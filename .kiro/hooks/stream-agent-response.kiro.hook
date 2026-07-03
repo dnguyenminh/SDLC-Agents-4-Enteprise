@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Stream Agent Response",
+  "description": "When agent completes a response, use mem_ingest MCP tool to log AI activity.",
+  "version": "3",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Agent just finished responding. Use the mem_ingest MCP tool to log a 1-sentence summary (max 150 chars) of what you just did. Parameters: content=<summary>, type=CONTEXT, source=chat-response, tags=chat,stream,agent. Do NOT add commentary."
+  }
+}

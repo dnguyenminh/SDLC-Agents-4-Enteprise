@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validate Draw.io XML",
+  "description": "After any .drawio file is written, validates the XML for common errors: self-call edges with 3 waypoints (should be 2), self-closing edges (missing mxGeometry child), and mxfile wrapper (should be bare mxGraphModel). If issues found, instructs agent to fix immediately.",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "**/*.drawio"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A .drawio file was just created. Validate it for common errors:\n\n1. **Self-call 3-waypoint bug**: Search for edges where source and target are the same (or sourcePoint.x == targetPoint.x for self-calls) that have 3 mxPoint elements inside Array. Fix: remove the 3rd waypoint, set targetPoint to lifeline position (same X as sourcePoint, Y = 2nd waypoint Y).\n\n2. **Self-closing edges**: Search for `edge=\"1\"` cells that are self-closing (end with `/>` without mxGeometry child). Fix: add `<mxGeometry relative=\"1\" as=\"geometry\"/>` child.\n\n3. **mxfile wrapper**: Check if file starts with `<mxfile>` instead of `<mxGraphModel>`. Fix: strip the wrapper.\n\n4. **Alt box without arrow**: If there's a rectangle with \"alt\" in its value but no edge cell with sourcePoint/targetPoint within the alt box bounds, add a dashed return arrow.\n\nIf ANY issue is found: fix the .drawio file immediately, then re-export to PNG using: & \"C:\\Program Files\\draw.io\\draw.io.exe\" -x -f png -b 10 -o \"{same-path}.png\" \"{file-path}\"\n\nIf no issues found: do nothing (don't report)."
+  }
+}

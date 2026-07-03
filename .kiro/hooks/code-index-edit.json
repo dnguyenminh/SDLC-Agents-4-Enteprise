@@ -1,0 +1,33 @@
+{
+  "name": "Code Index — File Edited",
+  "version": "1.0.0",
+  "description": "Triggers incremental indexer when a source file is edited",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.kt",
+      "**/*.java",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.py",
+      "**/*.go",
+      "**/*.rs",
+      "**/*.cs",
+      "**/*.gradle.kts",
+      "**/*.gradle",
+      "**/*.yml",
+      "**/*.yaml",
+      "**/*.properties",
+      "**/*.xml",
+      "**/*.sql",
+      "**/*.json",
+      "**/*.toml"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx ts-node .analysis/code-intelligence/scripts/src/incremental-indexer.ts --files ${file}"
+  }
+}

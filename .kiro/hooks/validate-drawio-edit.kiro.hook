@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validate Draw.io Edit",
+  "description": "After any .drawio file is edited, validates the XML for common errors and fixes them automatically. Same validation as the fileCreated hook.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.drawio"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A .drawio file was just edited. Validate it for common errors:\n\n1. **Self-call 3-waypoint bug**: Search for edges with sourcePoint and targetPoint at same X (self-calls) that have 3 mxPoint elements inside Array. The 3rd point going back to lifeline is WRONG. Fix: remove 3rd waypoint, set targetPoint X = sourcePoint X, targetPoint Y = 2nd waypoint Y.\n\n2. **Self-closing edges**: Any `edge=\"1\"` cell ending with `/>` (no mxGeometry child). Fix: add child element.\n\n3. **mxfile wrapper**: File starts with `<mxfile>`. Fix: strip wrapper, keep bare `<mxGraphModel>`.\n\nIf ANY issue found: fix immediately, then re-export PNG.\nIf no issues: do nothing silently."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Stream User Prompt",
+  "description": "When user submits a prompt, use mem_ingest MCP tool to log chat activity.",
+  "version": "3",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A user prompt was submitted. Use the mem_ingest MCP tool to log a summary of the user message (max 200 chars). Parameters: content=<user message summarized>, type=CONTEXT, source=/chat-prompt, tags=chat,stream,user. Do NOT add commentary."
+  }
+}

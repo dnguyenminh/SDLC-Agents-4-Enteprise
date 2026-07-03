@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "KB Lookup Before Drawio Write",
+  "description": "Khi agent sắp write file .drawio, nhắc agent phải search KB trước để lấy đúng patterns (styles, edges, containers, export rules)",
+  "version": "1",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "write"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "BEFORE writing any .drawio file, you MUST first call mem_search(\"drawio procedure\", detail=true) to retrieve the correct draw.io patterns from KB. Apply the styles, colors, edge routing rules, and naming conventions from KB results. If the file being written is NOT a .drawio file, ignore this instruction and proceed normally."
+  }
+}

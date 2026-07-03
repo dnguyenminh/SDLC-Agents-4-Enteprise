@@ -1,0 +1,27 @@
+{
+  "name": "Memory Sync — Code File Edited",
+  "version": "1.0.0",
+  "description": "Triggers mem_sync_code when a source code file is edited to keep KB in sync",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.kt",
+      "**/*.java",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.py",
+      "**/*.go",
+      "**/*.rs",
+      "**/*.cs"
+    ]
+  },
+  "then": {
+    "type": "runTool",
+    "tool": "mem_sync_code",
+    "arguments": {
+      "limit": 10000
+    }
+  }
+}

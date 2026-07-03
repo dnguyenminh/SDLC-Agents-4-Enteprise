@@ -1,0 +1,12 @@
+{
+  "name": "Code Index — Full Re-Index",
+  "version": "1.0.0",
+  "description": "Triggers a full re-index of the entire project. Run the full indexer script, read its JSON output, then ingest into KB via MCP tools.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Run the full code intelligence indexer by executing: npx ts-node .analysis/code-intelligence/scripts/src/full-indexer.ts\n\nAfter the script completes:\n1. Read the JSON output from .analysis/code-intelligence/kb-payloads.json\n2. For each payload, ingest into the Knowledge Base using mcp_knowledge_base_kb_ingest with the title, content, tags, and project fields\n3. Report the indexing summary (total files, modules, classes, functions, parse errors, elapsed time)"
+  }
+}

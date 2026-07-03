@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Validate Draw.io in Documents",
+  "description": "When a markdown document is created or edited in the documents/ folder, remind the agent that all diagrams MUST use draw.io format (.drawio files + exported .png references). Never use mermaid code blocks or inline XML diagrams in documents.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "documents/**/*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "IMPORTANT RULE: All diagrams in documents/ MUST use draw.io format. Check if the file you just edited contains any ```mermaid code blocks or inline ```xml diagram blocks. If found, you MUST: 1) Create a proper .drawio file in the diagrams/ subfolder, 2) Export it to .png using export_drawio tool, 3) Replace the mermaid/xml block with ![alt](diagrams/filename.png) + *[Edit in draw.io](diagrams/filename.drawio)* reference. NEVER leave mermaid or inline XML diagrams in document files."
+  }
+}

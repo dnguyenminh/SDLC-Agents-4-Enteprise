@@ -1,0 +1,33 @@
+{
+  "name": "Code Index — File Deleted",
+  "version": "1.0.0",
+  "description": "Triggers incremental indexer when a source file is deleted, removing it from the index and marking annotations as [DELETED]",
+  "when": {
+    "type": "fileDeleted",
+    "patterns": [
+      "**/*.kt",
+      "**/*.java",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.py",
+      "**/*.go",
+      "**/*.rs",
+      "**/*.cs",
+      "**/*.gradle.kts",
+      "**/*.gradle",
+      "**/*.yml",
+      "**/*.yaml",
+      "**/*.properties",
+      "**/*.xml",
+      "**/*.sql",
+      "**/*.json",
+      "**/*.toml"
+    ]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx ts-node .analysis/code-intelligence/scripts/src/incremental-indexer.ts --files ${file}"
+  }
+}

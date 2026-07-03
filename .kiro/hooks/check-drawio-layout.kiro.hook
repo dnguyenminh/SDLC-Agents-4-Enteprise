@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Check Drawio Layout",
+  "description": "After creating or editing a .drawio file, remind the agent to call drawio_auto_layout to verify no overlapping nodes or edge crossings, then export PNG",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "*.drawio"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You just created/modified a .drawio file. MANDATORY: Call drawio_auto_layout(file_path=&quot;{filePath}&quot;) to check for overlapping nodes and edge crossings. If issues found, fix them using waypoints on edges (not by restructuring layout). Then export to PNG using export_drawio tool with absolute path."
+  }
+}
