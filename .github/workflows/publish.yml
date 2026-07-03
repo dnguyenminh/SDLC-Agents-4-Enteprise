@@ -1,0 +1,89 @@
+name: Publish — Extension + Backend
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Publish target'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - extension-only
+          - backend-only
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      ext_ver: ${{ steps.versions.outputs.ext_ver }}
+      backend_ver: ${{ steps.versions.outputs.backend_ver }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: extract
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(jq -r .version extension/package.json)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "📦 Version: $VERSION"
+
+      - name: Read module versions
+        id: versions
+        run: |
+          EXT_VER=$(jq -r .version extension/package.json)
+          BACKEND_VER=$(jq -r .version backend/package.json)
+          echo "ext_ver=$EXT_VER" >> "$GITHUB_OUTPUT"
+          echo "backend_ver=$BACKEND_VER" >> "$GITHUB_OUTPUT"
+          echo "Extension: $EXT_VER | Backend: $BACKEND_VER"
+
+  publish-extension:
+    needs: version-check
+    if: github.event.inputs.target != 'backend-only'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Sync version from tag
+        run: npm version ${{ needs.version-check.outputs.version }} --no-git-tag-version --allow-same-version
+
+      - run: npm ci
+      - run: npm run copy-resources
+      - run: npm run gen-checksums
+      - run: npm run esbuild-production
+      - run: npx vsce package --no-dependencies
+
+      - name: Upload VSIX to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: extension/*.vsix
+
+      - name: Publish to VS Code Marketplace
+        run: npx vsce publish --packagePath *.vsix -p ${{ secrets.VSCE_PAT }}
+        continue-on-error: true
+
+      - name: Publish to Open VSX (Kiro IDE)
+        run: npx ovsx publish *.vsix -p ${{ secrets.OVSX_TOKEN }}
+        continue-on-error: true

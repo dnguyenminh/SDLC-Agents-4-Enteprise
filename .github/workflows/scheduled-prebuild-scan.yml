@@ -1,0 +1,96 @@
+name: Scheduled Prebuild Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Every Monday at 00:00 UTC
+  workflow_dispatch:
+
+env:
+  SUPPORTED_NODE_VERSIONS: "20 22 24"
+  BETTER_SQLITE3_VERSION: "11.10.0"
+  ONNXRUNTIME_VERSION: "1.18.0"
+  PLATFORMS: "win32-x64 linux-x64 darwin-x64 darwin-arm64"
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for missing binaries
+        id: check_versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NEEDS_BUILD_NATIVE=""
+          NEEDS_BUILD_ORT=""
+
+          for MAJOR in $SUPPORTED_NODE_VERSIONS; do
+            NATIVE_MISSING=false
+            for PLAT_ARCH in $PLATFORMS; do
+              PLAT=$(echo $PLAT_ARCH | cut -d- -f1)
+              ARCH=$(echo $PLAT_ARCH | cut -d- -f2)
+              TAG="better-sqlite3-v${BETTER_SQLITE3_VERSION}"
+              FILENAME="better-sqlite3-v${BETTER_SQLITE3_VERSION}-node-v${MAJOR}-${PLAT}-${ARCH}.node"
+
+              if ! gh release view "$TAG" --json assets -q ".assets[].name" 2>/dev/null | grep -qF "$FILENAME"; then
+                echo "  ⚠️ Missing: $FILENAME"
+                NATIVE_MISSING=true
+                break
+              fi
+            done
+            [ "$NATIVE_MISSING" = true ] && NEEDS_BUILD_NATIVE="${NEEDS_BUILD_NATIVE} ${MAJOR}"
+
+            # ONNX uses N-API — check once
+            if [ "$MAJOR" = "22" ]; then
+              for PLAT_ARCH in $PLATFORMS; do
+                PLAT=$(echo $PLAT_ARCH | cut -d- -f1)
+                ARCH=$(echo $PLAT_ARCH | cut -d- -f2)
+                TAG="onnxruntime-node-v${ONNXRUNTIME_VERSION}"
+                FILENAME="onnxruntime-node-v${ONNXRUNTIME_VERSION}-${PLAT}-${ARCH}.tar.gz"
+
+                if ! gh release view "$TAG" --json assets -q ".assets[].name" 2>/dev/null | grep -qF "$FILENAME"; then
+                  echo "  ⚠️ Missing onnxruntime: $FILENAME"
+                  NEEDS_BUILD_ORT="true"
+                  break
+                fi
+              done
+            fi
+          done
+
+          NEEDS_BUILD_NATIVE=$(echo $NEEDS_BUILD_NATIVE | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs)
+
+          if [ -z "$NEEDS_BUILD_NATIVE" ] && [ "$NEEDS_BUILD_ORT" != "true" ]; then
+            echo "✅ All binaries up to date"
+            echo "needs_native=false" >> $GITHUB_OUTPUT
+            echo "needs_ort=false" >> $GITHUB_OUTPUT
+          else
+            [ -n "$NEEDS_BUILD_NATIVE" ] && echo "needs_native=true" >> $GITHUB_OUTPUT && echo "native_versions=$NEEDS_BUILD_NATIVE" >> $GITHUB_OUTPUT || echo "needs_native=false" >> $GITHUB_OUTPUT
+            [ "$NEEDS_BUILD_ORT" = "true" ] && echo "needs_ort=true" >> $GITHUB_OUTPUT || echo "needs_ort=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger build-native
+        if: steps.check_versions.outputs.needs_native == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for VER in ${{ steps.check_versions.outputs.native_versions }}; do
+            echo "Triggering build-native for Node.js v${VER}..."
+            gh workflow run build-native.yml \
+              -f better_sqlite3_version="${BETTER_SQLITE3_VERSION}" \
+              -f node_version="${VER}"
+            sleep 2
+          done
+
+      - name: Trigger build-onnxruntime
+        if: steps.check_versions.outputs.needs_ort == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run build-onnxruntime.yml \
+            -f onnxruntime_version="${ONNXRUNTIME_VERSION}" \
+            -f node_version="22"

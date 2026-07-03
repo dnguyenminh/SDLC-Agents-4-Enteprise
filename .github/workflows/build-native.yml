@@ -1,0 +1,167 @@
+name: Build Native Addons (better-sqlite3)
+
+on:
+  workflow_dispatch:
+    inputs:
+      better_sqlite3_version:
+        description: 'better-sqlite3 version to build'
+        required: true
+        default: '11.10.0'
+      node_version:
+        description: 'Node.js major version to build for'
+        required: true
+        default: '22'
+        type: choice
+        options:
+          - '20'
+          - '22'
+          - '24'
+          - 'all'
+      force_rebuild:
+        description: 'Force rebuild even if binary exists'
+        required: false
+        default: 'false'
+        type: boolean
+  workflow_call:
+    inputs:
+      better_sqlite3_version:
+        required: true
+        type: string
+      node_version:
+        required: true
+        type: string
+      force_rebuild:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.setup.outputs.version }}
+      matrix: ${{ steps.setup.outputs.matrix }}
+    steps:
+      - name: Setup build matrix
+        id: setup
+        run: |
+          VERSION="${{ inputs.better_sqlite3_version || '11.10.0' }}"
+          NODE_INPUT="${{ inputs.node_version || '22' }}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+          if [ "$NODE_INPUT" = "all" ]; then
+            NODES="20 22 24"
+          else
+            NODES="$NODE_INPUT"
+          fi
+
+          MATRIX="{\"include\":["
+          FIRST=true
+          for NV in $NODES; do
+            for ENTRY in "windows-latest,win32,x64" "ubuntu-latest,linux,x64" "macos-13,darwin,x64" "macos-14,darwin,arm64"; do
+              OS=$(echo $ENTRY | cut -d, -f1)
+              PLAT=$(echo $ENTRY | cut -d, -f2)
+              ARCH=$(echo $ENTRY | cut -d, -f3)
+              if [ "$FIRST" = true ]; then FIRST=false; else MATRIX="${MATRIX},"; fi
+              MATRIX="${MATRIX}{\"os\":\"${OS}\",\"platform\":\"${PLAT}\",\"arch\":\"${ARCH}\",\"node_version\":\"${NV}\"}"
+            done
+          done
+          MATRIX="${MATRIX}]}"
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - name: Check if binary already exists
+        id: check_existing
+        if: inputs.force_rebuild != true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="better-sqlite3-v${VERSION}"
+          FILENAME="better-sqlite3-v${VERSION}-node-v${{ matrix.node_version }}-${{ matrix.platform }}-${{ matrix.arch }}.node"
+
+          if gh release view "$TAG" --json assets -q ".assets[].name" 2>/dev/null | grep -qF "$FILENAME"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⏭️ $FILENAME already exists — skipping"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "🔨 $FILENAME not found — will build"
+          fi
+
+      - name: Build better-sqlite3
+        if: steps.check_existing.outputs.skip != 'true'
+        shell: bash
+        run: |
+          mkdir build-temp && cd build-temp
+          npm init -y
+          npm install "better-sqlite3@${{ needs.prepare.outputs.version }}"
+
+      - name: Package binary
+        if: steps.check_existing.outputs.skip != 'true'
+        shell: bash
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          FILENAME="better-sqlite3-v${VERSION}-node-v${{ matrix.node_version }}-${{ matrix.platform }}-${{ matrix.arch }}.node"
+
+          NODE_FILE=$(find build-temp/node_modules/better-sqlite3 -name "better_sqlite3.node" | head -1)
+          cp "$NODE_FILE" "$FILENAME"
+          sha256sum "$FILENAME" > "${FILENAME}.sha256" 2>/dev/null || shasum -a 256 "$FILENAME" > "${FILENAME}.sha256"
+          echo "Built: $FILENAME ($(wc -c < "$FILENAME") bytes)"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.check_existing.outputs.skip != 'true'
+        with:
+          name: binary-node-v${{ matrix.node_version }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            *.node
+            *.sha256
+          retention-days: 90
+
+  release:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: binary-*
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! ls *.node 1>/dev/null 2>&1; then
+            echo "ℹ️ No new binaries — all skipped"
+            exit 0
+          fi
+
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="better-sqlite3-v${VERSION}"
+
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" \
+              --title "better-sqlite3 v${VERSION} Prebuilt Binaries" \
+              --notes "Prebuilt binaries for better-sqlite3 (win32-x64, linux-x64, darwin-x64, darwin-arm64)."
+
+          for f in *.node; do
+            gh release upload "$TAG" "$f" --clobber
+          done
+          echo "✅ Uploaded $(ls *.node | wc -l) binaries to release $TAG"

@@ -1,0 +1,180 @@
+name: Build ONNX Runtime Native (onnxruntime-node)
+
+on:
+  workflow_dispatch:
+    inputs:
+      onnxruntime_version:
+        description: 'onnxruntime-node version to package'
+        required: true
+        default: '1.18.0'
+      node_version:
+        description: 'Node.js major version'
+        required: true
+        default: '22'
+        type: choice
+        options:
+          - '20'
+          - '22'
+          - '24'
+          - 'all'
+      force_rebuild:
+        description: 'Force rebuild even if binary exists'
+        required: false
+        default: 'false'
+        type: boolean
+  workflow_call:
+    inputs:
+      onnxruntime_version:
+        required: true
+        type: string
+      node_version:
+        required: true
+        type: string
+      force_rebuild:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.setup.outputs.version }}
+      matrix: ${{ steps.setup.outputs.matrix }}
+    steps:
+      - name: Setup build matrix
+        id: setup
+        run: |
+          VERSION="${{ inputs.onnxruntime_version || '1.18.0' }}"
+          NODE_INPUT="${{ inputs.node_version || '22' }}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+          # onnxruntime-node uses N-API — one binary per platform
+          if [ "$NODE_INPUT" = "all" ]; then
+            NODES="22"
+          else
+            NODES="$NODE_INPUT"
+          fi
+
+          MATRIX="{\"include\":["
+          FIRST=true
+          for NV in $NODES; do
+            for ENTRY in "windows-latest,win32,x64" "ubuntu-latest,linux,x64" "macos-13,darwin,x64" "macos-14,darwin,arm64"; do
+              OS=$(echo $ENTRY | cut -d, -f1)
+              PLAT=$(echo $ENTRY | cut -d, -f2)
+              ARCH=$(echo $ENTRY | cut -d, -f3)
+              if [ "$FIRST" = true ]; then FIRST=false; else MATRIX="${MATRIX},"; fi
+              MATRIX="${MATRIX}{\"os\":\"${OS}\",\"platform\":\"${PLAT}\",\"arch\":\"${ARCH}\",\"node_version\":\"${NV}\"}"
+            done
+          done
+          MATRIX="${MATRIX}]}"
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - name: Check if binary already exists
+        id: check_existing
+        if: inputs.force_rebuild != true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="onnxruntime-node-v${VERSION}"
+          FILENAME="onnxruntime-node-v${VERSION}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz"
+
+          if gh release view "$TAG" --json assets -q ".assets[].name" 2>/dev/null | grep -qF "$FILENAME"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⏭️ $FILENAME already exists — skipping"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "🔨 $FILENAME not found — will build"
+          fi
+
+      - name: Install onnxruntime-node
+        if: steps.check_existing.outputs.skip != 'true'
+        shell: bash
+        env:
+          ONNXRUNTIME_NODE_INSTALL_CUDA: '0'
+        run: |
+          mkdir build-temp && cd build-temp
+          npm init -y
+          npm install "onnxruntime-node@${{ needs.prepare.outputs.version }}" || \
+            npm install "onnxruntime-node@${{ needs.prepare.outputs.version }}" --ignore-scripts
+
+      - name: Package native binaries
+        if: steps.check_existing.outputs.skip != 'true'
+        shell: bash
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          ARCHIVE_NAME="onnxruntime-node-v${VERSION}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz"
+
+          ORT_DIR="build-temp/node_modules/onnxruntime-node"
+          mkdir -p package/onnxruntime-node
+
+          [ -d "$ORT_DIR/bin" ] && cp -r "$ORT_DIR/bin" package/onnxruntime-node/
+          [ -d "$ORT_DIR/dist" ] && cp -r "$ORT_DIR/dist" package/onnxruntime-node/
+          cp "$ORT_DIR/package.json" package/onnxruntime-node/
+
+          ORT_COMMON="build-temp/node_modules/onnxruntime-common"
+          [ -d "$ORT_COMMON" ] && cp -r "$ORT_COMMON" package/onnxruntime-common
+
+          tar -czf "$ARCHIVE_NAME" -C package .
+          sha256sum "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256" 2>/dev/null || shasum -a 256 "$ARCHIVE_NAME" > "${ARCHIVE_NAME}.sha256"
+          echo "Archive: $ARCHIVE_NAME ($(wc -c < "$ARCHIVE_NAME") bytes)"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.check_existing.outputs.skip != 'true'
+        with:
+          name: onnxruntime-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            *.tar.gz
+            *.sha256
+          retention-days: 90
+
+  release:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: onnxruntime-*
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! ls *.tar.gz 1>/dev/null 2>&1; then
+            echo "ℹ️ No new binaries — all skipped"
+            exit 0
+          fi
+
+          VERSION="${{ needs.prepare.outputs.version }}"
+          TAG="onnxruntime-node-v${VERSION}"
+
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" \
+              --title "onnxruntime-node v${VERSION} Prebuilt Binaries" \
+              --notes "Prebuilt native binaries for onnxruntime-node (win32-x64, linux-x64, darwin-x64, darwin-arm64)."
+
+          for f in *.tar.gz; do
+            gh release upload "$TAG" "$f" --clobber
+          done
+          echo "✅ Uploaded $(ls *.tar.gz | wc -l) archives to release $TAG"

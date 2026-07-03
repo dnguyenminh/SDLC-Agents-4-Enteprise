@@ -1,0 +1,77 @@
+name: Auto-release Extension
+
+on:
+  workflow_run:
+    workflows:
+      - "Build Native Addons (better-sqlite3)"
+      - "Build ONNX Runtime Native (onnxruntime-node)"
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: auto-release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-release:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT || github.token }}
+          fetch-depth: 0
+
+      - name: Check if new binaries were uploaded
+        id: check_new
+        if: github.event_name != 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          JOBS=$(gh api "repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs" --jq '.jobs[] | select(.name | startswith("build")) | .conclusion')
+
+          if echo "$JOBS" | grep -q "success"; then
+            echo "has_new=true" >> $GITHUB_OUTPUT
+            echo "✅ New binaries were built"
+          else
+            echo "has_new=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ All builds were skipped"
+          fi
+
+      - name: Bump version
+        id: bump
+        if: >
+          github.event_name == 'workflow_dispatch' ||
+          steps.check_new.outputs.has_new == 'true'
+        run: |
+          CURRENT=$(jq -r .version extension/package.json)
+          echo "Current version: $CURRENT"
+
+          MAJOR=$(echo $CURRENT | cut -d. -f1)
+          MINOR=$(echo $CURRENT | cut -d. -f2)
+          PATCH=$(echo $CURRENT | cut -d. -f3)
+          NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          jq ".version = \"$NEW_VERSION\"" extension/package.json > tmp.json
+          mv tmp.json extension/package.json
+
+      - name: Commit and tag
+        if: steps.bump.outputs.version != ''
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add extension/package.json
+          git commit -m "chore: bump extension to v${VERSION} (new prebuilds)"
+          git tag "v${VERSION}"
+          git push origin main --tags
+          echo "✅ Pushed v${VERSION}"
