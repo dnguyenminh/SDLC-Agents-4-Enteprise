@@ -77,7 +77,7 @@ function formatBytes(bytes: number): string {
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-export function createAdminRoute(logger: Logger): Hono {
+export function createAdminRoute(logger: Logger, registry?: any): Hono {
   const app = new Hono();
 
   // Initialize DB on first load
@@ -99,9 +99,9 @@ export function createAdminRoute(logger: Logger): Hono {
       if (token) {
         const injectScript = '<script>localStorage.setItem("admin_token","' + token + '");</script>';
         html = html.replace('</head>', injectScript + '</head>');
-        if (page) {
-          html = html.replace("useState('dashboard')", "useState('" + page + "')");
-        }
+      }
+      if (page) {
+        html = html.replace("useState('dashboard')", "useState('" + page + "')");
       }
       return new Response(html, { headers: { 'Content-Type': 'text/html', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
     }
@@ -744,19 +744,60 @@ export function createAdminRoute(logger: Logger): Hono {
     const cfg = loadConfig();
     const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
     let servers: any[] = [];
+
+    // Try to get actual connection data from McpClientManager
+    const orchestration = registry?.getModule?.('orchestration');
+    const clientManager = orchestration?.getClientManager?.();
+
     if (fs.existsSync(orchPath)) {
       try {
         const orch = JSON.parse(fs.readFileSync(orchPath, 'utf-8'));
         servers = Object.entries(orch.mcpServers || {}).map(([name, cfg]: [string, any]) => {
-          const tools = cfg.tools || cfg.autoApprove || [];
           const serverToggles = toolToggles[name] || {};
+          const isConnected = clientManager?.isServerConnected?.(name) ?? false;
+          const actualToolCount = clientManager?.getServerToolCount?.(name) ?? 0;
+          const configTools = cfg.autoApprove || [];
+
+          let tools: any[];
+          if (isConnected && actualToolCount > 0) {
+            const proxied = (clientManager?.getProxiedTools?.() || []).filter((t: any) => t.category === name);
+            tools = proxied.map((t: any) => ({ name: t.name, enabled: serverToggles[t.name] !== false }));
+          } else {
+            tools = configTools.map((t: string) => ({ name: t, enabled: serverToggles[t] !== false }));
+          }
+
           return {
             id: name, name,
-            status: cfg.disabled ? 'stopped' : 'running',
-            tools: tools.map((t: string) => ({ name: t, enabled: serverToggles[t] !== false })),
+            url: cfg.url || '',
+            type: cfg.type || cfg.transportType || 'stdio',
+            transportType: cfg.transportType || cfg.type || 'stdio',
+            command: cfg.command || '',
+            args: cfg.args || [],
+            env: cfg.env || {},
+            disabled: cfg.disabled || false,
+            status: cfg.disabled ? 'stopped' : (isConnected ? 'running' : 'disconnected'),
+            tools,
           };
         });
       } catch (e) { /* ignore */ }
+    }
+
+    // Add code-intel as virtual internal server (tools from ModuleRegistry)
+    const allHandlers = registry?.getToolHandlers?.();
+    if (allHandlers) {
+      const internalTools = Array.from(allHandlers.keys());
+      servers.push({
+        id: 'code-intel', name: 'code-intel',
+        url: 'internal',
+        type: 'internal',
+        transportType: 'internal',
+        command: '',
+        args: [],
+        env: {},
+        disabled: false,
+        status: 'running',
+        tools: internalTools.map((t: string) => ({ name: t, enabled: true })),
+      });
     }
 
     // Enforce allowedServers roleData filtering
@@ -768,24 +809,213 @@ export function createAdminRoute(logger: Logger): Hono {
     return c.json({ servers });
   });
 
-  app.post('/api/admin/mcp/servers/:id/restart', (c) => {
+  app.post('/api/admin/mcp/servers/:id/restart', async (c) => {
     const user = requireAuth(c);
     if (user instanceof Response) return user;
 
-    const permCheck = requirePermission(c, user.userId, 'MCP_ACCESS');
+    const permCheck = requirePermission(c, user.userId, 'MCP_MANAGE');
     if (permCheck instanceof Response) return permCheck;
+
+    // Enforce allowRestart rule
+    if ((permCheck.roleData as any)?.allowRestart === false) {
+      return c.json({ error: 'Forbidden: not allowed to restart servers' }, 403);
+    }
 
     const serverId = c.req.param('id');
 
-    // Enforce allowedServers — user can only restart servers they have access to
+    // Enforce allowedServers
     const allowedServers = (permCheck.roleData as any)?.allowedServers;
-    if (Array.isArray(allowedServers) && !allowedServers.includes(serverId)) {
+    if (Array.isArray(allowedServers) && !allowedServers.includes('*') && !allowedServers.includes(serverId)) {
       return c.json({ error: 'Forbidden: server not in allowedServers' }, 403);
     }
 
     addMcpLog(serverId, 'INFO', `Server restart requested by ${user.username}`);
     recordAudit(user.userId, user.username, 'RESTART_SERVER', 'mcp', serverId);
+
+    // Actually reconnect via McpClientManager
+    const orchestration = registry?.getModule?.('orchestration');
+    const clientManager = orchestration?.getClientManager?.();
+    if (clientManager) {
+      try {
+        await clientManager.disconnectServer(serverId);
+        const cfg = loadConfig();
+        const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
+        if (fs.existsSync(orchPath)) {
+          const orch = JSON.parse(fs.readFileSync(orchPath, 'utf-8'));
+          const serverCfg = orch.mcpServers?.[serverId];
+          if (serverCfg && !serverCfg.disabled) {
+            await clientManager.connectServer(serverId, serverCfg);
+            const toolCount = clientManager.getServerToolCount(serverId);
+            addMcpLog(serverId, 'INFO', `Reconnected. ${toolCount} tools loaded.`);
+            return c.json({ success: true, status: 'connected', tools: toolCount });
+          }
+        }
+      } catch (err: any) {
+        addMcpLog(serverId, 'ERROR', `Restart failed: ${err.message}`);
+        return c.json({ success: false, error: err.message, status: 'disconnected' });
+      }
+    }
     return c.json({ success: true, message: 'Restart signal sent' });
+  });
+
+  // POST /api/admin/mcp/servers — Add new MCP server
+  app.post('/api/admin/mcp/servers', async (c) => {
+    const user = requireAuth(c);
+    if (user instanceof Response) return user;
+    const permCheck = requirePermission(c, user.userId, 'MCP_MANAGE');
+    if (permCheck instanceof Response) return permCheck;
+
+    // Enforce allowAdd rule
+    if ((permCheck.roleData as any)?.allowAdd === false) {
+      return c.json({ error: 'Forbidden: not allowed to add servers' }, 403);
+    }
+
+    const body = await c.req.json();
+    const { name, url, type, command, args, env, disabled, autoApprove } = body;
+    if (!name) return c.json({ error: 'name is required' }, 400);
+    if (!url && !command) return c.json({ error: 'url or command is required' }, 400);
+
+    const cfg = loadConfig();
+    const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
+    let orch: any = { mcpServers: {} };
+    if (fs.existsSync(orchPath)) {
+      try { orch = JSON.parse(fs.readFileSync(orchPath, 'utf-8')); } catch {}
+    }
+    if (!orch.mcpServers) orch.mcpServers = {};
+    if (orch.mcpServers[name]) return c.json({ error: `Server "${name}" already exists` }, 409);
+
+    const serverConfig: any = {};
+    if (url) serverConfig.url = url;
+    if (type) { serverConfig.type = type; serverConfig.transportType = type; }
+    else { serverConfig.type = 'stdio'; serverConfig.transportType = 'stdio'; }
+    if (command) serverConfig.command = command;
+    if (args) serverConfig.args = args;
+    if (env) serverConfig.env = env;
+    if (disabled !== undefined) serverConfig.disabled = disabled;
+    if (autoApprove) serverConfig.autoApprove = autoApprove;
+    if (body.tools) serverConfig.tools = body.tools;
+
+    orch.mcpServers[name] = serverConfig;
+    const tmpPath = orchPath + '.tmp';
+    fs.writeFileSync(tmpPath, JSON.stringify(orch, null, 2), 'utf-8');
+    fs.renameSync(tmpPath, orchPath);
+
+    addMcpLog(name, 'INFO', `Server added by ${user.username}`);
+    recordAudit(user.userId, user.username, 'ADD_SERVER', 'mcp', name);
+
+    // Connect new server only (targeted — don't reinitialize all)
+    let status = disabled ? 'stopped' : 'disconnected';
+    let toolCount = 0;
+    const orchestration = registry?.getModule?.('orchestration');
+    const clientManager = orchestration?.getClientManager?.();
+    if (clientManager && !disabled) {
+      try {
+        await clientManager.connectServer(name, serverConfig);
+        status = 'connected';
+        toolCount = clientManager.getServerToolCount(name);
+      } catch (err: any) {
+        addMcpLog(name, 'ERROR', `Connect failed: ${err.message}`);
+        status = 'disconnected';
+      }
+    }
+
+    return c.json({ success: true, name, status, tools: toolCount }, 201);
+  });
+
+  // DELETE /api/admin/mcp/servers/:id — Remove MCP server
+  app.delete('/api/admin/mcp/servers/:id', async (c) => {
+    const user = requireAuth(c);
+    if (user instanceof Response) return user;
+    const permCheck = requirePermission(c, user.userId, 'MCP_MANAGE');
+    if (permCheck instanceof Response) return permCheck;
+
+    // Enforce allowRemove rule
+    if ((permCheck.roleData as any)?.allowRemove === false) {
+      return c.json({ error: 'Forbidden: not allowed to remove servers' }, 403);
+    }
+
+    const serverId = c.req.param('id');
+
+    // Enforce allowedServers
+    const allowedServers = (permCheck.roleData as any)?.allowedServers;
+    if (Array.isArray(allowedServers) && !allowedServers.includes('*') && !allowedServers.includes(serverId)) {
+      return c.json({ error: 'Forbidden: server not in allowedServers' }, 403);
+    }
+
+    const cfg = loadConfig();
+    const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
+    let orch: any = { mcpServers: {} };
+    if (fs.existsSync(orchPath)) {
+      try { orch = JSON.parse(fs.readFileSync(orchPath, 'utf-8')); } catch {}
+    }
+    if (!orch.mcpServers?.[serverId]) return c.json({ error: `Server "${serverId}" not found` }, 404);
+
+    delete orch.mcpServers[serverId];
+    const tmpPath = orchPath + '.tmp';
+    fs.writeFileSync(tmpPath, JSON.stringify(orch, null, 2), 'utf-8');
+    fs.renameSync(tmpPath, orchPath);
+
+    addMcpLog(serverId, 'INFO', `Server removed by ${user.username}`);
+    recordAudit(user.userId, user.username, 'REMOVE_SERVER', 'mcp', serverId);
+    return c.json({ success: true, removed: serverId });
+  });
+
+  // PUT /api/admin/mcp/servers/:id — Update MCP server config
+  app.put('/api/admin/mcp/servers/:id', async (c) => {
+    const user = requireAuth(c);
+    if (user instanceof Response) return user;
+    const permCheck = requirePermission(c, user.userId, 'MCP_MANAGE');
+    if (permCheck instanceof Response) return permCheck;
+
+    // Enforce allowEdit rule
+    if ((permCheck.roleData as any)?.allowEdit === false) {
+      return c.json({ error: 'Forbidden: not allowed to edit server config' }, 403);
+    }
+
+    const serverId = c.req.param('id');
+
+    // Enforce allowedServers
+    const allowedServers = (permCheck.roleData as any)?.allowedServers;
+    if (Array.isArray(allowedServers) && !allowedServers.includes('*') && !allowedServers.includes(serverId)) {
+      return c.json({ error: 'Forbidden: server not in allowedServers' }, 403);
+    }
+
+    const body = await c.req.json();
+    const cfg = loadConfig();
+    const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
+    let orch: any = { mcpServers: {} };
+    if (fs.existsSync(orchPath)) {
+      try { orch = JSON.parse(fs.readFileSync(orchPath, 'utf-8')); } catch {}
+    }
+    if (!orch.mcpServers?.[serverId]) return c.json({ error: `Server "${serverId}" not found` }, 404);
+
+    const existing = orch.mcpServers[serverId];
+    if (body.url !== undefined) existing.url = body.url;
+    if (body.type !== undefined) { existing.type = body.type; existing.transportType = body.type; }
+    if (body.command !== undefined) existing.command = body.command;
+    if (body.args !== undefined) existing.args = body.args;
+    if (body.env !== undefined) existing.env = body.env;
+    if (body.disabled !== undefined) existing.disabled = body.disabled;
+    if (body.autoApprove !== undefined) existing.autoApprove = body.autoApprove;
+
+    const tmpPath = orchPath + '.tmp';
+    fs.writeFileSync(tmpPath, JSON.stringify(orch, null, 2), 'utf-8');
+    fs.renameSync(tmpPath, orchPath);
+
+    addMcpLog(serverId, 'INFO', `Config updated by ${user.username}`);
+    recordAudit(user.userId, user.username, 'UPDATE_SERVER', 'mcp', serverId);
+
+    const orchestration = registry?.getModule?.('orchestration');
+    const clientManager = orchestration?.getClientManager?.();
+    if (clientManager && !existing.disabled) {
+      try {
+        await clientManager.disconnectServer(serverId);
+        await clientManager.connectServer(serverId, existing);
+      } catch (err: any) {
+        addMcpLog(serverId, 'ERROR', `Reconnect failed: ${err.message}`);
+      }
+    }
+    return c.json({ success: true, name: serverId });
   });
 
   // POST /api/admin/mcp/servers/:id/tools/:toolName/toggle
@@ -861,6 +1091,7 @@ export function createAdminRoute(logger: Logger): Hono {
   const RESTART_REQUIRED_KEYS: Record<string, string[]> = {
     server: ['port', 'host'],
     embedding: ['model', 'dimensions'],
+    llm: ['provider', 'baseUrl'],
   };
 
   const getEffectiveConfig = (): Record<string, Record<string, any>> => {
@@ -868,6 +1099,16 @@ export function createAdminRoute(logger: Logger): Hono {
     const base: Record<string, Record<string, any>> = {
       server: { port: cfg.port, host: cfg.host, logLevel: cfg.logLevel },
       embedding: { model: 'paraphrase-multilingual-MiniLM-L12-v2', dimensions: 384, onnxModelPath: cfg.onnxModelPath },
+      llm: {
+        provider: process.env.LLM_PROVIDER || 'ollama',
+        model: process.env.LLM_MODEL || 'qwen2.5:7b-instruct-q4_K_M',
+        baseUrl: process.env.LLM_BASE_URL || 'http://localhost:11434',
+        apiKey: process.env.LLM_API_KEY ? '***' : '',
+        temperature: parseFloat(process.env.LLM_TEMPERATURE || '0.3'),
+        maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '300', 10),
+        tagAnalysisEnabled: process.env.TAG_ANALYSIS_ENABLED !== 'false',
+        tagConfidenceThreshold: parseFloat(process.env.TAG_CONFIDENCE_THRESHOLD || '0.7'),
+      },
       kb: { maxEntries: 100000, sqliteDbPath: cfg.sqliteDbPath, dataDir: cfg.dataDir },
       mcp: { orchestrationConfigPath: cfg.orchestrationConfigPath },
     };
@@ -880,6 +1121,78 @@ export function createAdminRoute(logger: Logger): Hono {
     }
     return base;
   };
+
+  // LLM proxy endpoints (avoid CORS issues from browser)
+  app.get('/api/admin/llm/models', async (c) => {
+    const user = requireAuth(c);
+    if (user instanceof Response) return user;
+    const config = getEffectiveConfig();
+    const llm = config.llm || {};
+    const prov = c.req.query('provider') || llm.provider || 'ollama';
+    const base = c.req.query('baseUrl') || llm.baseUrl || 'http://localhost:11434';
+    try {
+      let url: string;
+      if (prov === 'ollama') url = base + '/api/tags';
+      else url = base + '/models';
+      const headers: Record<string, string> = {};
+      const apiKey = llm.apiKey;
+      if (apiKey && apiKey !== '***') {
+        headers['Authorization'] = 'Bearer ' + apiKey;
+        headers['x-api-key'] = apiKey;
+      }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      const r = await fetch(url, { headers, signal: controller.signal });
+      clearTimeout(timeout);
+      if (!r.ok) return c.json({ error: 'HTTP ' + r.status, models: [] });
+      const d = await r.json() as any;
+      let models: { id: string; name: string }[];
+      if (prov === 'ollama') {
+        models = (d.models || []).map((m: any) => ({ id: m.name || m.model, name: m.name || m.model }));
+      } else {
+        models = (d.data || []).map((m: any) => ({ id: m.id, name: m.id }));
+      }
+      return c.json({ models, provider: prov });
+    } catch (e: any) {
+      return c.json({ error: e.message || 'Connection failed', models: [] });
+    }
+  });
+
+  app.post('/api/admin/llm/test', async (c) => {
+    const user = requireAuth(c);
+    if (user instanceof Response) return user;
+    const config = getEffectiveConfig();
+    const llm = config.llm || {};
+    const prov = llm.provider || 'ollama';
+    const base = llm.baseUrl || 'http://localhost:11434';
+    try {
+      const start = Date.now();
+      let r: Response;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (llm.apiKey && llm.apiKey !== '***') {
+        headers['Authorization'] = 'Bearer ' + llm.apiKey;
+        headers['x-api-key'] = llm.apiKey;
+      }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      if (prov === 'ollama') {
+        r = await fetch(base + '/api/generate', { method: 'POST', headers, signal: controller.signal, body: JSON.stringify({ model: llm.model || 'llama3.1', prompt: 'Say hello in 5 words', stream: false, options: { num_predict: 20 } }) });
+      } else {
+        r = await fetch(base + '/models', { headers, signal: controller.signal });
+      }
+      clearTimeout(timeout);
+      const ms = Date.now() - start;
+      if (r.ok) {
+        const d = await r.json() as any;
+        const info = prov === 'ollama' ? ((d.response || '').substring(0, 80)) : ((d.data || []).length + ' models available');
+        return c.json({ success: true, message: 'Connected (' + ms + 'ms) — ' + info, latencyMs: ms });
+      } else {
+        return c.json({ success: false, message: 'HTTP ' + r.status, latencyMs: ms });
+      }
+    } catch (e: any) {
+      return c.json({ success: false, message: e.message || 'Connection failed' });
+    }
+  });
 
   app.get('/api/admin/config', (c) => {
     const user = requireAuth(c);
@@ -1320,9 +1633,9 @@ export function createAdminRoute(logger: Logger): Hono {
     if (graphService && graphService.ready) {
       try {
         const result = graphService.getAllPositions();
-        // Filter by allowed tiers
+        // Filter by allowed tiers — CODE tier always passes (not part of KB tier system)
         if (Array.isArray(allowedTiers)) {
-          result.nodes = result.nodes.filter((n: any) => allowedTiers.includes(n.tier));
+          result.nodes = result.nodes.filter((n: any) => n.tier === 'CODE' || allowedTiers.includes(n.tier));
           result.total = result.nodes.length;
         }
         // Attach real-time counts

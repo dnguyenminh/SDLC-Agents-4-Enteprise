@@ -15,6 +15,8 @@ import { loadConfig } from '../../engine/config.js';
 import { QueryLayer } from '../../engine/query/query-layer.js';
 import { migrate001AddScopeColumns } from './migrations/001-add-scope-columns.js';
 import { ScopePromotionService } from './ScopePromotionService.js';
+import { TagAnalyzerService } from './llm/TagAnalyzerService.js';
+import { LLMService } from './llm/LLMService.js';
 import type { ScopeContext } from './models.js';
 
 export class MemoryModule implements IModule {
@@ -56,6 +58,24 @@ export class MemoryModule implements IModule {
       // Initialize scope promotion service
       const promotionService = new ScopePromotionService(this.dbManager.getDb(), this.logger);
       this.dispatcher.setPromotionService(promotionService);
+
+      // Initialize LLM-based tag analyzer
+      try {
+        const llmConfig = {
+          provider: (process.env.LLM_PROVIDER || 'lmstudio') as any,
+          model: process.env.LLM_MODEL || 'qwen3-8b',
+          baseUrl: process.env.LLM_BASE_URL || 'http://localhost:1234/v1',
+          apiKey: process.env.LLM_API_KEY || undefined,
+          temperature: parseFloat(process.env.LLM_TEMPERATURE || '0.3'),
+          maxTokens: parseInt(process.env.LLM_MAX_TOKENS || '500', 10),
+        };
+        const llmService = new LLMService(llmConfig);
+        const tagAnalyzer = new TagAnalyzerService(llmService, this.logger);
+        this.dispatcher.setTagAnalyzer(tagAnalyzer);
+        this.logger.info({ provider: llmConfig.provider, model: llmConfig.model, baseUrl: llmConfig.baseUrl }, 'TagAnalyzerService initialized — LLM auto-tagging enabled');
+      } catch (err) {
+        this.logger.warn({ err }, 'TagAnalyzerService init failed — fallback keyword tagging only');
+      }
 
       // Start periodic promotion scan (every 1 hour)
       const SCAN_INTERVAL_MS = 60 * 60 * 1000; // 1 hour

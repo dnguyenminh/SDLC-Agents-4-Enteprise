@@ -9,6 +9,7 @@ import type { MemoryEngine } from './MemoryEngine.js';
 import type { QueryLayer } from '../../engine/query/query-layer.js';
 import type { KBScope, ScopeContext } from './models.js';
 import type { ScopePromotionService } from './ScopePromotionService.js';
+import type { TagAnalyzerService } from './llm/TagAnalyzerService.js';
 
 type Args = Record<string, unknown>;
 
@@ -25,6 +26,7 @@ const ALIASES: Record<string, [string, Record<string, string>]> = {
 export class MemoryToolDispatcher {
   private scopeCtx: ScopeContext | undefined;
   private promotionService: ScopePromotionService | undefined;
+  private tagAnalyzer: TagAnalyzerService | undefined;
 
   constructor(
     private readonly engine: MemoryEngine,
@@ -40,6 +42,11 @@ export class MemoryToolDispatcher {
   /** Inject promotion service (set after module init). */
   setPromotionService(svc: ScopePromotionService): void {
     this.promotionService = svc;
+  }
+
+  /** Inject tag analyzer service (set after module init). */
+  setTagAnalyzer(svc: TagAnalyzerService): void {
+    this.tagAnalyzer = svc;
   }
 
   dispatch(name: string, args: Args): string | null {
@@ -98,11 +105,12 @@ export class MemoryToolDispatcher {
     if (!content) return 'Error: content required';
     const type = (a.type as string) ?? 'CONTEXT';
     const source = a.source as string | undefined;
-    const tags = Array.isArray(a.tags) ? (a.tags as string[]).join(',') : ((a.tags as string) ?? '');
+    let tags = Array.isArray(a.tags) ? (a.tags as string[]).join(',') : ((a.tags as string) ?? '');
     const summary = (a.summary as string) ?? (a.title as string) ?? content.slice(0, 120);
     const agentName = a.agent_name as string | undefined;
     const scope = ((a.scope as string) ?? 'USER').toUpperCase() as KBScope;
     const userId = (a.user_id as string) ?? this.scopeCtx?.userId ?? null;
+
     const id = this.engine.insert({
       content, summary, type,
       tier: this.tierForType(type),
@@ -112,6 +120,23 @@ export class MemoryToolDispatcher {
       owner: this.inferOwner(source),
     });
     this.engine.auditLog('INGEST', id);
+
+    // AI-Assisted Tagging: always run LLM analysis to add business feature tags
+    if (this.tagAnalyzer) {
+      console.log('[TagAnalyzer] Starting analysis for entry', id, '— content length:', content.length);
+      this.tagAnalyzer.analyzeTags(content).then(result => {
+        console.log('[TagAnalyzer] Result for entry', id, ':', JSON.stringify(result));
+        if (result.appliedTags.length > 0) {
+          const existing = tags ? tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
+          const merged = [...new Set([...existing, ...result.appliedTags])];
+          this.engine.updateTags(id, merged.join(','));
+          console.log('[TagAnalyzer] Tags applied:', merged.join(','));
+        }
+      }).catch((err) => { console.error('[TagAnalyzer] LLM analysis failed:', err?.message || err); });
+    } else {
+      console.log('[TagAnalyzer] NOT INITIALIZED — this.tagAnalyzer is', this.tagAnalyzer);
+    }
+
     return `Knowledge entry created: id=${id}, type=${type}, scope=${scope}, tier=${this.tierForType(type)} - "${summary}"`;
   }
 
@@ -242,6 +267,39 @@ export class MemoryToolDispatcher {
       case 'taxonomy': return '[]';
       case 'popular': return '[]';
       case 'entry_tags': return a.entry_id ? '[]' : 'Error: entry_id required';
+      case 'retag': {
+        const entryId = a.entry_id as number;
+        if (!entryId) return 'Error: entry_id required';
+        if (!this.tagAnalyzer) return 'Error: TagAnalyzer not initialized';
+        const db = this.engine.getDb();
+        const entry = db.prepare('SELECT content, tags FROM knowledge_entries WHERE id = ?').get(entryId) as any;
+        if (!entry) return `Error: entry ${entryId} not found`;
+        this.tagAnalyzer.analyzeTags(entry.content).then(result => {
+          if (result.appliedTags.length > 0) {
+            this.engine.updateTags(entryId, result.appliedTags.join(','));
+            console.log(`[Retag] Entry ${entryId}: ${result.appliedTags.join(',')}`);
+          }
+        }).catch(err => console.error(`[Retag] Failed ${entryId}:`, err?.message));
+        return `Retag queued for entry #${entryId} (async LLM)`;
+      }
+      case 'retag_all': {
+        if (!this.tagAnalyzer) return 'Error: TagAnalyzer not initialized';
+        const db = this.engine.getDb();
+        const entries = db.prepare('SELECT id, content FROM knowledge_entries ORDER BY id').all() as any[];
+        let queued = 0;
+        for (const entry of entries) {
+          setTimeout(() => {
+            this.tagAnalyzer!.analyzeTags(entry.content).then(result => {
+              if (result.appliedTags.length > 0) {
+                this.engine.updateTags(entry.id, result.appliedTags.join(','));
+                console.log(`[Retag] Entry ${entry.id}: ${result.appliedTags.join(',')}`);
+              }
+            }).catch(err => console.error(`[Retag] Failed ${entry.id}:`, err?.message));
+          }, queued * 3000); // 3s between each to not overload LLM
+          queued++;
+        }
+        return `Retag ALL queued: ${queued} entries (async, ~${queued * 3}s total)`;
+      }
       default: return `Unknown tags action: ${action}`;
     }
   }

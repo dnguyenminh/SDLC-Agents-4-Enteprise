@@ -1,6 +1,7 @@
 /**
  * Backend MCP Server entry point.
  * Initializes all modules, starts HTTP server on configured port.
+ * LLM TagAnalyzer: qwen3-8b via LM Studio (port 1234)
  */
 
 import pino from 'pino/pino.js';
