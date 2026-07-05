@@ -4,6 +4,7 @@
  */
 
 import { Hono } from 'hono';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { McpConfigService, ConfigError } from './McpConfigService.js';
 import type { McpClientManager } from './McpClientManager.js';
 import type { Logger } from 'pino';
@@ -49,7 +50,7 @@ export function createMcpConfigRoutes(
       configService.addServer(name, config);
     } catch (e) {
       if (e instanceof ConfigError) {
-        return c.json({ error: e.message, details: e.validationErrors }, e.statusCode);
+        return c.json({ error: e.message, details: e.validationErrors }, e.statusCode as ContentfulStatusCode);
       }
       throw e;
     }
@@ -76,7 +77,7 @@ export function createMcpConfigRoutes(
       configService.updateServer(name, config);
     } catch (e) {
       if (e instanceof ConfigError) {
-        return c.json({ error: e.message, details: e.validationErrors }, e.statusCode);
+        return c.json({ error: e.message, details: e.validationErrors }, e.statusCode as ContentfulStatusCode);
       }
       throw e;
     }
@@ -105,7 +106,7 @@ export function createMcpConfigRoutes(
       configService.removeServer(name);
     } catch (e) {
       if (e instanceof ConfigError) {
-        return c.json({ error: e.message }, e.statusCode);
+        return c.json({ error: e.message }, e.statusCode as ContentfulStatusCode);
       }
       throw e;
     }

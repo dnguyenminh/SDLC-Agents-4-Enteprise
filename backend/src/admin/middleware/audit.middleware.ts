@@ -48,9 +48,9 @@ export function createAuditMiddleware(deps: AuditDeps) {
           userId, username,
           action: deriveAction(req.method, req.baseUrl + req.path),
           resource: (req.baseUrl + req.path).split('/').filter(Boolean)[2] || 'unknown',
-          resourceId: req.params.id || req.params.userId,
+          resourceId: (req.params.id || req.params.userId) as string | undefined,
           changes: req.body ? { after: req.body } : undefined,
-          ipAddress: req.ip || req.socket.remoteAddress,
+          ipAddress: (Array.isArray(req.ip) ? req.ip[0] : req.ip) || req.socket.remoteAddress,
         }).catch(() => {});
       }
       return originalJson(body);

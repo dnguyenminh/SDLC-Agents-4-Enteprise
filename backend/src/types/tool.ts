@@ -7,7 +7,7 @@ export interface ToolDefinition {
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
-  category: 'memory' | 'code' | 'orchestration' | 'analytics' | 'kb-graph' | 'utility';
+  category: 'memory' | 'code' | 'orchestration' | 'analytics' | 'kb-graph' | 'utility' | 'web';
 }
 
 export interface ToolResult {

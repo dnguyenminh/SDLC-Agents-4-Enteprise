@@ -816,7 +816,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
         env: {},
         disabled: false,
         status: 'running',
-        tools: internalTools.map((t: string) => ({ name: t, enabled: true })),
+        tools: internalTools.map((t: unknown) => ({ name: t as string, enabled: true })),
       });
     }
 

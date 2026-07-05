@@ -1,7 +1,7 @@
 import { pipeline, env, FeatureExtractionPipeline } from '@xenova/transformers';
 
 // Suppress local file warnings, force downloading from HF Hub if not available locally
-env.allowLocalModels = false;
+(env as any).allowLocalModels = false;
 
 export class EmbeddingService {
   private static instance: EmbeddingService;
