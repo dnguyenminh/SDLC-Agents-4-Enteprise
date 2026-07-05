@@ -1,0 +1,93 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Component Diagram — F11 Panel Classes&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="250" y="10" width="360" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="base_panel" value="&lt;b&gt;&lt;i&gt;BasePanel&lt;/i&gt;&lt;/b&gt;&#10;(abstract)&#10;---&#10;+create() +getHtml()&#10;+loadData() +handleMessage()&#10;+sendMessage() +reveal()&#10;+dispose() +reload()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="300" y="60" width="220" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="graph_p" value="&lt;b&gt;GraphPanel&lt;/b&gt;&#10;getHtml() = iframe&#10;loadData() = no-op" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="40" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="dashboard_p" value="&lt;b&gt;DashboardPanel&lt;/b&gt;&#10;getHtml() = iframe&#10;loadData() = no-op" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="220" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="tags_p" value="&lt;b&gt;TagsPanel&lt;/b&gt;&#10;getHtml() = iframe&#10;+ KbEventBus" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="400" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="quality_p" value="&lt;b&gt;QualityPanel&lt;/b&gt;&#10;getHtml() = iframe&#10;+ KbEventBus" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="580" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="analytics_p" value="&lt;b&gt;AnalyticsPanel&lt;/b&gt;&#10;getHtml() = iframe&#10;+ KbEventBus" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="40" y="340" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="workflow_p" value="&lt;b&gt;WorkflowPanel&lt;/b&gt;&#10;getHtml() = custom 3D&#10;loadData() = static graph" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="220" y="340" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="security_p" value="&lt;b&gt;SecurityPanel&lt;/b&gt;&#10;getHtml() = custom&#10;loadData() = code_search + mem_search&#10;overrides create()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="420" y="340" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="impact_p" value="&lt;b&gt;ImpactPanel&lt;/b&gt;&#10;getHtml() = custom&#10;loadData() = code_context&#10;overrides create()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="640" y="340" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="settings_p" value="&lt;b&gt;SettingsPanel&lt;/b&gt; (Singleton)&#10;NOT extends BasePanel&#10;---&#10;+open(extensionUri, secrets)&#10;+dispose()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="40" y="470" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="msg_handler" value="&lt;b&gt;SettingsMessageHandler&lt;/b&gt;&#10;handle(msg)&#10;sendCurrentState()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="280" y="470" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="llm_svc" value="&lt;b&gt;LlmTestService&lt;/b&gt;&#10;testLlm()&#10;autoTestAndNotify()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="520" y="470" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="config_svc" value="&lt;b&gt;ProviderConfigService&lt;/b&gt;&#10;getCurrentState()&#10;updateConfig() getModels()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="700" y="470" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="panel_mgr2" value="&lt;b&gt;WebviewPanelManager&lt;/b&gt;&#10;panels: Map&lt;PanelType, BasePanel&gt;&#10;openPanel() createPanel()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="40" y="580" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_ext_graph" style="html=1;endArrow=block;endSize=12;endFill=0;" edge="1" source="graph_p" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_ext_dash" style="html=1;endArrow=block;endSize=12;endFill=0;" edge="1" source="dashboard_p" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_ext_tags" style="html=1;endArrow=block;endSize=12;endFill=0;" edge="1" source="tags_p" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_ext_quality" style="html=1;endArrow=block;endSize=12;endFill=0;" edge="1" source="quality_p" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_ext_analytics" style="html=1;endArrow=block;endSize=12;endFill=0;" edge="1" source="analytics_p" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_ext_workflow" style="html=1;endArrow=block;endSize=12;endFill=0;" edge="1" source="workflow_p" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_ext_security" style="html=1;endArrow=block;endSize=12;endFill=0;" edge="1" source="security_p" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_ext_impact" style="html=1;endArrow=block;endSize=12;endFill=0;" edge="1" source="impact_p" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_settings_handler" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="settings_p" target="msg_handler" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_handler_llm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="msg_handler" target="llm_svc" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_handler_config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="msg_handler" target="config_svc" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_mgr_panels" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;" edge="1" source="panel_mgr2" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="30" y="610"/>
+          <mxPoint x="30" y="120"/>
+          <mxPoint x="300" y="120"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

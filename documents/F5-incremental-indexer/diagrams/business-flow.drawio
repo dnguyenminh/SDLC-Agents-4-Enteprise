@@ -1,0 +1,111 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="F5 Incremental Indexer — Business Flow" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="380" y="10" width="380" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="Backend Server&#10;Starts" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="init_ts" value="Initialize Tree-sitter&#10;(Load WASM Grammars)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="170" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="full_scan" value="Full Workspace Scan&#10;(discover all source files)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="280" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="hash_check" value="Hash-Based Change&#10;Detection" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="390" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="skip" value="Skip File&#10;(unchanged)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="400" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="parse_ast" value="AST Parse&#10;(Tree-sitter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="520" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="regex_fb" value="Regex Fallback&#10;(grammar unavailable)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="520" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="extract" value="Extract Symbols&#10;+ Relationships" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="170" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="embed" value="Generate Embeddings&#10;(ONNX / MiniLM)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="280" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="store" value="Store in SQLite&#10;(atomic transaction)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="390" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="resolve_xref" value="Cross-File Relationship&#10;Resolution" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="500" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="modules" value="Module Detection&#10;+ Pattern Analysis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="610" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="watcher" value="Start File Watcher&#10;(chokidar)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="780" y="60" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="event" value="File Event&#10;(add/change/unlink)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="170" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="debounce" value="Debounce 500ms" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="280" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="incr_index" value="Incremental Index&#10;(single file)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="780" y="380" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="Index Updated&#10;AI Agents Have&#10;Current Context" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="500" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="start" target="init_ts">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;" edge="1" parent="1" source="init_ts" target="full_scan">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;" edge="1" parent="1" source="full_scan" target="hash_check">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="unchanged" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="hash_check" target="skip">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="changed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="hash_check" target="parse_ast">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="no grammar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#c62828;fontSize=10;" edge="1" parent="1" source="parse_ast" target="regex_fb">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;" edge="1" parent="1" source="parse_ast" target="extract">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;" edge="1" parent="1" source="regex_fb" target="extract">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="extract" target="embed">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;" edge="1" parent="1" source="embed" target="store">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;" edge="1" parent="1" source="store" target="resolve_xref">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;" edge="1" parent="1" source="resolve_xref" target="modules">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="modules" target="watcher">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#c62828;" edge="1" parent="1" source="watcher" target="event">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;" edge="1" parent="1" source="event" target="debounce">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;" edge="1" parent="1" source="debounce" target="incr_index">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="incr_index" target="end">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

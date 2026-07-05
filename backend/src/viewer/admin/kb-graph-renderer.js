@@ -95,19 +95,23 @@
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       this.container.appendChild(this.renderer.domElement);
 
-      if (THREE.OrbitControls) {
-        this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-      } else if (window.THREE && window.THREE.OrbitControls) {
-        this.controls = new window.THREE.OrbitControls(this.camera, this.renderer.domElement);
-      } else {
-        this.controls = this._createFallbackControls(THREE);
-      }
-      this.controls.enableDamping = true;
-      this.controls.dampingFactor = 0.05;
-      this.controls.minDistance = 1;
-      this.controls.maxDistance = 50000;
-      this.controls.enableZoom = true;
-      this.controls.zoomSpeed = 1.2;
+      var self = this;
+      this.controls = new MapControls(this.camera, this.renderer.domElement, {
+        minDistance: 1,
+        maxDistance: 50000,
+        friction: 0.92,
+        zoomSpeed: 1.2,
+        panSpeed: 2.0,
+        onZoomEnd: function() { self._updateMode(false); },
+        onNodeDragStart: function(nodeId) { self._startNodeDrag(nodeId); },
+        onNodeDragMove: function(x, y) { self._moveNodeDrag(x, y); },
+        onNodeDragEnd: function() { self._endNodeDrag(); },
+        onDoubleTap: function(x, y) { self._handleDoubleTap(x, y); },
+        onTap: function(x, y) { self._handleTap(x, y); },
+        raycastNode: function(sx, sy) { return self._raycastAtScreen(sx, sy); },
+        getCurrentMode: function() { return self.currentMode; }
+      });
+      this._clock = new THREE.Clock();
 
       this.labelContainer = document.createElement('div');
       this.labelContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;';
@@ -124,10 +128,8 @@
       this.mouse = new THREE.Vector2();
 
       this._onResize = this._handleResize.bind(this);
-      this._onClick = this._handleClick.bind(this);
       this._onMouseMove = this._handleMouseMove.bind(this);
       window.addEventListener('resize', this._onResize);
-      this.renderer.domElement.addEventListener('click', this._onClick);
       this.renderer.domElement.addEventListener('mousemove', this._onMouseMove);
 
       this._animate();
@@ -137,36 +139,6 @@
     _getThree() {
       if (typeof window.THREE !== 'undefined') return window.THREE;
       throw new Error('THREE.js not found');
-    }
-
-    _createFallbackControls(THREE) {
-      var cam = this.camera, el = this.renderer.domElement;
-      var target = new THREE.Vector3();
-      var spherical = new THREE.Spherical();
-      var isDragging = false, prevMouse = { x: 0, y: 0 };
-      el.addEventListener('mousedown', function(e) { isDragging = true; prevMouse = { x: e.clientX, y: e.clientY }; });
-      el.addEventListener('mousemove', function(e) {
-        if (!isDragging) return;
-        var dx = (e.clientX - prevMouse.x) * 0.005, dy = (e.clientY - prevMouse.y) * 0.005;
-        prevMouse = { x: e.clientX, y: e.clientY };
-        var offset = cam.position.clone().sub(target);
-        spherical.setFromVector3(offset);
-        spherical.theta -= dx; spherical.phi -= dy;
-        spherical.phi = Math.max(0.01, Math.min(Math.PI - 0.01, spherical.phi));
-        offset.setFromSpherical(spherical);
-        cam.position.copy(target).add(offset); cam.lookAt(target);
-      });
-      el.addEventListener('mouseup', function() { isDragging = false; });
-      el.addEventListener('wheel', function(e) {
-        e.preventDefault();
-        var offset = cam.position.clone().sub(target);
-        var len = offset.length();
-        var newLen = len * (e.deltaY > 0 ? 1.15 : 0.85);
-        newLen = Math.max(1, Math.min(50000, newLen));
-        offset.normalize().multiplyScalar(newLen);
-        cam.position.copy(target).add(offset);
-      }, { passive: false });
-      return { target: target, enableDamping: false, dampingFactor: 0.05, minDistance: 10, maxDistance: 50000, enableZoom: true, zoomSpeed: 1.2, update: function() { cam.lookAt(target); }, dispose: function() {} };
     }
 
     // ===== Public API =====
@@ -181,26 +153,26 @@
 
     zoomToFit() {
       if (!this.nodes.length || !this.camera) return;
-      var cx = 0, cy = 0, cz = 0, n = this.nodes.length;
-      for (var i = 0; i < n; i++) { cx += this.nodes[i].x; cy += this.nodes[i].y; cz += this.nodes[i].z; }
-      cx /= n; cy /= n; cz /= n;
+      var cx = 0, cy = 0, n = this.nodes.length;
+      for (var i = 0; i < n; i++) { cx += this.nodes[i].x; cy += this.nodes[i].y; }
+      cx /= n; cy /= n;
       var maxR = 0;
       for (var i = 0; i < n; i++) {
-        var dx = this.nodes[i].x - cx, dy = this.nodes[i].y - cy, dz = this.nodes[i].z - cz;
-        maxR = Math.max(maxR, Math.sqrt(dx * dx + dy * dy + dz * dz));
+        var dx = this.nodes[i].x - cx, dy = this.nodes[i].y - cy;
+        maxR = Math.max(maxR, Math.sqrt(dx * dx + dy * dy));
       }
       var dist = maxR / Math.tan((this.camera.fov / 2) * Math.PI / 180) * 1.2;
-      this.camera.position.set(cx, cy, cz + dist);
-      this.controls.target.set(cx, cy, cz); this.controls.update();
+      this.controls.panTo(cx, cy, 600);
+      this.controls.zoomTo(dist, 600);
     }
 
     focusNode(id) {
       var idx = this.nodeMap.get(id);
       if (idx === undefined) return;
       var node = this.nodes[idx];
-      this.camera.position.set(node.x + 80, node.y + 80, node.z + 80);
-      this.controls.target.set(node.x, node.y, node.z);
-      this.controls.update(); this.selectedNodeId = id; this._dispatchNodeClick(node);
+      this.controls.panTo(node.x, node.y, 600);
+      this.controls.zoomTo(200, 600);
+      this.selectedNodeId = id; this._dispatchNodeClick(node);
     }
 
     destroy() {
@@ -208,7 +180,6 @@
       if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
       window.removeEventListener('resize', this._onResize);
       if (this.renderer) {
-        this.renderer.domElement.removeEventListener('click', this._onClick);
         this.renderer.domElement.removeEventListener('mousemove', this._onMouseMove);
         this.renderer.dispose();
         if (this.renderer.domElement.parentNode) this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
@@ -303,7 +274,7 @@
 
     _getCameraDistance() {
       if (!this.camera || !this.controls) return 1000;
-      return this.camera.position.distanceTo(this.controls.target);
+      return this.camera.position.z;
     }
 
     _updateMode(force) {
@@ -467,11 +438,6 @@
 
     // ===== Raycasting =====
 
-    _handleClick(event) {
-      var node = this._raycastNode(event);
-      if (node) { this.selectedNodeId = node.id; this._dispatchNodeClick(node); }
-    }
-
     _handleMouseMove(event) {
       var node = this._raycastNode(event);
       this.renderer.domElement.style.cursor = node ? 'pointer' : 'default';
@@ -504,6 +470,79 @@
       return null;
     }
 
+    _handleTap(screenX, screenY) {
+      var node = this._raycastNodeAtScreen(screenX, screenY);
+      if (node) { this.selectedNodeId = node.id; this._dispatchNodeClick(node); }
+    }
+
+    _handleDoubleTap(screenX, screenY) {
+      var worldPos = this._screenToWorldXY(screenX, screenY);
+      // Zoom in toward the double-tapped position
+      var targetZ = this.camera.position.z * 0.5;
+      if (targetZ < 1) targetZ = 1;
+      this.controls.panTo(worldPos.x, worldPos.y, 600);
+      this.controls.zoomTo(targetZ, 600);
+    }
+
+    _startNodeDrag(nodeId) {
+      this._draggingNodeId = nodeId;
+      this._draggingNodeIdx = this.nodeMap.get(nodeId);
+    }
+
+    _moveNodeDrag(screenX, screenY) {
+      if (this._draggingNodeIdx === undefined) return;
+      var worldPos = this._screenToWorldXY(screenX, screenY);
+      var node = this.nodes[this._draggingNodeIdx];
+      node.x = worldPos.x; node.y = worldPos.y;
+      // Update close mode mesh position if exists
+      if (this.closeMeshes) {
+        for (var i = 0; i < this.closeMeshes.length; i++) {
+          if (this.closeMeshes[i].userData.nodeIdx === this._draggingNodeIdx) {
+            this.closeMeshes[i].position.set(node.x, node.y, node.z);
+            break;
+          }
+        }
+      }
+    }
+
+    _endNodeDrag() {
+      this._draggingNodeId = null;
+      this._draggingNodeIdx = undefined;
+      this._buildEdgeGeometry();
+    }
+
+    _raycastAtScreen(screenX, screenY) {
+      var node = this._raycastNodeAtScreen(screenX, screenY);
+      return node ? node.id : null;
+    }
+
+    _raycastNodeAtScreen(screenX, screenY) {
+      var rect = this.renderer.domElement.getBoundingClientRect();
+      this.mouse.x = ((screenX - rect.left) / rect.width) * 2 - 1;
+      this.mouse.y = -((screenY - rect.top) / rect.height) * 2 + 1;
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      if (this.closeMeshes.length > 0) {
+        var hits = this.raycaster.intersectObjects(this.closeMeshes);
+        if (hits.length > 0) return this.nodes[hits[0].object.userData.nodeIdx];
+      }
+      if (this.pointsObject) {
+        var hits = this.raycaster.intersectObject(this.pointsObject);
+        if (hits.length > 0) return this.nodes[hits[0].index];
+      }
+      return null;
+    }
+
+    _screenToWorldXY(screenX, screenY) {
+      var rect = this.renderer.domElement.getBoundingClientRect();
+      var ndcX = ((screenX - rect.left) / rect.width) * 2 - 1;
+      var ndcY = -((screenY - rect.top) / rect.height) * 2 + 1;
+      var fovRad = (this.camera.fov * Math.PI) / 180;
+      var halfH = Math.tan(fovRad / 2) * this.camera.position.z;
+      var halfW = halfH * this.camera.aspect;
+      var target = this.controls.target;
+      return { x: target.x + ndcX * halfW, y: target.y + ndcY * halfH };
+    }
+
     _dispatchNodeClick(node) {
       this.container.dispatchEvent(new CustomEvent('graph-node-click', { detail: node, bubbles: true }));
     }
@@ -523,12 +562,9 @@
       if (this._destroyed) return;
       var self = this;
       this.animFrameId = requestAnimationFrame(function() { self._animate(); });
-      this.controls.update();
-      // Throttle mode switching to every 2 seconds (avoid interfering with zoom)
-      if (!this._lastModeCheck || Date.now() - this._lastModeCheck > 2000) {
-        this._lastModeCheck = Date.now();
-        this._updateMode(false);
-      }
+      var dt = this._clock ? this._clock.getDelta() : 0.016;
+      this.controls.update(dt);
+      // LOD mode check triggered by MapControls.onZoomEnd callback (event-driven)
       if (this.currentMode === 'CLOSE') this._updateLabels();
       this.renderer.render(this.scene, this.camera);
       this._renderMinimap();

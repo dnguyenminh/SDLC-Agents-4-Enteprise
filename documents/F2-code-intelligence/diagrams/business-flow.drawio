@@ -1,0 +1,99 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Code Intelligence — Business Flow" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="file_change" value="File Change&#10;Detected (Watcher)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="hash_check" value="Content Hash&#10;Changed?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="75" y="180" width="130" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="tree_sitter" value="Tree-sitter&#10;AST Parse" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="320" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="regex_fallback" value="Regex Fallback&#10;Extraction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="320" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="extract" value="Extract Symbols&#10;+ Relationships" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="430" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="store_db" value="Store in SQLite&#10;(symbols + relationships + FTS5)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="540" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="agent_query" value="Agent Calls&#10;MCP Tool" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="60" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="dispatch" value="Dispatch to&#10;Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="510" y="180" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="query_layer" value="QueryLayer&#10;(FTS5 Search)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="300" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="call_graph" value="CallGraph&#10;Service (BFS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="570" y="300" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="dep_graph" value="DependencyGraph&#10;Service (BFS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="300" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="impact_svc" value="Impact Analysis&#10;(Combined)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="570" y="400" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ai_context" value="AI Context&#10;Assembly" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="400" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="analyzers" value="Analyzers&#10;(Complexity, EntryPoints, etc.)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="730" y="400" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="token_budget" value="Token Budget&#10;Enforcement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="510" y="510" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="result" value="Return Structured&#10;Results to Agent" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="620" width="170" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="file_change" target="hash_check">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="hash_check" target="tree_sitter">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2b" value="No grammar" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#666666;fontSize=10;dashed=1;" edge="1" parent="1" source="tree_sitter" target="regex_fallback">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;" edge="1" parent="1" source="tree_sitter" target="extract">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;" edge="1" parent="1" source="extract" target="store_db">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="agent_query" target="dispatch">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="dispatch" target="query_layer">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="dispatch" target="call_graph">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="dispatch" target="dep_graph">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#c62828;" edge="1" parent="1" source="call_graph" target="impact_svc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#c62828;" edge="1" parent="1" source="dep_graph" target="impact_svc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;" edge="1" parent="1" source="dispatch" target="ai_context">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;" edge="1" parent="1" source="ai_context" target="token_budget">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;" edge="1" parent="1" source="token_budget" target="result">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

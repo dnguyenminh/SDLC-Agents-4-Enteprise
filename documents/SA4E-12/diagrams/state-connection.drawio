@@ -1,0 +1,60 @@
+<mxfile>
+  <diagram name="State - Connection" id="state-conn-sa4e-12">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;SA4E-12 — Connection Status State Machine&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="initial" value="" style="ellipse;shape=doubleCircle;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="unknown" value="&lt;b&gt;UNKNOWN&lt;/b&gt;&#10;No test performed&#10;Badge: Gray circle" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="200" y="280" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="testing" value="&lt;b&gt;TESTING&lt;/b&gt;&#10;Test in progress&#10;Badge: Spinner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="500" y="280" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="connected" value="&lt;b&gt;CONNECTED&lt;/b&gt;&#10;Test passed&#10;Badge: Green check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="180" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="disconnected" value="&lt;b&gt;DISCONNECTED&lt;/b&gt;&#10;Test failed&#10;Badge: Red X" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="800" y="380" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e_init" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="initial" target="unknown" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_unknown_testing" value="test triggered" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="unknown" target="testing" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_testing_connected" value="isAvailable = true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="testing" target="connected" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_testing_disconnected" value="error / timeout" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="testing" target="disconnected" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_connected_testing" value="re-test / provider change" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="connected" target="testing" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="890" y="150" /><mxPoint x="590" y="150" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_disconnected_testing" value="re-test / fix config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="disconnected" target="testing" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="890" y="480" /><mxPoint x="590" y="480" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_conn_unknown" value="provider change" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="connected" target="unknown" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="890" y="100" /><mxPoint x="290" y="100" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_disc_unknown" value="provider change" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="disconnected" target="unknown" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="890" y="530" /><mxPoint x="290" y="530" /></Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

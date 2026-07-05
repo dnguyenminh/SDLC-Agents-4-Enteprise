@@ -1,0 +1,93 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Code Intelligence — Component Diagram" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="module" value="&lt;&lt;component&gt;&gt;&#10;CodeIntelModule" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="430" y="60" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="indexer" value="&lt;&lt;component&gt;&gt;&#10;IndexingEngine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="200" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ts_indexer" value="&lt;&lt;component&gt;&gt;&#10;TreeSitterIndexer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="330" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="grammar" value="&lt;&lt;component&gt;&gt;&#10;GrammarRegistry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="450" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="watcher" value="&lt;&lt;component&gt;&gt;&#10;FileWatcher" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="330" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="resolver" value="&lt;&lt;component&gt;&gt;&#10;SymbolResolver" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="350" y="200" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="callgraph" value="&lt;&lt;component&gt;&gt;&#10;CallGraphService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="200" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="depgraph" value="&lt;&lt;component&gt;&gt;&#10;DependencyGraphService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="770" y="200" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="impact" value="&lt;&lt;component&gt;&gt;&#10;ImpactAnalysisService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="620" y="330" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ai_ctx" value="&lt;&lt;component&gt;&gt;&#10;AI Context Tools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="330" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="analyzers" value="&lt;&lt;component&gt;&gt;&#10;Analyzers&#10;(Complexity, EntryPoints, Graph)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="830" y="330" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="graphrepo" value="&lt;&lt;component&gt;&gt;&#10;GraphRepository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="460" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="dbmgr" value="&lt;&lt;component&gt;&gt;&#10;DatabaseManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="350" y="460" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="testdet" value="&lt;&lt;component&gt;&gt;&#10;TestDetector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="460" width="130" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#82b366;" edge="1" parent="1" source="module" target="indexer">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#82b366;" edge="1" parent="1" source="module" target="callgraph">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#82b366;" edge="1" parent="1" source="module" target="depgraph">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#d6b656;" edge="1" parent="1" source="indexer" target="ts_indexer">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#d6b656;" edge="1" parent="1" source="indexer" target="watcher">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#9673a6;" edge="1" parent="1" source="ts_indexer" target="grammar">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#82b366;" edge="1" parent="1" source="callgraph" target="resolver">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#c62828;" edge="1" parent="1" source="impact" target="callgraph">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#c62828;" edge="1" parent="1" source="impact" target="depgraph">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#c62828;" edge="1" parent="1" source="impact" target="testdet">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#666666;" edge="1" parent="1" source="callgraph" target="graphrepo">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#666666;" edge="1" parent="1" source="indexer" target="dbmgr">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#0288d1;" edge="1" parent="1" source="ai_ctx" target="callgraph">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;strokeColor=#0288d1;" edge="1" parent="1" source="ai_ctx" target="resolver">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

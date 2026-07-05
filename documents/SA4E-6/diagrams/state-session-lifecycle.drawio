@@ -1,0 +1,80 @@
+<mxfile host="app.diagrams.net" modified="2026-07-03T17:00:00.000Z" agent="BA Agent" version="24.0.0">
+  <diagram id="state-session" name="State Diagram - Session Lifecycle">
+    <mxGraphModel dx="1100" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;State Diagram - Sandbox Session Lifecycle&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="330" y="10" width="370" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="520" y="60" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="creating" value="CREATING&#10;&#10;- Pulling Docker image (if needed)&#10;- Allocating resources&#10;- Applying security profile&#10;- Setting up mounts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="340" y="110" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="running" value="RUNNING&#10;&#10;- Container started, accepting commands&#10;- TTL timer active (30 min default)&#10;- lastActivity updated on each exec&#10;- Resource limits enforced&#10;- Reaper monitoring TTL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="310" y="310" width="440" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="stopping" value="STOPPING&#10;&#10;- Graceful stop (SIGTERM, 10s grace)&#10;- Draining active commands&#10;- Removing container" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="340" y="540" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="destroyed" value="DESTROYED&#10;&#10;- Container removed&#10;- Session deregistered&#10;- Resources freed&#10;- TTL timer cancelled" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="340" y="730" width="380" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e_start" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="start" target="creating">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_created" value="Container started OK&#10;[docker start success]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="creating" target="running">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_destroy_manual" value="sandbox_session(destroy)&#10;[agent requests destruction]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="running" target="stopping">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ttl" value="TTL expired&#10;[idle > 30 min, Reaper fires]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;exitX=1;exitY=0.8;entryX=1;entryY=0.2;" edge="1" parent="1" source="running" target="stopping">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="415" />
+              <mxPoint x="800" y="555" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_shutdown" value="Backend SIGTERM&#10;[graceful shutdown]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;dashed=1;exitX=0;exitY=0.8;entryX=0;entryY=0.2;" edge="1" parent="1" source="running" target="stopping">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="260" y="415" />
+              <mxPoint x="260" y="555" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_stopped" value="Container removed&#10;[docker rm success]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="stopping" target="destroyed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_create_fail" value="Creation failed&#10;[Docker error, image pull fail]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;dashed=1;exitX=1;exitY=1;entryX=1;entryY=0;" edge="1" parent="1" source="creating" target="destroyed">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="210" />
+              <mxPoint x="860" y="730" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_exec" value="sandbox_exec() /&#10;sandbox_run() /&#10;sandbox_test()&#10;[resets TTL timer]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;exitX=0;exitY=0.3;entryX=0;entryY=0.6;curved=1;" edge="1" parent="1" source="running" target="running">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="240" y="350" />
+              <mxPoint x="240" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_oom" value="OOM Kill (exitCode 137)&#10;[memory limit exceeded]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;strokeColor=#b85450;exitX=0.8;exitY=1;entryX=0.8;entryY=0;" edge="1" parent="1" source="running" target="stopping">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="470" />
+              <mxPoint x="680" y="520" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

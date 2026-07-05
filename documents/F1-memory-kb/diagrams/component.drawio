@@ -1,0 +1,45 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;Component Diagram -- Memory Module Classes&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="380" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="imodule" value="&lt;b&gt;&lt;i&gt;IModule&lt;/i&gt;&lt;/b&gt;&#10;+ name: string&#10;+ status: ModuleStatus&#10;+ initialize(): Promise&#10;+ shutdown(): Promise&#10;+ getToolHandlers(): Map&#10;+ getToolDefinitions(): ToolDef[]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="220" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="memory_module" value="&lt;b&gt;MemoryModule&lt;/b&gt;&#10;- logger: Logger&#10;- dbManager: DatabaseManager&#10;- engine: MemoryEngine&#10;- dispatcher: MemoryToolDispatcher&#10;- promotionInterval: Timer&#10;+ initialize()&#10;+ shutdown()&#10;+ getEngine(): MemoryEngine" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="60" y="240" width="230" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="memory_engine" value="&lt;b&gt;MemoryEngine&lt;/b&gt;&#10;- db: Database&#10;- currentSessionId: string&#10;+ insert(entry): number&#10;+ findById(id): Entry&#10;+ search(query, ...): SearchResult[]&#10;+ addEdge(src, tgt, rel): number&#10;+ getNeighbors(nodeId): Edge[]&#10;+ promoteEntry(id, scope): boolean&#10;+ demoteEntry(id, scope): boolean&#10;+ startSession(name): string&#10;+ auditLog(op, entryId)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="370" y="60" width="240" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="tool_dispatcher" value="&lt;b&gt;MemoryToolDispatcher&lt;/b&gt;&#10;- engine: MemoryEngine&#10;- workspace: string&#10;- queryLayer: QueryLayer&#10;- scopeCtx: ScopeContext&#10;+ dispatch(name, args): string&#10;+ setScopeContext(ctx)&#10;+ setPromotionService(svc)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="370" y="310" width="230" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="scope_promo" value="&lt;b&gt;ScopePromotionService&lt;/b&gt;&#10;- db: Database&#10;- logger: Logger&#10;- config: PromotionConfig&#10;+ scanForPromotionCandidates()&#10;+ evaluateCriteria(entry)&#10;+ queueCandidates(list)&#10;+ runPromotionCycle(): string&#10;+ approve(id, reviewer)&#10;+ reject(id, reviewer)&#10;+ promoteOnMerge(ticket)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="690" y="60" width="230" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="masking_mw" value="&lt;b&gt;MaskingMiddleware&lt;/b&gt;&#10;- piiDetector: PiiDetector&#10;- credDetector: CredentialDetector&#10;- masker: ContentMasker&#10;- allowlist: AllowlistService&#10;- audit: AuditService&#10;+ applyMasking(entries, role): MaskedEntry[]&#10;- processEntry(entry, role): MaskedEntry&#10;- classifyEntry(entry): Level&#10;- canAccess(role, level): boolean" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="690" y="310" width="270" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="e_impl" value="" style="endArrow=block;endSize=12;endFill=0;html=1;strokeColor=#666666;" edge="1" parent="1" source="memory_module" target="imodule">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_mod_eng" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="memory_module" target="memory_engine">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_mod_disp" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="memory_module" target="tool_dispatcher">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_disp_eng" value="delegates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="tool_dispatcher" target="memory_engine">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_disp_mask" value="applies masking" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#c62828;dashed=1;fontSize=10;" edge="1" parent="1" source="tool_dispatcher" target="masking_mw">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_mod_promo" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="memory_module" target="scope_promo">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

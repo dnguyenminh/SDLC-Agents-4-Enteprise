@@ -1,0 +1,90 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F8 Chat Panel — Architecture&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="300" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="view_layer" value="VIEW LAYER (Webview Sandbox)" style="swimlane;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="300" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="chat_js" value="chat.js&#10;(DOM, Events, State)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="view_layer">
+      <mxGeometry x="20" y="40" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="md_renderer" value="markdown-renderer.js&#10;(Parse + Render)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="view_layer">
+      <mxGeometry x="160" y="40" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="graph_viz" value="graph-viz.js&#10;(Pipeline Graph)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="view_layer">
+      <mxGeometry x="20" y="110" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="css" value="chat.css&#10;(Styles)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="view_layer">
+      <mxGeometry x="160" y="110" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ctrl_layer" value="CONTROLLER LAYER (Extension Host)" style="swimlane;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="300" width="500" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="provider" value="ChatPanelProvider&#10;(WebviewViewProvider)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="ctrl_layer">
+      <mxGeometry x="20" y="40" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="msg_handler" value="MessageHandler&#10;(Dispatcher)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="ctrl_layer">
+      <mxGeometry x="200" y="40" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="msg_routing" value="MessageRouting&#10;(Pure Functions)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="ctrl_layer">
+      <mxGeometry x="350" y="40" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="html_builder" value="ChatHtmlBuilder" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="ctrl_layer">
+      <mxGeometry x="20" y="100" width="120" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="svc_layer" value="SERVICE LAYER" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="300" width="260" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="status_mgr" value="ChatStatusManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="svc_layer">
+      <mxGeometry x="20" y="40" width="110" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="model_mgr" value="ChatModelManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="svc_layer">
+      <mxGeometry x="140" y="40" width="110" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="state_mgr" value="ChatStateManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="svc_layer">
+      <mxGeometry x="20" y="100" width="110" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="ctx_picker" value="ChatContextPicker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="svc_layer">
+      <mxGeometry x="140" y="100" width="110" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="domain_layer" value="DOMAIN LAYER" style="swimlane;startSize=30;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="510" width="500" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="conv_mgr" value="ConversationManager&#10;(Tab state)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="domain_layer">
+      <mxGeometry x="20" y="40" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="token_counter" value="TokenCounter&#10;(Estimation)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="domain_layer">
+      <mxGeometry x="180" y="40" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ctx_tracker" value="ContextUsageTracker&#10;(Per-tab breakdown)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="domain_layer">
+      <mxGeometry x="330" y="40" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_layer" value="EXTERNAL" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="510" width="260" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="langgraph" value="LangGraphEngine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="ext_layer">
+      <mxGeometry x="20" y="40" width="110" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp_mgr" value="McpServerManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="ext_layer">
+      <mxGeometry x="140" y="40" width="110" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="vscode_api" value="VS Code APIs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="ext_layer">
+      <mxGeometry x="70" y="90" width="120" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="e_post" value="postMessage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=9;dashed=1;" edge="1" source="view_layer" target="ctrl_layer" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_prov_svc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="provider" target="svc_layer" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_ctrl_domain" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="ctrl_layer" target="domain_layer" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_ctrl_ext" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="msg_routing" target="langgraph" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

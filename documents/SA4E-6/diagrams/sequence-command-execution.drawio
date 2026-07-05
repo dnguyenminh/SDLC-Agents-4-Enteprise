@@ -1,0 +1,166 @@
+<mxfile host="app.diagrams.net" modified="2026-07-03T17:00:00.000Z" agent="BA Agent" version="24.0.0">
+  <diagram id="seq-exec" name="Sequence - Command Execution">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;Sequence Diagram - sandbox_exec Command Execution&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="420" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="agent_head" value="AI Agent" style="shape=rectangle;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="50" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="mcp_head" value="Backend MCP" style="shape=rectangle;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="50" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sandbox_head" value="SandboxModule" style="shape=rectangle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="50" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="store_head" value="SessionStore" style="shape=rectangle;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="50" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="docker_head" value="DockerExecutor" style="shape=rectangle;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="50" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="engine_head" value="Docker API" style="shape=rectangle;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="50" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="agent_line" style="dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="80" as="sourcePoint" />
+            <mxPoint x="110" y="850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="mcp_line" style="dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="80" as="sourcePoint" />
+            <mxPoint x="310" y="850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sandbox_line" style="dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="80" as="sourcePoint" />
+            <mxPoint x="525" y="850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="store_line" style="dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="735" y="80" as="sourcePoint" />
+            <mxPoint x="735" y="850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="docker_line" style="dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="945" y="80" as="sourcePoint" />
+            <mxPoint x="945" y="850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="engine_line" style="dashed=1;strokeColor=#999999;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1155" y="80" as="sourcePoint" />
+            <mxPoint x="1155" y="850" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m1" value="1. execute_dynamic_tool('sandbox_exec', {command, sessionId})" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="110" y="120" as="sourcePoint" />
+            <mxPoint x="310" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="2. route to SandboxModule handler" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="160" as="sourcePoint" />
+            <mxPoint x="525" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="3. validateExecParams(params)" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="200" as="sourcePoint" />
+            <mxPoint x="525" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="4. getSession(sessionId)" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="250" as="sourcePoint" />
+            <mxPoint x="735" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="5. session {mode=docker, containerId, status=running}" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="735" y="280" as="sourcePoint" />
+            <mxPoint x="525" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="6. exec(session, command, {workdir, env, timeout})" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="320" as="sourcePoint" />
+            <mxPoint x="945" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m7" value="7. container.exec({Cmd: ['/bin/sh', '-c', command]})" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="945" y="360" as="sourcePoint" />
+            <mxPoint x="1155" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m8" value="8. exec instance" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1155" y="390" as="sourcePoint" />
+            <mxPoint x="945" y="390" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m9" value="9. exec.start({hijack: true}) - attach streams" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="945" y="420" as="sourcePoint" />
+            <mxPoint x="1155" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m10" value="10. stdout/stderr multiplexed stream" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1155" y="460" as="sourcePoint" />
+            <mxPoint x="945" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m11" value="11. demux + buffer + size check (max 1MB)" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="945" y="500" as="sourcePoint" />
+            <mxPoint x="945" y="530" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m12" value="12. process exits (exitCode)" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1155" y="560" as="sourcePoint" />
+            <mxPoint x="945" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m13" value="13. {exitCode, stdout, stderr, duration}" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="945" y="600" as="sourcePoint" />
+            <mxPoint x="525" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m14" value="14. touch(sessionId) - reset TTL" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="640" as="sourcePoint" />
+            <mxPoint x="735" y="640" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m15" value="15. ExecutionResult" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="680" as="sourcePoint" />
+            <mxPoint x="310" y="680" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m16" value="16. {exitCode, stdout, stderr, duration, truncated, sessionId}" style="html=1;endArrow=block;dashed=1;fontSize=10;strokeColor=#82b366;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="720" as="sourcePoint" />
+            <mxPoint x="110" y="720" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note_timeout" value="[ALT: Timeout]&#10;If timeout fires before step 12:&#10;- SIGKILL sent to process&#10;- Return partial output + timedOut=true" style="text;html=1;fontSize=9;fillColor=#fff2cc;strokeColor=#d6b656;rounded=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="960" y="500" width="250" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

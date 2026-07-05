@@ -142,4 +142,68 @@ export class McpClientManager {
       }
     }
   }
+
+  // --- Config Persistence API support ---
+
+  isServerConnected(name: string): boolean {
+    return this.clients.has(name);
+  }
+
+  getServerToolCount(name: string): number {
+    let count = 0;
+    for (const [, serverName] of this.toolsToServer.entries()) {
+      if (serverName === name) count++;
+    }
+    return count;
+  }
+
+  async connectServer(name: string, config: any): Promise<void> {
+    if (config.disabled || name === 'code-intelligence') return;
+
+    let transport: any;
+    if (config.type === 'sse' || config.transportType === 'sse') {
+      transport = new SSEClientTransport(new URL(config.url));
+    } else if (config.type === 'httpStream' || config.transportType === 'httpStream') {
+      transport = new StreamableHTTPClientTransport(new URL(config.url));
+    } else if (config.command) {
+      transport = new StdioClientTransport({
+        command: config.command,
+        args: config.args || [],
+        env: { ...process.env, ...(config.env || {}) },
+      });
+    } else {
+      throw new Error(`Unknown transport for server ${name}`);
+    }
+
+    const client = new Client({ name: 'code-intel-orchestrator', version: '1.0.0' }, { capabilities: {} });
+    await Promise.race([
+      client.connect(transport),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('Connection timeout')), 10000)),
+    ]);
+
+    this.clients.set(name, client);
+    const toolsResult = await client.listTools();
+    for (const tool of (toolsResult.tools || [])) {
+      this.toolsToServer.set(tool.name, name);
+      this.proxiedTools.push({
+        name: tool.name,
+        description: tool.description || '',
+        category: name as any,
+        inputSchema: tool.inputSchema as any,
+      });
+    }
+    this.logger.info({ name, tools: toolsResult.tools?.length ?? 0 }, 'Server connected via config API');
+  }
+
+  async disconnectServer(name: string): Promise<void> {
+    const client = this.clients.get(name);
+    if (client) {
+      try { await client.close(); } catch { /* ok */ }
+      this.clients.delete(name);
+    }
+    for (const [toolName, serverName] of this.toolsToServer.entries()) {
+      if (serverName === name) this.toolsToServer.delete(toolName);
+    }
+    this.proxiedTools = this.proxiedTools.filter(t => t.category !== name);
+  }
 }

@@ -1,0 +1,57 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="F3 Orchestration — Module Lifecycle State Diagram" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;fillColor=#1a1a2e;strokeColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="100" y="100" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="init" value="initializing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="90" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ready" value="ready" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="90" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="degraded" value="degraded" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="230" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="stopped" value="stopped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="350" y="380" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="" style="ellipse;fillColor=#1a1a2e;strokeColor=#1a1a2e;strokeWidth=3;" vertex="1" parent="1">
+      <mxGeometry x="410" y="480" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="start" target="init">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="all servers connected" style="html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" parent="1" source="init" target="ready">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="some servers failed" style="html=1;exitX=1;exitY=1;entryX=0;entryY=0;fontSize=9;" edge="1" parent="1" source="init" target="degraded">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="server disconnects" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=9;" edge="1" parent="1" source="ready" target="degraded">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="server reconnects" style="html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;fontSize=9;" edge="1" parent="1" source="degraded" target="ready">
+      <mxGeometry x="0.2" relative="1" as="geometry">
+        <mxPoint x="650" y="180" as="targetPoint" />
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="shutdown()" style="html=1;exitX=0.5;exitY=1;entryX=1;entryY=0;fontSize=9;" edge="1" parent="1" source="ready" target="stopped">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="shutdown()" style="html=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;fontSize=9;" edge="1" parent="1" source="degraded" target="stopped">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="stopped" target="end">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="note1" value="Connection per Server:&#10;connecting → connected&#10;connecting → failed (timeout)&#10;connected → disconnected&#10;disconnected → connecting (reconnect)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=9;align=left;" vertex="1" parent="1">
+      <mxGeometry x="50" y="280" width="250" height="90" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,99 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F8 — Sequence: Send Message&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="320" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="user_ll" value="Developer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="wv_ll" value="Webview&#10;(chat.js)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="220" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="prov_ll" value="ChatPanel&#10;Provider" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="380" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="mh_ll" value="Message&#10;Handler" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="540" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="mr_ll" value="Message&#10;Routing" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="700" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="eng_ll" value="LangGraph&#10;Engine" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="860" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="types message + clicks Send" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="100" y="140" as="sourcePoint" />
+        <mxPoint x="260" y="140" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="postMessage(chat:userMessage)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="180" as="sourcePoint" />
+        <mxPoint x="420" y="180" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="routeMessage(msg)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="220" as="sourcePoint" />
+        <mxPoint x="580" y="220" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="buildEnrichedText(text, context)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="580" y="260" as="sourcePoint" />
+        <mxPoint x="740" y="260" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="routeUserMessage()" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="740" y="300" as="sourcePoint" />
+        <mxPoint x="900" y="300" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5b" value="workingStatus(true)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="580" y="340" as="sourcePoint" />
+        <mxPoint x="260" y="340" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="invokeChat(enrichedText)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="740" y="380" as="sourcePoint" />
+        <mxPoint x="900" y="380" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="streamChunk (multiple)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="440" as="sourcePoint" />
+        <mxPoint x="260" y="440" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="render markdown progressively" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="480" as="sourcePoint" />
+        <mxPoint x="260" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="streamComplete" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="560" as="sourcePoint" />
+        <mxPoint x="260" y="560" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="workingStatus(false)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="580" y="600" as="sourcePoint" />
+        <mxPoint x="260" y="600" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="display response with code actions" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="260" y="640" as="sourcePoint" />
+        <mxPoint x="100" y="640" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

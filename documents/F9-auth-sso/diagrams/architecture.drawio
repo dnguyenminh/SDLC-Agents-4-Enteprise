@@ -1,0 +1,97 @@
+<mxfile host="app.diagrams.net" modified="2025-07-04T10:00:00.000Z" agent="SA Agent" version="24.0.0">
+  <diagram id="arch-auth" name="Architecture — Auth Module">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;Architecture — Auth &amp; SSO Module (Layered Plugin)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="320" y="10" width="420" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_cmd" value="Commands Layer" style="rounded=1;fillColor=#e1f5fe;strokeColor=#0288d1;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=5;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="60" width="800" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cmd_login" value="sa4e.auth.login" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="90" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="cmd_sso" value="sa4e.auth.loginSso" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="90" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="cmd_logout" value="sa4e.auth.logout" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="90" width="130" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="cmd_switch" value="sa4e.auth.switchAccount" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="90" width="150" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_mgr" value="Manager Layer" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=5;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="170" width="800" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="auth_mgr" value="&lt;b&gt;AuthManager&lt;/b&gt;&#10;State Machine&#10;login() | loginWithSso() | logout()&#10;refreshToken() | getAccessToken()" style="rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;html=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="320" y="195" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_svc" value="Services Layer" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=5;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="300" width="800" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="pkce_svc" value="&lt;b&gt;PkceService&lt;/b&gt;&#10;generateCodeVerifier()&#10;generateCodeChallenge()&#10;generateState()" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="325" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="timer_svc" value="&lt;b&gt;TokenRefreshTimer&lt;/b&gt;&#10;start() | stop()&#10;5-min interval" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="325" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="callback_svc" value="&lt;b&gt;SsoCallbackHandler&lt;/b&gt;&#10;startFlow()&#10;handleUri()&#10;120s timeout" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="325" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="config_svc" value="&lt;b&gt;AuthConfigProvider&lt;/b&gt;&#10;getProviders()&#10;validateProviders()" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="325" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_storage" value="Storage Layer" style="rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=5;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="430" width="400" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="secret_store" value="VS Code SecretStorage&#10;(OS Keychain)" style="shape=cylinder3;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;html=1;size=10;" vertex="1" parent="1">
+          <mxGeometry x="280" y="455" width="150" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="layer_ui" value="UI Layer" style="rounded=1;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=5;html=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="430" width="350" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="status_bar" value="AuthStatusBar&#10;$(key) Connected" style="rounded=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="455" width="130" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="notifications" value="Notifications&#10;(Error/Info)" style="rounded=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="770" y="455" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_backend" value="SA4E Backend&#10;(HTTPS)" style="rounded=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="560" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_idp" value="SSO IdP&#10;(OAuth2)" style="rounded=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="560" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_browser" value="System Browser" style="rounded=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="560" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cmd_mgr" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;" edge="1" parent="1" source="layer_cmd" target="auth_mgr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_pkce" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;" edge="1" parent="1" source="auth_mgr" target="pkce_svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_timer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;" edge="1" parent="1" source="auth_mgr" target="timer_svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_callback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;" edge="1" parent="1" source="auth_mgr" target="callback_svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_storage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;" edge="1" parent="1" source="auth_mgr" target="secret_store">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_ui" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="auth_mgr" target="status_bar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_backend" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#c62828;" edge="1" parent="1" source="auth_mgr" target="ext_backend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_callback_browser" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#c62828;" edge="1" parent="1" source="callback_svc" target="ext_browser">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

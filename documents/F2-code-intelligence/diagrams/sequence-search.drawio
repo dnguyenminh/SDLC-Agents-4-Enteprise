@@ -1,0 +1,39 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Sequence — Code Search Flow" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="350" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="agent_ll" value="AI Agent" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="80" y="50" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="module_ll" value="CodeIntelModule" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="280" y="50" width="120" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="query_ll" value="QueryLayer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="480" y="50" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="fts_ll" value="SQLite FTS5" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="680" y="50" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="code_search(query, limit)" style="html=1;verticalAlign=bottom;endArrow=block;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;strokeColor=#0288d1;fontSize=10;" edge="1" parent="1" source="agent_ll" target="module_ll">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="130" y="120" as="sourcePoint" /><mxPoint x="340" y="120" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="sanitizeQuery(query)" style="html=1;verticalAlign=bottom;endArrow=block;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="module_ll" target="query_ll">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="340" y="170" as="sourcePoint" /><mxPoint x="530" y="170" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="FTS5 MATCH query" style="html=1;verticalAlign=bottom;endArrow=block;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="query_ll" target="fts_ll">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="530" y="220" as="sourcePoint" /><mxPoint x="730" y="220" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="ranked results" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="fts_ll" target="query_ll">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="730" y="280" as="sourcePoint" /><mxPoint x="530" y="280" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="format results" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;strokeColor=#82b366;fontSize=10;" edge="1" parent="1" source="query_ll" target="module_ll">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="530" y="340" as="sourcePoint" /><mxPoint x="340" y="340" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="structured text response" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;edgeStyle=elbowEdgeStyle;elbow=vertical;curved=0;strokeColor=#0288d1;fontSize=10;" edge="1" parent="1" source="module_ll" target="agent_ll">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="340" y="400" as="sourcePoint" /><mxPoint x="130" y="400" as="targetPoint" /></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

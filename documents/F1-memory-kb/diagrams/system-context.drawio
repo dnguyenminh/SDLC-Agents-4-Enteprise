@@ -1,0 +1,69 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;System Context -- Memory / Knowledge Base&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="420" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="boundary" value="Memory Module" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;fontStyle=1;spacingTop=10;html=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="100" width="550" height="550" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_agent" value="AI Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#e1f5fe;strokeColor=#0288d1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="250" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_admin" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="450" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="tool_dispatcher" value="&lt;b&gt;MemoryToolDispatcher&lt;/b&gt;&#10;Routes MCP tool calls" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="340" y="150" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="engine" value="&lt;b&gt;MemoryEngine&lt;/b&gt;&#10;CRUD, Search, Graph, Sessions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="340" y="280" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="promotion" value="&lt;b&gt;ScopePromotionService&lt;/b&gt;&#10;Hourly scan + approval" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="280" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="masking" value="&lt;b&gt;MaskingMiddleware&lt;/b&gt;&#10;PII + Credential detection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="340" y="410" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="sqlite" value="SQLite DB&#10;(FTS5 + WAL)" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="550" width="120" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="onnx" value="ONNX Runtime&#10;(Embeddings)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="950" y="200" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="llm" value="LLM Service&#10;(Ollama/OpenAI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="950" y="300" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="filesystem" value="File System&#10;(Workspace)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="950" y="400" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="MCP tools" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;fontSize=10;" edge="1" parent="1" source="actor_agent" target="tool_dispatcher">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;" edge="1" parent="1" source="tool_dispatcher" target="engine">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;" edge="1" parent="1" source="engine" target="sqlite">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#c62828;" edge="1" parent="1" source="engine" target="masking">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="embeddings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="engine" target="onnx">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="summarize" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;dashed=1;fontSize=10;" edge="1" parent="1" source="engine" target="llm">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="read files" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#666666;fontSize=10;" edge="1" parent="1" source="engine" target="filesystem">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="approve/reject" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="actor_admin" target="promotion">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;" edge="1" parent="1" source="promotion" target="sqlite">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

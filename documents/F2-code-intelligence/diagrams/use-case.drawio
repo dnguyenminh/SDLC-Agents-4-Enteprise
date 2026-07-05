@@ -1,0 +1,108 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Code Intelligence — Use Case Diagram" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="system" value="Code Intelligence Module" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="50" width="620" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="agent" value="AI Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="300" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="watcher" value="File Watcher&#10;(System)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="100" y="600" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" value="Code Search&#10;(FTS5)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="70" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" value="Symbol&#10;Resolution" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="140" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" value="Code Context&#10;Retrieval" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="210" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" value="Call Graph&#10;Analysis" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="280" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc5" value="Dependency&#10;Graph Query" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="350" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc6" value="Impact&#10;Analysis" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="420" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc7" value="Complexity&#10;Analysis" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="70" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc8" value="Entry Point&#10;Detection" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="140" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc9" value="Circular Dep&#10;Detection" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="210" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc10" value="Related Test&#10;Finding" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="280" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc11" value="Hot Path&#10;Detection" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="350" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc12" value="Dead Import&#10;Detection" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="420" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc13" value="AI Context&#10;(Intent-Aware)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="500" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc14" value="Edit Context" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="570" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc15" value="Curated Context&#10;(NL Query)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="640" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc16" value="Background&#10;Indexing" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="580" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc17" value="Module&#10;Summary" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="500" width="130" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="a1" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a2" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a3" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a4" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a5" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a6" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a7" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc13">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a8" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc14">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a9" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc15">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a10" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="watcher" target="uc16">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc1" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc6" target="uc4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc2" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc6" target="uc5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc3" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc13" target="uc3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

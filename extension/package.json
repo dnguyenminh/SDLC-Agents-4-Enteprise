@@ -1,13 +1,13 @@
 {
-  "name": "kiro-sdlc-agents",
-  "displayName": "Kiro SDLC Agents",
-  "description": "Thin client for Kiro SDLC multi-agent pipeline — connects to remote backend for KB, indexing, and AI features",
-  "version": "2.0.1",
+  "name": "sdlc-agents-4-enterprise",
+  "displayName": "SDLC Agents 4 Enterprise",
+  "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
+  "version": "1.0.0",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/kiro-sdlc-agents"
+    "url": "https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise"
   },
   "icon": "resources/icon.png",
   "engines": {
@@ -135,10 +135,6 @@
       {
         "command": "kiroSdlc.syncWorkspace",
         "title": "Kiro SDLC: Sync Workspace"
-      },
-      {
-        "command": "kiroSdlc.indexSalesforceProject",
-        "title": "Kiro SDLC: Index Salesforce Project"
       }
     ],
     "viewsContainers": {

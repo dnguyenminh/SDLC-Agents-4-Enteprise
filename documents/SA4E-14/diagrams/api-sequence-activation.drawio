@@ -1,0 +1,84 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="extension.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="initPlatformSwap" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="350" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="PlatformDetector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="600" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="StateManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="850" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="PlatformStatusBar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="1100" y="50" width="150" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="SwapExecutor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="1350" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="1. activate()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="170" y="140" as="sourcePoint" />
+        <mxPoint x="420" y="140" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="11" value="2. new PlatformDetector()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="180" as="sourcePoint" />
+        <mxPoint x="670" y="180" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="12" value="3. detect()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="220" as="sourcePoint" />
+        <mxPoint x="670" y="220" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="13" value="4. DetectionResult{platform}" style="html=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="670" y="260" as="sourcePoint" />
+        <mxPoint x="420" y="260" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="14" value="5. read()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="320" as="sourcePoint" />
+        <mxPoint x="920" y="320" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="15" value="6. AgentConfigState" style="html=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="920" y="360" as="sourcePoint" />
+        <mxPoint x="420" y="360" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="16" value="7. update(active, detected)" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="420" as="sourcePoint" />
+        <mxPoint x="1175" y="420" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="17" value="8. [if mismatch] offerRestore()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="480" as="sourcePoint" />
+        <mxPoint x="1420" y="480" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="18" value="9. registerCommands()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="540" as="sourcePoint" />
+        <mxPoint x="170" y="540" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="19" value="10. init complete" style="html=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="600" as="sourcePoint" />
+        <mxPoint x="170" y="600" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

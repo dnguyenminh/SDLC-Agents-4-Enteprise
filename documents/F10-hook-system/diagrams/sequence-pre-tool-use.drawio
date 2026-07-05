@@ -1,0 +1,84 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="p1" value="Pipeline" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="100" y="40" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="p2" value="HookEngine" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="300" y="40" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="p3" value="ToolMatcher" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="500" y="40" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="p4" value="HookExecutor" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="40" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="p5" value="Emitter" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="900" y="40" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="firePreToolUse(toolName, args)" style="" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="150" y="120" as="sourcePoint" />
+        <mxPoint x="350" y="120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="classifyTool(toolName)" style="" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="160" as="sourcePoint" />
+        <mxPoint x="550" y="160" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="category" style="dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="550" y="190" as="sourcePoint" />
+        <mxPoint x="350" y="190" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="getMatchingToolHooks(hooks, preToolUse, name, cat)" style="" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="230" as="sourcePoint" />
+        <mxPoint x="550" y="230" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="matchingHooks[]" style="dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="550" y="260" as="sourcePoint" />
+        <mxPoint x="350" y="260" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="[loop] for each hook" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=10;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="280" y="290" width="680" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="m7" value="execute(hook, context)" style="" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="330" as="sourcePoint" />
+        <mxPoint x="750" y="330" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="HookResult" style="dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="750" y="380" as="sourcePoint" />
+        <mxPoint x="350" y="380" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="emitHookFired(hook, result)" style="" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="420" as="sourcePoint" />
+        <mxPoint x="950" y="420" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="[if denied] return {denied:true}" style="dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="470" as="sourcePoint" />
+        <mxPoint x="150" y="470" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="return {denied:false, injectedPrompts}" style="dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="560" as="sourcePoint" />
+        <mxPoint x="150" y="560" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

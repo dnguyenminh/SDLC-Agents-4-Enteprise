@@ -53,7 +53,19 @@
       ],
       "transportType": "httpStream",
       "disabled": false,
-      "disabledTools": []
+      "disabledTools": [],
+      "command": "uvx",
+      "args": [
+        "mcp-code-intelligence@latest",
+        "--config",
+        "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise/.code-intel/orchestration.json"
+      ],
+      "cwd": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
+      "env": {
+        "CODE_INTEL_WORKSPACE": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
+        "CODE_INTEL_VIEWER_PORT": "3200",
+        "FORCE_RESTART": "15"
+      }
     },
     "atlassian": {
       "url": "http://localhost:3010/mcp",

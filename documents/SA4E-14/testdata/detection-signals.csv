@@ -1,0 +1,9 @@
+test_id,appName,extensions,envVars,expected_platform,expected_signals
+UT-DET-01,Kiro,none,none,kiro,appName:Kiro
+UT-DET-02,Visual Studio Code,anthropic.claude,none,claude-code,ext:anthropic.claude
+UT-DET-03,Visual Studio Code,github.copilot,none,github-copilot,ext:github.copilot
+UT-DET-04,Kiro,anthropic.claude,none,kiro,appName:Kiro
+UT-DET-05,Visual Studio Code,anthropic.claude;github.copilot,none,claude-code,ext:anthropic.claude
+UT-DET-06,Cursor,none,none,claude-code,appName:Cursor
+UT-DET-07,Windsurf,none,none,claude-code,appName:Windsurf
+UT-DET-08,Unknown Editor,none,none,kiro,fallback

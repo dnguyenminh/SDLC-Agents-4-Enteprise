@@ -1,0 +1,90 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="F3 Orchestration — Business Flow" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="350" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;fillColor=#1a1a2e;strokeColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="80" y="70" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="step1" value="1. Backend Startup&#10;ModuleRegistry.initialize()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="30" y="130" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="step2" value="2. Read orchestration.json&#10;Parse child server configs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="30" y="210" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="step3" value="3. Connect to Child Servers&#10;(HTTP/SSE/stdio, 10s timeout)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="30" y="290" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="step4" value="4. Fetch Tools List&#10;from each connected server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="30" y="370" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="step5" value="5. Register Tools&#10;Store in mcp_tools with vectors" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="30" y="450" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ready" value="Module READY" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="30" y="530" width="180" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="agent" value="AI Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="500" y="120" width="30" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="find" value="6. find_tools(query)&#10;Generate embedding&#10;Cosine similarity search" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="220" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="exec" value="7. execute_dynamic_tool(name, args)&#10;Route to child server or internal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="320" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="decision" value="Owned by&#10;child server?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="440" y="420" width="120" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="proxy" value="8a. Proxy to&#10;Child Server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="540" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="internal" value="8b. Route to&#10;Internal Module" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="550" y="540" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="result" value="9. Return MCP Result&#10;to Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="640" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="start" target="step1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="step1" target="step2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="step2" target="step3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="step3" target="step4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="step4" target="step5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="step5" target="ready">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="agent" target="find">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="find" target="exec">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="exec" target="decision">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="Yes" style="html=1;exitX=0;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="decision" target="proxy">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" value="No" style="html=1;exitX=1;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="decision" target="internal">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="html=1;exitX=0.5;exitY=1;entryX=0.25;entryY=0;" edge="1" parent="1" source="proxy" target="result">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" style="html=1;exitX=0.5;exitY=1;entryX=0.75;entryY=0;" edge="1" parent="1" source="internal" target="result">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

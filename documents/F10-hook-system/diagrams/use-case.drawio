@@ -1,0 +1,93 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="boundary" value="Hook System" style="shape=rect;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;fontSize=14;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="200" y="40" width="700" height="720" as="geometry" />
+    </mxCell>
+    <mxCell id="actor1" value="Developer (Hook Author)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor2" value="AI Agent Pipeline" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="500" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor3" value="VS Code Extension" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="300" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" value="Define Hook" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="80" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" value="Fire preToolUse" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="170" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" value="Fire postToolUse" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="260" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" value="Fire File Event" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="350" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc5" value="Fire promptSubmit" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="440" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc6" value="Trigger userTriggered" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="530" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc7" value="Reload Hooks" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="630" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc8" value="Execute askAgent" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="580" y="170" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc9" value="Execute runCommand" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="580" y="270" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc10" value="Detect Circular Dep" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="580" y="380" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc11" value="Match Tool Type" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="580" y="480" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc12" value="Emit Hook Event (UI)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="580" y="590" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ea1" value="" style="" edge="1" source="actor1" target="uc1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea2" value="" style="" edge="1" source="actor1" target="uc6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea3" value="" style="" edge="1" source="actor1" target="uc7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea4" value="" style="" edge="1" source="actor2" target="uc2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea5" value="" style="" edge="1" source="actor2" target="uc3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea6" value="" style="" edge="1" source="actor2" target="uc4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea7" value="" style="" edge="1" source="actor2" target="uc5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea8" value="" style="" edge="1" source="actor3" target="uc12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ei1" value="include" style="dashed=1;" edge="1" source="uc2" target="uc8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ei2" value="include" style="dashed=1;" edge="1" source="uc2" target="uc10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ei3" value="include" style="dashed=1;" edge="1" source="uc2" target="uc11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ei4" value="include" style="dashed=1;" edge="1" source="uc3" target="uc9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ei5" value="include" style="dashed=1;" edge="1" source="uc3" target="uc12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -273,20 +273,20 @@ describe('4. roleData Enforcement — MCP_ACCESS.allowedServers', () => {
     }
   });
 
-  it('editor1 POST /api/admin/mcp/servers/drawio/restart → 403 (not in allowedServers)', async () => {
+  it('editor1 POST /api/admin/mcp/servers/drawio/restart → 403 (no MCP_MANAGE permission)', async () => {
     const { status, data } = await apiCall('/mcp/servers/drawio/restart', {
       method: 'POST',
     }, editor1Token);
     expect(status).toBe(403);
-    expect(data.error).toContain('allowedServers');
+    expect(data.error).toContain('MCP_MANAGE');
   });
 
-  it('editor1 POST /api/admin/mcp/servers/atlassian/restart → 200 (in allowedServers)', async () => {
+  it('editor1 POST /api/admin/mcp/servers/atlassian/restart → 403 (no MCP_MANAGE permission)', async () => {
     const { status, data } = await apiCall('/mcp/servers/atlassian/restart', {
       method: 'POST',
     }, editor1Token);
-    expect(status).toBe(200);
-    expect(data.success).toBe(true);
+    expect(status).toBe(403);
+    expect(data.error).toContain('MCP_MANAGE');
   });
 });
 

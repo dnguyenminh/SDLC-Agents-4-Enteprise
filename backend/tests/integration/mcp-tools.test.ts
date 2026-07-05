@@ -11,7 +11,7 @@ import { ModuleRegistry } from '../../src/modules/ModuleRegistry.js';
 import { MemoryModule } from '../../src/modules/memory/MemoryModule.js';
 import { OrchestrationModule } from '../../src/modules/orchestration/OrchestrationModule.js';
 import { UtilityModule } from '../../src/modules/utility/UtilityModule.js';
-import { ToolRouter } from '../../src/tools/ToolRouter.js';
+import { ToolRouter } from '../../src/tool-router/ToolRouter.js';
 import { createHealthRoute } from '../../src/server/routes/health.js';
 import { createToolsRoute } from '../../src/server/routes/tools.js';
 

@@ -1,0 +1,60 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="&lt;&lt;interface&gt;&gt;&#xa;IPlatformDetector" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="150" y="100" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="&lt;&lt;interface&gt;&gt;&#xa;IBackupManager" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="450" y="100" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="&lt;&lt;interface&gt;&gt;&#xa;IStateManager" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="750" y="100" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="&lt;&lt;interface&gt;&gt;&#xa;ISwapExecutor" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1050" y="100" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="PlatformDetector&#xa;&#xa;- cachedResult: DetectionResult&#xa;+ detect(): DetectionResult&#xa;+ invalidateCache(): void&#xa;- checkKiro(): boolean&#xa;- checkClaudeCode(): boolean&#xa;- checkGitHubCopilot(): boolean&#xa;- checkAntigravity(): boolean" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacingLeft=5;" vertex="1" parent="1">
+      <mxGeometry x="120" y="280" width="260" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="BackupManager&#xa;&#xa;- workspaceRoot: string&#xa;- MAX_RETENTION: 5&#xa;+ createBackup(platform, dirs): BackupRecord&#xa;+ verifyBackup(record): boolean&#xa;+ restoreFromBackup(record): void&#xa;+ pruneOldBackups(platform): number&#xa;- generateBackupPath(): string&#xa;- copyDirectory(src, dest): void&#xa;- countFiles(dir): number" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacingLeft=5;" vertex="1" parent="1">
+      <mxGeometry x="420" y="280" width="270" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="8" value="StateManager&#xa;&#xa;- workspaceRoot: string&#xa;- STATE_FILE: string&#xa;+ read(): AgentConfigState&#xa;+ write(state): void&#xa;+ updateActivePlatform(id): void&#xa;+ addBackupRecord(record): void&#xa;+ removeOldestBackup(platform): void&#xa;- getDefaultState(): AgentConfigState" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacingLeft=5;" vertex="1" parent="1">
+      <mxGeometry x="720" y="280" width="270" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="SwapExecutor&#xa;&#xa;- workspaceRoot: string&#xa;- backupManager: IBackupManager&#xa;- stateManager: IStateManager&#xa;- outputChannel: OutputChannel&#xa;+ executeSwap(from, to): SwapResult&#xa;+ executeRestore(target, backup): SwapResult&#xa;- deletePlatformDirs(platform): void&#xa;- copyFromConversions(platform): void&#xa;- mergeExtensionUpdates(): MergeReport&#xa;- rollback(backup): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacingLeft=5;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="280" width="280" height="240" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="PlatformStatusBar&#xa;&#xa;- item: StatusBarItem&#xa;+ update(active, detected): void&#xa;+ showSwapping(): void&#xa;+ showError(msg): void&#xa;+ dispose(): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacingLeft=5;" vertex="1" parent="1">
+      <mxGeometry x="120" y="560" width="260" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="PlatformConfig&#xa;&#xa;+ PLATFORM_DEFINITIONS: PlatformDefinition[]&#xa;+ PROTECTED_PATHS: string[]&#xa;+ getPlatform(id): PlatformDefinition&#xa;+ getAvailablePlatforms(root): PlatformId[]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=5;" vertex="1" parent="1">
+      <mxGeometry x="420" y="560" width="300" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;endFill=0;dashed=1;" edge="1" source="6" target="2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;endFill=0;dashed=1;" edge="1" source="7" target="3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;endFill=0;dashed=1;" edge="1" source="8" target="4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;endFill=0;dashed=1;" edge="1" source="9" target="5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="24" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endFill=0;" edge="1" source="9" target="7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endFill=0;" edge="1" source="9" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="26" value="reads" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endFill=0;" edge="1" source="6" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="27" value="reads" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=open;endFill=0;" edge="1" source="7" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

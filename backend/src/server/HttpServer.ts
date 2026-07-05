@@ -15,6 +15,8 @@ import { createHealthRoute } from './routes/health.js';
 import { createToolsRoute } from './routes/tools.js';
 import { createApiRoute } from './routes/api.js';
 import { createAdminRoute } from './routes/admin.js';
+import { createMcpConfigRoutes } from '../modules/orchestration/McpConfigRoutes.js';
+import { McpConfigService } from '../modules/orchestration/McpConfigService.js';
 import { createRequestLogger } from './middleware/request-logger.js';
 import { createErrorHandler } from './middleware/error-handler.js';
 import { localhostOnly } from './middleware/localhost-only.js';
@@ -59,12 +61,15 @@ export class HttpServer {
     const healthRoute = createHealthRoute(this.options.registry, this.options.version);
     const toolsRoute = createToolsRoute(toolRouter, this.logger);
     const apiRoute = createApiRoute(this.options.registry, this.logger);
-    const adminRoute = createAdminRoute(this.logger);
+    const adminRoute = createAdminRoute(this.logger, this.options.registry);
 
     app.route('/', healthRoute);
     app.route('/', toolsRoute);
     app.route('/', apiRoute);
     app.route('/', adminRoute);
+
+    // MCP Config REST API (Story 13 — config persistence)
+    this.registerMcpConfigRoutes(app);
 
     // MCP Streamable HTTP endpoint
     app.all('/mcp', async (c) => {
@@ -108,5 +113,23 @@ export class HttpServer {
 
   get honoApp(): Hono {
     return this.app;
+  }
+
+  private registerMcpConfigRoutes(app: Hono): void {
+    const orchestration = this.options.registry.getModule('orchestration') as any;
+    if (!orchestration) {
+      this.logger.warn('OrchestrationModule not found, skipping MCP config routes');
+      return;
+    }
+    const clientManager = orchestration.getClientManager?.();
+    if (!clientManager) {
+      this.logger.warn('McpClientManager not available, skipping MCP config routes');
+      return;
+    }
+    const cfg = { workspace: process.env.CODE_INTEL_WORKSPACE || process.cwd(), dataDir: process.env.CODE_INTEL_DATA_DIR || '.code-intel' };
+    const configService = new McpConfigService(cfg.workspace, cfg.dataDir, this.logger);
+    const mcpConfigApp = createMcpConfigRoutes(configService, clientManager, this.logger);
+    app.route('/', mcpConfigApp);
+    this.logger.info('MCP Config REST API registered at /api/mcp-servers');
   }
 }

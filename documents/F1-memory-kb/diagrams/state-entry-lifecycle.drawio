@@ -1,0 +1,60 @@
+<mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;State Diagram -- Knowledge Entry Lifecycle&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="320" y="10" width="380" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="initial" value="" style="ellipse;shape=doubleCircle;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="working" value="&lt;b&gt;WORKING&lt;/b&gt;&#10;Tier: short-term&#10;Scope: USER (default)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="160" y="180" width="170" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="episodic" value="&lt;b&gt;EPISODIC&lt;/b&gt;&#10;Tier: event-based&#10;access_count &gt;= 10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="180" width="170" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="semantic" value="&lt;b&gt;SEMANTIC&lt;/b&gt;&#10;Tier: conceptual&#10;quality &gt;= 80, conf &gt;= 0.9" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="180" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="procedural" value="&lt;b&gt;PROCEDURAL&lt;/b&gt;&#10;Tier: permanent&#10;how-to, verified" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="940" y="180" width="150" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="archived" value="&lt;b&gt;ARCHIVED&lt;/b&gt;&#10;archived=1&#10;no access 90+ days" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="380" width="170" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="user_scope" value="&lt;b&gt;Scope: USER&lt;/b&gt;&#10;Private to owner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="160" y="530" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="project_scope" value="&lt;b&gt;Scope: PROJECT&lt;/b&gt;&#10;Team visible" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="530" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="shared_scope" value="&lt;b&gt;Scope: SHARED&lt;/b&gt;&#10;Company-wide" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="530" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e_init" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#388e3c;" edge="1" parent="1" source="initial" target="working">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_w_e" value="access &gt;= 10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;fontSize=10;" edge="1" parent="1" source="working" target="episodic">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_e_s" value="quality &gt;= 80" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="episodic" target="semantic">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_s_p" value="verified how-to" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="semantic" target="procedural">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_w_a" value="stale 90d" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#666666;dashed=1;fontSize=10;" edge="1" parent="1" source="working" target="archived">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_e_a" value="stale 90d" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#666666;dashed=1;fontSize=10;" edge="1" parent="1" source="episodic" target="archived">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_u_p" value="auto-promote&#10;(criteria met)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;fontSize=10;" edge="1" parent="1" source="user_scope" target="project_scope">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_p_s" value="manual approve" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="project_scope" target="shared_scope">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

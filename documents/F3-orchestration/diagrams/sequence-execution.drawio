@@ -1,0 +1,120 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Sequence — Tool Execution (execute_dynamic_tool)" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="250" y="10" width="450" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="agent_ll" value="AI Agent" style="shape=rectangle;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="50" width="100" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="orch_ll" value="OrchestrationModule" style="shape=rectangle;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="50" width="140" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="mgr_ll" value="McpClientManager" style="shape=rectangle;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="470" y="50" width="130" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="child_ll" value="Child Server" style="shape=rectangle;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="680" y="50" width="100" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="reg_ll" value="ModuleRegistry" style="shape=rectangle;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="870" y="50" width="110" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="al" style="html=1;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="110" y="80" as="sourcePoint" />
+        <mxPoint x="110" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ol" style="html=1;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="80" as="sourcePoint" />
+        <mxPoint x="320" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ml" style="html=1;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="535" y="80" as="sourcePoint" />
+        <mxPoint x="535" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="cl" style="html=1;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="730" y="80" as="sourcePoint" />
+        <mxPoint x="730" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="rl" style="html=1;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="925" y="80" as="sourcePoint" />
+        <mxPoint x="925" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. execute_dynamic_tool(toolName, args)" style="html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="110" y="110" as="sourcePoint" />
+        <mxPoint x="320" y="110" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. ownsTool(toolName)?" style="html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="150" as="sourcePoint" />
+        <mxPoint x="535" y="150" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. true (tool owned by atlassian)" style="html=1;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="535" y="180" as="sourcePoint" />
+        <mxPoint x="320" y="180" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="alt1" value="[child server path]" style="text;html=1;fontSize=9;fontStyle=2;fillColor=#e8f5e9;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="300" y="200" width="120" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="m4" value="4. executeTool(toolName, args)" style="html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="230" as="sourcePoint" />
+        <mxPoint x="535" y="230" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5. client.callTool({name, arguments})" style="html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="535" y="260" as="sourcePoint" />
+        <mxPoint x="730" y="260" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6. {content, isError}" style="html=1;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="730" y="300" as="sourcePoint" />
+        <mxPoint x="535" y="300" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7. result" style="html=1;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="535" y="330" as="sourcePoint" />
+        <mxPoint x="320" y="330" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="alt2" value="[internal fallback path]" style="text;html=1;fontSize=9;fontStyle=2;fillColor=#fff3e0;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="300" y="360" width="130" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="m8" value="8. ownsTool=false → getToolHandlers()" style="html=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="395" as="sourcePoint" />
+        <mxPoint x="925" y="395" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9. handler(args)" style="html=1;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="925" y="430" as="sourcePoint" />
+        <mxPoint x="320" y="430" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10. MCP Result" style="html=1;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="480" as="sourcePoint" />
+        <mxPoint x="110" y="480" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,120 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-6 Sandbox Execution — Use Case Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="280" y="10" width="420" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_agent" value="AI Agent&#10;(DEV/QA)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="300" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_dev" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="550" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="sys_boundary" value="Sandbox Execution System" style="shape=rect;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;fontSize=12;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="50" width="500" height="730" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_docker" value="Docker Engine" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="200" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_host" value="Host OS" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="400" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" value="Execute Bash&#10;Command" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="80" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" value="Install Packages&#10;(npm/pip/apt)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="170" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" value="Compile and Run&#10;Code" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="260" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" value="Run Test Suite" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="350" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc5" value="Read Execution&#10;Output (stdout/stderr)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="440" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc6" value="Choose Execution&#10;Mode (Local/Docker)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="540" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc7" value="Manage Sessions&#10;(Create/Destroy/List)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="630" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc8" value="Mount Workspace&#10;Files" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="720" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc9" value="Create Docker&#10;Container" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="80" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc10" value="Apply Resource&#10;Limits" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="170" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc11" value="Auto-Cleanup&#10;(TTL Reaper)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="260" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc12" value="Stream Output&#10;(Real-time)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="350" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc13" value="Enforce Timeout" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="440" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc14" value="Orphan Container&#10;Cleanup" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="540" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ea1" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_agent" target="uc1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea2" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_agent" target="uc2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea3" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_agent" target="uc3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea4" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_agent" target="uc4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea5" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_agent" target="uc5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea6" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea7" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea8" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="el1" style="html=1;endArrow=none;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="actor_docker" target="uc9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="el2" style="html=1;endArrow=none;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="actor_docker" target="uc10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="el3" style="html=1;endArrow=none;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="actor_docker" target="uc11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="el4" style="html=1;endArrow=none;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="actor_host" target="uc12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="el5" style="html=1;endArrow=none;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="actor_host" target="uc13" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc1" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="uc1" target="uc9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc2" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="uc1" target="uc12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc3" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="uc9" target="uc10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ext1" value="&lt;&lt;extends&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;exitX=0.5;exitY=0;entryX=0.5;entryY=1;fontSize=9;" edge="1" source="uc13" target="uc1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ext2" value="&lt;&lt;extends&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;exitX=0.5;exitY=0;entryX=0.5;entryY=1;fontSize=9;" edge="1" source="uc14" target="uc11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

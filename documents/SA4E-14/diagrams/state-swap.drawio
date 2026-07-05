@@ -1,0 +1,66 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="IDLE&#xa;(No swap active)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="350" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="DETECTING&#xa;(Platform check)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="150" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="BACKING_UP&#xa;(Creating backup)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="650" y="150" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="SWAPPING&#xa;(Delete + Copy)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="920" y="150" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="RESTORING&#xa;(From backup)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="920" y="400" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="MERGING&#xa;(Extension updates)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="650" y="400" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="8" value="ERROR&#xa;(Rollback)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="550" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="COMPLETE&#xa;(Swap done)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="150" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="activate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="2" target="3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="mismatch detected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="3" target="4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="22" value="backup complete" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="4" target="5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="23" value="swap success" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="5" target="9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="24" value="restore requested" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="3" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="restore done" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="6" target="7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="26" value="merge done" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="7" target="9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="27" value="any failure" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;dashed=1;" edge="1" source="5" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="28" value="backup failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;dashed=1;" edge="1" source="4" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="29" value="rollback done" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="8" target="2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="30" value="match (no swap)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;" edge="1" source="3" target="9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="reset" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="9" target="2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

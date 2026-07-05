@@ -1,0 +1,82 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <!-- Title -->
+    <mxCell id="title" value="Test Execution Flow — SA4E-12" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;fillColor=none;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="200" y="10" width="400" height="40" as="geometry"/>
+    </mxCell>
+    <!-- PBT Node -->
+    <mxCell id="pbt" value="PBT&#xa;(Property-Based)&#xa;5 tests" style="rounded=1;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=center;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="50" y="80" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <!-- UT Node -->
+    <mxCell id="ut" value="UT&#xa;(Unit Tests)&#xa;24 tests" style="rounded=1;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=center;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="230" y="80" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <!-- IT Node -->
+    <mxCell id="it" value="IT&#xa;(Integration)&#xa;10 tests" style="rounded=1;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="410" y="80" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <!-- E2E-API Node -->
+    <mxCell id="e2eapi" value="E2E-API&#xa;(API E2E)&#xa;8 tests" style="rounded=1;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="590" y="80" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <!-- E2E-UI Node -->
+    <mxCell id="e2eui" value="E2E-UI&#xa;(Cucumber)&#xa;12 tests" style="rounded=1;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="410" y="200" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <!-- SIT Node -->
+    <mxCell id="sit" value="SIT&#xa;(Manual)&#xa;6 tests" style="rounded=1;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=center;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="590" y="200" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <!-- Entry Gate -->
+    <mxCell id="entry" value="Entry:&#xa;Code Compiles&#xa;Deps Installed" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="200" width="130" height="50" as="geometry"/>
+    </mxCell>
+    <!-- Exit Gate -->
+    <mxCell id="exit" value="Exit:&#xa;100% Pass&#xa;0 Critical&#xa;RTM 100%" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="590" y="310" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <!-- Defect Loop -->
+    <mxCell id="defect" value="Defect Found&#xa;→ Fix → Retest" style="rounded=1;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=center;whiteSpace=wrap;fontSize=10;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="230" y="310" width="130" height="50" as="geometry"/>
+    </mxCell>
+    <!-- Edges: PBT → UT -->
+    <mxCell id="e1" edge="1" parent="1" source="pbt" target="ut" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- UT → IT -->
+    <mxCell id="e2" edge="1" parent="1" source="ut" target="it" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- IT → E2E-API -->
+    <mxCell id="e3" edge="1" parent="1" source="it" target="e2eapi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- E2E-API → E2E-UI -->
+    <mxCell id="e4" edge="1" parent="1" source="e2eapi" target="e2eui" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- E2E-UI → SIT -->
+    <mxCell id="e5" edge="1" parent="1" source="e2eui" target="sit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- SIT → Exit -->
+    <mxCell id="e6" edge="1" parent="1" source="sit" target="exit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Entry → PBT -->
+    <mxCell id="e7" edge="1" parent="1" source="entry" target="pbt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Defect feedback loop (from any to defect) -->
+    <mxCell id="e8" edge="1" parent="1" source="it" target="defect" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;" value="FAIL">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Defect back to UT (fix cycle) -->
+    <mxCell id="e9" edge="1" parent="1" source="defect" target="ut" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;" value="Fix+Retest">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

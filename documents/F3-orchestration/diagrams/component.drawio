@@ -1,0 +1,45 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="F3 Orchestration — Component Diagram" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="320" y="10" width="380" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="pkg_orch" value="&lt;&lt;package&gt;&gt;&#10;modules/orchestration/" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontStyle=1;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="60" width="600" height="300" as="geometry" />
+    </mxCell>
+    <mxCell id="orch_class" value="&lt;&lt;class&gt;&gt;&#10;OrchestrationModule&#10;─────────────────────&#10;- name: string = 'orchestration'&#10;- _status: ModuleStatus&#10;- logger: Logger&#10;- registry?: ModuleRegistry&#10;- clientManager: McpClientManager&#10;─────────────────────&#10;+ initialize(): Promise&lt;void&gt;&#10;+ shutdown(): Promise&lt;void&gt;&#10;+ getToolHandlers(): Map&#10;+ getToolDefinitions(): ToolDefinition[]" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="220" y="100" width="240" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="mgr_class" value="&lt;&lt;class&gt;&gt;&#10;McpClientManager&#10;─────────────────────&#10;- clients: Map&lt;string, Client&gt;&#10;- toolsToServer: Map&lt;string, string&gt;&#10;- proxiedTools: ToolDefinition[]&#10;- logger: Logger&#10;─────────────────────&#10;+ initializeAll(): Promise&lt;void&gt;&#10;+ shutdownAll(): Promise&lt;void&gt;&#10;+ ownsTool(name): boolean&#10;+ executeTool(name, args): Promise&#10;+ getProxiedTools(): ToolDefinition[]" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="530" y="100" width="250" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="imodule" value="&lt;&lt;interface&gt;&gt;&#10;IModule&#10;─────────────────&#10;+ name: string&#10;+ status: ModuleStatus&#10;+ initialize(): Promise&#10;+ shutdown(): Promise&#10;+ getToolHandlers(): Map&#10;+ getToolDefinitions(): ToolDef[]" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="30" y="120" width="160" height="170" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp_sdk" value="&lt;&lt;external&gt;&gt;&#10;@modelcontextprotocol/sdk&#10;─────────────────&#10;Client&#10;StreamableHTTPClientTransport&#10;SSEClientTransport&#10;StdioClientTransport" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="530" y="420" width="220" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="embed_ext" value="&lt;&lt;singleton&gt;&gt;&#10;EmbeddingService&#10;─────────────────&#10;+ generateEmbedding(text)&#10;+ cosineSimilarity(a, b)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="30" y="420" width="180" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="modreg_ext" value="&lt;&lt;class&gt;&gt;&#10;ModuleRegistry&#10;─────────────────&#10;+ getModule(name): IModule&#10;+ getToolHandlers(): Map" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="270" y="420" width="180" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="rel1" value="implements" style="html=1;endArrow=block;endFill=0;dashed=1;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1" source="orch_class" target="imodule">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel2" value="creates/uses" style="html=1;endArrow=open;strokeColor=#333333;fontSize=9;" edge="1" parent="1" source="orch_class" target="mgr_class">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel3" value="uses" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="mgr_class" target="mcp_sdk">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel4" value="uses" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="orch_class" target="embed_ext">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel5" value="uses" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="orch_class" target="modreg_ext">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

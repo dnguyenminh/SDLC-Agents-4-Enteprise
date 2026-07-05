@@ -1,0 +1,59 @@
+<mxfile>
+  <diagram name="Component Interaction" id="comp-sa4e-12">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;SA4E-12 — Component Interaction Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="380" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="webview" value="&lt;b&gt;settings.js&lt;/b&gt;&#10;onProviderChange()&#10;onSaveKey()&#10;onTestConnection()&#10;updateModels()&#10;updateBadge()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="200" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="handler" value="&lt;b&gt;SettingsMessageHandler&lt;/b&gt;&#10;handle(msg)&#10;sendCurrentState()&#10;handleGetModels()&#10;handleTestLlm()&#10;handleAutoTest()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="80" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="config" value="&lt;b&gt;ProviderConfigService&lt;/b&gt;&#10;getCurrentState()&#10;getModels(provider)&#10;updateConfig(key, val)&#10;getBaseUrlForProvider()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="300" width="220" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="test" value="&lt;b&gt;LlmTestService&lt;/b&gt;&#10;testLlm(provider?, baseUrl?)&#10;autoTestAndNotify(provider)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="400" y="470" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="models" value="&lt;b&gt;chat-models.ts&lt;/b&gt;&#10;getStaticModels(provider)&#10;fetchGatewayModels(url)&#10;getDefaultModel(provider)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="300" width="220" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="provider_cfg" value="&lt;b&gt;LlmProviderConfig&lt;/b&gt;&#10;SECRET_KEYS&#10;PROVIDER_BASE_URL_DEFAULTS&#10;PROVIDER_BASE_URL_KEYS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="750" y="470" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="chat_panel" value="&lt;b&gt;ChatPanelProvider&lt;/b&gt;&#10;onConfigChange()&#10;modelManager.sendModels()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="350" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="postMessage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=classic;startSize=6;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="webview" target="handler" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="config ops" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="handler" target="config" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="test ops" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="handler" target="test" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="getModels()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config" target="models" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="constants" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="config" target="provider_cfg" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="VS Code commands&#10;(notify connected)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="test" target="chat_panel" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="350" y="510" /><mxPoint x="350" y="390" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="config change event" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="config" target="chat_panel" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="350" y="355" /><mxPoint x="350" y="390" /></Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

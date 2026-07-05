@@ -1,0 +1,58 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Incremental Indexer — State Diagram" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="380" y="10" width="360" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;html=1;shape=doubleCircle;whiteSpace=wrap;aspect=fixed;fillColor=#1a1a2e;strokeColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="100" y="340" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="idle" value="IDLE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="220" y="325" width="120" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="full_indexing" value="FULL_INDEXING&#xa;(batch processing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="450" y="200" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="watching" value="WATCHING&#xa;(file watcher active)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="450" y="400" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="processing" value="PROCESSING_FILE&#xa;(single file index)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="750" y="400" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="stopped" value="STOPPED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="750" y="200" width="120" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e_start" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=8;strokeColor=#1a1a2e;" edge="1" parent="1" source="start" target="idle">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="startBackgroundIndexing()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=6;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1" source="idle" target="full_indexing">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="full index complete" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=6;strokeColor=#82b366;fontSize=9;" edge="1" parent="1" source="full_indexing" target="watching">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="file change event&#xa;(debounced)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=6;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1" source="watching" target="processing">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="file indexed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=6;strokeColor=#82b366;fontSize=9;" edge="1" parent="1" source="processing" target="watching">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="840" y="480" />
+          <mxPoint x="540" y="480" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="stop()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=6;strokeColor=#b85450;fontSize=9;" edge="1" parent="1" source="watching" target="stopped">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="540" y="560" />
+          <mxPoint x="810" y="560" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="stop()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=6;strokeColor=#b85450;fontSize=9;dashed=1;" edge="1" parent="1" source="full_indexing" target="stopped">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

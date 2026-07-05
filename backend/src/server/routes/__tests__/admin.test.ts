@@ -213,6 +213,7 @@ describe('Admin Routes — /api/admin/users (CRUD)', () => {
 
 describe('Admin Routes — /api/admin/rbac', () => {
   let testGroupId: string;
+  const uniqueGroupName = `Viewers-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
   it('GET /api/admin/rbac/groups returns groups with permissions', async () => {
     const res = await app.request('/api/admin/rbac/groups', { headers: authHeaders() });
@@ -229,7 +230,7 @@ describe('Admin Routes — /api/admin/rbac', () => {
     const res = await app.request('/api/admin/rbac/groups', {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ name: 'Viewers', permissions: [{ name: 'KB_READ', roleData: {} }] }),
+      body: JSON.stringify({ name: uniqueGroupName, permissions: [{ name: 'KB_READ', roleData: {} }] }),
     });
     expect(res.status).toBe(201);
     const body = await res.json() as any;
@@ -241,7 +242,7 @@ describe('Admin Routes — /api/admin/rbac', () => {
     const res = await app.request(`/api/admin/rbac/groups/${testGroupId}`, {
       method: 'PUT',
       headers: authHeaders(),
-      body: JSON.stringify({ name: 'Viewers Updated', permissions: [{ name: 'KB_READ', roleData: {} }, { name: 'DASHBOARD_VIEW', roleData: {} }] }),
+      body: JSON.stringify({ name: `${uniqueGroupName}-updated`, permissions: [{ name: 'KB_READ', roleData: {} }, { name: 'DASHBOARD_VIEW', roleData: {} }] }),
     });
     expect(res.status).toBe(200);
     const body = await res.json() as any;

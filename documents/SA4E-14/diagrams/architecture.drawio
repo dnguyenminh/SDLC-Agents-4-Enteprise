@@ -1,0 +1,81 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="VS Code Extension" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="100" y="80" width="1300" height="800" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="extension.ts&#xa;(Entry Point)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="600" y="120" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="Platform Swap Module" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontStyle=1;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="150" y="240" width="550" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="PlatformDetector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="200" y="300" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="BackupManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="200" y="400" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="SwapExecutor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="500" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="8" value="StateManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="200" y="600" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="PlatformStatusBar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="200" y="700" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="SwapCommands" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="450" y="300" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="PlatformConfig&#xa;(data)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="450" y="400" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="Existing Modules" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;fontStyle=1;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="800" y="240" width="550" height="350" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="checksum.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="850" y="300" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="injector.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="850" y="400" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="15" value="config.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="850" y="500" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="McpServerManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="1100" y="300" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="ConfigWatcher" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="1100" y="400" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="File System" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="950" y="680" width="140" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="VS Code API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="700" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="3" target="4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="7" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="7" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="33" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="7" target="13" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="8" target="18" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="5" target="19" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="36" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="9" target="19" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

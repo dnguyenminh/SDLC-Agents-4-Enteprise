@@ -1,0 +1,61 @@
+<mxfile host="app.diagrams.net" modified="2025-07-04T10:00:00.000Z" agent="SA Agent" version="24.0.0">
+  <diagram id="comp-auth" name="Component Diagram — Auth Module">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;Component Diagram — Auth &amp; SSO Classes&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="370" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="auth_pkg" value="&lt;&lt;package&gt;&gt;&#10;extension/src/auth/" style="shape=folder;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=5;html=1;tabWidth=120;tabHeight=20;" vertex="1" parent="1">
+          <mxGeometry x="100" y="50" width="950" height="720" as="geometry" />
+        </mxCell>
+        <mxCell id="c_types" value="&lt;&lt;module&gt;&gt;&#10;&lt;b&gt;types.ts&lt;/b&gt;&#10;---&#10;AuthState (enum)&#10;SsoProvider (interface)&#10;PkceChallenge (interface)&#10;TokenResponse (interface)" style="shape=component;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;html=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="140" y="100" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="c_auth_mgr" value="&lt;&lt;class&gt;&gt;&#10;&lt;b&gt;AuthManager&lt;/b&gt;&#10;---&#10;- state: AuthState&#10;- cachedToken: string|null&#10;- tokenExpiresAt: number|null&#10;---&#10;+ initialize(): void&#10;+ login(user, pass): void&#10;+ loginWithSso(provider): void&#10;+ refreshToken(): void&#10;+ logout(): void&#10;+ getAccessToken(): string|null&#10;+ onStateChange: Event" style="shape=component;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;html=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="400" y="100" width="220" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="c_pkce" value="&lt;&lt;class&gt;&gt;&#10;&lt;b&gt;PkceService&lt;/b&gt;&#10;---&#10;+ generateCodeVerifier(): string&#10;+ generateCodeChallenge(v): string&#10;+ generateState(): string&#10;- base64UrlEncode(buf): string" style="shape=component;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;html=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="140" y="360" width="240" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="c_timer" value="&lt;&lt;class&gt;&gt;&#10;&lt;b&gt;TokenRefreshTimer&lt;/b&gt;&#10;---&#10;- timer: NodeJS.Timeout|null&#10;- authManager: AuthManager&#10;---&#10;+ start(): void&#10;+ stop(): void&#10;- check(): void" style="shape=component;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;html=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="140" y="510" width="200" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c_callback" value="&lt;&lt;class&gt;&gt;&#10;&lt;b&gt;SsoCallbackHandler&lt;/b&gt;&#10;implements UriHandler&#10;---&#10;- pendingChallenge: PkceChallenge&#10;- resolveCallback: Function&#10;- timeoutTimer: Timeout&#10;---&#10;+ startFlow(provider, challenge): string&#10;+ handleUri(uri): void&#10;+ dispose(): void" style="shape=component;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;html=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="380" width="260" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c_commands" value="&lt;&lt;class&gt;&gt;&#10;&lt;b&gt;AuthCommands&lt;/b&gt;&#10;---&#10;+ register(ctx): void&#10;- handleLogin(): void&#10;- handleLoginSso(): void&#10;- handleLogout(): void&#10;- handleSwitchAccount(): void" style="shape=component;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;html=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="720" y="100" width="200" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c_statusbar" value="&lt;&lt;class&gt;&gt;&#10;&lt;b&gt;AuthStatusBar&lt;/b&gt;&#10;---&#10;- statusBarItem: StatusBarItem&#10;---&#10;+ updateDisplay(state): void&#10;+ dispose(): void" style="shape=component;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;html=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="720" y="270" width="200" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="c_config" value="&lt;&lt;class&gt;&gt;&#10;&lt;b&gt;AuthConfigProvider&lt;/b&gt;&#10;---&#10;+ getProviders(): SsoProvider[]&#10;+ getDefaultProvider(): SsoProvider&#10;+ getBackendUrl(): string&#10;+ validateProviders(): Result[]" style="shape=component;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;html=1;align=left;spacingLeft=5;" vertex="1" parent="1">
+          <mxGeometry x="720" y="420" width="230" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_pkce" value="uses" style="endArrow=open;dashed=1;html=1;fontSize=9;" edge="1" parent="1" source="c_auth_mgr" target="c_pkce">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_timer" value="owns" style="endArrow=diamond;endFill=1;html=1;fontSize=9;" edge="1" parent="1" source="c_auth_mgr" target="c_timer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_mgr_callback" value="uses" style="endArrow=open;dashed=1;html=1;fontSize=9;" edge="1" parent="1" source="c_auth_mgr" target="c_callback">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cmd_mgr" value="delegates to" style="endArrow=open;dashed=1;html=1;fontSize=9;" edge="1" parent="1" source="c_commands" target="c_auth_mgr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sb_mgr" value="observes" style="endArrow=open;dashed=1;html=1;fontSize=9;" edge="1" parent="1" source="c_statusbar" target="c_auth_mgr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cmd_config" value="reads" style="endArrow=open;dashed=1;html=1;fontSize=9;" edge="1" parent="1" source="c_commands" target="c_config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_types_all" value="imports" style="endArrow=open;dashed=1;html=1;fontSize=9;strokeColor=#999999;" edge="1" parent="1" source="c_auth_mgr" target="c_types">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

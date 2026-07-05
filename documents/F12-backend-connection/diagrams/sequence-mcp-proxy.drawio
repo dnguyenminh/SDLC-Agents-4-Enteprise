@@ -1,0 +1,133 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;MCP Request Proxy — Sequence Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="320" y="10" width="340" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="client" value="&lt;b&gt;MCP Client&lt;/b&gt;&#10;(IDE/Kiro)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="50" width="100" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="wrapper" value="&lt;b&gt;Wrapper :9181&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="50" width="120" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="ltool" value="&lt;b&gt;Local Tools&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="50" width="100" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="mcpc" value="&lt;b&gt;MCP Client&lt;/b&gt;&#10;(backend)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="660" y="50" width="120" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="be" value="&lt;b&gt;Backend&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="870" y="50" width="100" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="ll1" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="105" y="90" width="10" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="ll2" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="315" y="90" width="10" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="ll3" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="515" y="90" width="10" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="ll4" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="715" y="90" width="10" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="ll5" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="915" y="90" width="10" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="1. POST /mcp {tools/call}" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="110" y="140" as="sourcePoint" />
+        <mxPoint x="320" y="140" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. validate Content-Type" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="170" as="sourcePoint" />
+        <mxPoint x="320" y="195" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="370" y="170" />
+          <mxPoint x="370" y="195" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. parse JSON-RPC" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="210" as="sourcePoint" />
+        <mxPoint x="320" y="235" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="370" y="210" />
+          <mxPoint x="370" y="235" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. check: LOCAL_TOOLS.has(name)?" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="260" as="sourcePoint" />
+        <mxPoint x="320" y="285" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="370" y="260" />
+          <mxPoint x="370" y="285" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note_local" value="[if local tool]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="330" y="295" width="90" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="m5" value="5a. executeLocalTool(name, args)" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="320" as="sourcePoint" />
+        <mxPoint x="520" y="320" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6a. {isError: false, content: [...]}" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="520" y="350" as="sourcePoint" />
+        <mxPoint x="320" y="350" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note_remote" value="[if remote tool]" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="330" y="380" width="100" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="m7" value="5b. wrapToolArguments()" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="410" as="sourcePoint" />
+        <mxPoint x="320" y="435" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="370" y="410" />
+          <mxPoint x="370" y="435" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="6b. mcpClient.request()" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="460" as="sourcePoint" />
+        <mxPoint x="720" y="460" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="7b. forward via transport" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="490" as="sourcePoint" />
+        <mxPoint x="920" y="490" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="8b. result" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="920" y="520" as="sourcePoint" />
+        <mxPoint x="720" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="9b. response" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="550" as="sourcePoint" />
+        <mxPoint x="320" y="550" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="10. JSON-RPC response" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="590" as="sourcePoint" />
+        <mxPoint x="110" y="590" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,57 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="start" value="" style="ellipse;html=1;shape=mxgraph.flowchart.start_2;fontSize=12;fillColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="80" y="330" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="Idle" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="180" y="320" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="s2" value="Matching" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="320" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="s3" value="Executing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="580" y="320" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="s4" value="Completed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="800" y="200" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="s5" value="Failed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="800" y="320" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="s6" value="Timed Out" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="800" y="440" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="s7" value="Denied" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="800" y="560" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="s8" value="Skipped&#10;(Circular)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="500" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="" style="" edge="1" source="start" target="s1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="event fired" style="" edge="1" source="s1" target="s2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="hook matched" style="" edge="1" source="s2" target="s3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="circular detected" style="" edge="1" source="s2" target="s8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="success" style="" edge="1" source="s3" target="s4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="error" style="" edge="1" source="s3" target="s5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="timeout" style="" edge="1" source="s3" target="s6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="denial pattern" style="" edge="1" source="s3" target="s7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

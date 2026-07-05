@@ -1,0 +1,93 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="AI Context Assembly — Use Cases" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="380" y="10" width="380" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="system" value="AI Context Assembly Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;verticalAlign=top;spacingTop=5;arcSize=8;" vertex="1" parent="1">
+      <mxGeometry x="300" y="60" width="600" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_dev" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="250" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_agent" value="AI Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="450" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_index" value="Code Index&#10;(SQLite)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="150" width="80" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_kb" value="Knowledge&#10;Base" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="300" width="80" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_git" value="Git" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=5;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="450" width="80" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" value="UC-1: Get Intent-Aware&#10;Context for Symbol" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="100" width="200" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" value="UC-2: Get Edit Context&#10;for Code Modification" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="210" width="200" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" value="UC-3: Query Curated Context&#10;via Natural Language" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="320" width="220" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" value="UC-4: Manage Token&#10;Budget Allocation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="650" y="420" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc5" value="UC-5: Merge Multi-Source&#10;Results (RRF)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="650" y="520" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc6" value="UC-6: Configure Source&#10;Weights" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="450" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc7" value="UC-7: Resolve Symbol&#10;(name / file:line)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="650" y="140" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc8" value="UC-8: Allocate Progressive&#10;Detail Levels" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="650" y="620" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="a1" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_dev" target="uc1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a2" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_dev" target="uc2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a3" style="html=1;endArrow=none;strokeColor=#9673a6;" edge="1" parent="1" source="actor_agent" target="uc3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a4" style="html=1;endArrow=none;strokeColor=#9673a6;" edge="1" parent="1" source="actor_agent" target="uc6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a5" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="uc1" target="actor_index">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a6" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="uc2" target="actor_index">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a7" style="html=1;endArrow=none;strokeColor=#82b366;" edge="1" parent="1" source="uc3" target="actor_kb">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a8" style="html=1;endArrow=none;strokeColor=#d6b656;" edge="1" parent="1" source="uc2" target="actor_git">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc1" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc1" target="uc7">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc2" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc2" target="uc7">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc3" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc1" target="uc4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc4" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc3" target="uc5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc5" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc3" target="uc4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc6" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc5" target="uc8">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

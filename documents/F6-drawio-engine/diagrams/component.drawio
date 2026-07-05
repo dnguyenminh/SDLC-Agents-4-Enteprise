@@ -1,0 +1,48 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="parser-comp" value="&lt;&lt;module&gt;&gt;&#xa;drawio-parser.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;align=center;" parent="1" vertex="1">
+      <mxGeometry x="100" y="200" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="parser-exports" value="Exports:&#xa;parseDrawio()&#xa;DiagramGraph&#xa;DiagramNode&#xa;DiagramEdge" style="text;html=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontSize=10;" parent="1" vertex="1">
+      <mxGeometry x="100" y="285" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="tool-comp" value="&lt;&lt;module&gt;&gt;&#xa;drawio-tool.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;align=center;" parent="1" vertex="1">
+      <mxGeometry x="380" y="100" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="tool-exports" value="Exports:&#xa;DRAWIO_TOOL_DEFINITION&#xa;handleDrawioLayout()" style="text;html=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontSize=10;" parent="1" vertex="1">
+      <mxGeometry x="380" y="185" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="router-comp" value="&lt;&lt;module&gt;&gt;&#xa;drawio-router.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=center;" parent="1" vertex="1">
+      <mxGeometry x="380" y="320" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="router-exports" value="Exports:&#xa;routeEdges()&#xa;Waypoint" style="text;html=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontSize=10;" parent="1" vertex="1">
+      <mxGeometry x="380" y="405" width="180" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="writer-comp" value="&lt;&lt;module&gt;&gt;&#xa;drawio-writer.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;align=center;" parent="1" vertex="1">
+      <mxGeometry x="660" y="200" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="writer-exports" value="Exports:&#xa;writeLayout()" style="text;html=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontSize=10;" parent="1" vertex="1">
+      <mxGeometry x="660" y="285" width="180" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="export-comp" value="&lt;&lt;module&gt;&gt;&#xa;drawio-export-png.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;align=center;" parent="1" vertex="1">
+      <mxGeometry x="660" y="420" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="export-exports" value="Exports:&#xa;handleDrawioExportPng()&#xa;isExportPngAvailable()&#xa;detectRenderer()&#xa;resetRendererCache()" style="text;html=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontSize=10;" parent="1" vertex="1">
+      <mxGeometry x="660" y="505" width="200" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="e-tool-parser" value="imports" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" parent="1" source="tool-comp" target="parser-comp" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e-writer-parser" value="imports" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" parent="1" source="writer-comp" target="parser-comp" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e-writer-router" value="imports" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" parent="1" source="writer-comp" target="router-comp" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e-router-parser" value="imports" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0;exitY=0.5;entryX=1;entryY=1;" parent="1" source="router-comp" target="parser-comp" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

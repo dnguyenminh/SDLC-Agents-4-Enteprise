@@ -1,0 +1,16 @@
+test_case_id,provider,api_key_value,key_prefix,is_valid,expected_result,expected_message,description
+UT-11,anthropic,sk-ant-api03-testkey123456789abcdefghijklmnop,sk-ant-,true,saved,,Valid Anthropic key — correct prefix and length
+UT-12,anthropic,sk-ant-api03-testkey123456789abcdefghijklmnop,sk-ant-,true,cleared,,Key exists then cleared
+E2E-UI-03,anthropic,sk-ant-api03-validkey9999999999999999999999,sk-ant-,true,saved,Key saved ✅,Save key shows success indicator
+E2E-UI-04,anthropic,sk-ant-api03-tobecleared99999999999999999,sk-ant-,true,cleared,No key ❌,Clear key shows cross indicator
+E2E-API-01,anthropic,sk-ant-api03-realvalidkey123456789012345,sk-ant-,true,connected,Connected to Anthropic,Valid key — connection test success
+E2E-API-02,anthropic,sk-ant-INVALID-key-too-short,sk-ant-,false,auth_error,Authentication failed. Check your API key.,Invalid key — 401 auth error
+PBT-04,anthropic,sk-ant-api03-arbitrary-random-string-for-pbt,sk-ant-,true,saved,,PBT — key never appears in webview messages
+UT-11,openai,sk-proj-testkey123456789abcdefghijklmnopqrst,sk-,true,saved,,Valid OpenAI key
+E2E-UI-12,openai,sk-proj-secondproviderkey99999999999999999,sk-,true,saved,Key saved ✅,Independent key storage test
+IT-02,anthropic,,sk-ant-,false,no_key,No key ❌,Empty key — after clear operation
+IT-06,anthropic,sk-ant-api03-storewillfail99999999999999999,sk-ant-,true,error,Failed to save API key,SecretStorage write failure scenario
+PBT-04,openai,sk-proj-arbitrary-random-string-for-pbt-test,sk-,true,saved,,PBT — verify key isolation
+UT-11,anthropic,,sk-ant-,false,validation_warning,,Empty key — should not save
+UT-11,anthropic,   ,sk-ant-,false,validation_warning,,Whitespace-only key — should not save
+UT-11,anthropic,short,sk-ant-,true,saved_with_warning,,Short key — soft warning but save allowed
