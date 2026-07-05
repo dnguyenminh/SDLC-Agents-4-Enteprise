@@ -87,3 +87,40 @@ jobs:
       - name: Publish to Open VSX (Kiro IDE)
         run: npx ovsx publish *.vsix -p ${{ secrets.OVSX_TOKEN }}
         continue-on-error: true
+
+  publish-backend:
+    needs: version-check
+    if: github.event.inputs.target != 'extension-only'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Sync version from git tag
+        run: npm version ${{ needs.version-check.outputs.version }} --no-git-tag-version --allow-same-version
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm publish --access public
+          echo "✅ Published mcp-code-intelligence@${{ needs.version-check.outputs.version }}"
+
+      - name: Upload dist to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            backend/dist/**/*.js
