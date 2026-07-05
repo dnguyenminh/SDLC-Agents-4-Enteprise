@@ -75,3 +75,44 @@ jobs:
           git tag "v${VERSION}"
           git push origin main --tags
           echo "✅ Pushed v${VERSION}"
+
+      - name: Sync backend version
+        if: steps.bump.outputs.version != ''
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          jq ".version = \"$VERSION\"" backend/package.json > tmp.json
+          mv tmp.json backend/package.json
+          git add backend/package.json
+          git commit --amend --no-edit
+          git push origin main --force-with-lease
+          echo "✅ Backend version synced to v${VERSION}"
+
+      - name: Setup Node.js for npm publish
+        if: steps.bump.outputs.version != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Build and publish to npm
+        if: steps.bump.outputs.version != ''
+        working-directory: backend
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm ci
+          npm run build
+          npm publish --access public
+          echo "✅ Published mcp-code-intelligence@${{ steps.bump.outputs.version }} to npm"
+
+      - name: Create GitHub Release
+        if: steps.bump.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.bump.outputs.version }}"
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --generate-notes \
+            --notes-start-tag "$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo '')"
+          echo "✅ GitHub Release v${VERSION} created"
