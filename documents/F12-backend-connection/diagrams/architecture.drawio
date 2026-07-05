@@ -1,0 +1,93 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F12 Backend Connection — Architecture&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="340" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_boundary" value="VS Code Extension Host" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="820" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="conn_layer" value="&lt;b&gt;Connection Layer&lt;/b&gt;" style="rounded=1;dashed=1;fillColor=#e1f5fe;strokeColor=#0288d1;verticalAlign=top;fontSize=11;opacity=30;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="100" width="380" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="conn_mgr" value="&lt;b&gt;ConnectionManager&lt;/b&gt;&#10;State Machine&#10;connect() / disconnect()&#10;onStateChange" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="140" width="170" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="health" value="&lt;b&gt;HealthChecker&lt;/b&gt;&#10;setInterval polling&#10;onHealthFail callback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="140" width="150" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp_layer" value="&lt;b&gt;MCP Bridge Layer&lt;/b&gt;" style="rounded=1;dashed=1;fillColor=#e8f5e9;strokeColor=#388e3c;verticalAlign=top;fontSize=11;opacity=30;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="330" width="580" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="remote_client" value="&lt;b&gt;RemoteBackendClient&lt;/b&gt;&#10;MCP Client (SDK)&#10;StreamableHTTP Transport&#10;onStatusChange / onNotification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="370" width="200" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="wrapper_srv" value="&lt;b&gt;Wrapper Server&lt;/b&gt;&#10;HTTP :9181&#10;/mcp + /health&#10;JSON-RPC routing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="370" width="160" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="local_tools" value="&lt;b&gt;Local Tools&lt;/b&gt;&#10;stream_write_file&#10;embed_image&#10;wrapToolArguments" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="510" y="370" width="120" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="config_layer" value="&lt;b&gt;Configuration Layer&lt;/b&gt;" style="rounded=1;dashed=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;verticalAlign=top;fontSize=11;opacity=30;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="560" width="380" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="config_watcher" value="&lt;b&gt;ConfigWatcher&lt;/b&gt;&#10;FileSystemWatcher&#10;debounce + hash&#10;suppressNextChange()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="600" width="170" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="config_builder" value="&lt;b&gt;MCP Config Builder&lt;/b&gt;&#10;resolveConfig()&#10;writeMcpConfig()&#10;downloadVariant()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="600" width="150" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_dep" value="&lt;b&gt;Dependencies&lt;/b&gt;" style="rounded=1;dashed=1;fillColor=#fff3e0;strokeColor=#f57c00;verticalAlign=top;fontSize=11;opacity=30;html=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="100" width="340" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="auth_mgr" value="&lt;b&gt;AuthManager&lt;/b&gt;&#10;(F9-auth-sso)&#10;getTokenSync()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="520" y="140" width="140" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="http_client" value="&lt;b&gt;HttpClient&lt;/b&gt;&#10;(proxy module)&#10;healthCheck()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="140" width="140" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="vscode_api" value="&lt;b&gt;VS Code API&lt;/b&gt;&#10;EventEmitter, Settings&#10;FileSystemWatcher" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="520" y="220" width="140" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp_sdk" value="&lt;b&gt;MCP SDK&lt;/b&gt;&#10;Client class&#10;StreamableHTTP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="220" width="140" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="backend_ext" value="&lt;b&gt;Kiro Backend&lt;/b&gt;&#10;(External)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="930" y="380" width="120" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="filesystem_ext" value="&lt;b&gt;Local FS&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="930" y="500" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="manages" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="conn_mgr" target="health" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="controls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="conn_mgr" target="remote_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="hosts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="remote_client" target="wrapper_srv" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="delegates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="wrapper_srv" target="local_tools" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="watches" style="dashed=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config_watcher" target="remote_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="configures" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config_builder" target="config_watcher" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="token" style="dashed=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="auth_mgr" target="remote_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="HTTP" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="health" target="http_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="MCP/HTTP" style="html=1;endArrow=classic;startArrow=classic;startSize=6;endSize=6;fontSize=10;" edge="1" source="remote_client" target="backend_ext" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="read/write" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="local_tools" target="filesystem_ext" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

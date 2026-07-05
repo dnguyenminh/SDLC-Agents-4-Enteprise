@@ -1,0 +1,84 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;LangGraph Pipeline — Architecture Overview&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="380" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_boundary" value="VS Code Extension Host" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;arcSize=5;" vertex="1" parent="1">
+      <mxGeometry x="40" y="50" width="900" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="engine" value="LangGraphEngine&#10;(Singleton)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="380" y="90" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="router_box" value="Router Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="340" y="190" width="240" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="classifier" value="Intent Classifier" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="360" y="215" width="100" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="route_fn" value="routeByIntent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="470" y="215" width="90" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="subgraphs_box" value="Subgraphs (Lazy Loaded)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#82b366;dashed=1;verticalAlign=top;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="300" width="820" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="sg_sdlc" value="SDLC&#10;Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="100" y="340" width="100" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="sg_hotfix" value="Hotfix&#10;Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="220" y="340" width="100" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="sg_review" value="Code Review&#10;Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="340" y="340" width="100" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="sg_docs" value="Docs&#10;Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="460" y="340" width="100" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="sg_sec" value="Security&#10;Audit Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="580" y="340" width="100" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="sg_chat" value="Chat&#10;Graph" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="700" y="340" width="100" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="sdlc_detail" value="Nodes: SM, BA, TA, SA, QA, DEV, DevOps&#10;Verify + Quality Gates + Feedback Loop" style="text;html=1;align=left;fontSize=9;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="100" y="400" width="250" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="infra_box" value="Infrastructure Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9673a6;dashed=1;verticalAlign=top;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="530" width="820" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp_bridge" value="McpBridge&#10;(Tool Calls)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="100" y="580" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="stream_h" value="StreamHandler&#10;(Events)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="240" y="580" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="checkpt" value="Checkpointer&#10;(JSON Disk)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="380" y="580" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="llm_prov" value="LlmProvider&#10;(Interface)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="580" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="tool_reg" value="ToolRegistry&#10;(Discovery)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="660" y="580" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="hook_eng" value="HookEngine&#10;(Lifecycle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="800" y="580" width="90" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="steer" value="SteeringLoader" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="100" y="650" width="110" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="ctx_budget" value="ContextBudget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="240" y="650" width="110" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="engine" target="router_box" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="router_box" target="subgraphs_box" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;" edge="1" source="subgraphs_box" target="infra_box" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

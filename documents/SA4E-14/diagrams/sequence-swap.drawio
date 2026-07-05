@@ -1,0 +1,108 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="50" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="Command Palette" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="300" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="ConfigSwapManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="550" y="50" width="160" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="BackupManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="820" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="StateManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="1070" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="File System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="50" width="120" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="1. swapPlatform()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="140" y="160" as="sourcePoint" />
+        <mxPoint x="370" y="160" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="11" value="2. showQuickPick(platforms)" style="html=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="370" y="200" as="sourcePoint" />
+        <mxPoint x="140" y="200" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="12" value="3. selectPlatform(target)" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="140" y="240" as="sourcePoint" />
+        <mxPoint x="370" y="240" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="13" value="4. executeSwap(target)" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="370" y="300" as="sourcePoint" />
+        <mxPoint x="630" y="300" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="14" value="5. createBackup(activePlatform)" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="360" as="sourcePoint" />
+        <mxPoint x="890" y="360" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="15" value="6. copyDirs(source, backupDir)" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="890" y="400" as="sourcePoint" />
+        <mxPoint x="1380" y="400" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="16" value="7. verifyBackup()" style="html=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1380" y="440" as="sourcePoint" />
+        <mxPoint x="890" y="440" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="17" value="8. backupComplete" style="html=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="890" y="480" as="sourcePoint" />
+        <mxPoint x="630" y="480" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="18" value="9. deleteOldPlatformDirs()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="540" as="sourcePoint" />
+        <mxPoint x="1380" y="540" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="19" value="10. copyNewPlatformDirs(conversions/target)" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="600" as="sourcePoint" />
+        <mxPoint x="1380" y="600" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="20" value="11. updateState(target, backupRecord)" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="660" as="sourcePoint" />
+        <mxPoint x="1140" y="660" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="21" value="12. writeAtomicJSON()" style="html=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1140" y="700" as="sourcePoint" />
+        <mxPoint x="1380" y="700" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="22" value="13. SwapResult{success}" style="html=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="760" as="sourcePoint" />
+        <mxPoint x="370" y="760" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="23" value="14. showNotification(success)" style="html=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="370" y="800" as="sourcePoint" />
+        <mxPoint x="140" y="800" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

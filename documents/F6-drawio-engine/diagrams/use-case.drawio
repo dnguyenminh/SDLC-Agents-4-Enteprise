@@ -1,0 +1,104 @@
+<mxfile>
+  <diagram name="Use Cases" id="uc_diagram">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;Draw.io Engine — Use Case Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="350" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="boundary" value="Draw.io Engine System" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="60" width="620" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_ai" value="AI Agent" style="shape=actor;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_sm" value="SM Agent" style="shape=actor;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="530" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_cli" value="draw.io CLI" style="shape=actor;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="350" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc1_node" value="Validate XML Structure" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="100" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc2_node" value="Parse Diagram Graph" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="200" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc3_node" value="Detect Layout Issues" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="310" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc4_node" value="Apply Auto-Layout" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="420" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc5_node" value="Route Edges Orthogonally" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="530" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc6_node" value="Write Layout to XML" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="640" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc7_node" value="Export PNG (CLI)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="650" y="200" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc8_node" value="Export PNG (Chrome)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="650" y="310" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc9_node" value="Export PNG (Puppeteer)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="650" y="420" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc10_node" value="Detect Renderer" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="650" y="100" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ai_uc1" style="html=1;endArrow=none;" edge="1" source="actor_ai" target="uc1_node" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="180" y="135" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ai_uc3" style="html=1;endArrow=none;" edge="1" source="actor_ai" target="uc3_node" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ai_uc4" style="html=1;endArrow=none;" edge="1" source="actor_ai" target="uc4_node" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="180" y="455" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_sm_uc5" style="html=1;endArrow=none;" edge="1" source="actor_sm" target="uc5_node" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sm_uc6" style="html=1;endArrow=none;" edge="1" source="actor_sm" target="uc6_node" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="180" y="675" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ai_uc7" style="html=1;endArrow=none;" edge="1" source="actor_ai" target="uc7_node" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="180" y="235" /><mxPoint x="620" y="235" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_cli_uc7" style="html=1;endArrow=none;" edge="1" source="actor_cli" target="uc7_node" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="980" y="235" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_include_parse" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc3_node" target="uc2_node" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_include_route" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc4_node" target="uc5_node" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_include_write" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc5_node" target="uc6_node" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_extend_cli" value="&lt;i&gt;&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc7_node" target="uc10_node" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_extend_chrome" value="&lt;i&gt;&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc8_node" target="uc10_node" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_extend_puppet" value="&lt;i&gt;&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc9_node" target="uc10_node" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,48 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F12 Backend Connection — Component Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="conn_mgr" value="&lt;b&gt;ConnectionManager&lt;/b&gt;&#10;&#10;- state: ConnectionState&#10;- reconnectAttempts: number&#10;- reconnectDelays: number[]&#10;- healthChecker: HealthChecker&#10;&#10;+ connect(): Promise&lt;void&gt;&#10;+ disconnect(): void&#10;+ updateConfig(cfg): void&#10;+ onStateChange: Event" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="220" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="health_checker" value="&lt;b&gt;HealthChecker&lt;/b&gt;&#10;&#10;- timer: Interval&#10;- failListeners: Function[]&#10;- httpClient: HttpClient&#10;+ interval: number&#10;&#10;+ start(): void&#10;+ stop(): void&#10;+ checkOnce(): Promise&lt;bool&gt;&#10;+ onHealthFail(fn): void" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="60" y="310" width="220" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="remote_client" value="&lt;b&gt;RemoteBackendClient&lt;/b&gt;&#10;&#10;- mcpClient: Client&#10;- httpServer: http.Server&#10;- requestId: number&#10;- _status: ServerStatus&#10;&#10;+ connect(): Promise&lt;void&gt;&#10;+ disconnect(): Promise&lt;void&gt;&#10;+ reconnect(): Promise&lt;void&gt;&#10;+ invokeTool(name, args): Promise&#10;+ onStatusChange: Event&#10;+ onNotification: Event" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="360" y="60" width="230" height="230" as="geometry" />
+    </mxCell>
+    <mxCell id="local_tools" value="&lt;b&gt;backend-local-tools&lt;/b&gt;&#10;&#10;LOCAL_TOOLS: Set&lt;string&gt;&#10;&#10;+ executeLocalTool(name, args)&#10;+ wrapToolArguments(name, args)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="360" y="340" width="230" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="config_watcher" value="&lt;b&gt;ConfigWatcher&lt;/b&gt;&#10;&#10;- watcher: FileSystemWatcher&#10;- debounceTimer: Timeout&#10;- lastConfigHash: string&#10;- suppressUntil: number&#10;&#10;+ suppressNextChange(): void&#10;+ readCodeIntelConfig(): Config&#10;+ dispose(): void" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="670" y="60" width="220" height="190" as="geometry" />
+    </mxCell>
+    <mxCell id="config_builder" value="&lt;b&gt;mcp-config-builder&lt;/b&gt;&#10;&#10;+ resolveConfig(variant, root)&#10;+ writeMcpConfig(root, cfg)&#10;+ writeDefaultOrchConfig(root)&#10;+ downloadVariant(variant, root)&#10;+ getMcpServersDir(root)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="670" y="300" width="220" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp_mgr" value="&lt;b&gt;mcp-server-manager&lt;/b&gt;&#10;(Compatibility alias)&#10;&#10;export {RemoteBackendClient&#10;  as McpServerManager}&#10;+ getNonce(): string" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="670" y="490" width="220" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="creates/manages" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="conn_mgr" target="health_checker" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="delegates connect" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="conn_mgr" target="remote_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="remote_client" target="local_tools" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="triggers reconnect" style="dashed=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config_watcher" target="remote_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="writes config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config_builder" target="config_watcher" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="re-exports" style="dashed=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="mcp_mgr" target="remote_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

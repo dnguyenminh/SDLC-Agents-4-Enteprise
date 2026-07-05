@@ -1,0 +1,96 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="F3 Orchestration — Use Case Diagram" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="320" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="system" value="Orchestration Module" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="50" width="500" height="550" as="geometry" />
+    </mxCell>
+    <mxCell id="agent" value="AI Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="220" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="admin" value="System Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="100" y="420" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="system_actor" value="System&#10;(Startup)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="870" y="220" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="child" value="Child MCP&#10;Server" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="870" y="400" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" value="Semantic Tool&#10;Discovery" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="70" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" value="Dynamic Tool&#10;Execution" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="150" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" value="Orchestration&#10;Status" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="230" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" value="Tool Toggle&#10;(Enable/Disable)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="310" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc5" value="Child Server&#10;Connection" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="540" y="70" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc6" value="Multi-Transport&#10;Support" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="540" y="150" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc7" value="Tool Routing&#10;(Child vs Internal)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="540" y="230" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc8" value="Connection&#10;Timeout" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="540" y="310" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc9" value="Execution&#10;Timeout" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="400" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc10" value="Server&#10;Reconnection" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="540" y="400" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc11" value="Schema&#10;Validation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="480" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="uc12" value="Config&#10;Hot-Reload" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="540" y="480" width="140" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="a1" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a2" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a3" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="agent" target="uc3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a4" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="admin" target="uc4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a5" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="system_actor" target="uc5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a6" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="system_actor" target="uc6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a7" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="child" target="uc7">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="a8" style="html=1;endArrow=none;strokeColor=#333333;" edge="1" parent="1" source="child" target="uc10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc1" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc2" target="uc7">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc2" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc5" target="uc6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc3" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc5" target="uc8">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc4" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="uc2" target="uc9">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

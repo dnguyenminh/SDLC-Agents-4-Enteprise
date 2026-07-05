@@ -1,0 +1,96 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;LangGraph SDLC Pipeline — Use Case Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="developer" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="30" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="teamlead" value="Team Lead" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="400" width="30" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="llm" value="LLM Provider" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="300" width="30" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="boundary" value="LangGraph SDLC Pipeline" style="shape=rect;rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="60" width="650" height="620" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" value="Run Full SDLC Pipeline" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="90" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" value="Chat with ReAct Agent" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="170" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" value="Run Hotfix Pipeline" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="250" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" value="Run Code Review" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="330" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc5" value="Generate Documentation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="410" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc6" value="Run Security Audit" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="490" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc7" value="Approve Quality Gate" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="550" y="130" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc8" value="Resume Pipeline" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="550" y="220" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc9" value="Classify Intent" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="550" y="320" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc10" value="Verify Agent Output" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="550" y="410" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc11" value="Checkpoint State" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="550" y="500" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc12" value="Feedback Loop (BA-SA)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="550" y="590" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ea1" style="html=1;endArrow=none;" edge="1" source="developer" target="uc1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea2" style="html=1;endArrow=none;" edge="1" source="developer" target="uc2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea3" style="html=1;endArrow=none;" edge="1" source="developer" target="uc3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea4" style="html=1;endArrow=none;" edge="1" source="developer" target="uc4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea5" style="html=1;endArrow=none;" edge="1" source="developer" target="uc5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea6" style="html=1;endArrow=none;" edge="1" source="developer" target="uc6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea7" style="html=1;endArrow=none;" edge="1" source="teamlead" target="uc7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea8" style="html=1;endArrow=none;" edge="1" source="developer" target="uc8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea9" style="html=1;endArrow=none;" edge="1" source="llm" target="uc9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea10" style="html=1;endArrow=none;" edge="1" source="llm" target="uc10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc1" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=6;fontSize=9;" edge="1" source="uc1" target="uc7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc2" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=6;fontSize=9;" edge="1" source="uc1" target="uc11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc3" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=6;fontSize=9;" edge="1" source="uc1" target="uc12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

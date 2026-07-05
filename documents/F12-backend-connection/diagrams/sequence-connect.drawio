@@ -1,0 +1,121 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;Connection Establishment — Sequence Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="ext" value="&lt;b&gt;Extension&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="50" width="100" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="cm" value="&lt;b&gt;ConnectionManager&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="220" y="50" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="hc" value="&lt;b&gt;HealthChecker&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="50" width="120" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="rbc" value="&lt;b&gt;RemoteBackendClient&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="50" width="160" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="backend" value="&lt;b&gt;Backend&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="830" y="50" width="100" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="ll_ext" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="105" y="90" width="10" height="620" as="geometry" />
+    </mxCell>
+    <mxCell id="ll_cm" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="285" y="90" width="10" height="620" as="geometry" />
+    </mxCell>
+    <mxCell id="ll_hc" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="475" y="90" width="10" height="620" as="geometry" />
+    </mxCell>
+    <mxCell id="ll_rbc" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="675" y="90" width="10" height="620" as="geometry" />
+    </mxCell>
+    <mxCell id="ll_be" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;html=1;" vertex="1" parent="1">
+      <mxGeometry x="875" y="90" width="10" height="620" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="1. connect()" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="110" y="140" as="sourcePoint" />
+        <mxPoint x="290" y="140" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s2" value="2. state = CONNECTING" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="170" as="sourcePoint" />
+        <mxPoint x="110" y="170" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s3" value="3. healthCheck()" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="200" as="sourcePoint" />
+        <mxPoint x="480" y="200" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s4" value="4. GET /health" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="230" as="sourcePoint" />
+        <mxPoint x="880" y="230" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s5" value="5. 200 OK" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="880" y="260" as="sourcePoint" />
+        <mxPoint x="480" y="260" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s6" value="6. healthy = true" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="290" as="sourcePoint" />
+        <mxPoint x="290" y="290" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s7" value="7. state = CONNECTED" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="320" as="sourcePoint" />
+        <mxPoint x="110" y="320" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s8" value="8. start()" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="350" as="sourcePoint" />
+        <mxPoint x="480" y="350" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s9" value="9. connect() [MCP]" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="390" as="sourcePoint" />
+        <mxPoint x="680" y="390" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s10" value="10. StreamableHTTP /mcp" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="680" y="420" as="sourcePoint" />
+        <mxPoint x="880" y="420" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s11" value="11. session established" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="880" y="450" as="sourcePoint" />
+        <mxPoint x="680" y="450" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s12" value="12. startLocalServer(:9181)" style="html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="680" y="490" as="sourcePoint" />
+        <mxPoint x="680" y="520" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="730" y="490" />
+          <mxPoint x="730" y="520" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s13" value="13. status = running" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="680" y="550" as="sourcePoint" />
+        <mxPoint x="290" y="550" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

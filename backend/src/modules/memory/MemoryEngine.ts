@@ -65,6 +65,10 @@ export class MemoryEngine {
     this.db.prepare('DELETE FROM knowledge_entries WHERE id = ?').run(id);
   }
 
+  updateTags(id: number, tags: string): void {
+    this.db.prepare('UPDATE knowledge_entries SET tags = ?, updated_at = datetime(\'now\') WHERE id = ?').run(tags, id);
+  }
+
   recordAccess(id: number): void {
     this.db.prepare(`
       UPDATE knowledge_entries

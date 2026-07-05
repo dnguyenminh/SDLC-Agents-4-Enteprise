@@ -1,0 +1,99 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Incremental Indexer — Sequence: Full Index Startup" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="280" y="10" width="450" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="server" value="Server" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="80" height="780" as="geometry" />
+    </mxCell>
+    <mxCell id="engine" value="IndexingEngine" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="250" y="60" width="100" height="780" as="geometry" />
+    </mxCell>
+    <mxCell id="scanner" value="FileScanner" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="430" y="60" width="80" height="780" as="geometry" />
+    </mxCell>
+    <mxCell id="indexer" value="TreeSitterIndexer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="600" y="60" width="110" height="780" as="geometry" />
+    </mxCell>
+    <mxCell id="db" value="SQLite" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="790" y="60" width="70" height="780" as="geometry" />
+    </mxCell>
+    <mxCell id="graph" value="GraphRepo" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="950" y="60" width="80" height="780" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="startBackgroundIndexing()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="130" as="sourcePoint" />
+        <mxPoint x="290" y="130" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="scanWorkspace(config)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#82b366;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="300" y="180" as="sourcePoint" />
+        <mxPoint x="460" y="180" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="ScannedFile[] (N files)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#82b366;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="460" y="220" as="sourcePoint" />
+        <mxPoint x="300" y="220" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="Phase 1: INSERT OR REPLACE files (hash check)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="300" y="270" as="sourcePoint" />
+        <mxPoint x="820" y="270" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="Phase 2: indexFiles (batch 50)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#b85450;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="300" y="340" as="sourcePoint" />
+        <mxPoint x="645" y="340" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="parse + storeResults (per file)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#b85450;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="655" y="380" as="sourcePoint" />
+        <mxPoint x="820" y="380" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="results[]" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#b85450;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="645" y="440" as="sourcePoint" />
+        <mxPoint x="300" y="440" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="updateModules()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="300" y="490" as="sourcePoint" />
+        <mxPoint x="820" y="490" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="detectAndStorePatterns()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="300" y="540" as="sourcePoint" />
+        <mxPoint x="820" y="540" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="resolveTargets(5000)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="300" y="600" as="sourcePoint" />
+        <mxPoint x="980" y="600" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="resolved count" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="980" y="640" as="sourcePoint" />
+        <mxPoint x="300" y="640" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="startWatcher()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#82b366;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="300" y="690" as="sourcePoint" />
+        <mxPoint x="300" y="720" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

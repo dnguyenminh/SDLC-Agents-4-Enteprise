@@ -18,14 +18,20 @@ After each sub-agent completes:
    If found → re-invoke agent to fix before export
 5. VALIDATE no <mxfile> wrapper: must start with <mxGraphModel>
    If wrapped → strip wrapper or re-invoke agent
-6. IF Critical items missing:
+6. VISION SELF-CHECK (MANDATORY for diagram quality):
+   a. Export PNG via drawio_export_png
+   b. Read the PNG image
+   c. Check: overlaps, clipped labels, missing connections, stacked edges
+   d. If issues → fix XML → re-export → re-check (max 2 rounds)
+   e. Minimum quality: ⭐⭐⭐⭐ (no major overlaps, all connections correct)
+7. IF Critical items missing:
    → Re-invoke agent with specific fix request
    → Re-verify after fix
    → Max 2 retry attempts
-7. IF only Minor items missing:
+8. IF only Minor items missing:
    → Log as warning, proceed
-8. REPORT verification result:
-   "✅ BRD verified: 6/6 checks passed, 2 diagrams present"
+9. REPORT verification result:
+   "✅ BRD verified: 6/6 checks passed, 2 diagrams present, quality: ⭐⭐⭐⭐⭐"
    or
    "⚠️ FSD verified: 7/9 checks. Missing: sequence diagram. Requesting BA..."
 9. ONLY mark phase = done AFTER all Critical checks pass

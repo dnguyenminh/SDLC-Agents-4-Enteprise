@@ -1,0 +1,93 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SDLC Subgraph — Sequence (One Phase)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="350" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="user_ll" value="User" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="60" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="engine_ll" value="Engine" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="220" y="60" width="60" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="sm_ll" value="SM Node" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="60" width="70" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="agent_ll" value="Agent Node" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="verify_ll" value="Verify Node" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="650" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="gate_ll" value="Quality Gate" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="810" y="60" width="80" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="invoke(ticket, phase)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=10;" edge="1" parent="1">
+      <mxGeometry x="-0.2" relative="1" as="geometry">
+        <mxPoint x="110" y="140" as="sourcePoint" />
+        <mxPoint x="250" y="140" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="route(currentPhase)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="250" y="180" as="sourcePoint" />
+        <mxPoint x="395" y="180" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="execute(state)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="395" y="230" as="sourcePoint" />
+        <mxPoint x="540" y="230" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="callLlm() + callMcp()" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="540" y="290" as="sourcePoint" />
+        <mxPoint x="540" y="350" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="agentOutputs" style="html=1;verticalAlign=bottom;endArrow=open;endSize=8;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="540" y="380" as="sourcePoint" />
+        <mxPoint x="395" y="380" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="evaluate(output, criteria)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="395" y="420" as="sourcePoint" />
+        <mxPoint x="690" y="420" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="verifyPassed=true" style="html=1;verticalAlign=bottom;endArrow=open;endSize=8;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="690" y="470" as="sourcePoint" />
+        <mxPoint x="395" y="470" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="pause(criteria)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="395" y="510" as="sourcePoint" />
+        <mxPoint x="850" y="510" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="approvalRequired event" style="html=1;verticalAlign=bottom;endArrow=open;endSize=8;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="850" y="560" as="sourcePoint" />
+        <mxPoint x="110" y="560" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="handleApproval(approve)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="110" y="620" as="sourcePoint" />
+        <mxPoint x="250" y="620" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="advance phase" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="250" y="660" as="sourcePoint" />
+        <mxPoint x="395" y="660" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

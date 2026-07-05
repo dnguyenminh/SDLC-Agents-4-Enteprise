@@ -1,0 +1,42 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Code Intelligence — System Context" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="agents" value="AI Agents&#10;(BA, SA, DEV, QA)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="codeintel" value="Code Intelligence&#10;Module" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="180" width="200" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="sqlite" value="SQLite DB&#10;(index.db)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;size=12;" vertex="1" parent="1">
+      <mxGeometry x="700" y="100" width="120" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="filesystem" value="Workspace&#10;Filesystem" style="shape=folder;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="700" y="250" width="130" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="treesitter" value="Tree-sitter&#10;(WASM Grammars)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="700" y="400" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="memory" value="Memory/KB Module&#10;(F1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="380" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="MCP Tool Calls&#10;(code_search, code_callers, etc.)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1" source="agents" target="codeintel">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="Query/Store&#10;symbols + relationships" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="codeintel" target="sqlite">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="Read Source&#10;Files" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1" source="codeintel" target="filesystem">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="Parse AST" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1" source="codeintel" target="treesitter">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="KB integration&#10;(curated context)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;fontSize=9;dashed=1;" edge="1" parent="1" source="codeintel" target="memory">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

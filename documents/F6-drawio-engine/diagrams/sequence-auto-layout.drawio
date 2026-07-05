@@ -1,0 +1,72 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="actor" value="AI Agent" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;participant=umlActor;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+      <mxGeometry x="80" y="40" width="80" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="tool" value="drawio_auto_layout" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+      <mxGeometry x="280" y="40" width="140" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="parser" value="Parser" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+      <mxGeometry x="500" y="40" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="detector" value="Detector" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+      <mxGeometry x="700" y="40" width="100" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="drawio_auto_layout({file_path})" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="120" as="sourcePoint" />
+        <mxPoint x="350" y="120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="parseDrawio(filePath)" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="160" as="sourcePoint" />
+        <mxPoint x="550" y="160" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="DiagramGraph" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="550" y="220" as="sourcePoint" />
+        <mxPoint x="350" y="220" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="detectAllIssues(graph)" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="260" as="sourcePoint" />
+        <mxPoint x="750" y="260" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="detectNodeOverlaps" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="750" y="300" as="sourcePoint" />
+        <mxPoint x="750" y="330" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="detectEdgeCrossings" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="750" y="350" as="sourcePoint" />
+        <mxPoint x="750" y="380" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="detectDiagonalEdges" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="750" y="400" as="sourcePoint" />
+        <mxPoint x="750" y="430" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="Issue[]" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="750" y="460" as="sourcePoint" />
+        <mxPoint x="350" y="460" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="JSON {status, issues}" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" parent="1" edge="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="520" as="sourcePoint" />
+        <mxPoint x="120" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

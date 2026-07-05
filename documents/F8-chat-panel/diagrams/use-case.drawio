@@ -1,0 +1,102 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F8 Chat Panel — Use Case Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="320" y="10" width="350" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_dev" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="300" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="sys_boundary" value="Chat Panel System" style="shape=rect;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;fontSize=12;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="50" width="500" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_llm" value="LLM Provider" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="200" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_mcp" value="MCP Server" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="400" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" value="Send Chat Message" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="80" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" value="Manage&#10;Conversation Tabs" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="170" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" value="Select AI Model" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="260" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" value="Attach Context&#10;(#File, #Git, etc.)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="350" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc5" value="Monitor Token Usage" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="440" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc6" value="Apply/Insert Code" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="530" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc7" value="Trigger SDLC Pipeline" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="80" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc8" value="Approve/Reject&#10;Quality Gate" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="170" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc9" value="Stream LLM Response" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="260" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc10" value="Check Connection Status" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="350" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc11" value="Invoke Agent&#10;(/slash command)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="440" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc12" value="Attach Files&#10;(Images, PDFs)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="620" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc13" value="View Workflow Graph" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="530" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ea1" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea2" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea3" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea4" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc4" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea5" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea6" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea7" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea8" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea9" style="html=1;endArrow=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="actor_dev" target="uc8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="el1" style="html=1;endArrow=none;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="actor_llm" target="uc9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="el2" style="html=1;endArrow=none;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="actor_mcp" target="uc10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc1" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="uc1" target="uc9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="inc2" value="&lt;&lt;include&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" source="uc7" target="uc9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ext1" value="&lt;&lt;extends&gt;&gt;" style="html=1;endArrow=open;dashed=1;endSize=8;exitX=0.5;exitY=0;entryX=0.5;entryY=1;fontSize=9;" edge="1" source="uc4" target="uc1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

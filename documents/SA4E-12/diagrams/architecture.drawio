@@ -1,0 +1,75 @@
+<mxfile>
+  <diagram name="Architecture" id="arch-sa4e-12">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;SA4E-12 Rich LLM Config UI — Architecture&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_boundary" value="&lt;b&gt;VS Code Extension Host (Node.js)&lt;/b&gt;" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="680" height="460" as="geometry" />
+        </mxCell>
+        <mxCell id="webview_boundary" value="&lt;b&gt;Webview (Sandboxed Browser)&lt;/b&gt;" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#9673a6;verticalAlign=top;fontSize=12;arcSize=8;html=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="560" width="680" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="settings_panel" value="&lt;b&gt;SettingsPanel&lt;/b&gt;&#10;Webview Shell&#10;HTML + CSP + Nonce" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="msg_handler" value="&lt;b&gt;MessageHandler&lt;/b&gt;&#10;Route Messages&#10;Coordinate Services" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="220" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="config_svc" value="&lt;b&gt;ProviderConfigService&lt;/b&gt;&#10;Config + SecretStorage&#10;Model List" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="350" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="test_svc" value="&lt;b&gt;LlmTestService&lt;/b&gt;&#10;Connectivity Check&#10;Auto-test / Manual" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="220" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="chat_models" value="&lt;b&gt;chat-models.ts&lt;/b&gt;&#10;Static Catalog&#10;Gateway Fetch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="350" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="providers" value="&lt;b&gt;LLM Providers&lt;/b&gt;&#10;createProviderByType()&#10;isAvailable() / chat()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="540" y="100" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="secret_store" value="&lt;b&gt;SecretStorage&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="360" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vscode_cfg" value="&lt;b&gt;VS Code Settings&lt;/b&gt;&#10;(settings.json)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="560" y="440" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="settings_js" value="&lt;b&gt;settings.js&lt;/b&gt;&#10;DOM Logic&#10;Event Handlers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="100" y="620" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="settings_css" value="&lt;b&gt;settings.css&lt;/b&gt;&#10;VS Code Theme Vars&#10;Responsive Layout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="350" y="620" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="settings_panel" target="msg_handler" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="delegates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="msg_handler" target="config_svc" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="delegates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="msg_handler" target="test_svc" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config_svc" target="chat_models" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="test_svc" target="providers" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="read/write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config_svc" target="secret_store" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="read/write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config_svc" target="vscode_cfg" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="postMessage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=classic;startSize=6;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" source="msg_handler" target="settings_js" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="50" y="500" /><mxPoint x="50" y="655" /></Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

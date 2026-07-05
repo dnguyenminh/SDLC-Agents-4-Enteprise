@@ -1,0 +1,60 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="F3 Orchestration — System Context" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="380" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="orch" value="Orchestration Module&#10;(OrchestrationModule.ts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="320" width="220" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="agents" value="AI Agents&#10;(BA, SA, DEV, QA...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="60" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="atlassian" value="Atlassian MCP Server&#10;:3062 (Jira, Confluence)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="500" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="exporter" value="Markdown Exporter&#10;MCP Server (stdio)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="500" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="other" value="Other Child Servers&#10;(future: GitHub, Slack...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="550" y="500" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="memory" value="Memory Module (F1)&#10;SQLite + mcp_tools table" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="300" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="embedding" value="ONNX EmbeddingService&#10;all-MiniLM-L6-v2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="200" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="registry" value="Module Registry&#10;(Internal tool handlers)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="750" y="300" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="config" value="orchestration.json&#10;(.code-intel/)" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="750" y="180" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ea1" value="find_tools()&#10;execute_dynamic_tool()" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=9;" edge="1" parent="1" source="agents" target="orch">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea2" value="MCP callTool()&#10;(httpStream)" style="html=1;exitX=0.15;exitY=1;entryX=0.5;entryY=0;fontSize=9;" edge="1" parent="1" source="orch" target="atlassian">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea3" value="MCP callTool()&#10;(stdio)" style="html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=9;" edge="1" parent="1" source="orch" target="exporter">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea4" value="MCP callTool()" style="html=1;exitX=0.85;exitY=1;entryX=0.5;entryY=0;fontSize=9;dashed=1;" edge="1" parent="1" source="orch" target="other">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea5" value="DB access&#10;(mcp_tools)" style="html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;fontSize=9;" edge="1" parent="1" source="orch" target="memory">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea6" value="generateEmbedding()" style="html=1;entryX=0.5;entryY=1;exitX=0;exitY=0;fontSize=9;" edge="1" parent="1" source="orch" target="embedding">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea7" value="getToolHandlers()&#10;(fallback routing)" style="html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=9;" edge="1" parent="1" source="orch" target="registry">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ea8" value="reads" style="html=1;exitX=1;exitY=0;entryX=0;entryY=1;fontSize=9;dashed=1;" edge="1" parent="1" source="orch" target="config">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

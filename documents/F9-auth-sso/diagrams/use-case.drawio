@@ -1,0 +1,136 @@
+<mxfile host="app.diagrams.net" modified="2025-07-04T10:00:00.000Z" agent="BA Agent" version="24.0.0">
+  <diagram id="uc-auth" name="Use Case — Auth and SSO">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;Use Case Diagram — Auth &amp; SSO&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="380" y="10" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="boundary" value="SA4E Extension — Auth Module" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="50" width="600" height="700" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_dev" value="Developer" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_admin" value="Admin" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="550" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_sso" value="SSO Provider&#10;(External)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="200" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_backend" value="SA4E Backend&#10;(External)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="450" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_system" value="Timer&#10;(Background)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="620" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc1" value="Login with&#10;Username/Password" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="80" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc2" value="Login with SSO&#10;(OAuth2 PKCE)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="180" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc3" value="Restore Session&#10;(Auto-login)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="280" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc4" value="Logout" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="380" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc5" value="View Auth&#10;Status" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="480" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc6" value="Configure SSO&#10;Providers" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="590" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc7" value="Generate PKCE&#10;Challenge" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="580" y="130" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc8" value="Refresh Token&#10;(Background)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="580" y="280" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc9" value="Store/Retrieve&#10;Credentials" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="580" y="400" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc10" value="Handle Auth&#10;Errors" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="580" y="530" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dev_uc1" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_dev" target="uc1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dev_uc2" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_dev" target="uc2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dev_uc3" style="html=1;endArrow=none;strokeColor=#82b366;" edge="1" parent="1" source="actor_dev" target="uc3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dev_uc4" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_dev" target="uc4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_dev_uc5" style="html=1;endArrow=none;strokeColor=#82b366;" edge="1" parent="1" source="actor_dev" target="uc5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_admin_uc6" style="html=1;endArrow=none;strokeColor=#d6b656;" edge="1" parent="1" source="actor_admin" target="uc6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sso_uc2" style="html=1;endArrow=none;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="actor_sso" target="uc2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sso_uc7" style="html=1;endArrow=none;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="actor_sso" target="uc7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_backend_uc1" style="html=1;endArrow=none;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="actor_backend" target="uc1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_backend_uc8" style="html=1;endArrow=none;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="actor_backend" target="uc8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_backend_uc4" style="html=1;endArrow=none;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="actor_backend" target="uc4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_timer_uc8" style="html=1;endArrow=none;strokeColor=#9673a6;" edge="1" parent="1" source="actor_system" target="uc8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_include_pkce" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="uc2" target="uc7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_include_store" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="uc1" target="uc9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_include_store2" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="uc3" target="uc9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_extend_err" value="&lt;i&gt;&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#c62828;" edge="1" parent="1" source="uc10" target="uc1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="900" y="70" width="60" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="" style="ellipse;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="900" y="100" width="16" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1t" value="Core Auth (MUST)" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="925" y="95" width="110" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="900" y="120" width="16" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2t" value="UX (SHOULD)" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="925" y="115" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="" style="ellipse;fillColor=#fce4ec;strokeColor=#c62828;" vertex="1" parent="1">
+          <mxGeometry x="900" y="140" width="16" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3t" value="Security (MUST)" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="925" y="135" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" value="" style="ellipse;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="900" y="160" width="16" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4t" value="Background (MUST)" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="925" y="155" width="120" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

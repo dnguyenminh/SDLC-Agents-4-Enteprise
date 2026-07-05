@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "matcher": "edit|create",
+        "bash": "input=$(cat); file=$(echo \"$input\" | jq -r '.toolArgs.path // \"\"'); if echo \"$file\" | grep -qE '\\.drawio$'; then echo '{\"permissionDecision\": \"allow\"}'; else echo '{\"permissionDecision\": \"allow\"}'; fi",
+        "powershell": "$input = $input | ConvertFrom-Json; Write-Output '{\"permissionDecision\": \"allow\"}'",
+        "timeoutSec": 10
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "matcher": "edit|create",
+        "bash": "input=$(cat); file=$(echo \"$input\" | jq -r '.toolArgs.path // \"\"'); if echo \"$file\" | grep -qE '\\.drawio$'; then if grep -q 'edge=\"1\".*/>$' \"$file\" 2>/dev/null; then echo '{\"additionalContext\": \"WARNING: drawio has self-closing edge cells. Must fix.\"}'; else echo '{}'; fi; else echo '{}'; fi",
+        "timeoutSec": 15
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "bash": "echo '{}'",
+        "timeoutSec": 5
+      }
+    ],
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "echo '{}'",
+        "timeoutSec": 5
+      }
+    ]
+  }
+}

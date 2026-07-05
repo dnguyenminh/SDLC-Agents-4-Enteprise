@@ -1,0 +1,82 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;State Diagram — Panel Lifecycle&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="250" y="10" width="300" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="initial" value="" style="ellipse;shape=doubleCircle;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="380" y="60" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="created" value="&lt;b&gt;CREATED&lt;/b&gt;&#10;Panel instantiated&#10;HTML generated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="140" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="loading" value="&lt;b&gt;LOADING&lt;/b&gt;&#10;loadData() in progress&#10;Fetching from MCP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="260" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="active" value="&lt;b&gt;ACTIVE&lt;/b&gt;&#10;Data displayed&#10;User can interact" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="380" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="hidden" value="&lt;b&gt;HIDDEN&lt;/b&gt;&#10;retainContextWhenHidden&#10;State preserved" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="380" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="error" value="&lt;b&gt;ERROR&lt;/b&gt;&#10;Overlay visible&#10;Retry available" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="260" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="disposed" value="&lt;b&gt;DISPOSED&lt;/b&gt;&#10;Panel destroyed&#10;Resources freed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="520" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_init" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="initial" target="created" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_created_loading" value="ready msg" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="created" target="loading" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_loading_active" value="data loaded" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="loading" target="active" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_loading_error" value="load failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="loading" target="error" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_error_loading" value="retry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="error" target="loading" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="625" y="240"/>
+          <mxPoint x="395" y="240"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_active_hidden" value="tab hidden" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="active" target="hidden" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_hidden_active" value="reveal()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="hidden" target="active" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="185" y="360"/>
+          <mxPoint x="395" y="360"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_active_disposed" value="dispose()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="active" target="disposed" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_active_error" value="server disconnected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="active" target="error" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="480" y="410"/>
+          <mxPoint x="520" y="410"/>
+          <mxPoint x="520" y="290"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_error_active" value="reconnected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="error" target="active" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="710" y="290"/>
+          <mxPoint x="710" y="410"/>
+          <mxPoint x="480" y="410"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,5 @@
+test_id,existing_backups,max_retention,action,expected_remaining
+UT-BAK-08,6,5,prune,5
+UT-BAK-09,3,5,prune,3
+PBT-STM-03,20,5,prune_after_add,5
+IT-BAK-03,6,5,prune,5

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "_name": "KB Lookup Before Drawio Write",
+        "type": "command",
+        "matcher": "edit|create|write",
+        "bash": "echo 'If writing .drawio: first call mem_search(drawio procedure) for patterns.'",
+        "timeoutSec": 5
+      }
+    ],
+    "postToolUse": [
+      {
+        "_name": "Code Index Incremental",
+        "type": "command",
+        "matcher": "edit|create|write",
+        "bash": "echo 'If source file modified, run incremental indexer.'",
+        "timeoutSec": 5
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "_name": "Stream User Prompt",
+        "type": "command",
+        "bash": "echo 'Log prompt summary via mem_ingest'",
+        "timeoutSec": 5
+      }
+    ],
+    "agentStop": [
+      {
+        "_name": "Stream Agent Response",
+        "type": "command",
+        "bash": "echo 'Log response summary via mem_ingest'",
+        "timeoutSec": 5
+      }
+    ]
+  }
+}

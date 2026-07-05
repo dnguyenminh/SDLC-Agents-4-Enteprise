@@ -160,6 +160,30 @@ function seedDefaults(db: Database.Database): void {
     for (const perm of allPerms) {
       insertPerm.run('grp-admin', perm, '{}');
     }
+
+    // Seed: Developers group
+    db.prepare(`INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
+      VALUES (?, ?, 0, ?, ?)`).run('grp-dev', 'Developers', now, now);
+    const devPerms = ['DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'MCP_ACCESS', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW'];
+    for (const perm of devPerms) {
+      insertPerm.run('grp-dev', perm, '{}');
+    }
+
+    // Seed: Viewers group (read-only)
+    db.prepare(`INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
+      VALUES (?, ?, 0, ?, ?)`).run('grp-viewer', 'Viewers', now, now);
+    const viewerPerms = ['DASHBOARD_VIEW', 'KB_READ', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW'];
+    for (const perm of viewerPerms) {
+      insertPerm.run('grp-viewer', perm, '{}');
+    }
+
+    // Seed: MCP Operators group
+    db.prepare(`INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
+      VALUES (?, ?, 0, ?, ?)`).run('grp-mcp-ops', 'MCP Operators', now, now);
+    const mcpPerms = ['DASHBOARD_VIEW', 'MCP_ACCESS', 'MCP_MANAGE'];
+    for (const perm of mcpPerms) {
+      insertPerm.run('grp-mcp-ops', perm, '{}');
+    }
   }
 
   const userExists = db.prepare('SELECT 1 FROM users WHERE username = ?').get('admin');

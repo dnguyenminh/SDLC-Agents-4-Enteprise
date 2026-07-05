@@ -1,0 +1,81 @@
+<mxfile>
+  <diagram name="System Context" id="ctx-sa4e-12">
+    <mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;SA4E-12 Rich LLM Config UI — System Context&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="330" y="10" width="420" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="boundary" value="&lt;b&gt;VS Code Extension&lt;/b&gt;" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="100" width="600" height="500" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_dev" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#e1f5fe;strokeColor=#0288d1;html=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="30" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="settings_panel" value="&lt;b&gt;Settings Panel&lt;/b&gt;&#10;(Webview UI)&#10;Provider/Model/Key config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="150" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="msg_handler" value="&lt;b&gt;Message Handler&lt;/b&gt;&#10;(Extension Host)&#10;Route webview messages" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="290" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="config_service" value="&lt;b&gt;ProviderConfigService&lt;/b&gt;&#10;Read/write VS Code config&#10;+ SecretStorage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="430" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="test_service" value="&lt;b&gt;LlmTestService&lt;/b&gt;&#10;Connection testing&#10;Provider.isAvailable()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="290" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="chat_models" value="&lt;b&gt;chat-models.ts&lt;/b&gt;&#10;Static catalog +&#10;Gateway fetch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="430" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_gateway" value="&lt;b&gt;LLM Gateway&lt;/b&gt;&#10;/v1/models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="200" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_provider" value="&lt;b&gt;LLM Provider&lt;/b&gt;&#10;(Anthropic/OpenAI/Ollama)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="340" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_chat" value="&lt;b&gt;Chat Panel&lt;/b&gt;&#10;Model dropdown sync" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="470" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="secret_store" value="&lt;b&gt;SecretStorage&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="560" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vscode_config" value="&lt;b&gt;VS Code Settings&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="550" y="560" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="postMessage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=classic;startSize=6;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="settings_panel" target="msg_handler" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="msg_handler" target="config_service" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="msg_handler" target="test_service" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="config_service" target="chat_models" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="GET /v1/models" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="chat_models" target="ext_gateway" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="isAvailable()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="test_service" target="ext_provider" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="kiroSdlc.llmModel" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="config_service" target="ext_chat" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" style="html=1;endArrow=classic;endSize=6;" edge="1" source="actor_dev" target="settings_panel" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="180" y="185" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="config_service" target="secret_store" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="config_service" target="vscode_config" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

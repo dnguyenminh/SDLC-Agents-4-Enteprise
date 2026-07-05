@@ -1,0 +1,5 @@
+platform_id,display_name,directories,conversion_path
+kiro,Kiro,.kiro/agents/;.kiro/steering/;.kiro/hooks/;.kiro/settings/,.kiro/
+claude-code,Claude Code,CLAUDE.md;.claude/,conversions/claude-code/
+github-copilot,GitHub Copilot,.github/copilot-instructions.md;.github/instructions/;.github/agents/;.github/hooks/,conversions/github-copilot/
+antigravity,Antigravity,AGENTS.md;GEMINI.md;.agents/;skills/,conversions/antigravity/

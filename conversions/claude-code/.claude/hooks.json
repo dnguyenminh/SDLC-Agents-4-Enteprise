@@ -1,0 +1,39 @@
+{
+  "_comment": "Converted from .kiro/hooks/. fileEdited/fileCreated/fileDeleted events NOT supported — see GAPS.md",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "_name": "KB Lookup Before Drawio Write",
+        "type": "command",
+        "matcher": "Write|Edit|Create",
+        "bash": "echo 'REMINDER: If writing .drawio file, first call mem_search(drawio procedure) for patterns.'",
+        "timeoutSec": 5
+      }
+    ],
+    "PostToolUse": [
+      {
+        "_name": "Code Index Incremental (approximates fileEdited)",
+        "type": "command",
+        "matcher": "Write|Edit",
+        "bash": "echo 'If source file modified (.kt,.ts,.py,.go,.rs,.cs), run: npx ts-node .analysis/code-intelligence/scripts/src/incremental-indexer.ts --files <file>'",
+        "timeoutSec": 5
+      }
+    ],
+    "userPromptSubmitted": [
+      {
+        "_name": "Stream User Prompt",
+        "type": "command",
+        "bash": "echo 'Log user prompt summary via mem_ingest: type=CONTEXT, source=/chat-prompt, tags=chat,stream,user'",
+        "timeoutSec": 5
+      }
+    ],
+    "Stop": [
+      {
+        "_name": "Stream Agent Response",
+        "type": "command",
+        "bash": "echo 'Log agent response summary via mem_ingest: type=CONTEXT, source=chat-response, tags=chat,stream,agent'",
+        "timeoutSec": 5
+      }
+    ]
+  }
+}

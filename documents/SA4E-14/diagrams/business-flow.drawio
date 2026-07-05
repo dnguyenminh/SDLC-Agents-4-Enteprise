@@ -1,0 +1,111 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-14 IDE-Aware Agent Config Swap — Business Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="250" y="10" width="470" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="Start&#10;(Extension Activates)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="130" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="detect_ide" value="Detect Current IDE&#10;(appName, extensions)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="50" y="170" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="read_config" value="Read&#10;.agent-config.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="50" y="280" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="match_check" value="Detected Platform&#10;== Active Platform?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="50" y="400" width="170" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="no_action" value="No Action Needed&#10;(Configs Match)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="50" y="560" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="auto_check" value="Auto-Swap&#10;Enabled?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="400" width="130" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="prompt_user" value="Prompt User:&#10;&quot;Swap to {platform}?&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="540" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="user_confirm" value="User Confirms?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="650" width="120" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="backup" value="Backup Current Config&#10;(.agent-config-backup/&#10;{platform}-{timestamp}/)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="300" width="200" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="verify_backup" value="Verify Backup&#10;Complete?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="590" y="420" width="130" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="delete_old" value="Delete Old Platform&#10;Config Directories" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="570" y="550" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="copy_new" value="Copy New Platform Config&#10;from conversions/{platform}/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="650" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="update_json" value="Update&#10;.agent-config.json&#10;(activePlatform, backups)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="570" y="760" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="update_status" value="Update Status Bar&#10; {Platform}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="340" y="770" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="End" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="90" y="770" width="60" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="abort" value="Abort Swap&#10;(Notify User)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="430" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="start" target="detect_ide" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="detect_ide" target="read_config" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="read_config" target="match_check" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;" edge="1" source="match_check" target="no_action" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="no (mismatch)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" edge="1" source="match_check" target="auto_check" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" edge="1" source="auto_check" target="backup" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;" edge="1" source="auto_check" target="prompt_user" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="prompt_user" target="user_confirm" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=1;fontSize=10;" edge="1" source="user_confirm" target="backup" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0;exitY=1;entryX=0.5;entryY=0;fontSize=10;" edge="1" source="user_confirm" target="end" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="backup" target="verify_backup" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" value="yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;" edge="1" source="verify_backup" target="delete_old" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" value="no (failed)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" edge="1" source="verify_backup" target="abort" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="delete_old" target="copy_new" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="copy_new" target="update_json" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="update_json" target="update_status" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="update_status" target="end" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="no_action" target="end" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

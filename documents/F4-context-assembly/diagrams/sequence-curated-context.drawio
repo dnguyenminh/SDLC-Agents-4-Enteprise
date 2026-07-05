@@ -1,0 +1,120 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Sequence — get_curated_context" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=13;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="350" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="client" value="Client" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="70" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="curated" value="Curated&#xa;Context" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="180" y="60" width="70" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="analyzer" value="Query&#xa;Analyzer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="320" y="60" width="70" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="code_src" value="Code&#xa;Search" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="460" y="60" width="70" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="mem_src" value="Memory&#xa;Search" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="600" y="60" width="70" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="graph_src" value="Graph&#xa;Expand" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="740" y="60" width="70" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="rrf_life" value="RRF&#xa;Merger" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="880" y="60" width="70" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="alloc" value="Budget&#xa;Allocator" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;size=40;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="60" width="70" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="getContext(query, options)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="75" y="120" as="sourcePoint" />
+        <mxPoint x="215" y="120" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s2" value="analyze(query)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="215" y="150" as="sourcePoint" />
+        <mxPoint x="355" y="150" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s3" value="QueryAnalysis" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=0;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="355" y="175" as="sourcePoint" />
+        <mxPoint x="215" y="175" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="par_note" value="parallel" style="text;html=1;fontSize=9;fontStyle=2;fillColor=none;strokeColor=#666666;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="380" y="195" width="50" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="s4" value="searchCode(analysis)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="215" y="220" as="sourcePoint" />
+        <mxPoint x="495" y="220" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s5" value="searchMemory(analysis)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#82b366;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="215" y="250" as="sourcePoint" />
+        <mxPoint x="635" y="250" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s6" value="codeResults" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=0;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="495" y="290" as="sourcePoint" />
+        <mxPoint x="215" y="290" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s7" value="memoryResults" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=0;strokeColor=#82b366;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="635" y="310" as="sourcePoint" />
+        <mxPoint x="215" y="310" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s8" value="expandGraph(top5)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="215" y="340" as="sourcePoint" />
+        <mxPoint x="775" y="340" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s9" value="graphResults" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=0;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="775" y="370" as="sourcePoint" />
+        <mxPoint x="215" y="370" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s10" value="merge(code, memory, graph, weights)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="215" y="400" as="sourcePoint" />
+        <mxPoint x="915" y="400" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s11" value="mergedResults (RRF sorted)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=0;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="915" y="430" as="sourcePoint" />
+        <mxPoint x="215" y="430" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s12" value="allocate(merged, maxTokens)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=0;strokeColor=#c62828;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="215" y="460" as="sourcePoint" />
+        <mxPoint x="1055" y="460" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s13" value="allocated (with detail levels)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=0;strokeColor=#c62828;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1055" y="490" as="sourcePoint" />
+        <mxPoint x="215" y="490" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s14" value="CuratedContextResponse" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=0;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="215" y="540" as="sourcePoint" />
+        <mxPoint x="75" y="540" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

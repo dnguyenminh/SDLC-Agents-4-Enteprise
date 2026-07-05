@@ -1,0 +1,102 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F8 Chat Panel — Business Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="300" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="60" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="activate" value="User Opens&#10;Chat Panel Sidebar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="170" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="init" value="Initialize Panel&#10;(HTML/CSS/JS Load)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="280" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="status_check" value="Check Status&#10;(MCP + LLM)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="400" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="restore" value="Restore State&#10;(Tabs, Messages,&#10;Steering)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="400" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="compose" value="User Composes&#10;Message" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="510" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="context" value="Add Context?&#10;(#File, #Git, etc.)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="400" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="route" value="Route Message" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="540" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="pipeline" value="SDLC Pipeline&#10;(ticket command)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="500" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="agent_cmd" value="Agent Invoke&#10;(/agent task)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="560" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="general_chat" value="General Chat&#10;(LLM invoke)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="620" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="stream" value="LLM Streams&#10;Response Chunks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="550" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="render" value="Render Markdown&#10;(Progressive)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="660" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="actions" value="User Actions&#10;(Apply/Insert/Approve)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="720" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="End" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="730" width="60" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="start" target="activate" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="activate" target="init" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="init" target="status_check" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="connected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" edge="1" source="status_check" target="restore" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="restore" target="compose" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="compose" target="context" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="context" target="route" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="ticket" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.25;entryX=0;entryY=0.5;fontSize=10;" edge="1" source="route" target="pipeline" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="/agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" edge="1" source="route" target="agent_cmd" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="other" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.75;entryX=0;entryY=0.5;fontSize=10;" edge="1" source="route" target="general_chat" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.3;" edge="1" source="pipeline" target="stream" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="agent_cmd" target="stream" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.7;" edge="1" source="general_chat" target="stream" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="stream" target="render" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="render" target="actions" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="actions" target="end" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

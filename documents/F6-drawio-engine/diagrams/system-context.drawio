@@ -1,0 +1,54 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="AI Agents&#xa;(BA, SA, QA, DevOps)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+      <mxGeometry x="80" y="300" width="120" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="Draw.io Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" parent="1" vertex="1">
+      <mxGeometry x="400" y="280" width="200" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="Workspace&#xa;Filesystem" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+      <mxGeometry x="700" y="160" width="120" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="draw.io Desktop CLI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+      <mxGeometry x="700" y="300" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="Chrome DevTools MCP&#xa;(Fallback)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;" parent="1" vertex="1">
+      <mxGeometry x="700" y="400" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="MCP Tool Registry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+      <mxGeometry x="400" y="120" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" source="2" target="3" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e1label" value="MCP tool calls&#xa;(drawio_auto_layout,&#xa;drawio_export_png)" style="edgeLabel;html=1;align=center;verticalAlign=middle;" parent="e1" vertex="1" connectable="0">
+      <mxGeometry x="-0.2" relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" parent="1" source="3" target="4" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2label" value="Read/Write&#xa;.drawio + .png" style="edgeLabel;html=1;align=center;" parent="e2" vertex="1" connectable="0">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" parent="1" source="3" target="5" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3label" value="--export --format png" style="edgeLabel;html=1;align=center;" parent="e3" vertex="1" connectable="0">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.75;entryX=0;entryY=0.5;dashed=1;" parent="1" source="3" target="6" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4label" value="screenshot&#xa;(fallback)" style="edgeLabel;html=1;align=center;" parent="e4" vertex="1" connectable="0">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" parent="1" source="3" target="7" edge="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5label" value="Tool registration" style="edgeLabel;html=1;align=center;" parent="e5" vertex="1" connectable="0">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

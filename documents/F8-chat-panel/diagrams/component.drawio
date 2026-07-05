@@ -1,0 +1,69 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F8 Chat Panel — Component Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="320" y="10" width="340" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="provider_comp" value="&lt;&lt;component&gt;&gt;&#10;ChatPanelProvider" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="70" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="handler_comp" value="&lt;&lt;component&gt;&gt;&#10;MessageHandler" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="160" y="200" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="routing_comp" value="&lt;&lt;component&gt;&gt;&#10;MessageRouting" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="160" y="310" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="conv_comp" value="&lt;&lt;component&gt;&gt;&#10;ConversationManager" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="160" y="430" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="token_comp" value="&lt;&lt;component&gt;&gt;&#10;TokenCounter" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="160" y="540" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ctx_track_comp" value="&lt;&lt;component&gt;&gt;&#10;ContextUsageTracker" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="160" y="650" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="status_comp" value="&lt;&lt;component&gt;&gt;&#10;ChatStatusManager" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="200" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="model_comp" value="&lt;&lt;component&gt;&gt;&#10;ChatModelManager" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="310" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="state_comp" value="&lt;&lt;component&gt;&gt;&#10;ChatStateManager" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="430" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="picker_comp" value="&lt;&lt;component&gt;&gt;&#10;ChatContextPicker" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="540" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="html_comp" value="&lt;&lt;component&gt;&gt;&#10;ChatHtmlBuilder" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="650" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="protocol_comp" value="&lt;&lt;interface&gt;&gt;&#10;message-protocol.ts" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="200" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="models_comp" value="&lt;&lt;component&gt;&gt;&#10;chat-models.ts" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="310" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="types_comp" value="&lt;&lt;interface&gt;&gt;&#10;conversation-types.ts" style="shape=component;align=left;spacingLeft=36;rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="430" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ep1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" source="provider_comp" target="handler_comp" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ep2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" source="provider_comp" target="status_comp" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ep3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="handler_comp" target="routing_comp" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ep4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="provider_comp" target="protocol_comp" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ep5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="routing_comp" target="conv_comp" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ep6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="model_comp" target="models_comp" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

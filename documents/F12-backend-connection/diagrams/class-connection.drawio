@@ -1,0 +1,42 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F12 Backend Connection — Class Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="360" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="iface_disposable" value="&lt;b&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;/b&gt;&#10;&lt;b&gt;vscode.Disposable&lt;/b&gt;&#10;&#10;+ dispose(): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=center;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="360" y="50" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="conn_mgr" value="&lt;b&gt;ConnectionManager&lt;/b&gt;&#10;&#10;- state: ConnectionState&#10;- reconnectAttempts: number&#10;- maxReconnectAttempts: 5&#10;- reconnectDelays: number[]&#10;- reconnectTimer: Timeout | null&#10;- healthChecker: HealthChecker&#10;- config: RemoteBackendConfig&#10;- authManager: AuthManager&#10;- httpClient: HttpClient&#10;- _onStateChange: EventEmitter&#10;&#10;+ connect(): Promise&lt;void&gt;&#10;+ disconnect(): void&#10;+ updateConfig(cfg): void&#10;+ currentState: ConnectionState&#10;+ isConnected: boolean&#10;+ backendUrl: string&#10;+ onStateChange: Event&#10;+ dispose(): void&#10;- scheduleReconnect(): void&#10;- cancelReconnect(): void&#10;- transitionTo(state): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="60" y="180" width="230" height="380" as="geometry" />
+    </mxCell>
+    <mxCell id="health_checker" value="&lt;b&gt;HealthChecker&lt;/b&gt;&#10;&#10;- timer: Interval | null&#10;- failListeners: Function[]&#10;- httpClient: HttpClient&#10;+ interval: number&#10;&#10;+ onHealthFail(fn): void&#10;+ start(): void&#10;+ stop(): void&#10;+ checkOnce(): Promise&lt;boolean&gt;&#10;- check(): Promise&lt;void&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="60" y="610" width="230" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="remote_client" value="&lt;b&gt;RemoteBackendClient&lt;/b&gt;&#10;&#10;- _status: ServerStatus&#10;- _port: number | null&#10;- _wrapperPort: number | null&#10;- mcpClient: Client | null&#10;- httpServer: http.Server | null&#10;- requestId: number&#10;- workspaceFolder: string&#10;- outputChannel: OutputChannel&#10;- authManager: AuthManager&#10;- backendUrl: string&#10;&#10;+ connect(): Promise&lt;void&gt;&#10;+ disconnect(): Promise&lt;void&gt;&#10;+ spawn(): Promise&lt;void&gt;&#10;+ kill(): Promise&lt;void&gt;&#10;+ restart(): Promise&lt;void&gt;&#10;+ reconnect(): Promise&lt;void&gt;&#10;+ invokeTool(name, args): Promise&#10;+ status: ServerStatus&#10;+ port: number | null&#10;+ onStatusChange: Event&#10;+ onNotification: Event&#10;+ dispose(): void&#10;- startLocalServer(): Promise&lt;void&gt;&#10;- handleMcpRequest(req,res): Promise&#10;- readBody(req): Promise&lt;string&gt;&#10;- checkHealth(): Promise&lt;void&gt;&#10;- extractPort(url): number | null&#10;- setStatus(s): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="360" y="180" width="240" height="520" as="geometry" />
+    </mxCell>
+    <mxCell id="config_watcher" value="&lt;b&gt;ConfigWatcher&lt;/b&gt;&#10;&#10;- watcher: FileSystemWatcher&#10;- debounceTimer: Timeout&#10;- lastConfigHash: string&#10;- suppressUntil: number&#10;- outputChannel: OutputChannel&#10;- workspaceFolder: string&#10;- mcpManager: McpServerManager&#10;&#10;+ suppressNextChange(): void&#10;+ readCodeIntelConfig(): Config | null&#10;+ dispose(): void&#10;- startWatching(): void&#10;- onConfigFileChanged(): void&#10;- onConfigFileDeleted(): void&#10;- handleConfigChange(): void&#10;- handleConfigDeleted(): void&#10;- computeConfigHash(): string" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="670" y="180" width="230" height="330" as="geometry" />
+    </mxCell>
+    <mxCell id="e_inherit1" style="endArrow=block;endSize=12;endFill=0;html=1;" edge="1" source="conn_mgr" target="iface_disposable" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_inherit2" style="endArrow=block;endSize=12;endFill=0;html=1;" edge="1" source="remote_client" target="iface_disposable" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_inherit3" style="endArrow=block;endSize=12;endFill=0;html=1;" edge="1" source="config_watcher" target="iface_disposable" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_comp1" value="1" style="endArrow=diamond;endFill=1;endSize=10;html=1;fontSize=10;" edge="1" source="health_checker" target="conn_mgr" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_uses1" value="uses" style="dashed=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="conn_mgr" target="remote_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_uses2" value="triggers" style="dashed=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="config_watcher" target="remote_client" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

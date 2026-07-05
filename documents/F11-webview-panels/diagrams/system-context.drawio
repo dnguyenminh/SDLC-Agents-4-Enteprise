@@ -1,0 +1,75 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;System Context — F11 Webview Panels&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="360" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_dev" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#e1f5fe;strokeColor=#0288d1;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="300" width="30" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary" value="SA4E VS Code Extension" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;html=1;" vertex="1" parent="1">
+      <mxGeometry x="160" y="60" width="480" height="580" as="geometry"/>
+    </mxCell>
+    <mxCell id="panel_mgr" value="&lt;b&gt;WebviewPanelManager&lt;/b&gt;&#10;Factory + singleton registry&#10;openPanel() / disposeAll()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="100" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="base_panel" value="&lt;b&gt;BasePanel (abstract)&lt;/b&gt;&#10;Lifecycle, message handling&#10;CSP, server status subscription" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="210" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="iframe_panels" value="&lt;b&gt;Iframe Panels&lt;/b&gt;&#10;Graph, Dashboard, Tags&#10;Quality, Analytics, Workflow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="330" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="custom_panels" value="&lt;b&gt;Custom HTML Panels&lt;/b&gt;&#10;Security, Impact, Settings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="330" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="mcp_mgr" value="&lt;b&gt;McpServerManager&lt;/b&gt;&#10;invokeTool()&#10;onStatusChange()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="460" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="event_bus" value="&lt;b&gt;KbEventBus&lt;/b&gt;&#10;SSE subscription&#10;Real-time updates" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="560" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="secret_store" value="&lt;b&gt;SecretStorage&lt;/b&gt;&#10;API keys" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="460" width="120" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="mcp_server" value="&lt;b&gt;MCP Server&lt;/b&gt;&#10;mem_search, mem_admin&#10;code_search, code_context" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="200" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="backend_server" value="&lt;b&gt;Backend Server&lt;/b&gt;&#10;Admin UI (HTML/JS)&#10;http://127.0.0.1:48721" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="380" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="vscode_api" value="&lt;b&gt;VS Code API&lt;/b&gt;&#10;WebviewPanel&#10;Commands, Config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="530" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_dev_mgr" value="Commands" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="actor_dev" target="panel_mgr" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_mgr_base" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="panel_mgr" target="base_panel" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_base_iframe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="base_panel" target="iframe_panels" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_base_custom" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="base_panel" target="custom_panels" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_custom_mcp" value="invokeTool()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="custom_panels" target="mcp_mgr" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_mcp_server" value="JSON-RPC (stdio)" style="rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=10;" edge="1" source="mcp_mgr" target="mcp_server" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_iframe_backend" value="iframe src" style="rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="iframe_panels" target="backend_server" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_base_vscode" value="VS Code API" style="rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="base_panel" target="vscode_api" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_settings_secret" value="store/read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=10;" edge="1" source="custom_panels" target="secret_store" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_eventbus_panels" value="SSE events" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" source="event_bus" target="iframe_panels" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

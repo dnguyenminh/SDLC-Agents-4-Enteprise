@@ -1,0 +1,58 @@
+{
+  "kb-lookup-drawio": {
+    "PreToolUse": [
+      {
+        "matcher": "write_to_file|create_file|edit_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'If writing .drawio: call mem_search(drawio procedure) first.'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "code-index-incremental": {
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|edit_file|create_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'If source file modified, run incremental indexer.'",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "stream-user-prompt": {
+    "PreInvocation": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Log prompt via mem_ingest: type=CONTEXT, source=/chat-prompt'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "stream-agent-response": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Log response via mem_ingest: type=CONTEXT, source=chat-response'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

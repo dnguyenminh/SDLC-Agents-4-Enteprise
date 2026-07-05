@@ -24,6 +24,10 @@ export class OrchestrationModule implements IModule {
     this.clientManager = new McpClientManager(logger);
   }
 
+  getClientManager(): McpClientManager {
+    return this.clientManager;
+  }
+
   get status(): ModuleStatus { return this._status; }
 
   async initialize(): Promise<void> {

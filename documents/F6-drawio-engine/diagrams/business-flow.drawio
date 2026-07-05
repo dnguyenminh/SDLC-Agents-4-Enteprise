@@ -1,0 +1,75 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;Draw.io Engine — Business Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="300" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="60" width="60" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="generate_xml" value="AI Agent Generates&#10;Draw.io XML" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="160" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="call_layout" value="Call drawio_auto_layout&#10;(MCP Tool)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="280" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="parse_xml" value="Parse XML&#10;(Regex-based)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="400" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="detect_issues" value="Issues&#10;Detected?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="520" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="report_issues" value="Report Issues&#10;with Fix Hints" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="530" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="agent_fixes" value="Agent Fixes XML&#10;Based on Hints" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="380" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="call_export" value="Call drawio_export_png&#10;(MCP Tool)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="660" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="detect_renderer" value="Detect Renderer&#10;(CLI &gt; Chrome &gt; Puppeteer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="780" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="export_png" value="Export PNG&#10;(Same Dir)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="370" y="900" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="End&#10;(PNG Embedded in Doc)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="1020" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="start" target="generate_xml" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="generate_xml" target="call_layout" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="call_layout" target="parse_xml" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="parse_xml" target="detect_issues" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;fontSize=10;" edge="1" source="detect_issues" target="report_issues" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" source="report_issues" target="agent_fixes" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="agent_fixes" target="call_layout" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;fontSize=10;" edge="1" source="detect_issues" target="call_export" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="call_export" target="detect_renderer" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="detect_renderer" target="export_png" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="export_png" target="end" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

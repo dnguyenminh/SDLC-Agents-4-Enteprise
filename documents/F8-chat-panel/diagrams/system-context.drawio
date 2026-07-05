@@ -1,0 +1,54 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;F8 Chat Panel — System Context&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="320" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="chat_panel" value="Chat Panel&#10;(WebviewViewProvider)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="410" y="310" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="developer" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="320" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="vscode" value="VS Code API&#10;(Editor, FS, Terminal,&#10;Diagnostics)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="410" y="80" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="langgraph" value="LangGraph Engine&#10;(Pipeline + Chat)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="410" y="530" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="llm" value="LLM Provider&#10;(Anthropic/OpenAI/&#10;Ollama/ONNX)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="750" y="80" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp" value="MCP Server&#10;(Tool Execution)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="750" y="310" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="webview" value="Webview Frontend&#10;(HTML/CSS/JS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="310" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="workspace" value="Workspace State&#10;(Memento)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="750" y="500" width="140" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="postMessage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=10;" edge="1" source="webview" target="chat_panel" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="types/views" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="developer" target="webview" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="Webview API&#10;Editor API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=10;" edge="1" source="chat_panel" target="vscode" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="invoke/stream" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=10;" edge="1" source="chat_panel" target="langgraph" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="status/tools" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=10;" edge="1" source="chat_panel" target="mcp" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="prompts/responses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=10;" edge="1" source="langgraph" target="llm" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="save/restore" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;startArrow=classic;startSize=6;fontSize=10;" edge="1" source="chat_panel" target="workspace" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

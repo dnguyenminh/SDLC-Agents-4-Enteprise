@@ -1,0 +1,115 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;Backend Connection &amp;amp; Lifecycle — Business Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="320" y="10" width="420" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="Extension&#10;Activates" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="120" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="init" value="&lt;b&gt;ConnectionManager&lt;/b&gt;&#10;Initialize with&#10;backend URL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="170" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="health_check" value="Health Check&#10;GET /health" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="50" y="290" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="connected" value="&lt;b&gt;CONNECTED&lt;/b&gt;&#10;Start HealthChecker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="170" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp_session" value="&lt;b&gt;MCP Session&lt;/b&gt;&#10;StreamableHTTP&#10;Transport" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="290" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="wrapper" value="&lt;b&gt;Local Wrapper&lt;/b&gt;&#10;Server :9181&#10;(MCP Proxy)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="410" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="running" value="&lt;b&gt;RUNNING&lt;/b&gt;&#10;Ready for tool calls" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="530" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="reconnect" value="&lt;b&gt;Schedule Reconnect&lt;/b&gt;&#10;Exponential Backoff&#10;1s, 2s, 4s, 8s, 16s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="430" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="max_check" value="Max&#10;Attempts?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="50" y="560" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="error" value="&lt;b&gt;ERROR&lt;/b&gt;&#10;Show notification&#10;Stop retrying" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="700" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="health_monitor" value="&lt;b&gt;HealthChecker&lt;/b&gt;&#10;Periodic ping&#10;(30s interval)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="530" y="290" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="config_watch" value="&lt;b&gt;ConfigWatcher&lt;/b&gt;&#10;mcp.json change?&#10;(debounce 500ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="530" y="430" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="local_tools" value="&lt;b&gt;Local Tool Exec&lt;/b&gt;&#10;stream_write_file&#10;embed_image" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="530" y="560" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="start" target="init" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="init" target="health_check" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="OK (200)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="health_check" target="connected" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="Fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;strokeColor=#b85450;" edge="1" source="health_check" target="reconnect" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="connected" target="mcp_session" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="mcp_session" target="wrapper" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="wrapper" target="running" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="reconnect" target="max_check" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="max_check" target="error" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="No (Retry)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="max_check" target="health_check" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="10" y="600" />
+          <mxPoint x="10" y="330" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="running" target="health_monitor" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="460" y="565" />
+          <mxPoint x="460" y="325" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e12" value="Health Fail" style="dashed=1;html=1;endArrow=classic;endSize=6;fontSize=10;strokeColor=#b85450;" edge="1" source="health_monitor" target="reconnect" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="610" y="240" />
+          <mxPoint x="120" y="240" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="running" target="config_watch" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" value="Config Changed" style="dashed=1;html=1;endArrow=classic;endSize=6;fontSize=10;strokeColor=#6c8ebf;" edge="1" source="config_watch" target="init" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="750" y="465" />
+          <mxPoint x="750" y="760" />
+          <mxPoint x="120" y="760" />
+          <mxPoint x="120" y="240" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="running" target="local_tools" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

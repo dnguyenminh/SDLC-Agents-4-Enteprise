@@ -1,0 +1,54 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="AI Context Assembly — System Context" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="system" value="Context Assembly Engine&#xa;(AIContextService, EditContextService, CuratedContextService)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;arcSize=8;" vertex="1" parent="1">
+      <mxGeometry x="380" y="300" width="340" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="developer" value="Developer&#xa;(VS Code)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="200" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ai_agent" value="AI Agent&#xa;(LLM)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="400" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="code_index" value="Code Intelligence&#xa;Index (SQLite)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="120" width="120" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="kb" value="Knowledge&#xa;Base (FTS5)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="240" width="120" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="call_graph" value="Call Graph&#xa;Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="360" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="git" value="Git&#xa;Repository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="460" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="graph_traverser" value="Graph&#xa;Traverser" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="560" width="120" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="get_ai_context&#xa;get_edit_context" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1" source="developer" target="system">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="get_curated_context" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1" source="ai_agent" target="system">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="FTS + Symbol queries" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;fontSize=9;" edge="1" parent="1" source="system" target="code_index">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="Memory search" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#82b366;fontSize=9;" edge="1" parent="1" source="system" target="kb">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="findCallers/Callees" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1" source="system" target="call_graph">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="getFileHistory" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="system" target="git">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="traverse (1-hop)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1" source="system" target="graph_traverser">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

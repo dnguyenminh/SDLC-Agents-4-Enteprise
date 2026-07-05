@@ -115,6 +115,26 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     if (fs.existsSync(fp)) return new Response(fs.readFileSync(fp, 'utf-8'), { headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache' } });
     return c.text('Not found', 404);
   });
+  app.get('/admin/gesture-fsm.js', (c) => {
+    const fp = path.resolve(__dirname, '../../viewer/admin/gesture-fsm.js');
+    if (fs.existsSync(fp)) return new Response(fs.readFileSync(fp, 'utf-8'), { headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache' } });
+    return c.text('Not found', 404);
+  });
+  app.get('/admin/camera-physics.js', (c) => {
+    const fp = path.resolve(__dirname, '../../viewer/admin/camera-physics.js');
+    if (fs.existsSync(fp)) return new Response(fs.readFileSync(fp, 'utf-8'), { headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache' } });
+    return c.text('Not found', 404);
+  });
+  app.get('/admin/zoom-animator.js', (c) => {
+    const fp = path.resolve(__dirname, '../../viewer/admin/zoom-animator.js');
+    if (fs.existsSync(fp)) return new Response(fs.readFileSync(fp, 'utf-8'), { headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache' } });
+    return c.text('Not found', 404);
+  });
+  app.get('/admin/map-controls.js', (c) => {
+    const fp = path.resolve(__dirname, '../../viewer/admin/map-controls.js');
+    if (fs.existsSync(fp)) return new Response(fs.readFileSync(fp, 'utf-8'), { headers: { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache' } });
+    return c.text('Not found', 404);
+  });
   app.get('/admin/lod-clustering.js', (c) => {
     const fp = path.resolve(__dirname, '../../viewer/admin/lod-clustering.js');
     if (fs.existsSync(fp)) return new Response(fs.readFileSync(fp, 'utf-8'), { headers: { 'Content-Type': 'application/javascript' } });

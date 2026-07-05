@@ -1,0 +1,92 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;Sequence: Hybrid Search (mem_search)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="350" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="agent_ll" value="AI Agent" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="100" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="dispatch_ll" value="ToolDispatcher" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="60" width="120" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="engine_ll" value="MemoryEngine" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="60" width="120" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="fts_ll" value="FTS5 (SQLite)" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="660" y="60" width="100" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="mask_ll" value="MaskingMW" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="840" y="60" width="100" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="msg1" value="mem_search(query, filters)" style="html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="140" as="sourcePoint" />
+        <mxPoint x="320" y="140" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg2" value="dispatch('mem_search', args)" style="html=1;endArrow=classic;endSize=6;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="180" as="sourcePoint" />
+        <mxPoint x="520" y="180" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg3" value="sanitize query" style="html=1;endArrow=classic;endSize=6;strokeColor=#82b366;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="520" y="220" as="sourcePoint" />
+        <mxPoint x="520" y="250" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="570" y="220" />
+          <mxPoint x="570" y="250" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg4" value="FTS5 MATCH query" style="html=1;endArrow=classic;endSize=6;strokeColor=#82b366;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="520" y="280" as="sourcePoint" />
+        <mxPoint x="710" y="280" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg5" value="BM25 ranked results" style="html=1;endArrow=classic;endSize=6;strokeColor=#666666;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="710" y="320" as="sourcePoint" />
+        <mxPoint x="520" y="320" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg6" value="merge + scope filter" style="html=1;endArrow=classic;endSize=6;strokeColor=#82b366;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="520" y="370" as="sourcePoint" />
+        <mxPoint x="520" y="400" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="570" y="370" />
+          <mxPoint x="570" y="400" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg7" value="applyMasking(entries, role)" style="html=1;endArrow=classic;endSize=6;strokeColor=#c62828;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="520" y="430" as="sourcePoint" />
+        <mxPoint x="890" y="430" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg8" value="masked results" style="html=1;endArrow=classic;endSize=6;strokeColor=#c62828;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="890" y="470" as="sourcePoint" />
+        <mxPoint x="520" y="470" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg9" value="ranked results" style="html=1;endArrow=classic;endSize=6;strokeColor=#82b366;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="520" y="510" as="sourcePoint" />
+        <mxPoint x="320" y="510" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg10" value="SearchResult[]" style="html=1;endArrow=classic;endSize=6;strokeColor=#0288d1;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="320" y="550" as="sourcePoint" />
+        <mxPoint x="130" y="550" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,9 @@
+test_id,from_platform,to_platform,backup_exists,auto_confirm,expected_result
+UT-SWP-01,kiro,claude-code,false,true,success
+UT-SWP-06,kiro,kiro,false,true,already_on_platform
+UT-SWP-07,kiro,antigravity,false,true,config_not_available
+UT-SWP-08,kiro,claude-code,false,true,rollback_on_failure
+IT-SWP-01,kiro,claude-code,false,true,success
+IT-SWP-03,claude-code,kiro,true,true,success_restored
+E2E-CMD-01,kiro,claude-code,false,true,success
+E2E-CMD-03,kiro,kiro,false,true,already_on_platform

@@ -1,0 +1,18 @@
+test_case_id,provider,model_id,display_name,description,rate_multiplier,is_default,source,expected_result,test_description
+UT-02,anthropic,claude-sonnet-4-20250514,Claude Sonnet 4,Best balance of speed and quality,1.0,true,static,present,Static catalog default model
+UT-02,anthropic,claude-opus-4-20250514,Claude Opus 4,Most capable model,2.2,false,static,present,Static catalog premium model
+UT-02,anthropic,claude-haiku-3-20241022,Claude Haiku 3,Fast and efficient,0.5,false,static,present,Static catalog fast model
+UT-03,anthropic,model-gateway-1,Gateway Model 1,From gateway API,,false,gateway,present,Gateway fetched model
+UT-03,anthropic,model-gateway-2,Gateway Model 2,From gateway API,,false,gateway,present,Gateway fetched model 2
+UT-04,anthropic,claude-sonnet-4-20250514,Claude Sonnet 4,,1.0,true,static_fallback,present,Fallback after gateway timeout
+IT-03,anthropic,live-model-1,Live Model From Gateway,Dynamic model,1.5,false,gateway,present,Real HTTP gateway fetch
+IT-09,ollama,llama3:8b,Llama 3 8B,Local Llama model,,true,ollama_tags,present,Ollama /api/tags model
+IT-09,ollama,codellama:7b,Code Llama 7B,Code-focused model,,false,ollama_tags,present,Ollama /api/tags model 2
+E2E-API-05,anthropic,claude-sonnet-4,Claude Sonnet 4,From gateway,1.0,true,gateway,present,E2E gateway model list success
+E2E-API-06,anthropic,claude-sonnet-4-20250514,Claude Sonnet 4,,1.0,true,static_fallback,present,E2E fallback after gateway error
+E2E-UI-09,anthropic,claude-sonnet-4-20250514,Claude Sonnet 4,Best balance,1.0,true,static,selected,UI model selection test
+PBT-05,anthropic,,,,,true,static,non_empty,PBT — models always non-empty
+PBT-05,openai,,,,,true,static,non_empty,PBT — models always non-empty for any provider
+PBT-05,ollama,,,,,true,static,non_empty,PBT — models always non-empty for local
+PBT-05,lmstudio,,,,,true,static,non_empty,PBT — models always non-empty for LM Studio
+PBT-05,onnx,,,,,true,static,non_empty,PBT — models always non-empty for ONNX

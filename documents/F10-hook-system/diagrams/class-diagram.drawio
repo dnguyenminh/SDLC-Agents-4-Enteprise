@@ -1,0 +1,54 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="cls1" value="&lt;&lt;class&gt;&gt;&#10;HookEngine&#10;---&#10;- hooks: HookDefinition[]&#10;- loaded: boolean&#10;- executionStack: Set&lt;string&gt;&#10;- executor: HookExecutor&#10;---&#10;+ initialize(): Promise&lt;void&gt;&#10;+ reload(): Promise&lt;void&gt;&#10;+ firePreToolUse(): Promise&lt;PreToolUseHookResult&gt;&#10;+ firePostToolUse(): Promise&lt;PostToolUseHookResult&gt;&#10;+ firePromptSubmit(): Promise&lt;string[]&gt;&#10;+ fireAgentStop(): Promise&lt;string[]&gt;&#10;+ dispose(): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="280" height="260" as="geometry" />
+    </mxCell>
+    <mxCell id="cls2" value="&lt;&lt;class&gt;&gt;&#10;HookExecutor&#10;---&#10;- outputChannel: OutputChannel&#10;- defaultTimeout: number&#10;---&#10;+ execute(hook, context): Promise&lt;HookResult&gt;&#10;- executeAskAgent(): Promise&lt;HookResult&gt;&#10;- executeRunCommand(): Promise&lt;HookResult&gt;&#10;- substitutePlaceholders(): string&#10;- detectDenial(): string | null&#10;- killProcess(pid): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="420" y="60" width="280" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="cls3" value="&lt;&lt;class&gt;&gt;&#10;HookCommands&#10;---&#10;- disposables: Disposable[]&#10;- executor: HookExecutor&#10;---&#10;+ registerCommands(): Promise&lt;void&gt;&#10;+ getRegisteredCommands(): Promise&lt;string[]&gt;&#10;- sanitizeName(name): string&#10;+ dispose(): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="780" y="60" width="260" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="cls4" value="&lt;&lt;class&gt;&gt;&#10;HookEventsManager&#10;---&#10;- executionStack: Set&lt;string&gt;&#10;- executionLog: HookLogEntry[]&#10;- maxDepth: number&#10;---&#10;+ fireEvent(type, context): Promise&lt;void&gt;&#10;+ firePreToolUse(toolName, args): Promise&lt;PreToolUseResult&gt;&#10;+ firePostToolUse(toolName, args, result): Promise&lt;void&gt;&#10;+ classifyTool(name): string&#10;+ getExecutionLog(limit): HookLogEntry[]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="60" y="380" width="300" height="220" as="geometry" />
+    </mxCell>
+    <mxCell id="int1" value="&lt;&lt;interface&gt;&gt;&#10;HookDefinition&#10;---&#10;+ name: string&#10;+ version: string&#10;+ description?: string&#10;+ enabled: boolean&#10;+ when: HookTrigger&#10;+ then: HookAction&#10;+ filePath: string" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="420" y="360" width="200" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="int2" value="&lt;&lt;interface&gt;&gt;&#10;HookContext&#10;---&#10;+ toolName?: string&#10;+ toolArgs?: Record&#10;+ toolResult?: string&#10;+ nodeName?: string" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="680" y="360" width="180" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="int3" value="&lt;&lt;interface&gt;&gt;&#10;HookResult&#10;---&#10;+ status: string&#10;+ output?: string&#10;+ error?: string&#10;+ duration: number" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="900" y="360" width="160" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="fn1" value="&lt;&lt;module&gt;&gt;&#10;hook-loader&#10;---&#10;+ loadHooks(root): Promise&lt;HookDefinition[]&gt;&#10;+ clearHookCache(): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="420" y="580" width="250" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="fn2" value="&lt;&lt;module&gt;&gt;&#10;hook-tool-matcher&#10;---&#10;+ classifyTool(name): string&#10;+ getMatchingToolHooks(...): HookDefinition[]&#10;+ extractFilePath(name, args): string | null&#10;+ matchGlob(pattern, path): boolean" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=5;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="720" y="560" width="280" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="uses" style="" edge="1" source="cls1" target="cls2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="uses" style="" edge="1" source="cls3" target="cls2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="uses" style="" edge="1" source="cls1" target="int1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="uses" style="" edge="1" source="cls2" target="int2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="returns" style="" edge="1" source="cls2" target="int3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="uses" style="" edge="1" source="cls1" target="fn1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="uses" style="" edge="1" source="cls1" target="fn2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>
