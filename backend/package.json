@@ -19,7 +19,15 @@
     "test:e2e-api": "vitest run tests/e2e/",
     "test:e2e-ui": "npx playwright test"
   },
-  "keywords": ["mcp", "code-intelligence", "sdlc", "agents", "memory", "knowledge-base", "draw.io"],
+  "keywords": [
+    "mcp",
+    "code-intelligence",
+    "sdlc",
+    "agents",
+    "memory",
+    "knowledge-base",
+    "draw.io"
+  ],
   "author": "SA4E Team",
   "license": "MIT",
   "repository": {
@@ -47,6 +55,7 @@
     "@types/node": "^20.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.5.0",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "@types/express": "^5.0.0"
   }
 }
