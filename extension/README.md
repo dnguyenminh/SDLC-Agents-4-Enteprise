@@ -243,6 +243,22 @@ MIT
 
 ## Changelog
 
+### v1.2.1 (2026-07-08)
+
+- **Loop Engineering Guardrails** — Inspired by [loop-engineering](https://github.com/cobusgreyling/loop-engineering):
+  - Loop Constraints (path denylist, execution limits, push/merge safety)
+  - Token Budget Tracking via KB (daily cap, 80% warning, 100% hard stop)
+  - Circuit Breaker (closed/open/half-open, 30min cooldown, user override)
+  - Run Log per ticket (append-only with tokens column)
+  - Phased Autonomy (L1 report-only / L2 assisted / L3 unattended)
+  - Failure Mode Catalog (7 patterns: infinite loop, verifier theater, token burn, etc.)
+- **Engineering Skills** — Inspired by [mattpocock/skills](https://github.com/mattpocock/skills):
+  - Domain Glossary via KB (BA extracts terms in Phase 1, all agents consume)
+  - Two-Axis Code Review (Standards + Spec axes run parallel before QA)
+  - DEV Bug Diagnosis Loop (6-phase: feedback loop → reproduce → hypothesise → instrument → fix → cleanup)
+- **41 steering files** bundled (up from 32)
+- Install instructions updated for v1.2.1
+
 ### v1.2.0 (2026-07-08)
 
 - **Local tools discoverable in MCP** — `stream_write_file` and `embed_image` now appear in `tools/list` with description + inputSchema

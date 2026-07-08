@@ -372,3 +372,20 @@ If the user requests only a specific part:
 - "Implement service" → Steps 4 + 7 (service tests only)
 - "Implement {feature name}" → Find relevant TDD section and implement that scope
 - "Viết User Guide" / "Tạo UG" → Step 9 only (User Guide)
+
+## Bug Fix Mode
+
+**Trigger:** SM invokes with "Fix bugs" or Jira ticket type = Bug.
+
+**When in bug fix mode, DEV MUST follow `.kiro/steering/dev-bug-diagnosis.md`** — the 6-phase diagnosis loop:
+
+1. Build Feedback Loop → ensure project compiles
+2. Reproduce → write FAILING test FIRST
+3. Hypothesise → form specific, testable hypothesis
+4. Instrument → verify hypothesis with observation
+5. Fix → minimal change to make reproduction test pass
+6. Cleanup → remove debug code, proper commit
+
+**⛔ CORE RULE:** "No red-capable command, no fix attempt." — DEV CANNOT attempt a fix without a failing reproduction test.
+
+Read full procedure: `.kiro/steering/dev-bug-diagnosis.md`

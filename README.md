@@ -16,7 +16,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.2.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.2.1.vsix
 ```
 
 ### 3. Use
@@ -62,6 +62,21 @@ MIT
 ---
 
 ## Changelog
+
+### v1.2.1 (2026-07-08)
+
+- **Loop Engineering Guardrails** — 6 items from [cobusgreyling/loop-engineering](https://github.com/cobusgreyling/loop-engineering):
+  - Loop Constraints file (path denylist, execution limits, push safety)
+  - Token Budget Tracking via KB (daily cap, 80% warning, hard stop)
+  - Circuit Breaker (closed/open/half-open states, auto-cooldown)
+  - Run Log per ticket (append-only audit trail)
+  - Phased Autonomy Levels (L1 report / L2 assisted / L3 unattended)
+  - Failure Mode Catalog (7 documented patterns)
+- **Skills Integration** — 3 items from [mattpocock/skills](https://github.com/mattpocock/skills):
+  - Domain Glossary via KB (BA extracts terms, all agents consume)
+  - Two-Axis Code Review (Standards + Spec compliance, parallel)
+  - Bug Diagnosis Loop (6-phase structured debugging for DEV)
+- **41 steering files** bundled (up from 32)
 
 ### v1.2.0 (2026-07-08)
 
