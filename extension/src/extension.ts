@@ -1,5 +1,5 @@
 /**
- * Kiro SDLC Agents — VS Code Extension entry point.
+ * SDLC Agents 4 Enterprise — VS Code Extension entry point.
  * Thin activation shell — delegates command registration to CommandRegistrar and LlmCommands.
  */
 

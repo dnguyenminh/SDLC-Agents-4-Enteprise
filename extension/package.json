@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -39,110 +39,110 @@
     "commands": [
       {
         "command": "kiroSdlc.injectAll",
-        "title": "Kiro SDLC: Inject All Agents",
+        "title": "SDLC Agents: Inject All Agents",
         "icon": "$(cloud-download)"
       },
       {
         "command": "kiroSdlc.injectSelective",
-        "title": "Kiro SDLC: Inject (Select Components)"
+        "title": "SDLC Agents: Inject (Select Components)"
       },
       {
         "command": "kiroSdlc.update",
-        "title": "Kiro SDLC: Update Agents"
+        "title": "SDLC Agents: Update Agents"
       },
       {
         "command": "kiroSdlc.status",
-        "title": "Kiro SDLC: Show Status",
+        "title": "SDLC Agents: Show Status",
         "icon": "$(info)"
       },
       {
         "command": "kiroSdlc.openKbGraph",
-        "title": "Kiro SDLC: Open KB Graph"
+        "title": "SDLC Agents: Open KB Graph"
       },
       {
         "command": "kiroSdlc.openKbDashboard",
-        "title": "Kiro SDLC: Open KB Dashboard"
+        "title": "SDLC Agents: Open KB Dashboard"
       },
       {
         "command": "kiroSdlc.openKbTags",
-        "title": "Kiro SDLC: Open KB Tags"
+        "title": "SDLC Agents: Open KB Tags"
       },
       {
         "command": "kiroSdlc.openKbQuality",
-        "title": "Kiro SDLC: Open KB Quality"
+        "title": "SDLC Agents: Open KB Quality"
       },
       {
         "command": "kiroSdlc.openKbAnalytics",
-        "title": "Kiro SDLC: Open KB Analytics"
+        "title": "SDLC Agents: Open KB Analytics"
       },
       {
         "command": "kiroSdlc.openWorkflowGraph",
-        "title": "Kiro SDLC: Open Workflow Graph"
+        "title": "SDLC Agents: Open Workflow Graph"
       },
       {
         "command": "kiroSdlc.symbolSearch",
-        "title": "Kiro SDLC: Symbol Search"
+        "title": "SDLC Agents: Symbol Search"
       },
       {
         "command": "kiroSdlc.openSecurityPanel",
-        "title": "Kiro SDLC: Security Panel"
+        "title": "SDLC Agents: Security Panel"
       },
       {
         "command": "kiroSdlc.impactAnalysis",
-        "title": "Kiro SDLC: Impact Analysis"
+        "title": "SDLC Agents: Impact Analysis"
       },
       {
         "command": "kiroSdlc.getAIContext",
-        "title": "Kiro SDLC: Get AI Context for Symbol"
+        "title": "SDLC Agents: Get AI Context for Symbol"
       },
       {
         "command": "kiroSdlc.getEditContext",
-        "title": "Kiro SDLC: Get Edit Context for Symbol"
+        "title": "SDLC Agents: Get Edit Context for Symbol"
       },
       {
         "command": "kiroSdlc.openSettings",
-        "title": "Kiro SDLC: Settings",
+        "title": "SDLC Agents: Settings",
         "icon": "$(gear)"
       },
       {
         "command": "kiroSdlc.openKbBrowser",
-        "title": "Kiro SDLC: Open KB in Browser"
+        "title": "SDLC Agents: Open KB in Browser"
       },
       {
         "command": "kiroSdlc.login",
-        "title": "Kiro SDLC: Login to Backend"
+        "title": "SDLC Agents: Login to Backend"
       },
       {
         "command": "kiroSdlc.logout",
-        "title": "Kiro SDLC: Logout"
+        "title": "SDLC Agents: Logout"
       },
       {
         "command": "kiroSdlc.reconnect",
-        "title": "Kiro SDLC: Reconnect to Backend"
+        "title": "SDLC Agents: Reconnect to Backend"
       },
       {
         "command": "kiroSdlc.disconnect",
-        "title": "Kiro SDLC: Disconnect"
+        "title": "SDLC Agents: Disconnect"
       },
       {
         "command": "kiroSdlc.indexDocuments",
-        "title": "Kiro SDLC: Index Documents"
+        "title": "SDLC Agents: Index Documents"
       },
       {
         "command": "kiroSdlc.indexSource",
-        "title": "Kiro SDLC: Index Source Code"
+        "title": "SDLC Agents: Index Source Code"
       },
       {
         "command": "kiroSdlc.syncWorkspace",
-        "title": "Kiro SDLC: Sync Workspace"
+        "title": "SDLC Agents: Sync Workspace"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
           "id": "kiroSdlc",
-          "title": "Kiro SDLC",
-          "icon": "resources/icon.svg"
+          "title": "SDLC Agents 4 Enterprise",
+          "icon": "resources/activity-icon.svg"
         }
       ]
     },
@@ -160,7 +160,7 @@
       ]
     },
     "configuration": {
-      "title": "Kiro SDLC Agents",
+      "title": "SDLC Agents 4 Enterprise",
       "properties": {
         "kiroSdlc.backend.url": {
           "type": "string",

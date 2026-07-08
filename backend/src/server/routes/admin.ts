@@ -55,8 +55,11 @@ import {
   deleteKbTag,
   mergeKbTags,
   getKbEntriesByTag,
+  getGroupPermissionIds,
 } from '../../admin/admin-db.js';
+import { findInvalidTag, containsHtml, sanitizeKbEntry } from '../../admin/sanitize.js';
 import { loadConfig, getWorkspacePath } from '../../config/BackendConfig.js';
+import { validateExternalUrl } from '../middleware/url-validator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -463,16 +466,31 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const user = requireAuth(c);
     if (user instanceof Response) return user;
 
-    const dbUser = getUserById(user.userId);
-    const permissions = getUserPermissions(user.userId);
+    // SECURITY (vuln-0005): prevent IDOR. The profile endpoint always returns
+    // the authenticated user's OWN profile. A userId query param is only honored
+    // for callers holding USER_MANAGE; otherwise it is rejected.
+    const requestedId = c.req.query('userId');
+    let targetId = user.userId;
+    if (requestedId && requestedId !== user.userId) {
+      const { has } = checkPermission(user.userId, 'USER_MANAGE');
+      if (!has) {
+        recordAudit(user.userId, user.username, 'PROFILE_ACCESS_DENIED', 'users', requestedId, 'IDOR attempt');
+        return c.json({ error: 'Forbidden: cannot access another user profile' }, 403);
+      }
+      targetId = requestedId;
+    }
+
+    const dbUser = getUserById(targetId);
+    if (!dbUser) return c.json({ error: 'User not found' }, 404);
+    const permissions = getUserPermissions(targetId);
     return c.json({
-      userId: user.userId,
-      username: user.username,
-      email: dbUser?.email || '',
-      group: user.accessGroupId,
+      userId: dbUser.userId,
+      username: dbUser.username,
+      email: dbUser.email || '',
+      group: dbUser.accessGroupId,
       permissions: permissions.map(p => p.permissionId),
-      lastLogin: dbUser?.lastLogin || new Date().toISOString(),
-      forcePasswordChange: dbUser?.forcePasswordChange || false,
+      lastLogin: dbUser.lastLogin || new Date().toISOString(),
+      forcePasswordChange: dbUser.forcePasswordChange || false,
     });
   });
 
@@ -532,6 +550,19 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
 
       const group = getGroupById(accessGroupId);
       if (!group) return c.json({ error: 'Access group not found' }, 400);
+
+      // SECURITY (vuln-0004): prevent privilege escalation. A user may only
+      // assign an access group whose permissions are a subset of their own.
+      // This blocks a USER_MANAGE holder from granting grp-admin (which carries
+      // RBAC_MANAGE etc.) unless they already hold those permissions.
+      const creatorPerms = new Set(getUserPermissions(user.userId).map(p => p.permissionId));
+      const targetPerms = getGroupPermissionIds(accessGroupId);
+      const escalated = targetPerms.filter(p => !creatorPerms.has(p));
+      if (escalated.length > 0) {
+        recordAudit(user.userId, user.username, 'CREATE_USER_DENIED', 'users', undefined,
+          JSON.stringify({ username, accessGroupId, escalatedPermissions: escalated }));
+        return c.json({ error: 'Cannot assign an access group with privileges higher than your own', escalatedPermissions: escalated }, 403);
+      }
 
       const newUser = createUser(username, email || '', password, accessGroupId);
       recordAudit(user.userId, user.username, 'CREATE_USER', 'users', newUser.userId, JSON.stringify({ username, accessGroupId }));
@@ -1185,6 +1216,15 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const llm = config.llm || {};
     const prov = llm.provider || 'ollama';
     const base = llm.baseUrl || 'http://localhost:11434';
+
+    // SSRF protection (Finding #11): validate configured LLM URL
+    if (llm.baseUrl && llm.baseUrl !== 'http://localhost:11434') {
+      const urlCheck = validateExternalUrl(base);
+      if (!urlCheck.valid) {
+        return c.json({ success: false, message: `SSRF blocked: ${urlCheck.error}` }, 400);
+      }
+    }
+
     try {
       const start = Date.now();
       let r: Response;
@@ -1977,6 +2017,12 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const entryId = c.req.param('id');
     const { tags } = await c.req.json();
     if (!Array.isArray(tags)) return c.json({ error: 'tags must be an array' }, 400);
+    // SECURITY (vuln-0003): reject tags containing HTML/script. Only allow
+    // alphanumeric, hyphen, underscore, and space characters.
+    const badTag = findInvalidTag(tags);
+    if (badTag !== null) {
+      return c.json({ error: 'Invalid tag. Tags may only contain letters, numbers, spaces, hyphens, and underscores (max 64 chars).', invalidTag: badTag }, 400);
+    }
     kbTags[entryId] = tags;
     updateKbEntryTags(entryId, tags);
     recordAudit(user.userId, user.username, 'TAG_ENTRY', 'kb', entryId, JSON.stringify({ tags }));
@@ -2099,8 +2145,19 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     if (permCheck instanceof Response) return permCheck;
 
     try {
-      const { entries, conflictMode } = await c.req.json();
-      if (!Array.isArray(entries)) return c.json({ error: 'entries must be an array' }, 400);
+      const { entries: rawEntries, conflictMode } = await c.req.json();
+      if (!Array.isArray(rawEntries)) return c.json({ error: 'entries must be an array' }, 400);
+
+      // SECURITY (vuln-0002): reject entries whose text fields contain HTML/script,
+      // then HTML-escape all text fields and drop unsafe tags before storage.
+      for (const entry of rawEntries) {
+        for (const field of ['source', 'content', 'summary', 'title']) {
+          if (containsHtml((entry as any)?.[field])) {
+            return c.json({ error: `Entry field "${field}" contains disallowed HTML/script content` }, 400);
+          }
+        }
+      }
+      const entries = rawEntries.map((e: any) => sanitizeKbEntry(e));
 
       // STORY 2: Conflict resolution - check for existing entries
       const mode = conflictMode || 'skip'; // skip | overwrite | merge

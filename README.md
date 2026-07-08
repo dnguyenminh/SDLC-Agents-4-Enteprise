@@ -6,9 +6,9 @@ BA -> SA -> DEV -> QA -> DevOps, orchestrated by Scrum Master.
 ## Quick Start
 
 ### 1. Start Backend
+Published on npm — no source download needed:
 ```bash
-cd backend
-npm ci && npm run build && npm start
+npx sdlc-agent-4-enterprise-server
 # Server at http://localhost:48721
 ```
 
@@ -16,7 +16,7 @@ npm ci && npm run build && npm start
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension kiro-sdlc-agents-2.0.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.2.0.vsix
 ```
 
 ### 3. Use
@@ -58,3 +58,24 @@ extension/  <- Kiro/VS Code extension
 ## License
 
 MIT
+
+---
+
+## Changelog
+
+### v1.2.0 (2026-07-08)
+
+- **Local tools discoverable** — `stream_write_file` and `embed_image` now appear in MCP `tools/list` response with full description + inputSchema (LLM can discover them)
+- **`embed_image` implemented** — Reads a markdown file, replaces local image references (`![](path.png)`) with base64 data URIs, writes self-contained `-embedded.md` file
+- **`stream_write_file` param fix** — Accepts both `file_path` and `path` arguments (callers use `file_path`)
+- **Local tools injected into wrapper** — `injectLocalTools()` deduplicates and merges local tool definitions into backend `tools/list` responses
+- **Backend admin API** — Rate limiter, localhost-only middleware, admin routes
+- **Code intelligence** — Updated analysis modules
+
+### v1.1.0
+
+- Thin client architecture (backend + extension separation)
+- 9 SDLC agents with full pipeline
+- Knowledge Base with 5 web panels
+- Chat panel with multi-LLM support
+- Salesforce project indexing

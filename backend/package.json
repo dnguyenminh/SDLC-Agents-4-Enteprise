@@ -32,7 +32,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise.git"
+    "url": "git+https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise.git"
   },
   "engines": {
     "node": ">=18.14.1"
@@ -57,5 +57,13 @@
     "typescript": "^5.5.0",
     "vitest": "^4.1.9",
     "@types/express": "^5.0.0"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "types": "./dist/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise/issues"
+  },
+  "homepage": "https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise#readme"
 }

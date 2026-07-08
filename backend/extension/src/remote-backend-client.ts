@@ -7,7 +7,7 @@ import * as https from "https";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { z } from "zod";
-import { executeLocalTool, wrapToolArguments } from "./backend-local-tools";
+import { executeLocalTool, wrapToolArguments, getLocalToolDefinitions } from "./backend-local-tools";
 
 /** Tools that execute locally without forwarding to backend */
 const LOCAL_TOOLS = new Set(["stream_write_file", "embed_image"]);
@@ -139,9 +139,19 @@ export class RemoteBackendClient implements vscode.Disposable {
         jsonRpc.params.arguments = wrapToolArguments(name, args);
       }
       const response = await this.mcpClient.request({ method: jsonRpc.method, params: jsonRpc.params }, z.any());
+      if (jsonRpc.method === "tools/list") { this.injectLocalTools(response); }
       res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, result: response }));
     } catch (err: any) {
       res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, error: { code: err.code || -32603, message: err.message } }));
+    }
+  }
+
+  /** Merge local tool definitions into a tools/list response (deduped by name). */
+  private injectLocalTools(response: any): void {
+    if (!response || !Array.isArray(response.tools)) { return; }
+    const existing = new Set(response.tools.map((t: any) => t.name));
+    for (const def of getLocalToolDefinitions()) {
+      if (!existing.has(def.name)) { response.tools.push(def); }
     }
   }
 

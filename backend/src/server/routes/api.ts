@@ -12,6 +12,17 @@ import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import type { CodeIntelModule } from '../../modules/code-intel/CodeIntelModule.js';
 import { loadConfig } from '../../config/BackendConfig.js';
 
+/** Validate relative path - reject traversal attempts */
+function isPathSafe(relPath: string): boolean {
+  if (!relPath || typeof relPath !== 'string') return false;
+  const normalized = path.normalize(relPath);
+  // Reject: absolute paths, traversal, null bytes
+  if (path.isAbsolute(normalized)) return false;
+  if (normalized.startsWith('..') || normalized.includes('..')) return false;
+  if (relPath.includes('\0')) return false;
+  return true;
+}
+
 export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
   const app = new Hono();
 

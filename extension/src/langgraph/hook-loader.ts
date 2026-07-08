@@ -39,7 +39,7 @@ let cachedHooks: HookDefinition[] | null = null;
 let hookOutputChannel: vscode.OutputChannel | undefined;
 
 function getHookOutputChannel(): vscode.OutputChannel {
-  if (!hookOutputChannel) { hookOutputChannel = vscode.window.createOutputChannel("Kiro SDLC Hooks"); }
+  if (!hookOutputChannel) { hookOutputChannel = vscode.window.createOutputChannel("SDLC Agents Hooks"); }
   return hookOutputChannel;
 }
 

@@ -7,6 +7,7 @@ export default defineConfig({
     fileParallelism: false,
     testTimeout: 30000,
     passWithNoTests: true,
+    setupFiles: ['./tests/vitest.setup.ts'],
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
     exclude: ['node_modules', 'dist', 'tests/e2e/admin-ui.e2e.test.ts', 'tests/e2e/lod-collapse.e2e.test.ts'],
     coverage: {

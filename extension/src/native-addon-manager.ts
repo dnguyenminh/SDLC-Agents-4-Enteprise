@@ -137,7 +137,7 @@ export class NativeAddonManager {
     this.outputChannel.appendLine(`[NativeAddon] Downloading: ${entry.url}`);
     this.outputChannel.appendLine(`[NativeAddon] Target: ${bindingPath}`);
     return vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: "Kiro SDLC: Downloading native module...", cancellable: true },
+      { location: vscode.ProgressLocation.Notification, title: "SDLC Agents: Downloading native module...", cancellable: true },
       (progress, token) => this.attemptDownload(entry, bindingPath, info, progress, token)
     );
   }

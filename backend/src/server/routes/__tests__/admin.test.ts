@@ -11,6 +11,11 @@ import { Hono } from 'hono';
 import { createAdminRoute } from '../admin.js';
 import pino from 'pino';
 
+// Admin credentials from env (set by tests/vitest.setup.ts) — no hardcoded
+// default (vuln-0001). Kept inline to avoid importing across the src rootDir.
+const TEST_ADMIN_USERNAME = 'admin';
+const TEST_ADMIN_PASSWORD = process.env.ADMIN_INITIAL_PASSWORD || 'test-admin-pw-01';
+
 const logger = pino({ level: 'silent' });
 
 let app: Hono;
@@ -25,7 +30,7 @@ beforeAll(async () => {
   const res = await app.request('/api/admin/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin' }),
+    body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
   });
   const data = await res.json() as any;
   authToken = data.token;
@@ -55,7 +60,7 @@ describe('Admin Routes — /api/admin/auth', () => {
     const res = await app.request('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'admin' }),
+      body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
     });
     expect(res.status).toBe(200);
     const body = await res.json() as any;
@@ -98,7 +103,7 @@ describe('Admin Routes — /api/admin/auth', () => {
     const loginRes = await app.request('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'admin' }),
+      body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
     });
     const loginData = await loginRes.json() as any;
     const tempToken = loginData.token;

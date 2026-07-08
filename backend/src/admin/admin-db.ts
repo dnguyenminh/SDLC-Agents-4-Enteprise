@@ -189,9 +189,29 @@ function seedDefaults(db: Database.Database): void {
   const userExists = db.prepare('SELECT 1 FROM users WHERE username = ?').get('admin');
   if (!userExists) {
     const now = new Date().toISOString();
-    const hash = hashPassword('admin');
+    // SECURITY (vuln-0001): never seed a hardcoded default password.
+    // Use ADMIN_INITIAL_PASSWORD if provided; otherwise generate a strong
+    // random password and print it once to the server log so the operator
+    // can retrieve it. force_password_change = 1 forces a reset on first login.
+    const envPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    const initialPassword = envPassword && envPassword.length >= 12
+      ? envPassword
+      : crypto.randomBytes(18).toString('base64url');
+    const hash = hashPassword(initialPassword);
     db.prepare(`INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at)
-      VALUES (?, ?, ?, ?, 'ACTIVE', 'grp-admin', 0, ?)`).run('user-admin-001', 'admin', 'admin@localhost', hash, now);
+      VALUES (?, ?, ?, ?, 'ACTIVE', 'grp-admin', 1, ?)`).run('user-admin-001', 'admin', 'admin@localhost', hash, now);
+
+    if (!envPassword) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '\n============================================================\n' +
+        '  ADMIN ACCOUNT CREATED — generated one-time password:\n' +
+        `  username: admin\n  password: ${initialPassword}\n` +
+        '  You MUST change this on first login. Set ADMIN_INITIAL_PASSWORD\n' +
+        '  env var to control the initial password.\n' +
+        '============================================================\n'
+      );
+    }
   }
 }
 
@@ -476,6 +496,13 @@ export function getUserPermissions(userId: string): GroupPermission[] {
   if (!user) return [];
   const perms = d.prepare('SELECT permission_id, role_data FROM group_permissions WHERE access_group_id = ?').all(user.access_group_id) as any[];
   return perms.map(p => ({ permissionId: p.permission_id, roleData: JSON.parse(p.role_data || '{}') }));
+}
+
+/** Returns the set of permission IDs granted by an access group. */
+export function getGroupPermissionIds(groupId: string): string[] {
+  const d = getAdminDb();
+  const perms = d.prepare('SELECT permission_id FROM group_permissions WHERE access_group_id = ?').all(groupId) as any[];
+  return perms.map(p => p.permission_id);
 }
 
 // --- Audit Operations ---

@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { ToolRouter } from '../../tool-router/ToolRouter.js';
 import type { Logger } from 'pino';
+import { isApiKeyAuthEnabled } from '../middleware/api-key-auth.js';
 
 const ToolCallSchema = z.object({
   tool_name: z.string().min(1, 'Missing required field: tool_name'),
@@ -45,10 +46,16 @@ export function createToolsRoute(router: ToolRouter, logger: Logger): Hono {
 
     const { tool_name, arguments: args } = parsed.data;
 
-    // Inject user context for scope-aware tools
-    const userId = c.req.header('X-User-Id') || c.req.header('x-user-id');
-    if (userId) {
-      (args as any).__userId = userId;
+    // Inject user context for scope-aware tools (Finding #8: X-User-Id hardening)
+    if (isApiKeyAuthEnabled()) {
+      // When API key auth is active, ignore X-User-Id header entirely
+      (args as any).__userId = 'api-key-user';
+    } else {
+      const userId = c.req.header('X-User-Id') || c.req.header('x-user-id');
+      if (userId) {
+        logger.warn({ userId }, 'X-User-Id header used without API key auth — identity unverified');
+        (args as any).__userId = userId;
+      }
     }
 
     // Check if tool exists

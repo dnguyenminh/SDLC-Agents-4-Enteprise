@@ -22,10 +22,45 @@ Generate `.drawio` files (native mxGraphModel XML). Export to PNG/SVG/PDF with e
 
 ## Workflow
 
-1. Generate XML → write `.drawio` file
-2. Call `drawio_auto_layout(file_path="<path>")` — fix issues until 0, or accept if waypoints cause false positives
-3. Export if requested (see CLI section). If CLI not found → keep `.drawio`, inform user
-4. Open result or print path
+### Standard Flow (Quality-First)
+
+1. **Plan** — Identify diagram type, shapes, relationships, layout direction (TB/LR)
+2. **Generate XML** → write `.drawio` file
+3. **Validate** — Check structural integrity:
+   - No self-closing edges (MUST have `<mxGeometry>` child)
+   - No dangling edges (source/target IDs must exist)
+   - No duplicate IDs
+   - No overlapping shapes (min 80px gap)
+   - Correct wrapper (`<mxGraphModel>` or `<mxfile><diagram>` for Use Case)
+4. **Auto-layout** — Call `drawio_auto_layout(file_path="<path>")` → fix issues until 0
+5. **Export PNG** — Call `drawio_export_png(file_path="<absolute_path>")` 
+6. **Vision Self-Check** (MANDATORY for quality):
+   - Read the exported PNG using vision capability
+   - Check for: overlapping shapes, clipped labels, missing connections, off-canvas shapes, edge-shape overlap, stacked edges, edge-label overlap
+   - If issues found → auto-fix XML → re-export → re-check
+   - Max **2 self-check rounds** — if issues remain after 2 fixes, proceed
+7. **Done** — Report file paths
+
+### Self-Check Criteria
+
+| Check | What to look for | Auto-fix |
+|-------|-----------------|----------|
+| Overlapping shapes | Two+ shapes stacked | Shift apart by ≥200px |
+| Clipped labels | Text cut off at boundaries | Increase shape width/height |
+| Missing connections | Arrows not connecting to shapes | Verify source/target IDs |
+| Off-canvas shapes | Negative coords or far from main group | Move to positive coords |
+| Edge-shape overlap | Edge crosses through unrelated shape | Add waypoints to route around |
+| Stacked edges | Multiple edges on same path | Distribute exit/entry points |
+| Edge-label overlap | Label overlaps another element | Add `labelBackgroundColor=#ffffff` + offset |
+
+### Quality Standards
+
+- **Node spacing:** minimum 80px between nodes, 120px preferred
+- **Edge labels:** always `labelBackgroundColor=#ffffff;fontSize=10` for readability
+- **Consistent sizing:** same-type nodes should have same dimensions
+- **Color meaning:** use color to convey semantic grouping, not decoration
+- **Title:** every diagram MUST have a title cell (fontSize=14, fontStyle=1)
+- **Legend:** if >3 colors used, add a legend section
 
 ## Output Format
 
@@ -405,3 +440,68 @@ Top=0.5,0 | Bottom=0.5,1 | Left=0,0.5 | Right=1,0.5 | Corners=0/1 combos
 
 - Style ref: https://github.com/jgraph/drawio-mcp/blob/main/shared/style-reference.md
 - XSD: https://github.com/jgraph/drawio-mcp/blob/main/shared/mxfile.xsd
+
+## Post-Export Validation (MANDATORY)
+
+### Structural Validation Checklist
+
+Before considering any diagram "done", verify:
+
+| # | Check | How | Fix |
+|---|-------|-----|-----|
+| 1 | Every edge has `<mxGeometry>` child | Grep for `edge="1"` → verify child exists | Add `<mxGeometry relative="1" as="geometry"/>` |
+| 2 | No dangling edges | All `source` and `target` IDs exist as vertices | Remove edge or add missing vertex |
+| 3 | No duplicate IDs | All `id` attributes unique | Rename duplicates |
+| 4 | Root cells exist | `id="0"` and `id="1"` present | Add them |
+| 5 | No negative coordinates | All x,y >= 0 | Shift entire diagram |
+| 6 | PNG file > 1KB | Check file size after export | Re-export or fix XML |
+| 7 | Title cell exists | First content cell is text with fontSize=14 | Add title |
+
+### PNG Export Quality
+
+- **Preferred:** MCP tool `drawio_export_png(file_path="<absolute_path>")`
+- **Verify:** exported PNG > 1KB (< 1KB = blank/failed)
+- **If export fails:** re-check XML validity, simplify diagram, retry max 3 times
+- **Scale:** default MCP export is sufficient for documents. For presentations, use CLI with `-s 2`
+
+### Vision Self-Check Protocol
+
+When vision is available (image can be read by the AI):
+
+```
+Round 1:
+  1. Read exported PNG
+  2. Score each criterion (OK / ISSUE)
+  3. For each ISSUE → apply targeted XML fix
+  4. Re-export PNG
+  
+Round 2 (if issues remain):
+  1. Re-read PNG
+  2. Fix remaining issues
+  3. Re-export final PNG
+  
+After Round 2 → accept result regardless
+```
+
+**Targeted fix rules:**
+
+| Issue | XML Fix |
+|-------|---------|
+| Shapes overlap | Increase x/y gap by 200px |
+| Label clipped | Increase width/height of mxGeometry |
+| Edge crosses node | Add waypoints `<Array as="points">` to route around |
+| Edges stacked | Change exitX/entryX to spread connection points |
+| Label on edge overlaps | Add `labelBackgroundColor=#ffffff` + adjust offset |
+| Node off-screen | Move to positive coords near main cluster |
+
+## Diagram Quality Rubric (for SM/QA review)
+
+| Score | Criteria |
+|-------|----------|
+| ⭐⭐⭐⭐⭐ | No overlaps, clear labels, consistent colors, proper spacing, legend if needed |
+| ⭐⭐⭐⭐ | Minor spacing issues, all connections correct |
+| ⭐⭐⭐ | Readable but has 1-2 overlaps or clipped labels |
+| ⭐⭐ | Multiple overlaps, hard to follow connections |
+| ⭐ | Unusable — major structural issues |
+
+**Minimum acceptable: ⭐⭐⭐⭐** — SM should request re-generation if below this.

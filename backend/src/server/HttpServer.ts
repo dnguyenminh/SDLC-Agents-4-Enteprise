@@ -5,9 +5,9 @@
 
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+// fs import removed (unused)
+// path import removed (unused)
+// fileURLToPath import removed (unused)
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from '../modules/ModuleRegistry.js';
 import { ToolRouter } from '../tool-router/ToolRouter.js';
@@ -19,8 +19,10 @@ import { createMcpConfigRoutes } from '../modules/orchestration/McpConfigRoutes.
 import { McpConfigService } from '../modules/orchestration/McpConfigService.js';
 import { createRequestLogger } from './middleware/request-logger.js';
 import { createErrorHandler } from './middleware/error-handler.js';
-import { localhostOnly } from './middleware/localhost-only.js';
 import { rateLimiter } from './middleware/rate-limiter.js';
+import { securityHeaders } from './middleware/security-headers.js';
+import { apiKeyAuth } from './middleware/api-key-auth.js';
+import { bodyLimit } from 'hono/body-limit';
 import { getMcpServer, registerTransport } from './mcpServer.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 
@@ -52,11 +54,17 @@ export class HttpServer {
     const toolRouter = new ToolRouter(this.options.registry, this.logger);
 
     // Global middleware
-    app.use('*', localhostOnly);
+    app.use('*', securityHeaders);
+    app.use('*', bodyLimit({ maxSize: 10 * 1024 * 1024 })); // 10MB max request body
     app.use('*', createRequestLogger(this.logger));
     app.use('/api/admin/*', rateLimiter); // 100 req/min per IP on admin API
-    app.onError(createErrorHandler(this.logger));
+    app.use('/api/admin/auth/login', rateLimiter); // Additional login protection (stacked)
 
+    // API key auth on public endpoints (Finding #3)
+    app.use('/api/index/*', apiKeyAuth);
+    app.use('/api/tags/*', apiKeyAuth);
+    app.use('/mcp/*', apiKeyAuth);
+    app.onError(createErrorHandler(this.logger));
     // Routes
     const healthRoute = createHealthRoute(this.options.registry, this.options.version);
     const toolsRoute = createToolsRoute(toolRouter, this.logger);

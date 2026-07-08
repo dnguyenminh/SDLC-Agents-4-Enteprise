@@ -11,9 +11,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 const BASE_URL = 'http://localhost:48721';
 const API = `${BASE_URL}/api/admin`;
 
-// Default admin credentials
+// Admin credentials — sourced from env (vuln-0001: no hardcoded default).
+// Set ADMIN_INITIAL_PASSWORD to match the running server's admin password.
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_INITIAL_PASSWORD || 'admin';
 
 let authToken = '';
 

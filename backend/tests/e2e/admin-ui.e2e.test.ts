@@ -10,8 +10,9 @@ import { test, expect, type Page } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:48721';
 const ADMIN_URL = `${BASE_URL}/admin`;
+// Admin credentials — sourced from env (vuln-0001: no hardcoded default).
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_INITIAL_PASSWORD || 'admin';
 
 // Helper: login and store token
 async function login(page: Page): Promise<void> {

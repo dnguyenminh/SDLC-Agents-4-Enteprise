@@ -29,7 +29,11 @@ const WINDOW_MS = 60000; // 1 minute
  * Applied to /api/admin/* endpoints.
  */
 export async function rateLimiter(c: Context, next: Next): Promise<Response | void> {
-  const ip = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || '127.0.0.1';
+    // Only trust proxy headers when behind a reverse proxy (configurable)
+  const trustProxy = process.env.TRUST_PROXY === 'true';
+  const ip = trustProxy
+    ? (c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || '127.0.0.1')
+    : '127.0.0.1'; // When not behind proxy, all connections are local
   const now = Date.now();
   const cutoff = now - WINDOW_MS;
 

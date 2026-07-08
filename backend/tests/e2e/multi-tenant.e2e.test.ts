@@ -13,9 +13,10 @@ const API = `${BASE_URL}/api/admin`;
 
 const TEST_ID = Date.now().toString().slice(-6);
 
-// Admin credentials
+// Admin credentials — sourced from env (vuln-0001: no hardcoded default).
+// Set ADMIN_INITIAL_PASSWORD to match the running server's admin password.
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_INITIAL_PASSWORD || 'admin';
 
 let adminToken = '';
 let viewer1Token = '';

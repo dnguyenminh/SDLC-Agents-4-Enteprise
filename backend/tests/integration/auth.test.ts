@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Hono } from 'hono';
 import { createAdminRoute } from '../../src/server/routes/admin.js';
+import { TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD } from '../test-credentials.js';
 import pino from 'pino';
 
 const logger = pino({ level: 'silent' });
@@ -22,7 +23,7 @@ beforeAll(async () => {
   const res = await app.request('/api/admin/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin' }),
+    body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
   });
   const data = (await res.json()) as any;
   adminToken = data.token;
@@ -44,7 +45,7 @@ describe('Auth Flow — Login / Logout Lifecycle', () => {
     const loginRes = await app.request('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'admin' }),
+      body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
     });
     expect(loginRes.status).toBe(200);
     const loginData = (await loginRes.json()) as any;
@@ -57,7 +58,7 @@ describe('Auth Flow — Login / Logout Lifecycle', () => {
     });
     expect(meRes.status).toBe(200);
     const meData = (await meRes.json()) as any;
-    expect(meData.username).toBe('admin');
+    expect(meData.username).toBe(TEST_ADMIN_USERNAME);
 
     // Logout
     const logoutRes = await app.request('/api/admin/auth/logout', {
@@ -77,7 +78,7 @@ describe('Auth Flow — Login / Logout Lifecycle', () => {
     const res = await app.request('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'wrongpass' }),
+      body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: 'wrongpass' }),
     });
     expect(res.status).toBe(401);
   });
@@ -108,14 +109,14 @@ describe('Auth Flow — Multiple Sessions', () => {
     const login1 = await app.request('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'admin' }),
+      body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
     });
     const data1 = (await login1.json()) as any;
 
     const login2 = await app.request('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'admin' }),
+      body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
     });
     const data2 = (await login2.json()) as any;
 
@@ -304,7 +305,7 @@ describe('Auth Flow — Password Change', () => {
     const changeRes = await app.request('/api/admin/auth/change-password', {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ currentPassword: 'admin', newPassword: '12345' }),
+      body: JSON.stringify({ currentPassword: TEST_ADMIN_PASSWORD, newPassword: '12345' }),
     });
     expect(changeRes.status).toBe(400);
   });
@@ -320,7 +321,7 @@ describe('Auth Flow — Session Expiry', () => {
     const loginRes = await app.request('/api/admin/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'admin' }),
+      body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
     });
     const loginData = (await loginRes.json()) as any;
     const token = loginData.token;
