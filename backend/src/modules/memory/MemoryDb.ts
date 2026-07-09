@@ -6,7 +6,7 @@
 import Database from 'better-sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
-import { MEMORY_SCHEMA } from './schema.js';
+import { MEMORY_SCHEMA, migrateProjectId } from './schema.js';
 import { loadConfig, getWorkspacePath } from '../../config/BackendConfig.js';
 
 const config = loadConfig();
@@ -50,4 +50,7 @@ function initializeSchema(db: Database.Database): void {
       throw err;
     }
   }
+
+  // Migrate existing DBs: add project_id column if missing
+  migrateProjectId(db);
 }

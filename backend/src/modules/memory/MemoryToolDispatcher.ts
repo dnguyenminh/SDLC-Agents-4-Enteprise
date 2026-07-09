@@ -115,6 +115,7 @@ export class MemoryToolDispatcher {
       content, summary, type,
       tier: this.tierForType(type),
       scope, user_id: userId,
+      project_id: this.scopeCtx?.projectId ?? null,
       source, tags,
       agent_name: agentName,
       owner: this.inferOwner(source),
@@ -161,7 +162,7 @@ export class MemoryToolDispatcher {
     let created = 0;
     for (const sec of (sections.length > 0 ? sections : [text])) {
       const summary = sec.split('\n')[0]?.trim().slice(0, 120) || filePath;
-      this.engine.insert({ content: sec.trim(), summary, type, tier: this.tierForType(type), scope, user_id: userId, source: filePath, tags: '' });
+      this.engine.insert({ content: sec.trim(), summary, type, tier: this.tierForType(type), scope, user_id: userId, project_id: this.scopeCtx?.projectId ?? null, source: filePath, tags: '' });
       created++;
     }
     this.engine.auditLog('INGEST_FILE');

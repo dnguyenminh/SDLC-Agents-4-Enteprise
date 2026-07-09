@@ -19,6 +19,7 @@ export interface KnowledgeEntry {
   tier: string;
   scope: KBScope;
   user_id: string | null;
+  project_id: string | null;
   source: string | null;
   source_ref: string | null;
   tags: string;

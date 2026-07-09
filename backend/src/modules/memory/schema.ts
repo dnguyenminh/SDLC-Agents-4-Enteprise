@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS knowledge_entries (
   tier TEXT NOT NULL DEFAULT 'WORKING',
   scope TEXT NOT NULL DEFAULT 'USER',
   user_id TEXT DEFAULT NULL,
+  project_id TEXT DEFAULT NULL,
   source TEXT,
   source_ref TEXT,
   tags TEXT NOT NULL DEFAULT '',
@@ -259,6 +260,10 @@ CREATE INDEX IF NOT EXISTS idx_reminders_entry ON reminders(entry_id);
 CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
 CREATE INDEX IF NOT EXISTS idx_search_log_created ON search_log(created_at);
 
+-- Indexes for project isolation
+CREATE INDEX IF NOT EXISTS idx_ke_project_id ON knowledge_entries(project_id);
+CREATE INDEX IF NOT EXISTS idx_ke_scope_project ON knowledge_entries(scope, project_id);
+
 -- Default agent scope config
 INSERT OR IGNORE INTO agent_scope_config (agent_role, tag_set) VALUES
   ('QA', '["testing","qa","test-plan","test-case","bug"]'),
@@ -267,3 +272,18 @@ INSERT OR IGNORE INTO agent_scope_config (agent_role, tag_set) VALUES
   ('SA', '["architecture","design","infrastructure","security"]'),
   ('DEVOPS', '["deployment","infrastructure","ci-cd","monitoring"]');
 `;
+
+/**
+ * Migration: Add project_id column to existing databases.
+ * Safe to run multiple times — catches "duplicate column" error.
+ */
+export function migrateProjectId(db: { exec: (sql: string) => void }): void {
+  try {
+    db.exec('ALTER TABLE knowledge_entries ADD COLUMN project_id TEXT DEFAULT NULL');
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!msg.includes('duplicate column')) throw err;
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_ke_project_id ON knowledge_entries(project_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_ke_scope_project ON knowledge_entries(scope, project_id)');
+}
