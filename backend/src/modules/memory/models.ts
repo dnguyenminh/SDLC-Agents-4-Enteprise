@@ -112,3 +112,8 @@ export interface ToolUsageRow {
   call_count: number;
   last_called_at: string | null;
 }
+
+
+// Re-export ProjectContext types (SA4E-27)
+export type { ProjectContext, ScopeFilter, WriteDecorator, MutationValidation } from './ProjectContext.js';
+export { createProjectContext } from './ProjectContext.js';

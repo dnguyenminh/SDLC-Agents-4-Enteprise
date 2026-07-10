@@ -175,8 +175,9 @@ export class MemoryEngine {
   /**
    * Promote entry from USER → PROJECT or PROJECT → SHARED.
    * Validates scope transition order.
+   * TA Decision #2: Stamps project_id when promoting USER → PROJECT.
    */
-  promoteEntry(entryId: number, targetScope: KBScope): boolean {
+  promoteEntry(entryId: number, targetScope: KBScope, projectId?: string): boolean {
     const entry = this.findById(entryId);
     if (!entry) return false;
 
@@ -189,13 +190,20 @@ export class MemoryEngine {
     const currentScope = (entry.scope ?? 'USER') as KBScope;
     if (!validTransitions[currentScope]?.includes(targetScope)) return false;
 
-    this.db.prepare(
-      `UPDATE knowledge_entries SET scope = ?, updated_at = datetime('now') WHERE id = ?`
-    ).run(targetScope, entryId);
+    // TA Decision #2: Stamp project_id when promoting USER -> PROJECT
+    if (currentScope === 'USER' && targetScope === 'PROJECT' && projectId) {
+      this.db.prepare(
+        `UPDATE knowledge_entries SET scope = ?, project_id = ?, updated_at = datetime('now') WHERE id = ?`,
+      ).run(targetScope, projectId, entryId);
+    } else {
+      this.db.prepare(
+        `UPDATE knowledge_entries SET scope = ?, updated_at = datetime('now') WHERE id = ?`,
+      ).run(targetScope, entryId);
+    }
 
     this.db.prepare(
       `INSERT INTO consolidation_log (entry_id, from_tier, to_tier, reason)
-       VALUES (?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?)`,
     ).run(entryId, currentScope, targetScope, `Promoted: ${currentScope} → ${targetScope}`);
 
     this.auditLog('PROMOTE', entryId);

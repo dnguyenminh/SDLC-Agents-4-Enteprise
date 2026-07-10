@@ -10,6 +10,8 @@ import type { QueryLayer } from '../../engine/query/query-layer.js';
 import type { KBScope, ScopeContext } from './models.js';
 import type { ScopePromotionService } from './ScopePromotionService.js';
 import type { TagAnalyzerService } from './llm/TagAnalyzerService.js';
+import type { ProjectContext } from './ProjectContext.js';
+import { validateReadAccess, validateMutationOwnership, buildIngestFileDeleteClause } from './IsolationLayer.js';
 
 type Args = Record<string, unknown>;
 
@@ -155,8 +157,16 @@ export class MemoryToolDispatcher {
       text = fs.readFileSync(resolved, 'utf-8');
     }
 
-    // Clean up existing entries for this file to prevent duplicates
-    this.engine.getDb().prepare('DELETE FROM knowledge_entries WHERE source = ?').run(filePath);
+    // TA Decision #4: Scoped deduplication — only delete entries in current project
+    if (this.scopeCtx) {
+      const { clause, params } = buildIngestFileDeleteClause(
+        this.scopeCtx as ProjectContext, filePath,
+      );
+      this.engine.getDb().prepare(clause).run(...params);
+    } else {
+      // Legacy behavior: delete all matching source
+      this.engine.getDb().prepare('DELETE FROM knowledge_entries WHERE source = ?').run(filePath);
+    }
 
     const sections = text.split(/^#{1,3}\s+/m).filter(s => s.trim());
     let created = 0;
@@ -197,8 +207,32 @@ export class MemoryToolDispatcher {
   private handleCrud(a: Args): string {
     const action = (a.action as string) || 'list';
     switch (action) {
-      case 'get': { const id = a.id as number; if (!id) return 'Error: id required'; const e = this.engine.findById(id); if (!e) return `Not found: ${id}`; this.engine.recordAccess(id); return `#${e.id} [${e.type}] ${e.summary}\nTier: ${e.tier} | Scope: ${e.scope ?? 'USER'} | Tags: ${e.tags}\n${e.content}`; }
-      case 'delete': { const id = a.id as number; if (!id) return 'Error: id required'; const e = this.engine.findById(id); if (!e) return `Not found: ${id}`; this.engine.deleteEntry(id); this.engine.auditLog('DELETE', id); return `Deleted #${id}`; }
+      case 'get': {
+        const id = a.id as number;
+        if (!id) return 'Error: id required';
+        const raw = this.engine.findById(id);
+        // TA Decision #1: Post-fetch scope validation via IsolationLayer
+        const e = this.scopeCtx
+          ? validateReadAccess(this.scopeCtx as ProjectContext, raw)
+          : raw;
+        if (!e) return `Not found: ${id}`;
+        this.engine.recordAccess(id);
+        return `#${e.id} [${e.type}] ${e.summary}\nTier: ${e.tier} | Scope: ${e.scope ?? 'USER'} | Tags: ${e.tags}\n${e.content}`;
+      }
+      case 'delete': {
+        const id = a.id as number;
+        if (!id) return 'Error: id required';
+        const e = this.engine.findById(id);
+        if (!e) return `Not found: ${id}`;
+        // TA Decision #3: Mutation ownership validation via IsolationLayer
+        if (this.scopeCtx) {
+          const v = validateMutationOwnership(this.scopeCtx as ProjectContext, e);
+          if (!v.allowed) return `Error: cannot delete — ${v.reason}`;
+        }
+        this.engine.deleteEntry(id);
+        this.engine.auditLog('DELETE', id);
+        return `Deleted #${id}`;
+      }
       case 'list': { const entries = this.engine.findFiltered(a.tier as string, a.type as string, (a.limit as number) ?? 20, this.scopeCtx); return entries.length === 0 ? 'No entries' : entries.map(e => `#${e.id} [${e.type}] ${e.summary.slice(0, 80)} (${e.tier}|${e.scope ?? 'USER'})`).join('\n'); }
       default: return `Unknown crud action: ${action}`;
     }

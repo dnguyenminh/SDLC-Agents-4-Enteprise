@@ -274,6 +274,7 @@ INSERT OR IGNORE INTO agent_scope_config (agent_role, tag_set) VALUES
 `;
 
 /**
+ * @deprecated Use MigrationRunner instead. Kept for backward compat with existing tests.
  * Migration: Add project_id column to existing databases.
  * Safe to run multiple times — catches "duplicate column" error.
  */
