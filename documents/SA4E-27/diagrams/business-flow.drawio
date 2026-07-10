@@ -1,0 +1,84 @@
+﻿<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Business Flow - Multi-Tenant Project Isolation (Redesign)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="200" y="10" width="520" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_ext" value="IDE Extension" style="swimlane;horizontal=0;startSize=110;fillColor=#e1f5fe;html=1;strokeColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="860" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="lane_ext">
+      <mxGeometry x="130" y="55" width="40" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_activate" value="Extension Activates&#10;(workspace opened)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_ext">
+      <mxGeometry x="210" y="45" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_derive" value="Derive projectId&#10;from workspace path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_ext">
+      <mxGeometry x="420" y="45" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_connect" value="Establish MCP connection&#10;with ProjectContext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_ext">
+      <mxGeometry x="640" y="45" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="lane_ext" source="start" target="ext_activate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="lane_ext" source="ext_activate" target="ext_derive" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="lane_ext" source="ext_derive" target="ext_connect" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_isolation" value="Isolation Layer&#10;(NEW module)" style="swimlane;horizontal=0;startSize=110;fillColor=#fff2cc;html=1;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="40" y="210" width="860" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="iso_receive" value="Receive KB operation&#10;+ ProjectContext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane_isolation">
+      <mxGeometry x="130" y="50" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="iso_decide" value="Operation Type?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane_isolation">
+      <mxGeometry x="340" y="35" width="140" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="iso_read" value="Build scope-aware&#10;WHERE clause" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_isolation">
+      <mxGeometry x="540" y="15" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="iso_write" value="Stamp entry with&#10;project_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_isolation">
+      <mxGeometry x="540" y="80" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="lane_isolation" source="iso_receive" target="iso_decide" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="Read" edge="1" parent="lane_isolation" source="iso_decide" target="iso_read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="Write" edge="1" parent="lane_isolation" source="iso_decide" target="iso_write" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_engine" value="Memory Engine&#10;(DB layer)" style="swimlane;horizontal=0;startSize=110;fillColor=#d5e8d4;html=1;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="40" y="370" width="860" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="eng_query" value="Execute filtered&#10;SQL query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_engine">
+      <mxGeometry x="340" y="45" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="eng_result" value="Return isolated&#10;results" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_engine">
+      <mxGeometry x="570" y="45" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="end_node" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="lane_engine">
+      <mxGeometry x="770" y="55" width="40" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" edge="1" parent="lane_engine" source="eng_query" target="eng_result" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" edge="1" parent="lane_engine" source="eng_result" target="end_node" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_cross1" edge="1" parent="1" source="ext_connect" target="iso_receive" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_cross2" edge="1" parent="1" source="iso_read" target="eng_query" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_cross3" edge="1" parent="1" source="iso_write" target="eng_query" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
