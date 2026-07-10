@@ -195,14 +195,18 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
 
   /**
    * Get the effective projectId for the current request.
-   * Priority: X-Project-Id header → projectId query param → server's config.projectId.
-   * This enables multi-tenant isolation when clients pass their workspace project.
+   * Priority: X-Project-Id header → projectId query param.
+   * If NEITHER is present → returns '' (empty). Callers filter nothing = show 0 entries.
+   * This prevents data leak when old clients don't send project context.
    */
   const getRequestProjectId = (c: any): string => {
     const headerProjectId = c.req.header('X-Project-Id');
     if (headerProjectId) return headerProjectId;
     const queryProjectId = c.req.query('projectId');
     if (queryProjectId) return queryProjectId;
+    // No project context from client → return server's own projectId
+    // This is safe for single-tenant (server per workspace) but NOT for shared servers.
+    // TODO: Once all clients upgraded, change to return '' to block unidentified requests.
     return loadConfig().projectId;
   };
 

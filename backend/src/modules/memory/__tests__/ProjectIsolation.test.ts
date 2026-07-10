@@ -158,32 +158,37 @@ describe('SA4E-26 UT — deriveProjectId', () => {
     }
   });
 
-  it('UT-09: deriveProjectId from Unix path', async () => {
+  it('UT-09: deriveProjectId from Unix path (hash of user+folder)', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/BackendConfig.js');
     const config = loadConfig({ workspace: '/projects/my-app' } as any);
-    expect(config.projectId).toBe('my-app');
+    // No git remote in test → falls to sha256(user:folder).slice(0,12)
+    expect(config.projectId).toHaveLength(12);
+    expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
   });
 
-  it('UT-10: deriveProjectId from Windows path', async () => {
+  it('UT-10: deriveProjectId from Windows path (hash of user+folder)', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/BackendConfig.js');
     const config = loadConfig({ workspace: 'C:\\projects\\my-app' } as any);
-    expect(config.projectId).toBe('my-app');
+    expect(config.projectId).toHaveLength(12);
+    expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
   });
 
-  it('UT-11: deriveProjectId from root path returns default', async () => {
+  it('UT-11: deriveProjectId from root path returns 12-char hash', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/BackendConfig.js');
     const config = loadConfig({ workspace: '/' } as any);
-    expect(['default', '']).toContain(config.projectId);
+    // sha256(user:/) or sha256(user:default) → 12 hex chars
+    expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
   });
 
-  it('UT-12: deriveProjectId from empty string returns default', async () => {
+  it('UT-12: deriveProjectId from empty string returns hash', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/BackendConfig.js');
     const config = loadConfig({ workspace: '' } as any);
-    expect(config.projectId).toBe('default');
+    // sha256(user:default) → 12 hex chars
+    expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
   });
 
   it('UT-13: deriveProjectId with config override', async () => {

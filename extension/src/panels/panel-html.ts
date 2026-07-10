@@ -5,6 +5,7 @@
 import * as vscode from "vscode";
 import { PanelType, PANEL_TITLES } from "../types";
 import { BasePanel } from "./base-panel";
+import { getProjectId } from "../extension";
 
 /**
  * Generates an iframe that embeds the backend server's UI.
@@ -21,10 +22,8 @@ export function getIframeHtml(panelType: PanelType, authTokenProvider?: () => st
   const page = pageMapping[panelType] || "dashboard";
   const backendOrigin = new URL(backendUrl).origin;
 
-  // Derive projectId from workspace folder name for multi-tenant isolation
-  const workspaceFolders = vscode.workspace.workspaceFolders;
-  const workspacePath = workspaceFolders && workspaceFolders.length > 0 ? workspaceFolders[0].uri.fsPath : "";
-  const projectId = workspacePath ? workspacePath.replace(/\\/g, '/').split('/').filter(Boolean).pop() || "default" : "default";
+  // Use the centralized projectId (derived at activation)
+  const projectId = getProjectId();
 
   const src = `${backendUrl}/admin?embed=true&page=${page}&token=${encodedToken}&projectId=${encodeURIComponent(projectId)}`;
 

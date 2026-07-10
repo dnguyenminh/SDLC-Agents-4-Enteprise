@@ -27,7 +27,7 @@ let kbEventBus: KbEventBus | undefined;
 let treeProvider: KiroTreeViewProvider | undefined;
 let authManager: AuthManager | undefined;
 
-/** Project ID for multi-tenant isolation — derived from workspace folder name. */
+/** Project ID for multi-tenant isolation — derived from git remote or user+folder hash. */
 let _projectId = "default";
 export function getProjectId(): string { return _projectId; }
 
@@ -51,9 +51,36 @@ export function deactivate() {
 }
 
 async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRoot: string, statusBar: vscode.StatusBarItem): Promise<void> {
-  // Derive projectId from workspace folder name (multi-tenant isolation)
-  const path = await import("path");
-  _projectId = path.basename(workspaceRoot) || "default";
+  // Derive projectId: .code-intel/project.json → git remote hash → user+folder hash
+  const pathModule = await import("path");
+  const fs = await import("fs");
+  const crypto = await import("crypto");
+  const os = await import("os");
+  const cp = await import("child_process");
+
+  let derivedProjectId = "default";
+  // 1. Explicit config
+  try {
+    const pjPath = pathModule.resolve(workspaceRoot, ".code-intel", "project.json");
+    if (fs.existsSync(pjPath)) {
+      const pj = JSON.parse(fs.readFileSync(pjPath, "utf-8"));
+      if (pj.projectId) { derivedProjectId = pj.projectId; }
+    }
+  } catch { /* ignore */ }
+  // 2. Git remote hash
+  if (derivedProjectId === "default") {
+    try {
+      const remote = cp.execSync("git remote get-url origin", { cwd: workspaceRoot, encoding: "utf-8", timeout: 3000 }).trim();
+      if (remote) { derivedProjectId = crypto.createHash("sha256").update(remote).digest("hex").slice(0, 12); }
+    } catch { /* no git */ }
+  }
+  // 3. User + folder hash
+  if (derivedProjectId === "default") {
+    const userId = os.userInfo().username || "unknown";
+    const folderName = pathModule.basename(workspaceRoot) || "default";
+    derivedProjectId = crypto.createHash("sha256").update(`${userId}:${folderName}`).digest("hex").slice(0, 12);
+  }
+  _projectId = derivedProjectId;
 
   const outputChannel = vscode.window.createOutputChannel("Kiro MCP Server");
   context.subscriptions.push(outputChannel);
