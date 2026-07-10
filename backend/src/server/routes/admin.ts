@@ -191,6 +191,19 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     return user;
   };
 
+  // ===== Project Context Helper (Multi-Tenant) =====
+
+  /**
+   * Get the effective projectId for the current request.
+   * Priority: X-Project-Id header → server's config.projectId (workspace-derived).
+   * This enables multi-tenant isolation when clients pass their workspace project.
+   */
+  const getRequestProjectId = (c: any): string => {
+    const headerProjectId = c.req.header('X-Project-Id');
+    if (headerProjectId) return headerProjectId;
+    return loadConfig().projectId;
+  };
+
   // ===== Permission Enforcement Helper =====
 
   /**
@@ -378,16 +391,17 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
       try { mcpCount = Object.keys(JSON.parse(fs.readFileSync(orchPath, 'utf-8')).mcpServers || {}).length; } catch {}
     }
 
-    // Apply tier filtering to KB entry count
+    // Apply tier filtering to KB entry count — also filter by project
+    const currentProjectId = getRequestProjectId(c);
     let kbEntries: number;
     if (Array.isArray(allowedTiers) && kbPerm.has) {
-      const allEntries = getKbEntries(1, 100000, 'created_at', 'desc');
+      const allEntries = getKbEntries(1, 100000, 'created_at', 'desc', currentProjectId);
       kbEntries = allEntries.items.filter((e: any) => {
         const entryTier = e.tier || e.scope || 'SHARED';
         return allowedTiers.includes(entryTier);
       }).length;
     } else {
-      kbEntries = getKbEntryCount();
+      kbEntries = getKbEntryCount(currentProjectId);
     }
 
     const uptimeMs = Date.now() - SERVER_START_TIME;
@@ -1424,7 +1438,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const startTime = Date.now();
 
     // STORY 9: Try real KB search first
-    const realResults = searchKbEntries(query);
+    const realResults = searchKbEntries(query, getRequestProjectId(c));
 
     if (realResults.items.length > 0) {
       const responseTimeMs = Date.now() - startTime;
@@ -1498,7 +1512,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const sortBy = c.req.query('sortBy') || 'created_at';
     const sortDir = (c.req.query('sortDir') || 'desc') as 'asc' | 'desc';
 
-    const result = getKbEntries(page, pageSize, sortBy, sortDir);
+    const result = getKbEntries(page, pageSize, sortBy, sortDir, getRequestProjectId(c));
 
     // Enforce allowedTiers roleData filtering
     const allowedTiers = (permCheck.roleData as any)?.allowedTiers;
@@ -1571,7 +1585,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const graphPermCheck = checkPermission(user.userId, 'GRAPH_VIEW');
     const maxNodes = (graphPermCheck.roleData as any)?.maxNodes || 500;
 
-    const result = getKbEntries(1, 500, 'created_at', 'desc');
+    const result = getKbEntries(1, 500, 'created_at', 'desc', getRequestProjectId(c));
     let nodes: any[] = [];
     let edges: any[] = [];
 
@@ -1626,7 +1640,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
       edges = [{source:'n0',target:'n1',weight:0.9},{source:'n0',target:'n5',weight:0.8},{source:'n1',target:'n6',weight:0.7},{source:'n2',target:'n10',weight:0.85},{source:'n3',target:'n9',weight:0.6},{source:'n4',target:'n5',weight:0.75},{source:'n5',target:'n6',weight:0.9},{source:'n6',target:'n7',weight:0.8},{source:'n7',target:'n8',weight:0.7},{source:'n8',target:'n0',weight:0.5},{source:'n9',target:'n13',weight:0.85},{source:'n10',target:'n11',weight:0.6},{source:'n11',target:'n12',weight:0.7},{source:'n12',target:'n13',weight:0.55},{source:'n13',target:'n14',weight:0.8},{source:'n14',target:'n0',weight:0.65}].filter(e => nodeIds.has(e.source) && nodeIds.has(e.target));
     }
 
-    return c.json({ nodes, edges, stats: { totalNodes: nodes.length, totalEdges: edges.length, maxNodes, totalEntries: getKbEntryCount() } });
+    return c.json({ nodes, edges, stats: { totalNodes: nodes.length, totalEdges: edges.length, maxNodes, totalEntries: getKbEntryCount(getRequestProjectId(c)) } });
   });
 
   // KB Graph Cluster Children — progressive loading for LOD
@@ -1644,7 +1658,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const pageSize = 30;
     const offset = clusterIndex * pageSize;
 
-    const result = getKbEntries(1, 5000, 'created_at', 'desc');
+    const result = getKbEntries(1, 5000, 'created_at', 'desc', getRequestProjectId(c));
     const items = result.items.slice(offset, offset + pageSize);
 
     const nodes = items.map((e: any, i: number) => ({
@@ -1679,7 +1693,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     let kbCount = 0;
     let codeCount = 0;
     try {
-      kbCount = getKbEntryCount();
+      kbCount = getKbEntryCount(getRequestProjectId(c));
     } catch {}
     try {
       const indexDbPath = path.resolve(getWorkspacePath(), '.code-intel', 'index.db');
@@ -1710,7 +1724,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     }
 
     // Fallback: generate positions from KB entries
-    const result = getKbEntries(1, 100000, 'created_at', 'desc');
+    const result = getKbEntries(1, 100000, 'created_at', 'desc', getRequestProjectId(c));
     const items = result.items;
     const n = items.length;
     const golden = (1 + Math.sqrt(5)) / 2;
@@ -1795,7 +1809,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const maxNodes = (graphPermCheck.roleData as any)?.maxNodes || 500;
     const allowedTiers = (kbPermCheck.roleData as any)?.allowedTiers;
 
-    const result = getKbEntries(1, maxNodes, 'created_at', 'desc');
+    const result = getKbEntries(1, maxNodes, 'created_at', 'desc', getRequestProjectId(c));
     let items = result.items;
     if (Array.isArray(allowedTiers)) {
       items = items.filter((e: any) => allowedTiers.includes(e.tier || e.scope || 'SHARED'));
@@ -1868,7 +1882,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const level = zoom > 500 ? 'macro' : zoom > 200 ? 'mid' : 'micro';
     return c.json({
       nodes: filteredNodes, edges,
-      stats: { totalNodes: filteredNodes.length, totalEdges: edges.length, queryTimeMs: 0, level, source: 'sqlite-fallback', totalEntries: getKbEntryCount() }
+      stats: { totalNodes: filteredNodes.length, totalEdges: edges.length, queryTimeMs: 0, level, source: 'sqlite-fallback', totalEntries: getKbEntryCount(getRequestProjectId(c)) }
     });
   });
 
@@ -1884,7 +1898,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
       return c.json({ error: 'Graph service not ready' }, 503);
     }
 
-    const result = getKbEntries(1, 100000, 'created_at', 'desc');
+    const result = getKbEntries(1, 100000, 'created_at', 'desc', getRequestProjectId(c));
     if (result.items.length === 0) {
       return c.json({ error: 'No KB entries to sync', nodesCreated: 0, edgesCreated: 0 });
     }
@@ -1924,7 +1938,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     }
 
     // Quality scores — filter by allowedTiers
-    const allEntries = getKbEntries(1, 100000, 'created_at', 'desc');
+    const allEntries = getKbEntries(1, 100000, 'created_at', 'desc', getRequestProjectId(c));
     let filteredEntries = allEntries.items;
     if (Array.isArray(allowedTiers)) {
       filteredEntries = filteredEntries.filter((e: any) => {
@@ -1967,7 +1981,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     });
 
     const summary = {
-      totalEntries: getKbEntryCount(),
+      totalEntries: getKbEntryCount(getRequestProjectId(c)),
       avgQuality: 0.78,
       avgQueryTime: queryStats.avgResponseTime || 0,
       totalQueries: queryStats.totalQueries,
@@ -2123,7 +2137,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const permCheck = requirePermission(c, user.userId, 'KB_IMPORT_EXPORT');
     if (permCheck instanceof Response) return permCheck;
 
-    const result = getKbEntries(1, 100000, 'created_at', 'desc');
+    const result = getKbEntries(1, 100000, 'created_at', 'desc', getRequestProjectId(c));
 
     // Enforce allowedTiers — filter exported entries by user's allowed tiers
     const allowedTiers = (permCheck.roleData as any)?.allowedTiers;
@@ -2168,7 +2182,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
       }
 
       // Check for conflicts (entries with same ID that already exist)
-      const existingEntries = getKbEntries(1, 100000, 'created_at', 'desc');
+      const existingEntries = getKbEntries(1, 100000, 'created_at', 'desc', getRequestProjectId(c));
       const existingIds = new Set(existingEntries.items.map((e: any) => e.id || e.entry_id));
 
       const conflicts: any[] = [];
@@ -2243,7 +2257,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     const sortBy = c.req.query('sortBy') || 'quality_score';
     const sortDir = (c.req.query('sortDir') || 'desc') as 'asc' | 'desc';
 
-    const result = getKbEntries(1, 100000, 'created_at', 'desc');
+    const result = getKbEntries(1, 100000, 'created_at', 'desc', getRequestProjectId(c));
     let entries = result.items.map((e: any) => ({
       id: e.id || e.entry_id,
       source: e.source || e.title || 'Untitled',
@@ -2460,7 +2474,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
     }).filter(Boolean);
 
     // DB entries
-    const dbRows = getKbEntriesByTag(tagName);
+    const dbRows = getKbEntriesByTag(tagName, getRequestProjectId(c));
     const dbEntries = dbRows.map((entry: any) => ({
       id: entry.id || entry.entry_id,
       source: entry.source || entry.title || 'Untitled',
@@ -2525,7 +2539,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
       const mem = process.memoryUsage();
       const d = getAdminDb();
       const userCount = (d.prepare('SELECT COUNT(*) as cnt FROM users').get() as any).cnt;
-      const kbCount = getKbEntryCount();
+      const kbCount = getKbEntryCount(getRequestProjectId(c));
       return JSON.stringify({
         kbEntries: kbCount,
         users: userCount,

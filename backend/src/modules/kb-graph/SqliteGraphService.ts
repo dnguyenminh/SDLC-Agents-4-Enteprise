@@ -11,7 +11,7 @@ import * as path from 'path';
 import Database from 'better-sqlite3';
 import type { Logger } from 'pino';
 import { getAdminDb, getKbEntries } from '../../admin/admin-db.js';
-import { getWorkspacePath } from '../../config/BackendConfig.js';
+import { getWorkspacePath, loadConfig } from '../../config/BackendConfig.js';
 
 export interface SpatialQueryParams {
   camX: number;
@@ -119,8 +119,9 @@ export class SqliteGraphService {
       return ksaGroupMap.get(key)!;
     }
 
-    // 1a. Knowledge entries (Documents)
-    const docResult = getKbEntries(1, 100000, 'created_at', 'desc');
+    // 1a. Knowledge entries (Documents) — filtered by server's project
+    const serverProjectId = loadConfig().projectId;
+    const docResult = getKbEntries(1, 100000, 'created_at', 'desc', serverProjectId);
     for (const entry of docResult.items) {
       const type = (entry.type || 'DOCUMENT').toUpperCase();
       const label = ((entry.summary || entry.tags || '').substring(0, 50)) ||

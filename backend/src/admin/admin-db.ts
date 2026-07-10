@@ -690,7 +690,7 @@ export function checkPromotionCooldown(entryId: string): { onCooldown: boolean; 
 
 // --- KB search with real index.db data (STORY 9) ---
 
-export function searchKbEntries(query: string): { items: any[]; total: number } {
+export function searchKbEntries(query: string, projectId?: string): { items: any[]; total: number } {
   try {
     const indexDbPath = getIndexDbPath();
     if (!fs.existsSync(indexDbPath)) return { items: [], total: 0 };
@@ -723,8 +723,15 @@ export function searchKbEntries(query: string): { items: any[]; total: number } 
         likeParams.push(`%${term}%`);
       }
     }
-    const sql = `SELECT * FROM knowledge_entries WHERE ${likeClauses.join(' OR ')} LIMIT 200`;
-    const rows = indexDb.prepare(sql).all(...likeParams) as any[];
+    // Project isolation filter
+    let projectFilter = '';
+    const projectParams: string[] = [];
+    if (projectId && projectId !== 'default') {
+      projectFilter = " AND (scope = 'SHARED' OR (scope = 'PROJECT' AND (project_id = ? OR project_id IS NULL)) OR scope = 'USER')";
+      projectParams.push(projectId);
+    }
+    const sql = `SELECT * FROM knowledge_entries WHERE (${likeClauses.join(' OR ')})${projectFilter} LIMIT 200`;
+    const rows = indexDb.prepare(sql).all(...likeParams, ...projectParams) as any[];
 
     // Calculate document frequency for each query term across candidates
     const termDocFreq: Record<string, number> = {};
@@ -940,7 +947,7 @@ export function getKbEntryById(entryId: string): any | null {
 
 // --- KB Entry Count (from index.db knowledge_entries table) ---
 
-export function getKbEntryCount(): number {
+export function getKbEntryCount(projectId?: string): number {
   try {
     const indexDbPath = getIndexDbPath();
     if (!fs.existsSync(indexDbPath)) return 0;
@@ -950,7 +957,12 @@ export function getKbEntryCount(): number {
       indexDb.close();
       return 0;
     }
-    const count = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as any).cnt;
+    let count: number;
+    if (projectId && projectId !== 'default') {
+      count = (indexDb.prepare("SELECT COUNT(*) as cnt FROM knowledge_entries WHERE scope = 'SHARED' OR (scope = 'PROJECT' AND (project_id = ? OR project_id IS NULL)) OR scope = 'USER'").get(projectId) as any).cnt;
+    } else {
+      count = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as any).cnt;
+    }
     indexDb.close();
     return count;
   } catch {
@@ -958,7 +970,7 @@ export function getKbEntryCount(): number {
   }
 }
 
-export function getKbEntries(page = 1, pageSize = 20, sortBy = 'created_at', sortDir: 'asc' | 'desc' = 'desc'): { items: any[]; total: number } {
+export function getKbEntries(page = 1, pageSize = 20, sortBy = 'created_at', sortDir: 'asc' | 'desc' = 'desc', projectId?: string): { items: any[]; total: number } {
   try {
     const indexDbPath = getIndexDbPath();
     if (!fs.existsSync(indexDbPath)) return { items: [], total: 0 };
@@ -977,8 +989,16 @@ export function getKbEntries(page = 1, pageSize = 20, sortBy = 'created_at', sor
     const safeSort = validColumns.includes(sortBy) ? sortBy : 'created_at';
     const safeDir = sortDir === 'asc' ? 'ASC' : 'DESC';
 
-    const total = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as any).cnt;
-    const rows = indexDb.prepare(`SELECT * FROM knowledge_entries ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`).all(pageSize, (page - 1) * pageSize) as any[];
+    let total: number;
+    let rows: any[];
+    if (projectId && projectId !== 'default') {
+      const whereClause = "WHERE scope = 'SHARED' OR (scope = 'PROJECT' AND (project_id = ? OR project_id IS NULL)) OR scope = 'USER'";
+      total = (indexDb.prepare(`SELECT COUNT(*) as cnt FROM knowledge_entries ${whereClause}`).get(projectId) as any).cnt;
+      rows = indexDb.prepare(`SELECT * FROM knowledge_entries ${whereClause} ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`).all(projectId, pageSize, (page - 1) * pageSize) as any[];
+    } else {
+      total = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as any).cnt;
+      rows = indexDb.prepare(`SELECT * FROM knowledge_entries ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`).all(pageSize, (page - 1) * pageSize) as any[];
+    }
 
     indexDb.close();
     return { items: rows, total };
@@ -1136,7 +1156,7 @@ export function mergeKbTags(sourceTag: string, targetTag: string): number {
   return merged;
 }
 
-export function getKbEntriesByTag(tagName: string): any[] {
+export function getKbEntriesByTag(tagName: string, projectId?: string): any[] {
   const entries: any[] = [];
   try {
     const indexDbPath = getIndexDbPath();
@@ -1144,7 +1164,12 @@ export function getKbEntriesByTag(tagName: string): any[] {
     const indexDb = new Database(indexDbPath, { readonly: true });
     const tableExists = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'").get() as any;
     if (tableExists && tableExists.cnt > 0) {
-      const rows = indexDb.prepare('SELECT * FROM knowledge_entries WHERE tags LIKE ?').all(`%${tagName}%`) as any[];
+      let rows: any[];
+      if (projectId && projectId !== 'default') {
+        rows = indexDb.prepare("SELECT * FROM knowledge_entries WHERE tags LIKE ? AND (scope = 'SHARED' OR (scope = 'PROJECT' AND (project_id = ? OR project_id IS NULL)) OR scope = 'USER')").all(`%${tagName}%`, projectId) as any[];
+      } else {
+        rows = indexDb.prepare('SELECT * FROM knowledge_entries WHERE tags LIKE ?').all(`%${tagName}%`) as any[];
+      }
       for (const row of rows) {
         if (!row.tags) continue;
         const tagArr = row.tags.split(',').map((t: string) => t.trim());
