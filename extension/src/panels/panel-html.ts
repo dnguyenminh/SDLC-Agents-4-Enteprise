@@ -20,7 +20,13 @@ export function getIframeHtml(panelType: PanelType, authTokenProvider?: () => st
   };
   const page = pageMapping[panelType] || "dashboard";
   const backendOrigin = new URL(backendUrl).origin;
-  const src = `${backendUrl}/admin?embed=true&page=${page}&token=${encodedToken}`;
+
+  // Derive projectId from workspace folder name for multi-tenant isolation
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  const workspacePath = workspaceFolders && workspaceFolders.length > 0 ? workspaceFolders[0].uri.fsPath : "";
+  const projectId = workspacePath ? workspacePath.replace(/\\/g, '/').split('/').filter(Boolean).pop() || "default" : "default";
+
+  const src = `${backendUrl}/admin?embed=true&page=${page}&token=${encodedToken}&projectId=${encodeURIComponent(projectId)}`;
 
   return `<!DOCTYPE html>
 <html lang="en">

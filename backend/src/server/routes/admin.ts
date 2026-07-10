@@ -195,12 +195,14 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
 
   /**
    * Get the effective projectId for the current request.
-   * Priority: X-Project-Id header → server's config.projectId (workspace-derived).
+   * Priority: X-Project-Id header → projectId query param → server's config.projectId.
    * This enables multi-tenant isolation when clients pass their workspace project.
    */
   const getRequestProjectId = (c: any): string => {
     const headerProjectId = c.req.header('X-Project-Id');
     if (headerProjectId) return headerProjectId;
+    const queryProjectId = c.req.query('projectId');
+    if (queryProjectId) return queryProjectId;
     return loadConfig().projectId;
   };
 

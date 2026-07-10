@@ -58,7 +58,12 @@ export class RemoteBackendClient implements vscode.Disposable {
       const url = new URL(`${this.backendUrl}/mcp`);
       const token = this.authManager?.getTokenSync();
       const requestInit: Record<string, any> = {};
-      if (token) { requestInit.headers = { "Authorization": `Bearer ${token}` }; }
+      const headers: Record<string, string> = {};
+      if (token) { headers["Authorization"] = `Bearer ${token}`; }
+      // Multi-tenant: derive projectId from workspace folder name
+      const wsName = this.workspaceRoot.replace(/\\/g, '/').split('/').filter(Boolean).pop() || 'default';
+      if (wsName && wsName !== 'default') { headers["X-Project-Id"] = wsName; }
+      if (Object.keys(headers).length > 0) { requestInit.headers = headers; }
       const transport = new StreamableHTTPClientTransport(url, { requestInit });
       await this.mcpClient.connect(transport);
       await this.startLocalServer();

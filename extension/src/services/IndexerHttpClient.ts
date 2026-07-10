@@ -116,6 +116,11 @@ export class IndexerHttpClient {
             "Content-Length": Buffer.byteLength(body).toString(),
         };
         if (token) { headers["Authorization"] = `Bearer ${token}`; }
+        // Multi-tenant: inject projectId from workspace
+        const vscode = await import("vscode");
+        const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
+        const pid = wsPath.replace(/\\/g, '/').split('/').filter(Boolean).pop() || "";
+        if (pid && pid !== "default") { headers["X-Project-Id"] = pid; }
         return new Promise<boolean>((resolve) => {
             const req = http.request(url, { method: "POST", headers }, (res: any) => {
                 res.on("data", () => {});

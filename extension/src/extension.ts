@@ -27,6 +27,10 @@ let kbEventBus: KbEventBus | undefined;
 let treeProvider: KiroTreeViewProvider | undefined;
 let authManager: AuthManager | undefined;
 
+/** Project ID for multi-tenant isolation — derived from workspace folder name. */
+let _projectId = "default";
+export function getProjectId(): string { return _projectId; }
+
 export async function activate(context: vscode.ExtensionContext) {
   const statusBar = createStatusBar();
   context.subscriptions.push(statusBar);
@@ -47,6 +51,10 @@ export function deactivate() {
 }
 
 async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRoot: string, statusBar: vscode.StatusBarItem): Promise<void> {
+  // Derive projectId from workspace folder name (multi-tenant isolation)
+  const path = await import("path");
+  _projectId = path.basename(workspaceRoot) || "default";
+
   const outputChannel = vscode.window.createOutputChannel("Kiro MCP Server");
   context.subscriptions.push(outputChannel);
 
