@@ -4,9 +4,9 @@
 
 import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
-import { LangGraphEngine } from "../langgraph/langgraph-engine";
+import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
 import { ChatExtToWebviewMessage, AutopilotMode } from "./message-protocol";
-import { SDLCPhase } from "../langgraph/state";
+import { SDLCPhase } from "../langgraph/core/state";
 
 /** Pattern matching for ticket-based commands */
 const TICKET_PATTERN = /^([A-Z]+-\d+)\s+(.+)$/;

@@ -18,9 +18,9 @@ vi.mock("vscode", () => ({
   languages: { getDiagnostics: () => [] },
 }));
 
-import { buildChatSubgraph } from "../graphs/chat-graph";
-import { StreamHandler } from "../stream-handler";
-import type { LlmProvider, LlmResponse } from "../llm-provider";
+import { buildChatSubgraph } from "../subgraphs/chat-graph";
+import { StreamHandler } from "../core/stream-handler";
+import type { LlmProvider, LlmResponse } from "../core/llm-provider";
 
 /** Build a provider whose chatWithTools returns a canned response. */
 function providerWithToolsResponse(response: LlmResponse): LlmProvider {

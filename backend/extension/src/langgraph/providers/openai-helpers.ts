@@ -3,7 +3,7 @@
  * Extracted from openai-provider.ts.
  */
 
-export interface LlmMessageBasic { role: string; content: string; toolCallId?: string; }
+interface LlmMessageBasic { role: string; content: string; toolCallId?: string; }
 
 export function formatMessages(messages: LlmMessageBasic[]): Array<{ role: string; content: string }> {
   return messages.map(m => ({ role: m.role, content: m.content }));

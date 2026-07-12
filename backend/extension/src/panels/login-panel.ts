@@ -18,7 +18,7 @@ export class LoginPanel implements vscode.Disposable {
 
   show(): void {
     if (this.panel) { this.panel.reveal(); return; }
-    this.panel = vscode.window.createWebviewPanel("kiroSdlc.login", "Kiro SDLC — Login", vscode.ViewColumn.One, { enableScripts: true, retainContextWhenHidden: false });
+    this.panel = vscode.window.createWebviewPanel("kiroSdlc.login", "SDLC Agents 4 Enterprise — Login", vscode.ViewColumn.One, { enableScripts: true, retainContextWhenHidden: false });
     this.panel.webview.html = this.getHtml();
     this.panel.webview.onDidReceiveMessage(async (msg) => { if (msg.type === "login") { await this.handleLogin(msg.username, msg.password); } }, null, this.disposables);
     this.panel.onDidDispose(() => { this.panel = null; }, null, this.disposables);
@@ -66,7 +66,7 @@ export class LoginPanel implements vscode.Disposable {
 </head>
 <body>
   <div class="container">
-    <h1>Kiro SDLC Agents</h1>
+    <h1>SDLC Agents 4 Enterprise</h1>
     <p class="subtitle">Login to Backend Server</p>
     <form id="loginForm">
       <div class="form-group">

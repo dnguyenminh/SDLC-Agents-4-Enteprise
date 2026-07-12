@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { debugLog, debugError } from "../debug-logger";
-import { LangGraphEngine } from "../langgraph/langgraph-engine";
+import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
 import { ChatExtToWebviewMessage } from "./message-protocol";
 
 const STATE_KEY = "chatPanel.state";

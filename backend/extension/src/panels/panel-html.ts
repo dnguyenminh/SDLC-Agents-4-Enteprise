@@ -5,6 +5,7 @@
 import * as vscode from "vscode";
 import { PanelType, PANEL_TITLES } from "../types";
 import { BasePanel } from "./base-panel";
+import { getProjectId } from "../extension";
 
 /**
  * Generates an iframe that embeds the backend server's UI.
@@ -20,7 +21,11 @@ export function getIframeHtml(panelType: PanelType, authTokenProvider?: () => st
   };
   const page = pageMapping[panelType] || "dashboard";
   const backendOrigin = new URL(backendUrl).origin;
-  const src = `${backendUrl}/admin?embed=true&page=${page}&token=${encodedToken}`;
+
+  // Use the centralized projectId (derived at activation)
+  const projectId = getProjectId();
+
+  const src = `${backendUrl}/admin?embed=true&page=${page}&token=${encodedToken}&projectId=${encodeURIComponent(projectId)}`;
 
   return `<!DOCTYPE html>
 <html lang="en">

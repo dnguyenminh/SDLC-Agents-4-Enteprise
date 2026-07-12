@@ -3,14 +3,14 @@
  * Router-specific state extensions for intent classification and subgraph routing.
  */
 
-export type { PipelineIntent } from "../state";
+export type { PipelineIntent } from "../core/state";
 
 /**
  * Confidence score from intent classification.
  * Used to decide whether regex match is sufficient or LLM fallback is needed.
  */
 export interface IntentClassification {
-  intent: import("../state").PipelineIntent;
+  intent: import("../core/state").PipelineIntent;
   confidence: number; // 0.0–1.0
   source: "regex" | "llm";
 }

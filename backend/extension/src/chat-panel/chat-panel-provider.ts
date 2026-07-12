@@ -7,7 +7,7 @@
 import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
 import { McpServerManager } from "../mcp-server-manager";
-import { LangGraphEngine } from "../langgraph/langgraph-engine";
+import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
 import { createLlmProvider } from "../langgraph/providers";
 import { MessageHandler } from "./message-handler";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage } from "./message-protocol";

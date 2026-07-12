@@ -2,8 +2,8 @@
  * Ollama tool calling support --- extracted from OllamaProvider.
  */
 
-import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../llm-provider";
-import type { McpToolDefinition } from "../tool-registry";
+import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../core/llm-provider";
+import type { McpToolDefinition } from "../vscode/tool-registry";
 
 export async function ollamaChatWithTools(
   baseUrl: string,

@@ -1,0 +1,18 @@
+{
+  "name": "sa-agent",
+  "description": "Solution Architect agent chuyên tạo Technical Design Document (TDD) từ BRD và FSD.",
+  "prompt": "file:.kiro/agents/prompts/sa-agent.md",
+  "tools": ["fs_read", "fs_write", "execute_bash", "grep", "glob", "code"],
+  "allowedTools": ["*"],
+  "useLegacyMcpJson": true,
+  "keyboardShortcut": "ctrl+shift+a",
+  "welcomeMessage": "🏗️ Solution Architect agent sẵn sàng! Cung cấp Jira ticket key để tạo TDD.",
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": ".kiro/hooks/file-watcher.sh .",
+        "description": "Start file watcher for code indexing"
+      }
+    ]
+  }
+}

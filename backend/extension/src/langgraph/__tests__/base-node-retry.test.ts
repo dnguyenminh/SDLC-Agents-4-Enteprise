@@ -14,11 +14,11 @@ vi.mock("vscode", () => ({
   languages: { getDiagnostics: () => [] },
 }));
 
-import { BaseNode } from "../nodes/base-node";
-import { StreamHandler } from "../stream-handler";
-import { McpBridge } from "../mcp-bridge";
+import { BaseNode } from "../core/base-node";
+import { StreamHandler } from "../core/stream-handler";
+import { McpBridge } from "../core/mcp-bridge";
 import { NonRecoverableError } from "../errors/non-recoverable-error";
-import type { PipelineState } from "../state";
+import type { PipelineState } from "../core/state";
 
 // --- Concrete test subclass ---
 

@@ -22,7 +22,7 @@ vi.mock("vscode", () => ({
   },
 }));
 
-import { validateHookSchema, loadHooks, clearHookCache } from "../hook-loader";
+import { validateHookSchema, loadHooks, clearHookCache } from "../hooks/hook-loader";
 import * as vscode from "vscode";
 
 describe("HookLoader — Schema Validation (KSA-249)", () => {

@@ -2,12 +2,12 @@
  * AnthropicProvider — KSA-210. LLM provider backed by Anthropic Messages API.
  * Extends BaseLlmProvider for shared availability check and streaming.
  */
-import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../llm-provider";
-import type { McpToolDefinition } from "../tool-registry";
+import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../core/llm-provider";
+import type { McpToolDefinition } from "../vscode/tool-registry";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { splitMessages, formatMessagesForTools } from "./anthropic-helpers";
 
-export const ANTHROPIC_SECRET_KEY = "kiroSdlc.anthropicApiKey";
+const ANTHROPIC_SECRET_KEY = "kiroSdlc.anthropicApiKey";
 const DEFAULT_MODEL = "claude-sonnet-4-latest";
 const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_BASE_URL = "https://api.anthropic.com";

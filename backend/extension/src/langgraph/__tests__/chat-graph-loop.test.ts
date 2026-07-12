@@ -27,10 +27,10 @@ vi.mock("vscode", () => ({
   DiagnosticSeverity: { Error: 0, Warning: 1, Information: 2, Hint: 3 },
 }));
 
-import { routeAfterVerify } from "../graphs/verify-node";
-import { buildMessages } from "../graphs/chat-graph-nodes";
-import { DEFAULT_VERIFY_PROMPT, buildVerifyMessages } from "../graphs/verify-prompt";
-import type { LlmMessage } from "../llm-provider";
+import { routeAfterVerify } from "../subgraphs/verify-node";
+import { buildMessages } from "../subgraphs/chat-graph-nodes";
+import { DEFAULT_VERIFY_PROMPT, buildVerifyMessages } from "../subgraphs/verify-prompt";
+import type { LlmMessage } from "../core/llm-provider";
 
 // --- Test routeAfterVerify ---
 

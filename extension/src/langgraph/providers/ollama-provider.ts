@@ -3,8 +3,8 @@
  * LLM provider backed by Ollama REST API (local inference).
  * Extends BaseLlmProvider for shared availability check and streaming.
  */
-import type { LlmMessage, LlmOptions, LlmResponse } from "../llm-provider";
-import type { McpToolDefinition } from "../tool-registry";
+import type { LlmMessage, LlmOptions, LlmResponse } from "../core/llm-provider";
+import type { McpToolDefinition } from "../vscode/tool-registry";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { ollamaChatWithTools } from "./ollama-tools";
 

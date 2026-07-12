@@ -4,8 +4,8 @@
  * with LLM fallback for ambiguous inputs.
  */
 
-import type { PipelineIntent } from "../state";
-import type { LlmProvider } from "../llm-provider";
+import type { PipelineIntent } from "../core/state";
+import type { LlmProvider } from "../core/llm-provider";
 import { IntentClassification, CONFIDENCE_THRESHOLD } from "./router-state";
 
 // === Regex Pattern Rules (fast path) ===

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="opencode" modified="2026-07-13T00:00:00.000Z" agent="SA-Agent" version="21.6.5">
+  <diagram id="full-sequence" name="Full Skip-with-Barrier Sequence">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="q-title" value="Full Sequence — Skip-with-Barrier (v6)" style="text;html=1;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="150" y="10" width="450" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="q-user" value="User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="20" y="80" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="q-sm" value="SM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="130" y="80" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="q-adv" value="advancePhase" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="260" y="80" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="q-rfs" value="routeFromSm" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="410" y="80" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="q-raa" value="routeAfter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="550" y="80" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="q-agent" value="Next Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="690" y="80" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="q-gate" value="Gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="20" y="130" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="qs1" value="1. approve" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-gate" target="q-adv">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs2" value="2. resolvePhaseIndex → -1 (orphan)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-adv" target="q-raa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs3" value="3. status=paused → END" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-raa" target="q-sm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs4" value="4. User clicks SKIP" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-user" target="q-sm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs5" value="5. handleApproval(skip)&#10;→ status=running" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-sm" target="q-rfs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs6" value="6. resolvePhaseIndex → -1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-rfs" target="q-adv">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs7" value="(routes to advance_phase — Layer 1)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=9;" edge="1" parent="1" source="q-adv" target="q-adv">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs8" value="7. Skip: reposition index&#10;inject barrier into chatHistory" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-adv" target="q-raa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs9" value="8. running → SM" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-raa" target="q-sm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs10" value="9. routeFromSm → agent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-sm" target="q-rfs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs11" value="10. resolvePhaseIndex → valid idx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-rfs" target="q-agent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qs12" value="11. Reads chatHistory→barrier&#12;ignores stale requests" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;verticalAlign=bottom;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="q-agent" target="q-agent">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

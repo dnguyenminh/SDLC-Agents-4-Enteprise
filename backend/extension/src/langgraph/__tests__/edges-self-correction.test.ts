@@ -3,8 +3,8 @@
  * Tests routeAfterVerify and routeAfterStrategySwitch conditional edges.
  */
 import { describe, it, expect } from "vitest";
-import { routeAfterVerify, routeAfterStrategySwitch } from "../edges";
-import type { PipelineState } from "../state";
+import { routeAfterVerify, routeAfterStrategySwitch } from "../pipeline/edges";
+import type { PipelineState } from "../core/state";
 
 // --- Helpers ---
 
@@ -51,7 +51,7 @@ function createBaseState(overrides: Partial<PipelineState> = {}): PipelineState 
 // --- Tests ---
 
 describe("routeAfterVerify (KSA-233)", () => {
-  const routeFn = routeAfterVerify("ba_brd", "quality_gate_requirements");
+  const routeFn = routeAfterVerify("ba-agent", "quality_gate_requirements");
 
   it("pass → routes to nextNodeId", () => {
     const state = createBaseState({ verifyPassed: true });
@@ -61,16 +61,16 @@ describe("routeAfterVerify (KSA-233)", () => {
   it("fail + attempts < max → routes back to targetNodeId", () => {
     const state = createBaseState({
       verifyPassed: false,
-      verifyAttempts: { ba_brd: 1 },
+      verifyAttempts: { "ba-agent": 1 },
       maxVerifyAttempts: 2,
     });
-    expect(routeFn(state)).toBe("ba_brd");
+    expect(routeFn(state)).toBe("ba-agent");
   });
 
   it("fail + attempts >= max → routes to 'strategy_switch'", () => {
     const state = createBaseState({
       verifyPassed: false,
-      verifyAttempts: { ba_brd: 2 },
+      verifyAttempts: { "ba-agent": 2 },
       maxVerifyAttempts: 2,
     });
     expect(routeFn(state)).toBe("strategy_switch");
@@ -79,7 +79,7 @@ describe("routeAfterVerify (KSA-233)", () => {
   it("fail + attempts > max → still routes to 'strategy_switch'", () => {
     const state = createBaseState({
       verifyPassed: false,
-      verifyAttempts: { ba_brd: 5 },
+      verifyAttempts: { "ba-agent": 5 },
       maxVerifyAttempts: 2,
     });
     expect(routeFn(state)).toBe("strategy_switch");
@@ -96,12 +96,12 @@ describe("routeAfterVerify (KSA-233)", () => {
   it("default maxVerifyAttempts (2) when state has no value", () => {
     const state = createBaseState({
       verifyPassed: false,
-      verifyAttempts: { ba_brd: 1 },
+      verifyAttempts: { "ba-agent": 1 },
     });
     // maxVerifyAttempts defaults to 2, attempts=1 < 2 → back to agent
     // Remove explicit maxVerifyAttempts to test default
     delete (state as any).maxVerifyAttempts;
-    expect(routeFn(state)).toBe("ba_brd");
+    expect(routeFn(state)).toBe("ba-agent");
   });
 });
 
@@ -109,15 +109,15 @@ describe("routeAfterStrategySwitch (KSA-233)", () => {
   it("alternate strategy active → routes to targetNodeId", () => {
     const state = createBaseState({
       pipelineStatus: "running",
-      activeStrategy: { ba_brd: "alternate" },
+      activeStrategy: { "ba-agent": "alternate" },
     });
-    expect(routeAfterStrategySwitch(state)).toBe("ba_brd");
+    expect(routeAfterStrategySwitch(state)).toBe("ba-agent");
   });
 
   it("pipeline paused → routes to '__end__'", () => {
     const state = createBaseState({
       pipelineStatus: "paused",
-      activeStrategy: { ba_brd: "alternate" },
+      activeStrategy: { "ba-agent": "alternate" },
     });
     expect(routeAfterStrategySwitch(state)).toBe("__end__");
   });
@@ -125,7 +125,7 @@ describe("routeAfterStrategySwitch (KSA-233)", () => {
   it("no active alternate strategy → routes to '__end__'", () => {
     const state = createBaseState({
       pipelineStatus: "running",
-      activeStrategy: { ba_brd: "primary" },
+      activeStrategy: { "ba-agent": "primary" },
     });
     expect(routeAfterStrategySwitch(state)).toBe("__end__");
   });
@@ -141,8 +141,8 @@ describe("routeAfterStrategySwitch (KSA-233)", () => {
   it("multiple nodes — returns first with 'alternate'", () => {
     const state = createBaseState({
       pipelineStatus: "running",
-      activeStrategy: { ba_brd: "primary", sa_tdd: "alternate" },
+      activeStrategy: { "ba-agent": "primary", "sa-agent": "alternate" },
     });
-    expect(routeAfterStrategySwitch(state)).toBe("sa_tdd");
+    expect(routeAfterStrategySwitch(state)).toBe("sa-agent");
   });
 });

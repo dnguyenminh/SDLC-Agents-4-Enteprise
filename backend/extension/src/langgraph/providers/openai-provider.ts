@@ -2,12 +2,12 @@
  * OpenAIProvider — KSA-210. LLM provider using OpenAI Chat Completions API via fetch().
  * Extends BaseLlmProvider for shared availability check and streaming.
  */
-import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../llm-provider";
-import type { McpToolDefinition } from "../tool-registry";
+import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../core/llm-provider";
+import type { McpToolDefinition } from "../vscode/tool-registry";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { formatMessages, formatMessagesForTools, buildHeaders } from "./openai-helpers";
 
-export const OPENAI_SECRET_KEY = "kiroSdlc.openaiApiKey";
+const OPENAI_SECRET_KEY = "kiroSdlc.openaiApiKey";
 const DEFAULT_MODEL = "gpt-4o";
 const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_API_BASE = "https://api.openai.com/v1";

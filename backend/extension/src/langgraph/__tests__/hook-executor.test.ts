@@ -16,8 +16,8 @@ vi.mock("vscode", () => ({
   },
 }));
 
-import { HookExecutor, HookContext } from "../hook-executor";
-import type { HookDefinition } from "../hook-loader";
+import { HookExecutor, HookContext } from "../hooks/hook-executor";
+import type { HookDefinition } from "../hooks/hook-loader";
 
 function createOutputChannel() {
   return { appendLine: vi.fn(), append: vi.fn(), show: vi.fn(), dispose: vi.fn() } as any;

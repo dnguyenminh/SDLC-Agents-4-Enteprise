@@ -6,11 +6,10 @@
  */
 
 import * as vscode from "vscode";
-import type { LlmProvider, LlmProviderType } from "../llm-provider";
+import type { LlmProvider, LlmProviderType } from "../core/llm-provider";
 import { getProviderDef, PROVIDER_REGISTRY } from "./provider-registry";
 
-/** Extended provider type including onnx */
-export type ExtendedLlmProviderType = LlmProviderType | "onnx" | string;
+type ExtendedLlmProviderType = LlmProviderType | "onnx" | string;
 
 /** VS Code secret keys for each provider */
 const SECRET_KEYS: Record<string, string> = {
@@ -102,13 +101,6 @@ export function createProviderByType(
   }
 
   throw new Error(`Unknown LLM provider type: ${type}. Add it to provider-registry.ts or provide a base URL.`);
-}
-
-/**
- * Get the secret storage key for a given provider type.
- */
-export function getSecretKeyForProvider(type: string): string {
-  return getSecretKey(type);
 }
 
 /** Re-export registry for settings panel */

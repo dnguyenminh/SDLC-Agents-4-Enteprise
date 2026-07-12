@@ -63,6 +63,37 @@ function imageToDataUri(imagePath: string): string | null {
   } catch { return null; }
 }
 
+/** Tool definitions for local tools, injected into tools/list responses. */
+export function getLocalToolDefinitions(): Array<{ name: string; description: string; inputSchema: Record<string, unknown> }> {
+  return [
+    {
+      name: "stream_write_file",
+      description: "Write or append content to a local workspace file (creates parent dirs). Runs in-extension, not forwarded to backend.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          file_path: { type: "string", description: "Target file path (absolute or workspace-relative)" },
+          content: { type: "string", description: "Content to write" },
+          mode: { type: "string", enum: ["write", "append"], default: "write" },
+        },
+        required: ["file_path", "content"],
+      },
+    },
+    {
+      name: "embed_image",
+      description: "Read a markdown file, replace local image references (PNG/JPG/etc.) with base64 data URIs, and write a new self-contained markdown file. Runs in-extension, not forwarded to backend.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          file_path: { type: "string", description: "Path to the source markdown file" },
+          output_path: { type: "string", description: "Output markdown path (default: <name>-embedded.md next to source)" },
+        },
+        required: ["file_path"],
+      },
+    },
+  ];
+}
+
 function handleStreamWriteFile(args: Record<string, unknown>): any {
   const filePath = (args.file_path ?? args.path) as string;
   const content = args.content as string;
@@ -94,35 +125,4 @@ export function wrapToolArguments(name: string, args: Record<string, unknown>): 
     }
   }
   return newArgs;
-}
-
-/** Tool definitions for local tools, injected into tools/list responses. */
-export function getLocalToolDefinitions(): Array<{ name: string; description: string; inputSchema: Record<string, unknown> }> {
-  return [
-    {
-      name: "stream_write_file",
-      description: "Write or append content to a local workspace file (creates parent dirs). Runs in-extension, not forwarded to backend.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          file_path: { type: "string", description: "Target file path (absolute or workspace-relative)" },
-          content: { type: "string", description: "Content to write" },
-          mode: { type: "string", enum: ["write", "append"], default: "write" },
-        },
-        required: ["file_path", "content"],
-      },
-    },
-    {
-      name: "embed_image",
-      description: "Read a markdown file, replace local image references (PNG/JPG/etc.) with base64 data URIs, and write a new self-contained markdown file. Runs in-extension, not forwarded to backend.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          file_path: { type: "string", description: "Path to the source markdown file" },
-          output_path: { type: "string", description: "Output markdown path (default: <name>-embedded.md next to source)" },
-        },
-        required: ["file_path"],
-      },
-    },
-  ];
 }

@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
-import { LangGraphEngine } from "../langgraph/langgraph-engine";
+import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage, AutopilotMode } from "./message-protocol";
 import { buildEnrichedText, routeUserMessage } from "./message-routing";
 

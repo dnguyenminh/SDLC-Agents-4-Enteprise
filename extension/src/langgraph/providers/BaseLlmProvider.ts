@@ -3,8 +3,8 @@
  * Shared logic: availability check (ping with timeout), SSE/NDJSON stream reading.
  * Subclasses override hook methods to customize behavior.
  */
-import type { LlmProvider, LlmMessage, LlmOptions, LlmResponse, LlmProviderType } from "../llm-provider";
-import type { McpToolDefinition } from "../tool-registry";
+import type { LlmProvider, LlmMessage, LlmOptions, LlmResponse, LlmProviderType } from "../core/llm-provider";
+import type { McpToolDefinition } from "../vscode/tool-registry";
 
 const DEFAULT_TIMEOUT_MS = 8000;
 

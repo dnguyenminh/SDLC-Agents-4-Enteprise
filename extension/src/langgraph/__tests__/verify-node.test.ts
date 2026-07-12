@@ -14,11 +14,11 @@ vi.mock("vscode", () => ({
   languages: { getDiagnostics: () => [] },
 }));
 
-import { VerifyNode } from "../nodes/verify-node";
-import { StreamHandler } from "../stream-handler";
-import { McpBridge } from "../mcp-bridge";
-import type { LlmProvider, LlmMessage, LlmOptions } from "../llm-provider";
-import type { PipelineState, AgentOutput } from "../state";
+import { VerifyNode } from "../agents/verify-node";
+import { StreamHandler } from "../core/stream-handler";
+import { McpBridge } from "../core/mcp-bridge";
+import type { LlmProvider, LlmMessage, LlmOptions } from "../core/llm-provider";
+import type { PipelineState, AgentOutput } from "../core/state";
 
 // --- Mocks ---
 
@@ -108,11 +108,11 @@ describe("VerifyNode (KSA-233)", () => {
     );
 
     const verifyNode = new VerifyNode(
-      "verify_ba_brd", "ba_brd", mcpBridge, streamHandler, llmProvider
+      "verify_ba_requirements", "ba-agent", mcpBridge, streamHandler, llmProvider
     );
 
     const agentOutput: AgentOutput = {
-      nodeId: "ba_brd",
+      nodeId: "ba-agent",
       content: "# BRD\n## User Stories\nAs a user...\nAs a admin...\nAs a dev...",
       timestamp: "2026-01-01T00:00:00Z",
     };
@@ -127,7 +127,7 @@ describe("VerifyNode (KSA-233)", () => {
     expect(result.verifyPassed).toBe(true);
     expect(result.verifyFeedback).toBeNull();
     expect(streamHandler.emitVerify).toHaveBeenCalledWith(
-      "verify_ba_brd", true, null, 1, "stream-test"
+      "verify_ba_requirements", true, null, 1, "stream-test"
     );
   });
 
@@ -137,11 +137,11 @@ describe("VerifyNode (KSA-233)", () => {
     );
 
     const verifyNode = new VerifyNode(
-      "verify_ba_brd", "ba_brd", mcpBridge, streamHandler, llmProvider
+      "verify_ba_requirements", "ba-agent", mcpBridge, streamHandler, llmProvider
     );
 
     const agentOutput: AgentOutput = {
-      nodeId: "ba_brd",
+      nodeId: "ba-agent",
       content: "# BRD\nIncomplete content",
       timestamp: "2026-01-01T00:00:00Z",
     };
@@ -155,9 +155,9 @@ describe("VerifyNode (KSA-233)", () => {
 
     expect(result.verifyPassed).toBe(false);
     expect(result.verifyFeedback).toBe("BRD missing acceptance criteria for Story 2");
-    expect(result.verifyAttempts).toEqual({ ba_brd: 1 });
+    expect(result.verifyAttempts).toEqual({ "ba-agent": 1 });
     expect(streamHandler.emitVerify).toHaveBeenCalledWith(
-      "verify_ba_brd", false, "BRD missing acceptance criteria for Story 2", 1, "stream-test"
+      "verify_ba_requirements", false, "BRD missing acceptance criteria for Story 2", 1, "stream-test"
     );
   });
 
@@ -171,11 +171,11 @@ describe("VerifyNode (KSA-233)", () => {
     };
 
     const verifyNode = new VerifyNode(
-      "verify_ba_brd", "ba_brd", mcpBridge, streamHandler, llmProvider
+      "verify_ba_requirements", "ba-agent", mcpBridge, streamHandler, llmProvider
     );
 
     const agentOutput: AgentOutput = {
-      nodeId: "ba_brd",
+      nodeId: "ba-agent",
       content: "Some valid output",
       timestamp: "2026-01-01T00:00:00Z",
     };
@@ -193,7 +193,7 @@ describe("VerifyNode (KSA-233)", () => {
     expect(result.verifyPassed).toBe(true);
     expect(result.verifyFeedback).toBeNull();
     expect(streamHandler.emitVerify).toHaveBeenCalledWith(
-      "verify_ba_brd", true, null, 1, "stream-test"
+      "verify_ba_requirements", true, null, 1, "stream-test"
     );
 
     warnSpy.mockRestore();
@@ -203,11 +203,11 @@ describe("VerifyNode (KSA-233)", () => {
     const llmProvider = createMockLlmProvider('should not be called');
 
     const verifyNode = new VerifyNode(
-      "verify_deploy", "devops_deploy", mcpBridge, streamHandler, llmProvider
+      "quality_gate_deployment", "devops-agent", mcpBridge, streamHandler, llmProvider
     );
 
     const agentOutput: AgentOutput = {
-      nodeId: "devops_deploy",
+      nodeId: "devops-agent",
       content: "Deploy output",
       timestamp: "2026-01-01T00:00:00Z",
     };
@@ -230,7 +230,7 @@ describe("VerifyNode (KSA-233)", () => {
     const llmProvider = createMockLlmProvider('should not be called');
 
     const verifyNode = new VerifyNode(
-      "verify_ba_brd", "ba_brd", mcpBridge, streamHandler, llmProvider
+      "verify_ba_requirements", "ba-agent", mcpBridge, streamHandler, llmProvider
     );
 
     // No agent output for the target node
@@ -245,7 +245,7 @@ describe("VerifyNode (KSA-233)", () => {
     expect(result.verifyFeedback).toBe("No output produced by agent node");
     expect(llmProvider.chat).not.toHaveBeenCalled();
     expect(streamHandler.emitVerify).toHaveBeenCalledWith(
-      "verify_ba_brd", false, "No output produced by agent node", 1, "stream-test"
+      "verify_ba_requirements", false, "No output produced by agent node", 1, "stream-test"
     );
   });
 
@@ -253,11 +253,11 @@ describe("VerifyNode (KSA-233)", () => {
     const llmProvider = createMockLlmProvider('should not be called');
 
     const verifyNode = new VerifyNode(
-      "verify_ba_brd", "ba_brd", mcpBridge, streamHandler, llmProvider
+      "verify_ba_requirements", "ba-agent", mcpBridge, streamHandler, llmProvider
     );
 
     const agentOutput: AgentOutput = {
-      nodeId: "ba_brd",
+      nodeId: "ba-agent",
       content: "",
       timestamp: "2026-01-01T00:00:00Z",
     };

@@ -2,7 +2,7 @@
  * Anthropic provider helpers — message formatting.
  * Extracted from anthropic-provider.ts.
  */
-import type { LlmMessage } from "../llm-provider";
+import type { LlmMessage } from "../core/llm-provider";
 
 export function splitMessages(messages: LlmMessage[]): { systemPrompt: string | undefined; userMessages: LlmMessage[] } {
   const systemMsgs = messages.filter(m => m.role === "system");

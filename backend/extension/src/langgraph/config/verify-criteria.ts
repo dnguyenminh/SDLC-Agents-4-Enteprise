@@ -3,7 +3,7 @@
  * Per-phase verification criteria. Configurable without code changes.
  * Implements: BR-9 (configurable per phase)
  */
-import { SDLCPhase } from "../state";
+import { SDLCPhase } from "../core/state";
 
 export interface VerifyCriteria {
   phase: SDLCPhase;

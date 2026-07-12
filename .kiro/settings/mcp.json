@@ -2,7 +2,7 @@
   "mcpServers": {
     "code-intelligence": {
       "type": "httpStream",
-      "url": "http://127.0.0.1:9186/mcp",
+      "url": "http://127.0.0.1:9181/mcp",
       "autoApprove": [
         "mem_ingest",
         "execute_dynamic_tool",

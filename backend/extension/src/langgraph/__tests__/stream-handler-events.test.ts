@@ -4,7 +4,7 @@
  * emitHumanIntervention emit correct event format.
  */
 import { describe, it, expect, vi } from "vitest";
-import { StreamHandler } from "../stream-handler";
+import { StreamHandler } from "../core/stream-handler";
 
 // --- Tests ---
 
@@ -13,14 +13,14 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     const emitFn = vi.fn();
     const handler = new StreamHandler(emitFn);
 
-    handler.emitRetry("ba_brd", 1, 2, 1000, "Network timeout", "stream-123");
+    handler.emitRetry("ba-agent", 1, 2, 1000, "Network timeout", "stream-123");
 
     expect(emitFn).toHaveBeenCalledTimes(1);
     const event = emitFn.mock.calls[0][0];
     expect(event).toMatchObject({
       type: "chat:streamChunk",
       streamId: "stream-123",
-      nodeId: "ba_brd",
+      nodeId: "ba-agent",
       eventType: "retry",
     });
     const content = JSON.parse(event.content);
@@ -38,7 +38,7 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     const handler = new StreamHandler(emitFn);
 
     handler.emitVerify(
-      "verify_ba_brd", false, "Missing acceptance criteria", 2, "stream-456"
+      "verify_ba_requirements", false, "Missing acceptance criteria", 2, "stream-456"
     );
 
     expect(emitFn).toHaveBeenCalledTimes(1);
@@ -46,7 +46,7 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     expect(event).toMatchObject({
       type: "chat:streamChunk",
       streamId: "stream-456",
-      nodeId: "verify_ba_brd",
+      nodeId: "verify_ba_requirements",
       eventType: "verify",
     });
     const content = JSON.parse(event.content);
@@ -62,7 +62,7 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     const emitFn = vi.fn();
     const handler = new StreamHandler(emitFn);
 
-    handler.emitVerify("verify_sa_tdd", true, null, 1, "stream-789");
+    handler.emitVerify("verify_sa_design", true, null, 1, "stream-789");
 
     const event = emitFn.mock.calls[0][0];
     const content = JSON.parse(event.content);
@@ -78,7 +78,7 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     const handler = new StreamHandler(emitFn);
 
     handler.emitStrategySwitch(
-      "ba_brd", "primary", "alternate", "2 verify failures", "stream-abc"
+      "ba-agent", "primary", "alternate", "2 verify failures", "stream-abc"
     );
 
     expect(emitFn).toHaveBeenCalledTimes(1);
@@ -86,7 +86,7 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     expect(event).toMatchObject({
       type: "chat:streamChunk",
       streamId: "stream-abc",
-      nodeId: "ba_brd",
+      nodeId: "ba-agent",
       eventType: "strategy_switch",
     });
     const content = JSON.parse(event.content);
@@ -109,7 +109,7 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     ];
 
     handler.emitHumanIntervention(
-      "ba_brd", failedStrategies, verifyHistory, "stream-xyz"
+      "ba-agent", failedStrategies, verifyHistory, "stream-xyz"
     );
 
     expect(emitFn).toHaveBeenCalledTimes(1);
@@ -117,7 +117,7 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     expect(event).toMatchObject({
       type: "chat:streamChunk",
       streamId: "stream-xyz",
-      nodeId: "ba_brd",
+      nodeId: "ba-agent",
       eventType: "human_intervention_required",
     });
     const content = JSON.parse(event.content);
@@ -135,10 +135,10 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     const emitFn = vi.fn();
     const handler = new StreamHandler(emitFn);
 
-    handler.emitRetry("ba_brd", 1, 2, 1000, "error", null);
+    handler.emitRetry("ba-agent", 1, 2, 1000, "error", null);
 
     const event = emitFn.mock.calls[0][0];
-    expect(event.streamId).toMatch(/^stream-ba_brd-\d+$/);
+    expect(event.streamId).toMatch(/^stream-ba-agent-\d+$/);
   });
 
   it("events flush pending buffer before emitting", () => {
@@ -146,9 +146,9 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     const handler = new StreamHandler(emitFn);
 
     // Add a token to buffer first
-    handler.emitToken("ba_brd", "hello", "stream-1");
+    handler.emitToken("ba-agent", "hello", "stream-1");
     // emitRetry should flush that token first
-    handler.emitRetry("ba_brd", 1, 2, 1000, "err", "stream-1");
+    handler.emitRetry("ba-agent", 1, 2, 1000, "err", "stream-1");
 
     // First call = flushed token, second call = retry event
     expect(emitFn).toHaveBeenCalledTimes(2);

@@ -24,10 +24,10 @@ vi.mock("vscode", () => ({
   languages: { getDiagnostics: () => [] },
 }));
 
-import { buildChatSubgraph } from "../graphs/chat-graph";
-import { StreamHandler } from "../stream-handler";
-import type { LlmProvider, LlmResponse, LlmToolCall } from "../llm-provider";
-import type { McpBridge } from "../mcp-bridge";
+import { buildChatSubgraph } from "../subgraphs/chat-graph";
+import { StreamHandler } from "../core/stream-handler";
+import type { LlmProvider, LlmResponse, LlmToolCall } from "../core/llm-provider";
+import type { McpBridge } from "../core/mcp-bridge";
 
 // === Test Helpers ===
 

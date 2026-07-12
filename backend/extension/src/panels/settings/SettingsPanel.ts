@@ -6,6 +6,7 @@
 import * as vscode from "vscode";
 import { getNonce } from "../../mcp-server-manager";
 import { SettingsMessageHandler } from "./SettingsMessageHandler";
+import { getProvidersByCategory } from "../../langgraph/providers/provider-registry";
 
 export class SettingsPanel {
   public static readonly viewType = "kiroSettingsPanel";
@@ -74,6 +75,20 @@ export class SettingsPanel {
     this.disposables = [];
   }
 
+  private buildProviderOptions(): string {
+    const byCategory = getProvidersByCategory();
+    const labels: Record<string, string> = { cloud: "☁️ Cloud", enterprise: "🏢 Enterprise", gateway: "🔀 Gateways", local: "💻 Local" };
+    let html = "";
+    for (const cat of ["cloud", "enterprise", "gateway", "local"] as const) {
+      const providers = byCategory[cat];
+      if (providers.length === 0) { continue; }
+      html += `<optgroup label="${labels[cat]}">`;
+      for (const p of providers) { html += `<option value="${p.id}">${p.label}</option>`; }
+      html += `</optgroup>`;
+    }
+    return html;
+  }
+
   private getHtml(webview: vscode.Webview): string {
     const nonce = getNonce();
     const cspSource = webview.cspSource;
@@ -104,7 +119,7 @@ export class SettingsPanel {
             <button class="tab-btn" id="tab-server" data-tab="pane-server" role="tab" aria-selected="false">&#127760; Server Settings</button>
         </div>
         <div class="tab-pane active" id="pane-llm" role="tabpanel">
-            <section class="card" id="provider-section"><h2>&#129302; LLM Provider</h2><div class="provider-select-group"><label for="provider-select">Choose provider</label><select id="provider-select"><option value="anthropic">Anthropic — Claude models (recommended)</option><option value="openai">OpenAI — GPT models</option><option value="openrouter">OpenRouter — Multi-model gateway</option><option value="lmstudio">LM Studio — Local models</option><option value="ollama">Ollama — Local models (no API key needed)</option><option value="onnx">ONNX — CPU-only local (Phi-3, SmolLM2)</option></select></div></section>
+            <section class="card" id="provider-section"><h2>&#129302; LLM Provider</h2><div class="provider-select-group"><label for="provider-select">Choose provider</label><select id="provider-select">${this.buildProviderOptions()}</select></div></section>
             <section class="card" id="api-section" style="display:none;"><h2>&#128273; API Configuration</h2><div class="form-group"><label for="api-key-input">API Key</label><div class="input-with-toggle"><input type="password" id="api-key-input" placeholder="Enter API key..." autocomplete="off"><button class="icon-btn" id="toggle-key-visibility" title="Show/Hide" aria-label="Toggle API key visibility">&#128065;</button></div><div id="key-status" class="status-indicator"></div></div><div class="form-group"><label for="base-url-input">Base URL <span style="opacity:0.6">(optional)</span></label><div class="checkbox-group" style="margin-bottom:6px;"><label><input type="checkbox" id="use-default-url-chk" checked> Use default URL for this provider</label></div><input type="text" id="base-url-input" placeholder="Leave empty for official API" disabled></div><div class="form-group"><label for="model-input">Model</label><select id="model-input"><option value="">— Select model —</option></select></div><div class="btn-row"><button id="save-key-btn" class="btn primary" disabled>Save API Key</button><button id="clear-key-btn" class="btn danger-outline">Clear Key</button></div></section>
             <section class="card" id="ollama-section" style="display:none;"><h2>&#129433; Ollama Configuration</h2><div class="form-group"><label for="ollama-url-input">Server URL</label><input type="text" id="ollama-url-input" value="http://localhost:11434"></div><div class="form-group"><label for="ollama-model-input">Model</label><select id="ollama-model-input"><option value="">— Select model —</option></select></div><div class="btn-row"><button id="test-ollama-btn" class="btn secondary">Test Connection</button></div><div id="ollama-status" class="status-indicator"></div></section>
             <section class="card" id="test-section"><h2>&#129514; Connection Test</h2><p class="card-desc">Send a test prompt to verify your LLM configuration works end-to-end.</p><div class="btn-row"><button id="test-llm-btn" class="btn primary">Test LLM</button></div><div id="test-result" class="test-result" style="display:none;"></div></section>

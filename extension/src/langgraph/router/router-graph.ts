@@ -1,11 +1,11 @@
 // Router Graph --- Multi-Graph Architecture --- classifies intent and routes to subgraphs
 import { StateGraph, END } from "@langchain/langgraph";
-import { PipelineAnnotation, PipelineState, PipelineIntent } from "../state";
-import { McpBridge } from "../mcp-bridge";
-import { StreamHandler } from "../stream-handler";
-import { WorkspaceCheckpointer } from "../checkpointer";
-import type { LlmProvider } from "../llm-provider";
-import type { HookEngine } from "../hook-engine";
+import { PipelineAnnotation, PipelineState, PipelineIntent } from "../core/state";
+import { McpBridge } from "../core/mcp-bridge";
+import { StreamHandler } from "../core/stream-handler";
+import { WorkspaceCheckpointer } from "../core/checkpointer";
+import type { LlmProvider } from "../core/llm-provider";
+import type { HookEngine } from "../hooks/hook-engine";
 import { classifyIntent } from "./intent-classifier";
 
 export async function buildRouterGraph(
@@ -27,7 +27,7 @@ export async function buildRouterGraph(
 
     switch (intent) {
       case "sdlc": {
-        const { buildSdlcSubgraph } = await import("../graphs/sdlc-graph");
+        const { buildSdlcSubgraph } = await import("../pipeline/sdlc-graph");
         const graph = await buildSdlcSubgraph(mcpBridge, streamHandler, checkpointer, llmProvider);
         invoker = async (state) => {
           const result = await graph.invoke(state, { configurable: { thread_id: state.threadId } });
@@ -36,7 +36,7 @@ export async function buildRouterGraph(
         break;
       }
       case "hotfix": {
-        const { buildHotfixSubgraph } = await import("../graphs/hotfix-graph");
+        const { buildHotfixSubgraph } = await import("../subgraphs/hotfix-graph");
         const graph = await buildHotfixSubgraph(mcpBridge, streamHandler, llmProvider);
         invoker = async (state) => {
           const result = await graph.invoke(state);
@@ -45,7 +45,7 @@ export async function buildRouterGraph(
         break;
       }
       case "code_review": {
-        const { buildCodeReviewSubgraph } = await import("../graphs/code-review-graph");
+        const { buildCodeReviewSubgraph } = await import("../subgraphs/code-review-graph");
         const graph = await buildCodeReviewSubgraph(mcpBridge, streamHandler, llmProvider);
         invoker = async (state) => {
           const result = await graph.invoke(state);
@@ -54,7 +54,7 @@ export async function buildRouterGraph(
         break;
       }
       case "docs": {
-        const { buildDocsSubgraph } = await import("../graphs/docs-graph");
+        const { buildDocsSubgraph } = await import("../subgraphs/docs-graph");
         const graph = await buildDocsSubgraph(mcpBridge, streamHandler, llmProvider);
         invoker = async (state) => {
           const result = await graph.invoke(state);
@@ -63,7 +63,7 @@ export async function buildRouterGraph(
         break;
       }
       case "security_audit": {
-        const { buildSecurityAuditSubgraph } = await import("../graphs/security-audit-graph");
+        const { buildSecurityAuditSubgraph } = await import("../subgraphs/security-audit-graph");
         const graph = await buildSecurityAuditSubgraph(mcpBridge, streamHandler, llmProvider);
         invoker = async (state) => {
           const result = await graph.invoke(state);
@@ -73,7 +73,7 @@ export async function buildRouterGraph(
       }
       case "chat":
       default: {
-        const { buildChatSubgraph } = await import("../graphs/chat-graph");
+        const { buildChatSubgraph } = await import("../subgraphs/chat-graph");
         const wsRoot = require("vscode").workspace.workspaceFolders?.[0]?.uri.fsPath || "";
         const graph = await buildChatSubgraph(streamHandler, llmProvider, mcpBridge, wsRoot, hookEngine);
         invoker = async (state) => {

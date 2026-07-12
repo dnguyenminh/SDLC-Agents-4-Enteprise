@@ -1,0 +1,18 @@
+{
+  "name": "ba-agent",
+  "description": "Business Analyst agent chuyên truy cập Jira, đọc ticket và linked tickets, xây dựng BRD hoặc FSD.",
+  "prompt": "file:.kiro/agents/prompts/ba-agent.md",
+  "tools": ["fs_read", "fs_write", "execute_bash", "grep", "glob", "code"],
+  "allowedTools": ["*"],
+  "useLegacyMcpJson": true,
+  "keyboardShortcut": "ctrl+shift+b",
+  "welcomeMessage": "📋 BA agent sẵn sàng! Cung cấp Jira ticket key để tạo BRD/FSD.",
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": ".kiro/hooks/file-watcher.sh .",
+        "description": "Start file watcher for code indexing"
+      }
+    ]
+  }
+}

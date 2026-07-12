@@ -4,7 +4,7 @@
  * Extends BaseLlmProvider; overrides isAvailable() directly (file-based, not HTTP).
  */
 import * as path from "path";
-import type { LlmMessage, LlmOptions } from "../llm-provider";
+import type { LlmMessage, LlmOptions } from "../core/llm-provider";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { OnnxTokenizer } from "./onnx-tokenizer";
 
@@ -12,7 +12,7 @@ const DEFAULT_MODEL_ID = "phi-3-mini";
 const MAX_CONTEXT_TOKENS = 2048;
 const MAX_NEW_TOKENS = 512;
 
-export interface OnnxModelConfig {
+interface OnnxModelConfig {
   id: string;
   displayName: string;
   files: string[];
@@ -21,7 +21,7 @@ export interface OnnxModelConfig {
   contextLength: number;
 }
 
-export const ONNX_MODEL_REGISTRY: OnnxModelConfig[] = [
+const ONNX_MODEL_REGISTRY: OnnxModelConfig[] = [
   { id: "phi-3-mini", displayName: "Phi-3 Mini (3.8B, Q4)", files: ["model.onnx", "model.onnx.data", "tokenizer.json", "tokenizer_config.json"], tokenizerFile: "tokenizer.json", modelFile: "model.onnx", contextLength: 2048 },
   { id: "smollm2-360m", displayName: "SmolLM2 (360M, FP16)", files: ["model.onnx", "tokenizer.json", "tokenizer_config.json"], tokenizerFile: "tokenizer.json", modelFile: "model.onnx", contextLength: 2048 },
 ];
