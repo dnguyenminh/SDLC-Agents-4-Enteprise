@@ -146,6 +146,8 @@ jobs:
       - name: Upload dist to GitHub Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
+        continue-on-error: true
         with:
           files: |
             backend/dist/**/*.js
+          fail_on_unmatched_files: false
