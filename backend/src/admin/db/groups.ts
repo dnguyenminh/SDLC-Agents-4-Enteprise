@@ -8,14 +8,14 @@ export function getGroups(): AccessGroup[] {
   const permStmt = d.prepare('SELECT permission_id, role_data FROM group_permissions WHERE access_group_id = ?');
 
   return groups.map(g => {
-    const perms = permStmt.all(g.access_group_id) as { permission_id: string; role_data: string }[];
+    const perms = permStmt.all(g.access_group_id as string) as { permission_id: string; role_data: string }[];
     return {
-      accessGroupId: g.access_group_id,
-      accessGroupName: g.access_group_name,
-      isSystemGroup: !!g.is_system_group,
+      accessGroupId: g.access_group_id as string,
+      accessGroupName: g.access_group_name as string,
+      isSystemGroup: !!(g.is_system_group as number),
       permissions: perms.map(p => ({ permissionId: p.permission_id, roleData: JSON.parse(p.role_data || '{}') })),
-      createdAt: g.created_at,
-      updatedAt: g.updated_at,
+      createdAt: g.created_at as string,
+      updatedAt: g.updated_at as string,
     };
   });
 }
@@ -26,10 +26,10 @@ export function getGroupById(groupId: string): AccessGroup | null {
   if (!g) return null;
   const perms = d.prepare('SELECT permission_id, role_data FROM group_permissions WHERE access_group_id = ?').all(groupId) as { permission_id: string; role_data: string }[];
   return {
-    accessGroupId: g.access_group_id, accessGroupName: g.access_group_name,
-    isSystemGroup: !!g.is_system_group,
+    accessGroupId: g.access_group_id as string, accessGroupName: g.access_group_name as string,
+    isSystemGroup: !!(g.is_system_group as number),
     permissions: perms.map(p => ({ permissionId: p.permission_id, roleData: JSON.parse(p.role_data || '{}') })),
-    createdAt: g.created_at, updatedAt: g.updated_at,
+    createdAt: g.created_at as string, updatedAt: g.updated_at as string,
   };
 }
 

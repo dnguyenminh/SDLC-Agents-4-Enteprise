@@ -27,9 +27,9 @@ export function getAuditLogs(filters?: { userId?: string; action?: string; dateF
   return {
     total,
     items: rows.map(r => ({
-      auditId: r.audit_id, userId: r.user_id, username: r.username,
-      action: r.action, resource: r.resource, resourceId: r.resource_id,
-      changes: r.changes, timestamp: r.timestamp, ipAddress: r.ip_address,
+      auditId: r.audit_id as string, userId: r.user_id as string, username: r.username as string,
+      action: r.action as string, resource: r.resource as string, resourceId: r.resource_id as string,
+      changes: r.changes as string, timestamp: r.timestamp as string, ipAddress: r.ip_address as string,
     })),
   };
 }
@@ -38,8 +38,8 @@ export function getRecentActivity(limit = 10): AuditEntry[] {
   const d = getAdminDb();
   const rows = d.prepare('SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT ?').all(limit) as Record<string, unknown>[];
   return rows.map(r => ({
-    auditId: r.audit_id, userId: r.user_id, username: r.username,
-    action: r.action, resource: r.resource, resourceId: r.resource_id,
-    changes: r.changes, timestamp: r.timestamp, ipAddress: r.ip_address,
+    auditId: r.audit_id as string, userId: r.user_id as string, username: r.username as string,
+    action: r.action as string, resource: r.resource as string, resourceId: r.resource_id as string,
+    changes: r.changes as string, timestamp: r.timestamp as string, ipAddress: r.ip_address as string,
   }));
 }

@@ -77,8 +77,8 @@ export function getUserSessions(userId: string): Session[] {
   const d = getAdminDb();
   const rows = d.prepare('SELECT * FROM sessions WHERE user_id = ? AND is_active = 1 ORDER BY login_at DESC').all(userId) as Record<string, unknown>[];
   return rows.map(r => ({
-    sessionId: r.session_id, userId: r.user_id,
-    device: r.device, ipAddress: r.ip_address, loginAt: r.login_at,
-    expiresAt: r.expires_at, isActive: !!r.is_active,
+    sessionId: r.session_id as string, userId: r.user_id as string,
+    device: r.device as string, ipAddress: r.ip_address as string, loginAt: r.login_at as string,
+    expiresAt: r.expires_at as string, isActive: !!(r.is_active as number),
   }));
 }

@@ -26,10 +26,10 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
         codeCount = row?.cnt || 0; indexDb.close();
       }
     } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to count code symbols'); }
-    const graphService = (globalThis as Record<string, unknown>).__sqliteGraphService;
-    if (graphService && (graphService as { ready?: boolean }).ready) {
+    const graphService = (globalThis as Record<string, unknown>).__sqliteGraphService as { ready?: boolean; getAllPositions?: () => any } | undefined;
+    if (graphService && graphService.ready) {
       try {
-        const result = graphService.getAllPositions();
+        const result = graphService.getAllPositions!();
         if (Array.isArray(allowedTiers)) result.nodes = result.nodes.filter((n: any) => n.tier === 'CODE' || allowedTiers.includes(n.tier));
         result.kbCount = kbCount; result.codeCount = codeCount;
         return c.json(result);
@@ -71,9 +71,9 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
     const camY = parseFloat(c.req.query('y') || '0');
     const camZ = parseFloat(c.req.query('z') || '0');
     const zoom = parseFloat(c.req.query('zoom') || '500');
-    const graphService = (globalThis as Record<string, unknown>).__sqliteGraphService;
-    if (graphService && (graphService as { ready?: boolean }).ready) {
-      try { return c.json((graphService as { spatialQuery: Function }).spatialQuery({ camX, camY, camZ, zoom })); }
+    const graphService = (globalThis as Record<string, unknown>).__sqliteGraphService as { ready?: boolean; spatialQuery?: Function } | undefined;
+    if (graphService && graphService.ready) {
+      try { return c.json(graphService.spatialQuery!({ camX, camY, camZ, zoom })); }
       catch (err: any) { ctx.logger.warn({ error: err.message }, 'SQLite graph spatial query failed, using inline fallback'); }
     }
     const graphPermCheck = ctx.checkPermission(user.userId, 'GRAPH_VIEW');

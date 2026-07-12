@@ -19,15 +19,15 @@ export function getUsers(filters?: { status?: string; search?: string; accessGro
   return {
     total,
     items: rows.map(r => ({
-      userId: r.user_id,
-      username: r.username,
-      email: r.email,
-      status: r.status,
-      accessGroupId: r.access_group_id,
-      accessGroupName: r.access_group_name || '',
-      forcePasswordChange: !!r.force_password_change,
-      createdAt: r.created_at,
-      lastLogin: r.last_login || undefined,
+      userId: r.user_id as string,
+      username: r.username as string,
+      email: r.email as string,
+      status: r.status as string,
+      accessGroupId: r.access_group_id as string,
+      accessGroupName: (r.access_group_name as string) || '',
+      forcePasswordChange: !!(r.force_password_change as number),
+      createdAt: r.created_at as string,
+      lastLogin: (r.last_login as string) || undefined,
     })),
   };
 }
@@ -37,9 +37,9 @@ export function getUserById(userId: string): User | null {
   const r = d.prepare('SELECT * FROM users WHERE user_id = ?').get(userId) as Record<string, unknown> | undefined;
   if (!r) return null;
   return {
-    userId: r.user_id, username: r.username, email: r.email, status: r.status,
-    accessGroupId: r.access_group_id, forcePasswordChange: !!r.force_password_change,
-    createdAt: r.created_at, lastLogin: r.last_login || undefined,
+    userId: r.user_id as string, username: r.username as string, email: r.email as string, status: r.status as UserStatus,
+    accessGroupId: r.access_group_id as string, forcePasswordChange: !!(r.force_password_change as number),
+    createdAt: r.created_at as string, lastLogin: (r.last_login as string) || undefined,
   };
 }
 
@@ -48,9 +48,9 @@ export function getUserByUsername(username: string): (User & { passwordHash: str
   const r = d.prepare('SELECT * FROM users WHERE username = ?').get(username) as Record<string, unknown> | undefined;
   if (!r) return null;
   return {
-    userId: r.user_id, username: r.username, email: r.email, status: r.status,
-    accessGroupId: r.access_group_id, forcePasswordChange: !!r.force_password_change,
-    createdAt: r.created_at, lastLogin: r.last_login || undefined, passwordHash: r.password_hash,
+    userId: r.user_id as string, username: r.username as string, email: r.email as string, status: r.status as UserStatus,
+    accessGroupId: r.access_group_id as string, forcePasswordChange: !!(r.force_password_change as number),
+    createdAt: r.created_at as string, lastLogin: (r.last_login as string) || undefined, passwordHash: r.password_hash as string,
   };
 }
 

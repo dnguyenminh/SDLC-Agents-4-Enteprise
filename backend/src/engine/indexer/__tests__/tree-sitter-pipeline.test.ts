@@ -78,6 +78,14 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
     db = dbManager.getDb();
 
     config = {
+      port: 0,
+      host: '127.0.0.1',
+      onnxModelPath: '',
+      logLevel: 'info' as const,
+      projectId: 'test',
+      dataDir: tmpDir,
+      sqliteDbPath: dbPath,
+      orchestrationConfigPath: path.join(tmpDir, '.code-intel', 'orchestration.json'),
       workspace: tmpDir,
       viewerPort: 0,
       dbPath,

@@ -78,7 +78,7 @@ export interface RBACDeps {
 
 export function createRBACMiddleware(deps: RBACDeps) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const userId = (req as { userId: string }).userId;
+    const userId = (req as unknown as { userId: string }).userId;
     if (!userId) { res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Auth required' } }); return; }
 
     const status = await deps.getUserStatus(userId);
@@ -109,7 +109,7 @@ export function createRBACMiddleware(deps: RBACDeps) {
       }
     }
 
-    (req as { userPermissions: GroupPermission[] }).userPermissions = cached.permissions;
+    (req as unknown as { userPermissions: GroupPermission[] }).userPermissions = cached.permissions;
     next();
   };
 }

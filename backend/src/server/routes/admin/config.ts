@@ -56,8 +56,8 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
       if (!r.ok) return c.json({ error: 'HTTP ' + r.status, models: [] });
       const d = await r.json() as Record<string, unknown>;
       let models: { id: string; name: string }[];
-      if (prov === 'ollama') models = ((d as Record<string, unknown>).models as { name?: string; model?: string }[] || []).map((m: { name?: string; model?: string }) => ({ id: m.name || m.model, name: m.name || m.model }));
-      else models = ((d as Record<string, unknown>).data as { id?: string }[] || []).map((m: { id?: string }) => ({ id: m.id, name: m.id }));
+      if (prov === 'ollama') models = ((d as Record<string, unknown>).models as { name?: string; model?: string }[] || []).map((m: { name?: string; model?: string }) => ({ id: m.name || m.model || '', name: m.name || m.model || '' }));
+      else models = ((d as Record<string, unknown>).data as { id?: string }[] || []).map((m: { id?: string }) => ({ id: m.id || '', name: m.id || '' }));
       return c.json({ models, provider: prov });
     } catch (e: any) { return c.json({ error: e.message || 'Connection failed', models: [] }); }
   });

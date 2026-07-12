@@ -153,7 +153,7 @@ export function getKbEntriesByTag(tagName: string, projectId?: string): any[] {
       }
       for (const row of rows) {
         if (!row.tags) continue;
-        const tagArr = row.tags.split(',').map((t: string) => t.trim());
+        const tagArr = (row.tags as string).split(',').map((t: string) => t.trim());
         if (tagArr.includes(tagName)) {
           entries.push(row);
         }

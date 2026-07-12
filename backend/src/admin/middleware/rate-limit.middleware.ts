@@ -19,7 +19,7 @@ function getCategory(method: string, path: string): string {
 }
 
 export function rateLimitMiddleware(req: Request, res: Response, next: NextFunction): void {
-  const userId = (req as { userId: string }).userId;
+  const userId = (req as unknown as { userId: string }).userId;
   if (!userId) { next(); return; }
 
   const category = getCategory(req.method, req.path);

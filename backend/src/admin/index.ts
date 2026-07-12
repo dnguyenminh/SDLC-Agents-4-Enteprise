@@ -29,7 +29,7 @@ export function registerAdminModule(app: Express, deps: AdminModuleDependencies)
     const auth = req.headers.authorization;
     if (auth?.startsWith('Bearer ')) {
       const claims = deps.jwtService.validate(auth.slice(7));
-      if (claims) { (req as { userId: string; username: string }).userId = claims.sub; (req as { userId: string; username: string }).username = claims.username; }
+      if (claims) { (req as unknown as { userId: string; username: string }).userId = claims.sub; (req as unknown as { userId: string; username: string }).username = claims.username; }
     }
     next();
   });
@@ -56,7 +56,7 @@ export function registerAdminModule(app: Express, deps: AdminModuleDependencies)
 
   // /api/admin/me
   adminRouter.get('/me', (req, res) => {
-    const userId = (req as { userId: string }).userId;
+    const userId = (req as unknown as { userId: string }).userId;
     if (!userId) { res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } }); return; }
     const user = deps.db.prepare('SELECT u.*, ag.access_group_name FROM users u JOIN access_groups ag ON ag.access_group_id = u.access_group_id WHERE u.user_id = ?').get(userId);
     if (!user) { res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } }); return; }
