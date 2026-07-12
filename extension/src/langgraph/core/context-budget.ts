@@ -5,7 +5,7 @@
 
 import type { LlmMessage } from "./llm-provider";
 import type { McpToolDefinition } from "../vscode/tool-registry";
-import { debugLog } from "../debug-logger";
+import { debugLog } from "../../debug-logger";
 
 /** Approximate tokens from text. ~3.5 chars per token for code/mixed content. */
 export function estimateTokens(text: string): number {

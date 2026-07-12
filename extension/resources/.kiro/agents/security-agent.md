@@ -1,5 +1,7 @@
 ---
 name: security-agent
+type: security
+phase: specification
 description: >
   Chuyên gia bảo mật web application — review code, phát hiện vulnerabilities (OWASP Top 10),
   kiểm tra authentication/authorization, API security, dependency vulnerabilities, security headers,

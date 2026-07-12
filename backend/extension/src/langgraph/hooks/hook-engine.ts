@@ -4,7 +4,7 @@
  * Fires hooks at checkpoints (preToolUse, postToolUse, promptSubmit, agentStop).
  */
 
-import { debugLog, debugError } from "../debug-logger";
+import { debugLog, debugError } from "../../debug-logger";
 import { StreamHandler } from "../core/stream-handler";
 import { HookDefinition, loadHooks, clearHookCache, filterHooksByType } from "./hook-loader";
 import { HookExecutor, HookContext, HookResult } from "./hook-executor";

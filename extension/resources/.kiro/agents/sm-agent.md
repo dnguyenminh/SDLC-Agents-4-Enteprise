@@ -1,5 +1,7 @@
 ---
 name: sm-agent
+type: agent
+phase: requirements
 description: >
   Scrum Master agent điều phối toàn bộ pipeline multi-agent theo SDLC.
   Entry point duy nhất — user chỉ cần cung cấp Jira ticket key.

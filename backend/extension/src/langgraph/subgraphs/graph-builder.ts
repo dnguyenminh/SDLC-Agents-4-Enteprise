@@ -18,7 +18,7 @@ import { StreamHandler } from "./core/stream-handler";
 import { WorkspaceCheckpointer } from "./core/checkpointer";
 import type { LlmProvider } from "./core/llm-provider";
 import type { HookEngine } from "./hooks/hook-engine";
-import { buildRouterGraph } from "./router/router-graph";
+import { buildRouterGraph } from "../router/router-graph";
 
 /**
  * Build and compile the pipeline graph.
