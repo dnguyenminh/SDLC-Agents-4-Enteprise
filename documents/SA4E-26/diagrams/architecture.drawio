@@ -1,0 +1,45 @@
+<mxGraphModel dx="1400" dy="827" grid="0" pageWidth="1400" pageHeight="760">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Architecture — SA4E-26 Project Isolation Fix&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="220" y="10" width="380" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary" value="SA4E Backend Server" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;html=1;" vertex="1" parent="1">
+      <mxGeometry x="140" y="60" width="540" height="480" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor" value="Developer&#10;(via AI Agent)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#e1f5fe;strokeColor=#0288d1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="30" y="220" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_ide" value="&lt;b&gt;IDE Extension&lt;/b&gt;&#10;Derives projectId&#10;from workspace path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="100" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="config" value="&lt;b&gt;BackendConfig&lt;/b&gt;&#10;projectId derivation&#10;(path → basename)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="440" y="100" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="dispatcher" value="&lt;b&gt;MemoryToolDispatcher&lt;/b&gt;&#10;setScopeContext()&#10;handleIngest() + handleSearch()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="260" y="230" width="240" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="engine" value="&lt;b&gt;MemoryEngine&lt;/b&gt;&#10;buildScopeClause()&#10;buildScopeParams()&#10;insert()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="260" y="360" width="240" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="db" value="&lt;b&gt;SQLite DB&lt;/b&gt;&#10;knowledge_entries&#10;+ project_id column" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="330" y="490" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="MCP tool calls&#10;(ScopeContext)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="actor" target="dispatcher" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="workspace.rootPath" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="ext_ide" target="config" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="projectId" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="config" target="dispatcher" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="search() / insert()&#10;with project_id" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="dispatcher" target="engine" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="SQL with&#10;project_id filter" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="engine" target="db" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

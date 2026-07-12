@@ -8,14 +8,14 @@ import type { IModule, ModuleStatus } from '../../types/module.js';
 import type { ToolHandler, ToolDefinition } from '../../types/tool.js';
 import type { Logger } from 'pino';
 import { DatabaseManager } from '../../engine/db/database-manager.js';
-import { MemoryEngine } from './MemoryEngine.js';
-import { MemoryToolDispatcher } from './MemoryToolDispatcher.js';
-import { MEMORY_TOOL_DEFINITIONS } from './MemoryToolDefinitions.js';
+import { MemoryEngine } from './engine/index.js';
+import { MemoryToolDispatcher } from './dispatchers/index.js';
+import { MEMORY_TOOL_DEFINITIONS } from './definitions/index.js';
 import { loadConfig } from '../../engine/config.js';
 import { QueryLayer } from '../../engine/query/query-layer.js';
 import { migrate001AddScopeColumns } from './migrations/001-add-scope-columns.js';
-import { ScopePromotionService } from './ScopePromotionService.js';
-import { TagAnalyzerService } from './llm/TagAnalyzerService.js';
+import { ScopePromotionService } from './promotion/index.js';
+import { TagAnalyzerService } from './llm/analyzer.js';
 import { LLMService } from './llm/LLMService.js';
 import type { ScopeContext } from './models.js';
 
@@ -81,7 +81,7 @@ export class MemoryModule implements IModule {
           this.logger.info({ provider: llmConfig.provider, model: llmConfig.model, baseUrl: llmConfig.baseUrl }, 'TagAnalyzerService initialized — LLM auto-tagging enabled');
         }
       } catch (err) {
-        this.logger.info('TagAnalyzer LLM unavailable — using keyword fallback only');
+        this.logger.error({ err }, 'TagAnalyzer LLM unavailable — using keyword fallback only');
       }
 
       // Start periodic promotion scan (every 1 hour)

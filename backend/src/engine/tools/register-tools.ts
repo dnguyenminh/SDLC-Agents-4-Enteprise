@@ -6,14 +6,12 @@ import { IndexingEngine } from '../indexer/indexing-engine.js';
 import { QueryLayer } from '../query/query-layer.js';
 import * as fs from 'fs';
 import * as path from 'path';
-
 import { handleDrawioLayout, DRAWIO_TOOL_DEFINITION } from './drawio-tool.js';
 import { handleDrawioExportPng, DRAWIO_EXPORT_PNG_DEFINITION, isExportPngAvailable } from './drawio-export-png.js';
 import { CALL_GRAPH_TOOL_DEFINITIONS, handleCodeCallers, handleCodeCallees } from './call-graph-tools.js';
 import { DEPENDENCY_TOOL_DEFINITIONS, handleCodeDependencies } from './dependency-tools.js';
 import { IMPACT_TOOL_DEFINITIONS, handleCodeImpact } from './impact-tools.js';
 import { TRAVERSE_TOOL_DEFINITIONS, handleCodeTraverse } from './code-traverse.js';
-
 import { COMPLEXITY_TOOL_DEFINITION, handleComplexityTool } from '../analyzers/complexity/ComplexityTool.js';
 import { ENTRY_POINT_TOOL_DEFINITION, handleEntryPointTool } from '../analyzers/entry-points/EntryPointTool.js';
 import { GRAPH_ANALYSIS_TOOL_DEFINITIONS, handleGraphAnalysisTool } from '../analyzers/graph-analysis/GraphAnalysisTools.js';
@@ -21,42 +19,15 @@ import { AI_CONTEXT_TOOL_DEFINITIONS, handleGetAIContext, handleGetEditContext, 
 import { SIMILARITY_TOOL_DEFINITIONS, handleSimilarityTool } from '../analyzers/similarity/SimilarityTools.js';
 
 export const CODE_INTEL_TOOL_DEFINITIONS = [
-  {
-    name: 'code_search',
-    description: 'Full-text search across indexed code symbols (functions, classes, interfaces). Uses SQLite FTS5 with porter stemming.',
-    inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Search query' }, limit: { type: 'number', description: 'Max results (default 20)' } }, required: ['query'] },
-  },
-  {
-    name: 'code_symbols',
-    description: 'Find code symbols by name prefix or list symbols in a file.',
-    inputSchema: { type: 'object', properties: { name: { type: 'string' }, file: { type: 'string' }, kind: { type: 'string' }, limit: { type: 'number' } } },
-  },
-  {
-    name: 'code_context',
-    description: 'Get source code context around a symbol or line range.',
-    inputSchema: { type: 'object', properties: { file: { type: 'string' }, symbol: { type: 'string' }, startLine: { type: 'number' }, endLine: { type: 'number' }, contextLines: { type: 'number' } }, required: ['file'] },
-  },
-  {
-    name: 'code_modules',
-    description: 'List all discovered code modules with file counts and languages.',
-    inputSchema: { type: 'object', properties: { name: { type: 'string' } } },
-  },
-  {
-    name: 'code_index_status',
-    description: 'Get current indexing status: file count, symbol count, languages, last indexed time.',
-    inputSchema: { type: 'object', properties: { reindex: { type: 'boolean' } } },
-  },
-  {
-    name: 'stream_write_file',
-    description: 'Write content directly to a file on disk. Modes: write (overwrite), append, create (fail if exists).',
-    inputSchema: { type: 'object', properties: { file_path: { type: 'string' }, content: { type: 'string' }, mode: { type: 'string' }, encoding: { type: 'string' } }, required: ['file_path'] },
-  },
-  {
-    name: 'code_kb_export',
-    description: 'Export code intelligence data as Knowledge Base payloads for ingestion.',
-    inputSchema: { type: 'object', properties: { module: { type: 'string' }, format: { type: 'string' } } },
-  },
+  { name: 'code_search', description: 'Full-text search across indexed code symbols (functions, classes, interfaces). Uses SQLite FTS5 with porter stemming.', inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Search query' }, limit: { type: 'number', description: 'Max results (default 20)' } }, required: ['query'] } },
+  { name: 'code_symbols', description: 'Find code symbols by name prefix or list symbols in a file.', inputSchema: { type: 'object', properties: { name: { type: 'string' }, file: { type: 'string' }, kind: { type: 'string' }, limit: { type: 'number' } } } },
+  { name: 'code_context', description: 'Get source code context around a symbol or line range.', inputSchema: { type: 'object', properties: { file: { type: 'string' }, symbol: { type: 'string' }, startLine: { type: 'number' }, endLine: { type: 'number' }, contextLines: { type: 'number' } }, required: ['file'] } },
+  { name: 'code_modules', description: 'List all discovered code modules with file counts and languages.', inputSchema: { type: 'object', properties: { name: { type: 'string' } } } },
+  { name: 'code_index_status', description: 'Get current indexing status: file count, symbol count, languages, last indexed time.', inputSchema: { type: 'object', properties: { reindex: { type: 'boolean' } } } },
+  { name: 'stream_write_file', description: 'Write content directly to a file on disk. Modes: write (overwrite), append, create (fail if exists).', inputSchema: { type: 'object', properties: { file_path: { type: 'string' }, content: { type: 'string' }, mode: { type: 'string' }, encoding: { type: 'string' } }, required: ['file_path'] } },
+  { name: 'code_kb_export', description: 'Export code intelligence data as Knowledge Base payloads for ingestion.', inputSchema: { type: 'object', properties: { module: { type: 'string' }, format: { type: 'string' } } } },
   DRAWIO_TOOL_DEFINITION,
+  DRAWIO_EXPORT_PNG_DEFINITION,
   ...CALL_GRAPH_TOOL_DEFINITIONS,
   ...DEPENDENCY_TOOL_DEFINITIONS,
   ...IMPACT_TOOL_DEFINITIONS,
@@ -97,26 +68,21 @@ export async function dispatchCodeIntelTool(
     case 'find_related_tests':
     case 'find_hot_paths':
     case 'find_dead_imports':
-    case 'module_summary': {
-      const result = handleGraphAnalysisTool(name, args, dbManager.getDb());
-      return result ?? `Unknown tool: ${name}`;
-    }
+    case 'module_summary':
+      return handleGraphAnalysisTool(name, args, dbManager.getDb()) ?? `Unknown tool: ${name}`;
     case 'get_ai_context': return handleGetAIContext(args, dbManager.getDb(), workspace);
     case 'get_edit_context': return handleGetEditContext(args, dbManager.getDb(), workspace);
     case 'get_curated_context': return handleGetCuratedContext(args, dbManager.getDb(), workspace, dbManager);
     case 'find_duplicates':
     case 'find_dead_code':
     case 'git_search':
-    case 'git_index': {
-      const simResult = handleSimilarityTool(name, args, dbManager.getDb(), workspace);
-      return simResult ?? `Unknown tool: ${name}`;
-    }
+    case 'git_index':
+      return handleSimilarityTool(name, args, dbManager.getDb(), workspace) ?? `Unknown tool: ${name}`;
     default:
       return `Unknown tool: ${name}`;
   }
 }
 
-// Handlers for the 7 core code tools
 function handleCodeSearch(args: Record<string, unknown>, ql: QueryLayer): string {
   const query = (args.query as string) ?? '';
   const limit = (args.limit as number) ?? 20;
@@ -141,14 +107,14 @@ function handleCodeSymbols(args: Record<string, unknown>, ql: QueryLayer): strin
     const symbols = ql.getFileSymbols(file);
     if (symbols.length === 0) return `No symbols found in ${file}`;
     const lines = [`Symbols in ${file} (${symbols.length}):\n`];
-    for (const s of symbols) { lines.push(`  L${s.startLine} [${s.kind}] ${s.name}`); }
+    for (const s of symbols) lines.push(`  L${s.startLine} [${s.kind}] ${s.name}`);
     return lines.join('\n');
   }
   if (name) {
     const symbols = ql.findSymbols(name, kind, limit);
     if (symbols.length === 0) return `No symbols matching "${name}"`;
     const lines = [`Found ${symbols.length} symbols matching "${name}":\n`];
-    for (const s of symbols) { lines.push(`[${s.kind}] ${s.name} - ${s.filePath}:${s.startLine}`); }
+    for (const s of symbols) lines.push(`[${s.kind}] ${s.name} - ${s.filePath}:${s.startLine}`);
     return lines.join('\n');
   }
   return 'Provide either "name" or "file" parameter';
@@ -196,7 +162,6 @@ function handleCodeModules(args: Record<string, unknown>, ql: QueryLayer): strin
 async function handleCodeIndexStatus(args: Record<string, unknown>, ql: QueryLayer, indexer: IndexingEngine): Promise<string> {
   if (args.reindex) await indexer.runFullIndex();
   const status = ql.getIndexStatus();
-  const tsStats = indexer.getTreeSitterStats();
   const lines = [
     'Code Intelligence Index Status\n',
     `State: ${indexer.isRunning() ? 'Indexing...' : 'Idle'}`,

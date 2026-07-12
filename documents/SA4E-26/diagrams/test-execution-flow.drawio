@@ -1,0 +1,89 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="Test Execution Flow — SA4E-26" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="350" y="20" width="300" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=none" vertex="1" parent="1">
+      <mxGeometry x="490" y="60" width="20" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="pbt" value="PBT (fast-check)&#xa;4 property tests&#xa;100 samples each" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="430" y="100" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e-start-pbt" style="edgeStyle=orthogonalEdgeStyle" edge="1" source="start" target="pbt" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ut" value="Unit Tests (Jest)&#xa;14 tests&#xa;buildScopeClause, insert, derive" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="430" y="180" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e-pbt-ut" style="edgeStyle=orthogonalEdgeStyle" edge="1" source="pbt" target="ut" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="gate1" value="PBT + UT&#xa;PASS?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="460" y="260" width="80" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e-ut-gate1" style="edgeStyle=orthogonalEdgeStyle" edge="1" source="ut" target="gate1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="fix1" value="Fix Code" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="600" y="270" width="80" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="e-gate1-fix" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;fontStyle=1;fontSize=9;fontColor=#CC0000" edge="1" source="gate1" target="fix1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e-fix1-ut" style="edgeStyle=orthogonalEdgeStyle;dashed=1" edge="1" source="fix1" target="ut" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="700" y="290" />
+          <mxPoint x="700" y="205" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="it" value="Integration Tests (Jest+SQLite)&#xa;12 tests&#xa;Real DB operations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="420" y="350" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e-gate1-it" value="PASS" style="edgeStyle=orthogonalEdgeStyle;fontStyle=1;fontSize=9;fontColor=#009900" edge="1" source="gate1" target="it" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2eapi" value="E2E-API Tests (MCP Client)&#xa;8 tests&#xa;Full tool call path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="420" y="430" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e-it-e2e" style="edgeStyle=orthogonalEdgeStyle" edge="1" source="it" target="e2eapi" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="gate2" value="IT + E2E&#xa;PASS?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="460" y="510" width="80" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e-e2e-gate2" style="edgeStyle=orthogonalEdgeStyle" edge="1" source="e2eapi" target="gate2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="fix2" value="Fix Code" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="600" y="520" width="80" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="e-gate2-fix" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;fontStyle=1;fontSize=9;fontColor=#CC0000" edge="1" source="gate2" target="fix2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="sit" value="SIT (Multi-Process)&#xa;4 tests&#xa;Performance + Isolation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="430" y="600" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e-gate2-sit" value="PASS" style="edgeStyle=orthogonalEdgeStyle;fontStyle=1;fontSize=9;fontColor=#009900" edge="1" source="gate2" target="sit" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="done" value="All Tests PASS&#xa;Ready for UAT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="430" y="680" width="140" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="e-sit-done" style="edgeStyle=orthogonalEdgeStyle" edge="1" source="sit" target="done" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=none;aspect=fixed" vertex="1" parent="1">
+      <mxGeometry x="493" y="740" width="14" height="14" as="geometry" />
+    </mxCell>
+    <mxCell id="e-done-end" style="edgeStyle=orthogonalEdgeStyle" edge="1" source="done" target="end" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ci-note" value="CI Pipeline: All levels run sequentially.&#xa;Failure at any gate blocks subsequent levels." style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#666666;fillColor=#f5f5f5;fontSize=9;rounded=1" vertex="1" parent="1">
+      <mxGeometry x="80" y="680" width="260" height="40" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

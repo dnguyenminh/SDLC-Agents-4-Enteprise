@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { DatabaseManager } from '../../../engine/db/database-manager.js';
-import { MemoryEngine } from '../MemoryEngine.js';
-import { MemoryToolDispatcher } from '../MemoryToolDispatcher.js';
+import { MemoryEngine } from '../engine/index.js';
+import { MemoryToolDispatcher } from '../dispatchers/index.js';
 import { QueryLayer } from '../../../engine/query/query-layer.js';
 
 describe('MemoryToolDispatcher sync_code & live status', () => {

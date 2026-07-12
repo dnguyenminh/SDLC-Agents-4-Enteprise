@@ -6,7 +6,7 @@
 import Database from 'better-sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
-import { MEMORY_SCHEMA } from './schema.js';
+import { MEMORY_SCHEMA } from './schema/index.js';
 import { MigrationRunner } from './MigrationRunner.js';
 import { loadConfig, getWorkspacePath } from '../../config/BackendConfig.js';
 

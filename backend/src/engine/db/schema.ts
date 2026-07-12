@@ -3,7 +3,7 @@
  * Uses FTS5 with porter tokenizer for full-text search on symbols.
  */
 
-import { MEMORY_SCHEMA } from '../../modules/memory/schema.js';
+import { MEMORY_SCHEMA } from '../../modules/memory/schema/index.js';
 
 export const SCHEMA_V1 = `
 -- Schema version tracking

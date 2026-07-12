@@ -1,0 +1,75 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="IDE Extension (Kiro)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="440" y="30" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="BackendConfig" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="140" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="MCP StreamableHTTP" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="440" y="110" width="200" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="MemoryToolDispatcher" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="170" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="IsolationLayer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;strokeWidth=3;" vertex="1" parent="1">
+      <mxGeometry x="440" y="250" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="MemoryEngine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="340" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="SQLite (better-sqlite3)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="420" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="MigrationRunner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="700" y="340" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="ProjectContext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="240" y="250" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="schema_migrations" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="710" y="420" width="130" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="12" value="ScopePromotionService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="700" y="250" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="2" target="4" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="4" target="5" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="5" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="6" target="7" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="7" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="9" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="10" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="3" target="10" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="12" target="7" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="13" value="NEW" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=#d5e8d4;fontSize=9;fontStyle=1;fontColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="650" y="250" width="40" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="14" value="NEW" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=#d5e8d4;fontSize=9;fontStyle=1;fontColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="850" y="340" width="40" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="15" value="Legend: Green = NEW components (SA4E-27)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="60" y="490" width="260" height="20" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

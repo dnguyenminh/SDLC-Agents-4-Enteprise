@@ -10,7 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { copyDirRecursive } from "./file-utils";
 
-export type IdeTarget = "kiro" | "vscode" | "claude" | "codex";
+export type IdeTarget = "kiro" | "vscode" | "claude" | "codex" | "opencode" | "antigravity";
 
 export interface IdeTargetInfo {
   id: IdeTarget;
@@ -23,6 +23,8 @@ export const IDE_TARGETS: IdeTargetInfo[] = [
   { id: "vscode", label: "VSCode (GitHub Copilot)", description: ".github/agents/, .github/copilot-instructions.md" },
   { id: "claude", label: "Claude Code", description: ".claude/agents/, .claude/rules/, CLAUDE.md" },
   { id: "codex", label: "Codex (OpenAI)", description: "AGENTS.md, agents/ subdirectory" },
+  { id: "opencode", label: "OpenCode", description: ".opencode/agents/, .opencode/skills/, opencode.json" },
+  { id: "antigravity", label: "AntiGravity", description: ".agents/, skills/ (Agentic Coding)" },
 ];
 
 /** Strategy interface — each IDE adapter knows how to inject pre-converted files. */
@@ -65,6 +67,8 @@ const ADAPTER_MAP: Record<IdeTarget, () => IdeAdapter> = {
   vscode: () => new PreConvertedAdapter("vscode", "github-copilot"),
   claude: () => new PreConvertedAdapter("claude", "claude-code"),
   codex: () => new PreConvertedAdapter("codex", "codex-openai"),
+  opencode: () => new PreConvertedAdapter("opencode", "opencode"),
+  antigravity: () => new PreConvertedAdapter("antigravity", "antigravity"),
 };
 
 export function createAdapter(target: IdeTarget): IdeAdapter {

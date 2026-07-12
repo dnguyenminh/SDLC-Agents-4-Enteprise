@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { MemoryToolDispatcher } from '../MemoryToolDispatcher.js';
+import { MemoryToolDispatcher } from '../dispatchers/index.js';
 import { makeTempDb, type TempDb } from '../../../__tests__/sa4e-testkit.js';
 
 describe('IT-04: mem_admin tool_usage read path', () => {

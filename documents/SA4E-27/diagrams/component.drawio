@@ -1,0 +1,72 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="ProjectContext.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="40" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="IsolationLayer.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;strokeWidth=3;" vertex="1" parent="1">
+      <mxGeometry x="320" y="40" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="MigrationRunner.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="600" y="40" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="models.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="140" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="MemoryEngine.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="140" width="180" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="MemoryDb.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="140" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="MemoryToolDispatcher.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="240" width="180" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="schema.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="240" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="ScopePromotionService.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="240" width="180" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="BackendConfig.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="340" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="imports types" style="edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=9;" edge="1" source="3" target="2" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="imports types" style="edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=9;" edge="1" source="3" target="5" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="delegates scope to" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="8" target="3" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="calls" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="8" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="uses" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="7" target="4" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="uses DDL from" style="edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=9;" edge="1" source="7" target="9" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="calls promoteEntry" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" edge="1" source="10" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="derives projectId" style="edgeStyle=orthogonalEdgeStyle;dashed=1;fontSize=9;" edge="1" source="11" target="2" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="12" value="Legend:" style="text;html=1;align=left;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="420" width="50" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="13" value="Green = NEW" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="120" y="420" width="80" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="14" value="Yellow = MODIFIED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="210" y="420" width="100" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="15" value="Gray = UNCHANGED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="320" y="420" width="110" height="20" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

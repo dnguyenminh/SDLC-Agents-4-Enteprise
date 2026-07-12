@@ -4,9 +4,10 @@
 
 - All tests pass (testing.status = "done")
 - UAT accepted (user confirmed)
+- Security Deployment Review done (security_deploy_review.status = "done") — Phase 6.7
 - Jira status: UAT or Ready For Product
 
-## ⛔ CHỈ THỰC HIỆN KHI USER XÁC NHẬN UAT PASS
+## ⛔ CHỈ THỰC HIỆN KHI USER XÁC NHẬN UAT PASS + SECURITY DEPLOY REVIEW PASS
 
 ## Workflow
 

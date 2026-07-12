@@ -4,8 +4,7 @@
  */
 
 import * as vscode from "vscode";
-import { isUpgradeAvailable, loadBundledManifest, migrateLegacyVersion } from "./checksum";
-import { migrateLegacyScripts, checkStatus } from "./injector";
+import { getWorkspaceRoot, createStatusBar, updateStatusBar, checkForUpgrade } from "./activation-helpers";
 import { McpServerManager } from "./mcp-server-manager";
 import { WebviewPanelManager } from "./webview-panel-manager";
 import { KiroTreeViewProvider } from "./sidebar/tree-view-provider";
@@ -27,6 +26,10 @@ let kbEventBus: KbEventBus | undefined;
 let treeProvider: KiroTreeViewProvider | undefined;
 let authManager: AuthManager | undefined;
 
+/** Project ID for multi-tenant isolation — derived from git remote or user+folder hash. */
+let _projectId = "default";
+export function getProjectId(): string { return _projectId; }
+
 export async function activate(context: vscode.ExtensionContext) {
   const statusBar = createStatusBar();
   context.subscriptions.push(statusBar);
@@ -36,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await initializeWorkspace(context, workspaceRoot, statusBar);
   }
 
-  updateStatusBar(statusBar);
+  updateStatusBar(statusBar, mcpManager);
   checkForUpgrade(context);
 }
 
@@ -47,6 +50,37 @@ export function deactivate() {
 }
 
 async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRoot: string, statusBar: vscode.StatusBarItem): Promise<void> {
+  // Derive projectId: .code-intel/project.json → git remote hash → user+folder hash
+  const pathModule = await import("path");
+  const fs = await import("fs");
+  const crypto = await import("crypto");
+  const os = await import("os");
+  const cp = await import("child_process");
+
+  let derivedProjectId = "default";
+  // 1. Explicit config
+  try {
+    const pjPath = pathModule.resolve(workspaceRoot, ".code-intel", "project.json");
+    if (fs.existsSync(pjPath)) {
+      const pj = JSON.parse(fs.readFileSync(pjPath, "utf-8"));
+      if (pj.projectId) { derivedProjectId = pj.projectId; }
+    }
+  } catch { /* ignore */ }
+  // 2. Git remote hash
+  if (derivedProjectId === "default") {
+    try {
+      const remote = cp.execSync("git remote get-url origin", { cwd: workspaceRoot, encoding: "utf-8", timeout: 3000 }).trim();
+      if (remote) { derivedProjectId = crypto.createHash("sha256").update(remote).digest("hex").slice(0, 12); }
+    } catch { /* no git */ }
+  }
+  // 3. User + folder hash
+  if (derivedProjectId === "default") {
+    const userId = os.userInfo().username || "unknown";
+    const folderName = pathModule.basename(workspaceRoot) || "default";
+    derivedProjectId = crypto.createHash("sha256").update(`${userId}:${folderName}`).digest("hex").slice(0, 12);
+  }
+  _projectId = derivedProjectId;
+
   const outputChannel = vscode.window.createOutputChannel("Kiro MCP Server");
   context.subscriptions.push(outputChannel);
 
@@ -130,7 +164,7 @@ function setupMcpStatusBroadcast(statusBar: vscode.StatusBarItem, workspaceRoot:
   mcpManager!.onStatusChange((status) => {
     const webviewStatus = mapServerStatusToWebview(status);
     panelManager?.notifyAllPanels({ type: "serverStatus", status: webviewStatus });
-    updateStatusBar(statusBar);
+    updateStatusBar(statusBar, mcpManager);
     if (status === "running") {
       kbEventBus?.connect();
       configWatcher?.suppressNextChange();
@@ -150,38 +184,4 @@ async function autoSpawnServer(config: vscode.WorkspaceConfiguration, outputChan
   }
 }
 
-// === Helpers ===
 
-function getWorkspaceRoot(): string | undefined {
-  const folders = vscode.workspace.workspaceFolders;
-  return folders && folders.length > 0 ? folders[0].uri.fsPath : undefined;
-}
-
-function createStatusBar(): vscode.StatusBarItem {
-  const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  item.command = "kiroSdlc.status";
-  item.show();
-  return item;
-}
-
-function updateStatusBar(item: vscode.StatusBarItem): void {
-  const root = getWorkspaceRoot();
-  if (!root) { item.text = "$(circle-slash) SDLC"; item.tooltip = "No workspace open"; return; }
-  const status = checkStatus(root);
-  const allPresent = Object.values(status).every(v => v);
-  const serverIcon = mcpManager?.status === "running" ? "$(check)" : "$(warning)";
-  item.text = allPresent ? `${serverIcon} SDLC Agents` : `$(warning) SDLC Agents`;
-  const portInfo = mcpManager?.port ? ` | Port: ${mcpManager.port}` : "";
-  item.tooltip = allPresent ? `All components active | MCP: ${mcpManager?.status || "N/A"}${portInfo}` : "Some components missing";
-}
-
-async function checkForUpgrade(context: vscode.ExtensionContext): Promise<void> {
-  const root = getWorkspaceRoot();
-  if (!root) { return; }
-  migrateLegacyVersion(root, context.extensionPath);
-  migrateLegacyScripts(root);
-  if (!isUpgradeAvailable(root, context.extensionPath)) { return; }
-  const manifest = loadBundledManifest(context.extensionPath);
-  const action = await vscode.window.showInformationMessage(`🆕 SDLC update → v${manifest?.version || "?"}`, "Update Now", "Later");
-  if (action === "Update Now") { vscode.commands.executeCommand("kiroSdlc.update"); }
-}

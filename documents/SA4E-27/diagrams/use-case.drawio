@@ -1,0 +1,148 @@
+﻿<mxfile>
+  <diagram name="Use Case - Project Isolation" id="uc1">
+    <mxGraphModel dx="1100" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="&lt;b&gt;Use Case Diagram - KB Project Isolation (Redesign SA4E-27)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="500" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="boundary" value="KB Isolation System" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="70" width="600" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_dev" value="Developer" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="250" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_ext" value="IDE Extension" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="450" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_system" value="Backend&#10;System" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="350" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc1_node" value="Search KB with&#10;project isolation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="100" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc2_node" value="Ingest entry with&#10;project stamp" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="200" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc3_node" value="List entries with&#10;project filter" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="300" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc4_node" value="Derive project context&#10;from workspace" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="380" y="400" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc5_node" value="Run versioned&#10;schema migration" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="380" y="500" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc6_node" value="Access SHARED entries&#10;cross-project" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="650" y="130" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc7_node" value="Access legacy entries&#10;(NULL project_id)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="650" y="240" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc8_node" value="Enforce scope&#10;filtering centrally" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="650" y="370" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc9_node" value="Track migration&#10;versions" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="650" y="490" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc10_node" value="Access USER entries&#10;by user_id" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="600" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc11_node" value="Run isolation&#10;tests" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="650" y="610" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_dev_uc1" edge="1" parent="1" source="actor_dev" target="uc1_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="135"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_dev_uc2" edge="1" parent="1" source="actor_dev" target="uc2_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="235"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_dev_uc3" edge="1" parent="1" source="actor_dev" target="uc3_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="335"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_dev_uc10" edge="1" parent="1" source="actor_dev" target="uc10_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="635"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc4" edge="1" parent="1" source="actor_ext" target="uc4_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="435"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc5" edge="1" parent="1" source="actor_ext" target="uc5_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="535"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_sys_uc8" edge="1" parent="1" source="actor_system" target="uc8_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_sys_uc9" edge="1" parent="1" source="actor_system" target="uc9_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_sys_uc11" edge="1" parent="1" source="actor_system" target="uc11_node" style="html=1;endArrow=none;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_include1" edge="1" parent="1" source="uc1_node" target="uc6_node" style="dashed=1;endArrow=open;fontSize=9;fontStyle=2;html=1;" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_include2" edge="1" parent="1" source="uc1_node" target="uc7_node" style="dashed=1;endArrow=open;fontSize=9;fontStyle=2;html=1;" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_include3" edge="1" parent="1" source="uc1_node" target="uc8_node" style="dashed=1;endArrow=open;fontSize=9;fontStyle=2;html=1;" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_include4" edge="1" parent="1" source="uc5_node" target="uc9_node" style="dashed=1;endArrow=open;fontSize=9;fontStyle=2;html=1;" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="320" y="720" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend1" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="390" y="718" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend1_text" value="Core KB Operations" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="410" y="714" width="120" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend2" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="540" y="718" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend2_text" value="Setup / Init" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="560" y="714" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend3" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="650" y="718" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend3_text" value="Scope Rules" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="670" y="714" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend4" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="760" y="718" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend4_text" value="System Internal" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="780" y="714" width="100" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -102,24 +102,29 @@ export class OrchestrationModule implements IModule {
     });
 
     handlers.set('execute_dynamic_tool', async (args: any) => {
+
       const toolName = args.toolName || args.tool_name;
       const toolArgs = args.arguments || {};
       
       // If a child MCP server owns this tool, proxy the request
       if (this.clientManager.ownsTool(toolName)) {
+
         try {
           const result = await this.clientManager.executeTool(toolName, toolArgs);
           if (this.registry && !result.isError) {
             trackToolUsage(this.registry, this.logger, toolName); // BR-07 (OI-4: proxied inner tool)
           }
+
           return result;
         } catch (err: any) {
+
           return {
             content: [{ type: 'text', text: `Error proxying tool ${toolName}: ${err.message || err}` }],
             isError: true,
           };
         }
       }
+
 
       if (!this.registry) {
         return {
@@ -132,19 +137,23 @@ export class OrchestrationModule implements IModule {
       const handler = allHandlers.get(toolName);
       
       if (!handler) {
+
         return {
-          content: [{ type: 'text', text: `Tool ${toolName} not found or not ready.` }],
+          content: [{ type: 'text', text: `Tool ${toolName} not found` }],
           isError: true,
         };
       }
       
       try {
+
         const result = await handler(toolArgs);
+
         if (this.registry && !result.isError) {
           trackToolUsage(this.registry, this.logger, toolName); // BR-07: resolved inner tool
         }
         return result;
       } catch (err: any) {
+
         this.logger.error({ err, toolName, toolArgs }, 'Failed to execute dynamic tool');
         return {
           content: [{ type: 'text', text: `Error executing tool ${toolName}: ${err.message || err}` }],

@@ -3,6 +3,7 @@
  * Provides Jira issue fetching and recursive link traversal for pipeline nodes.
  */
 
+
 import { debugError } from "../../debug-logger";
 import type { McpBridge } from "../mcp-bridge";
 

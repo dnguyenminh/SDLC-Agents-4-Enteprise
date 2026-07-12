@@ -41,9 +41,50 @@ jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{
 
 Also attach all `.drawio` files.
 
-8. Report: "✅ Phase 3 done — TDD.md created & attached to Jira. Chuyển sang Phase 4?"
+8. Report: "✅ Phase 3 done — TDD.md created & attached to Jira. Chuyển sang Phase 3.7 (Security Design Review)?"
 9. Wait for user confirmation.
-10. Đợi Jira ticket chuyển sang IN PROGRESS (transition "Implement" do reviewer/PO)
+
+### Step 3.7: Security Design Review (MANDATORY)
+
+**After TDD is finalized, Security Agent reviews the design for security concerns.**
+
+1. Update STATUS: `security_design_review.status = "in_progress"`
+
+2. Invoke Security agent:
+```
+invokeSubAgent(
+  name: "security-agent",
+  prompt: "Security Design Review cho {TICKET}. Đọc TDD.md tại documents/{TICKET}/TDD.md. Review:
+  1. Authentication/Authorization design — đầy đủ, an toàn?
+  2. Data protection — encryption at rest/transit, PII handling?
+  3. API security — rate limiting, input validation, CORS?
+  4. Dependency risks — vulnerable libraries được chọn?
+  5. Infrastructure security — network policies, secrets management?
+  6. Injection risks — SQL, command, LDAP injection vectors?
+  7. Session management — token lifetime, refresh, revocation?
+  Output: documents/{TICKET}/SECURITY-REVIEW.md với findings table (Critical/High/Medium/Low)."
+)
+```
+
+3. Verify `documents/{TICKET}/SECURITY-REVIEW.md` exists
+
+4. Read findings:
+   - **No Critical/High** → proceed to Phase 4
+   - **Critical findings** → invoke sa-agent to update TDD:
+     ```
+     invokeSubAgent(
+       name: "sa-agent",
+       prompt: "Cập nhật TDD cho {TICKET}. Security review phát hiện: {critical findings}. Sửa TDD security section để address các issues này."
+     )
+     ```
+   - **High findings** → log as DEV requirements, proceed with warning
+
+5. Update STATUS: `security_design_review.status = "done"`
+
+6. Report: "✅ Phase 3.7 done — Security Design Review complete. {summary}. Chuyển sang Phase 4?"
+
+7. Wait for user confirmation.
+8. Đợi Jira ticket chuyển sang IN PROGRESS (transition "Implement" do reviewer/PO)
 
 ## Step 3.5: Feedback Loop (BA ↔ SA)
 

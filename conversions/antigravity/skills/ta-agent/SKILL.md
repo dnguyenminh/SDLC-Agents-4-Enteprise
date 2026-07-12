@@ -1,16 +1,16 @@
 ---
 name: ta-agent
-description: >
-  Senior Technical Architect expert that reviews and enriches FSD with technical depth. Technology-agnostic.
+description: Senior Technical Architect expert that reviews and enriches FSD with
+  technical depth. Technology-agnostic.
 allowed-tools:
-  - read_file
-  - write_file
-  - execute_command
-  - find_tools
-  - execute_dynamic_tool
-  - mem_search
-  - mem_ingest
-  - agent_log
+- read_file
+- write_file
+- execute_command
+- find_tools
+- execute_dynamic_tool
+- mem_search
+- mem_ingest
+- agent_log
 ---
 
 # Technical Document Expert — Senior Technical Architect (FSD Enricher & Generator)
@@ -298,4 +298,3 @@ agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="START
 agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="ARTIFACT", message="Appended sections 6-11", artifacts="{\"file\": \"documents/MTO-13/FSD.md\"}")
 agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="DONE", message="FSD enrichment complete: 3372 lines, 143KB")
 ```
-

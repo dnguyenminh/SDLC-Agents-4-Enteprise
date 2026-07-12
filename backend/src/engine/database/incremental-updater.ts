@@ -5,6 +5,9 @@
 
 import * as fs from 'fs';
 import Database from 'better-sqlite3';
+import pino from 'pino';
+
+const logger = pino({ name: 'incremental-updater' });
 
 export interface ChangeSet {
   added: string[];
@@ -82,7 +85,7 @@ export class IncrementalUpdater {
         VALUES (?, ?, ?, ?, datetime('now'), ?)
       `).run(relativePath, Math.floor(stat.mtimeMs), hash, stat.size, symbolCount);
     } catch (err) {
-      console.error(`[incremental-updater] Failed to update index for ${relativePath}:`, err);
+      logger.error({ err }, `[incremental-updater] Failed to update index for ${relativePath}:`);
     }
   }
 

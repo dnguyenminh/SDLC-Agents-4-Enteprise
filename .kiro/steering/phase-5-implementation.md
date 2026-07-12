@@ -135,3 +135,68 @@ embed_images → export_docx → jira_update_issue
 
 **DEV reads:** KB (TDD + FSD + BRD), code intelligence, source code
 **DEV writes:** Source code, UG.md → KB, code intelligence index
+
+## Phase 5.7: Security Code Review (MANDATORY)
+
+### Prerequisites
+- Code exists (implementation.status = "done")
+- Source code pushed to branch {TICKET}
+
+### Step 5.7a: Security Agent Audits Code
+
+1. Update STATUS: `security_code_review.status = "in_progress"`
+
+2. Invoke Security agent:
+```
+invokeSubAgent(
+  name: "security-agent",
+  prompt: "Security Code Review cho {TICKET}. Audit source code on branch {TICKET}. Check:
+  1. OWASP Top 10 vulnerabilities (injection, broken auth, sensitive data exposure, XXE, broken access control, security misconfiguration, XSS, insecure deserialization, known vulns, insufficient logging)
+  2. Authentication/Authorization implementation correctness
+  3. Input validation and output encoding
+  4. SQL injection, command injection protection
+  5. Secrets/credentials handling (no hardcoded secrets, proper env var usage)
+  6. Dependency vulnerabilities (check CVEs for libraries used)
+  7. Error handling (no stack traces or sensitive info in responses)
+  8. Encryption — correct algorithms, key management
+  9. CORS, CSRF, security headers
+  10. Secure defaults (fail-closed, deny by default)
+  Output: documents/{TICKET}/SECURITY-ASSESSMENT.md với:
+  - Findings table (ID, Severity, Category, File, Description, Remediation)
+  - Overall risk rating
+  - Recommendations prioritized by severity"
+)
+```
+
+3. Verify `documents/{TICKET}/SECURITY-ASSESSMENT.md` exists
+
+### Step 5.7b: Handle Findings
+
+4. Read SECURITY-ASSESSMENT.md findings:
+   - **No Critical/High** → proceed to Phase 6 (Testing)
+   - **Critical findings** → MUST fix before testing:
+     ```
+     invokeSubAgent(
+       name: "dev-agent",
+       prompt: "Fix security vulnerabilities cho {TICKET}. Security review phát hiện:
+       {list critical findings with file + line + remediation}
+       Fix từng issue. Commit message: '{TICKET}: fix security - {category}'"
+     )
+     ```
+     After fix → re-invoke security-agent for re-review (max 2 iterations)
+   - **High findings** → DEV must fix, or user explicitly accepts risk
+
+5. Update STATUS: `security_code_review.status = "done"`
+
+6. Report: "✅ Phase 5.7 done — Security Code Review complete. {N} findings ({critical} critical, {high} high, {medium} medium). Chuyển sang Phase 6 (Testing)?"
+
+7. Wait for user confirmation.
+
+### Quality Gate — Security Code Review
+
+| # | Check | If Missing |
+|---|-------|------------|
+| 1 | SECURITY-ASSESSMENT.md exists | Re-invoke security-agent |
+| 2 | No Critical findings unresolved | DEV must fix → re-review |
+| 3 | No High findings unresolved (or risk accepted) | DEV fix or user approval |
+| 4 | All findings have remediation recommendations | Ask security-agent to add |

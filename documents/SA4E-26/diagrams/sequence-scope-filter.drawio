@@ -1,0 +1,77 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="827" grid="0" pageWidth="1400" pageHeight="760">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Sequence — Scope-Filtered KB Search (SA4E-26)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="150" y="10" width="500" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="ll_agent" value="Agent" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;size=16;fillColor=#e1f5fe;strokeColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="80" height="420" as="geometry"/>
+    </mxCell>
+    <mxCell id="ll_dispatcher" value="MemoryTool&#10;Dispatcher" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;size=16;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="240" y="60" width="100" height="420" as="geometry"/>
+    </mxCell>
+    <mxCell id="ll_engine" value="Memory&#10;Engine" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;size=16;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="420" y="60" width="80" height="420" as="geometry"/>
+    </mxCell>
+    <mxCell id="ll_sqlite" value="SQLite&#10;(FTS5)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;size=16;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="580" y="60" width="80" height="420" as="geometry"/>
+    </mxCell>
+    <mxCell id="msg1" value="mem_search(query, ScopeContext{userId, projectId})" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="140" as="sourcePoint"/>
+        <mxPoint x="290" y="140" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg2" value="extract projectId from ScopeContext" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="170" as="sourcePoint"/>
+        <mxPoint x="290" y="190" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="330" y="170"/>
+          <mxPoint x="330" y="190"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg3" value="search(query, scopeCtx)" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="210" as="sourcePoint"/>
+        <mxPoint x="460" y="210" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg4" value="buildScopeClause(ctx)&#10;&#10;IF ctx.projectId:&#10;  (scope='SHARED') OR&#10;  (scope='PROJECT' AND&#10;   (project_id=? OR project_id IS NULL)) OR&#10;  (scope='USER' AND user_id=?)" style="html=1;endArrow=classic;endSize=6;fontSize=9;labelBackgroundColor=#ffffff;dashed=1;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="460" y="230" as="sourcePoint"/>
+        <mxPoint x="460" y="310" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="510" y="230"/>
+          <mxPoint x="510" y="310"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg5" value="SELECT ... WHERE fts_match AND scope_clause" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="460" y="330" as="sourcePoint"/>
+        <mxPoint x="620" y="330" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg6" value="filtered rows" style="html=1;endArrow=open;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="620" y="360" as="sourcePoint"/>
+        <mxPoint x="460" y="360" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg7" value="SearchResult[]" style="html=1;endArrow=open;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="460" y="390" as="sourcePoint"/>
+        <mxPoint x="290" y="390" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="msg8" value="results (project-isolated)" style="html=1;endArrow=open;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="290" y="420" as="sourcePoint"/>
+        <mxPoint x="120" y="420" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,7 @@
+test_id,input_path,config_override,env_var,expected_projectId,description
+deriv-1,/projects/my-app,,,my-app,Unix path last segment
+deriv-2,C:\projects\my-app,,,my-app,Windows path last segment
+deriv-3,/,,,default,Root path fallback
+deriv-4,,,,default,Empty string fallback
+deriv-5,/projects/my-app,custom-name,,custom-name,Config override wins
+deriv-6,/projects/my-app,,env-project,env-project,Env variable wins over path

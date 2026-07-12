@@ -5,8 +5,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import Database from 'better-sqlite3';
 import pino from 'pino';
-import { ScopePromotionService } from '../ScopePromotionService.js';
-import { MEMORY_SCHEMA } from '../schema.js';
+import { ScopePromotionService } from '../promotion/index.js';
+import { MEMORY_SCHEMA } from '../schema/index.js';
 
 function createTestDb(): Database.Database {
   const db = new Database(':memory:');

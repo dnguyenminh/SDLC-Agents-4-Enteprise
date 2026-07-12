@@ -7,12 +7,12 @@ export function configRouter(deps: { db: any }): Router {
   const svc = new ConfigService(deps.db);
 
   router.get('/', (req, res) => {
-    const sections = (req as any).userPermissions?.find((p: any) => p.permissionId === 'CONFIG_EDIT')?.roleData?.sections;
+    const sections = (req as { userPermissions: { permissionId: string; roleData: { sections?: string[] } }[] }).userPermissions?.find((p: { permissionId: string }) => p.permissionId === 'CONFIG_EDIT')?.roleData?.sections;
     res.json({ success: true, data: { sections: svc.getAll(sections) } });
   });
 
   router.patch('/:section/:key', (req, res) => {
-    try { const result = svc.update(req.params.section, req.params.key, req.body.value, (req as any).userId); res.json({ success: true, data: result }); }
+    try { const result = svc.update(req.params.section, req.params.key, req.body.value, (req as { userId: string }).userId); res.json({ success: true, data: result }); }
     catch (e: any) { res.status(400).json({ success: false, error: { code: e.code, message: e.message } }); }
   });
 

@@ -43,15 +43,7 @@ export class UtilityModule implements IModule {
       isError: false,
     }));
 
-    handlers.set('drawio_auto_layout', async (args) => ({
-      content: [{ type: 'text', text: `Layout applied to: ${args.file_path || 'unknown'}` }],
-      isError: false,
-    }));
 
-    handlers.set('drawio_export_png', async (args) => ({
-      content: [{ type: 'text', text: `PNG exported: ${args.file_path || 'unknown'}` }],
-      isError: false,
-    }));
 
     return handlers;
   }
@@ -60,8 +52,7 @@ export class UtilityModule implements IModule {
     return [
       { name: 'agent_log', description: 'Log a message from an agent', inputSchema: { type: 'object', properties: { message: { type: 'string' }, level: { type: 'string' } }, required: ['message'] }, category: 'utility' },
       { name: 'stream_write_file', description: 'Write content to a file', inputSchema: { type: 'object', properties: { path: { type: 'string' }, content: { type: 'string' } }, required: ['path', 'content'] }, category: 'utility' },
-      { name: 'drawio_auto_layout', description: 'Apply auto-layout to a draw.io file', inputSchema: { type: 'object', properties: { file_path: { type: 'string' } }, required: ['file_path'] }, category: 'utility' },
-      { name: 'drawio_export_png', description: 'Export draw.io file to PNG', inputSchema: { type: 'object', properties: { file_path: { type: 'string' }, output_path: { type: 'string' } }, required: ['file_path'] }, category: 'utility' },
+
     ];
   }
 }

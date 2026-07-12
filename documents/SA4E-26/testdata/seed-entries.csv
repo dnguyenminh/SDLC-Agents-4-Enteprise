@@ -1,0 +1,8 @@
+id,content,summary,type,scope,project_id,user_id,description
+seed-1,Project A pattern,Project A pattern,CONTEXT,PROJECT,app-A,user-1,Project A entry
+seed-2,Project B pattern,Project B pattern,CONTEXT,PROJECT,app-B,user-1,Project B entry
+seed-3,Shared knowledge,Shared knowledge,CONTEXT,SHARED,app-A,user-1,Shared entry (from A)
+seed-4,Legacy entry,Legacy entry,CONTEXT,PROJECT,,user-1,Pre-migration entry (NULL project_id)
+seed-5,User private note,User private note,CONTEXT,USER,app-A,user-1,User-scoped entry
+seed-6,Other user data,Other user data,CONTEXT,USER,app-A,user-2,Other user entry
+seed-7,Project A second,Project A second,CONTEXT,PROJECT,app-A,user-2,Another A entry

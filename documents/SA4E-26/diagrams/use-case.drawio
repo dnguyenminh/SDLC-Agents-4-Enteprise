@@ -1,0 +1,78 @@
+<mxGraphModel adaptiveColors="auto" dx="1169" dy="827" grid="0" pageWidth="1169" pageHeight="827">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;SA4E-26 — KB Project Isolation — Use Case&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="380" y="20" width="380" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_dev" value="Developer" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="50" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_admin" value="System Admin" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="60" y="450" width="50" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_system" value="Backend System" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="1050" y="300" width="50" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary" value="KB Memory System (Project Isolation)" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=13;fontStyle=1;arcSize=6;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="80" width="660" height="620" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1" value="Search KB entries&#10;(project-isolated)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="420" y="130" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2" value="Ingest entry&#10;(with project_id)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="420" y="240" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3" value="List KB entries&#10;(project-filtered)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="420" y="350" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc4" value="Access SHARED entries&#10;(cross-project)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="420" y="470" width="210" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc5" value="Promote entry scope&#10;(PROJECT → SHARED)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="420" y="580" width="210" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc6" value="Derive project_id&#10;from workspace" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="720" y="130" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc7" value="Build scope clause&#10;with project filter" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="720" y="260" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc8" value="Access legacy entries&#10;(project_id = NULL)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="720" y="390" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="html=1;endArrow=none;" edge="1" parent="1" source="actor_dev" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="html=1;endArrow=none;" edge="1" parent="1" source="actor_dev" target="uc2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="html=1;endArrow=none;" edge="1" parent="1" source="actor_dev" target="uc3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="html=1;endArrow=none;" edge="1" parent="1" source="actor_admin" target="uc4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="html=1;endArrow=none;" edge="1" parent="1" source="actor_admin" target="uc5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="&lt;&lt;include&gt;&gt;" style="html=1;dashed=1;endArrow=open;fontSize=9;fontStyle=2;edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="uc1" target="uc7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="&lt;&lt;include&gt;&gt;" style="html=1;dashed=1;endArrow=open;fontSize=9;fontStyle=2;edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="uc2" target="uc6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="&lt;&lt;include&gt;&gt;" style="html=1;dashed=1;endArrow=open;fontSize=9;fontStyle=2;edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="uc3" target="uc7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="&lt;&lt;extend&gt;&gt;" style="html=1;dashed=1;endArrow=open;fontSize=9;fontStyle=2;edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" parent="1" source="uc8" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="html=1;endArrow=none;" edge="1" parent="1" source="actor_system" target="uc6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="html=1;endArrow=none;" edge="1" parent="1" source="actor_system" target="uc7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -4,7 +4,7 @@
 
 import { TaintAnalyzer } from '../taint/TaintAnalyzer.js';
 import type { SyntaxNode } from '../../../parsers/types.js';
-import type { IDORFinding, TrustTier } from '../types.js';
+import type { IDORFinding, TrustTier } from '../types/index.js';
 
 /** Patterns indicating a parameter is an object ID. */
 const ID_PARAM_PATTERNS = [

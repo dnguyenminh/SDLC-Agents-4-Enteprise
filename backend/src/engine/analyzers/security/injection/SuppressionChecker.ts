@@ -2,7 +2,7 @@
  * KSA-165: Suppression Checker — Detects nosec/NOLINT markers to suppress findings.
  */
 
-import type { SuppressionInfo } from '../types.js';
+import type { SuppressionInfo } from '../types/index.js';
 
 interface SuppressionMarker {
   pattern: string;

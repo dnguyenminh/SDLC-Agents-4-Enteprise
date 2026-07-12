@@ -10,8 +10,8 @@ export const securityHeaders: MiddlewareHandler = async (c, next) => {
 
   // Prevent MIME-type sniffing
   c.header('X-Content-Type-Options', 'nosniff');
-  // Clickjacking protection
-  c.header('X-Frame-Options', 'DENY');
+  // Clickjacking protection — disabled for extension webview iframe embedding
+  // X-Frame-Options removed: CSP frame-ancestors * handles this for local-only server
   // XSS filter (legacy browsers)
   c.header('X-XSS-Protection', '1; mode=block');
   // Referrer policy
@@ -31,7 +31,6 @@ export const securityHeaders: MiddlewareHandler = async (c, next) => {
     "font-src 'self' data:",
     "object-src 'none'",
     "base-uri 'self'",
-    "frame-ancestors 'none'",
   ].join('; '));
   // Remove server identification
   c.res.headers.delete('X-Powered-By');

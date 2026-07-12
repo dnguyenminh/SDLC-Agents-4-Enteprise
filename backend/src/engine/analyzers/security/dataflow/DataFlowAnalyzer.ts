@@ -4,7 +4,7 @@
 
 import { ControlFlowGraph } from '../cfg/ControlFlowGraph.js';
 import { ReachingDefinitions } from './ReachingDefinitions.js';
-import type { DataFlowResult, DefUseChain, Definition } from '../types.js';
+import type { DataFlowResult, DefUseChain, Definition } from '../types/index.js';
 
 export class DataFlowAnalyzer {
   private reachingDefs = new ReachingDefinitions();

@@ -1,0 +1,60 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="827" grid="0" pageWidth="1400" pageHeight="760">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;State Diagram — KB Entry Lifecycle with Project Isolation (SA4E-26)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="100" y="10" width="600" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="380" y="60" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_new" value="&lt;b&gt;NEW&lt;/b&gt;&#10;Entry created via mem_ingest&#10;project_id = ScopeContext.projectId" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="130" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_project_scoped" value="&lt;b&gt;PROJECT_SCOPED&lt;/b&gt;&#10;Visible only within&#10;matching project" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="270" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_legacy" value="&lt;b&gt;LEGACY&lt;/b&gt;&#10;project_id = NULL&#10;Visible to all projects" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="270" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_shared" value="&lt;b&gt;SHARED&lt;/b&gt;&#10;Visible to all projects&#10;regardless of project_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="270" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_user_scoped" value="&lt;b&gt;USER_SCOPED&lt;/b&gt;&#10;Visible only to owner&#10;(project_id stored for audit)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="420" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_start" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="start" target="s_new" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_new_project" value="scope=PROJECT&#10;projectId present" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="s_new" target="s_project_scoped" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_new_legacy" value="no projectId&#10;in ScopeContext" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="s_new" target="s_legacy" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_new_shared" value="scope=SHARED" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="s_new" target="s_shared" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_project_to_shared" value="mem_promote&#10;PROJECT-&gt;SHARED" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="s_project_scoped" target="s_shared" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="190" y="380"/>
+          <mxPoint x="630" y="380"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_new_user" value="scope=USER" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="s_new" target="s_user_scoped" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="300" y="200"/>
+          <mxPoint x="60" y="200"/>
+          <mxPoint x="60" y="455"/>
+          <mxPoint x="100" y="455"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_user_to_project" value="mem_promote&#10;USER-&gt;PROJECT" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="s_user_scoped" target="s_project_scoped" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

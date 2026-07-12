@@ -120,7 +120,37 @@ export abstract class BaseNode {
   }
 
   protected async discoverTools(query: string, threshold = 0.4, topK = 5): Promise<string> {
-    try { return await this.callMcp("find_tools", { query, threshold, top_k: topK }); }
+    try {
+      const res = await this.callMcp("find_tools", { query, threshold, top_k: topK });
+      try {
+        const tools = JSON.parse(res);
+        if (Array.isArray(tools)) {
+          tools.forEach(tool => {
+            if (tool.inputSchema?.properties) {
+              const props = tool.inputSchema.properties;
+              for (const key of Object.keys(props)) {
+                if (key.includes("base64")) {
+                  const newKey = `${key}_as_path`;
+                  props[newKey] = { 
+                    type: "string", 
+                    description: "Absolute path to the local file (Proxy will convert to base64 automatically)" 
+                  };
+                  delete props[key];
+                  if (Array.isArray(tool.inputSchema.required)) {
+                    const idx = tool.inputSchema.required.indexOf(key);
+                    if (idx !== -1) { tool.inputSchema.required[idx] = newKey; }
+                  }
+                }
+              }
+            }
+          });
+          return JSON.stringify(tools);
+        }
+      } catch (e) {
+        // ignore parse error
+      }
+      return res;
+    }
     catch { return ""; }
   }
 

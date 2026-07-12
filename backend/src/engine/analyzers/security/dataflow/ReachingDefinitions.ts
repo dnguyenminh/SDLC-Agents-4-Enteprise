@@ -5,7 +5,7 @@
 
 import { BasicBlock } from '../cfg/BasicBlock.js';
 import { ControlFlowGraph } from '../cfg/ControlFlowGraph.js';
-import type { Definition } from '../types.js';
+import type { Definition } from '../types/index.js';
 
 export class ReachingDefinitions {
   private defCounter = 0;

@@ -5,6 +5,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import pino from 'pino';
+
+const logger = pino({ name: 'ignore-parser' });
 
 export interface IgnorePattern {
   pattern: string;
@@ -37,7 +40,7 @@ export class IgnoreParser {
         .filter(l => l && !l.startsWith('#'));
       this.addPatterns(lines, filePath);
     } catch (err) {
-      console.error(`[ignore-parser] Failed to parse ${filePath}:`, err);
+      logger.error({ err }, `[ignore-parser] Failed to parse ${filePath}:`);
     }
   }
 

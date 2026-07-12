@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import type { CodeIntelModule } from '../../modules/code-intel/CodeIntelModule.js';
-import { loadConfig } from '../../config/BackendConfig.js';
+import { loadConfig } from '../../config/index.js';
 
 /** Validate relative path - reject traversal attempts */
 function isPathSafe(relPath: string): boolean {

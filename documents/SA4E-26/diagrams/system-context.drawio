@@ -1,0 +1,51 @@
+<mxGraphModel dx="1400" dy="827" grid="0" pageWidth="1400" pageHeight="760">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;System Context — KB Project Isolation (SA4E-26)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="200" y="10" width="500" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_dev" value="Developer&#10;(AI Agent)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="200" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary" value="SA4E Backend Server" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;html=1;fontStyle=1;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="160" y="80" width="560" height="340" as="geometry"/>
+    </mxCell>
+    <mxCell id="mcp_bridge" value="&lt;b&gt;MCP Bridge&lt;/b&gt;&#10;Routes tool calls" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="180" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="mem_dispatcher" value="&lt;b&gt;MemoryTool&#10;Dispatcher&lt;/b&gt;&#10;Extracts ScopeContext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="400" y="130" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="mem_engine" value="&lt;b&gt;MemoryEngine&lt;/b&gt;&#10;buildScopeClause()&#10;+ project_id filter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="400" y="240" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="sqlite_db" value="&lt;b&gt;SQLite DB&lt;/b&gt;&#10;knowledge_entries&#10;+ project_id column" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=10;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="420" y="350" width="120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="backend_config" value="&lt;b&gt;BackendConfig&lt;/b&gt;&#10;projectId derivation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="200" y="310" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_node" value="&lt;b&gt;IDE Extension&lt;/b&gt;&#10;(Kiro / VS Code)&#10;Derives projectId&#10;from workspace path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="350" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="actor_dev" target="mcp_bridge" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="mem_search / mem_ingest&#10;+ ScopeContext" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="mcp_bridge" target="mem_dispatcher" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="query + projectId" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="mem_dispatcher" target="mem_engine" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="SQL with&#10;project filter" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="mem_engine" target="sqlite_db" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="workspace path" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="ext_node" target="backend_config" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="projectId" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" source="backend_config" target="mem_dispatcher" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

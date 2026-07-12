@@ -3,8 +3,11 @@
  * Gracefully degrades if chokidar is not installed.
  */
 
+import pino from 'pino';
 import { AppConfig } from '../config.js';
 import { detectLanguage } from '../scanner/file-scanner.js';
+
+const logger = pino({ name: 'file-watcher' });
 
 type WatchEvent = 'add' | 'change' | 'unlink';
 type WatchCallback = (filePath: string, event: WatchEvent) => void;
@@ -23,7 +26,7 @@ export class FileWatcher {
   /** Start watching the workspace for file changes. */
   start(): void {
     this.initChokidar().catch(err => {
-      console.error('[watcher] chokidar not available, file watching disabled:', err.message);
+      logger.error({ err }, '[watcher] chokidar not available, file watching disabled:');
     });
   }
 
@@ -37,7 +40,7 @@ export class FileWatcher {
       clearTimeout(timer);
     }
     this.debounceTimers.clear();
-    console.error('[watcher] Stopped');
+    logger.error('[watcher] Stopped');
   }
 
   private async initChokidar(): Promise<void> {
@@ -55,7 +58,7 @@ export class FileWatcher {
     this.watcher.on('change', (p: string) => this.handleEvent(p, 'change'));
     this.watcher.on('unlink', (p: string) => this.handleEvent(p, 'unlink'));
 
-    console.error('[watcher] Watching for file changes');
+    logger.error('[watcher] Watching for file changes');
   }
 
   private handleEvent(filePath: string, event: WatchEvent): void {

@@ -2,7 +2,7 @@
  * KSA-164: Taint Registry — Configuration of taint sources, sinks, and sanitizers.
  */
 
-import type { TaintSourceType, TaintSinkType } from '../types.js';
+import type { TaintSourceType, TaintSinkType } from '../types/index.js';
 
 export interface SourcePattern {
   type: TaintSourceType;

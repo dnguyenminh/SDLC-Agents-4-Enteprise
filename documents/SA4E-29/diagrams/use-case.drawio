@@ -1,0 +1,65 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;Base64 Encoding Pattern — Use Case Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="boundary" value="Backend MCP Server&#10;(Base64 File Processing)" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=13;spacingTop=10;html=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="70" width="500" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_agent" value="AI Agent&#10;(Client)" style="shape=actor;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="350" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" value="Encode File&#10;to Base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="100" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" value="Call&#10;drawio_export_png&#10;with Base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="210" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" value="Call&#10;drawio_auto_layout&#10;with Base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="320" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" value="Call&#10;mem_ingest_file&#10;with Base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="430" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="uc5" value="Decode Base64&#10;to Buffer" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="210" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="uc6" value="Process Buffer:&#10;Export / Layout / Ingest" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="320" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="e_agent_uc1" style="html=1;endArrow=none;" edge="1" source="actor_agent" target="uc1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="220" y="135" /></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_agent_uc2" style="html=1;endArrow=none;" edge="1" source="actor_agent" target="uc2" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="220" y="245" /></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_agent_uc3" style="html=1;endArrow=none;" edge="1" source="actor_agent" target="uc3" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="220" y="355" /></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_agent_uc4" style="html=1;endArrow=none;" edge="1" source="actor_agent" target="uc4" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="220" y="465" /></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_include_decode" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc2" target="uc5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_include_decode_2" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc3" target="uc5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_include_decode_3" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc4" target="uc5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_include_process" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc5" target="uc6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -3,7 +3,7 @@
  */
 
 import { PatternMatcher } from '../PatternMatcher.js';
-import type { InjectionPattern } from '../../types.js';
+import type { InjectionPattern } from '../../types/index.js';
 
 export class PathTraversalMatcher extends PatternMatcher {
   readonly category = 'path_traversal';
