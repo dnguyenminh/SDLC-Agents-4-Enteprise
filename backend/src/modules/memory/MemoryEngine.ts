@@ -23,16 +23,18 @@ export class MemoryEngine {
 
   // ─── Knowledge CRUD ───────────────────────────────────────────────
 
-  insert(entry: Partial<KnowledgeEntry>): number {
+  insert(entry: Partial<KnowledgeEntry> & { project_id?: string | null }): number {
     const stmt = this.db.prepare(`
       INSERT INTO knowledge_entries
-      (content, summary, type, tier, scope, user_id, source, source_ref, tags, confidence, agent_name, owner)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (content, summary, type, tier, scope, user_id, project_id, source, source_ref, tags, confidence, agent_name, owner)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const result = stmt.run(
       entry.content, entry.summary, entry.type,
       entry.tier ?? 'WORKING', entry.scope ?? 'USER',
-      entry.user_id ?? null, entry.source ?? null,
+      entry.user_id ?? null,
+      entry.project_id ?? null,
+      entry.source ?? null,
       entry.source_ref ?? null, entry.tags ?? '',
       entry.confidence ?? 1.0, entry.agent_name ?? null,
       entry.owner ?? null,
@@ -173,8 +175,9 @@ export class MemoryEngine {
   /**
    * Promote entry from USER → PROJECT or PROJECT → SHARED.
    * Validates scope transition order.
+   * TA Decision #2: Stamps project_id when promoting USER → PROJECT.
    */
-  promoteEntry(entryId: number, targetScope: KBScope): boolean {
+  promoteEntry(entryId: number, targetScope: KBScope, projectId?: string): boolean {
     const entry = this.findById(entryId);
     if (!entry) return false;
 
@@ -187,13 +190,20 @@ export class MemoryEngine {
     const currentScope = (entry.scope ?? 'USER') as KBScope;
     if (!validTransitions[currentScope]?.includes(targetScope)) return false;
 
-    this.db.prepare(
-      `UPDATE knowledge_entries SET scope = ?, updated_at = datetime('now') WHERE id = ?`
-    ).run(targetScope, entryId);
+    // TA Decision #2: Stamp project_id when promoting USER -> PROJECT
+    if (currentScope === 'USER' && targetScope === 'PROJECT' && projectId) {
+      this.db.prepare(
+        `UPDATE knowledge_entries SET scope = ?, project_id = ?, updated_at = datetime('now') WHERE id = ?`,
+      ).run(targetScope, projectId, entryId);
+    } else {
+      this.db.prepare(
+        `UPDATE knowledge_entries SET scope = ?, updated_at = datetime('now') WHERE id = ?`,
+      ).run(targetScope, entryId);
+    }
 
     this.db.prepare(
       `INSERT INTO consolidation_log (entry_id, from_tier, to_tier, reason)
-       VALUES (?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?)`,
     ).run(entryId, currentScope, targetScope, `Promoted: ${currentScope} → ${targetScope}`);
 
     this.auditLog('PROMOTE', entryId);
@@ -226,14 +236,21 @@ export class MemoryEngine {
 
   /**
    * Build SQL WHERE clause for scope-based visibility.
-   * User sees: their own USER entries + all PROJECT entries + all SHARED entries.
+   * With projectId: user sees own USER + matching PROJECT + legacy NULL project + SHARED.
+   * Without projectId (backward compat): all PROJECT entries visible.
    */
   buildScopeClause(ctx: ScopeContext, tableAlias?: string): string {
-    const prefix = tableAlias ? `${tableAlias}.` : '';
-    return `(${prefix}scope IN ('PROJECT', 'SHARED') OR (${prefix}scope = 'USER' AND ${prefix}user_id = ?))`;
+    const p = tableAlias ? `${tableAlias}.` : '';
+    if (ctx.projectId) {
+      return `(${p}scope = 'SHARED' OR (${p}scope = 'PROJECT' AND (${p}project_id = ? OR ${p}project_id IS NULL)) OR (${p}scope = 'USER' AND ${p}user_id = ?))`;
+    }
+    return `(${p}scope IN ('PROJECT', 'SHARED') OR (${p}scope = 'USER' AND ${p}user_id = ?))`;
   }
 
   buildScopeParams(ctx: ScopeContext): unknown[] {
+    if (ctx.projectId) {
+      return [ctx.projectId, ctx.userId];
+    }
     return [ctx.userId];
   }
 

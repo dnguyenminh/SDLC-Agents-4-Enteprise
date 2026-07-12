@@ -22,13 +22,24 @@ const BackendConfigSchema = z.object({
   sqliteDbPath: z.string().default('index.db'),
   orchestrationConfigPath: z.string().default('orchestration.json'),
   logLevel: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  projectId: z.string().default('default'),
 });
 
 export type BackendConfig = z.infer<typeof BackendConfigSchema> & {
   workspace: string;
 };
 
+/** Derive projectId from explicit override, env, or workspace path. */
+function deriveProjectId(workspace: string, overrides?: Partial<BackendConfig>): string {
+  if (overrides?.projectId) return overrides.projectId;
+  const envId = process.env.CODE_INTEL_PROJECT_ID;
+  if (envId) return envId;
+  const basename = path.basename(workspace);
+  return basename || 'default';
+}
+
 export function loadConfig(overrides?: Partial<BackendConfig>): BackendConfig {
+  const workspace = overrides?.workspace ?? getWorkspacePath();
   const raw = {
     port: parseInt(process.env.CODE_INTEL_PORT || '48721', 10),
     host: process.env.CODE_INTEL_HOST || '0.0.0.0',
@@ -37,7 +48,8 @@ export function loadConfig(overrides?: Partial<BackendConfig>): BackendConfig {
     sqliteDbPath: process.env.CODE_INTEL_DB || 'index.db',
     orchestrationConfigPath: process.env.CODE_INTEL_ORCHESTRATION || 'orchestration.json',
     logLevel: process.env.CODE_INTEL_LOG_LEVEL || 'info',
-    workspace: getWorkspacePath(),
+    projectId: deriveProjectId(workspace, overrides),
+    workspace,
     ...overrides,
   };
 
