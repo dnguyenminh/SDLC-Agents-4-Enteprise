@@ -1,55 +1,59 @@
-/**
- * ToolValidator — validates tool call arguments against their schemas using zod.
- */
-
 import { z } from 'zod';
 import type { ToolDefinition } from '../types/tool.js';
 
+const JSON_SCHEMA_TYPE_MAP: Record<string, z.ZodType> = {
+  string: z.string(),
+  number: z.number(),
+  boolean: z.boolean(),
+  object: z.record(z.unknown()),
+  array: z.array(z.unknown()),
+};
+
 export class ToolValidator {
-  /**
-   * Validate arguments against a tool's inputSchema.
-   * Returns null if valid, or error message string if invalid.
-   */
   validate(tool: ToolDefinition, args: Record<string, unknown>): string | null {
     const schema = tool.inputSchema;
     if (!schema || typeof schema !== 'object') return null;
 
-    const properties = (schema as Record<string, unknown>).properties as Record<string, unknown> | undefined;
-    const required = (schema as Record<string, unknown>).required as string[] | undefined;
-
-    // Check required fields
-    if (required && Array.isArray(required)) {
-      for (const field of required) {
-        if (args[field] === undefined || args[field] === null) {
-          return `Missing required field: ${field}`;
-        }
+    try {
+      const zodSchema = this.jsonSchemaToZod(schema as Record<string, unknown>);
+      zodSchema.parse(args);
+      return null;
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
       }
+      return 'Invalid arguments';
     }
-
-    // Basic type checks for defined properties
-    if (properties) {
-      for (const [key, spec] of Object.entries(properties)) {
-        if (args[key] === undefined) continue;
-        const propSpec = spec as Record<string, unknown>;
-        const expectedType = propSpec.type as string | undefined;
-
-        if (expectedType && !this.checkType(args[key], expectedType)) {
-          return `Invalid type for field '${key}': expected ${expectedType}, got ${typeof args[key]}`;
-        }
-      }
-    }
-
-    return null;
   }
 
-  private checkType(value: unknown, expectedType: string): boolean {
-    switch (expectedType) {
-      case 'string': return typeof value === 'string';
-      case 'number': return typeof value === 'number';
-      case 'boolean': return typeof value === 'boolean';
-      case 'object': return typeof value === 'object' && value !== null;
-      case 'array': return Array.isArray(value);
-      default: return true;
+  private jsonSchemaToZod(schema: Record<string, unknown>): z.ZodType {
+    if (schema.type === 'object' && schema.properties) {
+      const properties = schema.properties as Record<string, unknown>;
+      const required = (Array.isArray(schema.required) ? schema.required : []) as string[];
+      const shape: Record<string, z.ZodTypeAny> = {};
+
+      for (const [key, prop] of Object.entries(properties)) {
+        const propSchema = prop as Record<string, unknown>;
+        let zodProp = this.jsonSchemaToZod(propSchema);
+        if (!required.includes(key)) {
+          zodProp = zodProp.optional();
+        }
+        shape[key] = zodProp;
+      }
+
+      return z.object(shape);
     }
+
+    if (schema.type === 'array' && schema.items) {
+      const items = this.jsonSchemaToZod((schema as Record<string, unknown>).items as Record<string, unknown>);
+      return z.array(items);
+    }
+
+    const typeName = schema.type as string | undefined;
+    if (typeName && typeName in JSON_SCHEMA_TYPE_MAP) {
+      return JSON_SCHEMA_TYPE_MAP[typeName];
+    }
+
+    return z.unknown();
   }
 }

@@ -12,7 +12,7 @@ import { CommandInjectionMatcher } from './patterns/CommandInjectionMatcher.js';
 import { PathTraversalMatcher } from './patterns/PathTraversalMatcher.js';
 import { DeserializationMatcher } from './patterns/DeserializationMatcher.js';
 import { LDAPXMLMatcher } from './patterns/LDAPXMLMatcher.js';
-import type { Finding, ScanOptions, ScanResult, Severity, TaintPath } from '../types.js';
+import type { Finding, ScanOptions, ScanResult, Severity, TaintPath } from '../types/index.js';
 
 export class InjectionScanner {
   private taintAnalyzer: TaintAnalyzer;
@@ -125,7 +125,7 @@ export class InjectionScanner {
   }
 
   /** Get all registered patterns (for SARIF rule generation). */
-  getAllPatterns(): Array<{ category: string; patterns: import('../types.js').InjectionPattern[] }> {
+  getAllPatterns(): Array<{ category: string; patterns: import('../types/index.js').InjectionPattern[] }> {
     return this.matchers.map(m => ({ category: m.category, patterns: m.patterns }));
   }
 

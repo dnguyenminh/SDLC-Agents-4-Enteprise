@@ -4,6 +4,9 @@
  * Provides timeout-aware tool invocation and availability checks.
  */
 
+import * as fs from "fs";
+import * as path from "path";
+import * as vscode from "vscode";
 import { McpServerManager } from "../mcp-server-manager";
 import { McpServerNotRunningError } from "../types";
 import type { McpToolDefinition } from "./tool-registry";
@@ -30,18 +33,77 @@ export class McpBridge {
       throw new McpServerNotRunningError();
     }
 
+    // Deep clone to prevent mutating LangGraph state (shallow copy { ...args } is not enough)
+    const modifiedArgs = this.interceptRequestArgs(JSON.parse(JSON.stringify(args)));
+
+    let timer: NodeJS.Timeout;
     // Race the tool call against a timeout
     const timeoutPromise = new Promise<never>((_, reject) => {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         reject(new McpToolTimeoutError(name, timeoutMs));
       }, timeoutMs);
       timer.unref?.();
     });
 
-    return Promise.race([
-      this.mcpManager.invokeTool(name, args),
-      timeoutPromise,
-    ]);
+    try {
+      const result = await Promise.race([
+        this.mcpManager.invokeTool(name, modifiedArgs),
+        timeoutPromise,
+      ]);
+      clearTimeout(timer!);
+      return this.interceptResponse(result);
+    } catch (err) {
+      clearTimeout(timer!);
+      throw err;
+    }
+  }
+
+  private interceptRequestArgs(args: Record<string, unknown>): Record<string, unknown> {
+    for (const key of Object.keys(args)) {
+      if (key.endsWith("_as_path")) {
+        const originalKey = key.replace("_as_path", "");
+        const filePath = args[key] as string;
+        try {
+          if (fs.existsSync(filePath)) {
+            args[originalKey] = fs.readFileSync(filePath, "base64");
+          }
+        } catch (e) {
+          console.error(`[McpBridge] Failed to read ${filePath} for base64 translation:`, e);
+        }
+        delete args[key];
+      } else if (typeof args[key] === "object" && args[key] !== null) {
+        args[key] = this.interceptRequestArgs(args[key] as Record<string, unknown>);
+      }
+    }
+    return args;
+  }
+
+  private interceptResponse(resultStr: string): string {
+    try {
+      const resultObj = JSON.parse(resultStr);
+      if (resultObj && typeof resultObj === "object" && typeof resultObj._base64_file === "string") {
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (!workspaceRoot) {
+          return "Proxy Error: Cannot save base64 file because workspace is undefined.";
+        }
+        
+        try {
+          const tmpDir = path.join(workspaceRoot, "documents", "tmp");
+          if (!fs.existsSync(tmpDir)) { fs.mkdirSync(tmpDir, { recursive: true }); }
+          
+          const filename = resultObj._filename || `output_${Date.now()}.bin`;
+          const outPath = path.join(tmpDir, filename);
+          
+          fs.writeFileSync(outPath, Buffer.from(resultObj._base64_file, "base64"));
+          return `File saved successfully to: ${outPath}`;
+        } catch (ioError: any) {
+          return `Proxy Error: Failed to save base64 file to disk (${ioError.message || ioError})`;
+        }
+      }
+    } catch (e) {
+      // Not JSON or doesn't match schema
+    }
+    return resultStr;
   }
 
   /**

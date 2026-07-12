@@ -5,6 +5,9 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import pino from 'pino';
+
+const logger = pino({ name: 'grammar-config-loader' });
 
 export interface EntityConfig {
   nodeTypes: string[];
@@ -94,7 +97,7 @@ export function loadGrammarConfigs(configDir: string): LanguageRegistry {
   const registry = new LanguageRegistry();
 
   if (!fs.existsSync(configDir)) {
-    console.error(`[grammar-config] Config directory not found: ${configDir}`);
+    logger.error(`[grammar-config] Config directory not found: ${configDir}`);
     return registry;
   }
 
@@ -109,10 +112,10 @@ export function loadGrammarConfigs(configDir: string): LanguageRegistry {
       const config = parseGrammarConfig(raw);
       if (config) {
         registry.register(config);
-        console.error(`[grammar-config] Loaded: ${config.language} (${config.extensions.join(', ')})`);
+        logger.error(`[grammar-config] Loaded: ${config.language} (${config.extensions.join(', ')})`);
       }
     } catch (err) {
-      console.error(`[grammar-config] Failed to load ${file}:`, err);
+      logger.error({ err }, `[grammar-config] Failed to load ${file}:`);
     }
   }
 

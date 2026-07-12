@@ -1,0 +1,104 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="827" grid="0" pageWidth="1400" pageHeight="760">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;SA4E-26 — KB Project Isolation — Business Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="450" y="10" width="450" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_ide" value="IDE / Extension" style="swimlane;horizontal=0;startSize=110;fillColor=#e8f4f8;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="1320" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_dispatch" value="MemoryToolDispatcher" style="swimlane;horizontal=0;startSize=110;fillColor=#e8f5e9;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="190" width="1320" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_engine" value="MemoryEngine" style="swimlane;horizontal=0;startSize=110;fillColor=#fff0e6;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="340" width="1320" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_db" value="SQLite (knowledge_entries)" style="swimlane;horizontal=0;startSize=110;fillColor=#fce4ec;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="510" width="1320" height="140" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="n_start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="lane_ide">
+      <mxGeometry x="130" y="45" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_open" value="User opens&#10;workspace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_ide">
+      <mxGeometry x="210" y="35" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_derive" value="Derive project_id&#10;from workspace path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_ide">
+      <mxGeometry x="410" y="35" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_ctx" value="Set ScopeContext&#10;{userId, projectId}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_ide">
+      <mxGeometry x="640" y="35" width="180" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="d_ingest" value="mem_ingest&#10;(store entry)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_dispatch">
+      <mxGeometry x="210" y="45" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d_search" value="mem_search&#10;(query entries)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_dispatch">
+      <mxGeometry x="640" y="45" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d_pass" value="Pass project_id&#10;to engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_dispatch">
+      <mxGeometry x="410" y="45" width="170" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d_scope" value="Pass ScopeContext&#10;with project_id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane_dispatch">
+      <mxGeometry x="850" y="45" width="170" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_insert" value="INSERT with&#10;project_id column" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane_engine">
+      <mxGeometry x="410" y="30" width="170" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_clause" value="buildScopeClause&#10;includes project_id&#10;filter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="lane_engine">
+      <mxGeometry x="850" y="25" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_note" value="&lt;i&gt;scope='PROJECT' AND&#10;(project_id = ? OR project_id IS NULL)&lt;/i&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="lane_engine">
+      <mxGeometry x="830" y="95" width="220" height="40" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="db_write" value="INSERT INTO&#10;knowledge_entries&#10;(..., project_id)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="lane_db">
+      <mxGeometry x="410" y="35" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="db_read" value="SELECT ... WHERE&#10;project_id = ?&#10;(PROJECT scope only)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="lane_db">
+      <mxGeometry x="850" y="35" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="db_end" value="" style="ellipse;fillColor=#ffffff;strokeColor=#000000;html=1;" vertex="1" parent="lane_db">
+      <mxGeometry x="1100" y="50" width="30" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="f1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="n_start" target="n_open">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="n_open" target="n_derive">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="n_derive" target="n_ctx">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="n_ctx" target="d_ingest">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="n_ctx" target="d_search">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d_ingest" target="d_pass">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d_pass" target="e_insert">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="e_insert" target="db_write">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d_search" target="d_scope">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d_scope" target="e_clause">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="e_clause" target="db_read">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="db_read" target="db_end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

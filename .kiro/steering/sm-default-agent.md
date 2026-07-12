@@ -8,6 +8,15 @@ Khi user cung cấp Jira ticket key (pattern: `[A-Z]+-\d+`) hoặc yêu cầu im
 2. **KHÔNG** tự xử lý trực tiếp — SM sẽ điều phối pipeline (BA → SA → DEV → QA → DevOps)
 3. Chỉ tự xử lý khi user hỏi câu hỏi đơn giản, config, hoặc yêu cầu rõ ràng "đừng dùng SM"
 
+## ⛔ CRITICAL: SM Delegation is REAL delegation
+
+Khi delegate sang SM, SM PHẢI dùng `invokeSubAgent` để gọi các agent khác. SM KHÔNG ĐƯỢC tự làm công việc của agent khác.
+
+**Nếu SM đang chạy trong main context (không có `invokeSubAgent` tool):**
+- SM PHẢI báo user: "Tôi cần chạy {agent-name} riêng. Hãy gọi: `{agent-name} {TICKET} {prompt}`"
+- SM KHÔNG ĐƯỢC tự viết BRD/FSD/TDD/STP/STC/UG/DPG/RLN
+- SM KHÔNG ĐƯỢC tự viết code hoặc tests
+
 ## Khi nào delegate SM:
 
 - User gửi ticket key (KSA-14, MTO-12, etc.)

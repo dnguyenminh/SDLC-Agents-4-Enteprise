@@ -68,6 +68,9 @@ SM PHẢI đọc file này trước mỗi pipeline run (Step 0). Vi phạm bất
 | Never skip verification after agent completes | Post-phase verification is mandatory |
 | Never fabricate agent results | If agent not invoked → report "skipped", never "approved" |
 | Never invoke same agent >2 times for same task | After 2 failures → escalate |
+| **SM NEVER writes documents or code** | SM only reads (verify) + writes STATUS.json/RUN-LOG.md |
+| **SM NEVER acts as another agent** | No "SM acting as BA/SA/QA/DEV/DevOps" — must use invokeSubAgent |
+| **Each agent does ONLY its own job** | BA writes BRD/FSD, SA writes TDD, QA writes STP/STC, DEV writes code/UG, DevOps writes DPG/RLN |
 
 ---
 

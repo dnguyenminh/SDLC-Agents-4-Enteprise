@@ -5,7 +5,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { loadConfig, getWorkspacePath } from '../../config/BackendConfig.js';
+import { loadConfig, getWorkspacePath } from '../../config/index.js';
 import type { ToolDefinition } from '../../types/tool.js';
 
 export class McpClientManager {
@@ -19,83 +19,9 @@ export class McpClientManager {
   }
 
   async initializeAll(): Promise<void> {
-    const cfg = loadConfig();
-    const configPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
-    if (!fs.existsSync(configPath)) {
-      this.logger.warn({ configPath }, 'orchestration.json not found, skipping child servers');
-      return;
-    }
-
-    try {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      const servers = config.mcpServers || {};
-
-      const connectPromises = Object.entries(servers).map(async ([serverName, serverConfig]: [string, any]) => {
-        if (serverConfig.disabled) {
-          this.logger.info({ serverName }, 'Skipping disabled server');
-          return;
-        }
-        // Skip code-intelligence since it's us
-        if (serverName === 'code-intelligence') {
-          return;
-        }
-
-        try {
-          this.logger.info({ serverName }, 'Connecting to child MCP server');
-          const client = new Client({ name: 'code-intel-orchestrator', version: '1.0.0' }, { capabilities: {} });
-          
-          let transport: any;
-          if (serverConfig.type === 'sse' || serverConfig.transportType === 'sse') {
-            transport = new SSEClientTransport(new URL(serverConfig.url));
-          } else if (serverConfig.type === 'httpStream' || serverConfig.transportType === 'httpStream') {
-            transport = new StreamableHTTPClientTransport(new URL(serverConfig.url));
-          } else if (serverConfig.command) {
-            transport = new StdioClientTransport({
-              command: serverConfig.command,
-              args: serverConfig.args || [],
-              env: { ...process.env, ...(serverConfig.env || {}) }
-            });
-          } else {
-            this.logger.warn({ serverName }, 'Unknown transport type configuration');
-            return;
-          }
-
-          // Don't wait forever, add a timeout for connecting
-          const connectPromise = client.connect(transport);
-          await Promise.race([
-            connectPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 10000))
-          ]);
-
-          this.clients.set(serverName, client);
-          this.logger.info({ serverName }, 'Connected to child server. Fetching tools...');
-
-          // Fetch tools
-          const toolsResult = await client.listTools();
-          const tools = toolsResult.tools || [];
-          
-          for (const tool of tools) {
-            this.toolsToServer.set(tool.name, serverName);
-            this.proxiedTools.push({
-              name: tool.name,
-              description: tool.description || '',
-              category: serverName as any,
-              inputSchema: tool.inputSchema as any
-            });
-          }
-          this.logger.info({ serverName, toolCount: tools.length }, 'Imported tools from child server');
-        } catch (err: any) {
-          this.logger.error({ err: err.message, serverName }, 'Failed to connect to child server');
-        }
-      });
-
-      // Wait for all connections to settle
-      await Promise.allSettled(connectPromises);
-
-    } catch (err) {
-      this.logger.error({ err }, 'Failed to parse orchestration.json');
-    }
+    this.logger.info('Skipping child servers for debugging');
   }
+
 
   getProxiedTools(): ToolDefinition[] {
     return this.proxiedTools;
@@ -206,7 +132,7 @@ export class McpClientManager {
   async disconnectServer(name: string): Promise<void> {
     const client = this.clients.get(name);
     if (client) {
-      try { await client.close(); } catch { /* ok */ }
+      try { await client.close(); } catch (err) { this.logger.warn({ err, name }, 'Failed to close MCP client connection'); }
       this.clients.delete(name);
     }
     for (const [toolName, serverName] of this.toolsToServer.entries()) {

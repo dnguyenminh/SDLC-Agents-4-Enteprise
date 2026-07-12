@@ -2,7 +2,7 @@
  * KSA-164: CFG Edge — Represents control flow between basic blocks.
  */
 
-import type { EdgeType } from '../types.js';
+import type { EdgeType } from '../types/index.js';
 import type { BasicBlock } from './BasicBlock.js';
 
 export class CFGEdge {

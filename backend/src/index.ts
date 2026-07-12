@@ -5,7 +5,7 @@
  */
 
 import pino from 'pino/pino.js';
-import { loadConfig } from './config/BackendConfig.js';
+import { loadConfig } from './config/index.js';
 import { HttpServer } from './server/HttpServer.js';
 import { ModuleRegistry } from './modules/ModuleRegistry.js';
 import { MemoryModule } from './modules/memory/MemoryModule.js';
@@ -17,6 +17,8 @@ import { KBGraphModule } from './modules/kb-graph/KBGraphModule.js';
 import { UtilityModule } from './modules/utility/UtilityModule.js';
 
 const VERSION = '1.0.0';
+
+const rootLogger = pino({ name: 'backend' });
 
 async function main() {
   const config = loadConfig();
@@ -129,6 +131,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('Fatal error starting Backend:', err);
+  rootLogger.error({ err }, 'Fatal error starting Backend:');
   process.exit(1);
 });

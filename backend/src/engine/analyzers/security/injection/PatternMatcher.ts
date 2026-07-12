@@ -2,7 +2,7 @@
  * KSA-165: Pattern Matcher — Base class for injection pattern matching.
  */
 
-import type { TaintPath, InjectionPattern, Finding, Confidence, TaintStep } from '../types.js';
+import type { TaintPath, InjectionPattern, Finding, Confidence, TaintStep } from '../types/index.js';
 
 export interface MatchContext {
   filePath: string;

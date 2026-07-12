@@ -24,7 +24,8 @@ const MAPPINGS = [
     { src: ".analysis/code-intelligence/scripts/bash", dst: ".analysis/code-intelligence/scripts/bash" },
     { src: ".analysis/code-intelligence/scripts/nodejs/src", dst: ".analysis/code-intelligence/scripts/nodejs/src" },
     { src: ".analysis/code-intelligence/scripts/nodejs/package.json", dst: ".analysis/code-intelligence/scripts/nodejs/package.json" },
-    { src: ".analysis/code-intelligence/scripts/nodejs/tsconfig.json", dst: ".analysis/code-intelligence/scripts/nodejs/tsconfig.json" }
+    { src: ".analysis/code-intelligence/scripts/nodejs/tsconfig.json", dst: ".analysis/code-intelligence/scripts/nodejs/tsconfig.json" },
+    { src: "conversions", dst: "conversions" }
 ];
 
 const SKIP_DIRS = ["node_modules", "__pycache__", "out", "dist", ".git", "settings"];

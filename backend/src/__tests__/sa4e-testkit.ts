@@ -4,7 +4,7 @@
  */
 
 import { DatabaseManager } from '../engine/db/database-manager.js';
-import { MemoryEngine } from '../modules/memory/MemoryEngine.js';
+import { MemoryEngine } from '../modules/memory/engine/index.js';
 import type { IModule, ModuleStatus } from '../types/module.js';
 import type { ToolHandler, ToolDefinition } from '../types/tool.js';
 import pino from 'pino';

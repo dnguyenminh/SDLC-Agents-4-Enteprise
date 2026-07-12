@@ -109,6 +109,28 @@ After each sub-agent completes:
 | 1 | TEST-REPORT.md exists | Critical | Re-invoke QA |
 | 2 | TEST-REPORT DOCX attached to Jira | Critical | Export + attach |
 
+## SECURITY-REVIEW Checklist (Phase 3.7)
+
+| # | Check | Severity | If Missing |
+|---|-------|----------|------------|
+| 1 | SECURITY-REVIEW.md exists | Critical | Re-invoke security-agent |
+| 2 | Findings table with severity levels | Critical | Re-invoke security-agent |
+| 3 | Auth/Authz design reviewed | Critical | Ask security-agent to review |
+| 4 | Data protection analysis | Critical | Ask security-agent to add |
+| 5 | API security recommendations | Minor | Ask security-agent to add |
+| 6 | No unaddressed Critical findings in TDD | Critical | Invoke SA to fix TDD |
+
+## SECURITY-ASSESSMENT Checklist (Phase 5.7)
+
+| # | Check | Severity | If Missing |
+|---|-------|----------|------------|
+| 1 | SECURITY-ASSESSMENT.md exists | Critical | Re-invoke security-agent |
+| 2 | OWASP Top 10 check completed | Critical | Re-invoke security-agent |
+| 3 | Findings table (ID, Severity, File, Remediation) | Critical | Re-invoke security-agent |
+| 4 | No Critical findings unresolved | Critical | DEV must fix |
+| 5 | No High findings unresolved (or risk accepted by user) | Critical | DEV fix or user approval |
+| 6 | Dependency vulnerability scan | Minor | Ask security-agent to add |
+
 ## DPG Checklist (Phase 7)
 
 | # | Check | Severity | If Missing |

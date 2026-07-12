@@ -4,7 +4,7 @@
 
 import { BasicBlock } from './BasicBlock.js';
 import { CFGEdge } from './CFGEdge.js';
-import type { EdgeType } from '../types.js';
+import type { EdgeType } from '../types/index.js';
 
 export class ControlFlowGraph {
   readonly entry: BasicBlock;

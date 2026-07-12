@@ -65,12 +65,17 @@ Multi-agent SDLC pipeline with specialized agents (SM, BA, TA, SA, QA, DEV, DevO
 | 2.5 | UI Design | UI | Wireframes | FSD.md with UI specs |
 | 3 | Design | SA | TDD.md | FSD.md exists |
 | 3.5 | Feedback Loop | BA↔SA | FSD fix + TDD update | DISCREPANCY.md exists |
+| 3.7 | Security Design Review | Security | SECURITY-REVIEW.md | TDD.md exists |
 | 4 | Test Planning | QA | STP.md, STC.md | BRD + FSD + TDD exist |
-| 5 | Implementation | DEV | Source code | TDD exists |
+| 4.5 | DevOps Pipeline Setup | DevOps | CI/CD configs, Dockerfile, infra | TDD + STP exist |
+| 5 | Implementation | DEV | Source code | TDD exists + CI/CD ready |
 | 5.5 | User Guide | DEV + BA + QA | UG.md | Code + docs exist |
-| 6 | Testing | QA | Test results | Code + STP/STC exist |
-| 6.5 | UAT | PO/User | Acceptance | All tests pass |
-| 7 | Deployment | DevOps | DPG.md, RLN.md | UAT accepted |
+| 5.7 | Security Code Review | Security | SECURITY-ASSESSMENT.md | Source code exists |
+| 6 | Testing | QA | Test results | Code + STP/STC exist + Security review done |
+| 6.3 | Penetration Testing | Security | PENTEST-REPORT.md | QA tests pass + app running |
+| 6.5 | UAT | PO/User | Acceptance | All tests pass + pentest done |
+| 6.7 | Security Deployment Review | Security + DevOps | SECURITY-DEPLOY-REVIEW.md | UAT pass + DPG exists |
+| 7 | Deployment | DevOps | RLN.md + Deploy | Security deploy review done + UAT accepted |
 
 ## Quality Gates — Post-Phase Verification
 

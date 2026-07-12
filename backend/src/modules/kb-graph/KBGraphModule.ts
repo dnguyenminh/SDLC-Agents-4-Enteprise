@@ -5,7 +5,7 @@
 import type { IModule, ModuleStatus } from '../../types/module.js';
 import type { ToolHandler, ToolDefinition } from '../../types/tool.js';
 import type { Logger } from 'pino';
-import { SqliteGraphService } from './SqliteGraphService.js';
+import { SqliteGraphService } from './service/index.js';
 
 export class KBGraphModule implements IModule {
   readonly name = 'kbGraph';

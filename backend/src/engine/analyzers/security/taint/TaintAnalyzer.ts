@@ -7,9 +7,10 @@ import type { SyntaxNode } from '../../../parsers/types.js';
 import { CFGBuilder } from '../cfg/CFGBuilder.js';
 import { DataFlowAnalyzer } from '../dataflow/DataFlowAnalyzer.js';
 import { TaintRegistry } from './TaintRegistry.js';
-import { TaintPropagator, type TaintState } from './TaintPropagator.js';
+import { TaintPropagator } from './TaintPropagator.js';
+import type { TaintState } from './taint-types.js';
 import type { ControlFlowGraph } from '../cfg/ControlFlowGraph.js';
-import type { TaintResult, TaintPath, TaintSource, TaintSink, TaintStep, TaintOptions, TaintSinkType } from '../types.js';
+import type { TaintResult, TaintPath, TaintSource, TaintSink, TaintStep, TaintOptions, TaintSinkType } from '../types/index.js';
 
 export class TaintAnalyzer {
   private cfgBuilder: CFGBuilder;

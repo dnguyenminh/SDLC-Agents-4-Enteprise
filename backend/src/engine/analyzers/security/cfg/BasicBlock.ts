@@ -3,7 +3,7 @@
  */
 
 import type { SyntaxNode } from '../../../parsers/types.js';
-import type { BlockType, Statement, VariableDef, VariableUse } from '../types.js';
+import type { BlockType, Statement, VariableDef, VariableUse } from '../types/index.js';
 
 export class BasicBlock {
   readonly id: number;

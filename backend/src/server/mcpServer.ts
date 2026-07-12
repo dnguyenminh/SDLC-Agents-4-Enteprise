@@ -2,10 +2,12 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import type { ModuleRegistry } from '../modules/ModuleRegistry.js';
 import type { Logger } from 'pino';
+import pino from 'pino';
 import { resolveCoreToolNames } from '../config/CoreTools.js';
 import { trackToolUsage } from './toolUsageTracker.js';
 
 const connectedTransports = new Set<any>();
+const log = pino({ name: 'mcp-server' });
 
 export function getMcpServer(registry: ModuleRegistry, logger: Logger): Server {
   const server = new Server({
@@ -91,7 +93,7 @@ export function broadcastNotification(method: string, params?: any) {
         params,
       });
     } catch (err) {
-      // ignore
+      log.warn({ err }, 'Failed to send broadcast notification to transport');
     }
   }
 }

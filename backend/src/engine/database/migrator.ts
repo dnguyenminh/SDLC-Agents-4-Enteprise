@@ -4,6 +4,9 @@
  */
 
 import Database from 'better-sqlite3';
+import pino from 'pino';
+
+const logger = pino({ name: 'graph-migrator' });
 
 /** Enhanced symbol columns added for tree-sitter (KSA-145/153). */
 const ENHANCED_SYMBOL_COLUMNS = [
@@ -84,23 +87,23 @@ CREATE INDEX IF NOT EXISTS idx_body_embeddings_symbol ON body_embeddings(symbol_
  * Safe to call multiple times — all operations are idempotent.
  */
 export function runGraphMigrations(db: Database.Database): void {
-  console.error('[graph-migrator] Running graph schema migrations...');
+  logger.error('[graph-migrator] Running graph schema migrations...');
 
   addEnhancedSymbolColumns(db);
   db.exec(GRAPH_SCHEMA_SQL);
-  console.error('[graph-migrator] Relationships table ready');
+  logger.error('[graph-migrator] Relationships table ready');
 
   db.exec(FILE_INDEX_SQL);
-  console.error('[graph-migrator] File index table ready');
+  logger.error('[graph-migrator] File index table ready');
 
   db.exec(GRAPH_META_SQL);
-  console.error('[graph-migrator] Graph metadata table ready');
+  logger.error('[graph-migrator] Graph metadata table ready');
 
   db.exec(BODY_EMBEDDINGS_SQL);
-  console.error('[graph-migrator] Body embeddings table ready');
+  logger.error('[graph-migrator] Body embeddings table ready');
 
   db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)').run(3);
-  console.error('[graph-migrator] Schema version set to 3');
+  logger.error('[graph-migrator] Schema version set to 3');
 }
 
 function addEnhancedSymbolColumns(db: Database.Database): void {
@@ -119,7 +122,7 @@ function addEnhancedSymbolColumns(db: Database.Database): void {
   }
 
   if (added > 0) {
-    console.error(`[graph-migrator] Added ${added} enhanced symbol columns`);
+    logger.error(`[graph-migrator] Added ${added} enhanced symbol columns`);
     try {
       db.exec('CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id) WHERE parent_symbol_id IS NOT NULL');
       db.exec('CREATE INDEX IF NOT EXISTS idx_sym_exported ON symbols(is_exported) WHERE is_exported = 1');

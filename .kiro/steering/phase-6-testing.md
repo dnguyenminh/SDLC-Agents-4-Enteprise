@@ -166,12 +166,77 @@ invokeSubAgent(
 ```
 Re-run tests after fix.
 
-### Step 6e: Finalize
+### Step 6e: Penetration Testing (Phase 6.3 — MANDATORY)
+
+**After automated tests pass and code quality is verified, Security Agent performs dynamic security testing (pentest) against the running application.**
+
+**Prerequisites:** Application deployed to test environment (localhost or staging), all QA tests pass.
+
+1. Update STATUS: `pentest.status = "in_progress"`
+
+2. Invoke Security agent for pentest:
+```
+invokeSubAgent(
+  name: "security-agent",
+  prompt: "Penetration Testing cho {TICKET}. Application đang chạy tại {test_url}. Thực hiện:
+
+  PHASE 1 — Reconnaissance:
+  1. Enumerate API endpoints (from TDD/FSD + actual discovery)
+  2. Identify authentication mechanisms
+  3. Map attack surface (public vs authenticated endpoints)
+
+  PHASE 2 — Active Testing:
+  4. Authentication attacks: brute force protection, session fixation, token manipulation
+  5. Authorization attacks: IDOR, privilege escalation, horizontal access
+  6. Injection attacks: SQL injection, command injection, LDAP injection (use payloads)
+  7. XSS attacks: reflected, stored, DOM-based (test all input fields)
+  8. CSRF verification: token presence, SameSite cookies
+  9. API abuse: rate limiting bypass, mass assignment, parameter pollution
+  10. Business logic attacks: race conditions, workflow bypass, price manipulation
+  11. File upload attacks (if applicable): malicious file types, path traversal
+  12. Information disclosure: error messages, debug endpoints, version headers
+
+  PHASE 3 — Infrastructure:
+  13. TLS/SSL configuration (cipher suites, protocol versions)
+  14. Security headers (HSTS, CSP, X-Frame-Options, etc.)
+  15. Cookie security (HttpOnly, Secure, SameSite)
+  16. CORS misconfiguration
+
+  TOOLS: Use curl, httpie, or equivalent CLI tools. Run actual HTTP requests.
+  DO NOT just review code — EXECUTE real attacks against the running application.
+
+  Output: documents/{TICKET}/PENTEST-REPORT.md với:
+  - Executive Summary (overall risk level)
+  - Findings table (ID, Severity, Category, Endpoint, Proof of Concept, Remediation)
+  - Evidence (request/response pairs showing vulnerability)
+  - Risk rating: Critical / High / Medium / Low / Informational"
+)
+```
+
+3. Verify `documents/{TICKET}/PENTEST-REPORT.md` exists
+
+4. Handle findings:
+   - **Critical/High vulns found** → MUST fix before UAT:
+     ```
+     invokeSubAgent(
+       name: "dev-agent",
+       prompt: "Fix pentest vulnerabilities cho {TICKET}: {findings with PoC}. Security đã chứng minh exploit được."
+     )
+     ```
+     After fix → re-run pentest on fixed endpoints (max 2 iterations)
+   - **Medium findings** → log, proceed to UAT with known risks documented
+   - **Low/Informational** → log as tech debt, proceed
+
+5. Update STATUS: `pentest.status = "done"`
+
+6. Attach PENTEST-REPORT to Jira (MANDATORY)
+
+### Step 6f: Finalize
 
 - If tests fail → transition "Fix bugs" → DEV fix → retest (loop)
-- If tests pass + quality review OK:
+- If tests pass + quality review OK + pentest done:
   - Update STATUS: `testing.status = "done"`
-  - Report results including quality assessment
+  - Report results including quality assessment and pentest summary
 
 ### Step 6f: UAT (Phase 6.5)
 

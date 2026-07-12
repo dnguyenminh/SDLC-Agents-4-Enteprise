@@ -15,20 +15,13 @@ Codex CLI does not have native MCP config files — configure via environment or
 - **Purpose**: Code indexing, semantic search, project analysis
 - **Tools**: code_search, find_tools, execute_dynamic_tool, agent_log, mem_search, mem_ingest
 
-### Atlassian Server
-
-- **URL**: `http://localhost:3010/mcp`
-- **Purpose**: Jira integration (issues, transitions, comments, attachments)
-- **Tools**: Discovered dynamically via find_tools
-
 ## Configuration Methods
 
 ### Method 1: Environment Variable
 
 ```bash
 export CODEX_MCP_SERVERS='[
-  {"name": "code-intelligence", "url": "http://127.0.0.1:9181/mcp"},
-  {"name": "atlassian", "url": "http://localhost:3010/mcp"}
+  {"name": "code-intelligence", "url": "http://127.0.0.1:9181/mcp"}
 ]'
 ```
 
@@ -39,9 +32,6 @@ export CODEX_MCP_SERVERS='[
   "mcpServers": {
     "code-intelligence": {
       "url": "http://127.0.0.1:9181/mcp"
-    },
-    "atlassian": {
-      "url": "http://localhost:3010/mcp"
     }
   }
 }

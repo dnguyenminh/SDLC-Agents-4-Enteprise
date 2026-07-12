@@ -4,14 +4,17 @@
  */
 
 import Database from 'better-sqlite3';
+import pino from 'pino';
 import { SCHEMA_V1 } from './schema.js';
 import { runGraphMigrations } from '../database/migrator.js';
+
+const logger = pino({ name: 'migrations' });
 
 function applyMemorySchema(db: Database.Database): void {
   try {
     db.exec(SCHEMA_V1);
   } catch (err) {
-    console.error('[migrations] Memory schema error (graceful):', err);
+    logger.error({ err }, '[migrations] Memory schema error (graceful):');
   }
 }
 
@@ -56,12 +59,12 @@ export function runMigrations(db: Database.Database): void {
   const pending = MIGRATIONS.filter(m => m.version > current);
 
   if (pending.length === 0 && current >= 2) {
-    console.error('[migrations] Schema up to date');
+    logger.error('[migrations] Schema up to date');
     return;
   }
 
   for (const migration of pending) {
-    console.error(`[migrations] Applying v${migration.version}: ${migration.description}`);
+    logger.error(`[migrations] Applying v${migration.version}: ${migration.description}`);
     applyMigration(db, migration);
   }
 
@@ -75,7 +78,7 @@ export function runMigrations(db: Database.Database): void {
     try {
       runGraphMigrations(db);
     } catch (err) {
-      console.error('[migrations] V3 graph migration error (graceful):', err);
+      logger.error({ err }, '[migrations] V3 graph migration error (graceful):');
     }
   }
 
@@ -120,16 +123,16 @@ function applyMigrationV4(db: Database.Database): void {
     applyMemorySchema(db);
 
     db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)').run(4);
-    console.error('[migrations] V4: Memory tables dropped and recreated with full schema');
+    logger.error('[migrations] V4: Memory tables dropped and recreated with full schema');
   } catch (err) {
-    console.error(`[migrations] V4 error: ${err}`);
+    logger.error({ err }, `[migrations] V4 error:`);
   }
 }
 
 function applyMigration(db: Database.Database, migration: Migration): void {
   db.exec(migration.sql);
   db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(migration.version);
-  console.error(`[migrations] v${migration.version} applied`);
+  logger.error(`[migrations] v${migration.version} applied`);
 }
 
 /** Migration V2 — Add pattern metadata columns to modules table. */
@@ -146,9 +149,9 @@ function applyMigrationV2(db: Database.Database): void {
     }
 
     db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)').run(2);
-    console.error(`[migrations] V2: Added ${added} pattern columns`);
+    logger.error(`[migrations] V2: Added ${added} pattern columns`);
   } catch (err) {
-    console.error(`[migrations] V2 error (graceful degradation): ${err}`);
+    logger.error({ err }, `[migrations] V2 error (graceful degradation):`);
   }
 }
 

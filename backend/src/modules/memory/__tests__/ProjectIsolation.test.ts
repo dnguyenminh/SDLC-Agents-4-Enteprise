@@ -7,8 +7,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
 import { makeTempDb, type TempDb } from '../../../__tests__/sa4e-testkit.js';
-import { MemoryEngine } from '../MemoryEngine.js';
-import { MemoryToolDispatcher } from '../MemoryToolDispatcher.js';
+import { MemoryEngine } from '../engine/index.js';
+import { MemoryToolDispatcher } from '../dispatchers/index.js';
 import type { ScopeContext } from '../models.js';
 
 // --- PBT — Property-Based Testing (4 tests) ---
@@ -303,7 +303,7 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
   });
 
   it('IT-10: Schema migration is idempotent (no error on re-run)', async () => {
-    const { migrateProjectId } = await import('../schema.js');
+    const { migrateProjectId } = await import('../schema/index.js');
     const db = ctx.dbManager.getDb();
     expect(() => migrateProjectId(db)).not.toThrow();
   });

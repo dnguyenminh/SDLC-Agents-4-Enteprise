@@ -1,0 +1,43 @@
+<mxfile>
+  <diagram name="Component">
+    <mxGraphModel dx="1400" dy="827" grid="0" pageWidth="1400" pageHeight="760">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="&lt;b&gt;Component Diagram — SA4E-26 Project Isolation&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="180" y="10" width="400" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="config_box" value="&lt;b&gt;BackendConfig.ts&lt;/b&gt;&#10;────────────────&#10;+ projectId: string&#10;+ deriveProjectId()&#10;+ loadConfig()" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="dispatcher_box" value="&lt;b&gt;MemoryToolDispatcher.ts&lt;/b&gt;&#10;────────────────&#10;- scopeCtx: ScopeContext&#10;+ handleIngest(args)&#10;+ handleIngestFile(args)&#10;+ handleSearch(args)&#10;────────────────&#10;Passes project_id =&#10;this.scopeCtx?.projectId" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="300" y="60" width="200" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="models_box" value="&lt;b&gt;models.ts&lt;/b&gt;&#10;────────────────&#10;ScopeContext {&#10;  userId: string&#10;  projectId?: string&#10;}&#10;KnowledgeEntry {&#10;  + project_id: string|null&#10;}" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="540" y="60" width="200" height="150" as="geometry"/>
+        </mxCell>
+        <mxCell id="engine_box" value="&lt;b&gt;MemoryEngine.ts&lt;/b&gt;&#10;────────────────&#10;+ buildScopeClause(ctx, alias)&#10;+ buildScopeParams(ctx)&#10;+ insert(entry)&#10;+ search(query, ...)&#10;+ findFiltered(..., scopeCtx)&#10;────────────────&#10;WHERE project_id = ?&#10;OR project_id IS NULL" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="280" y="280" width="220" height="160" as="geometry"/>
+        </mxCell>
+        <mxCell id="schema_box" value="&lt;b&gt;schema.ts&lt;/b&gt;&#10;────────────────&#10;+ MEMORY_SCHEMA (DDL)&#10;+ project_id column&#10;+ idx_ke_project_id&#10;+ idx_ke_scope_project" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=10;verticalAlign=top;spacingTop=5;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="60" y="310" width="180" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_config_disp" value="projectId" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="config_box" target="dispatcher_box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_disp_engine" value="insert({project_id})&#10;search(scopeCtx)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="dispatcher_box" target="engine_box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_engine_schema" value="DDL + queries" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="engine_box" target="schema_box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_models_disp" value="uses" style="dashed=1;endArrow=classic;endSize=6;fontSize=10;html=1;labelBackgroundColor=#ffffff;" edge="1" source="dispatcher_box" target="models_box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_models_engine" value="uses" style="dashed=1;endArrow=classic;endSize=6;fontSize=10;html=1;labelBackgroundColor=#ffffff;" edge="1" source="engine_box" target="models_box" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

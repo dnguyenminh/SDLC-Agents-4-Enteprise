@@ -18,17 +18,17 @@ export function createAnalyticsRouter(deps: AdminModuleDependencies): Router {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const auditStats = db.prepare(
         `SELECT action, COUNT(*) as count FROM audit_entries WHERE timestamp >= ? GROUP BY action ORDER BY count DESC LIMIT 10`
-      ).all(sevenDaysAgo) as any[];
+      ).all(sevenDaysAgo) as Record<string, unknown>[];
 
       // User stats
       const userStats = db.prepare(
         `SELECT status, COUNT(*) as count FROM users GROUP BY status`
-      ).all() as any[];
+      ).all() as Record<string, unknown>[];
 
       // Search volume (last 7 days from audit)
       const searchCount = (db.prepare(
         `SELECT COUNT(*) as cnt FROM audit_entries WHERE action LIKE '%SEARCH%' AND timestamp >= ?`
-      ).get(sevenDaysAgo) as any)?.cnt || 0;
+      ).get(sevenDaysAgo) as { cnt: number } | undefined)?.cnt || 0;
 
       res.json(apiSuccess({
         kbEntries: kbCounts,

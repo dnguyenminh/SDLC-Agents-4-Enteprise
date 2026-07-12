@@ -41,8 +41,8 @@ export function createAuditMiddleware(deps: AuditDeps) {
 
     const originalJson = res.json.bind(res);
     res.json = function (body: any) {
-      const userId = (req as any).userId;
-      const username = (req as any).username || 'unknown';
+      const userId = (req as { userId: string }).userId;
+      const username = (req as { username: string }).username || 'unknown';
       if (userId && res.statusCode < 500) {
         deps.recordAudit({
           userId, username,

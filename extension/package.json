@@ -32,7 +32,8 @@
     "onView:kiroSdlcTree",
     "onView:kiroChatPanel",
     "onCommand:kiroSdlc.injectAll",
-    "onCommand:kiroSdlc.status"
+    "onCommand:kiroSdlc.status",
+    "onCommand:kiroSdlc.openSettings"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -276,7 +277,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run copy-resources && npm run gen-checksums && npm run esbuild-production",
+    "vscode:prepublish": "npm run copy-resources && npm run gen-checksums",
+    "package:debug": "npm run esbuild && vsce package --no-dependencies",
+    "package:prod": "npm run esbuild-production && vsce package --no-dependencies",
     "compile": "tsc -p ./",
     "esbuild": "node esbuild.js",
     "esbuild-production": "node esbuild.js --production",
@@ -284,9 +287,8 @@
     "watch": "tsc -watch -p ./",
     "copy-resources": "node scripts/copy-resources.js",
     "gen-checksums": "node scripts/gen-checksums.js",
-    "package": "vsce package --no-dependencies",
-    "test": "mocha",
-    "test:watch": "mocha --watch"
+    "test": "vitest run",
+    "test:watch": "vitest watch"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

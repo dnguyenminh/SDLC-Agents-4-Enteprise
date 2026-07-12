@@ -6,8 +6,11 @@
 import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
+import pino from 'pino';
 import { runMigrations } from './migrations.js';
-import { resolveNativeBinding, resolveNativeBindingSync } from './native-addon-resolver.js';
+import { resolveNativeBinding, resolveNativeBindingSync } from './resolver/index.js';
+
+const logger = pino({ name: 'database-manager' });
 
 export class DatabaseManager {
   private db: Database.Database | null = null;
@@ -43,17 +46,17 @@ export class DatabaseManager {
       : resolveNativeBindingSync();
 
     if (nativeBinding) {
-      console.error(`[db] Using native binding: ${nativeBinding}`);
+      logger.error(`[db] Using native binding: ${nativeBinding}`);
       this.db = new Database(this.dbPath, { nativeBinding });
     } else {
-      console.error('[db] Using npm-installed better-sqlite3');
+      logger.error('[db] Using npm-installed better-sqlite3');
       this.db = new Database(this.dbPath);
     }
 
     this.configureDatabase();
     runMigrations(this.db);
     DatabaseManager.sharedDb = this.db;
-    console.error(`[db] Initialized at ${this.dbPath}`);
+    logger.error(`[db] Initialized at ${this.dbPath}`);
   }
 
   /** Get the underlying database instance. */
@@ -67,7 +70,7 @@ export class DatabaseManager {
     if (this.db) {
       this.db.close();
       this.db = null;
-      console.error('[db] Connection closed');
+      logger.error('[db] Connection closed');
     }
   }
 

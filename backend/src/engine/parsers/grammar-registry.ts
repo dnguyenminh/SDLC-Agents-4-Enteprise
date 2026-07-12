@@ -8,7 +8,10 @@ import { Parser, Language } from 'web-tree-sitter';
 import type { Node } from 'web-tree-sitter';
 import * as path from 'path';
 import * as fs from 'fs';
+import pino from 'pino';
 import type { ILanguageParser } from './types.js';
+
+const logger = pino({ name: 'grammar-registry' });
 
 export interface LanguageConfig {
   id: string;
@@ -42,7 +45,7 @@ export class GrammarRegistry {
     await Parser.init();
     this.ParserClass = Parser;
     this.initialized = true;
-    console.error('[grammar-registry] Tree-sitter WASM runtime initialized');
+    logger.error('[grammar-registry] Tree-sitter WASM runtime initialized');
   }
 
   /** Get a parser for a file path based on extension. Returns null if unsupported. */
@@ -103,7 +106,7 @@ export class GrammarRegistry {
         const wasmPath = path.resolve(this.config.grammarDir, langConfig.wasmPath);
 
         if (!fs.existsSync(wasmPath)) {
-          console.error(`[grammar-registry] WASM not found: ${wasmPath}`);
+          logger.error(`[grammar-registry] WASM not found: ${wasmPath}`);
           this.unavailable.add(langId);
           return null;
         }
@@ -126,10 +129,10 @@ export class GrammarRegistry {
       const langParser: ILanguageParser = new LangParserClass(parser, langId);
       this.languageParsers.set(langId, langParser);
 
-      console.error(`[grammar-registry] Loaded grammar: ${langId}`);
+      logger.error(`[grammar-registry] Loaded grammar: ${langId}`);
       return langParser;
     } catch (error) {
-      console.error(`[grammar-registry] Failed to load ${langId}:`, error);
+      logger.error({ error }, `[grammar-registry] Failed to load ${langId}:`);
       this.unavailable.add(langId);
       return null;
     }
