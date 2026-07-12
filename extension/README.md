@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.3.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.5.0-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -47,10 +47,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.3.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.5.0.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.3.0.vsix
+code --install-extension sdlc-agents-4-enterprise-1.5.0.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection

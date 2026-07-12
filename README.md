@@ -16,7 +16,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.3.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.5.0.vsix
 ```
 
 ### 3. Use
