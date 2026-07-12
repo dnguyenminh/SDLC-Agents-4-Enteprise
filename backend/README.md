@@ -56,7 +56,7 @@ All configuration via environment variables. Every variable is optional with sen
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `CODE_INTEL_PORT` | `48721` | HTTP server port |
-| `CODE_INTEL_HOST` | `127.0.0.1` | Bind address (localhost only for security) |
+| `CODE_INTEL_HOST` | `0.0.0.0` | Bind address (default all interfaces) |
 | `CODE_INTEL_DATA_DIR` | `.code-intel` | Data directory for DB and models |
 | `CODE_INTEL_DB` | `index.db` | SQLite database filename |
 | `CODE_INTEL_ONNX_MODEL` | `models/model.onnx` | ONNX embedding model path |
@@ -176,7 +176,7 @@ backend/
 
 ## Security
 
-- Binds to `127.0.0.1` only — no network exposure
+- Binds to `0.0.0.0` by default — restrict via middleware or firewall for production
 - Localhost-only middleware rejects non-local requests
 - No authentication required (local tool, same machine)
 - Process isolation from IDE (separate PID/memory)
