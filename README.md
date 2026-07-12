@@ -64,6 +64,21 @@ MIT
 
 ## Changelog
 
+### v1.5.0 (2026-07-13)
+
+- **SA4E-125: Pipeline Refactoring v2-v6** — Hardcoded → Data-Driven Architecture:
+  - Index-based phase routing with `currentPhaseIndex` replacing string `order.indexOf()`
+  - `PipelineDefinition` in state for per-thread isolation & checkpointing
+  - Sandboxed hot-swap with 3-rule validation (non-empty, valid agents, no LLM errors)
+  - `resolvePhaseIndex()` pure function for self-healing index realignment
+  - State size optimization (~2-5KB per pipeline definition)
+  - Orphaned phase detection → pipeline pause with human intervention
+  - Skip/Cancel decisions via extended `ApprovalDecision` type
+  - 3-Layer skip fix: `routeFromSm` → `advance_phase` → `buildSmTargets`
+  - Ghost Context Barrier — system `ChatMessage` injected on orphaned skip
+  - LangGraph source restructured: `core/`, `pipeline/`, `agents/`, `engine/`, `subgraphs/`, `steering/`, `workflow/`, `helpers/`, `hooks/`, `vscode/` modules
+  - Full SDLC documentation: BRD, FSD, TDD, 13 draw.io diagrams (PNG + source)
+
 ### v1.3.0 (2026-07-09)
 
 - **Multi-IDE Agent Injection** — IDE target picker (Kiro, VSCode/Copilot, Claude Code, Codex/OpenAI)

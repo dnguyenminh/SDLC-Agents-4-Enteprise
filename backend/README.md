@@ -233,6 +233,7 @@ The embedding model is expected at `.code-intel/models/model.onnx`. Download it:
 
 | Version | Date | Ticket | Changes |
 |---------|------|--------|---------|
+| 1.5.0 | 2026-07-13 | SA4E-125 | Pipeline Refactoring v2-v6: index-based routing, PipelineDefinition in state, sandboxed hot-swap, resolvePhaseIndex() realignment, orphan detection, skip/cancel decisions, 3-layer skip fix, Ghost Context Barrier. LangGraph restructured into core/pipeline/agents/engine/subgraphs/workflow/helpers/hooks/vscode. 13 architecture diagrams. |
 | 1.1.0 | 2026-07-03 | KSA-297 | WebModule — 6 internet/network tools: fetch_url, web_search, git_clone_browse, download_file, api_call, read_webpage. SSRF guard, rate limiter, content truncation. |
 | 1.0.1 | 2026-07-02 | KSA-296 | Sensitive Data Masking — PII/credential/business logic redaction middleware |
 | 1.0.0 | 2026-06-15 | — | Initial release — Code Intelligence, Memory, Orchestration |
