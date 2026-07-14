@@ -16,7 +16,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.5.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.6.0.vsix
 ```
 
 ### 3. Use
@@ -43,6 +43,7 @@ kiro --install-extension sdlc-agents-4-enterprise-1.5.0.vsix
 - 9 SDLC Agents - Full pipeline from requirements to deployment
 - Multi-IDE Support - Inject agents into Kiro, VSCode/Copilot, Claude Code, or Codex/OpenAI
 - Knowledge Base - SQLite + ONNX embeddings, 30+ memory tools
+- Multi-database Support - SQLite (default), PostgreSQL, MySQL with admin migration tool
 - Sensitive Data Masking - Read-time PII/credential/business logic redaction
 - Internet Tools - fetch_url, web_search, git_browse, download_file, api_call, read_webpage
 - Code Intelligence - AST parsing, call graph, impact analysis
@@ -63,6 +64,19 @@ MIT
 ---
 
 ## Changelog
+
+### v1.6.0 (2026-07-15)
+
+- **SA4E-34: Multi-database Support** — Database abstraction layer with admin configuration:
+  - Strategy pattern: `DatabaseAdapter` interface + `SqliteAdapter`, `PostgresAdapter`, `MysqlAdapter`
+  - `DatabaseAdapterFactory` for engine selection from config
+  - `DatabaseConfigService` — AES-256-GCM encrypted credentials in `database.json`
+  - `MigrationService` — batch data copy (500 rows/batch), progress streaming (SSE), automatic rollback
+  - Admin UI: Database Configuration tab with engine selector, connection form, Test Connection, Start Migration, Apply & Switch
+  - New dependencies: `pg` (PostgreSQL), `mysql2` (optional)
+  - API endpoints: `/api/admin/database/status`, `test-connection`, `migrate` (SSE), `migrate/cancel`, `switch`
+- **SA4E-35: Global Toast Notification** — Fixed-position toast (bottom-right) replacing inline msg bars across all admin pages (KB, Tags, Users, Config, Profile)
+- **SA4E-31: Cross-workspace Isolation** — Project-scoped graph nodes, spatial queries, and tag filtering by projectId
 
 ### v1.5.0 (2026-07-13)
 
