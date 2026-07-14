@@ -49,17 +49,13 @@ describe("Document Discovery Logic", () => {
     "DISCREPANCY": "CONTEXT", "SECURITY-REPORT": "PROCEDURE",
   };
 
+  const FOLDER_DENYLIST = new Set(["diagrams", "testdata", "templates", "node_modules", ".git"]);
+
   function discoverDocumentsTest(root: string) {
     const docsDir = path.join(root, "documents");
     if (!fs.existsSync(docsDir)) { return []; }
     const results: Array<{ path: string; type: string; ticket: string; format: string }> = [];
-    const allEntries = fs.readdirSync(docsDir);
-    const tickets = allEntries.filter(d =>
-      fs.statSync(path.join(docsDir, d)).isDirectory() && /^[A-Z]+-\d+$/.test(d)
-    );
-    for (const ticket of tickets) {
-      scanRecursive(path.join(docsDir, ticket), ticket, `documents/${ticket}`, results);
-    }
+    scanRecursive(docsDir, "documents", "documents", results);
     return results;
   }
 
@@ -67,8 +63,9 @@ describe("Document Discovery Logic", () => {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.isDirectory()) {
-        if (entry.name === "diagrams" || entry.name === "testdata") { continue; }
-        scanRecursive(path.join(dir, entry.name), ticket, `${relativePath}/${entry.name}`, results);
+        if (FOLDER_DENYLIST.has(entry.name)) { continue; }
+        const childTicket = ticket === "documents" ? entry.name : ticket;
+        scanRecursive(path.join(dir, entry.name), childTicket, `${relativePath}/${entry.name}`, results);
       } else if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
         if (!INDEXABLE_EXTENSIONS.has(ext)) { continue; }
@@ -196,9 +193,27 @@ describe("Document Discovery Logic", () => {
     expect(results.map(r => r.ticket).sort()).toEqual(["KSA-1", "KSA-2", "KSA-3"]);
   });
 
-  it("ignores non-ticket folder names", () => {
+  it("ignores denylisted folders (templates)", () => {
     fs.mkdirSync(path.join(documentsDir, "templates"));
     fs.writeFileSync(path.join(documentsDir, "templates", "BRD.md"), "t");
     expect(discoverDocumentsTest(tmpDir).length).toBe(0);
+  });
+
+  it("indexes feature-named folders that are not ticket keys (GRAPH-EMAIL)", () => {
+    const featureDir = path.join(documentsDir, "GRAPH-EMAIL");
+    fs.mkdirSync(featureDir);
+    fs.writeFileSync(path.join(featureDir, "BRD.md"), "#");
+    fs.writeFileSync(path.join(featureDir, "FSD.docx"), "f");
+    fs.writeFileSync(path.join(featureDir, "TDD.md"), "t");
+    const results = discoverDocumentsTest(tmpDir);
+    expect(results.length).toBe(3);
+    expect(results.every(r => r.ticket === "GRAPH-EMAIL")).toBe(true);
+    expect(results.find(r => r.path.includes("BRD.md"))?.type).toBe("REQUIREMENT");
+  });
+
+  it("indexes files placed directly under documents/ root", () => {
+    fs.writeFileSync(path.join(documentsDir, "overview.md"), "#");
+    const results = discoverDocumentsTest(tmpDir);
+    expect(results.some(r => r.path === "documents/overview.md")).toBe(true);
   });
 });

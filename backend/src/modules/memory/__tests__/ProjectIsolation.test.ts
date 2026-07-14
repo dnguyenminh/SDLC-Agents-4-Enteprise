@@ -20,11 +20,11 @@ describe('SA4E-26 PBT — Scope Clause Properties', () => {
   beforeEach(() => { ctx = makeTempDb(); engine = ctx.engine; });
   afterEach(() => ctx.close());
 
-  it('PBT-01: Scope clause always includes SHARED visibility', () => {
+  it('PBT-01: Scope clause with projectId includes SHARED visibility (SA4E-31)', () => {
     fc.assert(fc.property(
       fc.record({
         userId: fc.string({ minLength: 1, maxLength: 50 }),
-        projectId: fc.option(fc.string({ minLength: 1, maxLength: 100 }), { nil: undefined }),
+        projectId: fc.string({ minLength: 1, maxLength: 100 }),
       }),
       (scopeCtx) => {
         const clause = engine.buildScopeClause(scopeCtx as ScopeContext);
@@ -90,20 +90,21 @@ describe('SA4E-26 UT — buildScopeClause & buildScopeParams', () => {
   beforeEach(() => { ctx = makeTempDb(); engine = ctx.engine; });
   afterEach(() => ctx.close());
 
-  it('UT-01: buildScopeClause with projectId returns project filter clause', () => {
+  it('UT-01: buildScopeClause with projectId returns strict per-workspace clause (SA4E-31)', () => {
     const clause = engine.buildScopeClause({ userId: 'user-1', projectId: 'app-A' });
     expect(clause).toMatch(/SHARED/);
     expect(clause).toContain("scope = 'PROJECT'");
     expect(clause).toContain('project_id = ?');
-    expect(clause).toContain('project_id IS NULL');
+    // SA4E-31: no NULL escape; USER scoped to user_id + project_id
+    expect(clause).not.toContain('project_id IS NULL');
     expect(clause).toContain("scope = 'USER'");
     expect(clause).toContain('user_id = ?');
+    expect(clause).toContain('kb_shared_grants');
   });
 
-  it('UT-02: buildScopeClause without projectId returns backward-compat clause', () => {
+  it('UT-02: buildScopeClause without projectId fails closed (SA4E-31)', () => {
     const clause = engine.buildScopeClause({ userId: 'user-1' });
-    expect(clause).toContain("scope IN ('PROJECT', 'SHARED')");
-    expect(clause).not.toContain('project_id = ?');
+    expect(clause).toBe('1=0');
   });
 
   it('UT-03: buildScopeClause with tableAlias prefixes columns', () => {
@@ -113,20 +114,19 @@ describe('SA4E-26 UT — buildScopeClause & buildScopeParams', () => {
     expect(clause).toContain('ke.user_id');
   });
 
-  it('UT-04: buildScopeClause with empty string projectId uses backward-compat', () => {
+  it('UT-04: buildScopeClause with empty string projectId fails closed (SA4E-31)', () => {
     const clause = engine.buildScopeClause({ userId: 'user-1', projectId: '' });
-    expect(clause).toContain("scope IN ('PROJECT', 'SHARED')");
-    expect(clause).not.toContain('project_id = ?');
+    expect(clause).toBe('1=0');
   });
 
-  it('UT-05: buildScopeParams with projectId returns [projectId, userId]', () => {
+  it('UT-05: buildScopeParams with projectId returns [userId, projectId, projectId, projectId] (SA4E-31)', () => {
     const params = engine.buildScopeParams({ userId: 'user-1', projectId: 'app-A' });
-    expect(params).toEqual(['app-A', 'user-1']);
+    expect(params).toEqual(['user-1', 'app-A', 'app-A', 'app-A']);
   });
 
-  it('UT-06: buildScopeParams without projectId returns [userId]', () => {
+  it('UT-06: buildScopeParams without projectId returns [] (fail closed, SA4E-31)', () => {
     const params = engine.buildScopeParams({ userId: 'user-1' });
-    expect(params).toEqual(['user-1']);
+    expect(params).toEqual([]);
   });
 
   it('UT-07: insert with project_id stores value in DB', () => {
@@ -226,40 +226,36 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
   });
   afterEach(() => ctx.close());
 
-  it('IT-01: Search with projectId filters PROJECT entries', () => {
+  it('IT-01: Search with projectId filters PROJECT entries (SA4E-31: NULL no longer leaks)', () => {
     const results = engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
     const summaries = results.map(r => r.entry.summary);
     expect(summaries).toContain('seed-1');
     expect(summaries).toContain('seed-7');
     expect(summaries).not.toContain('seed-2');
-    expect(summaries).toContain('seed-4');
+    // SA4E-31: legacy NULL project_id no longer leaks
+    expect(summaries).not.toContain('seed-4');
   });
 
-  it('IT-02: Search without projectId shows all PROJECT entries (backward compat)', () => {
+  it('IT-02: Search without projectId fails closed — no entries (SA4E-31)', () => {
     const results = engine.search('pattern', 20, undefined, undefined, { userId: 'user-1' });
-    const summaries = results.map(r => r.entry.summary);
-    expect(summaries).toContain('seed-1');
-    expect(summaries).toContain('seed-2');
-    expect(summaries).toContain('seed-3');
-    expect(summaries).toContain('seed-4');
+    expect(results.length).toBe(0);
   });
 
-  it('IT-03: SHARED entries visible regardless of projectId', () => {
-    const resultsB = engine.search('Shared knowledge', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
+  it('IT-03: SHARED entries visible only to granted projects (SA4E-31)', () => {
+    const db = ctx.dbManager.getDb();
+    db.prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
     const resultsA = engine.search('Shared knowledge', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
-    const resultsNone = engine.search('Shared knowledge', 20, undefined, undefined, { userId: 'user-1' });
-    expect(resultsB.some(r => r.entry.summary === 'seed-3')).toBe(true);
+    const resultsB = engine.search('Shared knowledge', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
     expect(resultsA.some(r => r.entry.summary === 'seed-3')).toBe(true);
-    expect(resultsNone.some(r => r.entry.summary === 'seed-3')).toBe(true);
+    // app-B not granted → SHARED hidden
+    expect(resultsB.some(r => r.entry.summary === 'seed-3')).toBe(false);
   });
 
-  it('IT-04: Legacy entries (NULL project_id) visible to all projects', () => {
+  it('IT-04: Legacy entries (NULL project_id) no longer leak (SA4E-31)', () => {
     const resultsA = engine.search('Legacy entry', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
     const resultsB = engine.search('Legacy entry', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
-    const resultsC = engine.search('Legacy entry', 20, undefined, undefined, { userId: 'user-1', projectId: 'any-project' });
-    expect(resultsA.some(r => r.entry.summary === 'seed-4')).toBe(true);
-    expect(resultsB.some(r => r.entry.summary === 'seed-4')).toBe(true);
-    expect(resultsC.some(r => r.entry.summary === 'seed-4')).toBe(true);
+    expect(resultsA.some(r => r.entry.summary === 'seed-4')).toBe(false);
+    expect(resultsB.some(r => r.entry.summary === 'seed-4')).toBe(false);
   });
 
   it('IT-05: USER entries filtered by user_id only (unchanged behavior)', () => {
@@ -316,15 +312,17 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
     expect(names).toContain('idx_ke_scope_project');
   });
 
-  it('IT-12: Mixed scope query returns correct entries for user-1 from app-A', () => {
+  it('IT-12: Mixed scope query returns correct entries for user-1 from app-A (SA4E-31)', () => {
+    const db = ctx.dbManager.getDb();
+    db.prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
     const results = engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
     const summaries = results.map(r => r.entry.summary);
-    expect(summaries).toContain('seed-1');
-    expect(summaries).toContain('seed-3');
-    expect(summaries).toContain('seed-4');
-    expect(summaries).toContain('seed-5');
-    expect(summaries).toContain('seed-7');
-    expect(summaries).not.toContain('seed-2');
-    expect(summaries).not.toContain('seed-6');
+    expect(summaries).toContain('seed-1'); // PROJECT app-A
+    expect(summaries).toContain('seed-3'); // SHARED (granted)
+    expect(summaries).toContain('seed-5'); // USER user-1 app-A
+    expect(summaries).toContain('seed-7'); // PROJECT app-A
+    expect(summaries).not.toContain('seed-2'); // PROJECT app-B
+    expect(summaries).not.toContain('seed-4'); // legacy NULL — no longer leaks
+    expect(summaries).not.toContain('seed-6'); // USER user-2
   });
 });

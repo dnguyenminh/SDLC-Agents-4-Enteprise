@@ -102,7 +102,6 @@ export function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_graph_nodes_z ON graph_nodes(z);
     CREATE INDEX IF NOT EXISTS idx_graph_nodes_level ON graph_nodes(level);
     CREATE INDEX IF NOT EXISTS idx_graph_nodes_cluster ON graph_nodes(cluster_id);
-    CREATE INDEX IF NOT EXISTS idx_graph_nodes_project ON graph_nodes(project_id);
     CREATE INDEX IF NOT EXISTS idx_graph_edges_source ON graph_edges(source);
     CREATE INDEX IF NOT EXISTS idx_graph_edges_target ON graph_edges(target);
     CREATE INDEX IF NOT EXISTS idx_graph_edges_source_target ON graph_edges(source, target);

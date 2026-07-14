@@ -9,7 +9,7 @@ function makeEntry(overrides: Partial<KnowledgeEntry> = {}): KnowledgeEntry {
   return {
     id: 1, content: 'Clean content', summary: 'Summary',
     type: 'CONTEXT', tier: 'core', scope: 'USER',
-    user_id: null, project_id: null, source: null, source_ref: null,
+    user_id: null, workspace_id: null, project_id: null, source: null, source_ref: null,
     tags: '', confidence: 1, access_count: 0,
     created_at: '', updated_at: '', last_accessed_at: null,
     expires_at: null, pinned: 0, pin_order: 0,

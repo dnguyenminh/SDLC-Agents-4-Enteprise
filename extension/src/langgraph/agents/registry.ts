@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { PipelineExtractor, type PipelineDefinition, type PhaseDefinition, type AgentRelation } from "./pipeline-extractor";
 import type { LlmProvider } from "../core/llm-provider";
+import { debugError } from "../../debug-logger";
 
 export interface AgentConfig {
   id: string;
@@ -82,8 +83,16 @@ class AgentRegistry {
 
     this.removeGeneratedInfraNodes();
 
+    // LLM-based pipeline extraction is non-deterministic and can fail
+    // (malformed JSON, provider timeout, etc.). On failure, fall back to
+    // the statically-parsed phases so the pipeline remains usable.
     const extractor = new PipelineExtractor();
-    this.pipeline = await extractor.extract(agentContents, llm);
+    try {
+      this.pipeline = await extractor.extract(agentContents, llm);
+    } catch (err) {
+      debugError("[AgentRegistry] PipelineExtractor failed, using fallback phases", err as Error);
+      this.pipeline = this.buildFallbackPhases();
+    }
 
     this.generateInfraNodes();
   }

@@ -8,8 +8,8 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "dev": "tsx watch --ignore '.code-intel/**' src/index.ts",
+    "build": "tsc && xcopy src\\viewer dist\\viewer /E /I /Y /Q",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
@@ -40,11 +40,13 @@
   "dependencies": {
     "@hono/node-server": "^1.12.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@types/pg": "^8.20.0",
     "@xenova/transformers": "^2.0.1",
     "better-sqlite3": "^11.10.0",
     "chokidar": "^5.0.0",
     "hono": "^4.0.0",
     "onnxruntime-node": "^1.18.0",
+    "pg": "^8.22.0",
     "pino": "^9.2.0",
     "web-tree-sitter": "^0.26.9",
     "zod": "^3.23.0"

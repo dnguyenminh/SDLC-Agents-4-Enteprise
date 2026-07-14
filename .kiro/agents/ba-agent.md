@@ -2,6 +2,7 @@
 name: ba-agent
 label: Business Analyst
 phase: requirements
+tools: ["read", "write", "shell", "@mcp"]
 outputDoc: BRD.md
 ---
 

@@ -8,6 +8,7 @@ import type { QueryLayer } from '../../../engine/query/query-layer.js';
 import type { KBScope, ScopeContext } from '../models.js';
 import type { ScopePromotionService } from '../promotion/service.js';
 import type { TagAnalyzerService } from '../llm/analyzer.js';
+import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
 import { handleSearch, handleDiscover, handleTags, handleCitations } from './search.js';
 import { handleIngest, handleIngestFile, handlePin, handleMap, handleCrud } from './crud.js';
 import {
@@ -32,6 +33,7 @@ export class MemoryToolDispatcher {
   private scopeCtx: ScopeContext | undefined;
   private promotionService: ScopePromotionService | undefined;
   private tagAnalyzer: TagAnalyzerService | undefined;
+  private convertResolver: ConvertToolResolver | undefined;
 
   constructor(
     private readonly engine: MemoryEngine,
@@ -51,12 +53,16 @@ export class MemoryToolDispatcher {
     this.tagAnalyzer = svc;
   }
 
-  dispatch(name: string, args: Args): string | null {
+  setConvertResolver(resolver: ConvertToolResolver): void {
+    this.convertResolver = resolver;
+  }
+
+  async dispatch(name: string, args: Args): Promise<string | null> {
     const [resolved, merged] = this.resolveAlias(name, args);
     switch (resolved) {
       case 'mem_search': return handleSearch(this.engine, this.scopeCtx, merged);
       case 'mem_ingest': return handleIngest(this.engine, this.scopeCtx, this.tagAnalyzer, merged);
-      case 'mem_ingest_file': return handleIngestFile(this.engine, this.scopeCtx, this.workspace, merged);
+      case 'mem_ingest_file': return handleIngestFile(this.engine, this.scopeCtx, this.workspace, merged, this.convertResolver);
       case 'mem_pin': return handlePin(merged);
       case 'mem_map': return handleMap(merged);
       case 'mem_crud': return handleCrud(this.engine, this.scopeCtx, merged);

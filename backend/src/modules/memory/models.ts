@@ -3,7 +3,7 @@
  */
 
 /** KB Scope — determines visibility isolation level. */
-export type KBScope = 'USER' | 'PROJECT' | 'SHARED';
+export type KBScope = 'USER' | 'WORKSPACE' | 'PROJECT' | 'SHARED';
 
 /** Context passed to every tool call for scope enforcement. */
 export interface ScopeContext {
@@ -19,6 +19,7 @@ export interface KnowledgeEntry {
   tier: string;
   scope: KBScope;
   user_id: string | null;
+  workspace_id: string | null;
   project_id: string | null;
   source: string | null;
   source_ref: string | null;

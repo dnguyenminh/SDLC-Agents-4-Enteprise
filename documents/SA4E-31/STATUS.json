@@ -3,18 +3,51 @@
   "currentPhase": "implementation",
   "autonomyLevel": "L3",
   "architecturePattern": "ai-agent",
+  "reopened": {
+    "at": "2026-07-14T09:23:03Z",
+    "reason": "EXPANSION — new defect scope. Prior fix (commit 96b5e3d) addressed graph_nodes/kb-graph isolation only. This scope targets the knowledge_entries KB query WHERE-clause leak across 5 sites + IsolationLayer, plus mem_search (LLM-critical) scope clause and analytics stats leak.",
+    "priorScope": "graph_nodes project_id + kb-graph admin routes",
+    "newScope": "knowledge_entries read-filter unification (USER/PROJECT/SHARED) + kb_shared_grants allow-list + analytics leak"
+  },
   "phases": {
     "requirements": { "status": "skipped", "reason": "Bug fix — no BRD needed" },
     "specification": { "status": "skipped", "reason": "Bug fix — no FSD needed" },
-    "design": { "status": "skipped", "reason": "Bug fix — no TDD needed" },
-    "implementation": { "status": "in_progress", "startedAt": "2026-07-13T23:30:00Z" },
-    "testing": { "status": "not_started" },
+    "design": { "status": "skipped", "reason": "Bug fix — root cause + fix semantics confirmed by user" },
+    "implementation": { "status": "done", "completedAt": "2026-07-14T10:13:00Z", "branch": "SA4E-31", "implementedBy": "orchestrator", "note": "SM/dev-agent lacked tools in runtime; orchestrator implemented directly per user approval (option A), following dev-bug-diagnosis loop." },
+    "testing": { "status": "done", "completedAt": "2026-07-14T10:13:00Z", "result": "PASS", "note": "260/260 non-e2e logic tests pass incl. new SA4E31 isolation suite (9) + updated SA4E-26/27. LIVE multi-workspace verified: Sample kbEntries 1029->0, graphNodes 72170->0. Pre-existing: MigrationRunner version drift (7, unrelated), e2e auth 401 (environmental)." },
     "deployment": { "status": "not_started" }
   },
   "bugFix": {
-    "mode": "quick-fix",
-    "diagnosis": "Known root cause from ticket description",
-    "rootCause": "graph_nodes table lacks project_id; admin routes don't pass projectId; kbEngine methods don't filter by projectId"
+    "mode": "dev-pipeline",
+    "diagnosisLoop": "dev-bug-diagnosis (reproduce test first)",
+    "rootCauseVerifiedBySM": true,
+    "rootCause": "3 non-unified isolation implementations on knowledge_entries + analytics composite leak",
+    "targetSemantics": {
+      "USER": "scope='USER' AND user_id=? AND project_id=?",
+      "PROJECT": "scope='PROJECT' AND project_id=?  (remove project_id IS NULL escape)",
+      "SHARED": "scope='SHARED' AND project_id IN (<kb_shared_grants allow-list>)"
+    },
+    "querySitesToFix": [
+      "backend/src/modules/memory/IsolationLayer.ts :: buildReadFilter (single source of truth)",
+      "backend/src/modules/memory/engine/core.ts :: buildScopeClause/buildScopeParams (used by mem_search — replace with IsolationLayer)",
+      "backend/src/admin/db/kb-entries.ts :: getKbEntryById/getKbEntryCount/getKbEntries (add userId; bare scope='USER' leak)",
+      "backend/src/admin/db/kb-search.ts :: searchKbEntries (add userId; bare scope='USER' leak)",
+      "backend/src/admin/db/kb-tags.ts :: getAllKbTags/getKbEntriesByTag (add userId; loose clause)",
+      "backend/src/server/routes/admin/analytics.ts :: /api/admin/stats codeSymbols leak + graphTotalNodes=kbEntries+codeSymbols composite"
+    ],
+    "schemaChanges": [
+      "New table kb_shared_grants(project_id) — SHARED allow-list",
+      "Migration: backfill stamp project_id + user_id for legacy knowledge_entries"
+    ],
+    "ingestStamp": "mem_ingest must stamp project_id + user_id (buildWriteDecorator currently stamps project_id only)",
+    "verification": { "build": null, "tests": null, "multiWorkspaceIsolation": null }
   },
-  "lastUpdated": "2026-07-13T23:30:00Z"
+  "smToolingLimitation": {
+    "invokeSubAgent": "unavailable",
+    "jira": "unavailable",
+    "kb": "unavailable",
+    "docxExport": "unavailable",
+    "consequence": "SM verified root cause (read-only) and prepared dev-agent + qa-agent dispatch package. Orchestrator/user must dispatch the agents."
+  },
+  "lastUpdated": "2026-07-14T09:23:03Z"
 }

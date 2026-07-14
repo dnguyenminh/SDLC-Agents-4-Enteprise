@@ -1,0 +1,17 @@
+{
+  "ticket": "SA4E-35",
+  "summary": "Global toast notification consistency across all admin pages",
+  "currentPhase": "requirements",
+  "autonomyLevel": "L2",
+  "architecturePattern": "monolith",
+  "phases": {
+    "requirements": { "status": "not_started" },
+    "specification": { "status": "not_started" },
+    "design": { "status": "not_started" },
+    "implementation": { "status": "not_started" },
+    "testing": { "status": "not_started" },
+    "deployment": { "status": "not_started" }
+  },
+  "lastUpdated": "2026-07-15T01:00:00Z",
+  "description": "Replace all inline msg notification bars with fixed-position toast component (bottom-right) across: KB Management, KB Tags, Users, RBAC, Configuration, Profile pages. Ensure consistent UX pattern."
+}

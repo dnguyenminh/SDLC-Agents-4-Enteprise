@@ -5,6 +5,8 @@ import type { TagAnalyzerService } from '../llm/analyzer.js';
 import type { ProjectContext } from '../ProjectContext.js';
 import { validateReadAccess, validateMutationOwnership, buildIngestFileDeleteClause } from '../IsolationLayer.js';
 import { tierForType, inferOwner, resolvePath } from './helpers.js';
+import { classifyFormat, normalizeExt } from '../ingest/FormatClassifier.js';
+import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'memory-tool-dispatcher' });
@@ -51,24 +53,65 @@ export function handleIngest(engine: MemoryEngine, scopeCtx: ScopeContext | unde
   return `Knowledge entry created: id=${id}, type=${type}, scope=${scope}, tier=${tierForType(type)} - "${summary}"`;
 }
 
-export function handleIngestFile(engine: MemoryEngine, scopeCtx: ScopeContext | undefined, workspace: string, a: Args): string {
+/** Structured response for client consumption (Task 8). */
+export interface IngestFileResponse {
+  status: 'ingested' | 'unconvertible';
+  entries?: number;
+  file?: string;
+  reason?: string;
+}
+
+/** Marker để client (extension) nhận biết file không convert được và log ra. */
+export function unconvertibleMessage(filePath: string, reason: string): string {
+  return JSON.stringify({ status: 'unconvertible', file: filePath, reason } satisfies IngestFileResponse);
+}
+
+/**
+ * Ingest một file vào KB. (Design R4/R5/R6)
+ * - markdown/text → Direct Ingest (đọc utf-8).
+ * - binary (docx/xls/ảnh...) → convert qua ConvertToolResolver (dynamic tool).
+ *   Không có tool / convert fail → trả marker UNCONVERTIBLE, KHÔNG index rác.
+ */
+export async function handleIngestFile(
+  engine: MemoryEngine,
+  scopeCtx: ScopeContext | undefined,
+  workspace: string,
+  a: Args,
+  resolver?: ConvertToolResolver,
+): Promise<string> {
   const filePath = a.file_path as string;
   if (!filePath) return 'Error: file_path required';
   const type = (a.type as string) ?? 'CONTEXT';
   const scope = ((a.scope as string) ?? 'USER').toUpperCase() as KBScope;
   const userId = (a.user_id as string) ?? scopeCtx?.userId ?? null;
 
-  let text = a.content as string;
-  if (!text) {
+  const format = classifyFormat({ filePath });
+  const providedContent = a.content as string | undefined;
+
+  let text: string | undefined;
+  if (format === 'markdown' || format === 'text') {
+    // Direct Ingest — dùng content injected nếu có, ngược lại đọc utf-8 (R5)
+    text = providedContent;
+    if (!text) {
+      const resolved = resolvePath(filePath, workspace);
+      if (!fs.existsSync(resolved)) return `Error: file not found — ${resolved}`;
+      text = await fs.promises.readFile(resolved, 'utf-8');
+    }
+  } else if (providedContent && providedContent.trim().length > 0) {
+    // Binary nhưng client đã convert sẵn và gửi markdown/text — dùng trực tiếp (tương thích ngược).
+    text = providedContent;
+  } else {
+    // Binary (R6) — KHÔNG đọc utf-8; convert qua dynamic tool
     const resolved = resolvePath(filePath, workspace);
-    if (!fs.existsSync(resolved)) return `Error: file not found — ${resolved}`;
-    text = fs.readFileSync(resolved, 'utf-8');
+    if (!fs.existsSync(resolved)) { return unconvertibleMessage(filePath, 'no-tool'); }
+    if (!resolver) { return unconvertibleMessage(filePath, 'no-tool'); }
+    const res = await resolver.resolve({ filePath: resolved, ext: normalizeExt(filePath) });
+    if (!res.ok) { return unconvertibleMessage(filePath, res.reason); }
+    text = res.markdown;
   }
 
   if (scopeCtx) {
-    const { clause, params } = buildIngestFileDeleteClause(
-      scopeCtx as ProjectContext, filePath,
-    );
+    const { clause, params } = buildIngestFileDeleteClause(scopeCtx as ProjectContext, filePath);
     engine.getDb().prepare(clause).run(...params);
   } else {
     engine.getDb().prepare('DELETE FROM knowledge_entries WHERE source = ?').run(filePath);
@@ -82,7 +125,7 @@ export function handleIngestFile(engine: MemoryEngine, scopeCtx: ScopeContext | 
     created++;
   }
   engine.auditLog('INGEST_FILE');
-  return `Ingested: ${created} entries from ${filePath} (scope=${scope})`;
+  return JSON.stringify({ status: 'ingested', entries: created, file: filePath } satisfies IngestFileResponse);
 }
 
 export function handlePin(a: Args): string {

@@ -1,0 +1,83 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;State Diagram — File Ingest Lifecycle&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="340" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_start" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="440" y="60" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_discovered" value="Discovered" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="390" y="120" width="130" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_classifying" value="Classifying" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="390" y="210" width="130" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_direct" value="Direct Ingesting&#10;(read UTF-8)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="130" y="310" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_resolving" value="Resolving Tool&#10;(find_tools)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="590" y="310" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_converting" value="Converting&#10;(execute_dynamic_tool)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="520" y="420" width="170" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_ingested" value="&lt;b&gt;Ingested&lt;/b&gt;&#10;(indexed in KB)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="530" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_unconvertible" value="&lt;b&gt;Unconvertible&lt;/b&gt;&#10;(not indexed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="530" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_end" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1">
+      <mxGeometry x="440" y="650" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="s_start" target="s_discovered" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="ingest triggered" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="s_discovered" target="s_classifying" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="type = md/text" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="s_classifying" target="s_direct" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="type = binary" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="s_classifying" target="s_resolving" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="tool found" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="s_resolving" target="s_converting" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="no tool" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="s_resolving" target="s_unconvertible" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="780" y="335"/><mxPoint x="780" y="555"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="convert OK" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="s_converting" target="s_ingested" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="450" y="445"/><mxPoint x="450" y="555"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="failed / empty /&#10;timeout / schema" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="s_converting" target="s_unconvertible" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="read + index OK" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" source="s_direct" target="s_ingested" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="205" y="450"/><mxPoint x="275" y="450"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e10" value="IO error" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;" edge="1" source="s_direct" target="s_unconvertible" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="130" y="555"/><mxPoint x="130" y="610"/><mxPoint x="640" y="610"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="s_ingested" target="s_end" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="s_unconvertible" target="s_end" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note_reasons" value="&lt;b&gt;Unconvertible reasons:&lt;/b&gt;&#10;- no-tool&#10;- convert-failed&#10;- empty-result&#10;- schema-error&#10;- timeout" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=5;" vertex="1" parent="1">
+      <mxGeometry x="740" y="530" width="160" height="100" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

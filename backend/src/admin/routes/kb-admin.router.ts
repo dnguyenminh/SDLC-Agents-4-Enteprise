@@ -33,7 +33,7 @@ export function kbAdminRouter(deps: { db: any; kbEngine: any }): Router {
   });
 
   router.get('/graph', (req, res) => {
-    const data = svc.getGraphData({ tier: req.query.tier as string, minQuality: parseInt(req.query.minQuality as string) || undefined, limit: parseInt(req.query.limit as string) || 500 });
+    const data = svc.getGraphData({ tier: req.query.tier as string, minQuality: parseInt(req.query.minQuality as string) || undefined, limit: parseInt(req.query.limit as string) || 500, projectId: req.query.projectId as string });
     res.json({ success: true, data });
   });
 

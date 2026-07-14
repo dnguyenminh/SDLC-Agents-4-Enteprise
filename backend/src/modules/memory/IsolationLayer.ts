@@ -22,18 +22,29 @@ import type { KnowledgeEntry, KBScope } from './models.js';
 export function buildReadFilter(ctx: ProjectContext, tableAlias?: string): ScopeFilter {
   const p = tableAlias ? `${tableAlias}.` : '';
 
-  if (ctx.projectId) {
-    return {
-      clause: `(${p}scope = 'SHARED' OR (${p}scope = 'PROJECT' AND (${p}project_id = ? OR ${p}project_id IS NULL)) OR (${p}scope = 'USER' AND ${p}user_id = ?))`,
-      params: [ctx.projectId, ctx.userId],
-    };
+  // SA4E-31: Strict per-workspace isolation. No project context → fail closed.
+  if (!ctx.projectId) {
+    return { clause: '1=0', params: [] };
   }
 
-  // Backward compat: no projectId -> permissive mode
-  return {
-    clause: `(${p}scope IN ('PROJECT', 'SHARED') OR (${p}scope = 'USER' AND ${p}user_id = ?))`,
-    params: [ctx.userId],
-  };
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+
+  // USER: owner + same workspace only
+  if (ctx.userId && ctx.userId !== 'anonymous') {
+    conditions.push(`(${p}scope = 'USER' AND ${p}user_id = ? AND ${p}project_id = ?)`);
+    params.push(ctx.userId, ctx.projectId);
+  }
+
+  // PROJECT: this workspace only (no project_id IS NULL escape)
+  conditions.push(`(${p}scope = 'PROJECT' AND ${p}project_id = ?)`);
+  params.push(ctx.projectId);
+
+  // SHARED: company-wide, visible only if this project is granted access
+  conditions.push(`(${p}scope = 'SHARED' AND EXISTS (SELECT 1 FROM kb_shared_grants g WHERE g.project_id = ?))`);
+  params.push(ctx.projectId);
+
+  return { clause: conditions.join(' OR '), params };
 }
 
 /**
@@ -45,16 +56,16 @@ export function validateReadAccess(
   entry: KnowledgeEntry | undefined,
 ): KnowledgeEntry | undefined {
   if (!entry) return undefined;
-  if (entry.scope === 'SHARED') return entry;
+  // SA4E-31: strict per-workspace isolation, fail closed without project context
+  if (!ctx.projectId) return undefined;
+  if (entry.scope === 'SHARED') return entry; // query layer enforces grant
   if (entry.scope === 'USER') {
-    return entry.user_id === ctx.userId ? entry : undefined;
+    return entry.user_id === ctx.userId && entry.project_id === ctx.projectId ? entry : undefined;
   }
   if (entry.scope === 'PROJECT') {
-    if (!ctx.projectId) return entry; // backward compat
-    if (entry.project_id === null || entry.project_id === ctx.projectId) return entry;
-    return undefined; // wrong project
+    return entry.project_id === ctx.projectId ? entry : undefined;
   }
-  return entry;
+  return undefined;
 }
 
 // ─── Write Operations ───────────────────────────────────────────────
@@ -97,16 +108,17 @@ export function validateMutationOwnership(
   ctx: ProjectContext,
   entry: KnowledgeEntry,
 ): MutationValidation {
+  // SA4E-31: strict per-workspace ownership for mutations
   if (entry.scope === 'USER') {
-    if (entry.user_id !== ctx.userId) {
-      return { allowed: false, reason: `USER entry owned by ${entry.user_id}, not ${ctx.userId}` };
+    if (entry.user_id !== ctx.userId || entry.project_id !== ctx.projectId) {
+      return { allowed: false, reason: `Access denied: entry belongs to a different scope` };
     }
   }
   if (entry.scope === 'PROJECT') {
-    if (entry.project_id !== null && entry.project_id !== ctx.projectId) {
-      return { allowed: false, reason: `PROJECT entry belongs to ${entry.project_id}, not ${ctx.projectId}` };
+    if (entry.project_id !== ctx.projectId) {
+      return { allowed: false, reason: `Access denied: entry belongs to a different scope` };
     }
   }
-  // SHARED: always mutable. PROJECT with NULL: always mutable (legacy).
+  // SHARED mutations allowed for granted projects (grant enforced at query/route layer)
   return { allowed: true };
 }

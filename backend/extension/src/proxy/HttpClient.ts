@@ -4,6 +4,7 @@
  */
 
 import { AuthManager } from "../auth/AuthManager";
+import { getProjectId } from "../extension";
 
 export class HttpError extends Error {
   constructor(public readonly statusCode: number, message: string) {
@@ -35,6 +36,10 @@ export class HttpClient {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (token) {
       headers["Authorization"] = "Bearer " + token;
+    }
+    const projectId = getProjectId();
+    if (projectId && projectId !== "default") {
+      headers["X-Project-Id"] = projectId;
     }
     return headers;
   }

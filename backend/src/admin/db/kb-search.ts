@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import Database from 'better-sqlite3';
 import { getIndexDbPath } from './core.js';
+import { buildAdminScopeFilter } from './kb-scope-filter.js';
 
-export function searchKbEntries(query: string, projectId?: string): { items: any[]; total: number } {
+export function searchKbEntries(query: string, projectId?: string, userId?: string): { items: any[]; total: number } {
   try {
     const indexDbPath = getIndexDbPath();
     if (!fs.existsSync(indexDbPath)) return { items: [], total: 0 };
@@ -31,12 +32,9 @@ export function searchKbEntries(query: string, projectId?: string): { items: any
         likeParams.push(`%${term}%`);
       }
     }
-    let projectFilter = '';
-    const projectParams: string[] = [];
-    if (projectId && projectId !== 'default') {
-      projectFilter = " AND (scope = 'SHARED' OR (scope = 'PROJECT' AND (project_id = ? OR project_id IS NULL)) OR scope = 'USER')";
-      projectParams.push(projectId);
-    }
+    const filter = buildAdminScopeFilter(projectId, userId);
+    const projectFilter = filter ? ` AND (${filter.clause})` : '';
+    const projectParams = filter ? filter.params : [];
     const sql = `SELECT * FROM knowledge_entries WHERE (${likeClauses.join(' OR ')})${projectFilter} LIMIT 200`;
     const rows = indexDb.prepare(sql).all(...likeParams, ...projectParams) as Record<string, unknown>[];
 

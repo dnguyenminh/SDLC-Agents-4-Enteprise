@@ -18,18 +18,17 @@ const INDEXABLE_EXTENSIONS = new Set([
   ".txt", ".csv", ".json", ".xml", ".yaml", ".yml", ".rtf", ".odt", ".ods", ".odp"
 ]);
 
+// Folders under documents/ that never contain indexable documents.
+// Everything else (any project/feature/ticket folder name) is scanned.
+const FOLDER_DENYLIST = new Set(["diagrams", "testdata", "templates", "node_modules", ".git"]);
+
 export function discoverDocuments(root: string): Array<{ path: string; type: string; ticket: string; format: string }> {
   const docsDir = path.join(root, "documents");
   if (!fs.existsSync(docsDir)) { return []; }
   const results: Array<{ path: string; type: string; ticket: string; format: string }> = [];
-  const allEntries = fs.readdirSync(docsDir);
-  const tickets = allEntries.filter(d =>
-    fs.statSync(path.join(docsDir, d)).isDirectory() && /^[A-Z]+-\d+$/.test(d)
-  );
-  for (const ticket of tickets) {
-    const ticketDir = path.join(docsDir, ticket);
-    scanDirectoryRecursive(ticketDir, ticket, `documents/${ticket}`, results);
-  }
+  // Scan the whole documents/ tree. Folder names are NOT constrained to a
+  // ticket-key pattern — any subfolder (e.g. "GRAPH-EMAIL") is a valid group.
+  scanDirectoryRecursive(docsDir, "documents", "documents", results);
   return results;
 }
 
@@ -40,22 +39,30 @@ function scanDirectoryRecursive(
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
     if (entry.isDirectory()) {
-      if (entry.name === "diagrams" || entry.name === "testdata") { continue; }
-      scanDirectoryRecursive(path.join(dir, entry.name), ticket, `${relativePath}/${entry.name}`, results);
+      if (FOLDER_DENYLIST.has(entry.name)) { continue; }
+      // At the documents/ root, each subfolder name becomes the group/ticket label.
+      const childTicket = ticket === "documents" ? entry.name : ticket;
+      scanDirectoryRecursive(path.join(dir, entry.name), childTicket, `${relativePath}/${entry.name}`, results);
     } else if (entry.isFile()) {
-      const ext = path.extname(entry.name).toLowerCase();
-      if (!INDEXABLE_EXTENSIONS.has(ext)) { continue; }
-      const baseName = path.basename(entry.name, ext).toUpperCase();
-      let docType = "CONTEXT";
-      for (const key of Object.keys(DOCUMENT_TYPES)) {
-        if (baseName === key || baseName.startsWith(key + "-") || baseName.startsWith(key + "_") || baseName.startsWith(key)) {
-          docType = DOCUMENT_TYPES[key]; break;
-        }
-      }
-      const format = ext === ".md" ? "markdown" : ext.replace(".", "");
-      results.push({ path: `${relativePath}/${entry.name}`, type: docType, ticket, format });
+      const classified = classifyFile(entry.name);
+      if (!classified) { continue; }
+      results.push({ path: `${relativePath}/${entry.name}`, type: classified.type, ticket, format: classified.format });
     }
   }
+}
+
+function classifyFile(fileName: string): { type: string; format: string } | null {
+  const ext = path.extname(fileName).toLowerCase();
+  if (!INDEXABLE_EXTENSIONS.has(ext)) { return null; }
+  const baseName = path.basename(fileName, ext).toUpperCase();
+  let docType = "CONTEXT";
+  for (const key of Object.keys(DOCUMENT_TYPES)) {
+    if (baseName === key || baseName.startsWith(key + "-") || baseName.startsWith(key + "_") || baseName.startsWith(key)) {
+      docType = DOCUMENT_TYPES[key]; break;
+    }
+  }
+  const format = ext === ".md" ? "markdown" : ext.replace(".", "");
+  return { type: docType, format };
 }
 
 export function formatDocList(docs: Array<{ path: string; type: string; ticket: string }>): string {

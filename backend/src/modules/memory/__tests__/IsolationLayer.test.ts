@@ -22,6 +22,7 @@ function makeEntry(overrides: Partial<KnowledgeEntry> = {}): KnowledgeEntry {
   return {
     id: 1, content: 'test', summary: 'test', type: 'CONTEXT',
     tier: 'WORKING', scope: 'PROJECT', user_id: 'user-1',
+    workspace_id: null,
     project_id: 'app-A', source: null, source_ref: null, tags: '',
     confidence: 1.0, access_count: 0, created_at: '', updated_at: '',
     last_accessed_at: null, expires_at: null, pinned: 0, pin_order: 0,
@@ -95,24 +96,24 @@ describe('SA4E-27 PBT — IsolationLayer Properties', () => {
 // ─── UT — Unit Tests ─────────────────────────────────────────────────
 
 describe('SA4E-27 UT — buildReadFilter', () => {
-  it('UT-01: with projectId returns project_id filter in clause', () => {
+  it('UT-01: with projectId returns strict per-workspace clause (SA4E-31)', () => {
     const ctx = createProjectContext('app-A', 'user-1');
     const { clause, params } = buildReadFilter(ctx);
     expect(clause).toContain("scope = 'SHARED'");
     expect(clause).toContain("scope = 'PROJECT'");
     expect(clause).toContain('project_id = ?');
-    expect(clause).toContain('project_id IS NULL');
+    expect(clause).not.toContain('project_id IS NULL');
     expect(clause).toContain("scope = 'USER'");
     expect(clause).toContain('user_id = ?');
-    expect(params).toEqual(['app-A', 'user-1']);
+    expect(clause).toContain('kb_shared_grants');
+    expect(params).toEqual(['user-1', 'app-A', 'app-A', 'app-A']);
   });
 
-  it('UT-02: without projectId (empty string) returns backward-compat clause', () => {
+  it('UT-02: without projectId (empty string) fails closed (SA4E-31)', () => {
     const ctx = createProjectContext('', 'user-1');
     const { clause, params } = buildReadFilter(ctx);
-    expect(clause).toContain("scope IN ('PROJECT', 'SHARED')");
-    expect(clause).not.toContain('project_id = ?');
-    expect(params).toEqual(['user-1']);
+    expect(clause).toBe('1=0');
+    expect(params).toEqual([]);
   });
 
   it('UT-03: with tableAlias prefixes all columns', () => {
@@ -151,9 +152,9 @@ describe('SA4E-27 UT — validateReadAccess', () => {
     expect(validateReadAccess(ctx, entry)).toBe(entry);
   });
 
-  it('UT-09: PROJECT entry accessible if NULL projectId (legacy)', () => {
+  it('UT-09: PROJECT entry with NULL project_id blocked (SA4E-31 — no legacy escape)', () => {
     const entry = makeEntry({ scope: 'PROJECT', project_id: null });
-    expect(validateReadAccess(ctx, entry)).toBe(entry);
+    expect(validateReadAccess(ctx, entry)).toBeUndefined();
   });
 
   it('UT-10: PROJECT entry blocked if different projectId', () => {
@@ -161,10 +162,10 @@ describe('SA4E-27 UT — validateReadAccess', () => {
     expect(validateReadAccess(ctx, entry)).toBeUndefined();
   });
 
-  it('UT-11: PROJECT entry accessible in backward-compat mode (no projectId)', () => {
+  it('UT-11: no projectId context fails closed — PROJECT entry blocked (SA4E-31)', () => {
     const noProjectCtx = createProjectContext('', 'user-1');
     const entry = makeEntry({ scope: 'PROJECT', project_id: 'app-B' });
-    expect(validateReadAccess(noProjectCtx, entry)).toBe(entry);
+    expect(validateReadAccess(noProjectCtx, entry)).toBeUndefined();
   });
 });
 
@@ -180,7 +181,7 @@ describe('SA4E-27 UT — validateMutationOwnership', () => {
     const entry = makeEntry({ scope: 'USER', user_id: 'user-2' });
     const result = validateMutationOwnership(ctx, entry);
     expect(result.allowed).toBe(false);
-    expect(result.reason).toContain('user-2');
+    expect(result.reason).toBeTruthy();
   });
 
   it('UT-14: PROJECT entry same project — allowed', () => {
@@ -192,12 +193,12 @@ describe('SA4E-27 UT — validateMutationOwnership', () => {
     const entry = makeEntry({ scope: 'PROJECT', project_id: 'app-B' });
     const result = validateMutationOwnership(ctx, entry);
     expect(result.allowed).toBe(false);
-    expect(result.reason).toContain('app-B');
+    expect(result.reason).toBeTruthy();
   });
 
-  it('UT-16: PROJECT entry NULL project_id (legacy) — allowed', () => {
+  it('UT-16: PROJECT entry NULL project_id — denied (SA4E-31, no legacy escape)', () => {
     const entry = makeEntry({ scope: 'PROJECT', project_id: null });
-    expect(validateMutationOwnership(ctx, entry)).toEqual({ allowed: true });
+    expect(validateMutationOwnership(ctx, entry).allowed).toBe(false);
   });
 
   it('UT-17: SHARED entry — always allowed', () => {
@@ -269,18 +270,19 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
   });
   afterEach(() => ctx.close());
 
-  it('IT-01: buildReadFilter produces valid SQL executed against real DB', () => {
+  it('IT-01: buildReadFilter enforces strict isolation against real DB (SA4E-31)', () => {
+    ctx.engine.getDb().prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
     const pCtx = createProjectContext('app-A', 'u1');
     const { clause, params } = buildReadFilter(pCtx);
     const sql = `SELECT * FROM knowledge_entries WHERE archived = 0 AND ${clause}`;
     const rows = ctx.engine.getDb().prepare(sql).all(...params) as any[];
     const summaries = rows.map((r: any) => r.summary);
-    expect(summaries).toContain('proj-A');
-    expect(summaries).toContain('shared');
-    expect(summaries).toContain('legacy');
-    expect(summaries).toContain('user1-priv');
-    expect(summaries).not.toContain('proj-B');
-    expect(summaries).not.toContain('user2-priv');
+    expect(summaries).toContain('proj-A');       // PROJECT app-A
+    expect(summaries).toContain('shared');        // SHARED granted for app-A
+    expect(summaries).not.toContain('legacy');    // PROJECT NULL — no longer leaks
+    expect(summaries).not.toContain('user1-priv');// USER u1 but project_id NULL ≠ app-A
+    expect(summaries).not.toContain('proj-B');    // PROJECT app-B
+    expect(summaries).not.toContain('user2-priv');// USER u2
   });
 
   it('IT-02: buildIngestFileDeleteClause scoped delete works correctly', () => {

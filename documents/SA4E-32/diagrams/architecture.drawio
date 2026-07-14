@@ -1,0 +1,96 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Architecture — Server-side Document Conversion&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="260" y="10" width="400" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="client_layer" value="Client Layer (VS Code Extension)" style="swimlane;startSize=24;fillColor=#e1f5fe;strokeColor=#0288d1;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="800" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="idx_svc" value="&lt;b&gt;IndexingService&lt;/b&gt;&#10;indexDocuments()&#10;parseUnconvertible()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="client_layer">
+      <mxGeometry x="20" y="30" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="idx_http" value="&lt;b&gt;IndexerHttpClient&lt;/b&gt;&#10;POST ingest-file" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="client_layer">
+      <mxGeometry x="230" y="30" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="output_ch" value="&lt;b&gt;Output Channel&lt;/b&gt;&#10;SDLC Indexing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="client_layer">
+      <mxGeometry x="420" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="discover_cmd" value="&lt;b&gt;discoverDocuments&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="client_layer">
+      <mxGeometry x="600" y="30" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="server_layer" value="Server Layer (Backend — Node.js)" style="swimlane;startSize=24;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="180" width="800" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="dispatcher" value="&lt;b&gt;mem_ingest_file&lt;/b&gt;&#10;(dispatcher)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="server_layer">
+      <mxGeometry x="20" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="handle_ingest" value="&lt;b&gt;handleIngestFile&lt;/b&gt;&#10;(async, timeout)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="server_layer">
+      <mxGeometry x="20" y="100" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="format_cls" value="&lt;b&gt;FormatClassifier&lt;/b&gt;&#10;classifyFormat()&#10;normalizeExt()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="server_layer">
+      <mxGeometry x="210" y="100" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="convert_resolver" value="&lt;b&gt;ConvertToolResolver&lt;/b&gt;&#10;resolve()&#10;buildQuery() / selectBestTool()&#10;withTimeout()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="server_layer">
+      <mxGeometry x="410" y="90" width="200" height="65" as="geometry"/>
+    </mxCell>
+    <mxCell id="orch_gw" value="&lt;b&gt;OrchestrationGateway&lt;/b&gt;&#10;(interface)&#10;findTools() / executeDynamicTool()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="server_layer">
+      <mxGeometry x="640" y="30" width="140" height="65" as="geometry"/>
+    </mxCell>
+    <mxCell id="null_gw" value="NullGateway&#10;(always no-tool)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;fontStyle=2;" vertex="1" parent="server_layer">
+      <mxGeometry x="640" y="110" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="registry_gw" value="RegistryGateway&#10;(lazy resolve)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=9;fontStyle=2;" vertex="1" parent="server_layer">
+      <mxGeometry x="640" y="110" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="data_layer" value="Data Layer" style="swimlane;startSize=24;fillColor=#e8f5e9;strokeColor=#388e3c;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="380" width="800" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="memory_engine" value="&lt;b&gt;MemoryEngine&lt;/b&gt;&#10;insert() / search()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=10;" vertex="1" parent="data_layer">
+      <mxGeometry x="20" y="30" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sqlite_db" value="&lt;b&gt;SQLite&lt;/b&gt;&#10;(KB store)" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=8;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=10;" vertex="1" parent="data_layer">
+      <mxGeometry x="230" y="28" width="100" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="embedder" value="&lt;b&gt;Embedder&lt;/b&gt;&#10;(ONNX Runtime)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=10;" vertex="1" parent="data_layer">
+      <mxGeometry x="380" y="30" width="140" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_layer" value="External (Dynamic Tool Orchestration)" style="swimlane;startSize=24;fillColor=#fff3e0;strokeColor=#f57c00;html=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="490" width="800" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="find_tools_node" value="&lt;b&gt;find_tools&lt;/b&gt;&#10;(discover)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="ext_layer">
+      <mxGeometry x="20" y="30" width="130" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="exec_tool_node" value="&lt;b&gt;execute_dynamic_tool&lt;/b&gt;&#10;(convert)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="ext_layer">
+      <mxGeometry x="190" y="30" width="170" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="child_srv" value="&lt;b&gt;Child Convert Server&lt;/b&gt;&#10;(MCP — future)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;dashed=1;" vertex="1" parent="ext_layer">
+      <mxGeometry x="400" y="30" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_idx_http" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="idx_svc" target="idx_http" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_http_dispatch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="idx_http" target="dispatcher" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_dispatch_handle" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="dispatcher" target="handle_ingest" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_handle_cls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="handle_ingest" target="format_cls" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_handle_resolver" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="handle_ingest" target="convert_resolver" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_resolver_gw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="convert_resolver" target="orch_gw" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_handle_mem" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="handle_ingest" target="memory_engine" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_gw_ext" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" source="orch_gw" target="find_tools_node" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
