@@ -32,8 +32,8 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('reports correct live counts in status action', () => {
-    const statusBefore = dispatcher.dispatch('mem_status', {});
+  it('reports correct live counts in status action', async () => {
+    const statusBefore = await dispatcher.dispatch('mem_status', {});
     expect(statusBefore).toBe('Entries: 0 | Edges: 0');
 
     // Insert an entry manually
@@ -44,11 +44,11 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
       tier: 'WORKING',
     });
 
-    const statusAfter = dispatcher.dispatch('mem_status', {});
+    const statusAfter = await dispatcher.dispatch('mem_status', {});
     expect(statusAfter).toBe('Entries: 1 | Edges: 0');
   });
 
-  it('performs sync_code and creates cross-references', () => {
+  it('performs sync_code and creates cross-references', async () => {
     const db = dbManager.getDb();
     
     // 1. Seed files and symbols in database
@@ -69,11 +69,11 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
     });
 
     // 3. Dispatch sync_code
-    const syncRes = dispatcher.dispatch('mem_sync_code', {});
+    const syncRes = await dispatcher.dispatch('mem_sync_code', {});
     expect(syncRes).toContain('Synced: 1 code symbols, 1 cross-reference edges');
 
     // 4. Verify counts
-    const statusRes = dispatcher.dispatch('mem_status', {});
+    const statusRes = await dispatcher.dispatch('mem_status', {});
     expect(statusRes).toBe('Entries: 2 | Edges: 1');
 
     // 5. Verify the code entity was inserted with type CODE_ENTITY

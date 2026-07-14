@@ -37,7 +37,8 @@ export class IndexerHttpClient {
         report: vscode.Progress<{ message?: string }>,
         token?: string
     ): Promise<IngestResult> {
-        const url = `${this.backendUrl}/mcp/tools/call`;
+        // SA4E-30: Use REST API endpoint instead of /mcp/tools/call
+        const url = `${this.backendUrl}/api/v1/memory/ingest-file`;
         let ingested = 0;
         let errors = 0;
 
@@ -50,10 +51,7 @@ export class IndexerHttpClient {
             if (!fileContent) { fileContent = await this.readFileContent(d.path); }
             if (fileContent) { await this.uploadDocumentFile(d.path, fileContent, token); }
 
-            const payload = {
-                tool_name: "mem_ingest_file",
-                arguments: { file_path: d.path, type: d.type, format: "markdown", ...(fileContent ? { content: fileContent } : {}) },
-            };
+            const payload = { file_path: d.path, type: d.type, format: "markdown", ...(fileContent ? { content: fileContent } : {}) };
             const success = await this.httpPost(url, payload, token, http);
             if (success) { ingested++; } else { errors++; }
         }
@@ -115,16 +113,15 @@ export class IndexerHttpClient {
             "Content-Type": "application/json",
             "Content-Length": Buffer.byteLength(body).toString(),
         };
+        // Mandatory headers: JWT Bearer token + X-Project-Id (SA4E-30)
         if (token) { headers["Authorization"] = `Bearer ${token}`; }
-        // Multi-tenant: inject projectId from workspace
-        const vscode = await import("vscode");
-        const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
-        const pid = wsPath.replace(/\\/g, '/').split('/').filter(Boolean).pop() || "";
+        const { getProjectId } = await import("../extension");
+        const pid = getProjectId();
         if (pid && pid !== "default") { headers["X-Project-Id"] = pid; }
         return new Promise<boolean>((resolve) => {
             const req = http.request(url, { method: "POST", headers }, (res: any) => {
                 res.on("data", () => {});
-                res.on("end", () => resolve(res.statusCode === 200));
+                res.on("end", () => resolve(res.statusCode === 200 || res.statusCode === 201));
             });
             req.on("error", () => resolve(false));
             req.write(body);

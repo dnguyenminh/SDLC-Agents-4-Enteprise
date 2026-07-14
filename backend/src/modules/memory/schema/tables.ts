@@ -213,4 +213,10 @@ CREATE TABLE IF NOT EXISTS popular_queries (
   avg_results REAL NOT NULL DEFAULT 0,
   last_searched TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS kb_shared_grants (
+  project_id TEXT PRIMARY KEY,
+  granted_by TEXT DEFAULT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `;

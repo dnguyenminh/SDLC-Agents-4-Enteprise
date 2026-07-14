@@ -37,9 +37,9 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
     const currentProjectId = ctx.getRequestProjectId(c);
     let kbEntries: number;
     if (Array.isArray(allowedTiers) && kbPerm.has) {
-      const allEntries = getKbEntries(1, 100000, 'created_at', 'desc', currentProjectId);
+      const allEntries = getKbEntries(1, 100000, 'created_at', 'desc', currentProjectId, user.userId);
       kbEntries = allEntries.items.filter((e: any) => { const t = e.tier || e.scope || 'SHARED'; return allowedTiers.includes(t); }).length;
-    } else kbEntries = getKbEntryCount(currentProjectId);
+    } else kbEntries = getKbEntryCount(currentProjectId, user.userId);
     const uptimeMs = Date.now() - ctx.SERVER_START_TIME;
     const mem = process.memoryUsage();
     const recentActivity = getRecentActivity(10);
@@ -55,14 +55,14 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
     } catch { ctx.logger.warn({ context: 'dashboard' }, 'Failed to read code symbols count from index.db'); }
     let graphTotalNodes = 0, graphKbNodes = 0, graphCodeNodes = 0;
     try {
-      graphTotalNodes = (d.prepare('SELECT COUNT(*) as cnt FROM graph_nodes').get() as { cnt: number }).cnt || 0;
-      graphCodeNodes = (d.prepare("SELECT COUNT(*) as cnt FROM graph_nodes WHERE type IN ('FUNCTION','METHOD','CLASS','INTERFACE','TYPE','CONSTRUCTOR','ENUM','CONSTANT','VARIABLE')").get() as { cnt: number }).cnt || 0;
+      graphTotalNodes = (d.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ?').get(currentProjectId) as { cnt: number }).cnt || 0;
+      graphCodeNodes = (d.prepare("SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? AND type IN ('FUNCTION','METHOD','CLASS','INTERFACE','TYPE','CONSTRUCTOR','ENUM','CONSTANT','VARIABLE')").get(currentProjectId) as { cnt: number }).cnt || 0;
       graphKbNodes = graphTotalNodes - graphCodeNodes;
     } catch { ctx.logger.warn({ context: 'dashboard' }, 'Failed to query graph node counts from database'); }
+    // SA4E-31: report project-scoped graph counts, not the unfiltered index.db composite.
     return c.json({
-      kbEntries, codeSymbols,
-      graphTotalNodes: kbEntries + codeSymbols,
-      graphKbNodes: kbEntries, graphCodeNodes: codeSymbols,
+      kbEntries, codeSymbols: graphCodeNodes,
+      graphTotalNodes, graphKbNodes, graphCodeNodes,
       users: userCount, mcpServers: mcpCount,
       uptime: { ms: uptimeMs, formatted: formatUptime(uptimeMs) },
       memory: { heapUsed: mem.heapUsed, heapTotal: mem.heapTotal, rss: mem.rss, formatted: formatBytes(mem.heapUsed) + ' / ' + formatBytes(mem.heapTotal) },

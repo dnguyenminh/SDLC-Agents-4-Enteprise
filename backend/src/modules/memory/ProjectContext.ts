@@ -6,6 +6,7 @@
 export interface ProjectContext {
   readonly projectId: string;
   readonly userId: string;
+  readonly workspaceId?: string;
   readonly sessionId?: string;
   readonly createdAt: string;
 }
@@ -28,10 +29,12 @@ export function createProjectContext(
   projectId: string,
   userId: string,
   sessionId?: string,
+  workspaceId?: string,
 ): ProjectContext {
   return Object.freeze({
     projectId,
     userId,
+    workspaceId,
     sessionId,
     createdAt: new Date().toISOString(),
   });

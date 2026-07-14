@@ -63,9 +63,22 @@ export class PipelineExtractor {
       { role: "user", content: buildPrompt(agentFiles) },
     ];
 
+    // llm.chat() returns Promise<string> (per LlmProvider interface).
+    // Previously this read response.content — a bug that threw
+    // "Cannot read properties of undefined (reading 'match')" because
+    // response was a plain string and .content was undefined.
     const response = await llm.chat(messages, { temperature: 0 });
-    const jsonStr = extractJson(response.content);
-    const parsed = JSON.parse(jsonStr);
+    const jsonStr = extractJson(response);
+
+    let parsed: { phases?: unknown[]; relations?: unknown[] };
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (err) {
+      // LLM output is non-deterministic; a malformed JSON response must
+      // not crash the pipeline. Re-throw with context so callers (ensureGraph)
+      // can fall back to static phase definitions.
+      throw new Error(`PipelineExtractor: failed to parse LLM JSON output: ${(err as Error).message}`);
+    }
 
     return {
       phases: (parsed.phases || []).map((p: any, i: number) => ({
@@ -88,9 +101,13 @@ export class PipelineExtractor {
 }
 
 function extractJson(text: string): string {
+  if (!text || typeof text !== "string") return "{}";
+  // Try fenced code block first (common LLM output format: ```json ... ```)
+  const codeMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeMatch) return codeMatch[1].trim();
+  // Then try the outermost JSON object (non-greedy via balanced-ish heuristic:
+  // match from first { to the LAST } rather than first } to handle nested objects)
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (jsonMatch) return jsonMatch[0];
-  const codeMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (codeMatch) return codeMatch[1];
   return text;
 }

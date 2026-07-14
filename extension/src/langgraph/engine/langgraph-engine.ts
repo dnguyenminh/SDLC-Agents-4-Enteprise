@@ -143,7 +143,21 @@ export class LangGraphEngine {
   private async ensureGraph(): Promise<CompiledGraph> {
     if (!this.graph) {
       if (this.llmProvider) {
-        await agentRegistry.loadPipeline(this.workspaceRoot, this.llmProvider);
+        // LLM-based pipeline extraction is best-effort: if it fails (LLM
+        // timeout, malformed JSON, provider offline), fall back to the
+        // static agent registry phases instead of crashing the engine.
+        try {
+          await agentRegistry.loadPipeline(this.workspaceRoot, this.llmProvider);
+        } catch (err) {
+          this.streamHandler.emitDirect({
+            type: "chat:streamChunk",
+            streamId: "pipeline-init",
+            nodeId: "system",
+            eventType: "status",
+            content: `Pipeline extraction failed, using static phases: ${(err as Error).message}`,
+            timestamp: new Date().toISOString(),
+          });
+        }
       }
       this.graph = await buildPipelineGraph(this.mcpBridge, this.streamHandler, this.checkpointer, this.llmProvider, this.hookEngine);
     }

@@ -1,0 +1,52 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;System Context — Server-side Document Conversion&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="260" y="10" width="440" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_client" value="&lt;b&gt;VS Code Extension&lt;/b&gt;&#10;(Client)&#10;IndexingService&#10;discoverDocuments&#10;Output Channel log" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="180" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="system" value="&lt;b&gt;Ingest Service&lt;/b&gt;&#10;(Server Backend)&#10;&#10;FormatClassifier&#10;ConvertToolResolver&#10;handleIngestFile&#10;OrchestrationGateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=0;" vertex="1" parent="1">
+      <mxGeometry x="340" y="170" width="220" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_orch" value="&lt;b&gt;Dynamic Tool&lt;/b&gt;&#10;&lt;b&gt;Orchestrator&lt;/b&gt;&#10;find_tools&#10;execute_dynamic_tool" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="680" y="80" width="180" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_convert" value="&lt;b&gt;Convert Tool&lt;/b&gt;&#10;(Child MCP Server)&#10;&#10;docx-to-md&#10;xlsx-to-md&#10;image-ocr (future)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="680" y="220" width="180" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_kb" value="&lt;b&gt;Knowledge Base&lt;/b&gt;&#10;(SQLite)&#10;&#10;Semantic search&#10;mem_ingest entries" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="420" width="150" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_fs" value="&lt;b&gt;File System&lt;/b&gt;&#10;(Workspace)&#10;&#10;.md, .txt, .docx&#10;.png, .pdf, ..." style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="420" width="150" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_client_system" value="POST /api/v1/memory/ingest-file&#10;{file_path, type, format, content?}" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="ext_client" target="system" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_system_orch" value="find_tools(query)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="system" target="ext_orch" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_orch_convert" value="execute_dynamic_tool&#10;(tool_name, args)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="ext_orch" target="ext_convert" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_system_kb" value="MemoryEngine.insert&#10;(content, source, tags)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="system" target="ext_kb" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_system_fs" value="readFile (UTF-8)&#10;binary path" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="system" target="ext_fs" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="340" y="470"/><mxPoint x="210" y="470"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_system_client_resp" value="Response: ingested[] +&#10;unconvertible[] + summary" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;dashed=1;" edge="1" source="system" target="ext_client" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="340" y="290"/><mxPoint x="240" y="290"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note_dashed" value="--- = future / optional" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="680" y="340" width="140" height="20" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

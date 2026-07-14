@@ -36,40 +36,46 @@ function getEdgesForNodes(nodes: GraphNode[], db: Database.Database): GraphEdge[
     .map((row: { source: string; target: string; weight: number; rel_type: string }) => ({ source: row.source, target: row.target, weight: row.weight, type: row.rel_type }));
 }
 
-function getMacroNodes(db: Database.Database): { nodes: GraphNode[]; level: string } {
-  const types = (db.prepare('SELECT DISTINCT type FROM graph_nodes WHERE level = 0').all() as { type: string }[]).map((r: { type: string }) => r.type);
+function getMacroNodes(db: Database.Database, projectId?: string): { nodes: GraphNode[]; level: string } {
+  const projectFilter = projectId ? ' AND project_id = ?' : '';
+  const projectArgs = projectId ? [projectId] : [];
+  const types = (db.prepare(`SELECT DISTINCT type FROM graph_nodes WHERE level = 0${projectFilter}`).all(...projectArgs) as { type: string }[]).map((r: { type: string }) => r.type);
   const perType = Math.max(20, Math.floor(500 / Math.max(types.length, 1)));
   const allNodes: Record<string, unknown>[] = [];
   for (const t of types) {
-    const rows = db.prepare('SELECT * FROM graph_nodes WHERE level = 0 AND type = ? LIMIT ?').all(t, perType) as Record<string, unknown>[];
+    const rows = db.prepare(`SELECT * FROM graph_nodes WHERE level = 0 AND type = ?${projectFilter} LIMIT ?`).all(t, ...projectArgs, perType) as Record<string, unknown>[];
     allNodes.push(...rows);
   }
   return { nodes: allNodes.slice(0, 500).map(rowToNode), level: 'macro' };
 }
 
-function getMidNodes(camX: number, camY: number, camZ: number, db: Database.Database): { nodes: GraphNode[]; level: string } {
+function getMidNodes(camX: number, camY: number, camZ: number, db: Database.Database, projectId?: string): { nodes: GraphNode[]; level: string } {
+  const projectFilter = projectId ? ' AND project_id = ?' : '';
+  const projectArgs = projectId ? [projectId] : [];
   const nodes = (db.prepare(`
     SELECT *, ABS(x - ?) + ABS(y - ?) + ABS(z - ?) as manhattan_dist
-    FROM graph_nodes WHERE level <= 1
+    FROM graph_nodes WHERE level <= 1${projectFilter}
     ORDER BY manhattan_dist ASC LIMIT 1500
-  `).all(camX, camY, camZ) as Record<string, unknown>[]).map(rowToNode);
+  `).all(camX, camY, camZ, ...projectArgs) as Record<string, unknown>[]).map(rowToNode);
   return { nodes, level: 'mid' };
 }
 
-function getMicroNodes(camX: number, camY: number, camZ: number, db: Database.Database): { nodes: GraphNode[]; level: string } {
+function getMicroNodes(camX: number, camY: number, camZ: number, db: Database.Database, projectId?: string): { nodes: GraphNode[]; level: string } {
+  const projectFilter = projectId ? ' WHERE project_id = ?' : '';
+  const projectArgs = projectId ? [projectId] : [];
   const nearNodes = db.prepare(`
     SELECT *, ABS(x - ?) + ABS(y - ?) + ABS(z - ?) as manhattan_dist
-    FROM graph_nodes
+    FROM graph_nodes${projectFilter}
     ORDER BY manhattan_dist ASC LIMIT 10000
-  `).all(camX, camY, camZ) as Record<string, unknown>[];
+  `).all(camX, camY, camZ, ...projectArgs) as Record<string, unknown>[];
   return { nodes: nearNodes.map(rowToNode), level: 'micro' };
 }
 
-function getNodesByZoom(params: SpatialQueryParams, db: Database.Database): { nodes: GraphNode[]; level: string } {
+function getNodesByZoom(params: SpatialQueryParams, db: Database.Database, projectId?: string): { nodes: GraphNode[]; level: string } {
   const { camX, camY, camZ, zoom } = params;
-  if (zoom > 500) return getMacroNodes(db);
-  if (zoom > 200) return getMidNodes(camX, camY, camZ, db);
-  return getMicroNodes(camX, camY, camZ, db);
+  if (zoom > 500) return getMacroNodes(db, projectId);
+  if (zoom > 200) return getMidNodes(camX, camY, camZ, db, projectId);
+  return getMicroNodes(camX, camY, camZ, db, projectId);
 }
 
 function buildBuckets(db: Database.Database): Map<string, { entry_id: string; x: number; y: number; z: number; cluster_id: string; type: string }[]> {
@@ -128,17 +134,19 @@ export function buildCrossClusterEdges(db: Database.Database): number {
   return edgesCreated;
 }
 
-export function getAllPositions(db: Database.Database): { nodes: { id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[]; total: number } {
-  const rows = db.prepare('SELECT entry_id, x, y, z, type, tier, label FROM graph_nodes').all() as { entry_id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[];
+export function getAllPositions(db: Database.Database, projectId?: string): { nodes: { id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[]; total: number } {
+  const projectFilter = projectId ? ' WHERE project_id = ?' : '';
+  const projectArgs = projectId ? [projectId] : [];
+  const rows = db.prepare(`SELECT entry_id, x, y, z, type, tier, label FROM graph_nodes${projectFilter}`).all(...projectArgs) as { entry_id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[];
   const nodes = rows.map((r: { entry_id: string; x: number; y: number; z: number; type: string; tier: string; label: string }) => ({
     id: r.entry_id, x: r.x, y: r.y, z: r.z, type: r.type, tier: r.tier, label: r.label,
   }));
   return { nodes, total: nodes.length };
 }
 
-export function spatialQuery(params: SpatialQueryParams, db: Database.Database, logger: Logger): SpatialGraphResult {
+export function spatialQuery(params: SpatialQueryParams, db: Database.Database, logger: Logger, projectId?: string): SpatialGraphResult {
   const startTime = performance.now();
-  const { nodes, level } = getNodesByZoom(params, db);
+  const { nodes, level } = getNodesByZoom(params, db, projectId);
   const edges = getEdgesForNodes(nodes, db);
   const queryTimeMs = performance.now() - startTime;
   refreshNodeCache(db);

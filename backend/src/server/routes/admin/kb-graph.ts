@@ -104,7 +104,7 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     if (!graphService || !graphService.ready) return c.json({ error: 'Graph service not ready' }, 503);
     const result = getKbEntries(1, 100000, 'created_at', 'desc', ctx.getRequestProjectId(c));
     if (result.items.length === 0) return c.json({ error: 'No KB entries to sync', nodesCreated: 0, edgesCreated: 0 });
-    const syncResult = graphService.syncFromEntries(result.items);
+    const syncResult = graphService.syncFromEntries(result.items, ctx.getRequestProjectId(c));
     return c.json({ ...syncResult, totalEntries: result.total });
   });
 

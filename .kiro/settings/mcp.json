@@ -69,7 +69,15 @@
     },
     "atlassian-mcp-server": {
       "type": "registry",
-      "disabled": false
+      "disabled": false,
+      "autoApprove": [
+        "getVisibleJiraProjects",
+        "getAccessibleAtlassianResources",
+        "createJiraIssue",
+        "getTransitionsForJiraIssue",
+        "transitionJiraIssue",
+        "addCommentToJiraIssue"
+      ]
     },
     "atlassian": {
       "url": "http://localhost:3062/mcp",

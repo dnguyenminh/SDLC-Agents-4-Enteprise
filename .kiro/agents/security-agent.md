@@ -8,7 +8,7 @@ description: >
   encryption practices, và tạo Security Assessment Report chi tiết.
   Sử dụng bằng cách cung cấp path tới source code hoặc Jira ticket key cần audit.
   Tech stack focus: Kotlin/JVM, Ktor, PostgreSQL, REST APIs, MCP protocol.
-tools: ["read", "shell", "@mcp"]
+tools: ["read", "write", "shell", "@mcp"]
 includeMcpJson: true
 ---
 

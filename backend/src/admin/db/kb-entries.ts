@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import Database from 'better-sqlite3';
 import { getIndexDbPath } from './core.js';
+import { buildAdminScopeFilter } from './kb-scope-filter.js';
 
 export function getKbEntryById(entryId: string): any | null {
   try {
@@ -22,7 +23,7 @@ export function getKbEntryById(entryId: string): any | null {
   }
 }
 
-export function getKbEntryCount(projectId?: string): number {
+export function getKbEntryCount(projectId?: string, userId?: string): number {
   try {
     const indexDbPath = getIndexDbPath();
     if (!fs.existsSync(indexDbPath)) return 0;
@@ -32,9 +33,10 @@ export function getKbEntryCount(projectId?: string): number {
       indexDb.close();
       return 0;
     }
+    const filter = buildAdminScopeFilter(projectId, userId);
     let count: number;
-    if (projectId && projectId !== 'default') {
-      count = (indexDb.prepare("SELECT COUNT(*) as cnt FROM knowledge_entries WHERE scope = 'SHARED' OR (scope = 'PROJECT' AND (project_id = ? OR project_id IS NULL)) OR scope = 'USER'").get(projectId) as { cnt: number }).cnt;
+    if (filter) {
+      count = (indexDb.prepare(`SELECT COUNT(*) as cnt FROM knowledge_entries WHERE ${filter.clause}`).get(...filter.params) as { cnt: number }).cnt;
     } else {
       count = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as { cnt: number }).cnt;
     }
@@ -45,7 +47,7 @@ export function getKbEntryCount(projectId?: string): number {
   }
 }
 
-export function getKbEntries(page = 1, pageSize = 20, sortBy = 'created_at', sortDir: 'asc' | 'desc' = 'desc', projectId?: string): { items: any[]; total: number } {
+export function getKbEntries(page = 1, pageSize = 20, sortBy = 'created_at', sortDir: 'asc' | 'desc' = 'desc', projectId?: string, userId?: string): { items: any[]; total: number } {
   try {
     const indexDbPath = getIndexDbPath();
     if (!fs.existsSync(indexDbPath)) return { items: [], total: 0 };
@@ -62,12 +64,13 @@ export function getKbEntries(page = 1, pageSize = 20, sortBy = 'created_at', sor
     const safeSort = validColumns.includes(sortBy) ? sortBy : 'created_at';
     const safeDir = sortDir === 'asc' ? 'ASC' : 'DESC';
 
+    const filter = buildAdminScopeFilter(projectId, userId);
     let total: number;
     let rows: Record<string, unknown>[];
-    if (projectId && projectId !== 'default') {
-      const whereClause = "WHERE scope = 'SHARED' OR (scope = 'PROJECT' AND (project_id = ? OR project_id IS NULL)) OR scope = 'USER'";
-      total = (indexDb.prepare(`SELECT COUNT(*) as cnt FROM knowledge_entries ${whereClause}`).get(projectId) as { cnt: number }).cnt;
-      rows = indexDb.prepare(`SELECT * FROM knowledge_entries ${whereClause} ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`).all(projectId, pageSize, (page - 1) * pageSize) as Record<string, unknown>[];
+    if (filter) {
+      const whereClause = `WHERE ${filter.clause}`;
+      total = (indexDb.prepare(`SELECT COUNT(*) as cnt FROM knowledge_entries ${whereClause}`).get(...filter.params) as { cnt: number }).cnt;
+      rows = indexDb.prepare(`SELECT * FROM knowledge_entries ${whereClause} ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`).all(...filter.params, pageSize, (page - 1) * pageSize) as Record<string, unknown>[];
     } else {
       total = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as { cnt: number }).cnt;
       rows = indexDb.prepare(`SELECT * FROM knowledge_entries ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`).all(pageSize, (page - 1) * pageSize) as Record<string, unknown>[];

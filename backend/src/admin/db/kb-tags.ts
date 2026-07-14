@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import Database from 'better-sqlite3';
 import { getIndexDbPath, logger } from './core.js';
+import { buildAdminScopeFilter } from './kb-scope-filter.js';
 
-export function getAllKbTags(): Record<string, { count: number; lastUsed: string }> {
+export function getAllKbTags(projectId?: string, userId?: string): Record<string, { count: number; lastUsed: string }> {
   const tagCounts: Record<string, { count: number; lastUsed: string }> = {};
   try {
     const indexDbPath = getIndexDbPath();
@@ -11,7 +12,13 @@ export function getAllKbTags(): Record<string, { count: number; lastUsed: string
 
     const tableExists = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'").get() as { cnt: number } | undefined;
     if (tableExists && tableExists.cnt > 0) {
-      const rows = indexDb.prepare("SELECT tags, created_at FROM knowledge_entries WHERE tags IS NOT NULL AND tags != ''").all() as { tags: string; created_at: string }[];
+      let rows: { tags: string; created_at: string }[];
+      const filter = buildAdminScopeFilter(projectId, userId);
+      if (filter) {
+        rows = indexDb.prepare(`SELECT tags, created_at FROM knowledge_entries WHERE tags IS NOT NULL AND tags != '' AND (${filter.clause})`).all(...filter.params) as { tags: string; created_at: string }[];
+      } else {
+        rows = indexDb.prepare("SELECT tags, created_at FROM knowledge_entries WHERE tags IS NOT NULL AND tags != ''").all() as { tags: string; created_at: string }[];
+      }
       for (const row of rows) {
         if (!row.tags) continue;
         const tags = row.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0);
@@ -137,7 +144,7 @@ export function mergeKbTags(sourceTag: string, targetTag: string): number {
   return merged;
 }
 
-export function getKbEntriesByTag(tagName: string, projectId?: string): any[] {
+export function getKbEntriesByTag(tagName: string, projectId?: string, userId?: string): any[] {
   const entries: any[] = [];
   try {
     const indexDbPath = getIndexDbPath();
@@ -146,8 +153,9 @@ export function getKbEntriesByTag(tagName: string, projectId?: string): any[] {
     const tableExists = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'").get() as { cnt: number } | undefined;
     if (tableExists && tableExists.cnt > 0) {
       let rows: Record<string, unknown>[];
-      if (projectId && projectId !== 'default') {
-        rows = indexDb.prepare("SELECT * FROM knowledge_entries WHERE tags LIKE ? AND (scope = 'SHARED' OR (scope = 'PROJECT' AND (project_id = ? OR project_id IS NULL)) OR scope = 'USER')").all(`%${tagName}%`, projectId) as Record<string, unknown>[];
+      const filter = buildAdminScopeFilter(projectId, userId);
+      if (filter) {
+        rows = indexDb.prepare(`SELECT * FROM knowledge_entries WHERE tags LIKE ? AND (${filter.clause})`).all(`%${tagName}%`, ...filter.params) as Record<string, unknown>[];
       } else {
         rows = indexDb.prepare('SELECT * FROM knowledge_entries WHERE tags LIKE ?').all(`%${tagName}%`) as Record<string, unknown>[];
       }

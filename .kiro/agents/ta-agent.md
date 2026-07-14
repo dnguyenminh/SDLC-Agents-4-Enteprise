@@ -2,6 +2,7 @@
 name: ta-agent
 label: Technical Architect
 phase: specification
+tools: ["read", "write", "shell", "@mcp"]
 outputDoc: FSD.md
 ---
 

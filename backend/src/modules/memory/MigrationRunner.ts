@@ -22,6 +22,15 @@ const REGISTERED_MIGRATIONS: Migration[] = [
       'CREATE INDEX IF NOT EXISTS idx_ke_scope_project ON knowledge_entries(scope, project_id)',
     ].join(';\n'),
   },
+  {
+    version: 2,
+    name: 'add_workspace_id_column',
+    up: [
+      'ALTER TABLE knowledge_entries ADD COLUMN workspace_id TEXT DEFAULT NULL',
+      'CREATE INDEX IF NOT EXISTS idx_ke_workspace_id ON knowledge_entries(workspace_id)',
+      'CREATE INDEX IF NOT EXISTS idx_ke_scope_isolation ON knowledge_entries(scope, user_id, workspace_id, project_id)',
+    ].join(';\n'),
+  },
 ];
 
 export class MigrationRunner {

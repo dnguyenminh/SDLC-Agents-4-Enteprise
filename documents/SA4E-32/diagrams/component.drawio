@@ -1,0 +1,60 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Component Diagram — Ingest Module&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="320" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="pkg_ingest" value="&lt;b&gt;memory/ingest&lt;/b&gt;" style="shape=folder;whiteSpace=wrap;html=1;tabWidth=120;tabHeight=20;tabPosition=left;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="60" width="520" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="comp_classifier" value="&lt;b&gt;FormatClassifier&lt;/b&gt;&#10;&#10;classifyFormat()&#10;normalizeExt()&#10;&#10;Ext sets:&#10;- MARKDOWN_EXTS&#10;- TEXT_EXTS" style="shape=component;align=left;spacingLeft=36;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="230" y="110" width="180" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="comp_resolver" value="&lt;b&gt;ConvertToolResolver&lt;/b&gt;&#10;&#10;resolve(req)&#10;buildQuery(ext, mime)&#10;selectBestTool(tools)&#10;buildArgs(req)&#10;withTimeout(p, ms)&#10;extractMarkdown(raw)" style="shape=component;align=left;spacingLeft=36;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="100" width="200" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="comp_handler" value="&lt;b&gt;handleIngestFile&lt;/b&gt;&#10;&#10;- Async dispatcher&#10;- Routes: md/text → direct&#10;  binary+content → legacy&#10;  binary → resolver&#10;- unconvertibleMessage()" style="shape=component;align=left;spacingLeft=36;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="270" width="220" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="pkg_gateway" value="&lt;b&gt;orchestration&lt;/b&gt;" style="shape=folder;whiteSpace=wrap;html=1;tabWidth=120;tabHeight=20;tabPosition=left;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=12;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="420" width="520" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="comp_iface" value="&lt;b&gt;&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;/b&gt;&#10;OrchestrationGateway&#10;&#10;findTools(query, opts)&#10;executeDynamicTool(name, args)" style="shape=component;align=left;spacingLeft=36;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="230" y="460" width="220" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="comp_null_gw" value="&lt;b&gt;NullOrchestration&lt;/b&gt;&#10;&lt;b&gt;Gateway&lt;/b&gt;&#10;&#10;Always returns no-tool" style="shape=component;align=left;spacingLeft=36;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="500" y="450" width="170" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="comp_registry_gw" value="&lt;b&gt;RegistryOrchestration&lt;/b&gt;&#10;&lt;b&gt;Gateway&lt;/b&gt;&#10;&#10;Lazy-resolve from&#10;ModuleRegistry" style="shape=component;align=left;spacingLeft=36;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="500" y="540" width="180" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="pkg_client" value="&lt;b&gt;extension/indexing&lt;/b&gt;" style="shape=folder;whiteSpace=wrap;html=1;tabWidth=140;tabHeight=20;tabPosition=left;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=12;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="640" width="520" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="comp_idx_svc" value="&lt;b&gt;IndexingService&lt;/b&gt;&#10;indexDocuments()&#10;parseUnconvertible()" style="shape=component;align=left;spacingLeft=36;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="230" y="680" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="comp_http_client" value="&lt;b&gt;IndexerHttpClient&lt;/b&gt;&#10;POST /api/v1/memory/ingest-file" style="shape=component;align=left;spacingLeft=36;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="470" y="680" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep_handler_cls" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;fontSize=9;" edge="1" source="comp_handler" target="comp_classifier" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep_handler_resolver" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;fontSize=9;" edge="1" source="comp_handler" target="comp_resolver" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep_resolver_gw" value="depends on" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;fontSize=9;" edge="1" source="comp_resolver" target="comp_iface" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep_null_impl" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=12;endFill=0;fontSize=9;" edge="1" source="comp_null_gw" target="comp_iface" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep_reg_impl" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;endSize=12;endFill=0;fontSize=9;" edge="1" source="comp_registry_gw" target="comp_iface" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="dep_client_server" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="comp_http_client" target="comp_handler" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

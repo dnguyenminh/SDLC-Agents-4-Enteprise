@@ -44,7 +44,7 @@ export class KBAdminService {
     return this.db.prepare('SELECT * FROM kb_promotion_queue WHERE status = ? ORDER BY created_at DESC').all('PENDING').map((r: any) => ({ promotionId: r.promotion_id, entryId: r.entry_id, sourceTier: r.source_tier, targetTier: r.target_tier, reason: r.reason, status: r.status, createdAt: r.created_at }));
   }
 
-  getGraphData(filters: { tier?: string; minQuality?: number; limit?: number }): any {
+  getGraphData(filters: { tier?: string; minQuality?: number; limit?: number; projectId?: string }): any {
     return this.kbEngine?.getGraphData?.(filters) || { nodes: [], edges: [], clusters: [], totalCount: 0 };
   }
 

@@ -19,8 +19,8 @@ describe('IT-04: mem_admin tool_usage read path', () => {
   });
   afterEach(() => ctx.close());
 
-  it('returns JSON array of usage rows and supports name filter', () => {
-    const all = dispatcher.dispatch('mem_admin', { action: 'tool_usage', limit: 20 });
+  it('returns JSON array of usage rows and supports name filter', async () => {
+    const all = await dispatcher.dispatch('mem_admin', { action: 'tool_usage', limit: 20 });
     expect(all).not.toBeNull();
     const rows = JSON.parse(all as string);
     expect(Array.isArray(rows)).toBe(true);
@@ -29,7 +29,7 @@ describe('IT-04: mem_admin tool_usage read path', () => {
     expect(rows[0]).toHaveProperty('call_count');
     expect(rows[0]).toHaveProperty('last_called_at');
 
-    const filtered = JSON.parse(dispatcher.dispatch('mem_admin', { action: 'tool_usage', tool_name: 'mem_search' }) as string);
+    const filtered = JSON.parse(await dispatcher.dispatch('mem_admin', { action: 'tool_usage', tool_name: 'mem_search' }) as string);
     expect(filtered).toHaveLength(1);
     expect(filtered[0].tool_name).toBe('mem_search');
     expect(filtered[0].call_count).toBe(5);

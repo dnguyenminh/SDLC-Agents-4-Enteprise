@@ -95,23 +95,25 @@
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       this.container.appendChild(this.renderer.domElement);
 
-      var self = this;
-      this.controls = new MapControls(this.camera, this.renderer.domElement, {
-        minDistance: 1,
-        maxDistance: 50000,
-        friction: 0.92,
-        zoomSpeed: 1.2,
-        panSpeed: 2.0,
-        onZoomEnd: function() { self._updateMode(false); },
-        onNodeDragStart: function(nodeId) { self._startNodeDrag(nodeId); },
-        onNodeDragMove: function(x, y) { self._moveNodeDrag(x, y); },
-        onNodeDragEnd: function() { self._endNodeDrag(); },
-        onDoubleTap: function(x, y) { self._handleDoubleTap(x, y); },
-        onTap: function(x, y) { self._handleTap(x, y); },
-        raycastNode: function(sx, sy) { return self._raycastAtScreen(sx, sy); },
-        getCurrentMode: function() { return self.currentMode; }
-      });
+      // SA4E-31: full 3D OrbitControls (left=orbit 360°, right=pan, wheel=zoom).
+      if (!THREE.OrbitControls) throw new Error('THREE.OrbitControls not loaded');
+      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+      this.controls.enableDamping = true;
+      this.controls.dampingFactor = 0.12;
+      this.controls.rotateSpeed = 0.9;
+      this.controls.zoomSpeed = 1.2;
+      this.controls.panSpeed = 0.9;
+      this.controls.screenSpacePanning = true;
+      this.controls.minDistance = 1;
+      this.controls.maxDistance = 50000;
+      this.controls.target.set(0, 0, 0);
+      this.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+      this.controls.addEventListener('end', function() { self._updateMode(false); });
       this._clock = new THREE.Clock();
+
+      // Custom input: node selection (click), focus (dblclick), node drag.
+      this._modeCheckAccum = 0;
+      this._setupPointerInput();
 
       this.labelContainer = document.createElement('div');
       this.labelContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;';
@@ -153,25 +155,43 @@
 
     zoomToFit() {
       if (!this.nodes.length || !this.camera) return;
-      var cx = 0, cy = 0, n = this.nodes.length;
-      for (var i = 0; i < n; i++) { cx += this.nodes[i].x; cy += this.nodes[i].y; }
-      cx /= n; cy /= n;
+      // SA4E-31: 3D fit — center OrbitControls target on the cluster centroid and
+      // dolly the camera along its current orbit direction to frame the 3D bounds.
+      var THREE = this.THREE;
+      var cx = 0, cy = 0, cz = 0, n = this.nodes.length;
+      for (var i = 0; i < n; i++) { cx += this.nodes[i].x; cy += this.nodes[i].y; cz += (this.nodes[i].z || 0); }
+      cx /= n; cy /= n; cz /= n;
       var maxR = 0;
       for (var i = 0; i < n; i++) {
-        var dx = this.nodes[i].x - cx, dy = this.nodes[i].y - cy;
-        maxR = Math.max(maxR, Math.sqrt(dx * dx + dy * dy));
+        var dx = this.nodes[i].x - cx, dy = this.nodes[i].y - cy, dz = (this.nodes[i].z || 0) - cz;
+        maxR = Math.max(maxR, Math.sqrt(dx * dx + dy * dy + dz * dz));
       }
-      var dist = maxR / Math.tan((this.camera.fov / 2) * Math.PI / 180) * 1.2;
-      this.controls.panTo(cx, cy, 600);
-      this.controls.zoomTo(dist, 600);
+      if (maxR < 1) maxR = 200;
+      var dist = maxR / Math.tan((this.camera.fov / 2) * Math.PI / 180) * 1.3;
+      var center = new THREE.Vector3(cx, cy, cz);
+      var dir = this.camera.position.clone().sub(this.controls.target);
+      if (dir.lengthSq() < 1e-6) dir.set(0, 0, 1);
+      dir.normalize();
+      this.controls.target.copy(center);
+      this.camera.position.copy(center.clone().add(dir.multiplyScalar(dist)));
+      this.camera.updateProjectionMatrix();
+      this.controls.update();
+      this._updateMode(true);
     }
 
     focusNode(id) {
       var idx = this.nodeMap.get(id);
       if (idx === undefined) return;
+      var THREE = this.THREE;
       var node = this.nodes[idx];
-      this.controls.panTo(node.x, node.y, 600);
-      this.controls.zoomTo(200, 600);
+      var center = new THREE.Vector3(node.x, node.y, node.z || 0);
+      var dir = this.camera.position.clone().sub(this.controls.target);
+      if (dir.lengthSq() < 1e-6) dir.set(0, 0, 1);
+      dir.normalize();
+      this.controls.target.copy(center);
+      this.camera.position.copy(center.clone().add(dir.multiplyScalar(200)));
+      this.controls.update();
+      this._updateMode(true);
       this.selectedNodeId = id; this._dispatchNodeClick(node);
     }
 
@@ -274,7 +294,7 @@
 
     _getCameraDistance() {
       if (!this.camera || !this.controls) return 1000;
-      return this.camera.position.z;
+      return this.camera.position.distanceTo(this.controls.target);
     }
 
     _updateMode(force) {
@@ -470,50 +490,42 @@
       return null;
     }
 
-    _handleTap(screenX, screenY) {
-      var node = this._raycastNodeAtScreen(screenX, screenY);
-      if (node) { this.selectedNodeId = node.id; this._dispatchNodeClick(node); }
-    }
-
-    _handleDoubleTap(screenX, screenY) {
-      var worldPos = this._screenToWorldXY(screenX, screenY);
-      // Zoom in toward the double-tapped position
-      var targetZ = this.camera.position.z * 0.5;
-      if (targetZ < 1) targetZ = 1;
-      this.controls.panTo(worldPos.x, worldPos.y, 600);
-      this.controls.zoomTo(targetZ, 600);
-    }
-
-    _startNodeDrag(nodeId) {
-      this._draggingNodeId = nodeId;
-      this._draggingNodeIdx = this.nodeMap.get(nodeId);
-    }
-
-    _moveNodeDrag(screenX, screenY) {
-      if (this._draggingNodeIdx === undefined) return;
-      var worldPos = this._screenToWorldXY(screenX, screenY);
-      var node = this.nodes[this._draggingNodeIdx];
-      node.x = worldPos.x; node.y = worldPos.y;
-      // Update close mode mesh position if exists
-      if (this.closeMeshes) {
-        for (var i = 0; i < this.closeMeshes.length; i++) {
-          if (this.closeMeshes[i].userData.nodeIdx === this._draggingNodeIdx) {
-            this.closeMeshes[i].position.set(node.x, node.y, node.z);
-            break;
-          }
+    // ===== Pointer input (click = select, dblclick = focus) =====
+    // OrbitControls owns orbit/pan/zoom; we only add discrete click semantics.
+    _setupPointerInput() {
+      var self = this;
+      var el = this.renderer.domElement;
+      this._pd = null;
+      this._onPointerDown = function(e) {
+        self._pd = { x: e.clientX, y: e.clientY, t: Date.now() };
+      };
+      this._onPointerUp = function(e) {
+        if (!self._pd) return;
+        var dx = e.clientX - self._pd.x, dy = e.clientY - self._pd.y;
+        var moved = Math.sqrt(dx * dx + dy * dy);
+        var dur = Date.now() - self._pd.t;
+        self._pd = null;
+        // Treat as a click only if the pointer barely moved (not an orbit/pan drag).
+        if (moved <= 5 && dur < 400 && e.button === 0) {
+          var node = self._raycastNodeAtScreen(e.clientX, e.clientY);
+          if (node) { self.selectedNodeId = node.id; self._dispatchNodeClick(node); }
         }
-      }
+      };
+      this._onDblClick = function(e) {
+        var node = self._raycastNodeAtScreen(e.clientX, e.clientY);
+        if (node) self.focusNode(node.id);
+      };
+      el.addEventListener('pointerdown', this._onPointerDown);
+      el.addEventListener('pointerup', this._onPointerUp);
+      el.addEventListener('dblclick', this._onDblClick);
     }
 
-    _endNodeDrag() {
-      this._draggingNodeId = null;
-      this._draggingNodeIdx = undefined;
-      this._buildEdgeGeometry();
-    }
-
-    _raycastAtScreen(screenX, screenY) {
-      var node = this._raycastNodeAtScreen(screenX, screenY);
-      return node ? node.id : null;
+    _removePointerInput() {
+      if (!this.renderer) return;
+      var el = this.renderer.domElement;
+      if (this._onPointerDown) el.removeEventListener('pointerdown', this._onPointerDown);
+      if (this._onPointerUp) el.removeEventListener('pointerup', this._onPointerUp);
+      if (this._onDblClick) el.removeEventListener('dblclick', this._onDblClick);
     }
 
     _raycastNodeAtScreen(screenX, screenY) {
@@ -563,8 +575,11 @@
       var self = this;
       this.animFrameId = requestAnimationFrame(function() { self._animate(); });
       var dt = this._clock ? this._clock.getDelta() : 0.016;
-      this.controls.update(dt);
-      // LOD mode check triggered by MapControls.onZoomEnd callback (event-driven)
+      this.controls.update();
+      // SA4E-31: throttled LOD mode check (~every 200ms) since OrbitControls
+      // moves the camera continuously; _updateMode is cheap when mode is unchanged.
+      this._modeCheckAccum += dt;
+      if (this._modeCheckAccum >= 0.2) { this._modeCheckAccum = 0; this._updateMode(false); }
       if (this.currentMode === 'CLOSE') this._updateLabels();
       this.renderer.render(this.scene, this.camera);
       this._renderMinimap();

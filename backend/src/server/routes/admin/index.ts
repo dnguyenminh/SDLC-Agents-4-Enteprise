@@ -17,6 +17,7 @@ import { createKbQualityRoutes } from './kb-quality.js';
 import { createAnalyticsRoutes } from './analytics.js';
 import { createSseRoutes } from './sse.js';
 import { createMcpCrudRoutes } from './mcp-crud.js';
+import { createDatabaseRoutes } from './database.js';
 
 export function createAdminRoute(logger: Logger, registry?: any): Hono {
   const ctx = createAdminContext(logger, registry);
@@ -39,6 +40,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
   app.route('/', createKbQualityRoutes(ctx));
   app.route('/', createAnalyticsRoutes(ctx));
   app.route('/', createSseRoutes(ctx));
+  app.route('/', createDatabaseRoutes(ctx));
 
   logger.info('Admin portal routes registered: /admin + /api/admin/* (with auth, SSE)');
   return app;

@@ -58,18 +58,21 @@ export function getNode(entryId: string, db: Database.Database, logger: Logger):
   return rowToNode(row);
 }
 
-export function getNodeCount(db: Database.Database): number {
+export function getNodeCount(db: Database.Database, projectId?: string): number {
+  if (projectId) {
+    return (db.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ?').get(projectId) as any).cnt;
+  }
   return (db.prepare('SELECT COUNT(*) as cnt FROM graph_nodes').get() as any).cnt;
 }
 
-export function addNode(entryId: string, label: string, type: string, tier: string, db: Database.Database, logger: Logger): GraphNode {
+export function addNode(entryId: string, label: string, type: string, tier: string, db: Database.Database, logger: Logger, projectId = ''): GraphNode {
   const existing = db.prepare('SELECT entry_id FROM graph_nodes WHERE entry_id = ?').get(entryId);
   if (existing) return getNode(entryId, db, logger)!;
   const count = getNodeCount(db);
   const pos = computePosition(count, type, db);
-  db.prepare(`INSERT OR IGNORE INTO graph_nodes (entry_id, label, type, tier, x, y, z, level, cluster_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .run(entryId, label.substring(0, 50), type.toUpperCase(), tier, pos.x, pos.y, pos.z, pos.level, pos.clusterId);
-  autoCreateEdges(entryId, type.toUpperCase(), tier, db);
+  db.prepare(`INSERT OR IGNORE INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(entryId, label.substring(0, 50), type.toUpperCase(), tier, projectId, pos.x, pos.y, pos.z, pos.level, pos.clusterId);
+  autoCreateEdges(entryId, type.toUpperCase(), tier, db, projectId);
   return { id: entryId, label, type: type.toUpperCase(), tier, ...pos };
 }
 
@@ -78,11 +81,13 @@ export function removeNode(entryId: string, db: Database.Database): void {
   db.prepare('DELETE FROM graph_nodes WHERE entry_id = ?').run(entryId);
 }
 
-export function autoCreateEdges(entryId: string, type: string, tier: string, db: Database.Database): void {
-  for (const row of db.prepare('SELECT entry_id FROM graph_nodes WHERE type = ? AND entry_id != ? ORDER BY RANDOM() LIMIT 3').all(type, entryId) as any[]) {
+export function autoCreateEdges(entryId: string, type: string, tier: string, db: Database.Database, projectId = ''): void {
+  const projectFilter = projectId ? ' AND project_id = ?' : '';
+  const projectArgs = projectId ? [projectId] : [];
+  for (const row of db.prepare(`SELECT entry_id FROM graph_nodes WHERE type = ? AND entry_id != ?${projectFilter} ORDER BY RANDOM() LIMIT 3`).all(type, entryId, ...projectArgs) as any[]) {
     db.prepare('INSERT OR IGNORE INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?)').run(entryId, row.entry_id, 0.6, 'TYPE_MATCH');
   }
-  for (const row of db.prepare('SELECT entry_id FROM graph_nodes WHERE tier = ? AND type != ? AND entry_id != ? ORDER BY RANDOM() LIMIT 1').all(tier, type, entryId) as any[]) {
+  for (const row of db.prepare(`SELECT entry_id FROM graph_nodes WHERE tier = ? AND type != ? AND entry_id != ?${projectFilter} ORDER BY RANDOM() LIMIT 1`).all(tier, type, entryId, ...projectArgs) as any[]) {
     db.prepare('INSERT OR IGNORE INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?)').run(entryId, row.entry_id, 0.4, 'TIER_MATCH');
   }
 }

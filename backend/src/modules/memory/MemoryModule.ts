@@ -10,6 +10,9 @@ import type { Logger } from 'pino';
 import { DatabaseManager } from '../../engine/db/database-manager.js';
 import { MemoryEngine } from './engine/index.js';
 import { MemoryToolDispatcher } from './dispatchers/index.js';
+import { ConvertToolResolver } from './ingest/ConvertToolResolver.js';
+import { RegistryOrchestrationGateway } from './ingest/OrchestrationGateway.js';
+import type { ModuleRegistry } from '../ModuleRegistry.js';
 import { MEMORY_TOOL_DEFINITIONS } from './definitions/index.js';
 import { loadConfig } from '../../engine/config.js';
 import { QueryLayer } from '../../engine/query/query-layer.js';
@@ -28,10 +31,12 @@ export class MemoryModule implements IModule {
   private dispatcher!: MemoryToolDispatcher;
   private promotionInterval: ReturnType<typeof setInterval> | null = null;
   private readonly sessionName: string;
+  private readonly registry?: ModuleRegistry;
 
-  constructor(logger: Logger, sessionName?: string) {
+  constructor(logger: Logger, sessionName?: string, registry?: ModuleRegistry) {
     this.logger = logger.child({ module: this.name });
     this.sessionName = sessionName || `kiro-backend-${process.pid}`;
+    this.registry = registry;
   }
 
   get status(): ModuleStatus {
@@ -54,6 +59,17 @@ export class MemoryModule implements IModule {
       
       const queryLayer = new QueryLayer(this.dbManager);
       this.dispatcher = new MemoryToolDispatcher(this.engine, config.workspace, queryLayer);
+
+      // Wire ConvertToolResolver qua dynamic tool (find_tools + execute_dynamic_tool).
+      // Gateway lazy-resolve handlers từ registry tại thời điểm ingest (orchestration đã ready).
+      // Task 10: RegistryGateway khi có registry, NullGateway khi không (graceful fallback).
+      if (this.registry) {
+        const gateway = new RegistryOrchestrationGateway(this.registry);
+        this.dispatcher.setConvertResolver(new ConvertToolResolver(gateway));
+        this.logger.info('ConvertToolResolver wired with RegistryOrchestrationGateway');
+      } else {
+        this.logger.info('No registry available — binary files will be marked unconvertible (no-tool)');
+      }
 
       // Initialize scope promotion service
       const promotionService = new ScopePromotionService(this.dbManager.getDb(), this.logger);
@@ -129,15 +145,21 @@ export class MemoryModule implements IModule {
     for (const def of MEMORY_TOOL_DEFINITIONS) {
       handlers.set(def.name, async (args) => {
         try {
-          // Extract scope context from args (injected by HTTP layer)
-          const userId = (args as any).__userId as string | undefined;
-          if (userId) {
-            this.dispatcher.setScopeContext({ userId });
+          // Extract scope context from args (injected by REST API layer — SA4E-30)
+          const injectedCtx = (args as any)._projectContext;
+          if (injectedCtx) {
+            this.dispatcher.setScopeContext({ userId: injectedCtx.userId || '', projectId: injectedCtx.projectId || '' });
           } else {
-            this.dispatcher.setScopeContext(undefined);
+            // Legacy: try __userId for backward compat
+            const userId = (args as any).__userId as string | undefined;
+            if (userId) {
+              this.dispatcher.setScopeContext({ userId });
+            } else {
+              this.dispatcher.setScopeContext(undefined);
+            }
           }
 
-          const text = this.dispatcher.dispatch(def.name, args as Record<string, unknown>);
+          const text = await this.dispatcher.dispatch(def.name, args as Record<string, unknown>);
           if (text === null) {
             return {
               content: [{ type: 'text', text: `Unknown tool: ${def.name}` }],

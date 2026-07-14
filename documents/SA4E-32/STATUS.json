@@ -1,0 +1,18 @@
+{
+  "ticket": "SA4E-32",
+  "title": "Server-side Document Conversion khi Ingest (qua Dynamic Tool)",
+  "currentPhase": "implementation",
+  "autonomyLevel": "L3",
+  "phases": {
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1 },
+    "specification": { "status": "done", "file": "FSD.md", "version": 1 },
+    "design": { "status": "done", "file": "TDD.md", "version": 1 },
+    "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "version": 1 },
+    "implementation": { "status": "done", "note": "Tasks 1-10 complete. Backend structured response, client cutover (binary → server-side), PBT + IT tests, ConvertServerConfig graceful wiring." },
+    "testing": { "status": "not_started" },
+    "deployment": { "status": "not_started" }
+  },
+  "kiroSpec": ".kiro/specs/ingest-document-conversion/",
+  "notes": "Chua co child convert server (0) -> binary khong content = un-convertible (no-tool). docx/xls client convert van ingest duoc nho nhanh tuong thich nguoc.",
+  "lastUpdated": "2026-07-14"
+}

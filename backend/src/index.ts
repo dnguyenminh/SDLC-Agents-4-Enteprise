@@ -37,7 +37,7 @@ async function main() {
   const registry = new ModuleRegistry(logger);
 
   // Register all modules
-  registry.register(new MemoryModule(logger));
+  registry.register(new MemoryModule(logger, undefined, registry));
   registry.register(new CodeIntelModule(logger));
   registry.register(new OrchestrationModule(logger, registry));
   registry.register(new AnalyticsModule(logger));

@@ -13,13 +13,20 @@ function nodeSize(e) {
   return 4;
 }
 
+// SA4E-30: Extract projectId from URL for data isolation
+const _urlParams = new URLSearchParams(window.location.search);
+const _projectId = _urlParams.get('projectId') || '';
+const _basePath = window.__MCP_BASE || '';
+
 let graph3d = null, allNodes = [], selectedId = null;
 
 async function initGraph() {
   const el = document.getElementById('graph3d');
   if (!el) return;
   try {
-    const r = await fetch(API + '/graph/data?limit=5000');
+    const pidParam = _projectId ? `&projectId=${encodeURIComponent(_projectId)}` : '';
+    const _api = _basePath + '/api/kb';
+    const r = await fetch(_api + '/graph/data?limit=5000' + pidParam);
     const d = await r.json();
     allNodes = d.nodes.map(n => ({
       id: n.id, name: n.summary, type: n.type, tier: n.tier, source: n.source || ''
@@ -66,9 +73,10 @@ function selectGraphNode(n) {
 
 async function loadNodeDetail(id) {
   try {
-    const r = await fetch(API + '/entries/' + id);
+    const _api = _basePath + '/api/kb';
+    const r = await fetch(_api + '/entries/' + id);
     const e = await r.json();
-    const nb = await fetch(API + '/graph/' + id + '/neighbors');
+    const nb = await fetch(_api + '/graph/' + id + '/neighbors');
     const neighbors = await nb.json();
     const panel = document.getElementById('graph-node-detail');
     panel.innerHTML = renderEntryDetail(e) +

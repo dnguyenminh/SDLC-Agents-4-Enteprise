@@ -12,7 +12,7 @@ import { KIND_TO_TYPE } from './constants.js';
 import { computePositionByIndex } from './nodes.js';
 import { buildSpatialEdges, buildCrossClusterEdges } from './spatial.js';
 
-export function insertAllNodes(entries: Array<{ id: string; label: string; type: string; tier: string; groupId?: number }>, db: Database.Database): number {
+export function insertAllNodes(entries: Array<{ id: string; label: string; type: string; tier: string; groupId?: number; projectId?: string }>, db: Database.Database, projectId = ''): number {
   const n = entries.length;
   const typeGroups = new Map<string, number>();
   let typeGroupCounter = 0;
@@ -25,7 +25,7 @@ export function insertAllNodes(entries: Array<{ id: string; label: string; type:
     return typeGroups.get(t)!;
   }
 
-  const insertNode = db.prepare('INSERT OR REPLACE INTO graph_nodes (entry_id, label, type, tier, x, y, z, level, cluster_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+  const insertNode = db.prepare('INSERT OR REPLACE INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   let created = 0;
   const CHUNK = 5000;
   for (let start = 0; start < n; start += CHUNK) {
@@ -36,7 +36,8 @@ export function insertAllNodes(entries: Array<{ id: string; label: string; type:
         const type = entry.type.toUpperCase();
         const gId = resolveGroupId(entry);
         const pos = computePositionByIndex(start + ci, n, type, gId, totalGroups);
-        insertNode.run(entry.id, entry.label.substring(0, 60), type, entry.tier, pos.x, pos.y, pos.z, pos.level, pos.clusterId);
+        const pid = entry.projectId || projectId;
+        insertNode.run(entry.id, entry.label.substring(0, 60), type, entry.tier, pid, pos.x, pos.y, pos.z, pos.level, pos.clusterId);
         created++;
       }
     })();
@@ -44,8 +45,8 @@ export function insertAllNodes(entries: Array<{ id: string; label: string; type:
   return created;
 }
 
-export function syncFromEntries(entries: Array<{ id: string; label: string; type: string; tier: string; groupId?: number }>, db: Database.Database, logger: Logger): { nodesCreated: number; edgesCreated: number } {
-  const nodesCreated = insertAllNodes(entries, db);
+export function syncFromEntries(entries: Array<{ id: string; label: string; type: string; tier: string; groupId?: number; projectId?: string }>, db: Database.Database, logger: Logger, projectId = ''): { nodesCreated: number; edgesCreated: number } {
+  const nodesCreated = insertAllNodes(entries, db, projectId);
   const edgesCreated = buildSpatialEdges(db) + buildCrossClusterEdges(db);
   logger.info({ nodesCreated, edgesCreated }, 'syncFromEntries complete');
   return { nodesCreated, edgesCreated };
@@ -53,7 +54,7 @@ export function syncFromEntries(entries: Array<{ id: string; label: string; type
 
 export function fullSync(logger: Logger): { nodesCreated: number; edgesCreated: number; sources: Record<string, number> } {
   const startTime = Date.now();
-  const allEntries: Array<{ id: string; label: string; type: string; tier: string; groupId?: number }> = [];
+  const allEntries: Array<{ id: string; label: string; type: string; tier: string; groupId?: number; projectId?: string }> = [];
   const ksaGroupMap = new Map<string, number>();
   let groupCounter = 0;
   const sources: Record<string, number> = {};
@@ -76,6 +77,7 @@ export function fullSync(logger: Logger): { nodesCreated: number; edgesCreated: 
       allEntries.push({
         id: `doc-${entry.id}`, label, type, tier: entry.tier || 'SHARED',
         groupId: getKsaGroupId(entry.source),
+        projectId: entry.project_id || serverProjectId,
       });
       sources[type] = (sources[type] || 0) + 1;
     }
@@ -91,7 +93,7 @@ export function fullSync(logger: Logger): { nodesCreated: number; edgesCreated: 
     const module = srcIdx >= 0 && fileParts[srcIdx + 1] ? fileParts[srcIdx + 1] : 'code';
     const moduleKey = `MODULE-${module}`;
     if (!ksaGroupMap.has(moduleKey)) ksaGroupMap.set(moduleKey, groupCounter++);
-    allEntries.push({ id: `sym-${sym.id}`, label, type, tier: 'CODE', groupId: ksaGroupMap.get(moduleKey) });
+    allEntries.push({ id: `sym-${sym.id}`, label, type, tier: 'CODE', groupId: ksaGroupMap.get(moduleKey), projectId: loadConfig().projectId });
     sources[type] = (sources[type] || 0) + 1;
   }
 

@@ -53,7 +53,7 @@ export function createKbTagsRoutes(ctx: AdminContext): Hono {
     if (user instanceof Response) return user;
     const permCheck = ctx.requirePermission(c, user.userId, 'KB_READ');
     if (permCheck instanceof Response) return permCheck;
-    const tagCounts = getAllKbTags();
+    const tagCounts = getAllKbTags(ctx.getRequestProjectId(c));
     if (ctx.kbTags['__tag_registry__']) {
       for (const tag of ctx.kbTags['__tag_registry__']) {
         if (!tagCounts[tag]) tagCounts[tag] = { count: 0, lastUsed: new Date().toISOString() };

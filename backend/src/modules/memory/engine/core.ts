@@ -8,6 +8,8 @@ import type {
   KnowledgeEntry, SearchResult,
   KBScope, ScopeContext, ToolUsageRow,
 } from '../models.js';
+import type { ProjectContext, ScopeFilter } from '../ProjectContext.js';
+import { buildReadFilter } from '../IsolationLayer.js';
 import { MemoryEngineCrud } from './crud.js';
 
 export class MemoryEngine extends MemoryEngineCrud {
@@ -39,7 +41,9 @@ export class MemoryEngine extends MemoryEngineCrud {
 
   search(query: string, limit = 10, tier?: string, type?: string, scopeCtx?: ScopeContext): SearchResult[] {
     const ftsQuery = query.replace(/[^\w\s*":.]/g, ' ').trim() || '*';
-    const clauses: string[] = ['knowledge_fts MATCH ?', 'ke.archived = 0'];
+    // SA4E-31: isolate MATCH in a subquery so the scope filter (incl. EXISTS
+    // sub-select for SHARED grants) does not break FTS index usage.
+    const clauses: string[] = ['ke.archived = 0'];
     const params: unknown[] = [ftsQuery];
     if (tier) { clauses.push('ke.tier = ?'); params.push(tier); }
     if (type) { clauses.push('ke.type = ?'); params.push(type); }
@@ -48,10 +52,11 @@ export class MemoryEngine extends MemoryEngineCrud {
       params.push(...this.buildScopeParams(scopeCtx));
     }
     params.push(limit);
-    const sql = `SELECT ke.*, rank FROM knowledge_fts
-      JOIN knowledge_entries ke ON knowledge_fts.rowid = ke.id
+    const sql = `SELECT ke.*, f.rank FROM
+      (SELECT rowid, rank FROM knowledge_fts WHERE knowledge_fts MATCH ?) f
+      JOIN knowledge_entries ke ON f.rowid = ke.id
       WHERE ${clauses.join(' AND ')}
-      ORDER BY rank LIMIT ?`;
+      ORDER BY f.rank LIMIT ?`;
     try {
       const rows = this.db.prepare(sql).all(...params) as any[];
       return rows.map(row => {
@@ -161,19 +166,18 @@ export class MemoryEngine extends MemoryEngineCrud {
     return true;
   }
 
+  // SA4E-31: delegate to IsolationLayer (single source of truth) for scope isolation.
+  private scopeFilter(ctx: ScopeContext, tableAlias?: string): ScopeFilter {
+    const pctx = { projectId: ctx.projectId ?? '', userId: ctx.userId, createdAt: '' } as ProjectContext;
+    return buildReadFilter(pctx, tableAlias);
+  }
+
   buildScopeClause(ctx: ScopeContext, tableAlias?: string): string {
-    const p = tableAlias ? `${tableAlias}.` : '';
-    if (ctx.projectId) {
-      return `(${p}scope = 'SHARED' OR (${p}scope = 'PROJECT' AND (${p}project_id = ? OR ${p}project_id IS NULL)) OR (${p}scope = 'USER' AND ${p}user_id = ?))`;
-    }
-    return `(${p}scope IN ('PROJECT', 'SHARED') OR (${p}scope = 'USER' AND ${p}user_id = ?))`;
+    return this.scopeFilter(ctx, tableAlias).clause;
   }
 
   buildScopeParams(ctx: ScopeContext): unknown[] {
-    if (ctx.projectId) {
-      return [ctx.projectId, ctx.userId];
-    }
-    return [ctx.userId];
+    return [...this.scopeFilter(ctx).params];
   }
 
   // ─── Tool Usage (SA4E-18) ─────────────────────────────────────────

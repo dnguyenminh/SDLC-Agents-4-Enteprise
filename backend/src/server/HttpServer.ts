@@ -22,6 +22,8 @@ import { createErrorHandler } from './middleware/error-handler.js';
 import { rateLimiter } from './middleware/rate-limiter.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { apiKeyAuth } from './middleware/api-key-auth.js';
+import { validateJwtConfig, jwtAuth } from './middleware/jwt-auth.js';
+import { createKbApiRoutes, createToolsApiRoutes } from './routes/kb-api.js';
 import { bodyLimit } from 'hono/body-limit';
 import { getMcpServer, registerTransport } from './mcpServer.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
@@ -55,13 +57,14 @@ export class HttpServer {
 
     // Global middleware
     app.use('*', securityHeaders);
-    app.use('*', bodyLimit({ maxSize: 10 * 1024 * 1024 })); // 10MB max request body
+    app.use('*', bodyLimit({ maxSize: 100 * 1024 * 1024 })); // 100MB max request body
     app.use('*', createRequestLogger(this.logger));
     app.use('/api/admin/*', rateLimiter); // 100 req/min per IP on admin API
     app.use('/api/admin/auth/login', rateLimiter); // Additional login protection (stacked)
 
-    // API key auth on public endpoints (Finding #3)
-    app.use('/api/index/*', apiKeyAuth);
+    // SA4E-30: JWT + X-Project-Id auth on indexing endpoints (mandatory headers)
+    app.use('/api/index/*', jwtAuth);
+    // API key auth on other public endpoints (Finding #3)
     app.use('/api/tags/*', apiKeyAuth);
     app.use('/mcp/*', apiKeyAuth);
     app.onError(createErrorHandler(this.logger));
@@ -79,7 +82,15 @@ export class HttpServer {
     // MCP Config REST API (Story 13 — config persistence)
     this.registerMcpConfigRoutes(app);
 
-    // MCP Streamable HTTP endpoint
+    // SA4E-30: KB REST API with JWT auth
+    const kbApiRoutes = createKbApiRoutes(this.options.registry, this.logger);
+    app.route('/api/v1', kbApiRoutes);
+
+    // SA4E-30: Tools REST API
+    const toolsApiRoutes = createToolsApiRoutes(this.options.registry, this.logger);
+    app.route('/api/tools', toolsApiRoutes);
+
+    // MCP Streamable HTTP endpoint (kept for extension connection + tools/list)
     app.all('/mcp', async (c) => {
       const transport = new WebStandardStreamableHTTPServerTransport();
       registerTransport(transport);

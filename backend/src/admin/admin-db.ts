@@ -1,4 +1,4 @@
-export { getAdminDb, getIndexDbPath, hashPassword, verifyPassword, generateToken } from './db/core.js';
+export { getAdminDb, getIndexDbPath, getActiveEngine, getActiveDbConfig, resetAdminDb, hashPassword, verifyPassword, generateToken } from './db/core.js';
 
 export { getUsers, getUserById, getUserByUsername, createUser, updateUserStatus, deleteUser, resetUserPassword, changePassword, updateLastLogin } from './db/users.js';
 

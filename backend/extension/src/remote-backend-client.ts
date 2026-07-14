@@ -4,10 +4,8 @@ import { ServerStatus } from "./types";
 import { AuthManager } from "./auth/AuthManager";
 import * as http from "http";
 import * as https from "https";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { z } from "zod";
 import { executeLocalTool, wrapToolArguments, getLocalToolDefinitions } from "./backend-local-tools";
+import { getProjectId } from "./extension";
 
 /** Tools that execute locally without forwarding to backend */
 const LOCAL_TOOLS = new Set(["stream_write_file", "embed_image"]);
@@ -24,7 +22,6 @@ export class RemoteBackendClient implements vscode.Disposable {
   private _wrapperPort: number | null = null;
   private readonly _onStatusChange = new vscode.EventEmitter<ServerStatus>();
   readonly onStatusChange = this._onStatusChange.event;
-  private mcpClient: Client | null = null;
   private httpServer: http.Server | null = null;
   private requestId = 0;
   private readonly _onNotification = new vscode.EventEmitter<{ method: string; params?: any }>();
@@ -53,17 +50,10 @@ export class RemoteBackendClient implements vscode.Disposable {
     this.setStatus("starting");
     try {
       await this.checkHealth();
-      this.mcpClient = new Client({ name: "kiro-sdlc-extension", version: "2.0.0" }, { capabilities: {} });
-      this.mcpClient.fallbackNotificationHandler = async (n) => { this._onNotification.fire({ method: n.method, params: n.params }); };
-      const url = new URL(`${this.backendUrl}/mcp`);
-      const token = this.authManager?.getTokenSync();
-      const requestInit: Record<string, any> = {};
-      if (token) { requestInit.headers = { "Authorization": `Bearer ${token}` }; }
-      const transport = new StreamableHTTPClientTransport(url, { requestInit });
-      await this.mcpClient.connect(transport);
+      // SA4E-30: REST-only connection — no MCP client needed
       await this.startLocalServer();
       this.setStatus("running");
-      this.outputChannel.appendLine(`[RemoteBackendClient] Connected to ${this.backendUrl}`);
+      this.outputChannel.appendLine(`[RemoteBackendClient] Connected to ${this.backendUrl} (REST mode)`);
     } catch (err: any) {
       this.setStatus("crashed");
       this.outputChannel.appendLine(`[RemoteBackendClient] Connection failed: ${err.message}`);
@@ -127,8 +117,11 @@ export class RemoteBackendClient implements vscode.Disposable {
     let jsonRpc: any;
     try { jsonRpc = JSON.parse(body); } catch (err) { this.outputChannel.appendLine(`[WrapperServer] JSON parse error: ${(err as Error).message}`); res.writeHead(400); res.end('{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"Parse error"}}'); return; }
     if (jsonRpc.id === undefined) jsonRpc.id = ++this.requestId;
-    if (!this.mcpClient) { res.writeHead(503); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, error: { code: -32002, message: "Backend not connected" } })); return; }
     try {
+      if (jsonRpc.method === "tools/list") {
+        const tools = await this.restGetTools();
+        res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, result: { tools } })); return;
+      }
       if (jsonRpc.method === "tools/call" && jsonRpc.params) {
         const name = jsonRpc.params.name as string;
         const args = (jsonRpc.params.arguments || {}) as Record<string, unknown>;
@@ -136,23 +129,73 @@ export class RemoteBackendClient implements vscode.Disposable {
           const result = await executeLocalTool(name, args);
           res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, result })); return;
         }
-        jsonRpc.params.arguments = wrapToolArguments(name, args);
+        const finalArgs = wrapToolArguments(name, args);
+        const result = await this.restCallTool(name, finalArgs);
+        res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, result })); return;
       }
-      const response = await this.mcpClient.request({ method: jsonRpc.method, params: jsonRpc.params }, z.any());
-      if (jsonRpc.method === "tools/list") { this.injectLocalTools(response); }
-      res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, result: response }));
+      res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, error: { code: -32601, message: `Method not supported: ${jsonRpc.method}` } }));
     } catch (err: any) {
+      this.outputChannel.appendLine(`[WrapperServer] Error: ${err.message}`);
       res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, error: { code: err.code || -32603, message: err.message } }));
     }
   }
 
-  /** Merge local tool definitions into a tools/list response (deduped by name). */
-  private injectLocalTools(response: any): void {
-    if (!response || !Array.isArray(response.tools)) { return; }
-    const existing = new Set(response.tools.map((t: any) => t.name));
-    for (const def of getLocalToolDefinitions()) {
-      if (!existing.has(def.name)) { response.tools.push(def); }
-    }
+  /** SA4E-30: GET /api/tools from backend via http module. */
+  private restGetTools(): Promise<any[]> {
+    return new Promise((resolve) => {
+      const url = new URL(`${this.backendUrl}/api/tools`);
+      const opts = { hostname: url.hostname, port: url.port, path: url.pathname, method: "GET", headers: this.buildAuthHeaders() };
+      const r = http.request(opts, (resp) => {
+        let data = "";
+        resp.on("data", (c) => { data += c; });
+        resp.on("end", () => {
+          try {
+            const json = JSON.parse(data);
+            const tools = json.tools || [];
+            const existing = new Set(tools.map((t: any) => t.name));
+            for (const def of getLocalToolDefinitions()) { if (!existing.has(def.name)) tools.push(def); }
+            resolve(tools);
+          } catch { resolve(getLocalToolDefinitions()); }
+        });
+      });
+      r.on("error", () => resolve(getLocalToolDefinitions()));
+      r.setTimeout(5000, () => { r.destroy(); resolve(getLocalToolDefinitions()); });
+      r.end();
+    });
+  }
+
+  /** SA4E-30: POST /api/tools/execute to backend via http module. */
+  private restCallTool(name: string, args: Record<string, unknown>): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const url = new URL(`${this.backendUrl}/api/tools/execute`);
+      const payload = JSON.stringify({ tool_name: name, arguments: args });
+      const opts = { hostname: url.hostname, port: url.port, path: url.pathname, method: "POST", headers: { ...this.buildAuthHeaders(), "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload).toString() } };
+      const r = http.request(opts, (resp) => {
+        let data = "";
+        resp.on("data", (c) => { data += c; });
+        resp.on("end", () => {
+          try {
+            const json = JSON.parse(data);
+            if (json.error) { reject(new Error(json.error.message || JSON.stringify(json.error))); return; }
+            resolve(json.data || { content: [{ type: "text", text: JSON.stringify(json.data) }], isError: false });
+          } catch (e) { reject(new Error(`Parse error: ${data.substring(0, 200)}`)); }
+        });
+      });
+      r.on("error", (e) => reject(e));
+      r.setTimeout(30000, () => { r.destroy(); reject(new Error("Timeout")); });
+      r.write(payload);
+      r.end();
+    });
+  }
+
+  /** Build mandatory headers: JWT Bearer token + X-Project-Id. */
+  private buildAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {};
+    const token = this.authManager?.getTokenSync();
+    if (token) { headers["Authorization"] = `Bearer ${token}`; }
+    const projectId = getProjectId();
+    if (projectId && projectId !== "default") { headers["X-Project-Id"] = projectId; }
+    return headers;
   }
 
   async disconnect(): Promise<void> {
@@ -160,7 +203,6 @@ export class RemoteBackendClient implements vscode.Disposable {
       await new Promise<void>((resolve) => this.httpServer!.close(() => resolve()));
       this.httpServer = null;
     }
-    if (this.mcpClient) { await this.mcpClient.close(); this.mcpClient = null; }
     this.setStatus("stopped");
   }
 

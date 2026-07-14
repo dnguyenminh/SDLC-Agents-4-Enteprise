@@ -2,6 +2,7 @@
 name: dev-agent
 label: Developer
 phase: implementation
+tools: ["read", "write", "shell", "@mcp"]
 outputDoc: source_code.md
 ---
 

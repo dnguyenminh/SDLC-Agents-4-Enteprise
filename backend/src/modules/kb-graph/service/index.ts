@@ -47,12 +47,12 @@ export class SqliteGraphService {
     return result;
   }
 
-  getNodeCount(): number {
-    return nodes.getNodeCount(getAdminDb());
+  getNodeCount(projectId?: string): number {
+    return nodes.getNodeCount(getAdminDb(), projectId);
   }
 
-  addNode(entryId: string, label: string, type: string, tier: string): GraphNode {
-    return nodes.addNode(entryId, label, type, tier, getAdminDb(), this.logger);
+  addNode(entryId: string, label: string, type: string, tier: string, projectId = ''): GraphNode {
+    return nodes.addNode(entryId, label, type, tier, getAdminDb(), this.logger, projectId);
   }
 
   removeNode(entryId: string): void {
@@ -67,16 +67,16 @@ export class SqliteGraphService {
     getAdminDb().prepare('INSERT OR IGNORE INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?)').run(source, target, weight, relType);
   }
 
-  getAllPositions(): { nodes: { id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[]; total: number } {
-    return spatial.getAllPositions(getAdminDb());
+  getAllPositions(projectId?: string): { nodes: { id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[]; total: number } {
+    return spatial.getAllPositions(getAdminDb(), projectId);
   }
 
-  spatialQuery(params: SpatialQueryParams): SpatialGraphResult {
-    return spatial.spatialQuery(params, getAdminDb(), this.logger);
+  spatialQuery(params: SpatialQueryParams, projectId?: string): SpatialGraphResult {
+    return spatial.spatialQuery(params, getAdminDb(), this.logger, projectId);
   }
 
-  syncFromEntries(entries: Array<{ id: string; label: string; type: string; tier: string; groupId?: number }>): { nodesCreated: number; edgesCreated: number } {
-    return sync.syncFromEntries(entries, getAdminDb(), this.logger);
+  syncFromEntries(entries: Array<{ id: string; label: string; type: string; tier: string; groupId?: number; projectId?: string }>, projectId = ''): { nodesCreated: number; edgesCreated: number } {
+    return sync.syncFromEntries(entries, getAdminDb(), this.logger, projectId);
   }
 
   computePosition(index: number, type: string) {
@@ -87,8 +87,8 @@ export class SqliteGraphService {
     return nodes.computePositionByIndex(i, total, type, groupId, groupCount);
   }
 
-  autoCreateEdges(entryId: string, type: string, tier: string): void {
-    nodes.autoCreateEdges(entryId, type, tier, getAdminDb());
+  autoCreateEdges(entryId: string, type: string, tier: string, projectId = ''): void {
+    nodes.autoCreateEdges(entryId, type, tier, getAdminDb(), projectId);
   }
 
   rowToNode(row: any): GraphNode {

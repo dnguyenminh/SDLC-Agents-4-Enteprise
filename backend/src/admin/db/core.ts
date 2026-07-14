@@ -15,10 +15,32 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const config = loadConfig();
 
-const DB_PATH = path.resolve(getWorkspacePath(), config.dataDir, 'admin.db');
+const DATA_DIR = path.resolve(getWorkspacePath(), config.dataDir);
+const DB_PATH = path.resolve(DATA_DIR, 'admin.db');
 
 export function getIndexDbPath(): string {
   return path.resolve(getWorkspacePath(), config.dataDir, config.sqliteDbPath);
+}
+
+/** Get active database engine from database.json config */
+export function getActiveEngine(): string {
+  try {
+    const configPath = path.join(DATA_DIR, 'database.json');
+    if (!fs.existsSync(configPath)) return 'sqlite';
+    const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    return raw.activeEngine || 'sqlite';
+  } catch { return 'sqlite'; }
+}
+
+/** Get connection config for the active engine */
+export function getActiveDbConfig() {
+  try {
+    const configPath = path.join(DATA_DIR, 'database.json');
+    if (!fs.existsSync(configPath)) return { engine: 'sqlite' as const, dbPath: DB_PATH };
+    const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    if (raw.activeEngine === 'sqlite' || !raw.activeEngine) return { engine: 'sqlite' as const, dbPath: DB_PATH };
+    return { engine: raw.activeEngine, ...raw.engines[raw.activeEngine] };
+  } catch { return { engine: 'sqlite' as const, dbPath: DB_PATH }; }
 }
 
 let db: Database.Database | null = null;
@@ -34,4 +56,12 @@ export function getAdminDb(): Database.Database {
     seedDefaults(db);
   }
   return db;
+}
+
+/** Reset cached DB instance (used after migration to force reconnect) */
+export function resetAdminDb(): void {
+  if (db) {
+    db.close();
+    db = null;
+  }
 }
