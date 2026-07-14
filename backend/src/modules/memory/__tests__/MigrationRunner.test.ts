@@ -71,9 +71,9 @@ describe('SA4E-27 UT — MigrationRunner', () => {
   it('UT-MR-02: applies migration v1 (add project_id column)', () => {
     const runner = new MigrationRunner(testCtx.db);
     const result = runner.run();
-    expect(result.applied).toBe(1);
+    expect(result.applied).toBe(2);
     expect(result.skipped).toBe(0);
-    expect(result.total).toBe(1);
+    expect(result.total).toBe(2);
 
     // Verify column exists
     const info = testCtx.db.prepare('PRAGMA table_info(knowledge_entries)').all() as any[];
@@ -85,11 +85,12 @@ describe('SA4E-27 UT — MigrationRunner', () => {
   it('UT-MR-03: records migration version in schema_migrations', () => {
     const runner = new MigrationRunner(testCtx.db);
     runner.run();
-    const rows = testCtx.db.prepare('SELECT * FROM schema_migrations').all() as any[];
-    expect(rows.length).toBe(1);
+    const rows = testCtx.db.prepare('SELECT * FROM schema_migrations ORDER BY version').all() as any[];
+    expect(rows.length).toBe(2);
     expect(rows[0].version).toBe(1);
     expect(rows[0].name).toBe('add_project_id_column');
-    expect(rows[0].applied_at).toBeTruthy();
+    expect(rows[1].version).toBe(2);
+    expect(rows[1].name).toBe('add_workspace_id_column');
   });
 
   it('UT-MR-04: second run is idempotent (skips already applied)', () => {
@@ -97,20 +98,20 @@ describe('SA4E-27 UT — MigrationRunner', () => {
     runner.run();
     const result2 = runner.run();
     expect(result2.applied).toBe(0);
-    expect(result2.skipped).toBe(1);
+    expect(result2.skipped).toBe(2);
   });
 
   it('UT-MR-05: getAppliedVersions returns applied version numbers', () => {
     const runner = new MigrationRunner(testCtx.db);
     runner.run();
-    expect(runner.getAppliedVersions()).toEqual([1]);
+    expect(runner.getAppliedVersions()).toEqual([1, 2]);
   });
 
   it('UT-MR-06: getCurrentVersion returns max applied version', () => {
     const runner = new MigrationRunner(testCtx.db);
     expect(runner.getCurrentVersion()).toBe(0);
     runner.run();
-    expect(runner.getCurrentVersion()).toBe(1);
+    expect(runner.getCurrentVersion()).toBe(2);
   });
 
   it('UT-MR-07: handles duplicate column gracefully (SA4E-26 leftover)', () => {
@@ -122,7 +123,7 @@ describe('SA4E-27 UT — MigrationRunner', () => {
     expect(() => runner.run()).not.toThrow();
 
     // Should still record as applied
-    expect(runner.getAppliedVersions()).toEqual([1]);
+    expect(runner.getAppliedVersions()).toEqual([1, 2]);
   });
 
   it('UT-MR-08: creates indexes even when column already exists', () => {
@@ -153,7 +154,7 @@ describe('SA4E-27 UT — MigrationRunner', () => {
     const runner2 = new MigrationRunner(testCtx.db);
     expect(() => runner2.run()).not.toThrow();
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('DB version (99) ahead of code (1)'),
+      expect.stringContaining('DB version (99) ahead of code (2)'),
     );
     warnSpy.mockRestore();
   });
