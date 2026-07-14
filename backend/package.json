@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --ignore '.code-intel/**' src/index.ts",
-    "build": "tsc && xcopy src\\viewer dist\\viewer /E /I /Y /Q",
+    "build": "tsc && node -e \"const fs=require('fs');const path=require('path');function cp(s,d){if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});for(const f of fs.readdirSync(s)){const sp=path.join(s,f),dp=path.join(d,f);fs.statSync(sp).isDirectory()?cp(sp,dp):fs.copyFileSync(sp,dp);}}cp('src/viewer','dist/viewer');\"",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
