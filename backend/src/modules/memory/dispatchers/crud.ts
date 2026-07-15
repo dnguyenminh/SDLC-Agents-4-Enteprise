@@ -7,6 +7,7 @@ import { validateReadAccess, validateMutationOwnership, buildIngestFileDeleteCla
 import { tierForType, inferOwner, resolvePath } from './helpers.js';
 import { classifyFormat, normalizeExt } from '../ingest/FormatClassifier.js';
 import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
+import { createSupersessionChain } from './supersession.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'memory-tool-dispatcher' });
@@ -34,6 +35,14 @@ export function handleIngest(engine: MemoryEngine, scopeCtx: ScopeContext | unde
     owner: inferOwner(source),
   });
   engine.auditLog('INGEST', id);
+
+  const supersedesId = a.supersedes_id as number | undefined;
+  if (supersedesId) {
+    const chainResult = createSupersessionChain(engine, id, supersedesId);
+    if (!chainResult.ok) {
+      return `Knowledge entry created: id=${id} — supersession failed: ${chainResult.reason}`;
+    }
+  }
 
   if (tagAnalyzer) {
     logger.debug({ entryId: id, contentLength: content.length }, '[TagAnalyzer] Starting analysis');

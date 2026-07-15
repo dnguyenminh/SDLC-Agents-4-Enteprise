@@ -1,0 +1,120 @@
+﻿<mxGraphModel dx="826" dy="417" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+    <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="sys-boundary" value="KB Evolution Memory System" style="shape=umlFrame;whiteSpace=wrap;html=1;width=180;height=30;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=10;fontSize=14;fillColor=#f5f5f5;strokeColor=#666666;" parent="1" vertex="1">
+            <mxGeometry x="250" y="40" width="1100" height="1100" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor-agent" value="AI Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" parent="1" vertex="1">
+            <mxGeometry x="80" y="280" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor-system" value="System&#10;(Background)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" parent="1" vertex="1">
+            <mxGeometry x="80" y="700" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor-admin" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" parent="1" vertex="1">
+            <mxGeometry x="1460" y="500" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-search" value="UC-01: Search KB&#10;with Temporal Decay&#10;[P0 - CRITICAL]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="380" y="120" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-expire" value="UC-02: Exclude&#10;Expired Entries&#10;[P0 - CRITICAL]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="660" y="120" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-outcome" value="UC-03: Report&#10;Outcome (success/fail)&#10;[P1 - HIGH]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="380" y="280" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-version" value="UC-04: Create Entry&#10;with Supersedes Link&#10;[P1 - HIGH]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="660" y="280" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-stagnation" value="UC-05: Detect&#10;Stagnation Patterns&#10;[P1 - HIGH]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="380" y="440" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-confidence" value="UC-06: Run&#10;Confidence Decay Job&#10;[P2 - MEDIUM]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="430" y="794" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-epoch" value="UC-07: Trigger&#10;Epoch Boundary&#10;[P2 - MEDIUM]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="410" y="610" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-predictive" value="UC-08: Calculate&#10;Predictive Score&#10;[P3 - LOWER]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="380" y="954" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-verify" value="UC-09: Verify Entry&#10;(clear needs_verification)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="940" y="440" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-config" value="UC-10: Configure&#10;Decay Parameters" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="940" y="600" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-audit" value="UC-11: View Expired&#10;/ Superseded Entries" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="940" y="280" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=none;" parent="1" source="actor-agent" target="uc-search" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=none;" parent="1" source="actor-agent" target="uc-outcome" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=none;" parent="1" source="actor-agent" target="uc-version" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=none;" parent="1" source="actor-system" target="uc-stagnation" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=none;" parent="1" source="actor-system" target="uc-confidence" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=none;" parent="1" source="actor-system" target="uc-epoch" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=none;" parent="1" source="actor-system" target="uc-predictive" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=none;" parent="1" source="actor-admin" target="uc-verify" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=none;" parent="1" source="actor-admin" target="uc-config" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=none;" parent="1" source="actor-admin" target="uc-audit" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-inc1" value="&lt;&lt;include&gt;&gt;" style="edgeStyle=none;dashed=1;endArrow=open;endSize=12;fontSize=10;" parent="1" source="uc-search" target="uc-expire" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-inc2" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=none;dashed=1;endArrow=open;endSize=12;fontSize=10;" parent="1" source="uc-epoch" target="uc-verify" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-title" value="Legend" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+            <mxGeometry x="940" y="800" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p0" value="" style="ellipse;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+            <mxGeometry x="940" y="840" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p0-text" value="P0 - CRITICAL" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="965" y="834" width="100" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p1" value="" style="ellipse;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+            <mxGeometry x="940" y="870" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p1-text" value="P1 - HIGH" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="965" y="864" width="100" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p2" value="" style="ellipse;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+            <mxGeometry x="940" y="900" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p2-text" value="P2 - MEDIUM" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="965" y="894" width="100" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p3" value="" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+            <mxGeometry x="940" y="930" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p3-text" value="P3 - LOWER" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="965" y="924" width="100" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-admin" value="" style="ellipse;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+            <mxGeometry x="940" y="960" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-admin-text" value="Admin Operations" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="965" y="954" width="120" height="24" as="geometry"/>
+        </mxCell>
+    </root>
+</mxGraphModel>

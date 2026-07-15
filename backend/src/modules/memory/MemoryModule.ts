@@ -17,7 +17,10 @@ import { MEMORY_TOOL_DEFINITIONS } from './definitions/index.js';
 import { loadConfig } from '../../engine/config.js';
 import { QueryLayer } from '../../engine/query/query-layer.js';
 import { migrate001AddScopeColumns } from './migrations/001-add-scope-columns.js';
+import { migrate002AddEvolutionColumns } from './migrations/002-add-evolution-columns.js';
 import { ScopePromotionService } from './promotion/index.js';
+import { startScheduler, stopScheduler } from './evolution/Scheduler.js';
+import type { SchedulerHandles } from './evolution/Scheduler.js';
 import { TagAnalyzerService } from './llm/analyzer.js';
 import { LLMService } from './llm/LLMService.js';
 import type { ScopeContext } from './models.js';
@@ -31,6 +34,7 @@ export class MemoryModule implements IModule {
   private dispatcher!: MemoryToolDispatcher;
   private promotionInterval: ReturnType<typeof setInterval> | null = null;
   private readonly sessionName: string;
+  private schedulerHandles: SchedulerHandles | null = null;
   private readonly registry?: ModuleRegistry;
 
   constructor(logger: Logger, sessionName?: string, registry?: ModuleRegistry) {
@@ -52,6 +56,7 @@ export class MemoryModule implements IModule {
       
       // Run migrations for existing DBs
       migrate001AddScopeColumns(this.dbManager.getDb());
+      migrate002AddEvolutionColumns(this.dbManager.getDb());
 
       this.engine = new MemoryEngine(this.dbManager.getDb());
       // Start session with configurable name (unique per instance)
@@ -101,6 +106,9 @@ export class MemoryModule implements IModule {
       }
 
       // Start periodic promotion scan (every 1 hour)
+      // Start evolution scheduler (decay + stagnation detection)
+      this.schedulerHandles = startScheduler(this.dbManager.getDb(), this.logger);
+
       const SCAN_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
       this.promotionInterval = setInterval(() => {
         try {
@@ -122,6 +130,10 @@ export class MemoryModule implements IModule {
 
   async shutdown(): Promise<void> {
     this.logger.info('Shutting down memory module');
+    if (this.schedulerHandles) {
+      stopScheduler(this.schedulerHandles);
+      this.schedulerHandles = null;
+    }
     if (this.promotionInterval) {
       clearInterval(this.promotionInterval);
       this.promotionInterval = null;

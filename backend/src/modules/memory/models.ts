@@ -37,6 +37,9 @@ export interface KnowledgeEntry {
   archived: number;
   agent_name: string | null;
   owner: string | null;
+  needs_verification?: number;
+  epoch_id?: string | null;
+  superseded_by?: number | null;
 }
 
 export interface SearchResult {

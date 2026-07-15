@@ -9,14 +9,18 @@ import type {
   KBScope, ScopeContext, ToolUsageRow,
 } from '../models.js';
 import type { ProjectContext, ScopeFilter } from '../ProjectContext.js';
+import type { CompositeScoreOptions } from '../evolution/models.js';
 import { buildReadFilter } from '../IsolationLayer.js';
+import { CompositeScorer } from '../evolution/CompositeScorer.js';
 import { MemoryEngineCrud } from './crud.js';
 
 export class MemoryEngine extends MemoryEngineCrud {
   private currentSessionId: string | null = null;
+  private compositeScorer: CompositeScorer;
 
   constructor(db: Database.Database) {
     super(db);
+    this.compositeScorer = new CompositeScorer(db);
   }
 
   getSessionId(): string | null { return this.currentSessionId; }
@@ -41,9 +45,10 @@ export class MemoryEngine extends MemoryEngineCrud {
 
   search(query: string, limit = 10, tier?: string, type?: string, scopeCtx?: ScopeContext): SearchResult[] {
     const ftsQuery = query.replace(/[^\w\s*":.]/g, ' ').trim() || '*';
-    // SA4E-31: isolate MATCH in a subquery so the scope filter (incl. EXISTS
-    // sub-select for SHARED grants) does not break FTS index usage.
-    const clauses: string[] = ['ke.archived = 0'];
+    const clauses: string[] = [
+      'ke.archived = 0',
+      '(ke.expires_at IS NULL OR ke.expires_at >= datetime(\'now\'))',
+    ];
     const params: unknown[] = [ftsQuery];
     if (tier) { clauses.push('ke.tier = ?'); params.push(tier); }
     if (type) { clauses.push('ke.type = ?'); params.push(type); }
@@ -59,11 +64,48 @@ export class MemoryEngine extends MemoryEngineCrud {
       ORDER BY f.rank LIMIT ?`;
     try {
       const rows = this.db.prepare(sql).all(...params) as any[];
+      return this.applyCompositeScoring(rows);
+    } catch { return []; }
+  }
+
+  private applyCompositeScoring(rows: any[]): SearchResult[] {
+    try {
+      const options = this.readScoringOptions();
+      const scored = rows.map(row => {
+        const { rank, ...entry } = row;
+        const ftsRank = -rank;
+        const { score, breakdown } = this.compositeScorer.computeCompositeScore(
+          entry as KnowledgeEntry,
+          ftsRank,
+          options,
+        );
+        return {
+          entry: entry as KnowledgeEntry,
+          score,
+          matchType: 'composite',
+          breakdown,
+        };
+      });
+      scored.sort((a, b) => b.score - a.score);
+      return scored;
+    } catch {
+      // Fallback to FTS-only on composite scoring error
       return rows.map(row => {
         const { rank, ...entry } = row;
         return { entry: entry as KnowledgeEntry, score: -rank, matchType: 'fts' };
       });
-    } catch { return []; }
+    }
+  }
+
+  private readScoringOptions(): CompositeScoreOptions {
+    try {
+      const row = this.db.prepare(
+        `SELECT value FROM decay_config WHERE key = 'enable_predictive'`,
+      ).get() as { value: string } | undefined;
+      return { enablePredictive: row?.value === 'true' };
+    } catch {
+      return {};
+    }
   }
 
   // ─── Sessions ─────────────────────────────────────────────────────

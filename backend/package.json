@@ -1,6 +1,6 @@
 {
   "name": "sdlc-agent-4-enterprise-server",
-  "version": "1.6.0",
+  "version": "1.8.0",
   "description": "Code Intelligence MCP Server — multi-agent SDLC pipeline with semantic memory, code graph, and draw.io integration",
   "main": "dist/index.js",
   "bin": {
@@ -16,7 +16,7 @@
     "test:watch": "vitest",
     "test:unit": "vitest run src/",
     "test:integration": "vitest run tests/integration/",
-    "test:e2e-api": "vitest run tests/e2e/",
+    "test:e2e-api": "vitest run --config vitest.e2e.config.ts",
     "test:e2e-ui": "npx playwright test"
   },
   "keywords": [

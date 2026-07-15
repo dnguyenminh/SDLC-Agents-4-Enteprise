@@ -16,6 +16,7 @@ import {
   handleTemplates, handleAttachments, handleConversation,
   handleScoring, handlePromote,
 } from './analytics.js';
+import { handleOutcome, handleVerify, handleConfigureDecay } from './evolution.js';
 
 type Args = Record<string, unknown>;
 
@@ -78,6 +79,9 @@ export class MemoryToolDispatcher {
       case 'mem_scoring': return handleScoring(merged);
       case 'mem_admin': return handleAdmin(this.engine, { ...merged, _queryLayer: this.queryLayer, _workspace: this.workspace });
       case 'mem_promote': return handlePromote(this.promotionService, this.scopeCtx, merged);
+      case 'mem_outcome': return handleOutcome(this.engine, merged);
+      case 'mem_verify': return handleVerify(this.engine, merged);
+      case 'mem_configure_decay': return handleConfigureDecay(this.engine, merged);
       default: return null;
     }
   }

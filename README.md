@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.7.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.8.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,21 @@ MIT
 ---
 
 ## Changelog
+
+### v1.8.0 (2026-07-15)
+
+- **KB Evolution System** — CompositeScorer with 5 scoring strategies (Temporal, Confidence, Superseded, Outcome, Predictive), DecayService, EpochService, StagnationDetector, and OutcomeService for knowledge lifecycle management
+- **KB Supersession** — Entries can be marked superseded; old knowledge automatically deprioritized in search results
+- **KB Evolution Dispatcher** — New MCP tools: `mem_decay_cycle`, `mem_epoch_trigger`, `mem_stagnation_report`, `mem_record_outcome`, `mem_supersede`
+- **Security Phases in SDLC** — Added Phase 3.7 (Design Review), 5.7 (Code Review), 6.3 (Penetration Testing), 6.7 (Deployment Review) to pipeline
+- **DevOps as Version Sync PIC** — Phase 7 release process now requires DevOps to scan and sync ALL version references (project-agnostic)
+- **Architecture Pattern Detection** — 7 patterns (ai-agent, microservice, monolith, library, cli-tool, data-pipeline, plugin) with per-pattern pipeline adjustments
+- **Document Templates Overhaul** — Updated BRD, FSD, TDD, STP, STC, UG, DPG, RLN, Security Report, UI-Spec, Design System, Test Report templates
+- **Agent Prompt Improvements** — All 9 agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) updated with enhanced prompts and role boundaries
+- **Steering Rules Expansion** — Added patterns/, role-boundaries, dev-bug-diagnosis, shared-diagrams, phase routing steering files
+- **SA4E-36 BRD** — Business Requirements Document for new feature
+- **SA4E-37 Updates** — Health Check & Auto-Reconnect run log updates
+- **E2E Test Infrastructure** — Dynamic port allocation, env-setup module, separate vitest.e2e.config
 
 ### v1.7.1 (2026-07-15)
 

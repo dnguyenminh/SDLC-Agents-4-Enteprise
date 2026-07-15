@@ -1,0 +1,60 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="System Context — KB Evolution Memory (SA4E-36)" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+      <mxGeometry x="400" y="20" width="500" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="system" value="KB Evolution Memory&#10;(Memory Engine Module)&#10;&#10;• Composite Search Scoring&#10;• Outcome Tracking&#10;• Version Chains&#10;• Background Jobs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=5;" parent="1" vertex="1">
+      <mxGeometry x="500" y="320" width="260" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-ba" value="BA Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+      <mxGeometry x="100" y="200" width="30" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-sa" value="SA Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+      <mxGeometry x="100" y="320" width="30" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-dev" value="DEV Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+      <mxGeometry x="100" y="440" width="30" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="agent-qa" value="QA Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+      <mxGeometry x="100" y="560" width="30" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="scheduler" value="Background&#10;Scheduler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+      <mxGeometry x="550" y="580" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="admin" value="Admin / DevOps" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+      <mxGeometry x="1100" y="200" width="30" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="sqlite" value="SQLite DB&#10;(better-sqlite3)&#10;&#10;knowledge_entries&#10;entry_outcomes&#10;knowledge_graph_edges&#10;search_log&#10;decay_config" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;verticalAlign=top;spacingTop=14;" parent="1" vertex="1">
+      <mxGeometry x="1050" y="380" width="160" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="fts5" value="FTS5 Index&#10;(knowledge_fts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" parent="1" vertex="1">
+      <mxGeometry x="1050" y="560" width="120" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="mem_search&#10;mem_outcome" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="agent-ba" target="system" edge="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="mem_search&#10;mem_outcome" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="agent-sa" target="system" edge="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="mem_search&#10;mem_outcome" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="agent-dev" target="system" edge="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="mem_search&#10;mem_outcome" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="agent-qa" target="system" edge="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="mem_configure_decay&#10;mem_verify&#10;epoch trigger" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="admin" target="system" edge="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="READ/WRITE" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="system" target="sqlite" edge="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="FTS MATCH" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="system" target="fts5" edge="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="decay job&#10;stagnation check&#10;predictive calc" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="scheduler" target="system" edge="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

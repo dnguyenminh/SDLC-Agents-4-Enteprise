@@ -9,7 +9,7 @@ export default defineConfig({
     passWithNoTests: true,
     setupFiles: ['./tests/vitest.setup.ts'],
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
-    exclude: ['node_modules', 'dist', 'tests/e2e/admin-ui.e2e.test.ts', 'tests/e2e/lod-collapse.e2e.test.ts'],
+    exclude: ['node_modules', 'dist', 'tests/e2e/**'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
