@@ -1,0 +1,96 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="Sequence Diagram: Health Check Flow" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="20" width="400" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="Timer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="80" y="80" width="100" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="HealthMonitor" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="280" y="80" width="120" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="MCP Client" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="500" y="80" width="120" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="Child Server" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="720" y="80" width="120" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="StateTracker" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="940" y="80" width="120" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="30" value="interval tick (30s)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="180" as="sourcePoint" />
+        <mxPoint x="330" y="180" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="31" value="getConnectedServers()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="220" as="sourcePoint" />
+        <mxPoint x="990" y="220" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="32" value="servers[]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="990" y="250" as="sourcePoint" />
+        <mxPoint x="340" y="250" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="33" value="Promise.allSettled: client.listTools()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="300" as="sourcePoint" />
+        <mxPoint x="550" y="300" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="34" value="listTools()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="330" as="sourcePoint" />
+        <mxPoint x="770" y="330" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="35" value="tools response" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="770" y="370" as="sourcePoint" />
+        <mxPoint x="560" y="370" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="36" value="result (fulfilled/rejected)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="550" y="410" as="sourcePoint" />
+        <mxPoint x="340" y="410" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="37" value="[fulfilled] resetFailures(server)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="460" as="sourcePoint" />
+        <mxPoint x="990" y="460" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="38" value="[rejected] incrementFailures(server)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="520" as="sourcePoint" />
+        <mxPoint x="990" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="39" value="[failures >= threshold]&#xa;transitionTo(unhealthy)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="580" as="sourcePoint" />
+        <mxPoint x="990" y="580" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="40" value="emit server:unhealthy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="990" y="620" as="sourcePoint" />
+        <mxPoint x="340" y="620" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="41" value="triggerReconnect(server)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="660" as="sourcePoint" />
+        <mxPoint x="340" y="700" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
