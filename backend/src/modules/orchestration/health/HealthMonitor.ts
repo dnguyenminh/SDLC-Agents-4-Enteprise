@@ -64,7 +64,7 @@ export class HealthMonitor {
   private async pingServer(name: string, client: Client): Promise<void> {
     try {
       await Promise.race([
-        client.listTools(),
+        client.ping(),
         this.createTimeout(this.config.pingTimeout),
       ]);
       this.deps.onPingSuccess(name);

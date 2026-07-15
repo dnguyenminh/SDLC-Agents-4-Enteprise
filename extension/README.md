@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.7.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.8.1-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -242,6 +242,14 @@ MIT
 ---
 
 ## Changelog
+
+### v1.8.1 (2026-07-15)
+
+- **SA4E-38: Smart KB Ingest** — New `mem_smart_ingest` + `mem_smart_ingest_cleanup` MCP tools for semantic evaluation before KB ingestion using local Ollama LLM.
+
+### v1.8.0 (2026-07-15)
+
+- **SA4E-36: Multi-tenant RBAC** — Project isolation, per-user KB scoping, access group permissions, impersonation support in Admin Portal.
 
 ### v1.7.0 (2026-07-15)
 

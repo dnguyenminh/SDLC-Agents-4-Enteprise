@@ -79,6 +79,19 @@ export const DEFAULT_HEALTH_CONFIG: HealthCheckConfig = {
   jitterRange: 0.2,
 };
 
+/** Production-tuned config: longer timeouts for stdio servers, less aggressive failure detection */
+export const PRODUCTION_HEALTH_CONFIG: HealthCheckConfig = {
+  interval: 60_000,
+  pingTimeout: 15_000,
+  failureThreshold: 3,
+  initialDelay: 2_000,
+  backoffMultiplier: 2,
+  maxDelay: 60_000,
+  maxRetries: 10,
+  jitterEnabled: true,
+  jitterRange: 0.2,
+};
+
 /** Valid state transitions map */
 export const VALID_TRANSITIONS: Record<ConnectionState, ConnectionState[]> = {
   disconnected: ['connected'],

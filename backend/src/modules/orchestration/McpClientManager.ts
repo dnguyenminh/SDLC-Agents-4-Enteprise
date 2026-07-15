@@ -3,12 +3,14 @@
  * SA4E-37: Added health check, auto-reconnect, and connection state tracking.
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
 import type { Logger } from 'pino';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { ToolDefinition } from '../../types/tool.js';
 import type { ServerConfig } from './McpConfigService.js';
 import type { HealthCheckConfig, ServerStatusEntry, ServerStateChangeCallback, Unsubscribe } from './types/health.js';
-import { DEFAULT_HEALTH_CONFIG } from './types/health.js';
+import { DEFAULT_HEALTH_CONFIG, PRODUCTION_HEALTH_CONFIG } from './types/health.js';
 import { ConnectionStateTracker } from './health/ConnectionStateTracker.js';
 import { HealthMonitor } from './health/HealthMonitor.js';
 import { ReconnectManager } from './health/ReconnectManager.js';
@@ -27,7 +29,7 @@ export class McpClientManager {
 
   constructor(logger: Logger) {
     this.logger = logger.child({ component: 'McpClientManager' });
-    this.healthConfig = { ...DEFAULT_HEALTH_CONFIG };
+    this.healthConfig = { ...PRODUCTION_HEALTH_CONFIG };
     this.stateTracker = new ConnectionStateTracker(logger);
     this.healthMonitor = new HealthMonitor(logger, {
       getConnectedServers: () => this.getConnectedClients(),
@@ -42,7 +44,37 @@ export class McpClientManager {
   }
 
   async initializeAll(): Promise<void> {
-    this.logger.info('Skipping child servers for debugging');
+    const workspace = process.env.CODE_INTEL_WORKSPACE || process.cwd();
+    const dataDir = process.env.CODE_INTEL_DATA_DIR || '.code-intel';
+    const configPath = path.resolve(workspace, dataDir, 'orchestration.json');
+
+    if (!fs.existsSync(configPath)) {
+      this.logger.info({ configPath }, 'No orchestration.json found, skipping child servers');
+      return;
+    }
+
+    let config: { mcpServers: Record<string, ServerConfig> };
+    try {
+      const raw = fs.readFileSync(configPath, 'utf-8');
+      config = JSON.parse(raw);
+    } catch (err) {
+      this.logger.error({ err, configPath }, 'Failed to read orchestration.json');
+      return;
+    }
+
+    const servers = Object.entries(config.mcpServers || {});
+    this.logger.info({ count: servers.length }, 'Connecting child MCP servers');
+
+    for (const [name, serverConfig] of servers) {
+      try {
+        await this.connectServer(name, serverConfig);
+      } catch (err) {
+        this.logger.error({ err, server: name }, 'Failed to connect child server (will retry via health monitor)');
+        // Register so health monitor can attempt reconnect later
+        if (!this.stateTracker.getState(name)) this.stateTracker.register(name);
+        this.serverConfigs.set(name, serverConfig);
+      }
+    }
   }
 
   getProxiedTools(): ToolDefinition[] { return this.proxiedTools; }
@@ -199,7 +231,7 @@ export class McpClientManager {
       this.toolsToServer.set(tool.name, name);
       this.proxiedTools.push({
         name: tool.name, description: tool.description ?? '',
-        category: 'orchestration', inputSchema: tool.inputSchema as unknown as Record<string, unknown>,
+        category: name as ToolDefinition['category'], inputSchema: tool.inputSchema as unknown as Record<string, unknown>,
       });
     }
   }

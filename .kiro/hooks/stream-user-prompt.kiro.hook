@@ -1,13 +1,13 @@
 {
   "enabled": true,
   "name": "Stream User Prompt",
-  "description": "When user submits a prompt, LLM evaluates business/technical value before deciding to ingest into KB.",
-  "version": "5",
+  "description": "When user submits a prompt, use mem_ingest MCP tool to log chat activity.",
+  "version": "3",
   "when": {
     "type": "promptSubmit"
   },
   "then": {
     "type": "askAgent",
-    "prompt": "A user prompt was submitted. You MUST semantically evaluate whether this message carries business or technical contextual value worth preserving in KB for cross-session reference. Ask yourself: 'If I read this entry 3 days later in a different session, would it help me understand a decision, requirement, architecture choice, bug context, or workflow?' — If YES: ingest a summary (max 200 chars) via mem_ingest with params: content=<summary>, type=CONTEXT, source=/chat-prompt, tags=chat,stream,user. — If NO (the message is social, confirmatory, emotional, repetitive, meta-commentary about the conversation itself, or simply does not introduce any new business/technical information regardless of length): do NOT call mem_ingest. Do NOT add commentary either way."
+    "prompt": "A user prompt was submitted. Use the mem_ingest MCP tool to log a summary of the user message (max 200 chars). Parameters: content=<user message summarized>, type=CONTEXT, source=/chat-prompt, tags=chat,stream,user. Do NOT add commentary."
   }
 }

@@ -31,12 +31,12 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
           const serverToggles = ctx.toolToggles[name] || {};
           const isConnected = clientManager?.isServerConnected?.(name) ?? false;
           const actualToolCount = clientManager?.getServerToolCount?.(name) ?? 0;
-          const configTools = cfg.autoApprove || [];
+          const configTools = cfg.tools || cfg.autoApprove || [];
           let tools: any[];
           if (isConnected && actualToolCount > 0) {
             const proxied = (clientManager?.getProxiedTools?.() || []).filter((t: any) => t.category === name);
-            tools = proxied.map((t: any) => ({ name: t.name, enabled: serverToggles[t.name] !== false }));
-          } else tools = configTools.map((t: string) => ({ name: t, enabled: serverToggles[t] !== false }));
+            tools = proxied.map((t: any) => ({ name: t.name, description: t.description || '', enabled: serverToggles[t.name] !== false }));
+          } else tools = configTools.map((t: string) => ({ name: t, description: '', enabled: serverToggles[t] !== false }));
           return {
             id: name, name, url: cfg.url || '', type: cfg.type || cfg.transportType || 'stdio',
             transportType: cfg.transportType || cfg.type || 'stdio',
@@ -49,11 +49,13 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
     }
     const allHandlers = ctx.registry?.getToolHandlers?.();
     if (allHandlers) {
+      const allDefs = ctx.registry?.getAllToolDefinitions?.() || [];
+      const defMap = new Map(allDefs.map((d: any) => [d.name, d.description || '']));
       const internalTools = Array.from(allHandlers.keys());
       servers.push({
         id: 'code-intel', name: 'code-intel', url: 'internal', type: 'internal',
         transportType: 'internal', command: '', args: [], env: {}, disabled: false,
-        status: 'running', tools: internalTools.map((t: unknown) => ({ name: t as string, enabled: true })),
+        status: 'running', tools: internalTools.map((t: unknown) => ({ name: t as string, description: defMap.get(t as string) || '', enabled: true })),
       });
     }
     const allowedServers = (permCheck.roleData as { allowedServers?: string[] })?.allowedServers;

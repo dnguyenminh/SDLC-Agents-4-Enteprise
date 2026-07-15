@@ -18,6 +18,10 @@ function createMockLogger() {
 
 function createMockClient(shouldReject = false) {
   return {
+    ping: vi.fn(() => {
+      if (shouldReject) return Promise.reject(new Error('connection lost'));
+      return Promise.resolve({});
+    }),
     listTools: vi.fn(() => {
       if (shouldReject) return Promise.reject(new Error('connection lost'));
       return Promise.resolve({ tools: [] });
@@ -86,8 +90,8 @@ describe('HealthMonitor', () => {
       await monitor.runCycle();
       expect(deps.onPingSuccess).toHaveBeenCalledWith('s1');
       expect(deps.onPingSuccess).toHaveBeenCalledWith('s2');
-      expect(client1.listTools).toHaveBeenCalled();
-      expect(client2.listTools).toHaveBeenCalled();
+      expect(client1.ping).toHaveBeenCalled();
+      expect(client2.ping).toHaveBeenCalled();
     });
 
     it('should call onPingFailed when client.listTools rejects', async () => {
@@ -104,7 +108,7 @@ describe('HealthMonitor', () => {
       monitor = new HealthMonitor(logger, deps, config);
 
       const slowClient = {
-        listTools: vi.fn(() => new Promise(() => {})),
+        ping: vi.fn(() => new Promise(() => {})),
       } as any;
 
       (deps.getConnectedServers as any).mockReturnValue(new Map([['s1', slowClient]]));

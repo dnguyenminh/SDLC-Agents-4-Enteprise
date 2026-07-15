@@ -9,3 +9,4 @@
 | 5 | 2026-07-15 22:20 | qa-agent | test_planning | Create STP.md + STC.md + 2 diagrams + 5 CSV test data files (48 test cases, 100% RTM) | ✅ success | ~60k | 120s |
 | 6 | 2026-07-15 22:30 | dev-agent | implementation | Implement ClassifyService + SmartIngestHandler + tool defs + dispatcher + 33 unit tests + UG.md | ✅ success (419/419 tests pass) | ~100k | 180s |
 | 7 | 2026-07-15 22:38 | qa-agent | testing | Run vitest — 41 test files, 419/419 tests pass, 30.33s duration | ✅ success | ~20k | 30s |
+| 8 | 2026-07-15 22:45 | SM | deployment | UAT approved. Bump v1.8.1, update README + package.json, tag, push to remote | ✅ success | ~20k | 30s |
