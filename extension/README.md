@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.5.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.7.0-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -241,6 +241,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.7.0 (2026-07-15)
+
+- **SA4E-37: Health Check & Auto-Reconnect** — Backend child MCP server connections now auto-recover from silent disconnections with exponential backoff. No extension changes required — backend handles transparently.
 
 ### v1.5.0 (2026-07-13)
 

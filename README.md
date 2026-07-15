@@ -16,7 +16,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.6.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.7.0.vsix
 ```
 
 ### 3. Use
@@ -64,6 +64,19 @@ MIT
 ---
 
 ## Changelog
+
+### v1.7.0 (2026-07-15)
+
+- **SA4E-37: Health Check & Auto-Reconnect for Child MCP Servers** — Periodic monitoring and automatic recovery for child MCP server connections:
+  - `HealthMonitor` — single global `setInterval`, parallel pings via `Promise.allSettled()` with 5s timeout
+  - `ReconnectManager` — exponential backoff (1s→30s cap) with ±20% jitter, transport-specific reconnect (kill+respawn for stdio)
+  - `ConnectionStateTracker` — per-server state machine (connected→unhealthy→reconnecting→failed), event emission via callback array
+  - `TransportFactory` — shared transport creation (stdio/sse/httpStream)
+  - Enhanced `getServersStatus()` — backward-compatible, adds state, lastHealthCheck, consecutiveFailures, reconnectAttempts
+  - New APIs: `startHealthMonitor()`, `stopHealthMonitor()`, `reconnectServer(name)`, `onServerStateChange(cb)`, `setHealthCheckConfig(cfg)`
+  - `McpClientManager` refactored as Facade coordinating health subsystem
+  - `OrchestrationModule` lifecycle hooks added
+  - 54 unit tests (Vitest + fake timers)
 
 ### v1.6.0 (2026-07-15)
 
