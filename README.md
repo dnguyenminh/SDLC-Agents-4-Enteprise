@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.8.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.8.1.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,17 @@ MIT
 ---
 
 ## Changelog
+
+### v1.8.1 (2026-07-15)
+
+- **SA4E-38: Smart KB Ingest — Local LLM Semantic Evaluation** — New MCP tools `mem_smart_ingest` + `mem_smart_ingest_cleanup` that use local Ollama LLM to evaluate user messages before KB ingestion:
+  - `ClassifyService` — Strategy pattern for LLM-based binary classification (ingest/skip)
+  - Fire-and-forget pattern — hook calls backend tool without consuming chat LLM tokens
+  - Graceful fallback — Ollama unavailable → ingest raw with "unfiltered" tag, batch cleanup later
+  - Deduplication — content hash prevents duplicate KB entries
+  - Feature flag — `SMART_INGEST_ENABLED` env var for instant disable
+  - 33 unit tests, 48 test cases planned (STP/STC)
+  - Full SDLC documentation: BRD, FSD, TDD, STP, STC, UG + 10 draw.io diagrams
 
 ### v1.8.0 (2026-07-15)
 
