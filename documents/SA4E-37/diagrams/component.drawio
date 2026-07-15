@@ -1,0 +1,57 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-37 Component Interactions&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="350" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="mcm" value="&lt;b&gt;McpClientManager&lt;/b&gt;&#10;(Facade)&#10;startHealthMonitor() | stopHealthMonitor()&#10;reconnectServer() | onServerStateChange()&#10;getServersStatus() | setHealthCheckConfig()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="310" y="60" width="320" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="hm" value="&lt;b&gt;HealthMonitor&lt;/b&gt;&#10;start() | stop()&#10;runCycle() | pingServer()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="60" y="280" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="cst" value="&lt;b&gt;ConnectionStateTracker&lt;/b&gt;&#10;register() | transition()&#10;onStateChange() | getAllStatuses()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="340" y="280" width="240" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="rm" value="&lt;b&gt;ReconnectManager&lt;/b&gt;&#10;scheduleReconnect() | cancelReconnect()&#10;attemptReconnect() | calculateDelay()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="660" y="280" width="260" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="types_box" value="&lt;b&gt;types/health.ts&lt;/b&gt;&#10;ConnectionState | HealthCheckConfig&#10;ServerStatusEntry | ServerStateChangeEvent" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="700" y="70" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="child_servers" value="&lt;b&gt;Child MCP Servers&lt;/b&gt;&#10;atlassian | stitch | markitdown" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="450" width="250" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="consumers" value="&lt;b&gt;Event Consumers&lt;/b&gt;&#10;(registered callbacks)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="450" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="timers" value="&lt;b&gt;Node.js Timers&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="700" y="450" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="injects" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="mcm" target="hm" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="injects" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="mcm" target="cst" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="injects" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=9;" edge="1" source="mcm" target="rm" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="client.listTools()" style="endArrow=classic;html=1;dashed=1;strokeColor=#b85450;fontSize=9;" edge="1" source="hm" target="child_servers" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="emit events" style="endArrow=classic;html=1;dashed=1;strokeColor=#9673a6;fontSize=9;" edge="1" source="cst" target="consumers" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="setTimeout" style="endArrow=classic;html=1;dashed=1;strokeColor=#9673a6;fontSize=9;" edge="1" source="rm" target="timers" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="reconnect" style="endArrow=classic;html=1;dashed=1;strokeColor=#d6b656;fontSize=9;" edge="1" source="rm" target="child_servers" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="flow_note" value="Ping Flow: Timer → HealthMonitor.runCycle() → parallel listTools()&#10;Fail Flow: onPingFailed → StateTracker.transition(unhealthy) → ReconnectManager.schedule()&#10;Reconnect: setTimeout → attemptReconnect() → new transport → listTools() → re-register tools" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#ffffc0;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="560" width="500" height="70" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>
