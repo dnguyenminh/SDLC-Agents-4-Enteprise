@@ -6,9 +6,7 @@
  */
 
 import { test, expect, type Page } from '@playwright/test';
-
-const BASE_URL = 'http://localhost:48721';
-const ADMIN_URL = `${BASE_URL}/admin`;
+import { BASE_URL, ADMIN_URL } from './setup/e2e-config.js';
 
 test.setTimeout(60000);
 

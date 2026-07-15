@@ -1,18 +1,16 @@
 /**
  * E2E UI Tests - Admin Portal (Playwright)
- * Tests browser interactions against http://localhost:48721/admin
- * Server MUST be running before executing these tests.
+ * Tests browser interactions against E2E test server (dynamic port).
  *
  * Run: npm run test:e2e-ui (or: npx playwright test)
  */
 
 import { test, expect, type Page } from '@playwright/test';
+import { BASE_URL, ADMIN_URL, E2E_PASSWORD } from './setup/e2e-config.js';
 
-const BASE_URL = 'http://localhost:48721';
-const ADMIN_URL = `${BASE_URL}/admin`;
 // Admin credentials — sourced from env (vuln-0001: no hardcoded default).
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_INITIAL_PASSWORD || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_INITIAL_PASSWORD || E2E_PASSWORD;
 
 // Helper: login and store token
 async function login(page: Page): Promise<void> {

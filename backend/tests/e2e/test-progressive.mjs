@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+const BASE_URL = `http://localhost:${process.env.E2E_PORT || 48721}`;
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
@@ -6,7 +7,7 @@ const logs = [];
 page.on('console', msg => logs.push(msg.text()));
 page.on('pageerror', err => logs.push('ERROR: ' + err.message));
 
-await page.goto('http://localhost:48721/admin');
+await page.goto(`${BASE_URL}/admin`);
 await page.waitForSelector('.login-box');
 await page.fill('input[placeholder="Username"]', 'admin');
 await page.fill('input[placeholder="Password"]', 'admin');

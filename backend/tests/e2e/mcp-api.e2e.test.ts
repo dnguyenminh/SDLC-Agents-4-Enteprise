@@ -1,14 +1,12 @@
 /**
  * E2E API Tests — MCP Server (KSA-284: Backend MCP Server)
- * Tests real HTTP calls to localhost:48721.
- * Server MUST be running before executing these tests.
+ * Tests real HTTP calls to the E2E test server (dynamic port).
  *
  * Run: npx vitest run tests/e2e/mcp-api.e2e.test.ts
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-
-const BASE_URL = 'http://localhost:48721';
+import { BASE_URL } from './setup/e2e-config.js';
 
 // ============================================================
 // Setup: Verify server is running

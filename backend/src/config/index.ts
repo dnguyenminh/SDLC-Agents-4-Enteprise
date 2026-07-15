@@ -67,6 +67,15 @@ function resolveViewerPort(): number {
   return 3202;
 }
 
+function resolvePort(): number {
+  const args = process.argv.slice(2);
+  const idx = args.indexOf('--port');
+  if (idx >= 0 && args[idx + 1]) return parseInt(args[idx + 1], 10);
+  const envPort = process.env['CODE_INTEL_PORT'];
+  if (envPort) return parseInt(envPort, 10);
+  return 48721;
+}
+
 function loadFileConfig(configPath: string): Record<string, any> {
   try {
     if (fs.existsSync(configPath)) {
@@ -126,7 +135,7 @@ export function loadConfig(overrides?: Partial<UnifiedConfig>): UnifiedConfig {
   const dbPath = path.isAbsolute(envDb) ? envDb : path.join(codeIntelDir, envDb);
 
   const raw = {
-    port: parseInt(process.env.CODE_INTEL_PORT || '48721', 10),
+    port: resolvePort(),
     host: process.env.CODE_INTEL_HOST || '0.0.0.0',
     onnxModelPath: process.env.CODE_INTEL_ONNX_MODEL || 'models/model.onnx',
     logLevel: (process.env.CODE_INTEL_LOG_LEVEL || 'info') as any,

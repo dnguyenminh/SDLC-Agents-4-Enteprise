@@ -10,6 +10,7 @@ Published on npm — no source download needed:
 ```bash
 npx sdlc-agent-4-enterprise-server
 # Server at http://localhost:48721
+# Custom port: npx sdlc-agent-4-enterprise-server --port 9000
 ```
 
 ### 2. Install Extension
@@ -64,6 +65,12 @@ MIT
 ---
 
 ## Changelog
+
+### v1.7.1 (2026-07-15)
+
+- **Bug Fix: Database Name empty on Configuration page** — `/api/admin/database/status` now returns connection params (host, port, username, database, ssl) for non-SQLite engines; frontend `loadDbStatus` populates form fields on page load
+- **Enhancement: --port CLI argument** — Backend server port now configurable via `--port` CLI arg (priority: CLI > `CODE_INTEL_PORT` env > default 48721)
+- **Enhancement: E2E tests use dynamic free port** — Test setup finds a free port via `net.createServer(0)` to avoid conflicts with running dev server; shared `e2e-config.ts` exports centralized test URLs
 
 ### v1.7.0 (2026-07-15)
 

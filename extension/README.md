@@ -35,6 +35,7 @@ npm install -g sdlc-agent-4-enterprise-server
 sdlc-agent-4-enterprise-server
 
 # Server runs at http://localhost:48721
+# Custom port: sdlc-agent-4-enterprise-server --port 9000
 ```
 
 2. **Install this extension** (`.vsix` file):

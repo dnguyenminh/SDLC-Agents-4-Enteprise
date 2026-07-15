@@ -1,15 +1,15 @@
 /**
  * E2E API Tests — Admin Portal
- * Tests real HTTP requests against http://localhost:48721
- * Server MUST be running before executing these tests.
+ * Tests real HTTP requests against the E2E test server (dynamic port).
+ * Server is started by global-setup with an isolated temp database.
  *
  * Run: npm run test:e2e-api
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { BASE_URL, API_URL, E2E_PASSWORD } from './setup/e2e-config.js';
 
-const BASE_URL = 'http://localhost:48721';
-const API = `${BASE_URL}/api/admin`;
+const API = API_URL;
 
 // Admin credentials — sourced from env (vuln-0001: no hardcoded default).
 // Set ADMIN_INITIAL_PASSWORD to match the running server's admin password.

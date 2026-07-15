@@ -1,14 +1,13 @@
 /**
  * E2E Tests — Tool Forwarding (KSA-293: Extension Thin Client)
  * Verifies all 52 expected tools are registered, callable, and return valid responses.
- * Server MUST be running before executing these tests.
  *
  * Run: npx vitest run tests/e2e/tool-forwarding.e2e.test.ts
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
+import { BASE_URL } from './setup/e2e-config.js';
 
-const BASE_URL = process.env.CODE_INTEL_TEST_URL || 'http://127.0.0.1:48721';
 const TEST_TIMEOUT = 30000; // 30s per test for heavy DB queries
 
 const EXPECTED_TOOLS = [

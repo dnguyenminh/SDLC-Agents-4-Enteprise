@@ -1,15 +1,14 @@
 /**
  * E2E Multi-Tenant Isolation Tests — KSA-285
  * Tests RBAC permission enforcement, roleData rules, and cross-user isolation.
- * Server MUST be running at http://localhost:48721.
  *
  * Run: npm run test:e2e-api
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { BASE_URL, API_URL } from './setup/e2e-config.js';
 
-const BASE_URL = 'http://localhost:48721';
-const API = `${BASE_URL}/api/admin`;
+const API = API_URL;
 
 const TEST_ID = Date.now().toString().slice(-6);
 

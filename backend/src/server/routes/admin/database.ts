@@ -35,7 +35,11 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
   app.get('/api/admin/database/status', (c) => {
     try {
       const config = configService.load();
-      return c.json({ success: true, data: { engine: config.activeEngine, status: 'connected', details: config.engines.sqlite, lastMigration: config.migration.lastMigration } });
+      const engine = config.activeEngine;
+      const connParams = engine !== 'sqlite' && config.engines[engine]
+        ? { host: config.engines[engine]!.host, port: config.engines[engine]!.port, username: config.engines[engine]!.username, database: config.engines[engine]!.database, ssl: config.engines[engine]!.ssl }
+        : undefined;
+      return c.json({ success: true, data: { engine, status: 'connected', details: config.engines.sqlite, connection: connParams, lastMigration: config.migration.lastMigration } });
     } catch (err) {
       return c.json({ success: false, error: { code: 'STATUS_ERROR', message: (err as Error).message } }, 500);
     }
