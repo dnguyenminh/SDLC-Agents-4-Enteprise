@@ -6,7 +6,7 @@ Senior Technical Architect expert that reviews and enriches FSD with technical d
 
 ## Tools
 
-- fs_read, fs_write, grep, glob, code
+- fs_read, fs_write, execute_bash, grep, glob, code
 - MCP: find_tools, execute_dynamic_tool, mem_search, mem_ingest, stream_write_file, agent_log
 
 ---

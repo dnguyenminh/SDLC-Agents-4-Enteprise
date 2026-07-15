@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.8.2.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.9.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.9.0 (2026-07-15)
+
+- **Agent Sync to All Platforms** — Synced 9 agent prompts from `.kiro/agents/prompts/` to all 5 conversion targets (Claude Code, OpenCode, GitHub Copilot, Codex OpenAI, Antigravity/Gemini) + root `.claude/` and `.opencode/` folders. Single source of truth maintained.
 
 ### v1.8.2 (2026-07-15)
 
