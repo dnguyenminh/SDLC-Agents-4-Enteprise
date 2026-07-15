@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.8.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.8.2.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,12 @@ MIT
 ---
 
 ## Changelog
+
+### v1.8.2 (2026-07-15)
+
+- **SA4E-39: Extension Auth Warning** — Show warning + Login button when session expires, StatusBarManager wiring, HttpClient auth-guard prevents 401 spam and silent KB ingestion failures.
+- **SA4E-40: Admin Dashboard 401 Fix** — Stop polling on token expiry, auto-redirect to LoginPage, prevent server log flood.
+- **Version Sync** — All README badges + changelogs now consistent. Added `version-sync-check` hook to prevent future drift.
 
 ### v1.8.1 (2026-07-15)
 
