@@ -34,10 +34,12 @@ export class OrchestrationModule implements IModule {
   async initialize(): Promise<void> {
     this.logger.info('Initializing orchestration module');
     await this.clientManager.initializeAll();
+    this.clientManager.startHealthMonitor();
     this._status = 'ready';
   }
 
   async shutdown(): Promise<void> {
+    this.clientManager.stopHealthMonitor();
     await this.clientManager.shutdownAll();
     this._status = 'stopped';
   }
