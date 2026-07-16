@@ -103,6 +103,8 @@ export interface CuratedContextParams {
   include_memory?: boolean;
   include_graph?: boolean;
   source_weights?: SourceWeights;
+  /** SA4E-41: tenant scope for code/graph branches (fail-closed when absent). */
+  projectId?: string;
 }
 
 export interface SourceWeights {

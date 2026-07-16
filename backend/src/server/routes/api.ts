@@ -11,6 +11,7 @@ import * as path from 'path';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import type { CodeIntelModule } from '../../modules/code-intel/CodeIntelModule.js';
 import { loadConfig } from '../../config/index.js';
+import { getAdminDb } from '../../admin/admin-db.js';
 
 /** Validate relative path - reject traversal attempts */
 function isPathSafe(relPath: string): boolean {
@@ -139,7 +140,23 @@ export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
       }
       
       const config = loadConfig();
-      const workspace = config.workspace;
+      // Support multi-project: use X-Project-Id and X-Workspace-Root headers if provided
+      const requestProjectId = c.req.header('X-Project-Id') || config.projectId;
+      const requestWorkspace = c.req.header('X-Workspace-Root') || config.workspace;
+      const workspace = requestWorkspace;
+
+      // Register project in admin DB (ensures it appears in projects list)
+      try {
+        const adminDb = getAdminDb();
+        const displayName = path.basename(workspace);
+        adminDb.prepare(`
+          INSERT INTO project_registry (project_id, display_name, workspace_path, last_seen)
+          VALUES (?, ?, ?, datetime('now'))
+          ON CONFLICT(project_id) DO UPDATE SET
+            workspace_path = excluded.workspace_path,
+            last_seen = datetime('now')
+        `).run(requestProjectId, displayName, workspace);
+      } catch { /* non-fatal */ }
 
       // Phase 1: Write all files to disk (critical for remote indexing)
       let written = 0;
@@ -156,13 +173,49 @@ export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
       const codeIntelModule = registry.getModule('codeIntel') as CodeIntelModule | undefined;
       const indexer = codeIntelModule?.getIndexer();
       if (indexer) {
-        // Fire-and-forget: run full index in background after all files are written
-        indexer.runFullIndex().catch((err: any) => {
+        // SA4E-41: index the REQUEST workspace and stamp the REQUEST project_id.
+        // GraphSyncService (invoked inside runFullIndex) performs a per-project,
+        // scoped code-node sync (code:% rows for this project only) — it does NOT
+        // wipe other tenants' nodes, so multi-tenant isolation is preserved.
+        indexer.runFullIndex({ projectId: requestProjectId, workspace: requestWorkspace }).catch((err: any) => {
           logger.error({ err }, 'Background full re-index failed');
         });
       }
+
+      // Phase 3: Create a KB entry for this project (ensures it appears in KB-based queries)
+      try {
+        const memModule = registry.getModule('memory') as any;
+        if (memModule?.status === 'ready') {
+          const engine = memModule.getEngine();
+          const displayName = path.basename(workspace);
+          // Upsert: check if project metadata entry already exists
+          const existing = engine.getDb().prepare(
+            `SELECT id FROM knowledge_entries WHERE project_id = ? AND source = 'project-metadata'`
+          ).get(requestProjectId);
+          if (!existing) {
+            const entryId = engine.insert({
+              content: `Project "${displayName}" indexed. Workspace: ${workspace}. Files: ${written}.`,
+              summary: `Project metadata for ${displayName}`,
+              type: 'CONTEXT',
+              tier: 'SEMANTIC',
+              scope: 'PROJECT',
+              project_id: requestProjectId,
+              source: 'project-metadata',
+              tags: 'project,metadata,indexed',
+            });
+            // Also sync to graph_nodes so it appears in KB Graph visualization
+            try {
+              const adminDb = getAdminDb();
+              adminDb.prepare(
+                `INSERT OR IGNORE INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+              ).run(String(entryId), `Project: ${displayName}`, 'CONTEXT', 'SEMANTIC', requestProjectId, 0, 0, 0, 'macro', 0);
+            } catch { /* non-fatal */ }
+          }
+        }
+      } catch { /* non-fatal */ }
       
-      return c.json({ written, reindexTriggered: !!indexer });
+      return c.json({ written, reindexTriggered: !!indexer, projectId: requestProjectId });
     } catch (err: any) {
       logger.error({ err }, 'Error writing source batch');
       return c.json({ error: 'Internal error' }, 500);
@@ -178,7 +231,8 @@ export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
       }
       
       const config = loadConfig();
-      const workspace = config.workspace;
+      const requestWorkspace = c.req.header('X-Workspace-Root') || config.workspace;
+      const workspace = requestWorkspace;
       const targetPath = path.join(workspace, relPath);
       
       fs.mkdirSync(path.dirname(targetPath), { recursive: true });

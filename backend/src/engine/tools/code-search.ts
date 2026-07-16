@@ -13,9 +13,10 @@ export function registerCodeSearch(server: McpServer, queryLayer: QueryLayer): v
     {
       query: z.string().describe('Search query (supports FTS5 syntax: AND, OR, NOT, prefix*)'),
       limit: z.number().optional().default(20).describe('Max results (default 20)'),
+      __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
-    async ({ query, limit }) => {
-      const results = queryLayer.searchCode(query, limit);
+    async ({ query, limit, __projectId }) => {
+      const results = queryLayer.searchCode(__projectId, query, limit);
       const text = formatSearchResults(results, query);
       return { content: [{ type: 'text', text }] };
     }

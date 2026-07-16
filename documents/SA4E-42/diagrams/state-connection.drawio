@@ -1,0 +1,84 @@
+<mxGraphModel dx="1000" dy="720" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1080" pageHeight="720" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-42 — State Diagram: Child Server Connection States → Index Actions" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="120" y="15" width="820" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="start" value="" style="ellipse;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="90" y="120" width="20" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="disconnected" value="disconnected" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="220" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="connected" value="connected" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="440" y="220" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="unhealthy" value="unhealthy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="440" y="380" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="reconnecting" value="reconnecting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="240" y="380" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="failed" value="failed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="380" width="140" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="aConnect" value="INDEX ACTION:&#10;Scoped ingest / upsert of&#10;server tools (UC-01)&#10;[BR-01, BR-03, BR-04]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="700" y="205" width="240" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="aRemove" value="INDEX ACTION:&#10;Scoped removal of&#10;server tools (UC-02)&#10;[BR-02, BR-05]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="500" width="240" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="aNone" value="INDEX ACTION: none&#10;(transient states — BR-10)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="380" y="500" width="240" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t0" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="start" target="disconnected">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t1" value="connect (late)" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="disconnected" target="connected">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t2" value="ping failures ≥ threshold" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="connected" target="unhealthy">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t3" value="begin reconnect" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="unhealthy" target="reconnecting">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t4" value="reconnect success" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="reconnecting" target="connected">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t5" value="max retries exhausted" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="reconnecting" target="failed">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t6" value="retry" style="endArrow=block;html=1;fontSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="failed" target="reconnecting">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t7" value="manual / shutdown" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="connected" target="disconnected">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="x1" value="triggers" style="endArrow=block;html=1;dashed=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="connected" target="aConnect">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="x2" value="triggers" style="endArrow=block;html=1;dashed=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="failed" target="aRemove">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="x3" value="triggers" style="endArrow=block;html=1;dashed=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1" source="disconnected" target="aRemove">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="x4" style="endArrow=block;html=1;dashed=1;strokeColor=#999999;fontSize=10;" edge="1" parent="1" source="reconnecting" target="aNone">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="x5" style="endArrow=block;html=1;dashed=1;strokeColor=#999999;fontSize=10;" edge="1" parent="1" source="unhealthy" target="aNone">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="legend" value="Legend: green = index add · red = index remove · yellow = transient (no action). Only terminal transitions (connected / disconnected / failed) change the index (BR-10)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=9;align=left;" vertex="1" parent="1">
+      <mxGeometry x="380" y="600" width="560" height="50" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

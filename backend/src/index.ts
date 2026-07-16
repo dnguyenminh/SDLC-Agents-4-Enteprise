@@ -55,18 +55,22 @@ async function main() {
     // Include proxied child-server tools so find_tools can discover them (hidden but discoverable).
     const orchestrationModule = registry.getModule('orchestration') as OrchestrationModule | undefined;
     const proxiedTools = orchestrationModule?.getClientManager().getProxiedTools() ?? [];
-    const allTools = [...registry.getAllToolDefinitions(), ...proxiedTools];
+    // SA4E-42: local/core tools have server = NULL; proxied tools are owned by their
+    // child server (tool.category = serverName). `server` is the scoped delete/prune key.
+    const localTools = registry.getAllToolDefinitions().map((tool) => ({ tool, server: null as string | null }));
+    const proxied = proxiedTools.map((tool) => ({ tool, server: (tool.category as string) ?? null }));
+    const allTools = [...localTools, ...proxied];
     let ingestedCount = 0;
     
     const embeddingService = EmbeddingService.getInstance();
 
     // Prepare tools with embeddings asynchronously
     const preparedTools = [];
-    for (const tool of allTools) {
+    for (const { tool, server } of allTools) {
       const text = `Tool: ${tool.name}\nDescription: ${tool.description}`;
       const vector = await embeddingService.generateEmbedding(text);
       const vectorBuffer = Buffer.from(new Float32Array(vector).buffer);
-      preparedTools.push({ tool, vectorBuffer });
+      preparedTools.push({ tool, server, vectorBuffer });
     }
     
     // Use transaction for faster ingestion
@@ -76,19 +80,21 @@ async function main() {
         const existing = db.prepare('SELECT id FROM mcp_tools WHERE name = ?').get(tool.name) as { id: number } | undefined;
         const schemaJson = JSON.stringify(tool.inputSchema || {});
         if (!existing) {
-          db.prepare('INSERT INTO mcp_tools (name, description, schema_json, category, vector) VALUES (?, ?, ?, ?, ?)').run(
+          db.prepare('INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?, ?, ?, ?, ?, ?)').run(
             tool.name,
             tool.description,
             schemaJson,
             tool.category || 'general',
+            item.server,
             item.vectorBuffer
           );
           ingestedCount++;
         } else {
-          db.prepare('UPDATE mcp_tools SET description = ?, schema_json = ?, category = ?, vector = ? WHERE id = ?').run(
+          db.prepare('UPDATE mcp_tools SET description = ?, schema_json = ?, category = ?, server = ?, vector = ? WHERE id = ?').run(
             tool.description,
             schemaJson,
             tool.category || 'general',
+            item.server,
             item.vectorBuffer,
             existing.id
           );

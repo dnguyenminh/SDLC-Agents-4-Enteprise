@@ -34,7 +34,7 @@ export class CodeIntelModule implements IModule {
     try {
       const config = loadConfig();
       this.workspace = config.workspace;
-      this.dbManager = new DatabaseManager(config.dbPath);
+      this.dbManager = new DatabaseManager(config.dbPath, config.projectId);
       this.dbManager.initialize();
       this.indexer = new IndexingEngine(this.dbManager, config);
       this.indexer.startBackgroundIndexing();
@@ -62,7 +62,9 @@ export class CodeIntelModule implements IModule {
     for (const def of CODE_INTEL_TOOL_DEFINITIONS) {
       handlers.set(def.name, async (args) => {
         try {
-          const result = await dispatchCodeIntelTool(def.name, args, this.dbManager, this.indexer, this.workspace);
+          // SA4E-41: ADR-001 injection path stamps __projectId onto tool args.
+          const projectId = (args as Record<string, unknown>).__projectId as string | undefined;
+          const result = await dispatchCodeIntelTool(def.name, args, this.dbManager, this.indexer, this.workspace, projectId);
           return { content: [{ type: 'text', text: result }], isError: false };
         } catch (error: any) {
           return { content: [{ type: 'text', text: `Error: ${error.message}` }], isError: true };

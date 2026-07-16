@@ -1,0 +1,124 @@
+<mxGraphModel dx="1100" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-42 — Test Coverage: Levels -&gt; Components -&gt; Requirements" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="300" y="20" width="700" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lvlHdr" value="Test Levels" style="text;html=1;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="240" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="pbt" value="PBT (4)&#10;fast-check + real DB&#10;idempotency, scope, prune, injection" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="100" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="ut" value="UT (32)&#10;vitest + fakes&#10;Mapper/Queue/Repo/Subscriber/Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="60" y="185" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="it" value="IT (13)&#10;real better-sqlite3 + fake event/embed&#10;late-connect, disconnect, scope, migration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="60" y="270" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="api" value="E2E-API (4)&#10;in-process MCP client (connectMcp)&#10;find_tools / execute_dynamic_tool / status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="60" y="355" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="ui" value="E2E-UI — N/A&#10;no UI surface (backend ai-agent)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="440" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="sit" value="SIT — N/A&#10;no new external integration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="500" width="240" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="compHdr" value="Components Under Test" style="text;html=1;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="500" y="70" width="300" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="c_map" value="ReindexActionMapper" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="500" y="100" width="300" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="c_queue" value="PerServerTaskQueue" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="500" y="150" width="300" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="c_repo" value="McpToolsRepository (scoped SQL + tx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="500" y="200" width="300" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="c_sub" value="ReindexSubscriber (Observer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="500" y="250" width="300" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="c_svc" value="ReindexService (guard + embed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="500" y="300" width="300" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="c_mig" value="schema.ts migration (server col + index)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="500" y="350" width="300" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="c_mcp" value="MCP surface: find_tools / execute_dynamic_tool / orchestration_status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="500" y="400" width="300" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="reqHdr" value="Requirements" style="text;html=1;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="980" y="70" width="260" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="r_uc" value="UC-01..04 (100%)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="980" y="100" width="260" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="r_br" value="BR-01..11 (100%)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="980" y="150" width="260" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="r_tc" value="TC-01..09 (100%)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="980" y="200" width="260" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="r_ir" value="IR-1..10 (100%)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="980" y="250" width="260" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="r_sec" value="Security: F-01, F-03, F-04, F-06" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="980" y="300" width="260" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="ut" target="c_map">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="ut" target="c_queue">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="ut" target="c_repo">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="ut" target="c_sub">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="ut" target="c_svc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="it" target="c_repo">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="it" target="c_sub">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="it" target="c_mig">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="pbt" target="c_repo">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="api" target="c_mcp">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="c_sub" target="r_uc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="c_repo" target="r_br">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="c_mcp" target="r_tc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="c_svc" target="r_ir">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;" edge="1" parent="1" source="c_mig" target="r_sec">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;" edge="1" parent="1" source="c_repo" target="r_sec">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

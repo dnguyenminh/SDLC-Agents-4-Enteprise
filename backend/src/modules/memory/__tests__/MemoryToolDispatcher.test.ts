@@ -51,14 +51,15 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
   it('performs sync_code and creates cross-references', async () => {
     const db = dbManager.getDb();
     
-    // 1. Seed files and symbols in database
-    db.prepare("INSERT INTO files (path, relative_path, language, content_hash, size_bytes) VALUES ('C:/projects/kiro/src/index.ts', 'src/index.ts', 'typescript', 'hash123', 100)").run();
+    // 1. Seed files and symbols in database (SA4E-41: stamped with a tenant)
+    const PID = 'test-proj-01';
+    db.prepare("INSERT INTO files (project_id, path, relative_path, language, content_hash, size_bytes) VALUES (?, 'C:/projects/kiro/src/index.ts', 'src/index.ts', 'typescript', 'hash123', 100)").run(PID);
     const fileId = (db.prepare("SELECT id FROM files WHERE relative_path = 'src/index.ts'").get() as any).id;
     
     db.prepare(`
-      INSERT INTO symbols (file_id, name, kind, signature, start_line, end_line, visibility) 
-      VALUES (?, 'MyClass', 'class', 'class MyClass {}', 10, 20, 'public')
-    `).run(fileId);
+      INSERT INTO symbols (project_id, file_id, name, kind, signature, start_line, end_line, visibility) 
+      VALUES (?, ?, 'MyClass', 'class', 'class MyClass {}', 10, 20, 'public')
+    `).run(PID, fileId);
 
     // 2. Seed a document in knowledge entries referencing the class name
     engine.insert({
@@ -68,8 +69,8 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
       tier: 'SEMANTIC',
     });
 
-    // 3. Dispatch sync_code
-    const syncRes = await dispatcher.dispatch('mem_sync_code', {});
+    // 3. Dispatch sync_code (SA4E-41: tenant scope via injected __projectId)
+    const syncRes = await dispatcher.dispatch('mem_sync_code', { __projectId: PID });
     expect(syncRes).toContain('Synced: 1 code symbols, 1 cross-reference edges');
 
     // 4. Verify counts

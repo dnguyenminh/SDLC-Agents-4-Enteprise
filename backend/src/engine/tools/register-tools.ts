@@ -44,15 +44,16 @@ export async function dispatchCodeIntelTool(
   args: Record<string, unknown>,
   dbManager: DatabaseManager,
   indexer: IndexingEngine,
-  workspace: string
+  workspace: string,
+  projectId?: string
 ): Promise<string> {
   const queryLayer = new QueryLayer(dbManager);
   switch (name) {
-    case 'code_search': return handleCodeSearch(args, queryLayer);
-    case 'code_symbols': return handleCodeSymbols(args, queryLayer);
-    case 'code_context': return handleCodeContext(args, queryLayer, workspace);
-    case 'code_modules': return handleCodeModules(args, queryLayer);
-    case 'code_index_status': return handleCodeIndexStatus(args, queryLayer, indexer);
+    case 'code_search': return handleCodeSearch(args, queryLayer, projectId);
+    case 'code_symbols': return handleCodeSymbols(args, queryLayer, projectId);
+    case 'code_context': return handleCodeContext(args, queryLayer, workspace, projectId);
+    case 'code_modules': return handleCodeModules(args, queryLayer, projectId);
+    case 'code_index_status': return handleCodeIndexStatus(args, queryLayer, indexer, workspace, projectId);
     case 'stream_write_file': return handleStreamWriteFile(args, workspace);
     case 'code_kb_export': return handleCodeKbExport(args, queryLayer, workspace);
     case 'drawio_auto_layout': return handleDrawioLayout(args, workspace);
@@ -72,7 +73,7 @@ export async function dispatchCodeIntelTool(
       return handleGraphAnalysisTool(name, args, dbManager.getDb()) ?? `Unknown tool: ${name}`;
     case 'get_ai_context': return handleGetAIContext(args, dbManager.getDb(), workspace);
     case 'get_edit_context': return handleGetEditContext(args, dbManager.getDb(), workspace);
-    case 'get_curated_context': return handleGetCuratedContext(args, dbManager.getDb(), workspace, dbManager);
+    case 'get_curated_context': return handleGetCuratedContext(args, dbManager.getDb(), workspace, dbManager, projectId);
     case 'find_duplicates':
     case 'find_dead_code':
     case 'git_search':
@@ -83,10 +84,10 @@ export async function dispatchCodeIntelTool(
   }
 }
 
-function handleCodeSearch(args: Record<string, unknown>, ql: QueryLayer): string {
+function handleCodeSearch(args: Record<string, unknown>, ql: QueryLayer, projectId?: string): string {
   const query = (args.query as string) ?? '';
   const limit = (args.limit as number) ?? 20;
-  const results = ql.searchCode(query, limit);
+  const results = ql.searchCode(projectId, query, limit);
   if (results.length === 0) return `No results found for "${query}"`;
   const lines = [`Found ${results.length} results for "${query}":\n`];
   for (const r of results) {
@@ -98,20 +99,20 @@ function handleCodeSearch(args: Record<string, unknown>, ql: QueryLayer): string
   return lines.join('\n');
 }
 
-function handleCodeSymbols(args: Record<string, unknown>, ql: QueryLayer): string {
+function handleCodeSymbols(args: Record<string, unknown>, ql: QueryLayer, projectId?: string): string {
   const name = args.name as string | undefined;
   const file = args.file as string | undefined;
   const kind = args.kind as string | undefined;
   const limit = (args.limit as number) ?? 50;
   if (file) {
-    const symbols = ql.getFileSymbols(file);
+    const symbols = ql.getFileSymbols(projectId, file);
     if (symbols.length === 0) return `No symbols found in ${file}`;
     const lines = [`Symbols in ${file} (${symbols.length}):\n`];
     for (const s of symbols) lines.push(`  L${s.startLine} [${s.kind}] ${s.name}`);
     return lines.join('\n');
   }
   if (name) {
-    const symbols = ql.findSymbols(name, kind, limit);
+    const symbols = ql.findSymbols(projectId, name, kind, limit);
     if (symbols.length === 0) return `No symbols matching "${name}"`;
     const lines = [`Found ${symbols.length} symbols matching "${name}":\n`];
     for (const s of symbols) lines.push(`[${s.kind}] ${s.name} - ${s.filePath}:${s.startLine}`);
@@ -120,7 +121,7 @@ function handleCodeSymbols(args: Record<string, unknown>, ql: QueryLayer): strin
   return 'Provide either "name" or "file" parameter';
 }
 
-function handleCodeContext(args: Record<string, unknown>, ql: QueryLayer, workspace: string): string {
+function handleCodeContext(args: Record<string, unknown>, ql: QueryLayer, workspace: string, projectId?: string): string {
   const file = args.file as string;
   if (!file) return 'Parameter "file" is required';
   const fullPath = path.resolve(workspace, file);
@@ -130,7 +131,7 @@ function handleCodeContext(args: Record<string, unknown>, ql: QueryLayer, worksp
   const contextLines = (args.contextLines as number) ?? 5;
   const symbol = args.symbol as string | undefined;
   if (symbol) {
-    const symbols = ql.getFileSymbols(file);
+    const symbols = ql.getFileSymbols(projectId, file);
     const match = symbols.find(s => s.name === symbol);
     if (!match) return `Symbol "${symbol}" not found in ${file}`;
     const start = Math.max(0, match.startLine - 1 - contextLines);
@@ -144,9 +145,9 @@ function handleCodeContext(args: Record<string, unknown>, ql: QueryLayer, worksp
   return formatLines(lines, start, end, file);
 }
 
-function handleCodeModules(args: Record<string, unknown>, ql: QueryLayer): string {
+function handleCodeModules(args: Record<string, unknown>, ql: QueryLayer, projectId?: string): string {
   const name = args.name as string | undefined;
-  const modules = ql.listModulesWithPatterns(name ?? null);
+  const modules = ql.listModulesWithPatterns(projectId, name ?? null);
   if (modules.length === 0) return 'No modules indexed yet.';
   const lines = [`Modules (${modules.length}):\n`];
   for (const m of modules) {
@@ -159,12 +160,12 @@ function handleCodeModules(args: Record<string, unknown>, ql: QueryLayer): strin
   return lines.join('\n');
 }
 
-async function handleCodeIndexStatus(args: Record<string, unknown>, ql: QueryLayer, indexer: IndexingEngine): Promise<string> {
-  if (args.reindex) await indexer.runFullIndex();
-  const status = ql.getIndexStatus();
+async function handleCodeIndexStatus(args: Record<string, unknown>, ql: QueryLayer, indexer: IndexingEngine, workspace: string, projectId?: string): Promise<string> {
+  if (args.reindex) await indexer.runFullIndex(projectId ? { projectId, workspace } : undefined);
+  const status = ql.getIndexStatus(projectId);
   const lines = [
     'Code Intelligence Index Status\n',
-    `State: ${indexer.isRunning() ? 'Indexing...' : 'Idle'}`,
+    `State: ${indexer.isRunning(projectId) ? 'Indexing...' : 'Idle'}`,
     `Files: ${status.totalFiles}`,
     `Symbols: ${status.totalSymbols}`,
     `Modules: ${status.totalModules}`,

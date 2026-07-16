@@ -1,0 +1,98 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="SA4E-42 — find_tools Re-index on Child MCP Server Events (Business Flow)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="20" width="620" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="Start:&#xa;Backend Startup" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="470" y="80" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="Connect configured child MCP servers&#xa;(read orchestration.json)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="180" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="Ingest tools of connected servers&#xa;into semantic index (mcp_tools)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="270" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="Runtime:&#xa;Wait for child server state-change event&#xa;(onServerStateChange)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="430" y="360" width="240" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="Event&#xa;Type?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="495" y="460" width="110" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="15" value="Fetch tools/list&#xa;from reconnected server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="465" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="Remove server's tools&#xa;from semantic index" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="740" y="465" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="Upsert tools into index&#xa;(idempotent, scoped to server)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="560" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="Index now consistent with&#xa;orchestration_status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="650" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="Agent calls&#xa;find_tools('jira create issue')" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="740" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="Returns matching tools&#xa;with valid schemas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="830" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="Agent calls execute_dynamic_tool&#xa;(proxied to owning child server)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="920" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="22" value="End:&#xa;Tool discovered &amp; executed&#xa;(no restart needed)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="470" y="1010" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="30" value="On fetch failure: log error,&#xa;keep existing entries" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=9;fontColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="150" y="520" width="220" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="50" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="10" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="51" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="11" target="12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="52" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="12" target="13" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="53" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="13" target="14" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="54" value="connected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;" edge="1" source="14" target="15" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="55" value="disconnected / failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;" edge="1" source="14" target="16" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="56" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="15" target="17" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="57" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="17" target="18" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="58" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="16" target="18" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="59" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="18" target="19" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="60" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="19" target="20" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="61" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="20" target="21" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="62" style="edgeStyle=orthogonalEdgeStyle;rounded=1;" edge="1" source="21" target="22" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="63" value="next event" style="edgeStyle=orthogonalEdgeStyle;rounded=1;fontSize=10;dashed=1;" edge="1" source="18" target="13" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="700" y="675" />
+          <mxPoint x="700" y="390" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

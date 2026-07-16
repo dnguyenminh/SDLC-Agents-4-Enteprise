@@ -11,6 +11,8 @@ import type { ModuleRegistry } from '../ModuleRegistry.js';
 import type { MemoryModule } from '../memory/MemoryModule.js';
 import { McpClientManager } from './McpClientManager.js';
 import { trackToolUsage } from '../../server/toolUsageTracker.js';
+import { createReindexSubscriber } from './reindex/ReindexSubscriberFactory.js';
+import type { ReindexSubscriber } from './reindex/ReindexSubscriber.js';
 
 export class OrchestrationModule implements IModule {
   readonly name = 'orchestration';
@@ -18,6 +20,7 @@ export class OrchestrationModule implements IModule {
   private logger: Logger;
   private registry?: ModuleRegistry;
   private clientManager: McpClientManager;
+  private reindexSubscriber?: ReindexSubscriber;
 
   constructor(logger: Logger, registry?: ModuleRegistry) {
     this.logger = logger.child({ module: this.name });
@@ -35,10 +38,17 @@ export class OrchestrationModule implements IModule {
     this.logger.info('Initializing orchestration module');
     await this.clientManager.initializeAll();
     this.clientManager.startHealthMonitor();
+    // SA4E-42: subscribe AFTER the startup connect-burst so index.ts owns the
+    // one-shot ingest and the subscriber handles only runtime transitions (IR-1).
+    this.reindexSubscriber = createReindexSubscriber(this.clientManager, this.logger, this.registry);
+    this.reindexSubscriber.start();
     this._status = 'ready';
   }
 
   async shutdown(): Promise<void> {
+    // SA4E-42: release the state-change subscription before tearing down (IR-1).
+    this.reindexSubscriber?.stop();
+    this.reindexSubscriber = undefined;
     this.clientManager.stopHealthMonitor();
     await this.clientManager.shutdownAll();
     this._status = 'stopped';

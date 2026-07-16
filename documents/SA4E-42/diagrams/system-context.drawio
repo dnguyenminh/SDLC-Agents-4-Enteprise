@@ -1,0 +1,72 @@
+<mxGraphModel dx="1050" dy="720" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1150" pageHeight="760" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-42 — System Context: find_tools Re-index on Child Server Events" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="150" y="20" width="820" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="agent" value="AI Agent&#10;(discovery / execution consumer)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="60" y="300" width="60" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="operator" value="Platform Operator&#10;(monitors status / logs)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="60" y="580" width="60" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="boundary" value="Orchestration Backend (Node.js / Hono)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="300" y="120" width="520" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="findtools" value="find_tools&#10;(semantic discovery)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="330" y="180" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="exec" value="execute_dynamic_tool&#10;(routes via live state)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="600" y="180" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="index" value="mcp_tools&#10;semantic index&#10;(SQLite + embeddings)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="345" y="310" width="150" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="reindex" value="Re-index Subscriber&#10;(NEW — SA4E-42)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="595" y="310" width="190" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="mgr" value="McpClientManager&#10;onServerStateChange() / getProxiedTools()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="330" y="460" width="230" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="tracker" value="Connection State Tracker&#10;(SA4E-37) emits state-change events" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="595" y="460" width="190" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="embed" value="Embedding Service&#10;(ONNX vectors)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="345" y="600" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="child" value="Child MCP Servers&#10;(e.g., atlassian)&#10;configured in orchestration.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="940" y="340" width="170" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="find_tools()" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="agent" target="findtools">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="execute_dynamic_tool()" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="agent" target="exec">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="reads" style="endArrow=block;html=1;dashed=1;fontSize=10;" edge="1" parent="1" source="findtools" target="index">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="upsert / delete (scoped)" style="endArrow=block;html=1;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1" source="reindex" target="index">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="state-change events" style="endArrow=block;html=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="tracker" target="reindex">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="getProxiedTools()" style="endArrow=block;html=1;dashed=1;fontSize=10;" edge="1" parent="1" source="reindex" target="mgr">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="generate embeddings" style="endArrow=block;html=1;dashed=1;fontSize=10;" edge="1" parent="1" source="reindex" target="embed">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="proxy tool call" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1" source="exec" target="child">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="connect / disconnect / tools/list" style="endArrow=block;html=1;startArrow=block;startFill=1;fontSize=10;" edge="1" parent="1" source="mgr" target="child">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="monitors" style="endArrow=block;html=1;dashed=1;fontSize=10;" edge="1" parent="1" source="operator" target="boundary">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

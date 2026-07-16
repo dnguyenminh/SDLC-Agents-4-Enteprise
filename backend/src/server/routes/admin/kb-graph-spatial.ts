@@ -19,10 +19,12 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
     let codeCount = 0;
     try { kbCount = getKbEntryCount(ctx.getRequestProjectId(c)); } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to get KB entry count'); }
     try {
+      // SA4E-41: count only the requesting tenant's code symbols (fail-closed).
+      const pid = ctx.getRequestProjectId(c);
       const indexDbPath = path.resolve(getWorkspacePath(), '.code-intel', 'index.db');
-      if (fs.existsSync(indexDbPath)) {
+      if (pid && fs.existsSync(indexDbPath)) {
         const indexDb = new Database(indexDbPath, { readonly: true });
-        const row = indexDb.prepare("SELECT COUNT(*) as cnt FROM symbols WHERE kind IN ('function','class','interface','method','type','enum','constructor')").get() as { cnt: number } | undefined;
+        const row = indexDb.prepare("SELECT COUNT(*) as cnt FROM symbols WHERE project_id = ? AND kind IN ('function','class','interface','method','type','enum','constructor')").get(pid) as { cnt: number } | undefined;
         codeCount = row?.cnt || 0; indexDb.close();
       }
     } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to count code symbols'); }

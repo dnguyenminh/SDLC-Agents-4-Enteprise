@@ -72,3 +72,26 @@ jobs:
       - run: npm run test:integration
         working-directory: backend
         continue-on-error: true
+
+  e2e-api:
+    name: E2E API Tests
+    runs-on: ubuntu-latest
+    needs: [backend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+        working-directory: backend
+
+      - run: npm run build
+        working-directory: backend
+
+      - run: npm run test:e2e-api
+        working-directory: backend
+        continue-on-error: true

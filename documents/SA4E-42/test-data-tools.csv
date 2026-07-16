@@ -1,0 +1,14 @@
+tool_id,name,description,schema_json,server,category,notes
+T-A01,jira_create_issue,Create a Jira issue in a project,"{""type"":""object"",""properties"":{""project"":{""type"":""string""},""summary"":{""type"":""string""}},""required"":[""project"",""summary""]}",atlassian,atlassian,late-connect target (IT-01/API-01)
+T-A02,jira_get_issue,Get a Jira issue by key,"{""type"":""object"",""properties"":{""issue_key"":{""type"":""string""}},""required"":[""issue_key""]}",atlassian,atlassian,late-connect target
+T-A03,jira_search,Search Jira issues with JQL,"{""type"":""object"",""properties"":{""jql"":{""type"":""string""}},""required"":[""jql""]}",atlassian,atlassian,late-connect target
+T-A04,confluence_get_page,Get a Confluence page by id,"{""type"":""object"",""properties"":{""page_id"":{""type"":""string""}},""required"":[""page_id""]}",atlassian,atlassian,pruned in IT-10
+T-A05,confluence_search,Search Confluence content,"{""type"":""object"",""properties"":{""cql"":{""type"":""string""}},""required"":[""cql""]}",atlassian,atlassian,pruned in IT-10
+T-M01,export_docx,Export markdown to DOCX,"{""type"":""object"",""properties"":{""file_path"":{""type"":""string""}},""required"":[""file_path""]}",markdown-exporter,markdown-exporter,survives late-connect (IT-02) / stays on disconnect (IT-03)
+T-M02,embed_images,Embed images into markdown,"{""type"":""object"",""properties"":{""file_path"":{""type"":""string""}},""required"":[""file_path""]}",markdown-exporter,markdown-exporter,survives late-connect
+T-C01,mem_search,Core memory search tool,"{""type"":""object"",""properties"":{""query"":{""type"":""string""}},""required"":[""query""]}",,memory,core tool server IS NULL (scope-isolation IT-06)
+T-C02,find_tools,Core discovery tool,"{""type"":""object"",""properties"":{""query"":{""type"":""string""}},""required"":[""query""]}",,orchestration,core tool server IS NULL
+T-X01,common_tool,Tool name shared by two servers,"{""type"":""object"",""properties"":{}}",serverA,serverA,collision fixture owned by A (IT-12/UT-18)
+T-X02,common_tool,Same name exposed by server B,"{""type"":""object"",""properties"":{}}",serverB,serverB,collision fixture from B (IT-12/UT-18)
+T-INJ1,"x'); DROP TABLE mcp_tools;--",Adversarial SQL-metachar tool name,"{""type"":""object"",""properties"":{}}",serverA,serverA,injection-safety fixture (PBT-04/UT-19)
+T-INJ2,"a"" OR ""1""=""1",Adversarial quote tool name,"{""type"":""object"",""properties"":{}}",serverA,serverA,injection-safety fixture

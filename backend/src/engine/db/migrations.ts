@@ -7,6 +7,7 @@ import Database from 'better-sqlite3';
 import pino from 'pino';
 import { SCHEMA_V1 } from './schema.js';
 import { runGraphMigrations } from '../database/migrator.js';
+import { applyMigrationV5 } from './migration-v5.js';
 
 const logger = pino({ name: 'migrations' });
 
@@ -51,14 +52,19 @@ export function getCurrentVersion(db: Database.Database): number {
 }
 
 /** Run all pending migrations sequentially. */
-export function runMigrations(db: Database.Database): void {
+export function runMigrations(db: Database.Database, legacyProjectId: string = 'default'): void {
   // Idempotent memory schema execution
   applyMemorySchema(db);
+
+  // SA4E-42 (PT-01): additive `server` column on mcp_tools. Idempotent (PRAGMA probe),
+  // so it MUST run on every startup BEFORE the early-return below — existing v5 DBs
+  // (left by SA4E-41) would otherwise skip it and crash on the scoped INSERT.
+  migrateAddMcpToolsServerColumn(db);
 
   const current = getCurrentVersion(db);
   const pending = MIGRATIONS.filter(m => m.version > current);
 
-  if (pending.length === 0 && current >= 2) {
+  if (pending.length === 0 && current >= 5) {
     logger.error('[migrations] Schema up to date');
     return;
   }
@@ -86,6 +92,25 @@ export function runMigrations(db: Database.Database): void {
   if (current < 4) {
     applyMigrationV4(db);
   }
+
+  // Run V5 multi-tenant isolation (SA4E-41) — idempotent, backfills legacyProjectId
+  if (current < 5) {
+    applyMigrationV5(db, legacyProjectId);
+  }
+}
+
+/**
+ * SA4E-42 — add the `server` scoping column to `mcp_tools` for existing DBs.
+ * Uses a PRAGMA table_info probe (F-02) instead of a swallow-all catch, so a
+ * genuine migration failure surfaces rather than being silently ignored.
+ */
+export function migrateAddMcpToolsServerColumn(db: Database.Database): void {
+  const existing = getExistingColumns(db, 'mcp_tools');
+  if (!existing.has('server')) {
+    db.exec('ALTER TABLE mcp_tools ADD COLUMN server TEXT');
+    logger.error('[migrations] SA4E-42: added mcp_tools.server column');
+  }
+  db.exec('CREATE INDEX IF NOT EXISTS idx_mcp_tools_server ON mcp_tools(server)');
 }
 
 function applyMigrationV4(db: Database.Database): void {

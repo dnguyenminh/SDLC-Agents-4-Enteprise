@@ -1,0 +1,111 @@
+<mxGraphModel dx="1100" dy="800" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1250" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-42 — Sequence: Late-connect Re-index Flow (UC-01)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="15" width="760" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="hChild" value="Child MCP Server&#10;(atlassian)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="hMgr" value="McpClientManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="250" y="60" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="hTracker" value="Connection&#10;State Tracker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="440" y="60" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="hReindex" value="Re-index&#10;Subscriber (NEW)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="630" y="60" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="hEmbed" value="Embedding&#10;Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="830" y="60" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="hIndex" value="mcp_tools index" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="60" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="hAgent" value="AI Agent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="1170" y="55" width="40" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="lChild" style="endArrow=none;html=1;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="hChild" target="pChild">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="pChild" value="" style="ellipse;html=1;fillColor=#b85450;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="126" y="800" width="8" height="8" as="geometry" />
+    </mxCell>
+    <mxCell id="lMgr" style="endArrow=none;html=1;dashed=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="hMgr" target="pMgr">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="pMgr" value="" style="ellipse;html=1;fillColor=#6c8ebf;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="316" y="800" width="8" height="8" as="geometry" />
+    </mxCell>
+    <mxCell id="lTracker" style="endArrow=none;html=1;dashed=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="hTracker" target="pTracker">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="pTracker" value="" style="ellipse;html=1;fillColor=#6c8ebf;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="506" y="800" width="8" height="8" as="geometry" />
+    </mxCell>
+    <mxCell id="lReindex" style="endArrow=none;html=1;dashed=1;strokeColor=#d6b656;" edge="1" parent="1" source="hReindex" target="pReindex">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="pReindex" value="" style="ellipse;html=1;fillColor=#d6b656;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="701" y="800" width="8" height="8" as="geometry" />
+    </mxCell>
+    <mxCell id="lEmbed" style="endArrow=none;html=1;dashed=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="hEmbed" target="pEmbed">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="pEmbed" value="" style="ellipse;html=1;fillColor=#6c8ebf;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="891" y="800" width="8" height="8" as="geometry" />
+    </mxCell>
+    <mxCell id="lIndex" style="endArrow=none;html=1;dashed=1;strokeColor=#d79b00;" edge="1" parent="1" source="hIndex" target="pIndex">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="pIndex" value="" style="ellipse;html=1;fillColor=#d79b00;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="1061" y="800" width="8" height="8" as="geometry" />
+    </mxCell>
+    <mxCell id="lAgent" style="endArrow=none;html=1;dashed=1;strokeColor=#82b366;" edge="1" parent="1" source="hAgent" target="pAgent">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="pAgent" value="" style="ellipse;html=1;fillColor=#82b366;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="1186" y="800" width="8" height="8" as="geometry" />
+    </mxCell>
+
+    <mxCell id="m1" value="1: becomes reachable / connects" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="130" y="150" as="sourcePoint" /><mxPoint x="320" y="150" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2: registerServerTools() → transition(connected)" style="endArrow=block;html=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="320" y="200" as="sourcePoint" /><mxPoint x="510" y="200" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3: emit ServerStateChangeEvent(newState=connected)" style="endArrow=block;html=1;fontSize=10;strokeColor=#6c8ebf;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="510" y="250" as="sourcePoint" /><mxPoint x="701" y="250" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4: getProxiedTools() scoped to server" style="endArrow=block;html=1;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="701" y="300" as="sourcePoint" /><mxPoint x="320" y="300" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m4r" value="tools[] (name, description, schema)" style="endArrow=open;html=1;fontSize=9;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="320" y="335" as="sourcePoint" /><mxPoint x="701" y="335" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5: generateEmbedding(name+description) per tool" style="endArrow=block;html=1;fontSize=10;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="701" y="385" as="sourcePoint" /><mxPoint x="891" y="385" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m5r" value="vector[]" style="endArrow=open;html=1;fontSize=9;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="891" y="420" as="sourcePoint" /><mxPoint x="701" y="420" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6: upsert tools by name (idempotent, scoped) [BR-01/03/05]" style="endArrow=block;html=1;fontSize=10;strokeColor=#d6b656;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="701" y="470" as="sourcePoint" /><mxPoint x="1061" y="470" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7: remove rows no longer in tools/list [BR-04]" style="endArrow=block;html=1;fontSize=10;strokeColor=#d6b656;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="701" y="515" as="sourcePoint" /><mxPoint x="1061" y="515" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="note1" value="Async / non-blocking (BR-09). Steps 4–7 ≤ 5s (NFR). On fetch/embed/write error → log &amp; retry next event (BR-06)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=9;align=left;" vertex="1" parent="1">
+      <mxGeometry x="620" y="540" width="510" height="45" as="geometry" />
+    </mxCell>
+    <mxCell id="m8" value="8: find_tools('jira create issue')" style="endArrow=block;html=1;fontSize=10;strokeColor=#82b366;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1186" y="640" as="sourcePoint" /><mxPoint x="1061" y="640" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9: returns jira_create_issue + schemas" style="endArrow=open;html=1;fontSize=10;dashed=1;strokeColor=#82b366;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1061" y="690" as="sourcePoint" /><mxPoint x="1186" y="690" as="targetPoint" /></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -17,12 +17,12 @@ export class TreeSitterIndexer {
     this.maxFileSize = maxFileSize;
   }
 
-  async indexFile(filePath: string, relativePath: string): Promise<IndexResult> {
+  async indexFile(filePath: string, relativePath: string, projectId: string): Promise<IndexResult> {
     const startTime = Date.now();
     let source: string;
     try {
       const stat = fs.statSync(filePath);
-      if (stat.size > this.maxFileSize) return this.regexFallback(filePath, relativePath, startTime);
+      if (stat.size > this.maxFileSize) return this.regexFallback(filePath, relativePath, projectId, startTime);
       source = fs.readFileSync(filePath, 'utf-8');
     } catch {
       return { filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1, duration: Date.now() - startTime, method: 'regex-fallback' };
@@ -34,28 +34,28 @@ export class TreeSitterIndexer {
       result = parser.parse(source, relativePath);
       method = 'tree-sitter';
     } else {
-      return this.regexFallback(filePath, relativePath, startTime);
+      return this.regexFallback(filePath, relativePath, projectId, startTime);
     }
-    const symbolIds = storeResults(this.db, relativePath, result);
-    extractAndStoreBodies(this.db, relativePath, source, result, symbolIds);
+    const symbolIds = storeResults(this.db, relativePath, result, projectId);
+    extractAndStoreBodies(this.db, relativePath, source, result, symbolIds, projectId);
     return { filePath: relativePath, symbolCount: result.symbols.length, relationshipCount: result.relationships.length, parseErrors: result.errors.length, duration: Date.now() - startTime, method };
   }
 
-  async indexFiles(files: { absolutePath: string; relativePath: string }[]): Promise<IndexResult[]> {
+  async indexFiles(files: { absolutePath: string; relativePath: string }[], projectId: string): Promise<IndexResult[]> {
     const results: IndexResult[] = [];
     for (const file of files) {
-      results.push(await this.indexFile(file.absolutePath, file.relativePath));
+      results.push(await this.indexFile(file.absolutePath, file.relativePath, projectId));
     }
     return results;
   }
 
-  private regexFallback(filePath: string, relativePath: string, startTime: number): IndexResult {
+  private regexFallback(filePath: string, relativePath: string, projectId: string, startTime: number): IndexResult {
     try {
       const source = fs.readFileSync(filePath, 'utf-8');
       const ext = path.extname(filePath).toLowerCase();
       const language = this.extToLanguage(ext);
       const symbols = extractSymbols(source, language);
-      if (symbols.length > 0) storeRegexResults(this.db, relativePath, symbols);
+      if (symbols.length > 0) storeRegexResults(this.db, relativePath, symbols, projectId);
       return { filePath: relativePath, symbolCount: symbols.length, relationshipCount: 0, parseErrors: 0, duration: Date.now() - startTime, method: 'regex-fallback' };
     } catch {
       return { filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1, duration: Date.now() - startTime, method: 'regex-fallback' };
