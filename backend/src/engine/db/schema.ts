@@ -13,21 +13,26 @@ CREATE TABLE IF NOT EXISTS schema_version (
 );
 
 -- Indexed files with content hash for incremental updates
+-- SA4E-41: project_id scopes every file to a single tenant (multi-tenant isolation)
 CREATE TABLE IF NOT EXISTS files (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  path TEXT NOT NULL UNIQUE,
+  project_id TEXT NOT NULL DEFAULT '',
+  path TEXT NOT NULL,
   relative_path TEXT NOT NULL,
   language TEXT NOT NULL,
   module TEXT,
   content_hash TEXT NOT NULL,
   size_bytes INTEGER NOT NULL,
   last_indexed TEXT NOT NULL DEFAULT (datetime('now')),
-  line_count INTEGER NOT NULL DEFAULT 0
+  line_count INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(project_id, path)
 );
 
 -- Extracted symbols (functions, classes, interfaces, etc.)
+-- SA4E-41: project_id added additively to preserve FTS5 external-content mapping
 CREATE TABLE IF NOT EXISTS symbols (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL DEFAULT '',
   file_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   kind TEXT NOT NULL,
@@ -70,9 +75,11 @@ CREATE TRIGGER IF NOT EXISTS symbols_au AFTER UPDATE ON symbols BEGIN
 END;
 
 -- Module groupings with pattern metadata
+-- SA4E-41: project_id scopes modules; uniqueness is per-tenant
 CREATE TABLE IF NOT EXISTS modules (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
+  project_id TEXT NOT NULL DEFAULT '',
+  name TEXT NOT NULL,
   root_path TEXT NOT NULL,
   language TEXT,
   description TEXT,
@@ -83,12 +90,15 @@ CREATE TABLE IF NOT EXISTS modules (
   naming_convention TEXT DEFAULT NULL,
   logging_framework TEXT DEFAULT NULL,
   testing_framework TEXT DEFAULT NULL,
-  purpose TEXT DEFAULT NULL
+  purpose TEXT DEFAULT NULL,
+  UNIQUE(project_id, name)
 );
 
 -- Optional embeddings for semantic search
+-- SA4E-41: project_id scopes embeddings to a tenant
 CREATE TABLE IF NOT EXISTS embeddings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL DEFAULT '',
   symbol_id INTEGER,
   file_id INTEGER,
   vector BLOB NOT NULL,
@@ -107,6 +117,12 @@ CREATE INDEX IF NOT EXISTS idx_symbols_name ON symbols(name);
 CREATE INDEX IF NOT EXISTS idx_symbols_kind ON symbols(kind);
 CREATE INDEX IF NOT EXISTS idx_embeddings_symbol ON embeddings(symbol_id);
 CREATE INDEX IF NOT EXISTS idx_embeddings_file ON embeddings(file_id);
+
+-- SA4E-41: per-tenant scope indexes for fast isolated reads
+CREATE INDEX IF NOT EXISTS idx_files_project ON files(project_id);
+CREATE INDEX IF NOT EXISTS idx_symbols_project ON symbols(project_id);
+CREATE INDEX IF NOT EXISTS idx_symbols_proj_kind ON symbols(project_id, kind);
+CREATE INDEX IF NOT EXISTS idx_modules_project ON modules(project_id);
 
 -- MCP Tools
 CREATE TABLE IF NOT EXISTS mcp_tools (

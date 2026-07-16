@@ -15,12 +15,19 @@ const logger = pino({ name: 'database-manager' });
 export class DatabaseManager {
   private db: Database.Database | null = null;
   private readonly dbPath: string;
+  private readonly projectId: string;
   private static resolvedBinding: string | undefined | null = null; // null = not yet resolved
   private static sharedDb: Database.Database | null = null;
   private static initPromise: Promise<void> | null = null;
 
-  constructor(dbPath: string) {
+  /**
+   * @param dbPath  Path to the SQLite index.db file.
+   * @param projectId  Booting workspace's derived project id (SA4E-41) — used as
+   *                   the legacy backfill value for the V5 multi-tenant migration.
+   */
+  constructor(dbPath: string, projectId: string = 'default') {
     this.dbPath = dbPath;
+    this.projectId = projectId;
   }
 
   /**
@@ -54,7 +61,7 @@ export class DatabaseManager {
     }
 
     this.configureDatabase();
-    runMigrations(this.db);
+    runMigrations(this.db, this.projectId);
     DatabaseManager.sharedDb = this.db;
     logger.error(`[db] Initialized at ${this.dbPath}`);
   }

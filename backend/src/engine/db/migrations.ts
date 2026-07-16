@@ -7,6 +7,7 @@ import Database from 'better-sqlite3';
 import pino from 'pino';
 import { SCHEMA_V1 } from './schema.js';
 import { runGraphMigrations } from '../database/migrator.js';
+import { applyMigrationV5 } from './migration-v5.js';
 
 const logger = pino({ name: 'migrations' });
 
@@ -51,14 +52,14 @@ export function getCurrentVersion(db: Database.Database): number {
 }
 
 /** Run all pending migrations sequentially. */
-export function runMigrations(db: Database.Database): void {
+export function runMigrations(db: Database.Database, legacyProjectId: string = 'default'): void {
   // Idempotent memory schema execution
   applyMemorySchema(db);
 
   const current = getCurrentVersion(db);
   const pending = MIGRATIONS.filter(m => m.version > current);
 
-  if (pending.length === 0 && current >= 2) {
+  if (pending.length === 0 && current >= 5) {
     logger.error('[migrations] Schema up to date');
     return;
   }
@@ -85,6 +86,11 @@ export function runMigrations(db: Database.Database): void {
   // Run V4 memory table recreation
   if (current < 4) {
     applyMigrationV4(db);
+  }
+
+  // Run V5 multi-tenant isolation (SA4E-41) — idempotent, backfills legacyProjectId
+  if (current < 5) {
+    applyMigrationV5(db, legacyProjectId);
   }
 }
 
