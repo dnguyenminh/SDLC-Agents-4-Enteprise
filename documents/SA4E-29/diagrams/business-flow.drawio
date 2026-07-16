@@ -1,60 +1,141 @@
-<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+<mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
   <root>
     <mxCell id="0" />
     <mxCell id="1" parent="0" />
-    <mxCell id="title" value="&lt;b&gt;Base64 Encoding Pattern — Business Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
-      <mxGeometry x="300" y="10" width="400" height="30" as="geometry" />
+    <mxCell id="title" value="&lt;b&gt;Base64 Proxy — Full Request + Response Data Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;" vertex="1" parent="1">
+      <mxGeometry x="400" y="10" width="500" height="30" as="geometry" />
     </mxCell>
-    <mxCell id="client_boundary" value="Client Side (Extension)" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=10;html=1;" vertex="1" parent="1">
-      <mxGeometry x="30" y="60" width="350" height="520" as="geometry" />
+    <mxCell id="phase_req" value="▼ REQUEST FLOW (file_path → content_base64)" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=12;fontStyle=1;fontColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="50" y="50" width="400" height="25" as="geometry" />
     </mxCell>
-    <mxCell id="backend_boundary" value="Backend Side (Server)" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;spacingTop=10;html=1;" vertex="1" parent="1">
-      <mxGeometry x="480" y="60" width="350" height="520" as="geometry" />
+    <mxCell id="llm_box" value="LLM Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="50" y="90" width="200" height="140" as="geometry" />
     </mxCell>
-    <mxCell id="start" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="170" y="80" width="60" height="60" as="geometry" />
+    <mxCell id="llm_action" value="Gọi tool với:&#10;file_path=&quot;diagram.drawio&quot;&#10;&#10;(KHÔNG biết base64)" style="text;html=1;align=left;verticalAlign=top;strokeColor=none;fillColor=none;fontSize=11;spacingTop=30;" vertex="1" parent="1">
+      <mxGeometry x="60" y="90" width="180" height="130" as="geometry" />
     </mxCell>
-    <mxCell id="read_file" value="Agent Reads File&#10;from Local Filesystem" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="110" y="180" width="180" height="70" as="geometry" />
+    <mxCell id="ext_req_box" value="Extension (9181) — REQUEST Phase" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="330" y="90" width="560" height="140" as="geometry" />
     </mxCell>
-    <mxCell id="encode_base64" value="Encode File to&#10;Base64 String" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="110" y="290" width="180" height="70" as="geometry" />
+    <mxCell id="ext_step1" value="1. Intercept&#10;tools/call" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="345" y="130" width="100" height="50" as="geometry" />
     </mxCell>
-    <mxCell id="send_tool" value="Send Base64 in&#10;MCP Tool Call" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="110" y="400" width="180" height="70" as="geometry" />
+    <mxCell id="ext_step2" value="2. Detect proxy&#10;(schema scan)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="460" y="130" width="100" height="50" as="geometry" />
     </mxCell>
-    <mxCell id="receive_tool" value="Backend Receives&#10;Tool Call with Base64" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="570" y="180" width="180" height="70" as="geometry" />
+    <mxCell id="ext_step3" value="3. Read file&#10;fs.readFileSync()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="575" y="130" width="110" height="50" as="geometry" />
     </mxCell>
-    <mxCell id="decode_base64" value="Decode Base64&#10;to Buffer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="570" y="290" width="180" height="70" as="geometry" />
+    <mxCell id="ext_step4" value="4. Encode&#10;→ base64" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="700" y="130" width="90" height="50" as="geometry" />
     </mxCell>
-    <mxCell id="process_file" value="Process Buffer:&#10;Export PNG / Auto-Layout /&#10;Ingest to KB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="570" y="400" width="180" height="70" as="geometry" />
+    <mxCell id="ext_step5" value="5. Forward to&#10;backend API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="805" y="130" width="95" height="50" as="geometry" />
     </mxCell>
-    <mxCell id="end" value="End" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="660" y="510" width="60" height="60" as="geometry" />
+    <mxCell id="be_req_box" value="Backend (48721) — PROCESSING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="970" y="90" width="280" height="140" as="geometry" />
     </mxCell>
-    <mxCell id="e_start_read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="start" target="read_file" parent="1">
+    <mxCell id="be_step1" value="Receive&#10;{content_base64}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="985" y="130" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="be_step2" value="Process in&#10;temp dir&#10;(no FS needed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1115" y="130" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e_llm_ext" value="file_path" source="llm_box" target="ext_step1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=8;strokeColor=#0288d1;fontColor=#0288d1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
-    <mxCell id="e_read_encode" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="read_file" target="encode_base64" parent="1">
+    <mxCell id="e_r1" source="ext_step1" target="ext_step2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
-    <mxCell id="e_encode_send" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="encode_base64" target="send_tool" parent="1">
+    <mxCell id="e_r2" source="ext_step2" target="ext_step3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
-    <mxCell id="e_send_receive" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="send_tool" target="receive_tool" parent="1">
+    <mxCell id="e_r3" source="ext_step3" target="ext_step4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
-    <mxCell id="e_receive_decode" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="receive_tool" target="decode_base64" parent="1">
+    <mxCell id="e_r4" source="ext_step4" target="ext_step5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
-    <mxCell id="e_decode_process" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="decode_base64" target="process_file" parent="1">
+    <mxCell id="e_ext_be" value="content_base64" source="ext_step5" target="be_step1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=8;strokeColor=#f57c00;fontColor=#f57c00;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
-    <mxCell id="e_process_end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="process_file" target="end" parent="1">
+    <mxCell id="e_be12" source="be_step1" target="be_step2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
       <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="separator" value="" style="line;strokeColor=#999999;strokeWidth=1;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="50" y="260" width="1200" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="phase_resp" value="▲ RESPONSE FLOW (output_base64 → file_path)" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=12;fontStyle=1;fontColor=#e65100;" vertex="1" parent="1">
+      <mxGeometry x="50" y="285" width="400" height="25" as="geometry" />
+    </mxCell>
+    <mxCell id="be_resp_box" value="Backend — RESPONSE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="970" y="320" width="280" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="be_resp1" value="Generate output&#10;(render PNG)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="985" y="360" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="be_resp2" value="Encode result&#10;→ output_base64" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1115" y="360" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_resp_box" value="Extension (9181) — RESPONSE Phase" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="330" y="320" width="560" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_resp1" value="6. Receive&#10;{output_base64}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="720" y="360" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_resp2" value="7. Decode base64&#10;Buffer.from()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="585" y="360" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_resp3" value="8. Write file&#10;fs.writeFileSync()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="360" width="110" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_resp4" value="9. Return&#10;{file_path,&#10;size_bytes}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="345" y="355" width="85" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="llm_resp_box" value="LLM Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="50" y="320" width="200" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="llm_resp_text" value="Nhận response:&#10;file_path=&quot;diagram.png&quot;&#10;size_bytes=92481&#10;&#10;(KHÔNG thấy base64)" style="text;html=1;align=left;verticalAlign=top;strokeColor=none;fillColor=none;fontSize=11;spacingTop=30;" vertex="1" parent="1">
+      <mxGeometry x="60" y="320" width="180" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="e_be_resp" source="be_resp1" target="be_resp2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_be_ext_resp" value="output_base64" source="be_resp2" target="ext_resp1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=8;strokeColor=#f57c00;fontColor=#f57c00;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_resp1" source="ext_resp1" target="ext_resp2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_resp2" source="ext_resp2" target="ext_resp3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_resp3" source="ext_resp3" target="ext_resp4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_ext_llm_resp" value="file_path + size_bytes" source="ext_resp4" target="llm_resp_box" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=8;strokeColor=#0288d1;fontColor=#0288d1;strokeWidth=2;fontSize=11;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="50" y="480" width="500" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="485" width="80" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="leg_blue" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0288d1;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="70" y="512" width="30" height="8" as="geometry" />
+    </mxCell>
+    <mxCell id="leg_blue_t" value="MCP Protocol (LLM ↔ Extension) — LLM chỉ thấy file_path" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="110" y="507" width="350" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="leg_orange" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f57c00;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="70" y="535" width="30" height="8" as="geometry" />
+    </mxCell>
+    <mxCell id="leg_orange_t" value="REST/HTTP (Extension ↔ Backend) — base64 content transfer" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="110" y="530" width="380" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="leg_note" value="Extension là TRANSPARENT PROXY — LLM không cần biết kiến trúc remote/base64" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="70" y="555" width="460" height="20" as="geometry" />
     </mxCell>
   </root>
 </mxGraphModel>

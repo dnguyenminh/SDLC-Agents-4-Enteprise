@@ -1,65 +1,180 @@
-<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
-  <root>
-    <mxCell id="0" />
-    <mxCell id="1" parent="0" />
-    <mxCell id="title" value="&lt;b&gt;Base64 Encoding Pattern — Use Case Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
-      <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
-    </mxCell>
-    <mxCell id="boundary" value="Backend MCP Server&#10;(Base64 File Processing)" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=13;spacingTop=10;html=1;" vertex="1" parent="1">
-      <mxGeometry x="300" y="70" width="500" height="650" as="geometry" />
-    </mxCell>
-    <mxCell id="actor_agent" value="AI Agent&#10;(Client)" style="shape=actor;whiteSpace=wrap;html=1;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="100" y="350" width="40" height="60" as="geometry" />
-    </mxCell>
-    <mxCell id="uc1" value="Encode File&#10;to Base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="360" y="100" width="180" height="70" as="geometry" />
-    </mxCell>
-    <mxCell id="uc2" value="Call&#10;drawio_export_png&#10;with Base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="360" y="210" width="180" height="70" as="geometry" />
-    </mxCell>
-    <mxCell id="uc3" value="Call&#10;drawio_auto_layout&#10;with Base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="360" y="320" width="180" height="70" as="geometry" />
-    </mxCell>
-    <mxCell id="uc4" value="Call&#10;mem_ingest_file&#10;with Base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="360" y="430" width="180" height="70" as="geometry" />
-    </mxCell>
-    <mxCell id="uc5" value="Decode Base64&#10;to Buffer" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="600" y="210" width="180" height="70" as="geometry" />
-    </mxCell>
-    <mxCell id="uc6" value="Process Buffer:&#10;Export / Layout / Ingest" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="600" y="320" width="180" height="70" as="geometry" />
-    </mxCell>
-    <mxCell id="e_agent_uc1" style="html=1;endArrow=none;" edge="1" source="actor_agent" target="uc1" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <Array as="points"><mxPoint x="220" y="135" /></Array>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="e_agent_uc2" style="html=1;endArrow=none;" edge="1" source="actor_agent" target="uc2" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <Array as="points"><mxPoint x="220" y="245" /></Array>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="e_agent_uc3" style="html=1;endArrow=none;" edge="1" source="actor_agent" target="uc3" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <Array as="points"><mxPoint x="220" y="355" /></Array>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="e_agent_uc4" style="html=1;endArrow=none;" edge="1" source="actor_agent" target="uc4" parent="1">
-      <mxGeometry relative="1" as="geometry">
-        <Array as="points"><mxPoint x="220" y="465" /></Array>
-      </mxGeometry>
-    </mxCell>
-    <mxCell id="e_include_decode" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc2" target="uc5" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <mxCell id="e_include_decode_2" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc3" target="uc5" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <mxCell id="e_include_decode_3" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc4" target="uc5" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-    <mxCell id="e_include_process" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;" edge="1" source="uc5" target="uc6" parent="1">
-      <mxGeometry relative="1" as="geometry" />
-    </mxCell>
-  </root>
-</mxGraphModel>
+<mxfile>
+  <diagram name="Use Case - Base64 Proxy" id="uc_base64">
+    <mxGraphModel dx="1200" dy="827" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;Use Case Diagram — Base64 Proxy for File Tools&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="420" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="system_boundary" value="Base64 Proxy System (Extension)" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=14;spacingTop=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="50" width="600" height="720" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_llm" value="LLM Agent" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="200" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_backend" value="Backend&#10;Developer" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="80" y="500" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_extdev" value="Extension&#10;Developer" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="200" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_operator" value="Platform&#10;Operator" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="500" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc1_node" value="Call file tool with&#10;file_path only" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="100" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc2_node" value="Discover tools&#10;(rewritten schemas)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="200" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc3_node" value="Receive local file&#10;path in response" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="300" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc4_node" value="Auto-detect proxy&#10;from tool schemas" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="400" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc5_node" value="Add new file tool&#10;(zero extension changes)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="370" y="500" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc6_node" value="Unwrap&#10;execute_dynamic_tool" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="150" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc7_node" value="Rewrite find_tools&#10;response schemas" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="260" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc8_node" value="Proxy input:&#10;file to base64" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="370" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc9_node" value="Proxy output:&#10;base64 to file" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="480" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc10_node" value="Zero-config&#10;deployment" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="590" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc11_node" value="Auto-create&#10;output directories" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="690" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e_llm_uc1" source="actor_llm" target="uc1_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="135" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_llm_uc2" source="actor_llm" target="uc2_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_llm_uc3" source="actor_llm" target="uc3_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="335" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_be_uc4" source="actor_backend" target="uc4_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="435" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_be_uc5" source="actor_backend" target="uc5_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="535" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc6" source="actor_extdev" target="uc6_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="185" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc7" source="actor_extdev" target="uc7_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="295" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc8" source="actor_extdev" target="uc8_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="405" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc9" source="actor_extdev" target="uc9_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="515" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_op_uc10" source="actor_operator" target="uc10_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="625" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_op_uc11" source="actor_operator" target="uc11_node" style="html=1;endArrow=none;endSize=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="725" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_include_1" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" source="uc1_node" target="uc8_node" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_include_2" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" source="uc1_node" target="uc9_node" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_include_3" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" source="uc2_node" target="uc7_node" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_include_4" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" source="uc5_node" target="uc4_node" style="dashed=1;endArrow=open;html=1;fontSize=9;fontStyle=2;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="640" width="220" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="645" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_blue" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="50" y="670" width="16" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_blue_t" value="LLM Agent use cases" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="665" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_yellow" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="50" y="695" width="16" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_yellow_t" value="Backend Dev use cases" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="690" width="140" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_green" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="50" y="720" width="16" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_green_t" value="Extension Dev use cases" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="715" width="150" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_purple" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="50" y="745" width="16" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_purple_t" value="Platform Operator use cases" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="75" y="740" width="170" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

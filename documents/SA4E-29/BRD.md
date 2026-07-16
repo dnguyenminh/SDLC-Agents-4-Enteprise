@@ -1,6 +1,6 @@
 # Business Requirements Document (BRD)
 
-## Kiro SDLC Agents — SA4E-29: Base64 Encoding Pattern for Backend File Access
+## SA4E Extension — SA4E-29: Fix base64 design for file tools (drawio, mem_ingest_file)
 
 ---
 
@@ -9,11 +9,13 @@
 | Field | Value |
 |-------|-------|
 | Jira Ticket | SA4E-29 |
-| Title | Base64 Encoding Pattern for Backend File Access |
+| Title | Fix base64 design for file tools (drawio, mem_ingest_file) |
 | Author | BA Agent |
 | Version | 1.0 |
-| Date | 2026-07-11 |
-| Status | Draft |
+| Date | 2026-07-12 |
+| Status | Draft (Retroactive) |
+| Type | Task — High Priority |
+| Documentation Mode | Retroactive — code already implemented |
 
 ---
 
@@ -22,7 +24,7 @@
 | Role | Name - Position | Responsibility |
 |------|-----------------|----------------|
 | Author | BA Agent – Business Analyst | Create document |
-| Peer Reviewer | Duc Nguyen Minh – Reporter | Review document |
+| Peer Reviewer | TA Agent – Technical Architect | Review document |
 
 ---
 
@@ -30,16 +32,7 @@
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-07-11 | BA Agent | Initiate document — auto-generated from Jira ticket SA4E-29 |
-
----
-
-## Sign-Off
-
-| Name | Signature and date |
-|------|--------------------|
-| | ☐ I agree and confirm all criteria on this BRD as expected requirements |
-| | ☐ I agree and confirm all criteria on this BRD as expected requirements |
+| 1.0 | 2026-07-12 | BA Agent | Initiate document — retroactive documentation from implemented code (SA4E-29) |
 
 ---
 
@@ -47,28 +40,28 @@
 
 ### 1.1 Scope
 
-This change request addresses a fundamental architectural limitation in the SDLC multi-agent system: the backend MCP server cannot access the client-side filesystem. Tools such as `drawio_export_png`, `drawio_auto_layout`, and `mem_ingest_file` accept a `file_path` parameter, but when the backend receives this path, it has no access to the file because the file resides on the client machine (VS Code extension host).
+The SA4E extension operates in a **split-process architecture**:
+- **Extension process** (port 9181): Runs locally in VS Code, has access to the local filesystem
+- **Backend process** (port 48721): Runs remotely, processes tool logic but has NO local filesystem access
 
-The solution is to introduce a **base64 encoding pattern**: files are encoded to a base64 string on the client side, passed to the backend via the tool call payload, and decoded on the backend before processing.
+Several backend tools (`drawio_export_png`, `drawio_auto_layout`, `mem_ingest_file`) require file content as input and/or produce file output. These tools were originally designed with `file_path` parameters, assuming direct filesystem access. Since the backend runs remotely, it cannot read/write local files.
 
-The scope includes:
-- Updating affected tools to accept an optional `base64_content` parameter alongside (or instead of) `file_path`
-- Implementing client-side encoding logic
-- Implementing backend-side decoding logic
-- Updating all call sites that invoke these tools
+This BRD documents the **base64 proxy design** that transparently bridges this architectural gap: the extension reads files locally, encodes to base64, forwards to backend; backend processes content and returns output as base64; extension writes output back to local filesystem.
 
 ### 1.2 Out of Scope
 
-- Modifying tools that do not accept file paths (e.g., `mem_search`, `find_tools`)
-- Adding new file-related tools beyond the three affected ones
-- Building a persistent file transfer protocol (base64 is stateless per-call)
-- Streaming large files in chunks (base64 for files up to typical diagram/document sizes)
+- Backend server architecture changes (remains at port 48721)
+- Extension server architecture changes (remains at port 9181)
+- Tools that don't involve file I/O (e.g., `mem_search`, `code_search`)
+- LLM prompt engineering or tool selection logic
+- Authentication/authorization between Extension and Backend
 
 ### 1.3 Preliminary Requirement
 
-- The backend must support Node.js `Buffer.from()` or equivalent for base64 decode
-- The client (extension host) must have filesystem read access to encode files
-- All three affected tools must be registered and deployed before or alongside this change
+- Extension MCP server (WrapperServer) must be operational on port 9181
+- Backend MCP server must be operational on port 48721
+- Backend tools must expose `content_base64` in their input schemas
+- Backend tools returning files must include `output_base64` in descriptions
 
 ---
 
@@ -76,22 +69,37 @@ The scope includes:
 
 ### 2.1 High Level Process Map
 
-When an AI agent needs to process a file (export a drawio diagram to PNG, auto-layout a diagram, or ingest a file into the knowledge base), it first reads the file from the local filesystem on the client side, encodes it to a base64 string, and sends that string as part of the MCP tool call. The backend receives the base64 payload, decodes it to a buffer, and performs the requested operation. The result is returned to the agent.
+The system follows a three-tier data flow for file-based tool operations:
+
+```
+LLM Agent ──► Extension (9181) ──► Backend (48721)
+    │              │                      │
+    │  file_path   │  content_base64      │
+    │ ───────────► │ ──────────────────►  │
+    │              │                      │ process
+    │              │  output_base64       │
+    │  file_path   │ ◄──────────────────  │
+    │ ◄─────────── │                      │
+```
+
+The Extension acts as a **transparent proxy** that:
+1. Intercepts file_path from LLM requests
+2. Reads file, encodes to base64, forwards to Backend
+3. Receives base64 output from Backend, decodes, writes to local file
+4. Returns local file_path to LLM (LLM never sees base64)
 
 ![Business Flow](diagrams/business-flow.png)
-*[Edit in draw.io](diagrams/business-flow.drawio)*
-
-![Use Case Diagram](diagrams/use-case.png)
-*[Edit in draw.io](diagrams/use-case.drawio)*
 
 ### 2.2 List of User Stories / Use Cases
 
-| # | Story / Use Case / Epic | Priority | Source Ticket |
-|---|-------------------------|----------|---------------|
-| 1 | As an AI agent, I want to call `drawio_export_png` with base64-encoded XML so that diagrams can be exported without backend filesystem access. | MUST HAVE | SA4E-29 |
-| 2 | As an AI agent, I want to call `drawio_auto_layout` with base64-encoded XML so that diagrams can be auto-laid out without backend filesystem access. | MUST HAVE | SA4E-29 |
-| 3 | As an AI agent, I want to call `mem_ingest_file` with base64-encoded content so that files can be ingested into the knowledge base without backend filesystem access. | MUST HAVE | SA4E-29 |
-| 4 | As a backend developer, I want a reusable base64 decode utility so that all file-accepting tools handle encoding consistently. | SHOULD HAVE | SA4E-29 |
+| # | Story / Use Case | Priority | Source Ticket |
+|---|------------------|----------|---------------|
+| 1 | As an LLM agent, I want to call file tools using file_path only, so that I don't need to understand the remote architecture or base64 encoding | MUST HAVE | SA4E-29 |
+| 2 | As a backend developer, I want tools to auto-detect base64 proxy requirements from schemas, so that adding new file tools requires zero extension changes | MUST HAVE | SA4E-29 |
+| 3 | As an extension developer, I want a single proxy service that handles all file tool I/O transparently, so that I don't write per-tool proxy code | MUST HAVE | SA4E-29 |
+| 4 | As a platform operator, I want file tools to work correctly in split-process deployment without manual configuration, so that the system is production-ready out of the box | MUST HAVE | SA4E-29 |
+| 5 | As an LLM agent, I want find_tools to return schemas with file_path (not content_base64), so that tool discovery shows me parameters I can actually provide | SHOULD HAVE | SA4E-29 |
+| 6 | As a backend developer, I want execute_dynamic_tool to properly unwrap nested arguments for proxy processing, so that dynamically-invoked tools also benefit from base64 proxy | SHOULD HAVE | SA4E-29 |
 
 ---
 
@@ -101,129 +109,153 @@ When an AI agent needs to process a file (export a drawio diagram to PNG, auto-l
 
 #### Business Flow
 
-**Step 1:** The AI agent identifies a file that needs processing (e.g., a `.drawio` file for export, or a `.md` file for knowledge base ingestion).
+**Current (Broken) Behavior:**
 
-**Step 2:** The agent reads the file content from the local filesystem using the client-side `fs.readFile` or equivalent API.
+**Step 1:** LLM calls backend tool with `file_path` parameter (e.g., `drawio_export_png(file_path: "doc.drawio")`)
 
-**Step 3:** The agent encodes the file buffer to a base64 string using `Buffer.toString('base64')` or client-side `btoa()`.
+**Step 2:** Backend attempts to read file at `file_path` on the remote server
 
-**Step 4:** The agent calls the appropriate MCP tool (`drawio_export_png`, `drawio_auto_layout`, or `mem_ingest_file`) passing the base64 string as the `base64_content` parameter. The `file_path` parameter becomes optional or is used for metadata only (e.g., filename hint).
-
-**Step 5:** The backend receives the tool call, extracts the `base64_content`, and decodes it using `Buffer.from(base64, 'base64')`.
-
-**Step 6:** The backend processes the decoded buffer (exports PNG, applies auto-layout, or ingests to knowledge base).
-
-**Step 7:** The result is returned to the agent.
-
-> **Note:** Backward compatibility must be maintained — if neither `base64_content` nor `file_path` is provided, the tool should return a meaningful error. If `file_path` is provided and accessible (e.g., during local development), it should still work as before.
+**Step 3:** File does not exist on remote server → **FAILURE** (FileNotFoundError)
 
 ---
 
-#### STORY 1: Base64 Export for drawio_export_png
+**Expected (Fixed) Behavior:**
 
-> As an AI agent, I want to call `drawio_export_png` with base64-encoded XML so that diagrams can be exported without backend filesystem access.
+**Step 1:** LLM calls tool with `file_path` (e.g., `drawio_export_png(file_path: "doc.drawio")`)
 
-**Requirement Details:**
+**Step 2:** Extension intercepts call, reads file locally, encodes to base64
 
-1. The `drawio_export_png` tool MUST accept a new optional parameter `base64_content` (string — the base64-encoded drawio XML).
-2. When `base64_content` is provided, the backend MUST decode it and use the decoded XML as the diagram source.
-3. The existing `file_path` parameter SHOULD remain as an alternative for local development.
-4. The tool MUST validate that at least one of `file_path` or `base64_content` is provided.
-5. The output PNG MUST be returned as base64 in the tool response, or written to a path specified by the caller if a `file_path` is given.
+**Step 3:** Extension forwards to backend with `content_base64` (file_path removed from args)
 
-**Data Fields:**
+**Step 4:** Backend processes the base64 content (no filesystem access needed)
 
-| Field | Type | Required | Description | Example |
-|-------|------|----------|-------------|---------|
-| file_path | string | No | Local path to .drawio file | `C:\diagrams\flow.drawio` |
-| base64_content | string | No | Base64-encoded drawio XML | `PHhtbD48L3htbD4=` |
-| output_path | string | No | Path to write output PNG | `C:\diagrams\flow.png` |
+**Step 5:** Backend returns `output_base64` in response
 
-**Acceptance Criteria:**
+**Step 6:** Extension decodes base64, writes output file locally (e.g., `doc.png`)
 
-1. Given a valid base64-encoded drawio XML, when `drawio_export_png` is called with `base64_content`, then a PNG is successfully generated and returned.
-2. Given neither `file_path` nor `base64_content` is provided, when `drawio_export_png` is called, then a validation error is returned.
-3. Given both `file_path` and `base64_content` are provided, when `drawio_export_png` is called, then `base64_content` takes precedence (or both are tried with file first).
-4. Given an invalid base64 string, when `drawio_export_png` is called, then a decoding error is returned.
-5. Given the backend cannot write to the output path, when export completes, then the PNG data is still returned as base64 in the response.
+**Step 7:** Extension returns `{ file_path: "doc.png", size_bytes: N }` to LLM
 
 ---
 
-#### STORY 2: Base64 Auto-Layout for drawio_auto_layout
+#### STORY 1: Transparent file_path interface for LLM
 
-> As an AI agent, I want to call `drawio_auto_layout` with base64-encoded XML so that diagrams can be auto-laid out without backend filesystem access.
+> As an LLM agent, I want to call file tools using file_path only, so that I don't need to understand the remote architecture or base64 encoding.
 
 **Requirement Details:**
 
-1. The `drawio_auto_layout` tool MUST accept a new optional parameter `base64_content` (string — the base64-encoded drawio XML).
-2. When `base64_content` is provided, the backend MUST decode it, apply auto-layout, and return the laid-out XML.
-3. The existing `file_path` parameter SHOULD remain as an alternative for local development.
-4. The tool MUST validate that at least one of `file_path` or `base64_content` is provided.
-5. The output (laid-out XML) MUST be returned directly in the tool response.
-
-**Data Fields:**
-
-| Field | Type | Required | Description | Example |
-|-------|------|----------|-------------|---------|
-| file_path | string | No | Local path to .drawio file | `C:\diagrams\flow.drawio` |
-| base64_content | string | No | Base64-encoded drawio XML | `PHhtbD48L3htbD4=` |
+1. LLM MUST only see `file_path` in tool schemas (never `content_base64`)
+2. When LLM calls `tools/list`, schemas for file tools must show `file_path` as required parameter
+3. When LLM calls a file tool, it provides `file_path` — proxy handles the rest transparently
+4. Response to LLM contains `file_path` pointing to local output file (not raw base64)
+5. For output tools, an optional `output_path` parameter is exposed so LLM can specify destination
 
 **Acceptance Criteria:**
 
-1. Given a valid base64-encoded drawio XML, when `drawio_auto_layout` is called with `base64_content`, then the laid-out XML is returned successfully.
-2. Given neither `file_path` nor `base64_content` is provided, when `drawio_auto_layout` is called, then a validation error is returned.
-3. Given an invalid base64 string, when `drawio_auto_layout` is called, then a decoding error is returned.
-4. Given a valid base64 content with layout issues, when auto-layout completes, then the returned XML has corrected orthogonal edge routing and spacing.
+1. GIVEN LLM calls `tools/list`, WHEN response contains drawio tools, THEN schemas show `file_path` (required) and NOT `content_base64`
+2. GIVEN LLM calls `drawio_export_png(file_path: "diagram.drawio")`, WHEN file exists locally, THEN response contains `{ file_path: "diagram.png", size_bytes: N }`
+3. GIVEN LLM provides `file_path` that doesn't exist, THEN error message clearly states "Failed to read file {path}: ENOENT"
+4. GIVEN tool produces output, WHEN `output_path` not provided, THEN output path is auto-derived (`.drawio` → `.png`)
 
 ---
 
-#### STORY 3: Base64 File Ingestion for mem_ingest_file
+#### STORY 2: Zero-config auto-detection for new tools
 
-> As an AI agent, I want to call `mem_ingest_file` with base64-encoded content so that files can be ingested into the knowledge base without backend filesystem access.
+> As a backend developer, I want tools to auto-detect base64 proxy requirements from schemas, so that adding new file tools requires zero extension changes.
 
 **Requirement Details:**
 
-1. The `mem_ingest_file` tool MUST accept a new optional parameter `base64_content` (string — the base64-encoded file content).
-2. When `base64_content` is provided, the backend MUST decode it and use the decoded content for ingestion.
-3. A new optional parameter `filename` SHOULD be added to provide the original filename (for metadata/tagging purposes).
-4. The existing `file_path` parameter SHOULD remain as an alternative for local development.
-5. The tool MUST validate that at least one of `file_path` or `base64_content` is provided.
-
-**Data Fields:**
-
-| Field | Type | Required | Description | Example |
-|-------|------|----------|-------------|---------|
-| file_path | string | No | Local path to file | `C:\docs\BRD.md` |
-| base64_content | string | No | Base64-encoded file content | `IyBCdXNpbmVzcyBSZXE=` |
-| filename | string | No | Original filename for metadata | `BRD.md` |
+1. Extension must scan backend tool schemas on `tools/list` and auto-detect which tools need proxy
+2. Detection rule for INPUT proxy: tool schema has `content_base64` in `properties`
+3. Detection rule for OUTPUT proxy: tool description contains `output_base64` or `Returns output_base64`
+4. When a new tool is added to backend with `content_base64` param, it automatically gets proxied — no extension code changes needed
+5. Proxy sets are rebuilt on every `tools/list` call (picks up new tools dynamically)
 
 **Acceptance Criteria:**
 
-1. Given a valid base64-encoded file content, when `mem_ingest_file` is called with `base64_content`, then the content is successfully ingested into the knowledge base.
-2. Given neither `file_path` nor `base64_content` is provided, when `mem_ingest_file` is called, then a validation error is returned.
-3. Given `filename` is provided alongside `base64_content`, when ingestion completes, then the filename is stored as metadata with the knowledge base entry.
-4. Given an invalid base64 string, when `mem_ingest_file` is called, then a decoding error is returned.
-5. Given a very large file encoded in base64, when ingestion is attempted, then the tool handles it within reasonable memory limits (or returns an appropriate size-limit error).
+1. GIVEN backend adds `new_file_tool` with `content_base64` in schema, WHEN extension calls `tools/list`, THEN `new_file_tool` is auto-detected for input proxy
+2. GIVEN backend adds tool with "Returns output_base64" in description, WHEN extension calls `tools/list`, THEN tool is auto-detected for output proxy
+3. GIVEN extension restarts, WHEN first `tools/list` is called, THEN all proxy sets are correctly rebuilt
+4. GIVEN tool does NOT have `content_base64` in schema, THEN it is NOT proxied (passes through unchanged)
 
 ---
 
-#### STORY 4: Reusable Base64 Decode Utility
+#### STORY 3: Single proxy service handles all file I/O
 
-> As a backend developer, I want a reusable base64 decode utility so that all file-accepting tools handle encoding consistently.
+> As an extension developer, I want a single proxy service that handles all file tool I/O transparently, so that I don't write per-tool proxy code.
 
 **Requirement Details:**
 
-1. A shared utility function `decodeBase64(base64String: string): Buffer` MUST be created in a common location (e.g., `backend/src/utils/base64.ts`).
-2. The utility MUST handle standard base64 with proper error handling for invalid strings.
-3. All three affected tools MUST use this shared utility rather than implementing inline decode logic.
-4. The utility MUST support both standard base64 and base64url variants.
+1. A single `Base64ProxyService` class handles all proxy logic (SRP)
+2. Service provides: `detectFromToolList()`, `proxyInput()`, `proxyOutput()`, `rewriteSchemasForLlm()`
+3. WrapperServer uses Base64ProxyService — no file I/O logic in WrapperServer itself
+4. Service handles `execute_dynamic_tool` unwrapping: extracts nested tool name + args, proxies inner tool
+5. Service handles `find_tools` response rewriting: rewrites schemas in discovery responses
 
 **Acceptance Criteria:**
 
-1. Given a valid base64 string, when `decodeBase64` is called, then a Buffer with the correct decoded content is returned.
-2. Given an invalid base64 string, when `decodeBase64` is called, then an error with a descriptive message is thrown.
-3. Given all three tools use the utility, then no tool has inline base64 decode logic (verified by code review).
-4. Given a base64url-encoded string, when `decodeBase64` is called, then it is correctly decoded (handles `-` and `_` replacements).
+1. GIVEN any file tool call arrives, WHEN routed through WrapperServer, THEN Base64ProxyService handles all base64 logic
+2. GIVEN `execute_dynamic_tool(toolName: "drawio_export_png", arguments: {file_path: "x.drawio"})`, THEN inner args are unwrapped, proxied, and re-wrapped
+3. GIVEN `find_tools` returns tool schemas, THEN schemas in response are rewritten (hide content_base64, show file_path)
+4. GIVEN extension developer adds new route, THEN no proxy code needed — just call `callWithProxy(name, args)`
+
+---
+
+#### STORY 4: Production-ready without manual configuration
+
+> As a platform operator, I want file tools to work correctly in split-process deployment without manual configuration, so that the system is production-ready out of the box.
+
+**Requirement Details:**
+
+1. No configuration file or environment variable required for base64 proxy to work
+2. Proxy activates automatically based on schema detection
+3. Output directory is auto-created if it doesn't exist (`ensureDir` with `recursive: true`)
+4. Errors are propagated with clear messages (file not found, write permission errors)
+5. Non-file tools pass through unchanged — zero interference
+
+**Acceptance Criteria:**
+
+1. GIVEN fresh installation with Extension + Backend running, WHEN LLM calls file tool, THEN proxy works without any manual setup
+2. GIVEN output directory doesn't exist, WHEN tool produces output, THEN directory is created automatically
+3. GIVEN backend returns error, THEN error propagates to LLM unchanged
+4. GIVEN non-file tool called (e.g., `mem_search`), THEN it passes through without any proxy interference
+5. GIVEN Backend body > 1MB, THEN WrapperServer rejects with clear error (MAX_BODY_SIZE protection)
+
+---
+
+#### STORY 5: find_tools schema rewriting
+
+> As an LLM agent, I want find_tools to return schemas with file_path (not content_base64), so that tool discovery shows me parameters I can actually provide.
+
+**Requirement Details:**
+
+1. When `execute_dynamic_tool(toolName: "find_tools", ...)` is called, response is intercepted
+2. Tool schemas in the find_tools response are rewritten through `rewriteSchemasForLlm()`
+3. LLM sees consistent schemas whether from `tools/list` or `find_tools`
+
+**Acceptance Criteria:**
+
+1. GIVEN LLM calls find_tools for drawio tools, WHEN response arrives, THEN schemas show `file_path` not `content_base64`
+2. GIVEN schemas from `tools/list` and from `find_tools`, THEN both show identical rewritten schemas
+
+---
+
+#### STORY 6: execute_dynamic_tool nested arg unwrapping
+
+> As a backend developer, I want execute_dynamic_tool to properly unwrap nested arguments for proxy processing, so that dynamically-invoked tools also benefit from base64 proxy.
+
+**Requirement Details:**
+
+1. `execute_dynamic_tool` receives `{ toolName, arguments: { file_path: "..." } }`
+2. Extension must unwrap: extract inner `toolName` and `arguments` (or `args`)
+3. Apply proxy to inner args (read file, inject content_base64)
+4. Re-wrap proxied args back into `execute_dynamic_tool` shape
+5. After backend response, apply output proxy to result
+
+**Acceptance Criteria:**
+
+1. GIVEN `execute_dynamic_tool(toolName: "drawio_auto_layout", arguments: {file_path: "x.drawio"})`, THEN file is read, base64 injected into inner arguments
+2. GIVEN execute_dynamic_tool with `args` key (not `arguments`), THEN unwrapping still works
+3. GIVEN backend returns output_base64 via execute_dynamic_tool, THEN output file is written locally
 
 ---
 
@@ -231,11 +263,11 @@ When an AI agent needs to process a file (export a drawio diagram to PNG, auto-l
 
 | Dependency | Type | Related Ticket | Description |
 |------------|------|----------------|-------------|
-| Node.js Buffer API | Infrastructure | N/A | Server-side `Buffer.from()` for base64 decode |
-| Client-side fs access | System | N/A | Extension host `fs.readFile` to encode files |
-| drawio_export_png tool | System | F6-drawio-engine | Must be updated to accept base64 |
-| drawio_auto_layout tool | System | F6-drawio-engine | Must be updated to accept base64 |
-| mem_ingest_file tool | System | F1-memory-kb | Must be updated to accept base64 |
+| WrapperServer HTTP proxy | System | SA4E-29 | MCP JSON-RPC server on port 9181 routing to backend |
+| Backend MCP server | System | N/A | Remote backend on port 48721 providing file tools |
+| Node.js fs module | System | N/A | Local file read/write operations |
+| draw.io CLI | External | N/A | Backend dependency for PNG export (not extension concern) |
+| VS Code Extension API | System | N/A | Extension host environment |
 
 ---
 
@@ -243,10 +275,10 @@ When an AI agent needs to process a file (export a drawio diagram to PNG, auto-l
 
 | Role | Name / Team | Responsibility | Source |
 |------|-------------|----------------|--------|
-| Reporter / Product Owner | Duc Nguyen Minh | Defines requirements, approves BRD | Ticket reporter |
-| Backend Developer | Backend / Platform team | Implements decode utility + tool parameter updates | Assumed |
-| AI Agent consumers | All agents (BA, SA, DEV, QA) | Call these tools with base64 pattern | Derived from system design |
-| Extension Developer | Extension / Client team | Implements client-side encoding logic | Assumed |
+| LLM Agents | AI Coding Assistants | Primary consumers of file tools | Tool users |
+| Backend Dev | SA4E Team | Maintains backend tools with base64 interface | Implementor |
+| Extension Dev | SA4E Team | Maintains proxy service and wrapper server | Implementor |
+| Platform Operator | DevOps | Deploys and monitors the system | Operations |
 
 ---
 
@@ -256,17 +288,18 @@ When an AI agent needs to process a file (export a drawio diagram to PNG, auto-l
 
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
-| Large files cause excessive memory usage from base64 overhead (~33% size increase) | Medium | Medium | Document size limits; consider streaming for future |
-| Backward compatibility break for agents using file_path directly | High | Low | Keep file_path as fallback; deprecate with warning |
-| Invalid base64 strings from malformed client encoding | Medium | Medium | Input validation + descriptive error messages |
-| Race condition if same file is encoded and sent twice | Low | Low | Stateless per-call — no shared state |
+| Large files exceed MAX_BODY_SIZE (1MB) | High | Low | WrapperServer enforces 1MB limit; large file tools need chunking (future) |
+| Base64 encoding increases payload by ~33% | Medium | Certain | Accept trade-off; 1MB limit accounts for this |
+| Schema detection false positives | Medium | Low | Detection uses specific field names (`content_base64`) — unlikely to collide |
+| Backend schema changes break detection | High | Low | Detection re-runs on every tools/list call — self-healing |
 
 ### 5.2 Assumptions
 
-- All affected tools are already deployed in the MCP server.
-- The client (VS Code extension host) has full filesystem read access.
-- Files are small enough (typically < 10 MB) that base64 encoding overhead is acceptable.
-- Agents will be updated to use the base64 pattern in their workflows.
+- Backend tools correctly declare `content_base64` in their input schemas when they need file content
+- Backend tools that produce files include "output_base64" in their description
+- Extension always has read access to files that LLM references
+- Extension always has write access to output directories
+- Network latency between Extension (9181) and Backend (48721) is negligible (localhost or LAN)
 
 ---
 
@@ -274,11 +307,14 @@ When an AI agent needs to process a file (export a drawio diagram to PNG, auto-l
 
 | Category | Requirement | Details |
 |----------|-------------|---------|
-| Performance | Decode latency < 50ms | Base64 decode of typical files (< 10 MB) completes in under 50ms |
-| Compatibility | 100% backward compatibility | Existing `file_path` calls continue working unchanged |
-| Security | Input validation | All base64 inputs validated before decode; invalid inputs rejected with clear error |
-| Maintainability | Single decode utility | All tools use the shared `decodeBase64` utility |
-| Usability | Clear error messages | Errors include what went wrong and how to fix it |
+| Transparency | LLM-invisible proxy | LLM never sees base64 — only file_path in schemas and responses |
+| Zero-config | Schema-driven auto-detection | No config file, env var, or hardcoded tool list required |
+| Remote-safe | No filesystem dependency on backend | Backend never reads/writes local filesystem |
+| Performance | Synchronous file I/O acceptable | File reads/writes are local — sub-millisecond |
+| Extensibility | New tools auto-proxied | Adding backend tool with content_base64 param = auto-proxied |
+| Reliability | Error propagation | File errors (ENOENT, EACCES) propagated clearly to LLM |
+| Security | No path traversal | File paths validated (implicit — OS handles via fs.readFileSync) |
+| Maintainability | Single Responsibility | Base64ProxyService handles ONLY proxy logic; WrapperServer handles HTTP |
 
 ---
 
@@ -286,60 +322,45 @@ When an AI agent needs to process a file (export a drawio diagram to PNG, auto-l
 
 | Ticket Key | Summary | Status | Type | Relationship |
 |------------|---------|--------|------|--------------|
-| SA4E-29 | Base64 Encoding Pattern for Backend File Access | To Do | Task | Main ticket |
-| F6-drawio-engine | Draw.io Engine — XML Layout & PNG Export | In Progress | Feature | Affected tools |
-| F1-memory-kb | Memory & Knowledge Base | In Progress | Feature | Affected tool (mem_ingest_file) |
+| SA4E-29 | Fix base64 design for file tools (drawio, mem_ingest_file) | Done | Task | Main ticket |
 
 ---
 
 ## 8. Appendix
 
-### Affected Tools and their current signatures
+### Tools Affected by Base64 Proxy
 
-| Tool | Current Parameter | New Proposed Parameter(s) |
-|------|-------------------|--------------------------|
-| `drawio_export_png` | `file_path: string` | `file_path?: string`, `base64_content?: string`, `output_path?: string` |
-| `drawio_auto_layout` | `file_path: string` | `file_path?: string`, `base64_content?: string` |
-| `mem_ingest_file` | `file_path: string` | `file_path?: string`, `base64_content?: string`, `filename?: string` |
+| Tool Name | Input Proxy | Output Proxy | Description |
+|-----------|-------------|--------------|-------------|
+| `drawio_export_png` | Yes | Yes | Read .drawio file, export as PNG |
+| `drawio_auto_layout` | Yes | Yes | Read .drawio file, auto-layout, return modified file |
+| `mem_ingest_file` | Yes | No | Read file, ingest content into KB |
 
-### Base64 Encoding Pattern Pseudocode
+### Architecture Summary
 
-**Client-side (TypeScript):**
-```typescript
-import * as fs from 'fs';
-const buffer = fs.readFileSync('/path/to/file.drawio');
-const base64 = buffer.toString('base64');
-// Call tool: { base64_content: base64 }
-```
-
-**Backend-side (TypeScript):**
-```typescript
-function decodeBase64(encoded: string): Buffer {
-  return Buffer.from(encoded, 'base64');
-}
-// Process decoded buffer...
-```
+| Component | Port | Role | Filesystem Access |
+|-----------|------|------|-------------------|
+| LLM Agent | — | Tool consumer | None |
+| Extension (WrapperServer) | 9181 | MCP proxy + file I/O | Full local access |
+| Backend | 48721 | Tool logic + processing | No local access |
 
 ### Glossary
 
 | Term | Definition |
 |------|------------|
-| Base64 | Binary-to-text encoding scheme that represents binary data in an ASCII string format |
-| Base64url | URL-safe variant of base64 using `-` and `_` instead of `+` and `/` |
-| file_path | Local filesystem path parameter (current approach — backend cannot access) |
-| base64_content | New parameter carrying file content as base64-encoded string |
-| MCP Tool | Model Context Protocol tool — a function exposed by the server to AI agents |
+| Base64 Proxy | Transparent mechanism that converts file_path to base64 content for remote tool invocation |
+| WrapperServer | HTTP server in extension that bridges LLM requests to backend via JSON-RPC |
+| Schema Rewriting | Process of modifying tool schemas to hide internal params (content_base64) from LLM |
+| execute_dynamic_tool | Meta-tool that invokes other tools by name with nested arguments |
+| find_tools | Discovery tool that returns available tools and their schemas |
 
-### Reference Documents
+### Use Cases
 
-| Document | Link / Location |
-|----------|-----------------|
-| F6 Drawio Engine BRD | `documents/F6-drawio-engine/BRD.md` |
-| F1 Memory KB BRD | `documents/F1-memory-kb/BRD.md` |
+![Use Case Diagram](diagrams/use-case.png)
 
 ### Diagram Index
 
 | # | Diagram | Image | Source (editable) |
 |---|---------|-------|-------------------|
-| 1 | Business Flow | [business-flow.png](diagrams/business-flow.png) | [business-flow.drawio](diagrams/business-flow.drawio) |
-| 2 | Use Case Diagram | [use-case.png](diagrams/use-case.png) | [use-case.drawio](diagrams/use-case.drawio) |
+| 1 | Business Flow — Data flow LLM to Extension to Backend | [business-flow.png](diagrams/business-flow.png) | [business-flow.drawio](diagrams/business-flow.drawio) |
+| 2 | Use Case Diagram — Actor interactions | [use-case.png](diagrams/use-case.png) | [use-case.drawio](diagrams/use-case.drawio) |

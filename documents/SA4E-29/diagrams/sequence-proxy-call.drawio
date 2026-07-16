@@ -1,0 +1,136 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1400" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="Sequence Diagram: Proxy Call (UC-01)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="20" width="500" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="LLM Agent" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;size=40;" vertex="1" parent="1">
+      <mxGeometry x="100" y="80" width="120" height="1100" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="WrapperServer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;size=40;" vertex="1" parent="1">
+      <mxGeometry x="320" y="80" width="130" height="1100" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="Base64ProxyService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;size=40;" vertex="1" parent="1">
+      <mxGeometry x="550" y="80" width="150" height="1100" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="Local FS" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;size=40;" vertex="1" parent="1">
+      <mxGeometry x="770" y="80" width="100" height="1100" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="Backend (48721)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;size=40;" vertex="1" parent="1">
+      <mxGeometry x="950" y="80" width="130" height="1100" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="1: tools/call(drawio_export_png, {file_path: &quot;doc.drawio&quot;})" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="160" y="180" as="sourcePoint" />
+        <mxPoint x="385" y="180" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="21" value="2: routeToolCall() -&gt; callWithProxy()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;dashed=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="385" y="230" as="sourcePoint" />
+        <mxPoint x="385" y="260" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="420" y="230" />
+          <mxPoint x="420" y="260" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="22" value="3: proxyInput(name, args)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="385" y="290" as="sourcePoint" />
+        <mxPoint x="625" y="290" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="23" value="4: fs.readFileSync(file_path)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="625" y="340" as="sourcePoint" />
+        <mxPoint x="820" y="340" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="24" value="5: file buffer" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="820" y="380" as="sourcePoint" />
+        <mxPoint x="625" y="380" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="25" value="6: encode base64, inject content_base64" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;dashed=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="625" y="410" as="sourcePoint" />
+        <mxPoint x="625" y="440" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="660" y="410" />
+          <mxPoint x="660" y="440" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="26" value="7: proxiedArgs" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="625" y="470" as="sourcePoint" />
+        <mxPoint x="385" y="470" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="27" value="8: restCallTool(name, proxiedArgs)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="385" y="520" as="sourcePoint" />
+        <mxPoint x="1015" y="520" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="28" value="9: process content_base64" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;dashed=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1015" y="560" as="sourcePoint" />
+        <mxPoint x="1015" y="600" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="1050" y="560" />
+          <mxPoint x="1050" y="600" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="29" value="10: { output_base64: &quot;...&quot; }" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1015" y="640" as="sourcePoint" />
+        <mxPoint x="385" y="640" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="30" value="11: proxyOutput(name, args, result)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="385" y="690" as="sourcePoint" />
+        <mxPoint x="625" y="690" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="31" value="12: decode base64, resolve output path" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;dashed=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="625" y="720" as="sourcePoint" />
+        <mxPoint x="625" y="750" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="660" y="720" />
+          <mxPoint x="660" y="750" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="32" value="13: ensureDir() + fs.writeFileSync(outputPath, buf)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="625" y="790" as="sourcePoint" />
+        <mxPoint x="820" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="33" value="14: OK" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="820" y="830" as="sourcePoint" />
+        <mxPoint x="625" y="830" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="34" value="15: { file_path: &quot;doc.png&quot;, size_bytes: N }" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="625" y="870" as="sourcePoint" />
+        <mxPoint x="385" y="870" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="35" value="16: JSON-RPC result: { file_path, size_bytes }" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="385" y="930" as="sourcePoint" />
+        <mxPoint x="160" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
