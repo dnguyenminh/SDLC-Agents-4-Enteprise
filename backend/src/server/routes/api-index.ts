@@ -64,7 +64,7 @@ function triggerIndexPhase(registry: ModuleRegistry, scope: IndexScope, logger: 
   return true;
 }
 
-/** Phase: ensure a KB metadata entry exists for the project (non-fatal). */
+/** Phase: ensure a KB metadata entry + graph node exist for the project (non-fatal). */
 function ensureProjectKbEntry(registry: ModuleRegistry, scope: IndexScope, written: number, logger: Logger): void {
   try {
     const mem = registry.getModule('memory') as any;
@@ -73,29 +73,31 @@ function ensureProjectKbEntry(registry: ModuleRegistry, scope: IndexScope, writt
     const displayName = path.basename(scope.workspace);
     const existing = engine.getDb().prepare(
       `SELECT id FROM knowledge_entries WHERE project_id = ? AND source = 'project-metadata'`
-    ).get(scope.projectId);
-    if (existing) return;
-    insertProjectKbEntry(engine, scope, displayName, written, logger);
+    ).get(scope.projectId) as { id: number } | undefined;
+    const entryId = existing
+      ? existing.id
+      : engine.insert({
+          content: `Project "${displayName}" indexed. Workspace: ${scope.workspace}. Files: ${written}.`,
+          summary: `Project metadata for ${displayName}`,
+          type: 'CONTEXT', tier: 'SEMANTIC', scope: 'PROJECT',
+          project_id: scope.projectId, source: 'project-metadata', tags: 'project,metadata,indexed',
+        });
+    // Always upsert graph_node so the KB dot appears on the graph.
+    upsertProjectGraphNode(String(entryId), displayName, scope.projectId, logger);
   } catch (err) {
     logger.warn({ err }, '[index] project KB entry skipped (non-fatal)');
   }
 }
 
-/** Insert the project KB entry + graph node (split out to keep callers ≤20 lines). */
-function insertProjectKbEntry(engine: any, scope: IndexScope, displayName: string, written: number, logger: Logger): void {
-  const entryId = engine.insert({
-    content: `Project "${displayName}" indexed. Workspace: ${scope.workspace}. Files: ${written}.`,
-    summary: `Project metadata for ${displayName}`,
-    type: 'CONTEXT', tier: 'SEMANTIC', scope: 'PROJECT',
-    project_id: scope.projectId, source: 'project-metadata', tags: 'project,metadata,indexed',
-  });
+/** Upsert the project-metadata graph node (INSERT OR REPLACE to fix stale/missing rows). */
+function upsertProjectGraphNode(entryId: string, displayName: string, projectId: string, logger: Logger): void {
   try {
     getAdminDb().prepare(
-      `INSERT OR IGNORE INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id)
+      `INSERT OR REPLACE INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(String(entryId), `Project: ${displayName}`, 'CONTEXT', 'SEMANTIC', scope.projectId, 0, 0, 0, 'macro', 0);
+    ).run(entryId, `Project: ${displayName}`, 'CONTEXT', 'SEMANTIC', projectId, 0, 0, 0, 'macro', '0');
   } catch (err) {
-    logger.warn({ err }, '[index] graph node sync skipped (non-fatal)');
+    logger.warn({ err }, '[index] graph node upsert skipped (non-fatal)');
   }
 }
 
