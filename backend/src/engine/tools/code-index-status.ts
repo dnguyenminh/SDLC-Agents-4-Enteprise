@@ -16,15 +16,16 @@ export function registerCodeIndexStatus(
     'Get current indexing status: file count, symbol count, languages, last indexed time, indexer state, and SFDX stats (if Salesforce project detected).',
     {
       reindex: z.boolean().optional().default(false).describe('Trigger a full re-index'),
+      __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
-    async ({ reindex }) => {
+    async ({ reindex, __projectId }) => {
       if (reindex) {
-        await indexer.runFullIndex();
+        await indexer.runFullIndex(__projectId ? { projectId: __projectId } : undefined);
       }
-      const status = queryLayer.getIndexStatus();
+      const status = queryLayer.getIndexStatus(__projectId);
       const sfdxStats = indexer.getSfdxStats();
       const tsStats = indexer.getTreeSitterStats();
-      const text = formatStatus(status, indexer.isRunning(), sfdxStats, tsStats);
+      const text = formatStatus(status, indexer.isRunning(__projectId), sfdxStats, tsStats);
       return { content: [{ type: 'text', text }] };
     }
   );

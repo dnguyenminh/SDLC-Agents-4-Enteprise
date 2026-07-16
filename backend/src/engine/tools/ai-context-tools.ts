@@ -117,7 +117,8 @@ export function handleGetCuratedContext(
   args: Record<string, unknown>,
   db: Database.Database,
   workspace: string,
-  dbManager: DatabaseManager
+  dbManager: DatabaseManager,
+  projectId?: string
 ): string {
   const resolver = new SymbolResolver(db);
   const traverser = new GraphTraverser(db, resolver, workspace);
@@ -130,7 +131,8 @@ export function handleGetCuratedContext(
     include_source: (args.include_source as boolean) ?? true,
     include_memory: (args.include_memory as boolean) ?? true,
     include_graph: (args.include_graph as boolean) ?? true,
-    source_weights: args.source_weights as any
+    source_weights: args.source_weights as any,
+    projectId
   };
 
   const result = executeSync(() => service.getContext(params));

@@ -12,9 +12,10 @@ export function registerCodeModules(server: McpServer, queryLayer: QueryLayer): 
     'List all discovered code modules in the workspace with file counts, languages, and descriptions.',
     {
       name: z.string().optional().describe('Filter by module name (prefix match)'),
+      __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
-    async ({ name }) => {
-      const modules = queryLayer.listModules();
+    async ({ name, __projectId }) => {
+      const modules = queryLayer.listModules(__projectId);
       const filtered = name
         ? modules.filter(m => m.name.toLowerCase().startsWith(name.toLowerCase()))
         : modules;

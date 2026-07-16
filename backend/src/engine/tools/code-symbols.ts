@@ -15,14 +15,15 @@ export function registerCodeSymbols(server: McpServer, queryLayer: QueryLayer): 
       file: z.string().optional().describe('File path to list symbols from'),
       kind: z.string().optional().describe('Filter by kind: function, class, interface, enum, type, method'),
       limit: z.number().optional().default(50).describe('Max results'),
+      __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
-    async ({ name, file, kind, limit }) => {
+    async ({ name, file, kind, limit, __projectId }) => {
       let text: string;
       if (file) {
-        const symbols = queryLayer.getFileSymbols(file);
+        const symbols = queryLayer.getFileSymbols(__projectId, file);
         text = formatFileSymbols(file, symbols);
       } else if (name) {
-        const symbols = queryLayer.findSymbols(name, kind, limit);
+        const symbols = queryLayer.findSymbols(__projectId, name, kind, limit);
         text = formatSymbolList(symbols, name);
       } else {
         text = 'Provide either "name" or "file" parameter';

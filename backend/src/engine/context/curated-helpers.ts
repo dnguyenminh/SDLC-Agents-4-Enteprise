@@ -9,10 +9,11 @@ import { ContextSection, ContextItem } from './types.js';
 export async function searchCode(
   analysis: { ftsQuery: string; symbolCandidates: string[] },
   queryLayer: QueryLayer,
-  resolver: SymbolResolver
+  resolver: SymbolResolver,
+  projectId?: string
 ): Promise<{ source: string; results: any[] }> {
   try {
-    const ftsResults = queryLayer.searchCode(analysis.ftsQuery, 30);
+    const ftsResults = queryLayer.searchCode(projectId, analysis.ftsQuery, 30);
 
     const symbolResults: any[] = [];
     for (const candidate of analysis.symbolCandidates.slice(0, 5)) {

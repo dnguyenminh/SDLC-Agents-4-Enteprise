@@ -14,9 +14,10 @@ export function registerCodeKbExport(server: McpServer, queryLayer: QueryLayer, 
     {
       module: z.string().optional().describe('Filter by module name (optional, exports all if omitted)'),
       format: z.string().optional().describe('Output format: json (default) or text'),
+      __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
-    async ({ module, format }) => {
-      const modules = queryLayer.listModulesWithPatterns(module ?? null);
+    async ({ module, format, __projectId }) => {
+      const modules = queryLayer.listModulesWithPatterns(__projectId, module ?? null);
       const projectName = extractProjectName(workspace);
       const outputFormat = format ?? 'json';
       const text = outputFormat === 'text'
