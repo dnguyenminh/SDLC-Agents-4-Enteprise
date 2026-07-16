@@ -33,7 +33,6 @@ export class AnalyzeInputNode extends BaseNode {
       return {
         analyzedIntent: null,
         approvalDecision: null,
-        stepStatus: "NO_INPUT",
       };
     }
 
@@ -44,11 +43,14 @@ export class AnalyzeInputNode extends BaseNode {
     );
 
     try {
-      const structuredLlm = this.llmProvider!.withStructuredOutput(IntentAnalysisSchema);
-      const result: IntentAnalysis = await structuredLlm.invoke([
-        { role: "system", content: ANALYSIS_SYSTEM_PROMPT },
+      const chatResult = await this.llmProvider!.chat([
+        { role: "system", content: ANALYSIS_SYSTEM_PROMPT + "\n\nRespond with ONLY a JSON object: {\"intent\": \"APPROVE\"|\"REJECT\"|\"NEED_CLARIFICATION\", \"reasonSummary\": \"...\"}" },
         { role: "user", content: `User feedback: "${rawInput}"` },
       ]);
+
+      const parsed = JSON.parse(chatResult.replace(/```json\n?|\n?```/g, "").trim());
+      const validated = IntentAnalysisSchema.parse(parsed);
+      const result: IntentAnalysis = validated;
 
       this.streamHandler.emitToken(
         this.nodeId,

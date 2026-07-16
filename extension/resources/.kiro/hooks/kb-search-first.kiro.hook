@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "KB Search First",
+  "description": "On every user message, remind agent to search KB for relevant context before producing any output. Ensures self-learning rule #1 compliance.",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "BEFORE responding to the user's message, you MUST first call mem_search with a query relevant to the user's request (extract key topic/ticket/concept from their message). Use the KB results to inform your response. If the user mentions a ticket key (e.g. SA4E-xx), search for that ticket's documents. If the user asks about a concept, search for related decisions/patterns. Only AFTER reviewing KB results should you proceed with your response. If KB returns nothing relevant, proceed normally."
+  }
+}

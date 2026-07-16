@@ -222,9 +222,9 @@ export class RemoteBackendClient implements vscode.Disposable {
   }
 
   async invokeTool(name: string, args: Record<string, unknown>): Promise<string> {
-    if (this._status !== "running" || !this.mcpClient) { throw new Error("Backend not connected."); }
+    if (this._status !== "running") { throw new Error("Backend not connected."); }
     const finalArgs = wrapToolArguments(name, args);
-    const result = await this.mcpClient.callTool({ name, arguments: finalArgs });
+    const result = await this.restCallTool(name, finalArgs);
     if (result.isError) { throw new Error(`Tool execution failed: ${JSON.stringify(result.content)}`); }
     return JSON.stringify(result);
   }

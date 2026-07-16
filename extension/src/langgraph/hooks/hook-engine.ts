@@ -12,6 +12,19 @@ import { classifyTool, getMatchingToolHooks, extractFilePath, matchGlob } from "
 import { emitHookFired } from "./hook-emitter";
 import * as vscode from "vscode";
 
+/** Result from pre-tool-use hooks */
+export interface PreToolUseHookResult {
+  denied: boolean;
+  hookName?: string;
+  reason?: string;
+  injectedPrompts: string[];
+}
+
+/** Result from post-tool-use hooks */
+export interface PostToolUseHookResult {
+  injectedPrompts: string[];
+}
+
 export class HookEngine {
   private hooks: HookDefinition[] = [];
   private loaded = false;

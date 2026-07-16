@@ -6,8 +6,9 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import * as vscode from "vscode";
 import { BaseNode } from "../core/base-node";
-import { PipelineState } from "../core/state";
+import { PipelineState, SDLCPhase } from "../core/state";
 import { McpBridge } from "../core/mcp-bridge";
 import { StreamHandler } from "../core/stream-handler";
 import type { LlmProvider, LlmMessage } from "../core/llm-provider";
@@ -27,6 +28,10 @@ export class DynamicAgentNode extends BaseNode {
     this.config = config;
   }
 
+  private resolveWorkspaceRoot(): string | undefined {
+    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  }
+
   async execute(state: PipelineState): Promise<Partial<PipelineState>> {
     const agentId = this.config.id;
 
@@ -40,7 +45,8 @@ export class DynamicAgentNode extends BaseNode {
   }
 
   private async executeWithLlm(state: PipelineState, agentId: string): Promise<Partial<PipelineState>> {
-    const { ticketKey, workspaceRoot } = state;
+    const { ticketKey } = state;
+    const workspaceRoot = this.resolveWorkspaceRoot();
     const promptContent = await this.loadStepPrompt(workspaceRoot);
     const context = this.buildContext(state);
     const messages: LlmMessage[] = [
@@ -70,19 +76,19 @@ export class DynamicAgentNode extends BaseNode {
           label: this.config.label,
         },
       }],
-      currentPhase: this.config.phase,
+      currentPhase: this.config.phase as SDLCPhase,
       lastUpdatedAt: new Date().toISOString(),
     };
   }
 
   private async executeWithMcp(state: PipelineState, agentId: string): Promise<Partial<PipelineState>> {
-    const { sessionId, ticketKey, workspaceRoot, currentPhase } = state;
+    const { ticketKey, currentPhase } = state;
 
     const mcpResult = await this.mcpBridge.callTool(
       agentId,
       {
         ticketKey,
-        sessionId: sessionId ?? "",
+        sessionId: state.threadId ?? "",
         phase: currentPhase,
         input: JSON.stringify(state),
       }
@@ -108,7 +114,7 @@ export class DynamicAgentNode extends BaseNode {
           mcpFallback: true,
         },
       }],
-      currentPhase: this.config.phase,
+      currentPhase: this.config.phase as SDLCPhase,
       lastUpdatedAt: new Date().toISOString(),
     };
   }
@@ -135,8 +141,7 @@ export class DynamicAgentNode extends BaseNode {
 
   private buildContext(state: PipelineState): string {
     const parts: string[] = [];
-    if (state.ticketSummary) parts.push(`Ticket: ${state.ticketSummary}`);
-    if (state.ticketKey) parts.push(`Key: ${state.ticketKey}`);
+    if (state.ticketKey) parts.push(`Ticket: ${state.ticketKey}`);
     if (state.currentPhase) parts.push(`Phase: ${state.currentPhase}`);
     if (state.agentOutputs?.length) {
       const lastOutput = state.agentOutputs[state.agentOutputs.length - 1];

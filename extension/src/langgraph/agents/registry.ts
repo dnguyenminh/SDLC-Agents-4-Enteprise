@@ -91,7 +91,7 @@ class AgentRegistry {
       this.pipeline = await extractor.extract(agentContents, llm);
     } catch (err) {
       debugError("[AgentRegistry] PipelineExtractor failed, using fallback phases", err as Error);
-      this.pipeline = this.buildFallbackPhases();
+      this.pipeline = { phases: this.buildFallbackPhases(), relations: [] };
     }
 
     this.generateInfraNodes();

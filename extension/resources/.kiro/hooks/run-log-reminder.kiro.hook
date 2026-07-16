@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Run Log Reminder",
+  "description": "After agent stops, remind to append RUN-LOG.md entry for the ticket being worked on. Enforces sm-core.md rule: SM MUST append RUN-LOG after every sub-agent invocation.",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check: if you just completed work on a Jira ticket (SA4E-xx pattern), verify that documents/{TICKET}/RUN-LOG.md exists and has an entry for this action. If missing, create or append it now. Format: | # | Timestamp | Agent | Phase | Action | Result | Tokens | Duration |"
+  }
+}

@@ -49,7 +49,6 @@ export {
   routeAfterAnalyzeInput,
   routeAfterVerify,
   routeAfterStrategySwitch,
-  routeAfterNode,
-  routeAfterApproval,
+  routeAfterAdvance,
   QUALITY_GATE_TARGETS,
 } from "./pipeline/edges";

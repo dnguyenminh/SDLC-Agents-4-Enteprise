@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Version Sync Check",
+  "description": "After any package.json is edited, verify that all README badge versions match the new version. Reports mismatch if found.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/package.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A package.json was edited. Check if the version field changed. If yes, grep all README.md files for version badges (pattern: version-X.Y.Z-blue) and verify they match the new version in package.json. If ANY mismatch found, fix the badges immediately. Files to check: README.md, extension/README.md, backend/README.md."
+  }
+}
