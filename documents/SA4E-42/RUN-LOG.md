@@ -18,3 +18,7 @@ Type: Bug | Autonomy: L3 | Pattern: ai-agent
 | 11 | 2026-07-16 17:58 | qa-agent | test_planning | Tạo STP.md + STC.md (53 test cases, RTM 100%) + 2 diagrams + 2 CSV | ✅ success | ~60k | - |
 | 12 | 2026-07-16 18:00 | SM | test_planning | Verify STP/STC quality gate 7/7 → done | ✅ success | ~20k | - |
 | 13 | 2026-07-16 18:00 | SM | devops_pipeline_setup | ⚠️ Token budget ~79% → report-only mode. STOP, chờ user decision trước Phase 4.5/5 | ⏸️ paused | - | - |
+| 28 | 2026-07-17 08:00 | SM | uat | User xác nhận UAT pass ("làm tiếp đi") | ✅ success | - | - |
+| 29 | 2026-07-17 08:01 | SM | security_deploy_review | Trivial scope (no infra change) → PASS | ✅ success | - | - |
+| 30 | 2026-07-17 08:05 | SM | deployment | Merge --no-ff SA4E-42→main (2f683c6); bump v1.9.1 (794ba14); tag v1.9.1; push main+tags; Jira→Done | ✅ success | - | - |
+| 31 | 2026-07-17 08:05 | SM | deployment | ✅ PIPELINE COMPLETE — SA4E-42 DONE | ✅ | - | - |
