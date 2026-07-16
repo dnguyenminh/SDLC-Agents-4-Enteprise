@@ -1,0 +1,69 @@
+<mxGraphModel dx="1100" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1150" pageHeight="820" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Multi-Tenant Schema (V5) — project_id added; bold = new / changed" style="text;html=1;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="180" y="20" width="780" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="files" value="files" style="swimlane;html=1;fontStyle=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=26;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="260" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="filesC" value="PK id&#10;&lt;b&gt;project_id (NEW)&lt;/b&gt;&#10;path&#10;relative_path&#10;language, module&#10;content_hash, size_bytes, line_count&#10;&lt;b&gt;UNIQUE(project_id, path) — was path&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;spacingLeft=8;" vertex="1" parent="files">
+      <mxGeometry y="26" width="260" height="174" as="geometry"/>
+    </mxCell>
+    <mxCell id="symbols" value="symbols" style="swimlane;html=1;fontStyle=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=26;" vertex="1" parent="1">
+      <mxGeometry x="420" y="80" width="290" height="210" as="geometry"/>
+    </mxCell>
+    <mxCell id="symbolsC" value="PK id&#10;FK file_id → files.id&#10;&lt;b&gt;project_id (NEW — ALTER ADD)&lt;/b&gt;&#10;name, kind, signature&#10;start_line, end_line&#10;visibility, doc_comment&#10;is_exported, complexity ...&#10;&lt;b&gt;idx(project_id), idx(project_id, kind)&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;spacingLeft=8;" vertex="1" parent="symbols">
+      <mxGeometry y="26" width="290" height="184" as="geometry"/>
+    </mxCell>
+    <mxCell id="fts" value="symbols_fts (FTS5, external content = symbols)" style="swimlane;html=1;fontStyle=1;align=center;fillColor=#fff2cc;strokeColor=#d6b656;startSize=26;" vertex="1" parent="1">
+      <mxGeometry x="800" y="80" width="290" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="ftsC" value="content_rowid = symbols.id&#10;name, signature, doc_comment, kind&#10;&lt;b&gt;NO rebuild — ALTER on symbols preserves rowids&lt;/b&gt;&#10;filter via JOIN symbols.project_id" style="text;html=1;align=left;verticalAlign=top;spacingLeft=8;" vertex="1" parent="fts">
+      <mxGeometry y="26" width="290" height="114" as="geometry"/>
+    </mxCell>
+    <mxCell id="modules" value="modules" style="swimlane;html=1;fontStyle=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=26;" vertex="1" parent="1">
+      <mxGeometry x="60" y="330" width="260" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="modulesC" value="PK id&#10;&lt;b&gt;project_id (NEW)&lt;/b&gt;&#10;name, root_path, language&#10;file_count, symbol_count&#10;&lt;b&gt;UNIQUE(project_id, name) — was name&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;spacingLeft=8;" vertex="1" parent="modules">
+      <mxGeometry y="26" width="260" height="124" as="geometry"/>
+    </mxCell>
+    <mxCell id="rel" value="relationships" style="swimlane;html=1;fontStyle=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=26;" vertex="1" parent="1">
+      <mxGeometry x="420" y="330" width="290" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="relC" value="PK id&#10;FK source_symbol_id → symbols.id&#10;target_symbol, target_symbol_id&#10;kind, file_path, line&#10;&lt;b&gt;project_id (NEW — ALTER ADD)&lt;/b&gt;&#10;&lt;b&gt;resolveTargets scoped by project&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;spacingLeft=8;" vertex="1" parent="rel">
+      <mxGeometry y="26" width="290" height="124" as="geometry"/>
+    </mxCell>
+    <mxCell id="emb" value="embeddings / body_embeddings" style="swimlane;html=1;fontStyle=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=26;" vertex="1" parent="1">
+      <mxGeometry x="800" y="260" width="290" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="embC" value="FK symbol_id / file_id&#10;vector / embedding BLOB&#10;&lt;b&gt;project_id (NEW — ALTER ADD)&lt;/b&gt;&#10;backfill via parent symbol/file" style="text;html=1;align=left;verticalAlign=top;spacingLeft=8;" vertex="1" parent="emb">
+      <mxGeometry y="26" width="290" height="94" as="geometry"/>
+    </mxCell>
+    <mxCell id="gnodes" value="graph_nodes (admin.db)" style="swimlane;html=1;fontStyle=1;align=center;fillColor=#d5e8d4;strokeColor=#82b366;startSize=26;" vertex="1" parent="1">
+      <mxGeometry x="420" y="530" width="380" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="gnodesC" value="entry_id ('code:'||symbolId for code)&#10;label, type (CODE_ENTITY), tier (CODE)&#10;project_id (EXISTS — now populated for code)&#10;x, y, z, level, cluster_id&#10;&lt;b&gt;GraphSyncService writes/deletes code:% per project&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;spacingLeft=8;" vertex="1" parent="gnodes">
+      <mxGeometry y="26" width="380" height="124" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" style="html=1;endArrow=open;startArrow=diamondThin;startFill=1;" edge="1" parent="1" source="files" target="symbols">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2" style="html=1;endArrow=none;dashed=1;" edge="1" parent="1" source="symbols" target="fts">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3" style="html=1;endArrow=open;startArrow=diamondThin;startFill=1;" edge="1" parent="1" source="symbols" target="rel">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4" style="html=1;endArrow=open;startArrow=diamondThin;startFill=1;" edge="1" parent="1" source="symbols" target="emb">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s5" style="html=1;endArrow=open;dashed=1;" edge="1" parent="1" source="symbols" target="gnodes">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s6" style="html=1;endArrow=open;startArrow=diamondThin;startFill=1;" edge="1" parent="1" source="files" target="modules">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

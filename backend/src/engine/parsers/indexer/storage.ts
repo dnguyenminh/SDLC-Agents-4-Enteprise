@@ -1,5 +1,8 @@
 import Database from 'better-sqlite3';
+import pino from 'pino';
 import type { ParseResult } from '../types.js';
+
+const logger = pino({ name: 'indexer-storage' });
 
 /** Resolve the file row for a path within a tenant scope (SA4E-41). */
 function findScopedFileId(db: Database.Database, filePath: string, projectId: string): number | undefined {
@@ -16,7 +19,13 @@ export function storeResults(
     const fileId = findScopedFileId(db, filePath, projectId);
     if (!fileId) return;
     db.prepare('DELETE FROM symbols WHERE file_id = ?').run(fileId);
-    try { db.prepare('DELETE FROM relationships WHERE file_path = ? AND project_id = ?').run(filePath, projectId); } catch { }
+    // Relationships table may not exist yet on very first index — log and continue,
+    // since symbol storage below can still proceed without prior-relationship cleanup.
+    try {
+      db.prepare('DELETE FROM relationships WHERE file_path = ? AND project_id = ?').run(filePath, projectId);
+    } catch (err) {
+      logger.warn({ err, filePath, projectId }, '[storage] Failed to clear prior relationships (continuing)');
+    }
     const insertSym = db.prepare('INSERT INTO symbols (project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     for (const sym of result.symbols) {
       const info = insertSym.run(projectId, fileId, sym.name, sym.kind, sym.signature, sym.startLine, sym.endLine, sym.parentName ?? null, sym.isExported ? 'export' : null, sym.docComment ?? null);
@@ -30,7 +39,11 @@ export function storeResults(
         const targetId = symbolIds.get(rel.targetSymbol) ?? null;
         insertRel.run(projectId, sourceId, rel.targetSymbol, targetId, rel.kind, filePath, rel.line, rel.metadata ? JSON.stringify(rel.metadata) : null);
       }
-    } catch { }
+    } catch (err) {
+      // Relationship inserts are best-effort (schema/graph may lag) — never fail the
+      // whole file's symbol storage, but surface the error for observability.
+      logger.warn({ err, filePath, projectId }, '[storage] Failed to store relationships (symbols kept)');
+    }
   });
   transaction();
   return symbolIds;
@@ -73,5 +86,9 @@ export function extractAndStoreBodies(
       const textBuffer = Buffer.from(bodyText, 'utf-8');
       insertBody.run(projectId, symbolId, 0, textBuffer, tokenCount);
     }
-  } catch { }
+  } catch (err) {
+    // Body-embedding extraction is an optional enrichment step; log and continue so
+    // symbol indexing is never blocked by a body-store failure.
+    logger.warn({ err, filePath, projectId }, '[storage] Failed to extract/store bodies (continuing)');
+  }
 }

@@ -126,7 +126,7 @@ export function applyMigrationV5(db: Database.Database, legacyProjectId: string)
     backfillScopes(db, legacy);
     createScopeIndexes(db);
     db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)').run(5);
-    logger.error(`[migrations] V5: multi-tenant project_id applied (legacy=${legacy})`);
+    logger.info(`[migrations] V5: multi-tenant project_id applied (legacy=${legacy})`); // SEC-07: info, not error
   } catch (err) {
     logger.error({ err }, '[migrations] V5 error:');
     throw err;

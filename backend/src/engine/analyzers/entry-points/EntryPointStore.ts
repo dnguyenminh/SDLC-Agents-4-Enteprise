@@ -4,6 +4,7 @@
 
 import Database from 'better-sqlite3';
 import type { EntryPoint, EntryPointFilters, EntryPointQueryResult } from './types.js';
+import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
 const CREATE_TABLE = `
 CREATE TABLE IF NOT EXISTS entry_points (
@@ -30,13 +31,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_ep_symbol ON entry_points(symbol_id);
 
 export class EntryPointStore {
   private db: Database.Database;
+  private projectId: string | undefined;
   private stmts!: {
     upsert: Database.Statement;
     deleteBySymbol: Database.Statement;
   };
 
-  constructor(db: Database.Database) {
+  /**
+   * @param projectId  SA4E-41 read scope. Undefined ⇒ query() is fail-closed.
+   */
+  constructor(db: Database.Database, projectId?: string) {
     this.db = db;
+    this.projectId = projectId;
     this.ensureTable();
     this.prepareStatements();
   }
@@ -68,14 +74,16 @@ export class EntryPointStore {
 
   /** Query entry points with filters. */
   query(filters: EntryPointFilters): EntryPointQueryResult {
+    // entry_points has no project_id column — scope via the joined symbols table.
+    const scope = buildCodeScopeFilter(this.projectId, 's');
     let sql = `
       SELECT ep.*, s.name as symbol_name, f.relative_path as file_path, s.start_line
       FROM entry_points ep
       JOIN symbols s ON s.id = ep.symbol_id
       JOIN files f ON f.id = s.file_id
-      WHERE 1=1
+      WHERE ${scope.clause}
     `;
-    const params: unknown[] = [];
+    const params: unknown[] = [...scope.params];
 
     if (filters.entryType) {
       sql += ' AND ep.entry_type = ?';
@@ -117,19 +125,20 @@ export class EntryPointStore {
       has_auth: Boolean(r.has_auth),
     }));
 
-    // Summary
-    const typeSql = 'SELECT entry_type, COUNT(*) as count FROM entry_points GROUP BY entry_type';
-    const typeRows = this.db.prepare(typeSql).all() as Array<{ entry_type: string; count: number }>;
+    // Summary (tenant-scoped via joined symbols)
+    const scoped = (col: string, extra = '') => `
+      SELECT ep.${col}, COUNT(*) as count
+      FROM entry_points ep JOIN symbols s ON s.id = ep.symbol_id
+      WHERE ${scope.clause} ${extra} GROUP BY ep.${col}`;
+    const typeRows = this.db.prepare(scoped('entry_type')).all(...scope.params) as Array<{ entry_type: string; count: number }>;
     const byType: Record<string, number> = {};
     for (const r of typeRows) byType[r.entry_type] = r.count;
 
-    const fwSql = 'SELECT framework, COUNT(*) as count FROM entry_points WHERE framework IS NOT NULL GROUP BY framework';
-    const fwRows = this.db.prepare(fwSql).all() as Array<{ framework: string; count: number }>;
+    const fwRows = this.db.prepare(scoped('framework', 'AND ep.framework IS NOT NULL')).all(...scope.params) as Array<{ framework: string; count: number }>;
     const byFramework: Record<string, number> = {};
     for (const r of fwRows) byFramework[r.framework] = r.count;
 
-    const authSql = 'SELECT has_auth, COUNT(*) as count FROM entry_points GROUP BY has_auth';
-    const authRows = this.db.prepare(authSql).all() as Array<{ has_auth: number; count: number }>;
+    const authRows = this.db.prepare(scoped('has_auth')).all(...scope.params) as Array<{ has_auth: number; count: number }>;
     const authCoverage = { withAuth: 0, withoutAuth: 0 };
     for (const r of authRows) {
       if (r.has_auth) authCoverage.withAuth = r.count;

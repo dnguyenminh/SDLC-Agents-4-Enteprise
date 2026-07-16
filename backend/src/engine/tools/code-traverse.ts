@@ -35,7 +35,7 @@ export const TRAVERSE_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeTraverse(args: Record<string, unknown>, db: Database.Database, workspace: string): string {
+export function handleCodeTraverse(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
   const start = args.start as string;
   if (!start) return JSON.stringify({ error: 'Parameter "start" is required' });
 
@@ -47,8 +47,8 @@ export function handleCodeTraverse(args: Record<string, unknown>, db: Database.D
   const includeSource = (args.include_source as boolean) ?? false;
   const sourceLines = (args.source_lines as number) ?? 5;
 
-  const resolver = new SymbolResolver(db);
-  const traverser = new GraphTraverser(db, resolver, workspace);
+  const resolver = new SymbolResolver(db, projectId);
+  const traverser = new GraphTraverser(db, resolver, workspace, projectId);
 
   // Resolve start node
   const startNode = traverser.resolveNode(start);

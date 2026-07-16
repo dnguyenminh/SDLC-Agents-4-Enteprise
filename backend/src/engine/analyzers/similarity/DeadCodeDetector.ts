@@ -5,6 +5,7 @@
 
 import Database from 'better-sqlite3';
 import type { DeadCodeCandidate, DeadCodeReport } from './types.js';
+import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
 interface FunctionInfo {
   id: number;
@@ -21,10 +22,15 @@ interface FunctionInfo {
 export class DeadCodeDetector {
   private db: Database.Database;
   private minConfidence: number;
+  private projectId: string | undefined;
 
-  constructor(db: Database.Database, minConfidence: number = 60) {
+  /**
+   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
+   */
+  constructor(db: Database.Database, minConfidence: number = 60, projectId?: string) {
     this.db = db;
     this.minConfidence = minConfidence;
+    this.projectId = projectId;
   }
 
   /** Detect dead code with confidence scoring. */
@@ -75,16 +81,19 @@ export class DeadCodeDetector {
   }
 
   private getEntryPoints(): number[] {
+    const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     try {
-      const rows = this.db.prepare(
-        'SELECT symbol_id FROM entry_points'
-      ).all() as { symbol_id: number }[];
+      const rows = this.db.prepare(`
+        SELECT ep.symbol_id FROM entry_points ep
+        JOIN symbols s ON s.id = ep.symbol_id
+        WHERE ${scope.clause}
+      `).all(...scope.params) as { symbol_id: number }[];
       return rows.map(r => r.symbol_id);
     } catch {
-      // entry_points table may not exist — fall back to exported symbols
+      // entry_points table may not exist — fall back to exported symbols (scoped)
       const rows = this.db.prepare(
-        'SELECT id FROM symbols WHERE is_exported = 1'
-      ).all() as { id: number }[];
+        `SELECT id FROM symbols s WHERE is_exported = 1 AND ${scope.clause}`
+      ).all(...scope.params) as { id: number }[];
       return rows.map(r => r.id);
     }
   }
@@ -93,12 +102,13 @@ export class DeadCodeDetector {
     const visited = new Set<number>();
     const queue: number[] = [...entryPointIds];
 
-    // Load call graph edges
+    // Load call graph edges (tenant-scoped, fail-closed)
+    const edgeScope = buildCodeScopeFilter(this.projectId, 'relationships');
     const edges = this.db.prepare(`
       SELECT source_symbol_id, target_symbol_id
       FROM relationships
-      WHERE kind = 'calls' AND target_symbol_id IS NOT NULL
-    `).all() as { source_symbol_id: number; target_symbol_id: number }[];
+      WHERE kind = 'calls' AND target_symbol_id IS NOT NULL AND ${edgeScope.clause}
+    `).all(...edgeScope.params) as { source_symbol_id: number; target_symbol_id: number }[];
 
     // Build adjacency list (caller → callees)
     const callGraph = new Map<number, number[]>();
@@ -125,14 +135,16 @@ export class DeadCodeDetector {
   }
 
   private getAllFunctions(filePath?: string, module?: string): FunctionInfo[] {
+    const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     let sql = `
       SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine,
              s.is_exported as isExported, s.is_async as isAsync, s.decorators
       FROM symbols s
       JOIN files f ON f.id = s.file_id
       WHERE s.kind IN ('function', 'method', 'arrow_function', 'generator')
+        AND ${scope.clause}
     `;
-    const params: unknown[] = [];
+    const params: unknown[] = [...scope.params];
 
     if (filePath) {
       sql += ` AND f.relative_path LIKE ?`;
@@ -201,6 +213,7 @@ export class DeadCodeDetector {
   }
 
   private hasTestReferences(symbolId: number): boolean {
+    const scope = buildCodeScopeFilter(this.projectId, 'r'); // fail-closed
     try {
       const row = this.db.prepare(`
         SELECT COUNT(*) as count
@@ -208,7 +221,8 @@ export class DeadCodeDetector {
         JOIN files f ON f.id = (SELECT file_id FROM symbols WHERE id = r.source_symbol_id)
         WHERE r.target_symbol_id = ?
           AND (f.relative_path LIKE '%test%' OR f.relative_path LIKE '%spec%')
-      `).get(symbolId) as { count: number };
+          AND ${scope.clause}
+      `).get(symbolId, ...scope.params) as { count: number };
       return row.count > 0;
     } catch {
       return false;

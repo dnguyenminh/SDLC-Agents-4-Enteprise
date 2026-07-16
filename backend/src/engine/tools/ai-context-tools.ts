@@ -72,9 +72,9 @@ export const AI_CONTEXT_TOOL_DEFINITIONS = [
 ];
 
 /** Handle get_ai_context tool call. */
-export function handleGetAIContext(args: Record<string, unknown>, db: Database.Database, workspace: string): string {
-  const resolver = new SymbolResolver(db);
-  const graphRepo = new GraphRepository(db);
+export function handleGetAIContext(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
+  const resolver = new SymbolResolver(db, projectId);
+  const graphRepo = new GraphRepository(db, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
   const service = new AIContextService(db, resolver, callGraph, workspace);
 
@@ -91,11 +91,11 @@ export function handleGetAIContext(args: Record<string, unknown>, db: Database.D
 }
 
 /** Handle get_edit_context tool call. */
-export function handleGetEditContext(args: Record<string, unknown>, db: Database.Database, workspace: string): string {
-  const resolver = new SymbolResolver(db);
-  const graphRepo = new GraphRepository(db);
+export function handleGetEditContext(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
+  const resolver = new SymbolResolver(db, projectId);
+  const graphRepo = new GraphRepository(db, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
-  const testDetector = new TestDetector(db);
+  const testDetector = new TestDetector(db, projectId);
   const service = new EditContextService(db, resolver, callGraph, testDetector, workspace);
 
   const params = {
@@ -120,8 +120,8 @@ export function handleGetCuratedContext(
   dbManager: DatabaseManager,
   projectId?: string
 ): string {
-  const resolver = new SymbolResolver(db);
-  const traverser = new GraphTraverser(db, resolver, workspace);
+  const resolver = new SymbolResolver(db, projectId);
+  const traverser = new GraphTraverser(db, resolver, workspace, projectId);
   const queryLayer = new QueryLayer(dbManager);
   const service = new CuratedContextService(db, queryLayer, traverser, resolver);
 

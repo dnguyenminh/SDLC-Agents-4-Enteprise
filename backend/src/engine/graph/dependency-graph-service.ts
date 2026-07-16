@@ -15,10 +15,15 @@ export type { DependencyNode, DependencyResult } from './dep-helpers.js';
 export class DependencyGraphService {
   private db: Database.Database;
   private fileResolver: FileResolver;
+  private projectId: string | undefined;
 
-  constructor(db: Database.Database, fileResolver: FileResolver) {
+  /**
+   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
+   */
+  constructor(db: Database.Database, fileResolver: FileResolver, projectId?: string) {
     this.db = db;
     this.fileResolver = fileResolver;
+    this.projectId = projectId;
   }
 
   query(
@@ -43,12 +48,12 @@ export class DependencyGraphService {
     let cycles: string[][];
 
     if (direction === 'both') {
-      const outgoing = bfsTraversal(resolved, 'outgoing', clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db);
-      const incoming = bfsTraversal(resolved, 'incoming', clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db);
+      const outgoing = bfsTraversal(resolved, 'outgoing', clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db, this.projectId);
+      const incoming = bfsTraversal(resolved, 'incoming', clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db, this.projectId);
       results = mergeResults(outgoing.results, incoming.results);
       cycles = [...outgoing.cycles, ...incoming.cycles];
     } else {
-      const traversal = bfsTraversal(resolved, direction, clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db);
+      const traversal = bfsTraversal(resolved, direction, clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db, this.projectId);
       results = traversal.results;
       cycles = traversal.cycles;
     }

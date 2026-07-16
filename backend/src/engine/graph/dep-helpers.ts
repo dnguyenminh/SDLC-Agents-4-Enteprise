@@ -6,6 +6,7 @@
 import * as path from 'path';
 import Database from 'better-sqlite3';
 import { FileResolver } from './file-resolver.js';
+import { buildCodeScopeFilter } from '../query/code-intel-isolation.js';
 
 export interface DependencyNode {
   file: string;
@@ -36,7 +37,8 @@ export function bfsTraversal(
   limit: number,
   kinds: string[] | undefined,
   fileResolver: FileResolver,
-  db: Database.Database
+  db: Database.Database,
+  projectId?: string
 ): { results: DependencyNode[]; cycles: string[][] } {
   const visited = new Set<string>([root]);
   const results: DependencyNode[] = [];
@@ -48,8 +50,8 @@ export function bfsTraversal(
     const { file: current, depth: currentDepth, path: currentPath } = queue.shift()!;
     if (currentDepth >= maxDepth) continue;
     const deps = direction === 'outgoing'
-      ? getOutgoingDeps(current, kinds, db)
-      : getIncomingDeps(current, kinds, db);
+      ? getOutgoingDeps(current, kinds, db, projectId)
+      : getIncomingDeps(current, kinds, db, projectId);
     for (const dep of deps) {
       const isExternal = fileResolver.isExternal(dep.target);
       if (isExternal && !includeExternal) continue;
@@ -82,15 +84,16 @@ export function bfsTraversal(
   return { results, cycles };
 }
 
-export function getOutgoingDeps(filePath: string, kinds: string[] | undefined, db: Database.Database): Array<{ target: string; symbols: string[] }> {
+export function getOutgoingDeps(filePath: string, kinds: string[] | undefined, db: Database.Database, projectId?: string): Array<{ target: string; symbols: string[] }> {
   const queryKinds = kinds ?? ['imports', 'trigger-on', 'soql', 'dml', 'wire', 'flow-action', 'flow-object', 'apex-import', 'calls', 'inherits', 'implements'];
   const placeholders = queryKinds.map(() => '?').join(',');
+  const scope = buildCodeScopeFilter(projectId, 'relationships'); // fail-closed
   const rows = db.prepare(`
     SELECT target_symbol, metadata, kind
     FROM relationships
-    WHERE file_path = ? AND kind IN (${placeholders})
+    WHERE file_path = ? AND kind IN (${placeholders}) AND ${scope.clause}
     ORDER BY line
-  `).all(filePath, ...queryKinds) as { target_symbol: string; metadata: string | null; kind: string }[];
+  `).all(filePath, ...queryKinds, ...scope.params) as { target_symbol: string; metadata: string | null; kind: string }[];
   const grouped = new Map<string, string[]>();
   for (const row of rows) {
     const module = extractModule(row.target_symbol);
@@ -101,16 +104,18 @@ export function getOutgoingDeps(filePath: string, kinds: string[] | undefined, d
   return Array.from(grouped.entries()).map(([target, symbols]) => ({ target, symbols }));
 }
 
-export function getIncomingDeps(filePath: string, kinds: string[] | undefined, db: Database.Database): Array<{ target: string; symbols: string[] }> {
+export function getIncomingDeps(filePath: string, kinds: string[] | undefined, db: Database.Database, projectId?: string): Array<{ target: string; symbols: string[] }> {
   const basename = path.basename(filePath, path.extname(filePath));
   const queryKinds = kinds ?? ['imports', 'trigger-on', 'soql', 'dml', 'wire', 'flow-action', 'flow-object', 'apex-import', 'calls', 'inherits', 'implements'];
   const placeholders = queryKinds.map(() => '?').join(',');
+  const scope = buildCodeScopeFilter(projectId, 'relationships'); // fail-closed
   const rows = db.prepare(`
     SELECT DISTINCT file_path, target_symbol
     FROM relationships
     WHERE kind IN (${placeholders})
       AND (target_symbol LIKE ? OR target_symbol LIKE ? OR target_symbol LIKE ?)
-  `).all(...queryKinds, `%/${basename}`, `%${basename}%`, filePath) as { file_path: string; target_symbol: string }[];
+      AND ${scope.clause}
+  `).all(...queryKinds, `%/${basename}`, `%${basename}%`, filePath, ...scope.params) as { file_path: string; target_symbol: string }[];
   const grouped = new Map<string, string[]>();
   for (const row of rows) {
     if (row.file_path === filePath) continue;

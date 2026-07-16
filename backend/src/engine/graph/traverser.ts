@@ -55,11 +55,16 @@ export class GraphTraverser {
   private db: Database.Database;
   private resolver: SymbolResolver;
   private workspace: string;
+  private projectId: string | undefined;
 
-  constructor(db: Database.Database, resolver: SymbolResolver, workspace: string) {
+  /**
+   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no neighbors).
+   */
+  constructor(db: Database.Database, resolver: SymbolResolver, workspace: string, projectId?: string) {
     this.db = db;
     this.resolver = resolver;
     this.workspace = workspace;
+    this.projectId = projectId;
   }
 
   resolveNode(identifier: string): GraphNode | null {
@@ -90,7 +95,7 @@ export class GraphTraverser {
         }
       }
       if (depth < config.maxDepth) {
-        const neighbors = getNeighbors(node.id, config, this.db);
+        const neighbors = getNeighbors(node.id, config, this.db, this.projectId);
         for (const neighbor of neighbors) {
           if (!visited.has(neighbor.id)) {
             queue.push({ node: neighbor, depth: depth + 1, path: [...currentPath, neighbor.name] });

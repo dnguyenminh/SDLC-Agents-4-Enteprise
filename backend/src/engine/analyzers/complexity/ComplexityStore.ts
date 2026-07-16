@@ -4,6 +4,7 @@
 
 import Database from 'better-sqlite3';
 import type { ComplexityResult, ComplexityFilters, ComplexityQueryResult, Grade } from './types.js';
+import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
 const CREATE_TABLE = `
 CREATE TABLE IF NOT EXISTS complexity (
@@ -28,14 +29,20 @@ CREATE INDEX IF NOT EXISTS idx_complexity_symbol ON complexity(symbol_id);
 
 export class ComplexityStore {
   private db: Database.Database;
+  private projectId: string | undefined;
   private stmts!: {
     upsert: Database.Statement;
     getBySymbol: Database.Statement;
     deleteBySymbol: Database.Statement;
   };
 
-  constructor(db: Database.Database) {
+  /**
+   * @param projectId  SA4E-41 read scope. Undefined ⇒ query() is fail-closed.
+   *   Write paths (upsert) are keyed by symbol_id and don't require a scope.
+   */
+  constructor(db: Database.Database, projectId?: string) {
     this.db = db;
+    this.projectId = projectId;
     this.ensureTable();
     this.prepareStatements();
   }
@@ -68,17 +75,19 @@ export class ComplexityStore {
     return (this.stmts.getBySymbol.get(symbolId) as ComplexityResult) ?? null;
   }
 
-  /** Query complexity results with filters. */
+  /** Query complexity results with filters (tenant-scoped, fail-closed). */
   query(filters: ComplexityFilters): ComplexityQueryResult {
+    // complexity has no project_id column — scope via the joined symbols table.
+    const scope = buildCodeScopeFilter(this.projectId, 's');
     let sql = `
       SELECT c.*, s.name as symbol_name, f.relative_path as file_path,
              s.start_line, s.end_line
       FROM complexity c
       JOIN symbols s ON s.id = c.symbol_id
       JOIN files f ON f.id = s.file_id
-      WHERE 1=1
+      WHERE ${scope.clause}
     `;
-    const params: unknown[] = [];
+    const params: unknown[] = [...scope.params];
 
     if (filters.filePath) {
       sql += ' AND f.relative_path LIKE ?';
@@ -118,23 +127,28 @@ export class ComplexityStore {
 
     const results = this.db.prepare(sql).all(...params) as ComplexityResult[];
 
-    // Grade distribution
+    // Grade distribution (tenant-scoped)
     const distSql = `
       SELECT c.grade, COUNT(*) as count
       FROM complexity c
       JOIN symbols s ON s.id = c.symbol_id
       JOIN files f ON f.id = s.file_id
-      WHERE 1=1 ${filters.module ? 'AND f.module = ?' : ''}
+      WHERE ${scope.clause} ${filters.module ? 'AND f.module = ?' : ''}
       GROUP BY c.grade
     `;
-    const distParams = filters.module ? [filters.module] : [];
+    const distParams = filters.module ? [...scope.params, filters.module] : [...scope.params];
     const distRows = this.db.prepare(distSql).all(...distParams) as { grade: Grade; count: number }[];
     const gradeDistribution: Record<Grade, number> = { A: 0, B: 0, C: 0, D: 0, F: 0 };
     for (const row of distRows) gradeDistribution[row.grade] = row.count;
 
-    // Average
-    const avgSql = `SELECT AVG(cyclomatic_complexity) as avg FROM complexity`;
-    const avgRow = this.db.prepare(avgSql).get() as { avg: number | null };
+    // Average (tenant-scoped via joined symbols)
+    const avgSql = `
+      SELECT AVG(c.cyclomatic_complexity) as avg
+      FROM complexity c
+      JOIN symbols s ON s.id = c.symbol_id
+      WHERE ${scope.clause}
+    `;
+    const avgRow = this.db.prepare(avgSql).get(...scope.params) as { avg: number | null };
 
     return {
       results,

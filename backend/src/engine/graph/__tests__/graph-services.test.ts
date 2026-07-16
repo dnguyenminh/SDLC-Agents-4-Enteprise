@@ -23,9 +23,11 @@ function setupTestDb(): Database.Database {
   testDb.pragma('foreign_keys = ON');
 
   // Create schema
+  // SA4E-41: tables carry project_id (default 'test_proj') so scoped queries resolve.
   testDb.exec(`
     CREATE TABLE files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id TEXT NOT NULL DEFAULT 'test_proj',
       path TEXT NOT NULL UNIQUE,
       relative_path TEXT NOT NULL,
       language TEXT NOT NULL,
@@ -38,6 +40,7 @@ function setupTestDb(): Database.Database {
 
     CREATE TABLE symbols (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id TEXT NOT NULL DEFAULT 'test_proj',
       file_id INTEGER NOT NULL,
       name TEXT NOT NULL,
       kind TEXT NOT NULL,
@@ -62,6 +65,7 @@ function setupTestDb(): Database.Database {
 
     CREATE TABLE relationships (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id TEXT NOT NULL DEFAULT 'test_proj',
       source_symbol_id INTEGER NOT NULL,
       target_symbol TEXT NOT NULL,
       target_symbol_id INTEGER,
@@ -144,14 +148,14 @@ describe('SymbolResolver', () => {
   after(() => { db.close(); });
 
   it('resolves exact symbol name', () => {
-    const resolver = new SymbolResolver(db);
+    const resolver = new SymbolResolver(db, 'test_proj');
     const results = resolver.resolve('getUser');
     assert.ok(results.length >= 1);
     assert.equal(results[0].name, 'getUser');
   });
 
   it('resolves qualified name (Class.method)', () => {
-    const resolver = new SymbolResolver(db);
+    const resolver = new SymbolResolver(db, 'test_proj');
     const results = resolver.resolve('UserService.getUser');
     assert.equal(results.length, 1);
     assert.equal(results[0].name, 'getUser');
@@ -159,13 +163,13 @@ describe('SymbolResolver', () => {
   });
 
   it('returns empty for non-existent symbol', () => {
-    const resolver = new SymbolResolver(db);
+    const resolver = new SymbolResolver(db, 'test_proj');
     const results = resolver.resolve('nonExistentSymbol');
     assert.equal(results.length, 0);
   });
 
   it('suggests similar symbols', () => {
-    const resolver = new SymbolResolver(db);
+    const resolver = new SymbolResolver(db, 'test_proj');
     const suggestions = resolver.suggest('User');
     assert.ok(suggestions.length > 0);
     assert.ok(suggestions.some(s => s.includes('User')));
@@ -177,8 +181,8 @@ describe('CallGraphService', () => {
   after(() => { db.close(); });
 
   it('finds direct callers of a method', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
     const result = service.findCallers('getUser', 1, 20);
@@ -188,8 +192,8 @@ describe('CallGraphService', () => {
   });
 
   it('finds transitive callers with depth 2', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
     const result = service.findCallers('findById', 2, 20);
@@ -198,8 +202,8 @@ describe('CallGraphService', () => {
   });
 
   it('finds callees of a method', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
     const result = service.findCallees('handleGetUser', 1, 20);
@@ -208,8 +212,8 @@ describe('CallGraphService', () => {
   });
 
   it('returns empty for unknown symbol', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
     const result = service.findCallers('unknownFunction', 1, 20);
@@ -218,8 +222,8 @@ describe('CallGraphService', () => {
   });
 
   it('respects limit parameter', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
     const result = service.findCallers('getUser', 3, 1);
@@ -227,8 +231,8 @@ describe('CallGraphService', () => {
   });
 
   it('clamps depth to max 5', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
     const result = service.findCallers('getUser', 10, 20);
@@ -241,26 +245,26 @@ describe('FileResolver', () => {
   after(() => { db.close(); });
 
   it('resolves exact relative path', () => {
-    const resolver = new FileResolver(db, '/project');
+    const resolver = new FileResolver(db, '/project', 'test_proj');
     const result = resolver.resolveFile('src/service.ts');
     assert.equal(result, 'src/service.ts');
   });
 
   it('returns null for non-indexed file', () => {
-    const resolver = new FileResolver(db, '/project');
+    const resolver = new FileResolver(db, '/project', 'test_proj');
     const result = resolver.resolveFile('src/nonexistent.ts');
     assert.equal(result, null);
   });
 
   it('identifies external modules', () => {
-    const resolver = new FileResolver(db, '/project');
+    const resolver = new FileResolver(db, '/project', 'test_proj');
     assert.equal(resolver.isExternal('fs'), true);
     assert.equal(resolver.isExternal('path'), true);
     assert.equal(resolver.isExternal('lodash'), true);
   });
 
   it('identifies relative imports as non-external', () => {
-    const resolver = new FileResolver(db, '/project');
+    const resolver = new FileResolver(db, '/project', 'test_proj');
     assert.equal(resolver.isExternal('./service'), false);
   });
 });
@@ -270,8 +274,8 @@ describe('DependencyGraphService', () => {
   after(() => { db.close(); });
 
   it('finds outgoing dependencies', () => {
-    const fileResolver = new FileResolver(db, '/project');
-    const service = new DependencyGraphService(db, fileResolver);
+    const fileResolver = new FileResolver(db, '/project', 'test_proj');
+    const service = new DependencyGraphService(db, fileResolver, 'test_proj');
 
     const result = service.query('src/service.ts', 'outgoing', 1, false, 50);
     assert.equal(result.root, 'src/service.ts');
@@ -279,16 +283,16 @@ describe('DependencyGraphService', () => {
   });
 
   it('returns empty for non-indexed file', () => {
-    const fileResolver = new FileResolver(db, '/project');
-    const service = new DependencyGraphService(db, fileResolver);
+    const fileResolver = new FileResolver(db, '/project', 'test_proj');
+    const service = new DependencyGraphService(db, fileResolver, 'test_proj');
 
     const result = service.query('nonexistent.ts', 'outgoing', 1, false, 50);
     assert.equal(result.results.length, 0);
   });
 
   it('clamps depth to max 5', () => {
-    const fileResolver = new FileResolver(db, '/project');
-    const service = new DependencyGraphService(db, fileResolver);
+    const fileResolver = new FileResolver(db, '/project', 'test_proj');
+    const service = new DependencyGraphService(db, fileResolver, 'test_proj');
 
     const result = service.query('src/service.ts', 'outgoing', 10, false, 50);
     // Should not crash, depth clamped
@@ -301,14 +305,14 @@ describe('TestDetector', () => {
   after(() => { db.close(); });
 
   it('identifies test files by path pattern', () => {
-    const detector = new TestDetector(db);
+    const detector = new TestDetector(db, 'test_proj');
     assert.equal(detector.isTestFile('tests/service.test.ts'), true);
     assert.equal(detector.isTestFile('src/__tests__/foo.ts'), true);
     assert.equal(detector.isTestFile('src/service.ts'), false);
   });
 
   it('identifies test files by name pattern', () => {
-    const detector = new TestDetector(db);
+    const detector = new TestDetector(db, 'test_proj');
     assert.equal(detector.isTestFile('foo.test.ts'), true);
     assert.equal(detector.isTestFile('foo.spec.js'), true);
     assert.equal(detector.isTestFile('FooTest.kt'), true);
@@ -316,8 +320,8 @@ describe('TestDetector', () => {
   });
 
   it('finds related tests for a symbol', () => {
-    const detector = new TestDetector(db);
-    const resolver = new SymbolResolver(db);
+    const detector = new TestDetector(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const symbols = resolver.resolve('getUser');
     const tests = detector.findRelatedTests(symbols, []);
     assert.ok(tests.length >= 0); // May find tests/service.test.ts
@@ -329,12 +333,12 @@ describe('ImpactAnalysisService', () => {
   after(() => { db.close(); });
 
   it('analyzes impact of modifying a method', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
-    const fileResolver = new FileResolver(db, '/project');
-    const depGraph = new DependencyGraphService(db, fileResolver);
-    const testDetector = new TestDetector(db);
+    const fileResolver = new FileResolver(db, '/project', 'test_proj');
+    const depGraph = new DependencyGraphService(db, fileResolver, 'test_proj');
+    const testDetector = new TestDetector(db, 'test_proj');
     const service = new ImpactAnalysisService(db, callGraph, depGraph, resolver, testDetector);
 
     const result = service.analyzeImpact('getUser', 'modify', 3, true, 'low');
@@ -346,12 +350,12 @@ describe('ImpactAnalysisService', () => {
   });
 
   it('classifies delete action as higher severity', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
-    const fileResolver = new FileResolver(db, '/project');
-    const depGraph = new DependencyGraphService(db, fileResolver);
-    const testDetector = new TestDetector(db);
+    const fileResolver = new FileResolver(db, '/project', 'test_proj');
+    const depGraph = new DependencyGraphService(db, fileResolver, 'test_proj');
+    const testDetector = new TestDetector(db, 'test_proj');
     const service = new ImpactAnalysisService(db, callGraph, depGraph, resolver, testDetector);
 
     const modifyResult = service.analyzeImpact('getUser', 'modify', 2, false, 'low');
@@ -364,12 +368,12 @@ describe('ImpactAnalysisService', () => {
   });
 
   it('returns empty result for unknown symbol', () => {
-    const graphRepo = new GraphRepository(db);
-    const resolver = new SymbolResolver(db);
+    const graphRepo = new GraphRepository(db, 'test_proj');
+    const resolver = new SymbolResolver(db, 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
-    const fileResolver = new FileResolver(db, '/project');
-    const depGraph = new DependencyGraphService(db, fileResolver);
-    const testDetector = new TestDetector(db);
+    const fileResolver = new FileResolver(db, '/project', 'test_proj');
+    const depGraph = new DependencyGraphService(db, fileResolver, 'test_proj');
+    const testDetector = new TestDetector(db, 'test_proj');
     const service = new ImpactAnalysisService(db, callGraph, depGraph, resolver, testDetector);
 
     const result = service.analyzeImpact('nonExistent', 'modify', 3, true, 'low');
@@ -383,8 +387,8 @@ describe('GraphTraverser', () => {
   after(() => { db.close(); });
 
   it('resolves a start node', () => {
-    const resolver = new SymbolResolver(db);
-    const traverser = new GraphTraverser(db, resolver, '/project');
+    const resolver = new SymbolResolver(db, 'test_proj');
+    const traverser = new GraphTraverser(db, resolver, '/project', 'test_proj');
 
     const node = traverser.resolveNode('UserService');
     assert.ok(node !== null);
@@ -393,8 +397,8 @@ describe('GraphTraverser', () => {
   });
 
   it('traverses outgoing edges from a node', () => {
-    const resolver = new SymbolResolver(db);
-    const traverser = new GraphTraverser(db, resolver, '/project');
+    const resolver = new SymbolResolver(db, 'test_proj');
+    const traverser = new GraphTraverser(db, resolver, '/project', 'test_proj');
 
     const node = traverser.resolveNode('handleGetUser');
     assert.ok(node !== null);
@@ -411,8 +415,8 @@ describe('GraphTraverser', () => {
   });
 
   it('traverses incoming edges', () => {
-    const resolver = new SymbolResolver(db);
-    const traverser = new GraphTraverser(db, resolver, '/project');
+    const resolver = new SymbolResolver(db, 'test_proj');
+    const traverser = new GraphTraverser(db, resolver, '/project', 'test_proj');
 
     const node = traverser.resolveNode('getUser');
     assert.ok(node !== null);
@@ -428,16 +432,16 @@ describe('GraphTraverser', () => {
   });
 
   it('returns null for unknown symbol', () => {
-    const resolver = new SymbolResolver(db);
-    const traverser = new GraphTraverser(db, resolver, '/project');
+    const resolver = new SymbolResolver(db, 'test_proj');
+    const traverser = new GraphTraverser(db, resolver, '/project', 'test_proj');
 
     const node = traverser.resolveNode('nonExistentSymbol');
     assert.equal(node, null);
   });
 
   it('respects maxResults limit', () => {
-    const resolver = new SymbolResolver(db);
-    const traverser = new GraphTraverser(db, resolver, '/project');
+    const resolver = new SymbolResolver(db, 'test_proj');
+    const traverser = new GraphTraverser(db, resolver, '/project', 'test_proj');
 
     const node = traverser.resolveNode('UserService');
     assert.ok(node !== null);
@@ -453,8 +457,8 @@ describe('GraphTraverser', () => {
   });
 
   it('formats response correctly', () => {
-    const resolver = new SymbolResolver(db);
-    const traverser = new GraphTraverser(db, resolver, '/project');
+    const resolver = new SymbolResolver(db, 'test_proj');
+    const traverser = new GraphTraverser(db, resolver, '/project', 'test_proj');
 
     const node = traverser.resolveNode('UserService');
     assert.ok(node !== null);

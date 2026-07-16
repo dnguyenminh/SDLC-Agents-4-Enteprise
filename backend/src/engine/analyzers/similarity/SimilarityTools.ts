@@ -61,30 +61,31 @@ export const SIMILARITY_TOOL_DEFINITIONS = [
   },
 ];
 
-/** Dispatch a similarity/mining tool call. */
+/** Dispatch a similarity/mining tool call (SA4E-41: tenant-scoped, fail-closed). */
 export function handleSimilarityTool(
   name: string,
   args: Record<string, unknown>,
   db: Database.Database,
-  workspacePath: string
+  workspacePath: string,
+  projectId?: string
 ): string | null {
   switch (name) {
     case 'find_duplicates':
-      return handleFindDuplicates(args, db);
+      return handleFindDuplicates(args, db, projectId);
     case 'find_dead_code':
-      return handleFindDeadCode(args, db);
+      return handleFindDeadCode(args, db, projectId);
     case 'git_search':
-      return handleGitSearch(args, db, workspacePath);
+      return handleGitSearch(args, db, workspacePath, projectId);
     case 'git_index':
-      return handleGitIndex(args, db, workspacePath);
+      return handleGitIndex(args, db, workspacePath, projectId);
     default:
       return null;
   }
 }
 
-function handleFindDuplicates(args: Record<string, unknown>, db: Database.Database): string {
+function handleFindDuplicates(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
   const minSimilarity = (args.min_similarity as number) ?? 0.85;
-  const detector = new DuplicateDetector(db, minSimilarity);
+  const detector = new DuplicateDetector(db, minSimilarity, 5, projectId);
   const report = detector.detect({
     filePath: args.file_path as string | undefined,
     module: args.module as string | undefined,
@@ -111,9 +112,9 @@ function handleFindDuplicates(args: Record<string, unknown>, db: Database.Databa
   return lines.join('\n');
 }
 
-function handleFindDeadCode(args: Record<string, unknown>, db: Database.Database): string {
+function handleFindDeadCode(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
   const minConfidence = (args.min_confidence as number) ?? 60;
-  const detector = new DeadCodeDetector(db, minConfidence);
+  const detector = new DeadCodeDetector(db, minConfidence, projectId);
   const report = detector.detect({
     filePath: args.file_path as string | undefined,
     module: args.module as string | undefined,
@@ -141,11 +142,11 @@ function handleFindDeadCode(args: Record<string, unknown>, db: Database.Database
   return lines.join('\n');
 }
 
-function handleGitSearch(args: Record<string, unknown>, db: Database.Database, workspacePath: string): string {
+function handleGitSearch(args: Record<string, unknown>, db: Database.Database, workspacePath: string, projectId?: string): string {
   const query = args.query as string;
   if (!query) return 'Parameter "query" is required.';
 
-  const miner = new GitMiner(db, workspacePath);
+  const miner = new GitMiner(db, workspacePath, 10000, projectId);
   const results = miner.search(query, {
     author: args.author as string | undefined,
     file: args.file as string | undefined,
@@ -167,15 +168,21 @@ function handleGitSearch(args: Record<string, unknown>, db: Database.Database, w
   return lines.join('\n');
 }
 
-function handleGitIndex(args: Record<string, unknown>, db: Database.Database, workspacePath: string): string {
+function handleGitIndex(args: Record<string, unknown>, db: Database.Database, workspacePath: string, projectId?: string): string {
   const force = (args.force as boolean) ?? false;
-  const miner = new GitMiner(db, workspacePath);
-  const summary = miner.indexHistory(force);
-
-  return [
-    `Git history indexed:`,
-    `  Total commits: ${summary.totalCommits}`,
-    `  Last hash: ${summary.lastHash?.slice(0, 8) ?? 'none'}`,
-    `  Last indexed: ${summary.lastIndexedAt ?? 'never'}`,
-  ].join('\n');
+  const miner = new GitMiner(db, workspacePath, 10000, projectId);
+  try {
+    const summary = miner.indexHistory(force);
+    return [
+      `Git history indexed:`,
+      `  Total commits: ${summary.totalCommits}`,
+      `  Last hash: ${summary.lastHash?.slice(0, 8) ?? 'none'}`,
+      `  Last indexed: ${summary.lastIndexedAt ?? 'never'}`,
+    ].join('\n');
+  } catch (err: any) {
+    if (String(err?.message).startsWith('PROJECT_REQUIRED')) {
+      return JSON.stringify({ error: 'X-Project-Id required to index git history' });
+    }
+    throw err;
+  }
 }

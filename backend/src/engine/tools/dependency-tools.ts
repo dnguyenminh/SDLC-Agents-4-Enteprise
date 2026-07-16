@@ -26,7 +26,7 @@ export const DEPENDENCY_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeDependencies(args: Record<string, unknown>, db: Database.Database, workspace: string): string {
+export function handleCodeDependencies(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
   const file = args.file as string;
   if (!file) return JSON.stringify({ error: 'Parameter "file" is required' });
 
@@ -36,8 +36,8 @@ export function handleCodeDependencies(args: Record<string, unknown>, db: Databa
   const format = (args.format as string) ?? 'tree';
   const limit = (args.limit as number) ?? 50;
 
-  const fileResolver = new FileResolver(db, workspace);
-  const service = new DependencyGraphService(db, fileResolver);
+  const fileResolver = new FileResolver(db, workspace, projectId);
+  const service = new DependencyGraphService(db, fileResolver, projectId);
 
   const result = service.query(file, direction, depth, includeExternal, limit);
 

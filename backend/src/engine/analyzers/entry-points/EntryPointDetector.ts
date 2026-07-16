@@ -22,7 +22,10 @@ export class EntryPointDetector {
   private store: EntryPointStore;
   private db: Database.Database;
 
-  constructor(db: Database.Database) {
+  /**
+   * @param projectId  SA4E-41 read scope. Undefined ⇒ query() is fail-closed.
+   */
+  constructor(db: Database.Database, projectId?: string) {
     this.db = db;
     this.registry = new PatternRegistry();
     this.frameworkDetector = new FrameworkDetector(this.registry);
@@ -30,7 +33,7 @@ export class EntryPointDetector {
     this.mainDetector = new MainDetector(this.registry);
     this.cliDetector = new CLIDetector();
     this.eventDetector = new EventDetector();
-    this.store = new EntryPointStore(db);
+    this.store = new EntryPointStore(db, projectId);
   }
 
   /** Detect all entry points in a file. */

@@ -71,9 +71,9 @@ export const GRAPH_ANALYSIS_TOOL_DEFINITIONS = [
   },
 ];
 
-/** Dispatch a graph analysis tool call. */
-export function handleGraphAnalysisTool(name: string, args: Record<string, unknown>, db: Database.Database): string | null {
-  const graphLoader = new GraphLoader(db);
+/** Dispatch a graph analysis tool call (SA4E-41: tenant-scoped, fail-closed). */
+export function handleGraphAnalysisTool(name: string, args: Record<string, unknown>, db: Database.Database, projectId?: string): string | null {
+  const graphLoader = new GraphLoader(db, projectId);
 
   switch (name) {
     case 'find_circular_deps':
@@ -83,9 +83,9 @@ export function handleGraphAnalysisTool(name: string, args: Record<string, unkno
     case 'find_hot_paths':
       return handleHotPaths(args, graphLoader);
     case 'find_dead_imports':
-      return handleDeadImports(args, db);
+      return handleDeadImports(args, db, projectId);
     case 'module_summary':
-      return handleModuleSummary(args, db);
+      return handleModuleSummary(args, db, projectId);
     default:
       return null;
   }
@@ -164,8 +164,8 @@ function handleHotPaths(args: Record<string, unknown>, graphLoader: GraphLoader)
   return lines.join('\n');
 }
 
-function handleDeadImports(args: Record<string, unknown>, db: Database.Database): string {
-  const detector = new DeadImportDetector(db);
+function handleDeadImports(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
+  const detector = new DeadImportDetector(db, projectId);
   const results = detector.detect({
     filePath: args.file_path as string | undefined,
     module: args.module as string | undefined,
@@ -181,8 +181,8 @@ function handleDeadImports(args: Record<string, unknown>, db: Database.Database)
   return lines.join('\n');
 }
 
-function handleModuleSummary(args: Record<string, unknown>, db: Database.Database): string {
-  const summarizer = new ModuleSummarizer(db);
+function handleModuleSummary(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
+  const summarizer = new ModuleSummarizer(db, projectId);
   const results = summarizer.summarize(args.module as string | undefined);
 
   if (results.length === 0) return 'No modules found.';

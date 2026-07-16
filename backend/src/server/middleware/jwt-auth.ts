@@ -10,6 +10,7 @@
 
 import type { MiddlewareHandler } from 'hono';
 import { createProjectContext } from '../../modules/memory/ProjectContext.js';
+import { validateSession } from '../../admin/admin-db.js';
 
 const REQUIRE_AUTH = process.env.CODE_INTEL_REQUIRE_AUTH === 'true';
 const TOKEN_SECRET = process.env.KB_TOKEN_SECRET || '';
@@ -50,59 +51,133 @@ function isExpired(payload: Record<string, any>): boolean {
   return Date.now() >= payload.exp * 1000;
 }
 
-export const jwtAuth: MiddlewareHandler = async (c, next) => {
-  // X-Project-Id header is the mandatory source of project identity
-  const projectId = c.req.header('X-Project-Id') || '';
-  const authHeader = c.req.header('Authorization');
+/**
+ * Create a JWT auth middleware.
+ * @param alwaysRequire When true, a valid token is ALWAYS required regardless of
+ *   the global CODE_INTEL_REQUIRE_AUTH setting. Anonymous access is never allowed.
+ *   Used for sensitive endpoints like indexing (no default/anonymous action).
+ */
+function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
+  return async (c, next) => {
+    // X-Project-Id header is the mandatory source of project identity
+    const projectId = c.req.header('X-Project-Id') || '';
+    const authHeader = c.req.header('Authorization');
+    const mustAuth = REQUIRE_AUTH || alwaysRequire;
 
-  // Helper: build anonymous context, preserving X-Project-Id
-  const anonymous = () => {
-    const ctx = createProjectContext(projectId, 'anonymous');
+    // Helper: build anonymous context, preserving X-Project-Id
+    const anonymous = () => {
+      const ctx = createProjectContext(projectId, 'anonymous');
+      c.set('projectContext', ctx);
+      return next();
+    };
+
+    const unauthorized = (code: string, message: string) =>
+      c.json({ data: null, error: { code, message } }, 401);
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (mustAuth) return unauthorized('AUTH_REQUIRED', 'Authentication required');
+      return anonymous();
+    }
+
+    const token = authHeader.slice(7);
+
+    // Empty/blank token is not a valid credential
+    if (token.trim().length === 0) {
+      if (mustAuth) return unauthorized('AUTH_REQUIRED', 'Authentication required');
+      return anonymous();
+    }
+
+    // Two supported credential formats:
+    //  1. JWT (header.payload.signature) — signed with KB_TOKEN_SECRET
+    //  2. Admin session token — opaque hex issued by /api/admin/auth/login,
+    //     validated against the sessions table (checks is_active, expiry, status).
+    // A fresh admin session token is NOT a JWT, so we must accept both here or
+    // logged-in admins get a misleading 401 on /api/index/* (indexing).
+    const looksLikeJwt = token.split('.').length === 3;
+
+    if (looksLikeJwt) {
+      // Verify signature
+      if (TOKEN_SECRET) {
+        const valid = await verifyHs256(token, TOKEN_SECRET);
+        if (!valid) {
+          if (!mustAuth) return anonymous();
+          return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
+        }
+      }
+      // Decode payload
+      const payload = decodeJwtPayload(token);
+      if (!payload || isExpired(payload)) {
+        if (!mustAuth) return anonymous();
+        return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
+      }
+      // X-Project-Id header takes precedence over JWT pid claim
+      const ctx = createProjectContext(
+        projectId || payload.pid || '',
+        payload.sub || 'anonymous',
+        undefined,
+        payload.wid || undefined,
+      );
+      c.set('projectContext', ctx);
+      return next();
+    }
+
+    // Opaque token → validate as an admin session (revocation + expiry + status
+    // are all enforced inside validateSession).
+    const session = safeValidateSession(token);
+    if (!session) {
+      if (!mustAuth) return anonymous();
+      return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
+    }
+    const ctx = createProjectContext(projectId, session.userId);
     c.set('projectContext', ctx);
     return next();
   };
+}
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    if (REQUIRE_AUTH) {
-      return c.json({
-        data: null,
-        error: { code: 'AUTH_REQUIRED', message: 'Authentication required' }
-      }, 401);
-    }
-    return anonymous();
+/** validateSession wrapped so a DB error never crashes auth (fails closed). */
+function safeValidateSession(token: string): { userId: string; username: string; accessGroupId: string } | null {
+  try {
+    return validateSession(token);
+  } catch {
+    return null;
   }
+}
 
-  const token = authHeader.slice(7);
+export interface JwtVerification {
+  /** True only for a well-formed, signature-valid, non-expired JWT. */
+  valid: boolean;
+  payload: Record<string, any> | null;
+}
 
-  // Verify signature
+/**
+ * Verify a bearer credential as a JWT. Opaque (non-JWT) tokens return
+ * `{ valid: false }` so callers can decide how to treat non-JWT principals.
+ * SA4E-41 SEC-03: shared by the tools route to bind X-Project-Id to identity.
+ */
+export async function verifyJwtToken(token: string): Promise<JwtVerification> {
+  const looksLikeJwt = token.split('.').length === 3;
+  if (!looksLikeJwt) return { valid: false, payload: null };
   if (TOKEN_SECRET) {
-    const valid = await verifyHs256(token, TOKEN_SECRET);
-    if (!valid) {
-      if (!REQUIRE_AUTH) return anonymous();
-      return c.json({
-        data: null,
-        error: { code: 'TOKEN_INVALID', message: 'Invalid or expired token' }
-      }, 401);
-    }
+    const ok = await verifyHs256(token, TOKEN_SECRET);
+    if (!ok) return { valid: false, payload: null };
   }
-
-  // Decode payload
   const payload = decodeJwtPayload(token);
-  if (!payload || isExpired(payload)) {
-    if (!REQUIRE_AUTH) return anonymous();
-    return c.json({
-      data: null,
-      error: { code: 'TOKEN_INVALID', message: 'Invalid or expired token' }
-    }, 401);
-  }
+  if (!payload || isExpired(payload)) return { valid: false, payload: null };
+  return { valid: true, payload };
+}
 
-  // X-Project-Id header takes precedence over JWT pid claim
-  const ctx = createProjectContext(
-    projectId || payload.pid || '',
-    payload.sub || 'anonymous',
-    undefined,
-    payload.wid || undefined,
-  );
-  c.set('projectContext', ctx);
-  return next();
-};
+/** Extract the set of project ids a principal is granted from JWT claims. */
+export function allowedProjectsFromClaims(payload: Record<string, any>): string[] {
+  const out: string[] = [];
+  if (typeof payload.pid === 'string' && payload.pid) out.push(payload.pid);
+  if (Array.isArray(payload.pids)) {
+    out.push(...payload.pids.filter((p: unknown): p is string => typeof p === 'string' && p.length > 0));
+  }
+  return out;
+}
+
+/** Standard JWT auth — anonymous allowed unless CODE_INTEL_REQUIRE_AUTH=true. */
+export const jwtAuth: MiddlewareHandler = createJwtAuth(false);
+
+/** Strict JWT auth — always requires a valid token, never anonymous. */
+export const jwtAuthStrict: MiddlewareHandler = createJwtAuth(true);

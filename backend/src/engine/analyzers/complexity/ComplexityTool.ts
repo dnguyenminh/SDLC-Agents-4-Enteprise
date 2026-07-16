@@ -23,9 +23,9 @@ export const COMPLEXITY_TOOL_DEFINITION = {
   },
 };
 
-/** Handle complexity_analysis tool call. */
-export function handleComplexityTool(args: Record<string, unknown>, db: Database.Database): string {
-  const analyzer = new ComplexityAnalyzer(db);
+/** Handle complexity_analysis tool call (SA4E-41: tenant-scoped, fail-closed). */
+export function handleComplexityTool(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
+  const analyzer = new ComplexityAnalyzer(db, projectId);
 
   const filters = {
     filePath: args.file_path as string | undefined,

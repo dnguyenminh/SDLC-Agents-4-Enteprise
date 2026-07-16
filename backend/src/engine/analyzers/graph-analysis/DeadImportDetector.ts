@@ -4,17 +4,24 @@
 
 import Database from 'better-sqlite3';
 import type { DeadImport } from './types.js';
+import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
 export class DeadImportDetector {
   private db: Database.Database;
+  private projectId: string | undefined;
 
-  constructor(db: Database.Database) {
+  /**
+   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
+   */
+  constructor(db: Database.Database, projectId?: string) {
     this.db = db;
+    this.projectId = projectId;
   }
 
   /** Find dead (unused) imports in a file or across the project. */
   detect(options: { filePath?: string; module?: string; limit?: number } = {}): DeadImport[] {
     const limit = options.limit ?? 50;
+    const scope = buildCodeScopeFilter(this.projectId, 'r'); // fail-closed
 
     // Find imports where the target symbol is never referenced elsewhere in the same file
     let sql = `
@@ -22,15 +29,17 @@ export class DeadImportDetector {
              r.metadata
       FROM relationships r
       WHERE r.kind = 'imports'
+        AND ${scope.clause}
         AND NOT EXISTS (
           SELECT 1 FROM relationships r2
           WHERE r2.file_path = r.file_path
             AND r2.kind IN ('calls', 'uses')
             AND r2.target_symbol = r.target_symbol
             AND r2.id != r.id
+            AND r2.project_id = r.project_id
         )
     `;
-    const params: unknown[] = [];
+    const params: unknown[] = [...scope.params];
 
     if (options.filePath) {
       sql += ' AND r.file_path LIKE ?';

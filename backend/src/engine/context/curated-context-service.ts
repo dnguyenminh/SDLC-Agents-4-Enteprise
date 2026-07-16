@@ -53,7 +53,7 @@ export class CuratedContextService {
 
     const [codeResults, memoryResults] = await Promise.all([
       include_source ? searchCode(analysis, this.queryLayer, this.resolver, projectId) : Promise.resolve({ source: 'code', results: [] }),
-      include_memory ? searchMemory(analysis, this.db) : Promise.resolve({ source: 'memory', results: [] })
+      include_memory ? searchMemory(analysis, this.db, projectId) : Promise.resolve({ source: 'memory', results: [] })
     ]);
 
     let graphResults = { source: 'graph', results: [] as any[] };

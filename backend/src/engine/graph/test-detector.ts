@@ -5,6 +5,7 @@
 import * as path from 'path';
 import Database from 'better-sqlite3';
 import { ResolvedSymbol } from './symbol-resolver.js';
+import { buildCodeScopeFilter } from '../query/code-intel-isolation.js';
 
 export interface RelatedTest {
   file: string;
@@ -13,6 +14,7 @@ export interface RelatedTest {
 
 export class TestDetector {
   private db: Database.Database;
+  private projectId: string | undefined;
 
   private static readonly TEST_PATH_PATTERNS = [
     /\/tests?\//i,
@@ -28,8 +30,12 @@ export class TestDetector {
     /^test_.*\.py$/,
   ];
 
-  constructor(db: Database.Database) {
+  /**
+   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
+   */
+  constructor(db: Database.Database, projectId?: string) {
     this.db = db;
+    this.projectId = projectId;
   }
 
   /** Check if a file path is a test file. */
@@ -50,11 +56,12 @@ export class TestDetector {
     for (const sym of symbols) {
       const sourceBasename = path.basename(sym.filePath, path.extname(sym.filePath));
 
-      // Find test files that import the source file
+      // Find test files that import the source file (tenant-scoped, fail-closed)
+      const scope = buildCodeScopeFilter(this.projectId, 'relationships');
       const testFiles = this.db.prepare(`
         SELECT DISTINCT file_path FROM relationships
-        WHERE kind = 'imports' AND target_symbol LIKE ?
-      `).all(`%${sourceBasename}%`) as { file_path: string }[];
+        WHERE kind = 'imports' AND target_symbol LIKE ? AND ${scope.clause}
+      `).all(`%${sourceBasename}%`, ...scope.params) as { file_path: string }[];
 
       for (const tf of testFiles) {
         if (this.isTestFile(tf.file_path) && !seen.has(tf.file_path)) {

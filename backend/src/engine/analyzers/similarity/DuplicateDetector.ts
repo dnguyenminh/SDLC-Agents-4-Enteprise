@@ -6,6 +6,7 @@
 import Database from 'better-sqlite3';
 import { ClusterBuilder } from './ClusterBuilder.js';
 import type { SimilarityPair, DuplicateCluster, DuplicateReport, ClusterMember } from './types.js';
+import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
 interface EmbeddingRow {
   symbol_id: number;
@@ -27,11 +28,16 @@ export class DuplicateDetector {
   private db: Database.Database;
   private minSimilarity: number;
   private minLines: number;
+  private projectId: string | undefined;
 
-  constructor(db: Database.Database, minSimilarity: number = 0.85, minLines: number = 5) {
+  /**
+   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
+   */
+  constructor(db: Database.Database, minSimilarity: number = 0.85, minLines: number = 5, projectId?: string) {
     this.db = db;
     this.minSimilarity = minSimilarity;
     this.minLines = minLines;
+    this.projectId = projectId;
   }
 
   /** Find duplicate functions in the codebase. */
@@ -63,6 +69,7 @@ export class DuplicateDetector {
   }
 
   private loadEmbeddings(filePath?: string, module?: string): Array<{ symbolId: number; vector: number[]; info: SymbolRow }> {
+    const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     let sql = `
       SELECT be.symbol_id, be.chunk_index, be.embedding, be.token_count,
              s.id, s.name, s.kind, s.start_line, s.end_line, f.relative_path as file_path
@@ -71,8 +78,9 @@ export class DuplicateDetector {
       JOIN files f ON f.id = s.file_id
       WHERE be.chunk_index = 0
         AND (s.end_line - s.start_line) >= ?
+        AND ${scope.clause}
     `;
-    const params: unknown[] = [this.minLines];
+    const params: unknown[] = [this.minLines, ...scope.params];
 
     if (filePath) {
       sql += ` AND f.relative_path LIKE ?`;

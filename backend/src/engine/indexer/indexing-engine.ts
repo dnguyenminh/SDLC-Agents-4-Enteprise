@@ -102,8 +102,19 @@ export class IndexingEngine {
     }
   }
 
+  /**
+   * SA4E-41 SEC-06: incremental watcher events are scoped to the BOOT tenant only.
+   * The FileWatcher only watches `config.workspace` (a single tenant's tree), so the
+   * boot `config.projectId` is the correct owner for these events. Other tenants are
+   * indexed push-only via POST /api/index/source (which passes the request projectId
+   * to runFullIndex). Do NOT reuse this path for multi-tenant workspaces.
+   */
+  private bootProjectId(): string {
+    return this.config.projectId;
+  }
+
   async indexSingleFile(filePath: string): Promise<void> {
-    const projectId = this.config.projectId;
+    const projectId = this.bootProjectId(); // SEC-06: boot-tenant scope only
     const file = scanSingleFile(filePath, this.config.workspace);
     if (!file || isFileUnchanged(this.db, file, projectId)) return;
     await this.upsertFile(file, projectId);
@@ -111,7 +122,7 @@ export class IndexingEngine {
 
   removeFile(filePath: string): void {
     const relativePath = filePath.replace(/\\/g, '/');
-    const projectId = this.config.projectId;
+    const projectId = this.bootProjectId(); // SEC-06: boot-tenant scope only
     this.db.prepare('DELETE FROM files WHERE relative_path = ? AND project_id = ?').run(relativePath, projectId);
     this.graphRepo?.deleteFileRelationships(relativePath, projectId);
   }

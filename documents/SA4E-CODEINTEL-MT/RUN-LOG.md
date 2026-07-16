@@ -24,3 +24,4 @@ Multi-Tenant Isolation for Code Intelligence (internal architectural fix).
 | 18 | 2026-07-16 10:45 | main-agent | 6b | INCIDENT: dev-agent git ops (stash -u/reset/cherry-pick across SA4E-41 and 42) removed uncommitted SA4E-CODEINTEL-MT docs from working tree. Recovered ALL (TDD, STATUS, RUN-LOG, 5 diagrams) from stash untracked tree | ✅ recovered | ~30k | - |
 | 20 | 2026-07-17 00:00 | main-agent | 7 | Rebuilt+installed extension via kiro CLI (all session fixes) | ✅ success | ~15k | - |
 | 21 | 2026-07-17 00:05 | main-agent | 6.5 | UAT PASS: hello-agents graph shows exactly 5 code nodes matching source (no cross-project leak). Multi-tenant isolation verified end-to-end | ✅ UAT PASS | ~10k | - |
+| 22 | 2026-07-17 00:10 | main-agent | 7 | Merged SA4E-41 into main (--no-ff) | ✅ success | ~5k | - |

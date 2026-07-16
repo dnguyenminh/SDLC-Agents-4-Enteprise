@@ -9,18 +9,24 @@ import type { ComplexityResult, ComplexityFilters, ComplexityQueryResult, FileCo
 import { ComplexityCalculator } from './ComplexityCalculator.js';
 import { GradeAssigner } from './GradeAssigner.js';
 import { ComplexityStore } from './ComplexityStore.js';
+import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
 export class ComplexityAnalyzer {
   private calculator: ComplexityCalculator;
   private grader: GradeAssigner;
   private store: ComplexityStore;
   private db: Database.Database;
+  private projectId: string | undefined;
 
-  constructor(db: Database.Database) {
+  /**
+   * @param projectId  SA4E-41 read scope. Undefined ⇒ query()/getBySymbolName fail-closed.
+   */
+  constructor(db: Database.Database, projectId?: string) {
     this.db = db;
+    this.projectId = projectId;
     this.calculator = new ComplexityCalculator();
     this.grader = new GradeAssigner();
-    this.store = new ComplexityStore(db);
+    this.store = new ComplexityStore(db, projectId);
   }
 
   /** Analyze a single function given its body AST node. */
@@ -91,12 +97,13 @@ export class ComplexityAnalyzer {
 
   /** Get complexity for a specific symbol by name. */
   getBySymbolName(symbolName: string, filePath?: string): ComplexityResult | null {
+    const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     let sql = `
       SELECT s.id FROM symbols s
       JOIN files f ON f.id = s.file_id
-      WHERE s.name = ?
+      WHERE s.name = ? AND ${scope.clause}
     `;
-    const params: unknown[] = [symbolName];
+    const params: unknown[] = [symbolName, ...scope.params];
     if (filePath) {
       sql += ' AND f.relative_path LIKE ?';
       params.push(`%${filePath}%`);

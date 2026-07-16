@@ -1,55 +1,68 @@
 /**
  * KSA-168: Git Miner — Semantic search over git commit history.
  * Parses git log, stores commit metadata, enables text-based search.
+ * SA4E-41: commits are stamped with project_id and search is tenant-scoped (fail-closed).
  */
 import Database from 'better-sqlite3';
 import type { GitCommit, GitCommitResult, GitIndexSummary } from './types.js';
 import { parseGitLog, getLastIndexedHash } from './GitLogParser.js';
+import { buildCodeScopeFilter, requireProjectId } from '../../query/code-intel-isolation.js';
 
 export class GitMiner {
   private db: Database.Database;
   private repoPath: string;
   private maxCommits: number;
+  private projectId: string | undefined;
 
-  constructor(db: Database.Database, repoPath: string, maxCommits: number = 10000) {
+  /**
+   * @param projectId  SA4E-41 tenant scope. indexHistory requires it (write);
+   *   search/getSummary are fail-closed when it is missing.
+   */
+  constructor(db: Database.Database, repoPath: string, maxCommits: number = 10000, projectId?: string) {
     this.db = db;
     this.repoPath = repoPath;
     this.maxCommits = maxCommits;
+    this.projectId = projectId;
     this.ensureSchema();
   }
 
   indexHistory(force: boolean = false): GitIndexSummary {
-    const lastHash = force ? null : getLastIndexedHash(this.db);
+    // Writes must fail loudly when there is no tenant context.
+    const pid = requireProjectId(this.projectId);
+    const lastHash = force ? null : getLastIndexedHash(this.db, pid);
     const commits = parseGitLog(lastHash, this.repoPath, this.maxCommits);
     if (commits.length === 0) return this.getSummary();
     const insert = this.db.prepare(`
-      INSERT OR IGNORE INTO git_commits (hash, author, date, message, files_changed, insertions, deletions)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT OR IGNORE INTO git_commits (project_id, hash, author, date, message, files_changed, insertions, deletions)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const transaction = this.db.transaction((items: GitCommit[]) => {
       for (const commit of items) {
         insert.run(
-          commit.hash, commit.author, commit.date, commit.message,
+          pid, commit.hash, commit.author, commit.date, commit.message,
           JSON.stringify(commit.filesChanged), commit.insertions, commit.deletions
         );
       }
     });
     transaction(commits);
-    if (commits.length > 0) {
-      this.db.prepare(
-        `INSERT OR REPLACE INTO git_index_meta (key, value) VALUES ('last_indexed_hash', ?)`
-      ).run(commits[0].hash);
-      this.db.prepare(
-        `INSERT OR REPLACE INTO git_index_meta (key, value) VALUES ('last_indexed_at', datetime('now'))`
-      ).run();
-    }
+    this.recordIndexMeta(pid, commits[0].hash);
     return this.getSummary();
+  }
+
+  private recordIndexMeta(pid: string, lastHash: string): void {
+    this.db.prepare(
+      `INSERT OR REPLACE INTO git_index_meta (project_id, key, value) VALUES (?, 'last_indexed_hash', ?)`
+    ).run(pid, lastHash);
+    this.db.prepare(
+      `INSERT OR REPLACE INTO git_index_meta (project_id, key, value) VALUES (?, 'last_indexed_at', datetime('now'))`
+    ).run(pid);
   }
 
   search(query: string, options: { author?: string; file?: string; limit?: number; since?: string } = {}): GitCommitResult[] {
     const limit = options.limit ?? 10;
-    let sql = `SELECT hash, author, date, message, files_changed, insertions, deletions FROM git_commits WHERE 1=1`;
-    const params: unknown[] = [];
+    const scope = buildCodeScopeFilter(this.projectId, 'git_commits'); // fail-closed
+    let sql = `SELECT hash, author, date, message, files_changed, insertions, deletions FROM git_commits WHERE ${scope.clause}`;
+    const params: unknown[] = [...scope.params];
     if (query) {
       sql += ` AND (message LIKE ? OR files_changed LIKE ?)`;
       params.push(`%${query}%`, `%${query}%`);
@@ -71,36 +84,56 @@ export class GitMiner {
   }
 
   getSummary(): GitIndexSummary {
-    const countRow = this.db.prepare('SELECT COUNT(*) as count FROM git_commits').get() as { count: number };
-    const lastHashRow = this.db.prepare(
-      `SELECT value FROM git_index_meta WHERE key = 'last_indexed_hash'`
-    ).get() as { value: string } | undefined;
-    const lastTimeRow = this.db.prepare(
-      `SELECT value FROM git_index_meta WHERE key = 'last_indexed_at'`
-    ).get() as { value: string } | undefined;
+    if (!this.projectId) {
+      return { totalCommits: 0, indexed: 0, lastHash: null, lastIndexedAt: null };
+    }
+    const countRow = this.db.prepare(
+      `SELECT COUNT(*) as count FROM git_commits WHERE project_id = ?`
+    ).get(this.projectId) as { count: number };
+    const meta = (key: string) => (this.db.prepare(
+      `SELECT value FROM git_index_meta WHERE key = ? AND project_id = ?`
+    ).get(key, this.projectId) as { value: string } | undefined)?.value ?? null;
     return {
       totalCommits: countRow.count, indexed: countRow.count,
-      lastHash: lastHashRow?.value ?? null, lastIndexedAt: lastTimeRow?.value ?? null,
+      lastHash: meta('last_indexed_hash'), lastIndexedAt: meta('last_indexed_at'),
     };
   }
 
   private ensureSchema(): void {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS git_commits (
-        hash TEXT PRIMARY KEY,
+        project_id TEXT NOT NULL DEFAULT '',
+        hash TEXT NOT NULL,
         author TEXT NOT NULL,
         date TEXT NOT NULL,
         message TEXT NOT NULL,
         files_changed TEXT NOT NULL DEFAULT '[]',
         insertions INTEGER DEFAULT 0,
-        deletions INTEGER DEFAULT 0
+        deletions INTEGER DEFAULT 0,
+        PRIMARY KEY (project_id, hash)
       );
       CREATE INDEX IF NOT EXISTS idx_git_date ON git_commits(date);
       CREATE INDEX IF NOT EXISTS idx_git_author ON git_commits(author);
+      CREATE INDEX IF NOT EXISTS idx_git_project ON git_commits(project_id);
       CREATE TABLE IF NOT EXISTS git_index_meta (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
+        project_id TEXT NOT NULL DEFAULT '',
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        PRIMARY KEY (project_id, key)
       );
     `);
+    this.migrateLegacyGitSchema();
+  }
+
+  /** Add project_id to pre-SA4E-41 git tables when missing (idempotent). */
+  private migrateLegacyGitSchema(): void {
+    const cols = this.db.pragma('table_info(git_commits)') as { name: string }[];
+    if (!cols.some(c => c.name === 'project_id')) {
+      this.db.exec(`ALTER TABLE git_commits ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
+    }
+    const metaCols = this.db.pragma('table_info(git_index_meta)') as { name: string }[];
+    if (!metaCols.some(c => c.name === 'project_id')) {
+      this.db.exec(`ALTER TABLE git_index_meta ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
+    }
   }
 }

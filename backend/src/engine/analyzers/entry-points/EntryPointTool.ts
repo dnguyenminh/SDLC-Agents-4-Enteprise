@@ -23,9 +23,9 @@ export const ENTRY_POINT_TOOL_DEFINITION = {
   },
 };
 
-/** Handle find_entry_points tool call. */
-export function handleEntryPointTool(args: Record<string, unknown>, db: Database.Database): string {
-  const detector = new EntryPointDetector(db);
+/** Handle find_entry_points tool call (SA4E-41: tenant-scoped, fail-closed). */
+export function handleEntryPointTool(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
+  const detector = new EntryPointDetector(db, projectId);
 
   const result = detector.query({
     entryType: args.entry_type as EntryType | undefined,

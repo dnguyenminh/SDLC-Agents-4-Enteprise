@@ -5,10 +5,12 @@
 
 import * as path from 'path';
 import Database from 'better-sqlite3';
+import { buildCodeScopeFilter } from '../query/code-intel-isolation.js';
 
 export class FileResolver {
   private indexedFiles: Set<string>;
   private workspaceRoot: string;
+  private projectId: string | undefined;
 
   private static readonly EXTENSIONS = ['.ts', '.js', '.tsx', '.jsx', '.kt', '.py', '/index.ts', '/index.js'];
   private static readonly STDLIB_MODULES = new Set([
@@ -22,13 +24,20 @@ export class FileResolver {
     'unittest', 'io', 'subprocess', 'threading', 'multiprocessing',
   ]);
 
-  constructor(db: Database.Database, workspaceRoot: string) {
+  /**
+   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no files).
+   */
+  constructor(db: Database.Database, workspaceRoot: string, projectId?: string) {
     this.workspaceRoot = workspaceRoot;
+    this.projectId = projectId;
     this.indexedFiles = this.loadIndexedFiles(db);
   }
 
   private loadIndexedFiles(db: Database.Database): Set<string> {
-    const rows = db.prepare('SELECT relative_path FROM files').all() as { relative_path: string }[];
+    const scope = buildCodeScopeFilter(this.projectId, 'files');
+    const rows = db.prepare(
+      `SELECT relative_path FROM files WHERE ${scope.clause}`
+    ).all(...scope.params) as { relative_path: string }[];
     return new Set(rows.map(r => r.relative_path));
   }
 
