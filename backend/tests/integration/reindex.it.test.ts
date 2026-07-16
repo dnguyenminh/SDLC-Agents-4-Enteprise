@@ -21,8 +21,20 @@ import {
   FakeEventSource,
   FakeToolSource,
 } from '../../src/modules/orchestration/reindex/__tests__/reindex-fakes.js';
+import type { IEmbedder } from '../../src/modules/orchestration/reindex/models/ports.js';
 
 const silent = pino({ level: 'silent' });
+
+/** Embedder that adds latency so a re-index stays in flight (IT-07/BR-09). */
+class SlowEmbedder implements IEmbedder {
+  constructor(private readonly delayMs: number) {}
+  async generateEmbedding(text: string): Promise<number[]> {
+    await new Promise((r) => setTimeout(r, this.delayMs));
+    const v = [0, 0, 0, 0];
+    for (let i = 0; i < text.length; i++) v[i % 4] += text.charCodeAt(i) / 255;
+    return v;
+  }
+}
 
 interface Harness {
   tmp: TempDb;
@@ -125,6 +137,27 @@ describe('SA4E-42 re-index integration', () => {
     await h.sub.settle('atlassian');
     const after = h.db.prepare("SELECT name, server FROM mcp_tools WHERE server IS NULL OR server='markdown-exporter' ORDER BY name").all();
     expect(after).toEqual(before);
+  });
+
+  it('IT-07: non-blocking read during in-flight refresh (BR-09)', async () => {
+    seed(h.db, 'markdown-exporter', 'export_docx'); // pre-existing index stays readable
+    const svc = new ReindexService(() => h.db, new SlowEmbedder(100), h.src, silent);
+    const source = new FakeEventSource();
+    const sub = new ReindexSubscriber(source, svc, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
+    sub.start();
+    h.src.setTools('atlassian', ['jira_create_issue', 'jira_search', 'jira_update']);
+    h.src.setConnected('atlassian', true);
+    source.emit('atlassian', 'connected'); // slow re-index starts (in flight)
+    await new Promise((r) => setTimeout(r, 20)); // let the first embed be in progress
+    const t0 = Date.now();
+    const rows = h.db.prepare('SELECT * FROM mcp_tools').all() as any[];
+    const readMs = Date.now() - t0;
+    expect(readMs).toBeLessThan(50); // read not blocked by the async refresh
+    expect(rows.some((r) => r.name === 'export_docx')).toBe(true); // current index visible
+    expect(names(h.db, 'atlassian')).toEqual([]); // new tools not yet committed
+    await sub.settle('atlassian'); // now the refresh completes
+    expect(names(h.db, 'atlassian')).toContain('jira_create_issue'); // new tools appear
+    sub.stop();
   });
 
   it('IT-08: fail-soft on embedding error leaves prior rows; later event succeeds', async () => {
