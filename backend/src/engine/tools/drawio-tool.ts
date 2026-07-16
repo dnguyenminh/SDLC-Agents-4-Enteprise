@@ -1,39 +1,39 @@
 /**
  * drawio_auto_layout MCP tool — REVIEW mode: detect issues, report for AI to fix.
- * Does NOT modify the file. Returns detailed issue list.
+ * Accepts content_base64 (drawio XML). Does NOT modify the file. Returns issue list.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { parseDrawio, DiagramGraph, DiagramNode } from './drawio-parser.js';
 
 export const DRAWIO_TOOL_DEFINITION = {
   name: 'drawio_auto_layout',
-  description: 'Auto-layout draw.io diagrams using graph algorithms. Reads .drawio file, computes optimal node positions, writes back. Preserves all styles/labels.',
+  description: 'Analyze draw.io diagram layout from base64 XML content. Detects overlaps, crossings, diagonal edges.',
   inputSchema: {
     type: 'object',
     properties: {
-      file_path: { type: 'string', description: 'Path to .drawio file (absolute or relative to workspace)' },
+      content_base64: { type: 'string', description: 'Base64-encoded .drawio XML content' },
+      file_path: { type: 'string', description: 'Original file path (reference only)' },
       algorithm: { type: 'string', description: 'Layout algorithm: layered|force|mrtree|radial (default: layered)' },
       spacing: { type: 'number', description: 'Node spacing in pixels (default: 80)' },
       direction: { type: 'string', description: 'Layout direction: DOWN|RIGHT|LEFT|UP (default: DOWN)' },
-      export_png: { type: 'boolean', description: 'Also export PNG after layout (default: false)' },
-      force: { type: 'boolean', description: 'Force re-layout even if diagram has no overlaps (default: false)' },
     },
-    required: ['file_path'],
+    required: ['content_base64'],
   },
 };
 
 export function handleDrawioLayout(args: Record<string, unknown>, workspace: string): string {
-  const rawPath = args.file_path as string | undefined;
-  if (!rawPath) return error('file_path is required');
+  const b64 = args.content_base64 as string | undefined;
+  if (!b64) return error('content_base64 is required');
 
-  const filePath = path.isAbsolute(rawPath) ? rawPath : path.resolve(workspace, rawPath);
-  if (!fs.existsSync(filePath)) return error(`File not found: ${filePath}`);
-  if (!filePath.endsWith('.drawio')) return error(`Not a .drawio file`);
-
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'drawio-layout-'));
+  const tmpFile = path.join(tmpDir, 'input.drawio');
   try {
-    const { graph } = parseDrawio(filePath);
+    const content = Buffer.from(b64, 'base64').toString('utf-8');
+    fs.writeFileSync(tmpFile, content, 'utf-8');
+    const { graph } = parseDrawio(tmpFile);
     const nodeCount = graph.nodes.length + graph.containers.length;
     if (nodeCount === 0) return error('No nodes found in diagram');
 
@@ -52,6 +52,8 @@ export function handleDrawioLayout(args: Record<string, unknown>, workspace: str
     });
   } catch (e: any) {
     return error(`Analysis failed: ${e.message ?? e}`);
+  } finally {
+    try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch { /* best-effort */ }
   }
 }
 

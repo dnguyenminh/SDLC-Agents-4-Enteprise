@@ -4,7 +4,7 @@ import { ServerStatus } from "./types";
 import { AuthManager } from "./auth/AuthManager";
 import * as http from "http";
 import * as https from "https";
-import { executeLocalTool, wrapToolArguments, getLocalToolDefinitions } from "./backend-local-tools";
+import { executeLocalTool, wrapToolArguments, getLocalToolDefinitions, handleBase64Response } from "./backend-local-tools";
 import { getProjectId } from "./extension";
 
 /** Tools that execute locally without forwarding to backend */
@@ -130,7 +130,8 @@ export class RemoteBackendClient implements vscode.Disposable {
           res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, result })); return;
         }
         const finalArgs = wrapToolArguments(name, args);
-        const result = await this.restCallTool(name, finalArgs);
+        let result = await this.restCallTool(name, finalArgs);
+        result = handleBase64Response(name, args, result);
         res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, result })); return;
       }
       res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify({ jsonrpc: "2.0", id: jsonRpc.id, error: { code: -32601, message: `Method not supported: ${jsonRpc.method}` } }));
@@ -224,7 +225,8 @@ export class RemoteBackendClient implements vscode.Disposable {
   async invokeTool(name: string, args: Record<string, unknown>): Promise<string> {
     if (this._status !== "running") { throw new Error("Backend not connected."); }
     const finalArgs = wrapToolArguments(name, args);
-    const result = await this.restCallTool(name, finalArgs);
+    let result = await this.restCallTool(name, finalArgs);
+    result = handleBase64Response(name, args, result);
     if (result.isError) { throw new Error(`Tool execution failed: ${JSON.stringify(result.content)}`); }
     return JSON.stringify(result);
   }

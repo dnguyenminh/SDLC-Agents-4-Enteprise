@@ -38,15 +38,15 @@ export const TIER1_TOOLS = [
   },
   {
     name: 'mem_ingest_file',
-    description: 'Ingest a document from disk by file path. Zero-context: server reads file directly, agent only sends path (~80 tokens). Auto-chunks markdown by sections.',
+    description: 'Ingest a document by file path. Extension auto-reads file and sends content_base64 to backend. Zero-context for LLM: just provide file_path.',
     inputSchema: {
       type: 'object',
       properties: {
         file_path: { type: 'string', description: 'Path to document file (relative to workspace or absolute)' },
+        content_base64: { type: 'string', description: 'Base64-encoded file content (injected by extension proxy)' },
         type: { type: 'string', description: 'Knowledge type: REQUIREMENT, ARCHITECTURE, DECISION, PROCEDURE, CONTEXT (default: CONTEXT)' },
         scope: { type: 'string', description: 'Visibility scope: USER (private), PROJECT (team), SHARED (company). Default: USER' },
         format: { type: 'string', description: 'Format: markdown (default) or text' },
-        content: { type: 'string', description: 'File content (injected by Light Client wrapper)' },
       },
       required: ['file_path'],
     },

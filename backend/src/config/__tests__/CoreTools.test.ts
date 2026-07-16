@@ -20,13 +20,14 @@ beforeEach(() => { original = [...CORE_TOOLS]; });
 afterEach(() => { setCore(original); });
 
 describe('CoreTools.resolveCoreToolNames', () => {
-  it('UT-01: valid CORE set resolves to exactly 8 names', () => {
+  it('UT-01: valid CORE set resolves to exactly 10 names', () => {
     const set = resolveCoreToolNames();
     expect(set).toBeInstanceOf(Set);
-    expect(set.size).toBe(8);
+    expect(set.size).toBe(10);
     for (const name of [
       'mem_search', 'mem_ingest', 'mem_ingest_file', 'code_search',
       'get_curated_context', 'find_tools', 'execute_dynamic_tool', 'orchestration_status',
+      'drawio_export_png', 'drawio_auto_layout',
     ]) {
       expect(set.has(name)).toBe(true);
     }
