@@ -56,6 +56,11 @@ export function runMigrations(db: Database.Database, legacyProjectId: string = '
   // Idempotent memory schema execution
   applyMemorySchema(db);
 
+  // SA4E-42 (PT-01): additive `server` column on mcp_tools. Idempotent (PRAGMA probe),
+  // so it MUST run on every startup BEFORE the early-return below — existing v5 DBs
+  // (left by SA4E-41) would otherwise skip it and crash on the scoped INSERT.
+  migrateAddMcpToolsServerColumn(db);
+
   const current = getCurrentVersion(db);
   const pending = MIGRATIONS.filter(m => m.version > current);
 
@@ -92,9 +97,6 @@ export function runMigrations(db: Database.Database, legacyProjectId: string = '
   if (current < 5) {
     applyMigrationV5(db, legacyProjectId);
   }
-
-  // SA4E-42: additive `server` column on mcp_tools (idempotent, always probed)
-  migrateAddMcpToolsServerColumn(db);
 }
 
 /**
