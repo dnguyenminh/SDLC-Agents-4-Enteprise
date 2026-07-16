@@ -1,0 +1,105 @@
+<mxGraphModel dx="1100" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1150" pageHeight="880" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Component / Data Dependencies — Code Intelligence Isolation" style="text;html=1;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="150" y="20" width="820" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="legend" value="Legend:  green = new component   orange = modified   grey = unchanged" style="text;html=1;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="60" y="55" width="700" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="api" value="api.ts&#10;/api/index/source&#10;(MODIFIED: pass scope)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="60" y="100" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="cim" value="CodeIntelModule&#10;(MODIFIED: extract __projectId)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="300" y="100" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="reg" value="register-tools.ts&#10;dispatchCodeIntelTool(..,projectId)&#10;(MODIFIED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="540" y="100" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="spatial" value="kb-graph-spatial.ts&#10;codeCount(project_id)&#10;(MODIFIED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="800" y="100" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="scope" value="IndexScope (NEW)&#10;{ projectId, workspace }" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="230" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="engine" value="IndexingEngine&#10;runFullIndex(scope)&#10;per-project guard&#10;(MODIFIED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="60" y="330" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="helper" value="index-helper.ts&#10;isFileUnchanged/upsert&#10;+ project_id (MODIFIED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="60" y="450" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ql" value="QueryLayer&#10;all methods take projectId&#10;(MODIFIED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="320" y="330" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="iso" value="CodeIntelIsolation (NEW)&#10;buildCodeScopeFilter()&#10;requireProjectId()&#10;fail-closed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="230" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="ctx" value="ai-context-tools.ts&#10;get_curated_context(projectId)&#10;(MODIFIED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="580" y="330" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="grepo" value="GraphRepository&#10;resolveTargets scoped&#10;(MODIFIED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="580" y="230" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="gsync" value="GraphSyncService (NEW)&#10;syncProjectSymbols(projectId)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="820" y="230" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="mig" value="migrations.ts&#10;applyMigrationV5(db, legacyProjectId)&#10;(MODIFIED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="320" y="450" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="dbm" value="DatabaseManager&#10;sharedDb (UNCHANGED)&#10;+ pass projectId to migrations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="580" y="450" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="db" value="index.db + admin.db" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="840" y="440" width="180" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="api" target="scope">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="scope" target="engine">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="engine" target="helper">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="cim" target="reg">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="reg" target="ql">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="reg" target="ctx">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="ql" target="iso">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="engine" target="iso">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="ctx" target="ql">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c10" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="engine" target="grepo">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c11" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="engine" target="gsync">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c12" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="dbm" target="mig">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c13" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="dbm" target="db">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c14" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="gsync" target="db">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c15" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="spatial" target="db">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c16" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="ql" target="dbm">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
