@@ -4,10 +4,10 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { QueryLayer } from '../query/query-layer.js';
+import { resolveWithinWorkspace } from '../../shared/path-safety.js';
 
 export function registerCodeContext(
   server: McpServer, queryLayer: QueryLayer, workspace: string
@@ -35,7 +35,9 @@ function getContext(
   startLine: number | undefined, endLine: number | undefined,
   contextLines: number, queryLayer: QueryLayer, projectId?: string
 ): string {
-  const fullPath = path.resolve(workspace, file);
+  // SEC-04: reject absolute/traversal/null-byte paths and confirm containment.
+  const fullPath = resolveWithinWorkspace(workspace, file);
+  if (!fullPath) return `Invalid path: ${file}`;
   if (!fs.existsSync(fullPath)) return `File not found: ${file}`;
 
   const content = fs.readFileSync(fullPath, 'utf-8');

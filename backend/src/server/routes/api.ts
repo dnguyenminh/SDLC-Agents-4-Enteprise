@@ -1,28 +1,14 @@
 /**
  * Webview data API endpoints — /api/*
  * Provides data for Dashboard, KB Graph, Analytics, Tags, Quality panels.
+ * Indexing write endpoints live in ./api-index.ts (SA4E-41 split for size + path-safety).
  * Implements: UC-5
  */
 
 import { Hono } from 'hono';
 import type { Logger } from 'pino';
-import * as fs from 'fs';
-import * as path from 'path';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
-import type { CodeIntelModule } from '../../modules/code-intel/CodeIntelModule.js';
-import { loadConfig } from '../../config/index.js';
-import { getAdminDb } from '../../admin/admin-db.js';
-
-/** Validate relative path - reject traversal attempts */
-function isPathSafe(relPath: string): boolean {
-  if (!relPath || typeof relPath !== 'string') return false;
-  const normalized = path.normalize(relPath);
-  // Reject: absolute paths, traversal, null bytes
-  if (path.isAbsolute(normalized)) return false;
-  if (normalized.startsWith('..') || normalized.includes('..')) return false;
-  if (relPath.includes('\0')) return false;
-  return true;
-}
+import { registerIndexRoutes } from './api-index.js';
 
 export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
   const app = new Hono();
@@ -30,62 +16,40 @@ export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
   // GET /api/dashboard/summary
   app.get('/api/dashboard/summary', (c) => {
     return c.json({
-      data: {
-        totalEntries: 0,
-        recentCount: 0,
-        topCategories: [],
-      },
+      data: { totalEntries: 0, recentCount: 0, topCategories: [] },
       timestamp: new Date().toISOString(),
     });
   });
 
   // GET /api/dashboard/recent
   app.get('/api/dashboard/recent', (c) => {
-    return c.json({
-      data: { entries: [] },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { entries: [] }, timestamp: new Date().toISOString() });
   });
 
   // GET /api/kb/graph
   app.get('/api/kb/graph', (c) => {
-    return c.json({
-      data: { nodes: [], edges: [] },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { nodes: [], edges: [] }, timestamp: new Date().toISOString() });
   });
 
   // GET /api/kb/graph/node/:id
   app.get('/api/kb/graph/node/:id', (c) => {
     const id = c.req.param('id');
-    return c.json({
-      data: { id, title: '', content: '', tags: [] },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { id, title: '', content: '', tags: [] }, timestamp: new Date().toISOString() });
   });
 
   // GET /api/analytics/overview
   app.get('/api/analytics/overview', (c) => {
-    return c.json({
-      data: { totalCalls: 0, avgResponseTime: 0, errorRate: 0 },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { totalCalls: 0, avgResponseTime: 0, errorRate: 0 }, timestamp: new Date().toISOString() });
   });
 
   // GET /api/analytics/timeline
   app.get('/api/analytics/timeline', (c) => {
-    return c.json({
-      data: { points: [] },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { points: [] }, timestamp: new Date().toISOString() });
   });
 
   // GET /api/tags/list
   app.get('/api/tags/list', (c) => {
-    return c.json({
-      data: { tags: [] },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { tags: [] }, timestamp: new Date().toISOString() });
   });
 
   // POST /api/tags
@@ -104,10 +68,7 @@ export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
   app.put('/api/tags/:id', async (c) => {
     const id = c.req.param('id');
     const body = await c.req.json<{ name?: string }>();
-    return c.json({
-      data: { id, name: body.name, updatedAt: new Date().toISOString() },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { id, name: body.name, updatedAt: new Date().toISOString() }, timestamp: new Date().toISOString() });
   });
 
   // DELETE /api/tags/:id
@@ -117,157 +78,16 @@ export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
 
   // GET /api/quality/scores
   app.get('/api/quality/scores', (c) => {
-    return c.json({
-      data: { scores: [] },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { scores: [] }, timestamp: new Date().toISOString() });
   });
 
   // GET /api/quality/summary
   app.get('/api/quality/summary', (c) => {
-    return c.json({
-      data: { averageScore: 0, totalEntries: 0, distribution: {} },
-      timestamp: new Date().toISOString(),
-    });
+    return c.json({ data: { averageScore: 0, totalEntries: 0, distribution: {} }, timestamp: new Date().toISOString() });
   });
 
-  // POST /api/index/source
-  app.post('/api/index/source', async (c) => {
-    try {
-      const { files } = await c.req.json<{ files: Array<{ path: string; content: string }> }>();
-      if (!files || !Array.isArray(files)) {
-        return c.json({ error: 'files array required' }, 400);
-      }
-      
-      const config = loadConfig();
-      // Support multi-project: use X-Project-Id and X-Workspace-Root headers if provided
-      const requestProjectId = c.req.header('X-Project-Id') || config.projectId;
-      const requestWorkspace = c.req.header('X-Workspace-Root') || config.workspace;
-      const workspace = requestWorkspace;
-
-      // Register project in admin DB (ensures it appears in projects list)
-      try {
-        const adminDb = getAdminDb();
-        const displayName = path.basename(workspace);
-        adminDb.prepare(`
-          INSERT INTO project_registry (project_id, display_name, workspace_path, last_seen)
-          VALUES (?, ?, ?, datetime('now'))
-          ON CONFLICT(project_id) DO UPDATE SET
-            workspace_path = excluded.workspace_path,
-            last_seen = datetime('now')
-        `).run(requestProjectId, displayName, workspace);
-      } catch { /* non-fatal */ }
-
-      // Phase 1: Write all files to disk (critical for remote indexing)
-      let written = 0;
-      for (const file of files) {
-        const targetPath = path.join(workspace, file.path);
-        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-        fs.writeFileSync(targetPath, file.content, 'utf-8');
-        written++;
-      }
-
-      // Phase 2: Trigger full re-index asynchronously (non-blocking)
-      // This avoids tree-sitter WASM "table index is out of bounds" crash
-      // that occurs when indexSingleFile is called rapidly per-file.
-      const codeIntelModule = registry.getModule('codeIntel') as CodeIntelModule | undefined;
-      const indexer = codeIntelModule?.getIndexer();
-      if (indexer) {
-        // SA4E-41: index the REQUEST workspace and stamp the REQUEST project_id.
-        // GraphSyncService (invoked inside runFullIndex) performs a per-project,
-        // scoped code-node sync (code:% rows for this project only) — it does NOT
-        // wipe other tenants' nodes, so multi-tenant isolation is preserved.
-        indexer.runFullIndex({ projectId: requestProjectId, workspace: requestWorkspace }).catch((err: any) => {
-          logger.error({ err }, 'Background full re-index failed');
-        });
-      }
-
-      // Phase 3: Create a KB entry for this project (ensures it appears in KB-based queries)
-      try {
-        const memModule = registry.getModule('memory') as any;
-        if (memModule?.status === 'ready') {
-          const engine = memModule.getEngine();
-          const displayName = path.basename(workspace);
-          // Upsert: check if project metadata entry already exists
-          const existing = engine.getDb().prepare(
-            `SELECT id FROM knowledge_entries WHERE project_id = ? AND source = 'project-metadata'`
-          ).get(requestProjectId);
-          if (!existing) {
-            const entryId = engine.insert({
-              content: `Project "${displayName}" indexed. Workspace: ${workspace}. Files: ${written}.`,
-              summary: `Project metadata for ${displayName}`,
-              type: 'CONTEXT',
-              tier: 'SEMANTIC',
-              scope: 'PROJECT',
-              project_id: requestProjectId,
-              source: 'project-metadata',
-              tags: 'project,metadata,indexed',
-            });
-            // Also sync to graph_nodes so it appears in KB Graph visualization
-            try {
-              const adminDb = getAdminDb();
-              adminDb.prepare(
-                `INSERT OR IGNORE INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-              ).run(String(entryId), `Project: ${displayName}`, 'CONTEXT', 'SEMANTIC', requestProjectId, 0, 0, 0, 'macro', 0);
-            } catch { /* non-fatal */ }
-          }
-        }
-      } catch { /* non-fatal */ }
-      
-      return c.json({ written, reindexTriggered: !!indexer, projectId: requestProjectId });
-    } catch (err: any) {
-      logger.error({ err }, 'Error writing source batch');
-      return c.json({ error: 'Internal error' }, 500);
-    }
-  });
-
-  // POST /api/index/document
-  app.post('/api/index/document', async (c) => {
-    try {
-      const { path: relPath, content } = await c.req.json<{ path: string; content: string }>();
-      if (!relPath || !content) {
-        return c.json({ error: 'path and content required' }, 400);
-      }
-      
-      const config = loadConfig();
-      const requestWorkspace = c.req.header('X-Workspace-Root') || config.workspace;
-      const workspace = requestWorkspace;
-      const targetPath = path.join(workspace, relPath);
-      
-      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-      fs.writeFileSync(targetPath, content, 'utf-8');
-      
-      return c.json({ success: true });
-    } catch (err: any) {
-      logger.error({ err }, 'Error writing document');
-      return c.json({ error: 'Internal error' }, 500);
-    }
-  });
-
-  // POST /api/index/documents
-  app.post('/api/index/documents', async (c) => {
-    try {
-      const { files } = await c.req.json<{ files: Array<{ path: string; content: string }> }>();
-      if (!files || !Array.isArray(files)) {
-        return c.json({ error: 'files array required' }, 400);
-      }
-      
-      const config = loadConfig();
-      const workspace = config.workspace;
-
-      for (const file of files) {
-        const targetPath = path.join(workspace, file.path);
-        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-        fs.writeFileSync(targetPath, file.content, 'utf-8');
-      }
-      
-      return c.json({ indexed: files.length });
-    } catch (err: any) {
-      logger.error({ err }, 'Error writing documents batch');
-      return c.json({ error: 'Internal error' }, 500);
-    }
-  });
+  // POST /api/index/* — source/document indexing (path-safe + tenant-scoped)
+  registerIndexRoutes(app, registry, logger);
 
   return app;
 }
