@@ -69,8 +69,12 @@ export class GraphRepository {
     transaction(relationships);
   }
 
-  /** Delete all relationships originating from a file. */
-  deleteFileRelationships(filePath: string): void {
+  /** Delete all relationships originating from a file (optionally tenant-scoped). */
+  deleteFileRelationships(filePath: string, projectId?: string): void {
+    if (projectId) {
+      this.db.prepare('DELETE FROM relationships WHERE file_path = ? AND project_id = ?').run(filePath, projectId);
+      return;
+    }
     this.stmts.deleteFileRelationships.run(filePath);
   }
 
@@ -84,21 +88,22 @@ export class GraphRepository {
     return this.stmts.findCallees.all(symbolId, kind, limit) as CalleeResult[];
   }
 
-  /** Resolve target_symbol_id for unresolved relationships (batch). */
-  resolveTargets(batchSize: number = 1000): number {
-    const unresolved = this.db.prepare(`
-      SELECT r.id, r.target_symbol
-      FROM relationships r
-      WHERE r.target_symbol_id IS NULL
-      LIMIT ?
-    `).all(batchSize) as { id: number; target_symbol: string }[];
+  /** Resolve target_symbol_id for unresolved relationships (batch), tenant-scoped. */
+  resolveTargets(batchSize: number = 1000, projectId?: string): number {
+    const unresolved = (projectId
+      ? this.db.prepare('SELECT r.id, r.target_symbol FROM relationships r WHERE r.target_symbol_id IS NULL AND r.project_id = ? LIMIT ?').all(projectId, batchSize)
+      : this.db.prepare('SELECT r.id, r.target_symbol FROM relationships r WHERE r.target_symbol_id IS NULL LIMIT ?').all(batchSize)
+    ) as { id: number; target_symbol: string }[];
 
     let resolved = 0;
-    const findTarget = this.db.prepare('SELECT id FROM symbols WHERE name = ? LIMIT 1');
+    // Resolve targets only within the same tenant to avoid cross-project matches.
+    const findTarget = projectId
+      ? this.db.prepare('SELECT id FROM symbols WHERE name = ? AND project_id = ? LIMIT 1')
+      : this.db.prepare('SELECT id FROM symbols WHERE name = ? LIMIT 1');
 
     const transaction = this.db.transaction(() => {
       for (const row of unresolved) {
-        const target = findTarget.get(row.target_symbol) as { id: number } | undefined;
+        const target = (projectId ? findTarget.get(row.target_symbol, projectId) : findTarget.get(row.target_symbol)) as { id: number } | undefined;
         if (target) {
           this.stmts.resolveTarget.run(target.id, row.id);
           resolved++;
