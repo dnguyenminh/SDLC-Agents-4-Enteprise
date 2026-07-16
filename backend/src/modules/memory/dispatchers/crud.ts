@@ -96,18 +96,22 @@ export async function handleIngestFile(
 
   const format = classifyFormat({ filePath });
   const providedContent = a.content as string | undefined;
+  const contentBase64 = a.content_base64 as string | undefined;
 
   let text: string | undefined;
   if (format === 'markdown' || format === 'text') {
-    // Direct Ingest — dùng content injected nếu có, ngược lại đọc utf-8 (R5)
-    text = providedContent;
+    // Direct Ingest — dùng content_base64 → content injected → đọc utf-8 (R5)
+    text = contentBase64 ? Buffer.from(contentBase64, 'base64').toString('utf-8') : providedContent;
     if (!text) {
       const resolved = resolvePath(filePath, workspace);
       if (!fs.existsSync(resolved)) return `Error: file not found — ${resolved}`;
       text = await fs.promises.readFile(resolved, 'utf-8');
     }
+  } else if (contentBase64 && contentBase64.trim().length > 0) {
+    // Binary but client sent base64-encoded markdown/text conversion
+    text = Buffer.from(contentBase64, 'base64').toString('utf-8');
   } else if (providedContent && providedContent.trim().length > 0) {
-    // Binary nhưng client đã convert sẵn và gửi markdown/text — dùng trực tiếp (tương thích ngược).
+    // Legacy: client sent plain content (backward compat)
     text = providedContent;
   } else {
     // Binary (R6) — KHÔNG đọc utf-8; convert qua dynamic tool
