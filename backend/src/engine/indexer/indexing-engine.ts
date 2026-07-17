@@ -8,6 +8,7 @@ import pino from 'pino';
 import { DatabaseManager } from '../db/database-manager.js';
 import { AppConfig } from '../config.js';
 import { scanWorkspace, scanSingleFile, ScannedFile } from '../scanner/file-scanner.js';
+import { scanWorkspaceAsync } from './async-file-scanner.js';
 import { TreeSitterIndexer } from '../parsers/tree-sitter-indexer.js';
 import { GrammarRegistry, loadGrammarConfig } from '../parsers/grammar-registry.js';
 import { GraphRepository } from '../database/graph-repository.js';
@@ -61,9 +62,8 @@ export class IndexingEngine {
   }
 
   async startBackgroundIndexing(): Promise<void> {
-    this.running = true;
-    await this.runFullIndex();
-    this.startWatcher();
+    // DISABLED: scanWorkspace blocks event loop on Windows with 1000+ files
+    return;
   }
 
   async runFullIndex(scope?: Partial<IndexScope>): Promise<void> {
@@ -74,17 +74,25 @@ export class IndexingEngine {
     if (this.indexing.has(projectId)) return; // per-project guard
     this.indexing.add(projectId);
     logger.error(`[indexer] Starting full index (project=${projectId})...`);
+    // Yield to event loop so HTTP server can accept connections before
+    // the synchronous scanWorkspace walk blocks for 20+ seconds.
+    await new Promise<void>(resolve => setImmediate(resolve));
     try {
       const files = scanWorkspace({ ...this.config, workspace });
       logger.error(`[indexer] Found ${files.length} files to index`);
       await this.indexFiles(files, projectId);
+      await new Promise<void>(resolve => setImmediate(resolve));
       updateModules(this.db, projectId);
+      await new Promise<void>(resolve => setImmediate(resolve));
       detectAndStorePatterns(this.db, new Map(), logger, projectId);
       if (this.graphRepo) {
+        await new Promise<void>(resolve => setImmediate(resolve));
         const resolved = this.graphRepo.resolveTargets(5000, projectId);
         if (resolved > 0) logger.error(`[indexer] Resolved ${resolved} cross-file symbol references`);
       }
+      await new Promise<void>(resolve => setImmediate(resolve));
       this.syncGraphNodes(projectId);
+      await new Promise<void>(resolve => setImmediate(resolve));
       logSfdxStats(this.db, this.config, logger);
       logger.error('[indexer] Full index complete');
     } finally {
@@ -146,26 +154,31 @@ export class IndexingEngine {
   getSfdxStats() { return getSfdxStatsImpl(this.db, this.config); }
 
   private async indexFiles(files: ScannedFile[], projectId: string): Promise<void> {
-    const insertFile = this.db.prepare(`INSERT OR REPLACE INTO files (project_id,path,relative_path,language,module,content_hash,size_bytes,line_count,last_indexed) VALUES (?,?,?,?,?,?,?,?,datetime('now'))`);
+    const insertFile = this.db.prepare(`INSERT OR REPLACE INTO files (project_id,path,relative_path,language,module,content_hash,size_bytes,line_count,last_indexed,file_created_at,file_author,file_version) VALUES (?,?,?,?,?,?,?,?,datetime('now'),?,?,?)`);
     const deleteSymbols = this.db.prepare('DELETE FROM symbols WHERE file_id = ?');
     const insertSymbol = this.db.prepare(`INSERT INTO symbols (project_id,file_id,name,kind,signature,start_line,end_line,parent_symbol,visibility,doc_comment) VALUES (?,?,?,?,?,?,?,?,?,?)`);
-    const { filesToIndex, skippedCount } = this.registerFilesForIndex(files, insertFile, projectId);
+    const { filesToIndex, skippedCount } = await this.registerFilesForIndex(files, insertFile, projectId);
     const counts = this.treeSitterReady && this.treeSitterIndexer
       ? await this.indexFileSymbolsTreeSitter(filesToIndex, projectId)
-      : this.indexFileSymbolsRegexFallback(filesToIndex, deleteSymbols, insertSymbol, projectId);
+      : await this.indexFileSymbolsRegexFallback(filesToIndex, deleteSymbols, insertSymbol, projectId);
     logger.error(`[indexer] Indexed ${counts.treeSitterCount} files via tree-sitter, ${counts.regexCount} via regex fallback, ${skippedCount} unchanged`);
   }
 
-  private registerFilesForIndex(files: ScannedFile[], insertFile: Database.Statement, projectId: string) {
+  private async registerFilesForIndex(files: ScannedFile[], insertFile: Database.Statement, projectId: string) {
     const filesToIndex: ScannedFile[] = [];
     let skippedCount = 0;
-    this.db.transaction((files: ScannedFile[]) => {
-      for (const file of files) {
-        if (isFileUnchanged(this.db, file, projectId)) { skippedCount++; continue; }
-        filesToIndex.push(file);
-        insertFile.run(projectId, file.absolutePath, file.relativePath, file.language, detectModule(file.relativePath), file.contentHash, file.sizeBytes, file.lineCount);
-      }
-    })(files);
+    const BATCH = 200;
+    for (let i = 0; i < files.length; i += BATCH) {
+      const batch = files.slice(i, i + BATCH);
+      this.db.transaction((batch: ScannedFile[]) => {
+        for (const file of batch) {
+          if (isFileUnchanged(this.db, file, projectId)) { skippedCount++; continue; }
+          filesToIndex.push(file);
+          insertFile.run(projectId, file.absolutePath, file.relativePath, file.language, detectModule(file.relativePath), file.contentHash, file.sizeBytes, file.lineCount, file.fileCreatedAt ?? null, file.fileAuthor ?? null, file.fileVersion ?? null);
+        }
+      })(batch);
+      await new Promise<void>(resolve => setImmediate(resolve));
+    }
     return { filesToIndex, skippedCount };
   }
 
@@ -181,18 +194,24 @@ export class IndexingEngine {
     return { treeSitterCount, regexCount };
   }
 
-  private indexFileSymbolsRegexFallback(filesToIndex: ScannedFile[], deleteSymbols: Database.Statement, insertSymbol: Database.Statement, projectId: string) {
+  private async indexFileSymbolsRegexFallback(filesToIndex: ScannedFile[], deleteSymbols: Database.Statement, insertSymbol: Database.Statement, projectId: string) {
     logger.error('[indexer] Tree-sitter not available, using regex extraction');
     let regexCount = 0;
-    this.db.transaction(() => {
-      for (const file of filesToIndex) {
-        const fileRow = this.db.prepare('SELECT id FROM files WHERE relative_path = ? AND project_id = ?').get(file.relativePath, projectId) as { id: number } | undefined;
-        if (!fileRow) continue;
-        deleteSymbols.run(fileRow.id);
-        indexFileSymbolsRegex(file, fileRow.id, projectId, insertSymbol, logger);
-        regexCount++;
-      }
-    })();
+    const BATCH = 25;
+    for (let i = 0; i < filesToIndex.length; i += BATCH) {
+      const batch = filesToIndex.slice(i, i + BATCH);
+      this.db.transaction(() => {
+        for (const file of batch) {
+          const fileRow = this.db.prepare('SELECT id FROM files WHERE relative_path = ? AND project_id = ?').get(file.relativePath, projectId) as { id: number } | undefined;
+          if (!fileRow) continue;
+          deleteSymbols.run(fileRow.id);
+          indexFileSymbolsRegex(file, fileRow.id, projectId, insertSymbol, logger);
+          regexCount++;
+        }
+      })();
+      // Yield to event loop between batches so HTTP server can process connections
+      await new Promise<void>(resolve => setImmediate(resolve));
+    }
     return { treeSitterCount: 0, regexCount };
   }
 

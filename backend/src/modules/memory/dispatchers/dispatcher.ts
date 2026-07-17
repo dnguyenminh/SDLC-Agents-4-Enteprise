@@ -7,6 +7,7 @@ import type { MemoryEngine } from '../engine/core.js';
 import type { QueryLayer } from '../../../engine/query/query-layer.js';
 import type { KBScope, ScopeContext } from '../models.js';
 import type { ScopePromotionService } from '../promotion/service.js';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { TagAnalyzerService } from '../llm/analyzer.js';
 import type { ClassifyService } from '../llm/classify-service.js';
 import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
@@ -38,6 +39,8 @@ export class MemoryToolDispatcher {
   private tagAnalyzer: TagAnalyzerService | undefined;
   private classifyService: ClassifyService | undefined;
   private convertResolver: ConvertToolResolver | undefined;
+  private dbAdapter: DatabaseAdapter | undefined;
+  private embeddingAvailable = false;
 
   constructor(
     private readonly engine: MemoryEngine,
@@ -65,11 +68,19 @@ export class MemoryToolDispatcher {
     this.classifyService = svc;
   }
 
+  setDbAdapter(adapter: DatabaseAdapter): void {
+    this.dbAdapter = adapter;
+  }
+
+  setEmbeddingAvailable(available: boolean): void {
+    this.embeddingAvailable = available;
+  }
+
   async dispatch(name: string, args: Args): Promise<string | null> {
     const [resolved, merged] = this.resolveAlias(name, args);
     switch (resolved) {
       case 'mem_search': return handleSearch(this.engine, this.scopeCtx, merged);
-      case 'mem_ingest': return handleIngest(this.engine, this.scopeCtx, this.tagAnalyzer, merged);
+      case 'mem_ingest': return handleIngest(this.engine, this.scopeCtx, this.tagAnalyzer, merged, this.dbAdapter, this.embeddingAvailable);
       case 'mem_ingest_file': return handleIngestFile(this.engine, this.scopeCtx, this.workspace, merged, this.convertResolver);
       case 'mem_pin': return handlePin(merged);
       case 'mem_map': return handleMap(merged);

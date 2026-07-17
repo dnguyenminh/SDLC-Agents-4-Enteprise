@@ -3,37 +3,100 @@ import type { MemoryEngine } from '../engine/core.js';
 import type { KBScope, ScopeContext } from '../models.js';
 import type { TagAnalyzerService } from '../llm/analyzer.js';
 import type { ProjectContext } from '../ProjectContext.js';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import { validateReadAccess, validateMutationOwnership, buildIngestFileDeleteClause } from '../IsolationLayer.js';
 import { tierForType, inferOwner, resolvePath } from './helpers.js';
 import { classifyFormat, normalizeExt } from '../ingest/FormatClassifier.js';
 import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
 import { createSupersessionChain } from './supersession.js';
+import { PendingTaskRepository } from '../task-queue/PendingTaskRepository.js';
+import { TaskType } from '../task-queue/models.js';
 import pino from 'pino';
+import { loadFileMetadata } from '../../../engine/scanner/file-scanner.js';
 
 const logger = pino({ name: 'memory-tool-dispatcher' });
 
 type Args = Record<string, unknown>;
 
-export function handleIngest(engine: MemoryEngine, scopeCtx: ScopeContext | undefined, tagAnalyzer: TagAnalyzerService | undefined, a: Args): string {
+/**
+ * SA4E-44: handleIngest now accepts optional DatabaseAdapter + flags
+ * for transactional task creation. Falls back to fire-and-forget when
+ * db adapter is not provided (backward compat).
+ */
+export function handleIngest(
+  engine: MemoryEngine,
+  scopeCtx: ScopeContext | undefined,
+  tagAnalyzer: TagAnalyzerService | undefined,
+  a: Args,
+  dbAdapter?: DatabaseAdapter,
+  embeddingAvailable?: boolean,
+): string {
   const content = a.content as string;
   if (!content) return 'Error: content required';
   const type = (a.type as string) ?? 'CONTEXT';
   const source = a.source as string | undefined;
-  let tags = Array.isArray(a.tags) ? (a.tags as string[]).join(',') : ((a.tags as string) ?? '');
+  const tags = Array.isArray(a.tags) ? (a.tags as string[]).join(',') : ((a.tags as string) ?? '');
   const summary = (a.summary as string) ?? (a.title as string) ?? content.slice(0, 120);
   const agentName = a.agent_name as string | undefined;
   const scope = ((a.scope as string) ?? 'USER').toUpperCase() as KBScope;
   const userId = (a.user_id as string) ?? scopeCtx?.userId ?? null;
 
-  const id = engine.insert({
-    content, summary, type,
-    tier: tierForType(type),
-    scope, user_id: userId,
-    project_id: scopeCtx?.projectId ?? null,
-    source, tags,
-    agent_name: agentName,
-    owner: inferOwner(source),
-  });
+  let id!: number;
+
+  // SA4E-44 BR-1: Atomic transaction — entry + tasks
+  if (dbAdapter) {
+    dbAdapter.transaction(() => {
+      id = engine.insert({
+        content, summary, type,
+        tier: tierForType(type), scope, user_id: userId,
+        project_id: scopeCtx?.projectId ?? null,
+        source, tags, agent_name: agentName,
+        owner: inferOwner(source),
+      });
+      const taskRepo = new PendingTaskRepository(dbAdapter);
+      if (tagAnalyzer) {
+        taskRepo.create({
+          task_type: TaskType.TAG_ENRICHMENT,
+          entry_id: id,
+          payload: {
+            entry_id: id,
+            content: content.slice(0, 2000),
+            existing_tags: tags,
+            options: { threshold: 0.7, autoApply: true },
+          },
+        });
+      }
+      if (embeddingAvailable) {
+        taskRepo.create({
+          task_type: TaskType.VECTOR_EMBEDDING,
+          entry_id: id,
+          payload: {
+            entry_id: id,
+            text: `${summary} ${content}`.slice(0, 4000),
+          },
+        });
+      }
+    });
+  } else {
+    // Legacy fallback: no adapter, fire-and-forget
+    id = engine.insert({
+      content, summary, type,
+      tier: tierForType(type), scope, user_id: userId,
+      project_id: scopeCtx?.projectId ?? null,
+      source, tags, agent_name: agentName,
+      owner: inferOwner(source),
+    });
+    if (tagAnalyzer) {
+      tagAnalyzer.analyzeTags(content).then(result => {
+        if (result.appliedTags.length > 0) {
+          const existing = tags ? tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
+          const merged = [...new Set([...existing, ...result.appliedTags])];
+          engine.updateTags(id, merged.join(','));
+        }
+      }).catch((err) => { logger.error({ err }, '[TagAnalyzer] LLM analysis failed:'); });
+    }
+  }
+
   engine.auditLog('INGEST', id);
 
   const supersedesId = a.supersedes_id as number | undefined;
@@ -42,21 +105,6 @@ export function handleIngest(engine: MemoryEngine, scopeCtx: ScopeContext | unde
     if (!chainResult.ok) {
       return `Knowledge entry created: id=${id} — supersession failed: ${chainResult.reason}`;
     }
-  }
-
-  if (tagAnalyzer) {
-    logger.debug({ entryId: id, contentLength: content.length }, '[TagAnalyzer] Starting analysis');
-    tagAnalyzer.analyzeTags(content).then(result => {
-      logger.debug({ entryId: id, result }, '[TagAnalyzer] Analysis result');
-      if (result.appliedTags.length > 0) {
-        const existing = tags ? tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
-        const merged = [...new Set([...existing, ...result.appliedTags])];
-        engine.updateTags(id, merged.join(','));
-        logger.debug({ entryId: id, tags: merged.join(',') }, '[TagAnalyzer] Tags applied');
-      }
-    }).catch((err) => { logger.error({ err }, '[TagAnalyzer] LLM analysis failed:'); });
-  } else {
-    logger.warn({ tagAnalyzer }, '[TagAnalyzer] Not initialized');
   }
 
   return `Knowledge entry created: id=${id}, type=${type}, scope=${scope}, tier=${tierForType(type)} - "${summary}"`;
@@ -132,9 +180,16 @@ export async function handleIngestFile(
 
   const sections = text.split(/^#{1,3}\s+/m).filter(s => s.trim());
   let created = 0;
+  // Load file metadata from sidecar (createdAt/author/version from git/filesystem)
+  const fileMeta = loadFileMetadata(workspace);
+  const meta = fileMeta[filePath.replace(/\\/g, '/')];
+  const structuredMap = meta ? JSON.stringify({ fileCreatedAt: meta.fileCreatedAt, fileAuthor: meta.fileAuthor, fileVersion: meta.fileVersion }) : undefined;
   for (const sec of (sections.length > 0 ? sections : [text])) {
     const summary = sec.split('\n')[0]?.trim().slice(0, 120) || filePath;
-    engine.insert({ content: sec.trim(), summary, type, tier: tierForType(type), scope, user_id: userId, project_id: scopeCtx?.projectId ?? null, source: filePath, tags: '' });
+    const id = engine.insert({ content: sec.trim(), summary, type, tier: tierForType(type), scope, user_id: userId, project_id: scopeCtx?.projectId ?? null, source: filePath, tags: '' });
+    if (structuredMap) {
+      engine.getDb().prepare('UPDATE knowledge_entries SET structured_map = ? WHERE id = ?').run(structuredMap, id);
+    }
     created++;
   }
   engine.auditLog('INGEST_FILE');
