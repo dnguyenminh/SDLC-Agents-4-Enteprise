@@ -1,0 +1,11 @@
+test_case_id,file_sections,total_chars,content_truncated,context_chain_enabled,expected_entries,expected_context_chain,description
+E2E-API-01,3,8000,false,true,3,section1->section2->section3,Standard 3-section file with context chain
+E2E-API-02,2,5000,false,false,2,none,2-section file with context chain disabled
+E2E-API-03,1,15000,false,true,1,none,Single 15000-char section triggering chunking
+E2E-API-04,1,6000,false,true,1,none,LLM timeout — fallback graceful degradation test
+E2E-API-05,1,3000,false,true,1,none,Plain text file without markdown headings
+SIT-01,3,10000,false,true,3,section1->section2->section3,3-section file for manual log inspection
+SIT-03,2,4000,false,true,2,depends on race condition,Race condition test — rapid consecutive section processing
+SIT-04,3,8000,false,true,3,section1->section2->section3,Real LLM smoke test with LM Studio
+PT-01,1,5000,false,true,1,none,5000-char section for latency measurement
+PT-03,10,25000,false,true,10,10-section chain,10-section file for throughput measurement

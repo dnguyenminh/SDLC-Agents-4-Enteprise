@@ -1,0 +1,194 @@
+<mxGraphModel dx="826" dy="417" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1400" math="0" shadow="0">
+    <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Document Indexing with LLM Context Chain — Business Flow" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+            <mxGeometry x="800" y="20" width="800" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="lane-user" value="User / AI Agent" style="shape=mxgraph.flowchart.swimlane;startSize=30;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+            <mxGeometry x="40" y="80" width="2320" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane-ingest" value="Ingest Pipeline (handleIngestFile)" style="shape=mxgraph.flowchart.swimlane;startSize=30;horizontal=0;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+            <mxGeometry x="40" y="280" width="2320" height="380" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane-llm" value="LLM / TagAnalyzerService" style="shape=mxgraph.flowchart.swimlane;startSize=30;horizontal=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+            <mxGeometry x="40" y="660" width="2320" height="400" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane-db" value="Database (knowledge_entries)" style="shape=mxgraph.flowchart.swimlane;startSize=30;horizontal=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+            <mxGeometry x="40" y="1060" width="2320" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+            <mxGeometry x="100" y="160" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a-ingest" value="Call&#10;mem_ingest_file&#10;(file.md)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="200" y="145" width="130" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p-read" value="1. Đọc file&#10;utf-8 text" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="200" y="340" width="130" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p-split" value="2. Split theo&#10;markdown headings&#10;(#{1,3})" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="400" y="340" width="130" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p-loop" value="3. Với mỗi section&#10;[sequential loop]" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="600" y="320" width="140" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p-insert" value="4. INSERT vào&#10;knowledge_entries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="820" y="340" width="130" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p-context" value="5. [NEW] Context Chain:&#10;gắn summary section&#10;N-1 vào prompt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1020" y="340" width="140" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p-task" value="6. Tạo TAG_ENRICHMENT&#10;task với FULL content&#10;(không truncate)&#10;[P0]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=" parent="1" vertex="1">
+            <mxGeometry x="1230" y="330" width="140" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="l-analyze" value="7. LLM phân tích&#10;full section content&#10;+ context chain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="1020" y="720" width="160" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="l-extract" value="8. LLM trả về&#10;tags + summary&#10;+ entities + actors&#10;+ business_rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1240" y="720" width="140" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="l-parse" value="9. Parse JSON response&#10;Validate fields&#10;Apply threshold" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1440" y="720" width="140" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="d-update-tags" value="10a. Update&#10;tags column" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="1020" y="1120" width="130" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="d-update-structured" value="10b. [NEW] Update&#10;structured_map column&#10;với JSON đầy đủ&#10;[P0]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1220" y="1110" width="140" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="d-merge" value="11. [NEW] Merge với&#10;file metadata hiện có&#10;(fileCreatedAt...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1430" y="1120" width="140" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p-save-summary" value="12. [NEW] Lưu summary&#10;làm context cho&#10;section tiếp theo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1640" y="340" width="140" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="p-done" value="Done. Next section?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="1840" y="320" width="140" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="end" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+            <mxGeometry x="2040" y="160" width="30" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a-complete" value="Nhận kết quả:&#10;entries created&#10;+ structured_map&#10;filled" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1950" y="145" width="140" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="problem-note" value="[AS-IS Problems]&#10;✗ content.slice(0,2000) — mất business rules, entities&#10;✗ Không có context chain — section N không biết section N-1&#10;✗ Chỉ extract tags — không có structured data&#10;✗ structured_map chỉ chứa file metadata" style="shape=note;whiteSpace=wrap;html=1;size=14;verticalAlign=top;align=left;spacingLeft=8;fontSize=9;fillColor=#ffcccc;strokeColor=#b85450;" parent="1" vertex="1">
+            <mxGeometry x="50" y="700" width="250" height="100" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe1" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="start" target="a-ingest" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe2" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="a-ingest" target="p-read" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe3" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p-read" target="p-split" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe4" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p-split" target="p-loop" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe5" value="section" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="p-loop" target="p-insert" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe6" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p-insert" target="p-context" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe7" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p-context" target="p-task" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe8" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p-task" target="l-analyze" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="1300" y="480"/>
+                    <mxPoint x="1100" y="480"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="fe9" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="l-analyze" target="l-extract" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe10" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="l-extract" target="l-parse" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe11" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="l-parse" target="d-update-tags" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="1510" y="850"/>
+                    <mxPoint x="1085" y="850"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="fe12" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="l-parse" target="d-update-structured" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="1510" y="850"/>
+                    <mxPoint x="1290" y="850"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="fe13" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="d-update-structured" target="d-merge" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe14" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="d-update-tags" target="p-save-summary" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="1085" y="1160"/>
+                    <mxPoint x="1710" y="1160"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="fe15" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="d-merge" target="p-save-summary" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="1500" y="1170"/>
+                    <mxPoint x="1710" y="1170"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="fe16" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="p-save-summary" target="p-done" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe17" value="yes" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="p-done" target="p-loop" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="fe18" value="no" style="edgeStyle=orthogonalEdgeStyle;fontSize=9;" parent="1" source="p-done" target="a-complete" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="1910" y="310"/>
+                    <mxPoint x="1910" y="175"/>
+                    <mxPoint x="1950" y="175"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="fe19" style="edgeStyle=orthogonalEdgeStyle;" parent="1" source="a-complete" target="end" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="fe-llm-context" value="[NEW] context chain:&#10;summary_N-1" style="edgeStyle=orthogonalEdgeStyle;dashed=1;strokeColor=#b85450;fontSize=9;fontColor=#b85450;" parent="1" source="p-save-summary" target="p-context" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+    </root>
+</mxGraphModel>

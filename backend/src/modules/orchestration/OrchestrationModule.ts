@@ -74,7 +74,7 @@ export class OrchestrationModule implements IModule {
       if (this.registry) {
         const memoryModule = this.registry.getModule('memory') as MemoryModule | undefined;
         if (memoryModule && memoryModule.status === 'ready') {
-          const db = memoryModule.getEngine().getDb();
+          const db = memoryModule.getEngine().getDb() as any;
           
           try {
             const queryVector = await EmbeddingService.getInstance().generateEmbedding(query);

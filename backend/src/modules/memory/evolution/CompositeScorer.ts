@@ -3,7 +3,7 @@
  * to produce a single composite score for search results.
  */
 
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { KnowledgeEntry } from '../models.js';
 import type {
   ScoringStrategy,
@@ -23,17 +23,17 @@ const DEFAULT_HALF_LIFE_DAYS = 30;
 const SUPERSEDED_PENALTY = 0.3;
 
 export class CompositeScorer {
-  private readonly db: Database.Database;
+  private readonly adapter: DatabaseAdapter;
   private readonly strategies: ScoringStrategy[];
 
-  constructor(db: Database.Database, strategies?: ScoringStrategy[]) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, strategies?: ScoringStrategy[]) {
+    this.adapter = adapter;
     this.strategies = strategies ?? [
       new TemporalStrategy(),
       new ConfidenceStrategy(),
       new SupersededStrategy(),
-      new OutcomeStrategy(db),
-      new PredictiveStrategy(db),
+      new OutcomeStrategy(adapter),
+      new PredictiveStrategy(adapter),
     ];
   }
 

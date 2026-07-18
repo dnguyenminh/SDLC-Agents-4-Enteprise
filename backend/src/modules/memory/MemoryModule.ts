@@ -66,7 +66,8 @@ export class MemoryModule implements IModule {
       migrate002AddEvolutionColumns(this.dbManager.getDb());
       migrate003PendingTasks(this.dbManager.getDb());
 
-      this.engine = new MemoryEngine(this.dbManager.getDb());
+      const memAdapter = new SqliteDbAdapter(this.dbManager.getDb());
+      this.engine = new MemoryEngine(memAdapter);
       // Start session with configurable name (unique per instance)
       this.engine.startSession(this.sessionName);
       

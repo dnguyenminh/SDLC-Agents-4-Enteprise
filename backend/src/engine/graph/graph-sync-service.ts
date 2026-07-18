@@ -6,7 +6,8 @@
  * only touches rows for the given project_id with `entry_id LIKE 'code:%'`.
  */
 
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../database/dialect/DialectHelper.js';
 import type { Logger } from 'pino';
 
 interface CodeSymbolRow {
@@ -19,11 +20,18 @@ interface CodeSymbolRow {
 const CODE_KINDS = ['class', 'interface', 'function', 'method', 'enum', 'type', 'constructor'];
 
 export class GraphSyncService {
+  private readonly adminDialect: DialectHelper;
+
   constructor(
-    private readonly indexDb: Database.Database,
-    private readonly adminDb: Database.Database,
+    private readonly indexAdapter: DatabaseAdapter,
+    private readonly adminAdapter: DatabaseAdapter,
     private readonly log: Logger,
-  ) {}
+  ) {
+    this.adminDialect = new DialectHelper(adminAdapter.getEngine());
+    if (indexAdapter.getEngine() !== adminAdapter.getEngine()) {
+      this.log.warn('[graph-sync] Index and admin adapters use different engines');
+    }
+  }
 
   /** Re-project a tenant's code symbols into admin.db graph_nodes (bounded). */
   syncProjectSymbols(projectId: string, limit = 2000): void {
@@ -31,7 +39,7 @@ export class GraphSyncService {
     try {
       const symbols = this.readTopSymbols(projectId, limit);
       this.replaceCodeNodes(projectId, symbols);
-      this.log.error(`[graph-sync] Synced ${symbols.length} code nodes for project ${projectId}`);
+      this.log.info(`[graph-sync] Synced ${symbols.length} code nodes for project ${projectId}`);
     } catch (err) {
       // Non-fatal: visualization projection must never fail the index run.
       this.log.error({ err }, `[graph-sync] Failed to sync code nodes for ${projectId}`);
@@ -40,32 +48,30 @@ export class GraphSyncService {
 
   private readTopSymbols(projectId: string, limit: number): CodeSymbolRow[] {
     const placeholders = CODE_KINDS.map(() => '?').join(',');
-    return this.indexDb.prepare(
+    return this.indexAdapter.all<CodeSymbolRow>(
       `SELECT s.id, s.name, s.kind, f.relative_path
        FROM symbols s JOIN files f ON s.file_id = f.id
        WHERE s.project_id = ? AND s.kind IN (${placeholders})
        ORDER BY (s.is_exported = 1) DESC, s.complexity DESC
-       LIMIT ?`
-    ).all(projectId, ...CODE_KINDS, limit) as CodeSymbolRow[];
+       LIMIT ?`,
+      [projectId, ...CODE_KINDS, limit],
+    );
   }
 
   private replaceCodeNodes(projectId: string, symbols: CodeSymbolRow[]): void {
-    const del = this.adminDb.prepare(
-      "DELETE FROM graph_nodes WHERE project_id = ? AND entry_id LIKE 'code:%'"
-    );
-    const ins = this.adminDb.prepare(
-      `INSERT OR IGNORE INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id)
-       VALUES (?, ?, 'CODE_ENTITY', 'CODE', ?, ?, ?, ?, 'micro', ?)`
-    );
     const total = Math.max(symbols.length, 1);
-    const tx = this.adminDb.transaction(() => {
-      del.run(projectId);
+    this.adminAdapter.transaction(() => {
+      this.adminAdapter.run(
+        "DELETE FROM graph_nodes WHERE project_id = ? AND entry_id LIKE 'code:%'", [projectId]);
+      const sql = this.adminDialect.insertIgnore('graph_nodes',
+        ['entry_id','label','type','tier','project_id','x','y','z','level','cluster_id'], 'entry_id');
+      const ins = this.adminAdapter.prepare(sql);
       symbols.forEach((s, i) => {
         const pos = fibonacciSphere(i, total);
-        ins.run(`code:${s.id}`, this.toLabel(s), projectId, pos.x, pos.y, pos.z, `code-${projectId}`);
+        ins.run(`code:${s.id}`, this.toLabel(s), 'CODE_ENTITY', 'CODE',
+          projectId, pos.x, pos.y, pos.z, 'micro', `code-${projectId}`);
       });
     });
-    tx();
   }
 
   private toLabel(s: CodeSymbolRow): string {

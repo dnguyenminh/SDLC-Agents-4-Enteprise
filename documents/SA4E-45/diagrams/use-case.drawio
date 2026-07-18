@@ -1,0 +1,84 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="DatabaseAdapter Abstraction - Use Case Diagram" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="284" y="20" width="600" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="System Administrator" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="30" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="Developer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+      <mxGeometry x="60" y="400" width="30" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="CI/CD Pipeline" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+      <mxGeometry x="60" y="600" width="30" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="Code Intelligence System" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="80" width="800" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="UC-1: Switch Database Engine (SQLite / PostgreSQL)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="350" y="120" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="8" value="UC-2: Index Source Code (via DatabaseAdapter)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="350" y="230" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="UC-3: Store/Retrieve Knowledge Entries" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="350" y="340" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="UC-4: Sync Graph Nodes (Code to KB Graph)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="350" y="450" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="UC-5: Migrate Data Between DB Engines" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="350" y="560" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="UC-6: Run Full/Incremental Index Scan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="680" y="230" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="UC-7: Query Symbols and Files" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="680" y="340" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="UC-8: Verify Data Integrity After DB Switch" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="680" y="120" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="15" value="UC-9: Backward Compatible SQLite Operation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="680" y="450" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="" style="endArrow=none;html=1;" edge="1" source="3" target="7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="" style="endArrow=none;html=1;" edge="1" source="3" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="" style="endArrow=none;html=1;" edge="1" source="3" target="14" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="" style="endArrow=none;html=1;" edge="1" source="4" target="8" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="" style="endArrow=none;html=1;" edge="1" source="4" target="9" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="" style="endArrow=none;html=1;" edge="1" source="4" target="10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="22" value="" style="endArrow=none;html=1;" edge="1" source="4" target="13" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="23" value="" style="endArrow=none;html=1;" edge="1" source="5" target="12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="24" value="" style="endArrow=none;html=1;" edge="1" source="5" target="15" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="include" style="endArrow=open;endSize=12;dashed=1;html=1;" edge="1" source="7" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="26" value="include" style="endArrow=open;endSize=12;dashed=1;html=1;" edge="1" source="8" target="12" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="27" value="extend" style="endArrow=open;endSize=12;dashed=1;html=1;" edge="1" source="14" target="7" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

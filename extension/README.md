@@ -243,6 +243,13 @@ MIT
 
 ## Changelog
 
+### v1.11.0 (2026-07-18)
+
+- **SA4E-42: DatabaseAdapter Refactoring** — Engine layer overhaul with `DatabaseAdapter` interface + `SqliteDbAdapter` implementation. Memory, graph, indexer modules refactored. 66 test files pass.
+- **SA4E-47: LLM Context Chain** — Enhanced document indexing with context chain window, entity/actor/rule extraction, structured_map storage, full content extraction on ingest. 12 new test files.
+- **drawio Test Fixes** — Export tests pass with `content_base64` param; export-dependent tests skipped (requires drawio CLI).
+- **IndexerHttpClient** — 30s HTTP timeout for extension KB operations.
+
 ### v1.8.1 (2026-07-15)
 
 - **SA4E-38: Smart KB Ingest** — New `mem_smart_ingest` + `mem_smart_ingest_cleanup` MCP tools for semantic evaluation before KB ingestion using local Ollama LLM.

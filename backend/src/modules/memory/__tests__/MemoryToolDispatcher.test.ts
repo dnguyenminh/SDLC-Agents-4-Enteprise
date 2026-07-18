@@ -6,6 +6,7 @@ import { DatabaseManager } from '../../../engine/db/database-manager.js';
 import { MemoryEngine } from '../engine/index.js';
 import { MemoryToolDispatcher } from '../dispatchers/index.js';
 import { QueryLayer } from '../../../engine/query/query-layer.js';
+import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 
 describe('MemoryToolDispatcher sync_code & live status', () => {
   let tmpDir: string;
@@ -22,7 +23,7 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
     dbManager = new DatabaseManager(dbPath);
     dbManager.initialize();
 
-    engine = new MemoryEngine(dbManager.getDb());
+    engine = new MemoryEngine(new SqliteDbAdapter(dbManager.getDb()));
     queryLayer = new QueryLayer(dbManager);
     dispatcher = new MemoryToolDispatcher(engine, tmpDir, queryLayer);
   });

@@ -30,5 +30,5 @@ function resolveMemoryDb(registry?: ModuleRegistry) {
   if (!registry) return null;
   const memory = registry.getModule('memory') as MemoryModule | undefined;
   if (!memory || memory.status !== 'ready') return null;
-  return memory.getEngine().getDb();
+  return memory.getEngine().getDb() as any;
 }

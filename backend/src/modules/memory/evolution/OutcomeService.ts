@@ -3,7 +3,8 @@
  * Formula: (successes + 1) / (total + 2) — Laplace smoothing.
  */
 
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'outcome-service' });
@@ -24,10 +25,12 @@ interface RecordResult {
 }
 
 export class OutcomeService {
-  private readonly db: Database.Database;
+  private readonly adapter: DatabaseAdapter;
+  private readonly dialect: DialectHelper;
 
-  constructor(db: Database.Database) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter) {
+    this.adapter = adapter;
+    this.dialect = new DialectHelper(adapter.getEngine());
   }
 
   record(
@@ -51,9 +54,10 @@ export class OutcomeService {
   }
 
   getStats(entryId: number): OutcomeStats {
-    const rows = this.db.prepare(
+    const rows = this.adapter.all<{ outcome: string; cnt: number }>(
       `SELECT outcome, COUNT(*) as cnt FROM entry_outcomes WHERE entry_id = ? GROUP BY outcome`,
-    ).all(entryId) as Array<{ outcome: string; cnt: number }>;
+      [entryId],
+    );
 
     let successes = 0;
     let failures = 0;
@@ -76,9 +80,10 @@ export class OutcomeService {
   }
 
   private validateEntry(entryId: number): void {
-    const row = this.db.prepare(
+    const row = this.adapter.get<{ id: number }>(
       'SELECT id FROM knowledge_entries WHERE id = ?',
-    ).get(entryId);
+      [entryId],
+    );
     if (!row) throw new Error('ENTRY_NOT_FOUND');
   }
 
@@ -94,14 +99,16 @@ export class OutcomeService {
     agentName?: string,
     context?: string,
   ): void {
-    this.db.prepare(
+    this.adapter.run(
       `INSERT INTO entry_outcomes (entry_id, outcome, agent_name, context) VALUES (?, ?, ?, ?)`,
-    ).run(entryId, outcome, agentName ?? null, context ?? null);
+      [entryId, outcome, agentName ?? null, context ?? null],
+    );
   }
 
   private boostConfidence(entryId: number): void {
-    this.db.prepare(
-      `UPDATE knowledge_entries SET confidence = MIN(confidence * 1.1, 1.0), updated_at = datetime('now') WHERE id = ?`,
-    ).run(entryId);
+    this.adapter.run(
+      `UPDATE knowledge_entries SET confidence = MIN(confidence * 1.1, 1.0), updated_at = ${this.dialect.now()} WHERE id = ?`,
+      [entryId],
+    );
   }
 }

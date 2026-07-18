@@ -1,0 +1,11 @@
+id,message,expected_verdict,expected_summary_contains
+BM-01,"We decided to use Strategy pattern for the transport layer",ingest,"Strategy pattern"
+BM-02,"Architecture decision: Ollama for local LLM eval to save cloud tokens",ingest,"Ollama"
+BM-03,"Bug root cause: race condition in WebSocket reconnection logic causing duplicate messages",ingest,"race condition"
+BM-04,"Requirement change: API must support batch operations with max 100 items per request",ingest,"batch operations"
+BM-05,"Design decision: use SQLite for KB storage because single-user local-first architecture",ingest,"SQLite"
+BM-06,"Workflow: PR review requires both standards check and spec compliance check before merge",ingest,"PR review"
+BM-07,"Technical debt: OllamaAdapter needs retry logic for transient 503 errors",ingest,"retry logic"
+BM-08,"Decision: fire-and-forget pattern for hook calls to avoid blocking user interaction",ingest,"fire-and-forget"
+BM-09,"Security: all LLM inference must stay local - no user data sent to cloud APIs",ingest,"local"
+BM-10,"Performance requirement: smart ingest must complete within 3 seconds including LLM inference",ingest,"3 seconds"

@@ -76,18 +76,22 @@ export class IndexerHttpClient {
         report: vscode.Progress<{ message?: string }>,
         token?: string
     ): Promise<UploadResult> {
-        const files = await vscode.workspace.findFiles(
-            "**/*.{ts,js,kt,java,py,go,rs,tsx,jsx}", "{node_modules,dist,.git,build,out,backend}/**"
+        // Priority 1: Project source code (exclude all library/vendor directories)
+        const libraryExcludes = "{node_modules,dist,.git,build,out,backend,.opencode,vendor,packages,bower_components}/**";
+        const projectFiles = await vscode.workspace.findFiles(
+            "**/*.{ts,js,kt,java,py,go,rs,tsx,jsx}", libraryExcludes
         );
-        if (files.length === 0) { return { uploaded: 0, errors: 0, summary: "ℹ️ No source files found" }; }
+
+        if (projectFiles.length === 0) { return { uploaded: 0, errors: 0, summary: "ℹ️ No source files found" }; }
 
         const url = `${this.backendUrl}/api/index/source`;
         let uploaded = 0;
         let errors = 0;
 
-        for (let i = 0; i < files.length; i += 50) {
-            report.report({ message: `Uploading source files ${i + 1}/${files.length}...` });
-            const batch = files.slice(i, i + 50);
+        // Upload project code first (high priority)
+        for (let i = 0; i < projectFiles.length; i += 50) {
+            report.report({ message: `Indexing project code ${i + 1}/${projectFiles.length}...` });
+            const batch = projectFiles.slice(i, i + 50);
             const entries = await Promise.all(
                 batch.map(async (file) => {
                     const content = await vscode.workspace.fs.readFile(file);
@@ -99,7 +103,7 @@ export class IndexerHttpClient {
             if (success) { uploaded += batch.length; } else { errors += batch.length; }
         }
 
-        const summary = `✅ Uploaded ${uploaded} source files` + (errors > 0 ? `, ⚠️ Failed: ${errors}` : "");
+        const summary = `✅ Indexed ${uploaded} project files` + (errors > 0 ? `, ⚠️ Failed: ${errors}` : "");
         return { uploaded, errors, summary };
     }
 
@@ -136,6 +140,7 @@ export class IndexerHttpClient {
                 res.on("end", () => resolve({ ok: res.statusCode === 200 || res.statusCode === 201, body: data }));
             });
             req.on("error", () => resolve({ ok: false, body: "" }));
+            req.setTimeout(30000, () => { req.destroy(); resolve({ ok: false, body: '{"error":"timeout"}' }); });
             req.write(body);
             req.end();
         });
@@ -158,6 +163,7 @@ export class IndexerHttpClient {
                 res.on("end", () => resolve(res.statusCode === 200 || res.statusCode === 201));
             });
             req.on("error", () => resolve(false));
+            req.setTimeout(30000, () => { req.destroy(); resolve(false); });
             req.write(body);
             req.end();
         });

@@ -6,6 +6,7 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import Database from 'better-sqlite3';
+import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { SymbolResolver } from '../symbol-resolver.js';
 import { CallGraphService } from '../call-graph-service.js';
 import { FileResolver } from '../file-resolver.js';
@@ -181,7 +182,7 @@ describe('CallGraphService', () => {
   after(() => { db.close(); });
 
   it('finds direct callers of a method', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
@@ -192,7 +193,7 @@ describe('CallGraphService', () => {
   });
 
   it('finds transitive callers with depth 2', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
@@ -202,7 +203,7 @@ describe('CallGraphService', () => {
   });
 
   it('finds callees of a method', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
@@ -212,7 +213,7 @@ describe('CallGraphService', () => {
   });
 
   it('returns empty for unknown symbol', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
@@ -222,7 +223,7 @@ describe('CallGraphService', () => {
   });
 
   it('respects limit parameter', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
@@ -231,7 +232,7 @@ describe('CallGraphService', () => {
   });
 
   it('clamps depth to max 5', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
@@ -333,7 +334,7 @@ describe('ImpactAnalysisService', () => {
   after(() => { db.close(); });
 
   it('analyzes impact of modifying a method', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
     const fileResolver = new FileResolver(db, '/project', 'test_proj');
@@ -350,7 +351,7 @@ describe('ImpactAnalysisService', () => {
   });
 
   it('classifies delete action as higher severity', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
     const fileResolver = new FileResolver(db, '/project', 'test_proj');
@@ -368,7 +369,7 @@ describe('ImpactAnalysisService', () => {
   });
 
   it('returns empty result for unknown symbol', () => {
-    const graphRepo = new GraphRepository(db, 'test_proj');
+    const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(db, 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
     const fileResolver = new FileResolver(db, '/project', 'test_proj');

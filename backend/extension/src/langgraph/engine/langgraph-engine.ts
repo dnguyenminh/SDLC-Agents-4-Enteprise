@@ -2,8 +2,8 @@
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
-import { McpServerManager } from "../mcp-server-manager";
-import { ChatExtToWebviewMessage } from "../chat-panel/message-protocol";
+import { McpServerManager } from "../../mcp-server-manager";
+import { ChatExtToWebviewMessage } from "../../chat-panel/message-protocol";
 import { McpBridge } from "../core/mcp-bridge";
 import { StreamHandler } from "../core/stream-handler";
 import { WorkspaceCheckpointer } from "../core/checkpointer";
@@ -297,6 +297,7 @@ export class LangGraphEngine {
 
     return allNodes.map(n => ({
       ...n,
+      phase: n.phase as SDLCPhase,
       status: "idle" as const,
     }));
   }

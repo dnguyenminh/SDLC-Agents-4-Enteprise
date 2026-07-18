@@ -1,0 +1,38 @@
+{
+  "ticket": "SA4E-42",
+  "issueType": "Bug",
+  "summary": "find_tools does not re-index when child MCP server connects late",
+  "architecturePattern": "ai-agent",
+  "patternDetectedAt": "2026-07-16T16:52:21+07:00",
+  "autonomyLevel": "L3",
+  "humanGates": ["uat", "deployment"],
+  "currentPhase": "devops_pipeline_setup",
+  "jiraStatus": "To Do",
+  "phases": {
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-07-16T17:05:00+07:00", "userStories": 4, "diagrams": ["business-flow", "use-case"] },
+    "specification": { "status": "done", "file": "FSD.md", "version": 2, "completedAt": "2026-07-16T17:20:00+07:00", "useCases": 4, "businessRules": 11, "diagrams": ["system-context", "sequence-late-connect", "sequence-disconnect", "state-connection"], "notes": "BA draft + TA enrichment (OI-1..OI-5 resolved)" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1, "completedAt": "2026-07-16T17:35:00+07:00", "diagrams": ["architecture", "component"], "discrepancy": false },
+    "feedback_loop": { "status": "skipped", "iterations": 0, "maxIterations": 5, "reason": "No DISCREPANCY raised by SA" },
+    "security_design_review": { "status": "done", "file": "SECURITY-REVIEW.md", "completedAt": "2026-07-16T17:45:00+07:00", "findings": { "critical": 0, "high": 0, "medium": 0, "low": 4, "info": 3 }, "risk": "Low", "hardeningForDev": ["F-01 scope-aware upsert probe", "F-02 PRAGMA probe not catch{}", "F-03 bounded logging", "F-04 prune placeholder guard"] },
+    "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "completedAt": "2026-07-16T18:00:00+07:00", "testCases": 53, "levels": { "PBT": 4, "UT": 32, "IT": 13, "E2E-API": 4, "E2E-UI": "N/A", "SIT": "N/A" }, "rtmCoverage": "100%", "review": "approved" },
+    "devops_pipeline_setup": { "status": "in_progress" },
+    "implementation": { "status": "not_started" },
+    "security_code_review": { "status": "not_started" },
+    "testing": { "status": "not_started" },
+    "pentest": { "status": "not_started" },
+    "uat": { "status": "not_started" },
+    "security_deploy_review": { "status": "not_started" },
+    "deployment": { "status": "not_started" }
+  },
+  "circuitBreaker": {},
+  "tokenBudget": {
+    "dailyCap": 500000,
+    "usedToday": 0,
+    "lastReset": "2026-07-16T18:05:00+07:00",
+    "warningThreshold": 0.8,
+    "mode": "normal",
+    "note": "User override — budget reset to continue full pipeline (L3)"
+  },
+  "lastUpdated": "2026-07-16T18:05:00+07:00",
+  "lastCommentProcessed": null
+}

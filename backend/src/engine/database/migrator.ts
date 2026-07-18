@@ -3,7 +3,7 @@
  * Extends the existing migration system with graph-specific tables and columns.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'graph-migrator' });
@@ -86,34 +86,34 @@ CREATE INDEX IF NOT EXISTS idx_body_embeddings_symbol ON body_embeddings(symbol_
  * Run graph-related migrations (KSA-153 + KSA-169).
  * Safe to call multiple times — all operations are idempotent.
  */
-export function runGraphMigrations(db: Database.Database): void {
+export function runGraphMigrations(adapter: DatabaseAdapter): void {
   logger.error('[graph-migrator] Running graph schema migrations...');
 
-  addEnhancedSymbolColumns(db);
-  db.exec(GRAPH_SCHEMA_SQL);
+  addEnhancedSymbolColumns(adapter);
+  adapter.exec(GRAPH_SCHEMA_SQL);
   logger.error('[graph-migrator] Relationships table ready');
 
-  db.exec(FILE_INDEX_SQL);
+  adapter.exec(FILE_INDEX_SQL);
   logger.error('[graph-migrator] File index table ready');
 
-  db.exec(GRAPH_META_SQL);
+  adapter.exec(GRAPH_META_SQL);
   logger.error('[graph-migrator] Graph metadata table ready');
 
-  db.exec(BODY_EMBEDDINGS_SQL);
+  adapter.exec(BODY_EMBEDDINGS_SQL);
   logger.error('[graph-migrator] Body embeddings table ready');
 
-  db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)').run(3);
+  adapter.run('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [3]);
   logger.error('[graph-migrator] Schema version set to 3');
 }
 
-function addEnhancedSymbolColumns(db: Database.Database): void {
-  const existing = getExistingColumns(db, 'symbols');
+function addEnhancedSymbolColumns(adapter: DatabaseAdapter): void {
+  const existing = getExistingColumns(adapter, 'symbols');
   let added = 0;
 
   for (const col of ENHANCED_SYMBOL_COLUMNS) {
     if (!existing.has(col.name)) {
       try {
-        db.exec(`ALTER TABLE symbols ADD COLUMN ${col.name} ${col.type}`);
+        adapter.exec(`ALTER TABLE symbols ADD COLUMN ${col.name} ${col.type}`);
         added++;
       } catch {
         // Column may already exist
@@ -124,26 +124,26 @@ function addEnhancedSymbolColumns(db: Database.Database): void {
   if (added > 0) {
     logger.error(`[graph-migrator] Added ${added} enhanced symbol columns`);
     try {
-      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id) WHERE parent_symbol_id IS NOT NULL');
-      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_exported ON symbols(is_exported) WHERE is_exported = 1');
-      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_file_kind ON symbols(file_id, kind)');
+      adapter.exec('CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id) WHERE parent_symbol_id IS NOT NULL');
+      adapter.exec('CREATE INDEX IF NOT EXISTS idx_sym_exported ON symbols(is_exported) WHERE is_exported = 1');
+      adapter.exec('CREATE INDEX IF NOT EXISTS idx_sym_file_kind ON symbols(file_id, kind)');
     } catch {
       // Indexes may already exist
     }
   }
 }
 
-function getExistingColumns(db: Database.Database, table: string): Set<string> {
-  const rows = db.pragma(`table_info(${table})`) as { name: string }[];
+function getExistingColumns(adapter: DatabaseAdapter, table: string): Set<string> {
+  const rows = adapter.all<{ name: string }>(`SELECT * FROM pragma_table_info('${table}')`);
   return new Set(rows.map(r => r.name));
 }
 
 /** Check if graph migrations have been applied. */
-export function isGraphSchemaReady(db: Database.Database): boolean {
+export function isGraphSchemaReady(adapter: DatabaseAdapter): boolean {
   try {
-    const tables = db.prepare(
-      "SELECT name FROM sqlite_master WHERE type='table' AND name='relationships'"
-    ).get();
+    const tables = adapter.get<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='relationships'",
+    );
     return !!tables;
   } catch {
     return false;

@@ -295,3 +295,4 @@ agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="START
 agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="ARTIFACT", message="Appended sections 6-11", artifacts="{\"file\": \"documents/MTO-13/FSD.md\"}")
 agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="DONE", message="FSD enrichment complete: 3372 lines, 143KB")
 ```
+

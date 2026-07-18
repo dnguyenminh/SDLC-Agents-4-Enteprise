@@ -1,0 +1,66 @@
+<mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-44 — System Context Diagram&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;" vertex="1" parent="1">
+      <mxGeometry x="500" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="boundary" value="SA4E Code Intelligence Server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#0288d1;strokeWidth=2;dashed=1;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=10;" vertex="1" parent="1">
+      <mxGeometry x="350" y="100" width="700" height="600" as="geometry" />
+    </mxCell>
+    <mxCell id="client" value="MCP Client&#10;(IDE Extension)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="50" y="250" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="llm" value="LLM Provider&#10;(LM Studio / OpenAI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="1180" y="150" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="filesystem" value="File System&#10;(Workspace)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="50" y="550" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="mem_module" value="Memory Module&#10;(MemoryEngine)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="400" y="200" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="task_persist" value="Task Persistence&#10;Layer (NEW)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="400" y="340" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="task_worker" value="TaskWorker&#10;(Background) (NEW)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="650" y="340" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="async_scanner" value="AsyncFileScanner&#10;(NEW)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="400" y="500" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="tag_analyzer" value="TagAnalyzerService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="180" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="embedding_svc" value="EmbeddingService&#10;(Worker Thread)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="820" y="280" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="db" value="Database&#10;(SQLite/PG/MySQL)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;size=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="500" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="mem_ingest" source="client" target="mem_module" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=8;strokeColor=#0288d1;strokeWidth=2;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="create tasks" source="mem_module" target="task_persist" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="poll &amp; claim" source="task_worker" target="task_persist" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="analyzeTags()" source="task_worker" target="tag_analyzer" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="generateEmbedding()" source="task_worker" target="embedding_svc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="LLM API" source="tag_analyzer" target="llm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=8;strokeColor=#6c8ebf;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="persist" source="task_persist" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;strokeColor=#9673a6;strokeWidth=2;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="async readdir" source="async_scanner" target="filesystem" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

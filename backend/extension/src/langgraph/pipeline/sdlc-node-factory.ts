@@ -1,6 +1,7 @@
 import { McpBridge } from "../core/mcp-bridge";
 import { StreamHandler } from "../core/stream-handler";
 import type { LlmProvider } from "../core/llm-provider";
+import type { SDLCPhase } from "../core/state";
 import { agentRegistry } from "../agents/registry";
 import { DynamicAgentNode } from "../agents/dynamic-agent-node";
 import { FeedbackNode } from "../agents/feedback-node";
@@ -43,7 +44,7 @@ export function createSdlcNodes(
         verifyNodes[id] = new VerifyNode(id, config.targetNode || "", mcpBridge, streamHandler, llmProvider);
         break;
       case "gate":
-        gateNodes[id] = new ApprovalNode(id, config.phase, mcpBridge, streamHandler, llmProvider);
+        gateNodes[id] = new ApprovalNode(id, config.phase as SDLCPhase, mcpBridge, streamHandler, llmProvider);
         break;
     }
   }

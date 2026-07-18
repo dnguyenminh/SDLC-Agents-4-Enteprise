@@ -27,7 +27,7 @@ export function handleSyncCode(engine: MemoryEngine, queryLayer: QueryLayer | un
     return 'No code symbols found to sync.';
   }
 
-  const db = engine.getDb();
+  const db = engine.getDb() as any;
   const checkStmt = db.prepare(`
     SELECT id FROM knowledge_entries 
     WHERE type = 'CODE_ENTITY' AND source = ? AND summary = ?

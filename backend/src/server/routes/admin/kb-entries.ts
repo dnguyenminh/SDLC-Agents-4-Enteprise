@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import fs from 'node:fs';
+import Database from 'better-sqlite3';
 import {
   getKbEntries,
   getKbEntryCount,
@@ -6,6 +8,7 @@ import {
   searchKbEntries,
   recordQueryLog,
 } from '../../../admin/admin-db.js';
+import { getIndexDbPath } from '../../../admin/db/core.js';
 import type { AdminContext } from './context.js';
 
 export function createKbEntriesRoutes(ctx: AdminContext): Hono {
@@ -70,7 +73,20 @@ export function createKbEntriesRoutes(ctx: AdminContext): Hono {
     const permCheck = ctx.requirePermission(c, user.userId, 'KB_READ');
     if (permCheck instanceof Response) return permCheck;
     const entryId = c.req.param('id');
-    const entry = getKbEntryById(entryId);
+
+    // CODE_ENTITY nodes: fetch detail from symbols table (index.db)
+    if (entryId.startsWith('code:') || entryId.startsWith('sym-')) {
+      const symbolId = entryId.startsWith('code:')
+        ? entryId.replace('code:', '')
+        : entryId.replace('sym-', '');
+      const detail = getCodeSymbolDetail(symbolId, ctx);
+      if (detail) return c.json(detail);
+      return c.json({ error: 'Code symbol not found' }, 404);
+    }
+
+    // KB document nodes (doc-{id}): strip prefix to get numeric ID
+    const lookupId = entryId.startsWith('doc-') ? entryId.replace('doc-', '') : entryId;
+    const entry = getKbEntryById(lookupId);
     if (!entry) return c.json({ error: 'Entry not found' }, 404);
     const allowedTiers = (permCheck.roleData as any)?.allowedTiers;
     if (Array.isArray(allowedTiers)) {
@@ -94,4 +110,55 @@ export function createKbEntriesRoutes(ctx: AdminContext): Hono {
   });
 
   return app;
+}
+
+/** Fetch code symbol detail from index.db for KB Graph node click. */
+function getCodeSymbolDetail(symbolId: string, ctx: AdminContext): Record<string, unknown> | null {
+  try {
+    const indexDbPath = getIndexDbPath();
+    if (!fs.existsSync(indexDbPath)) return null;
+    const indexDb = new Database(indexDbPath, { readonly: true });
+    try {
+      const row = indexDb.prepare(`
+        SELECT s.id, s.name, s.kind, s.signature, s.start_line, s.end_line,
+               s.parent_symbol, s.visibility, s.doc_comment,
+               f.relative_path, f.language, f.module
+        FROM symbols s
+        JOIN files f ON s.file_id = f.id
+        WHERE s.id = ?
+      `).get(symbolId) as any;
+      if (!row) return null;
+      const lines = row.start_line && row.end_line
+        ? `Lines ${row.start_line}–${row.end_line}`
+        : '';
+      const contentParts = [
+        row.signature ? `**Signature:** \`${row.signature}\`` : '',
+        row.doc_comment ? `**Doc:** ${row.doc_comment}` : '',
+        `**Kind:** ${row.kind}`,
+        `**File:** ${row.relative_path}`,
+        lines ? `**Location:** ${lines}` : '',
+        row.module ? `**Module:** ${row.module}` : '',
+        row.visibility ? `**Visibility:** ${row.visibility}` : '',
+        row.parent_symbol ? `**Parent:** ${row.parent_symbol}` : '',
+      ].filter(Boolean).join('\n');
+      return {
+        id: `code:${row.id}`,
+        title: `${row.name} (${row.kind})`,
+        content: contentParts,
+        tier: 'CODE',
+        type: 'CODE_ENTITY',
+        source: row.relative_path || '',
+        tags: [row.kind, row.language, row.module].filter(Boolean),
+        links: [],
+        qualityScore: null,
+        createdAt: null,
+        updatedAt: null,
+      };
+    } finally {
+      indexDb.close();
+    }
+  } catch {
+    ctx.logger.warn({ symbolId }, 'Failed to fetch code symbol detail');
+    return null;
+  }
 }

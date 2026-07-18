@@ -1,0 +1,8 @@
+test_case_id,llm_available,enable_context_chain,expected_fallback,expected_context,description
+UT-04,false (timeout),true,true,none,LLM timeout triggers fallback extraction
+UT-05,false (connection refused),true,true,none,LLM unavailable triggers fallback
+IT-04,false (timeout),true,true,none,Integration test — LLM timeout with DB
+IT-05,true,false,false,none,Context chain disabled — no context prepended
+IT-06,true (prev section no summary),true,false,none,Previous section has no summary — no context
+E2E-API-04,false (timeout),true,true,none,Full E2E — LLM fallback pipeline
+PBT-02,any,any,false,none,safeParseStructuredMap never crashes

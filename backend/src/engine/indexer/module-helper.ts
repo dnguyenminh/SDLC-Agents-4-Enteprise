@@ -2,7 +2,7 @@
  * Module Helper — Module detection and pattern analysis.
  */
 
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter, PreparedStatement } from '../../database/adapters/DatabaseAdapter.js';
 import type { Logger } from 'pino';
 import type { ExtractedSymbol } from '../scanner/signature-extractor.js';
 import { detectPatterns, inferModulePurpose } from '../scanner/pattern-detector.js';
@@ -26,17 +26,18 @@ export function detectModule(relativePath: string): string {
 }
 
 /** Rebuild the modules table for a single tenant from its files (SA4E-41). */
-export function updateModules(db: Database.Database, projectId: string): void {
-  db.prepare('DELETE FROM modules WHERE project_id = ?').run(projectId);
-  const rows = db.prepare(`
-    SELECT module, language, COUNT(*) as file_count,
-           (SELECT COUNT(*) FROM symbols WHERE project_id = ? AND file_id IN (SELECT id FROM files WHERE module = f.module AND project_id = ?)) as symbol_count
-    FROM files f
-    WHERE module IS NOT NULL AND project_id = ?
-    GROUP BY module
-  `).all(projectId, projectId, projectId) as { module: string; language: string; file_count: number; symbol_count: number }[];
+export function updateModules(adapter: DatabaseAdapter, projectId: string): void {
+  adapter.run('DELETE FROM modules WHERE project_id = ?', [projectId]);
+  const rows = adapter.all<{ module: string; language: string; file_count: number; symbol_count: number }>(
+    `SELECT module, language, COUNT(*) as file_count,
+            (SELECT COUNT(*) FROM symbols WHERE project_id = ? AND file_id IN (SELECT id FROM files WHERE module = f.module AND project_id = ?)) as symbol_count
+     FROM files f
+     WHERE module IS NOT NULL AND project_id = ?
+     GROUP BY module`,
+    [projectId, projectId, projectId],
+  );
 
-  const insert = db.prepare(`
+  const insert = adapter.prepare(`
     INSERT INTO modules (project_id, name, root_path, language, file_count, symbol_count)
     VALUES (?, ?, ?, ?, ?, ?)
   `);
@@ -46,13 +47,14 @@ export function updateModules(db: Database.Database, projectId: string): void {
 }
 
 function processModulePattern(
-  db: Database.Database, name: string, projectId: string, moduleImports: Map<string, string[]>,
-  updateStmt: Database.Statement, logger: Logger
+  adapter: DatabaseAdapter, name: string, projectId: string, moduleImports: Map<string, string[]>,
+  updateStmt: PreparedStatement, logger: Logger
 ): void {
   try {
-    const symbols = db.prepare(
-      'SELECT name, kind, signature, visibility FROM symbols WHERE project_id = ? AND file_id IN (SELECT id FROM files WHERE module = ? AND project_id = ?)'
-    ).all(projectId, name, projectId) as ExtractedSymbol[];
+    const symbols = adapter.all<ExtractedSymbol>(
+      'SELECT name, kind, signature, visibility FROM symbols WHERE project_id = ? AND file_id IN (SELECT id FROM files WHERE module = ? AND project_id = ?)',
+      [projectId, name, projectId],
+    );
     const classes = symbols.filter(s => s.kind === 'class' || s.kind === 'interface');
     const functions = symbols.filter(s => s.kind === 'function' || s.kind === 'method');
     const imports = moduleImports.get(name) ?? [];
@@ -66,19 +68,19 @@ function processModulePattern(
 
 /** Detect and store coding patterns for one tenant's modules (SA4E-41). */
 export function detectAndStorePatterns(
-  db: Database.Database, moduleImports: Map<string, string[]>, logger: Logger, projectId: string
+  adapter: DatabaseAdapter, moduleImports: Map<string, string[]>, logger: Logger, projectId: string
 ): void {
   const startMs = Date.now();
-  const modules = db.prepare('SELECT name FROM modules WHERE project_id = ?').all(projectId) as { name: string }[];
-  const updateStmt = db.prepare(`
+  const modules = adapter.all<{ name: string }>('SELECT name FROM modules WHERE project_id = ?', [projectId]);
+  const updateStmt = adapter.prepare(`
     UPDATE modules SET di_style = ?, error_handling = ?, naming_convention = ?,
     logging_framework = ?, testing_framework = ?, purpose = ? WHERE name = ? AND project_id = ?
   `);
 
-  db.transaction(() => {
+  adapter.transaction(() => {
     for (const { name } of modules) {
-      processModulePattern(db, name, projectId, moduleImports, updateStmt, logger);
+      processModulePattern(adapter, name, projectId, moduleImports, updateStmt, logger);
     }
-  })();
+  });
   logger.error(`[indexer] Pattern detection: ${Date.now() - startMs}ms`);
 }

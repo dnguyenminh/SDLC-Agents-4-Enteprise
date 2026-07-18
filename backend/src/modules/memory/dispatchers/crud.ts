@@ -60,7 +60,7 @@ export function handleIngest(
           entry_id: id,
           payload: {
             entry_id: id,
-            content: content.slice(0, 2000),
+            content: content,
             existing_tags: tags,
             options: { threshold: 0.7, autoApply: true },
           },
@@ -135,6 +135,8 @@ export async function handleIngestFile(
   workspace: string,
   a: Args,
   resolver?: ConvertToolResolver,
+  dbAdapter?: DatabaseAdapter,
+  embeddingAvailable?: boolean,
 ): Promise<string> {
   const filePath = a.file_path as string;
   if (!filePath) return 'Error: file_path required';
@@ -173,9 +175,9 @@ export async function handleIngestFile(
 
   if (scopeCtx) {
     const { clause, params } = buildIngestFileDeleteClause(scopeCtx as ProjectContext, filePath);
-    engine.getDb().prepare(clause).run(...params);
+    (engine.getDb() as any).prepare(clause).run(...params);
   } else {
-    engine.getDb().prepare('DELETE FROM knowledge_entries WHERE source = ?').run(filePath);
+    (engine.getDb() as any).prepare('DELETE FROM knowledge_entries WHERE source = ?').run(filePath);
   }
 
   const sections = text.split(/^#{1,3}\s+/m).filter(s => s.trim());
@@ -184,11 +186,18 @@ export async function handleIngestFile(
   const fileMeta = loadFileMetadata(workspace);
   const meta = fileMeta[filePath.replace(/\\/g, '/')];
   const structuredMap = meta ? JSON.stringify({ fileCreatedAt: meta.fileCreatedAt, fileAuthor: meta.fileAuthor, fileVersion: meta.fileVersion }) : undefined;
+  const taskRepo = dbAdapter ? new PendingTaskRepository(dbAdapter) : undefined;
   for (const sec of (sections.length > 0 ? sections : [text])) {
     const summary = sec.split('\n')[0]?.trim().slice(0, 120) || filePath;
     const id = engine.insert({ content: sec.trim(), summary, type, tier: tierForType(type), scope, user_id: userId, project_id: scopeCtx?.projectId ?? null, source: filePath, tags: '' });
     if (structuredMap) {
-      engine.getDb().prepare('UPDATE knowledge_entries SET structured_map = ? WHERE id = ?').run(structuredMap, id);
+      (engine.getDb() as any).prepare('UPDATE knowledge_entries SET structured_map = ? WHERE id = ?').run(structuredMap, id);
+    }
+    if (taskRepo) {
+      taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content: sec.trim(), existing_tags: '', options: { threshold: 0.7, autoApply: true } } });
+      if (embeddingAvailable) {
+        taskRepo.create({ task_type: TaskType.VECTOR_EMBEDDING, entry_id: id, payload: { entry_id: id, text: `${summary} ${sec.trim()}`.slice(0, 4000) } });
+      }
     }
     created++;
   }

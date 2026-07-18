@@ -1,0 +1,18 @@
+{
+  "ticketKey": "SA4E-125",
+  "summary": "Pipeline Refactoring: Hardcoded → Data-Driven Architecture (v2-v6)",
+  "status": "all_phases_complete",
+  "currentPhase": "done",
+  "phases": {
+    "requirements": { "status": "done", "artifacts": ["BRD.md", "diagrams/business-flow.drawio", "diagrams/business-flow.png", "diagrams/use-case.drawio", "diagrams/use-case.png"] },
+    "specification": { "status": "done", "artifacts": ["FSD.md", "diagrams/system-context.drawio", "diagrams/system-context.png", "diagrams/sequence.drawio", "diagrams/sequence.png", "diagrams/state.drawio", "diagrams/state.png"] },
+    "design": { "status": "done", "artifacts": ["TDD.md", "diagrams/tdd/normal-flow.drawio", "diagrams/tdd/normal-flow.png", "diagrams/tdd/hot-swap-flow.drawio", "diagrams/tdd/hot-swap-flow.png", "diagrams/tdd/orphan-flow.drawio", "diagrams/tdd/orphan-flow.png", "diagrams/tdd/skip-resolution.drawio", "diagrams/tdd/skip-resolution.png", "diagrams/tdd/context-barrier.drawio", "diagrams/tdd/context-barrier.png", "diagrams/tdd/state-machine.drawio", "diagrams/tdd/state-machine.png", "diagrams/tdd/class-hierarchy.drawio", "diagrams/tdd/class-hierarchy.png", "diagrams/tdd/full-sequence.drawio", "diagrams/tdd/full-sequence.png"] },
+    "test_planning": { "status": "done", "artifacts": ["STP.md", "STC.md"] },
+    "implementation": { "status": "pending", "artifacts": [] },
+    "user_guide": { "status": "done", "artifacts": ["UG.md"] },
+    "testing": { "status": "pending", "artifacts": [] },
+    "deployment": { "status": "done", "artifacts": ["DPG.md"] }
+  },
+  "createdAt": "2026-07-12T00:00:00.000Z",
+  "updatedAt": "2026-07-13T00:00:00.000Z"
+}

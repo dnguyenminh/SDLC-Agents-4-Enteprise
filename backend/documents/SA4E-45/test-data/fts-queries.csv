@@ -1,0 +1,11 @@
+row,query,engine,expected_behavior,expected_sql_contains
+1,typescript class,sqlite,FTS5 MATCH search,knowledge_fts MATCH
+2,typescript class,postgresql,tsvector plainto_tsquery,plainto_tsquery
+3,,sqlite,Wildcard or all entries,*
+4,database adapter,mysql,MATCH AGAINST natural language,MATCH(content
+5,func*,sqlite,Prefix search via FTS5,knowledge_fts MATCH
+6,"exact phrase",sqlite,Phrase search,knowledge_fts MATCH
+7,a,sqlite,Single char search,knowledge_fts MATCH
+8,content:injection,sqlite,Colon stripped by sanitizer,knowledge_fts MATCH
+9,very long query with many words repeated many times for stress,sqlite,Normal search truncated,knowledge_fts MATCH
+10,SELECT * FROM users,sqlite,SQL in query sanitized,knowledge_fts MATCH

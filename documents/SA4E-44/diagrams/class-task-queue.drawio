@@ -1,0 +1,72 @@
+<mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-44 — Class Diagram: Task Queue Module&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;" vertex="1" parent="1">
+      <mxGeometry x="380" y="10" width="440" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="enum_type" value="&lt;&lt;enum&gt;&gt;&#xa;TaskType&#xa;---&#xa;TAG_ENRICHMENT&#xa;VECTOR_EMBEDDING" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="180" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="enum_status" value="&lt;&lt;enum&gt;&gt;&#xa;TaskStatus&#xa;---&#xa;PENDING&#xa;PROCESSING&#xa;COMPLETED&#xa;FAILED" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="250" y="60" width="180" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="iface_task" value="&lt;&lt;interface&gt;&gt;&#xa;&lt;b&gt;PendingTask&lt;/b&gt;&#xa;---&#xa;+ id: number&#xa;+ task_type: TaskType&#xa;+ entry_id: number&#xa;+ status: TaskStatus&#xa;+ payload: string (JSON)&#xa;+ error: string | null&#xa;+ retry_count: number&#xa;+ max_retries: number&#xa;+ created_at: string&#xa;+ started_at: string | null&#xa;+ completed_at: string | null" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="460" y="60" width="240" height="230" as="geometry" />
+    </mxCell>
+    <mxCell id="iface_input" value="&lt;&lt;interface&gt;&gt;&#xa;&lt;b&gt;CreateTaskInput&lt;/b&gt;&#xa;---&#xa;+ task_type: TaskType&#xa;+ entry_id: number&#xa;+ payload: object&#xa;+ max_retries?: number" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="730" y="60" width="220" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="iface_config" value="&lt;&lt;interface&gt;&gt;&#xa;&lt;b&gt;TaskWorkerConfig&lt;/b&gt;&#xa;---&#xa;+ baseInterval: number (2000ms)&#xa;+ maxInterval: number (30000ms)&#xa;+ staleThreshold: number (300000ms)&#xa;+ maxRetries: number (3)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="980" y="60" width="280" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="iface_stats" value="&lt;&lt;interface&gt;&gt;&#xa;&lt;b&gt;TaskWorkerStats&lt;/b&gt;&#xa;---&#xa;+ pending: number&#xa;+ processing: number&#xa;+ completed: number&#xa;+ failed: number&#xa;+ isRunning: boolean&#xa;+ lastPollAt: string | null" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="980" y="220" width="240" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="class_repo" value="&lt;b&gt;PendingTaskRepository&lt;/b&gt;&#xa;---&#xa;- db: DatabaseAdapter&#xa;---&#xa;+ create(input: CreateTaskInput): number&#xa;+ claimNext(): PendingTask | null&#xa;+ markCompleted(id: number): void&#xa;+ markFailed(id: number, error: string): void&#xa;+ resetForRetry(id: number): void&#xa;+ recoverStaleTasks(thresholdMs: number): number&#xa;+ getStats(): {...}&#xa;+ listFailed(limit?: number): PendingTask[]&#xa;+ findById(id: number): PendingTask | undefined" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="40" y="340" width="360" height="240" as="geometry" />
+    </mxCell>
+    <mxCell id="class_worker" value="&lt;b&gt;TaskWorker&lt;/b&gt;&#xa;---&#xa;- repo: PendingTaskRepository&#xa;- config: TaskWorkerConfig&#xa;- logger: Logger&#xa;- engine: MemoryEngine&#xa;- tagAnalyzer?: TagAnalyzerService&#xa;- embeddingService?: EmbeddingService&#xa;- running: boolean&#xa;- consecutiveEmpty: number&#xa;---&#xa;+ start(): void&#xa;+ stop(): Promise&lt;void&gt;&#xa;+ recoverStaleTasks(): number&#xa;+ getStats(): TaskWorkerStats&#xa;+ getRepository(): PendingTaskRepository&#xa;+ setTagAnalyzer(svc): void&#xa;+ setEmbeddingService(svc): void&#xa;- schedulePoll(delayMs: number): void&#xa;- poll(): Promise&lt;void&gt;&#xa;- processTask(task: PendingTask): Promise&lt;void&gt;&#xa;- processTagEnrichment(...): Promise&lt;void&gt;&#xa;- processVectorEmbedding(...): Promise&lt;void&gt;&#xa;- handleTaskError(task, err): void" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="440" y="320" width="340" height="420" as="geometry" />
+    </mxCell>
+    <mxCell id="class_admin" value="&lt;b&gt;admin-handlers&lt;/b&gt;&#xa;---&#xa;+ getTaskStats(worker): TaskWorkerStats&#xa;+ getFailedTasks(worker, limit): {...}&#xa;+ retryTask(worker, taskId): {...}" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=0;align=left;spacingLeft=8;verticalAlign=top;spacingTop=5;" vertex="1" parent="1">
+      <mxGeometry x="820" y="420" width="280" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_dbadapter" value="&lt;&lt;interface&gt;&gt;&#xa;&lt;b&gt;DatabaseAdapter&lt;/b&gt;&#xa;(existing)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="620" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_tagsvc" value="&lt;b&gt;TagAnalyzerService&lt;/b&gt;&#xa;(existing)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="820" y="560" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_embedsvc" value="&lt;b&gt;EmbeddingService&lt;/b&gt;&#xa;(existing)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="820" y="630" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_engine" value="&lt;b&gt;MemoryEngine&lt;/b&gt;&#xa;(existing)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="820" y="700" width="180" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e_repo_db" value="uses" source="class_repo" target="ext_dbadapter" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=10;dashed=1;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_worker_repo2" value="creates/uses" source="class_worker" target="class_repo" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=diamond;endSize=10;endFill=1;strokeColor=#82b366;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_worker_tag2" value="optional" source="class_worker" target="ext_tagsvc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_worker_embed2" value="optional" source="class_worker" target="ext_embedsvc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_worker_engine" value="uses" source="class_worker" target="ext_engine" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;strokeColor=#9673a6;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_admin_worker3" value="delegates to" source="class_admin" target="class_worker" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_repo_task_iface" value="returns" source="class_repo" target="iface_task" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e_worker_config2" value="configured by" source="class_worker" target="iface_config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endSize=8;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

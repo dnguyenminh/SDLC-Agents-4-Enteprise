@@ -11,6 +11,7 @@ import * as path from 'path';
 import * as os from 'os';
 import Database from 'better-sqlite3';
 import { DatabaseManager } from '../../db/database-manager.js';
+import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { IndexingEngine } from '../indexing-engine.js';
 import { AppConfig } from '../../config.js';
 
@@ -106,7 +107,7 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
   });
 
   it('should initialize IndexingEngine with tree-sitter support', () => {
-    const engine = new IndexingEngine(dbManager, config);
+    const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     const stats = engine.getTreeSitterStats();
     console.error(`[test] Tree-sitter ready: ${stats.ready}, languages: ${stats.languages.join(', ')}`);
     assert.ok(typeof stats.ready === 'boolean');
@@ -115,7 +116,7 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
   });
 
   it('should run full index without errors', async () => {
-    const engine = new IndexingEngine(dbManager, config);
+    const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     await engine.runFullIndex();
 
     const fileCount = db.prepare('SELECT COUNT(*) as c FROM files').get() as { c: number };
@@ -129,7 +130,7 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
   });
 
   it('should extract class and function symbols', async () => {
-    const engine = new IndexingEngine(dbManager, config);
+    const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     await engine.runFullIndex();
 
     const userService = db.prepare(
@@ -148,7 +149,7 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
   });
 
   it('should populate relationships table when tree-sitter is active', async () => {
-    const engine = new IndexingEngine(dbManager, config);
+    const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     const stats = engine.getTreeSitterStats();
     await engine.runFullIndex();
 
@@ -164,7 +165,7 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
   });
 
   it('should handle incremental file updates', async () => {
-    const engine = new IndexingEngine(dbManager, config);
+    const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     await engine.runFullIndex();
 
     const initialCount = (db.prepare('SELECT COUNT(*) as c FROM symbols').get() as { c: number }).c;
@@ -189,7 +190,7 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
   });
 
   it('should clean up relationships when file is removed', async () => {
-    const engine = new IndexingEngine(dbManager, config);
+    const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     await engine.runFullIndex();
 
     const testFile = path.join(tmpDir, 'src', 'example', 'to-remove.ts');

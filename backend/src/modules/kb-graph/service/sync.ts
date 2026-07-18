@@ -3,11 +3,11 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import Database from 'better-sqlite3';
 import type { Logger } from 'pino';
 import { getAdminDb, getKbEntries } from '../../../admin/admin-db.js';
-import { getWorkspacePath, loadConfig } from '../../../config/index.js';
+import { getIndexDbPath } from '../../../admin/db/core.js';
+import { loadConfig } from '../../../config/index.js';
 import { KIND_TO_TYPE } from './constants.js';
 import { computePositionByIndex } from './nodes.js';
 import { buildSpatialEdges, buildCrossClusterEdges } from './spatial.js';
@@ -115,7 +115,7 @@ export function fullSync(logger: Logger): { nodesCreated: number; edgesCreated: 
   }
 
   function processCodeSymbols(): void {
-    const indexDbPath = path.resolve(getWorkspacePath(), '.code-intel', 'index.db');
+    const indexDbPath = getIndexDbPath();
     if (!fs.existsSync(indexDbPath)) {
       logger.warn({ indexDbPath }, 'index.db not found — skipping code symbols');
       return;

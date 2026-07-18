@@ -50,7 +50,7 @@ export function handleTags(engine: MemoryEngine, tagAnalyzer: TagAnalyzerService
       const entryId = a.entry_id as number;
       if (!entryId) return 'Error: entry_id required';
       if (!tagAnalyzer) return 'Error: TagAnalyzer not initialized';
-      const db = engine.getDb();
+      const db = engine.getDb() as any;
       const entry = db.prepare('SELECT content, tags FROM knowledge_entries WHERE id = ?').get(entryId) as any;
       if (!entry) return `Error: entry ${entryId} not found`;
       tagAnalyzer.analyzeTags(entry.content).then(result => {
@@ -63,7 +63,7 @@ export function handleTags(engine: MemoryEngine, tagAnalyzer: TagAnalyzerService
     }
     case 'retag_all': {
       if (!tagAnalyzer) return 'Error: TagAnalyzer not initialized';
-      const db = engine.getDb();
+      const db = engine.getDb() as any;
       const entries = db.prepare('SELECT id, content FROM knowledge_entries ORDER BY id').all() as any[];
       let queued = 0;
       for (const entry of entries) {

@@ -3,7 +3,7 @@
  * Single entry point for all memory operations in the backend.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type {
   KnowledgeEntry, SearchResult,
   KBScope, ScopeContext, ToolUsageRow,
@@ -18,9 +18,9 @@ export class MemoryEngine extends MemoryEngineCrud {
   private currentSessionId: string | null = null;
   private compositeScorer: CompositeScorer;
 
-  constructor(db: Database.Database) {
-    super(db);
-    this.compositeScorer = new CompositeScorer(db);
+  constructor(adapter: DatabaseAdapter) {
+    super(adapter);
+    this.compositeScorer = new CompositeScorer(adapter);
   }
 
   getSessionId(): string | null { return this.currentSessionId; }
@@ -38,32 +38,61 @@ export class MemoryEngine extends MemoryEngineCrud {
     }
     const where = `WHERE ${clauses.join(' AND ')}`;
     params.push(limit);
-    return this.db.prepare(
-      `SELECT * FROM knowledge_entries ${where} ORDER BY created_at DESC LIMIT ?`
-    ).all(...params) as KnowledgeEntry[];
+    return this.adapter.all<KnowledgeEntry>(
+      `SELECT * FROM knowledge_entries ${where} ORDER BY created_at DESC LIMIT ?`,
+      params,
+    );
   }
 
   search(query: string, limit = 10, tier?: string, type?: string, scopeCtx?: ScopeContext): SearchResult[] {
-    const ftsQuery = query.replace(/[^\w\s*":.]/g, ' ').trim() || '*';
     const clauses: string[] = [
       'ke.archived = 0',
-      '(ke.expires_at IS NULL OR ke.expires_at >= datetime(\'now\'))',
+      `(ke.expires_at IS NULL OR ke.expires_at >= ${this.dialect.now()})`,
     ];
-    const params: unknown[] = [ftsQuery];
+    const params: unknown[] = [];
     if (tier) { clauses.push('ke.tier = ?'); params.push(tier); }
     if (type) { clauses.push('ke.type = ?'); params.push(type); }
     if (scopeCtx) {
       clauses.push(this.buildScopeClause(scopeCtx, 'ke'));
       params.push(...this.buildScopeParams(scopeCtx));
     }
-    params.push(limit);
-    const sql = `SELECT ke.*, f.rank FROM
-      (SELECT rowid, rank FROM knowledge_fts WHERE knowledge_fts MATCH ?) f
-      JOIN knowledge_entries ke ON f.rowid = ke.id
-      WHERE ${clauses.join(' AND ')}
-      ORDER BY f.rank LIMIT ?`;
+
+    const engine = this.adapter.getEngine();
+
+    if (engine === 'sqlite') {
+      const ftsQuery = query.replace(/[^\w\s*":.]/g, ' ').trim() || '*';
+      const sql = `SELECT ke.*, f.rank FROM
+        (SELECT rowid, rank FROM knowledge_fts WHERE knowledge_fts MATCH ?) f
+        JOIN knowledge_entries ke ON f.rowid = ke.id
+        WHERE ${clauses.join(' AND ')}
+        ORDER BY f.rank LIMIT ?`;
+      try {
+        const rows = this.adapter.all<any>(sql, [ftsQuery, ...params, limit]);
+        return this.applyCompositeScoring(rows);
+      } catch { return []; }
+    }
+
+    if (engine === 'postgresql') {
+      const sanitized = query.replace(/[^\w\s*":.]/g, ' ').trim();
+      if (!sanitized) {
+        return this.findFiltered(tier, type, limit, scopeCtx).map(e => ({ entry: e, score: 0, matchType: 'all' }));
+      }
+      const sql = `SELECT ke.*, ts_rank(ke.tsvector_content, plainto_tsquery('english', ?)) as rank
+        FROM knowledge_entries ke
+        WHERE ke.tsvector_content @@ plainto_tsquery('english', ?) AND ${clauses.join(' AND ')}
+        ORDER BY rank DESC LIMIT ?`;
+      try {
+        const rows = this.adapter.all<any>(sql, [sanitized, sanitized, ...params, limit]);
+        return this.applyCompositeScoring(rows);
+      } catch { return []; }
+    }
+
+    const sql = `SELECT ke.*, MATCH(ke.content, ke.summary) AGAINST(? IN NATURAL LANGUAGE MODE) as rank
+      FROM knowledge_entries ke
+      WHERE MATCH(ke.content, ke.summary) AGAINST(? IN NATURAL LANGUAGE MODE) AND ${clauses.join(' AND ')}
+      ORDER BY rank DESC LIMIT ?`;
     try {
-      const rows = this.db.prepare(sql).all(...params) as any[];
+      const rows = this.adapter.all<any>(sql, [query, query, ...params, limit]);
       return this.applyCompositeScoring(rows);
     } catch { return []; }
   }
@@ -89,7 +118,6 @@ export class MemoryEngine extends MemoryEngineCrud {
       scored.sort((a, b) => b.score - a.score);
       return scored;
     } catch {
-      // Fallback to FTS-only on composite scoring error
       return rows.map(row => {
         const { rank, ...entry } = row;
         return { entry: entry as KnowledgeEntry, score: -rank, matchType: 'fts' };
@@ -99,9 +127,9 @@ export class MemoryEngine extends MemoryEngineCrud {
 
   private readScoringOptions(): CompositeScoreOptions {
     try {
-      const row = this.db.prepare(
+      const row = this.adapter.get<{ value: string }>(
         `SELECT value FROM decay_config WHERE key = 'enable_predictive'`,
-      ).get() as { value: string } | undefined;
+      );
       return { enablePredictive: row?.value === 'true' };
     } catch {
       return {};
@@ -111,9 +139,10 @@ export class MemoryEngine extends MemoryEngineCrud {
   // ─── Sessions ─────────────────────────────────────────────────────
   startSession(agentName?: string): string {
     const sid = `sess-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    this.db.prepare(
-      `INSERT INTO memory_sessions (session_id, agent_name) VALUES (?, ?)`
-    ).run(sid, agentName ?? null);
+    this.adapter.run(
+      `INSERT INTO memory_sessions (session_id, agent_name) VALUES (?, ?)`,
+      [sid, agentName ?? null],
+    );
     this.currentSessionId = sid;
     this.auditLog('SESSION_START', undefined, sid);
     return sid;
@@ -121,36 +150,41 @@ export class MemoryEngine extends MemoryEngineCrud {
 
   endSession(): void {
     if (!this.currentSessionId) return;
-    this.db.prepare(
-      `UPDATE memory_sessions SET ended_at = datetime('now'), status = 'ended' WHERE session_id = ?`
-    ).run(this.currentSessionId);
+    this.adapter.run(
+      `UPDATE memory_sessions SET ended_at = ${this.dialect.now()}, status = 'ended' WHERE session_id = ?`,
+      [this.currentSessionId],
+    );
     this.auditLog('SESSION_END', undefined, this.currentSessionId);
     this.currentSessionId = null;
   }
 
   listSessions(limit = 20): any[] {
-    return this.db.prepare(
-      'SELECT * FROM memory_sessions ORDER BY started_at DESC LIMIT ?'
-    ).all(limit) as any[];
+    return this.adapter.all<any>(
+      'SELECT * FROM memory_sessions ORDER BY started_at DESC LIMIT ?',
+      [limit],
+    );
   }
 
   // ─── Audit ────────────────────────────────────────────────────────
 
   auditLog(operation: string, entryId?: number, sessionId?: string): void {
-    this.db.prepare(
-      `INSERT INTO memory_audit (operation, entry_id, session_id) VALUES (?, ?, ?)`
-    ).run(operation, entryId ?? null, sessionId ?? this.currentSessionId ?? null);
+    this.adapter.run(
+      `INSERT INTO memory_audit (operation, entry_id, session_id) VALUES (?, ?, ?)`,
+      [operation, entryId ?? null, sessionId ?? this.currentSessionId ?? null],
+    );
   }
 
   listAudit(limit = 20, operation?: string): any[] {
     if (operation) {
-      return this.db.prepare(
-        'SELECT * FROM memory_audit WHERE operation = ? ORDER BY created_at DESC LIMIT ?'
-      ).all(operation, limit) as any[];
+      return this.adapter.all<any>(
+        'SELECT * FROM memory_audit WHERE operation = ? ORDER BY created_at DESC LIMIT ?',
+        [operation, limit],
+      );
     }
-    return this.db.prepare(
-      'SELECT * FROM memory_audit ORDER BY created_at DESC LIMIT ?'
-    ).all(limit) as any[];
+    return this.adapter.all<any>(
+      'SELECT * FROM memory_audit ORDER BY created_at DESC LIMIT ?',
+      [limit],
+    );
   }
 
   // ─── Scope Operations ─────────────────────────────────────────────
@@ -169,19 +203,21 @@ export class MemoryEngine extends MemoryEngineCrud {
     if (!validTransitions[currentScope]?.includes(targetScope)) return false;
 
     if (currentScope === 'USER' && targetScope === 'PROJECT' && projectId) {
-      this.db.prepare(
-        `UPDATE knowledge_entries SET scope = ?, project_id = ?, updated_at = datetime('now') WHERE id = ?`,
-      ).run(targetScope, projectId, entryId);
+      this.adapter.run(
+        `UPDATE knowledge_entries SET scope = ?, project_id = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
+        [targetScope, projectId, entryId],
+      );
     } else {
-      this.db.prepare(
-        `UPDATE knowledge_entries SET scope = ?, updated_at = datetime('now') WHERE id = ?`,
-      ).run(targetScope, entryId);
+      this.adapter.run(
+        `UPDATE knowledge_entries SET scope = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
+        [targetScope, entryId],
+      );
     }
 
-    this.db.prepare(
-      `INSERT INTO consolidation_log (entry_id, from_tier, to_tier, reason)
-       VALUES (?, ?, ?, ?)`,
-    ).run(entryId, currentScope, targetScope, `Promoted: ${currentScope} → ${targetScope}`);
+    this.adapter.run(
+      `INSERT INTO consolidation_log (entry_id, from_tier, to_tier, reason) VALUES (?, ?, ?, ?)`,
+      [entryId, currentScope, targetScope, `Promoted: ${currentScope} → ${targetScope}`],
+    );
 
     this.auditLog('PROMOTE', entryId);
     return true;
@@ -200,9 +236,10 @@ export class MemoryEngine extends MemoryEngineCrud {
     const currentScope = (entry.scope ?? 'USER') as KBScope;
     if (!validTransitions[currentScope]?.includes(targetScope)) return false;
 
-    this.db.prepare(
-      `UPDATE knowledge_entries SET scope = ?, updated_at = datetime('now') WHERE id = ?`
-    ).run(targetScope, entryId);
+    this.adapter.run(
+      `UPDATE knowledge_entries SET scope = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
+      [targetScope, entryId],
+    );
 
     this.auditLog('DEMOTE', entryId);
     return true;
@@ -225,22 +262,23 @@ export class MemoryEngine extends MemoryEngineCrud {
   // ─── Tool Usage (SA4E-18) ─────────────────────────────────────────
 
   incrementToolUsage(toolName: string): void {
-    this.db.prepare(`
+    this.adapter.run(`
       INSERT INTO tool_usage (tool_name, call_count, last_called_at)
-      VALUES (?, 1, datetime('now'))
+      VALUES (?, 1, ${this.dialect.now()})
       ON CONFLICT(tool_name) DO UPDATE SET
         call_count = call_count + 1,
-        last_called_at = datetime('now')
-    `).run(toolName);
+        last_called_at = ${this.dialect.now()}
+    `, [toolName]);
   }
 
   getToolUsage(toolName?: string): ToolUsageRow[] {
     return (toolName
-      ? this.db.prepare(
-          'SELECT tool_name, call_count, last_called_at FROM tool_usage WHERE tool_name = ?'
-        ).all(toolName)
-      : this.db.prepare(
-          'SELECT tool_name, call_count, last_called_at FROM tool_usage ORDER BY call_count DESC'
-        ).all()) as ToolUsageRow[];
+      ? this.adapter.all<ToolUsageRow>(
+          'SELECT tool_name, call_count, last_called_at FROM tool_usage WHERE tool_name = ?',
+          [toolName],
+        )
+      : this.adapter.all<ToolUsageRow>(
+          'SELECT tool_name, call_count, last_called_at FROM tool_usage ORDER BY call_count DESC',
+        ));
   }
 }

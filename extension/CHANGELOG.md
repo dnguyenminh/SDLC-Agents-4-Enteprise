@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.11.0] - 2026-07-18
+
+### Added
+- **SA4E-42: DatabaseAdapter Refactoring** — Engine layer overhaul with `DatabaseAdapter` interface + `SqliteDbAdapter` implementation. Memory, graph, indexer modules refactored. 66 test files, 570 tests pass.
+- **SA4E-47: LLM Context Chain for Document Indexing** — Enhanced analyzer (context chunking, entity/actor/rule extraction), ENHANCED_SYSTEM_PROMPT, LLM maxTokens 2048, TaskWorker context chain query, structured_map merge, full content extraction on ingest. 12 new test files.
+
+### Fixed
+- **drawio Export Tests** — `drawio-export.test.ts` + `mcp-drawio-dispatch.test.ts` updated for `content_base64` param; export-dependent tests skip gracefully when drawio CLI unavailable
+
+### Changed
+- **IndexerHttpClient** — 30s HTTP timeout to prevent silent KB ingestion failures
+- **Backend version** — synced to 1.11.0
+
 ## [1.10.0] - 2026-07-17
 
 ### Added

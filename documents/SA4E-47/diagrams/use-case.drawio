@@ -1,0 +1,99 @@
+<mxGraphModel dx="826" dy="417" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+    <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="sys-boundary" value="Document Indexing with LLM Context Chain" style="shape=umlFrame;whiteSpace=wrap;html=1;width=180;height=30;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=10;fontSize=14;fillColor=#f5f5f5;strokeColor=#666666;" parent="1" vertex="1">
+            <mxGeometry x="250" y="40" width="1100" height="1000" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor-dev" value="Developer&#10;(AI Agent)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" parent="1" vertex="1">
+            <mxGeometry x="80" y="250" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor-system" value="System&#10;(Background)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=12;" parent="1" vertex="1">
+            <mxGeometry x="80" y="650" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-full-content" value="UC-01: Gửi Full Content&#10;lên LLM (không truncate)&#10;[P0 - CRITICAL]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="380" y="120" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-context-chain" value="UC-02: Context Chain&#10;giữa các Sections&#10;[P1 - HIGH]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="380" y="280" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-expanded-extract" value="UC-03: Expanded LLM Extraction&#10;(summary, entities,&#10;actors, rules)&#10;[P0 - CRITICAL]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="680" y="120" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-structured-map" value="UC-04: Lưu vào&#10;structured_map (JSON)&#10;[P0 - CRITICAL]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="680" y="280" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-backward" value="UC-05: Backward&#10;Compatibility&#10;[P1 - HIGH]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="380" y="450" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-config" value="UC-06: Toggle Context&#10;Chain (config flag)&#10;[P2 - MEDIUM]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="680" y="450" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-chunking" value="UC-07: Auto Chunking&#10;cho content quá dài&#10;[P2 - MEDIUM]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="380" y="610" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-fallback" value="UC-08: Fallback về&#10;Keyword Extraction&#10;[P1 - HIGH]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="680" y="610" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-merge" value="UC-09: Merge File Metadata&#10;với LLM Data&#10;[P1 - HIGH]" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+            <mxGeometry x="530" y="760" width="220" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=none;" parent="1" source="actor-dev" target="uc-full-content" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=none;" parent="1" source="actor-dev" target="uc-context-chain" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=none;" parent="1" source="actor-dev" target="uc-expanded-extract" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=none;" parent="1" source="actor-dev" target="uc-structured-map" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=none;" parent="1" source="actor-dev" target="uc-config" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=none;" parent="1" source="actor-system" target="uc-chunking" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=none;" parent="1" source="actor-system" target="uc-fallback" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=none;" parent="1" source="actor-system" target="uc-merge" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=none;" parent="1" source="actor-dev" target="uc-backward" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-inc1" value="&lt;&lt;include&gt;&gt;" style="edgeStyle=none;dashed=1;endArrow=open;endSize=12;fontSize=10;" parent="1" source="uc-full-content" target="uc-chunking" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-inc2" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=none;dashed=1;endArrow=open;endSize=12;fontSize=10;" parent="1" source="uc-expanded-extract" target="uc-fallback" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-inc3" value="&lt;&lt;include&gt;&gt;" style="edgeStyle=none;dashed=1;endArrow=open;endSize=12;fontSize=10;" parent="1" source="uc-structured-map" target="uc-merge" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-title" value="Legend" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;" parent="1" vertex="1">
+            <mxGeometry x="1020" y="800" width="80" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p0" value="" style="ellipse;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+            <mxGeometry x="1020" y="840" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p0-text" value="P0 - CRITICAL" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1045" y="834" width="100" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p1" value="" style="ellipse;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+            <mxGeometry x="1020" y="870" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p1-text" value="P1 - HIGH" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1045" y="864" width="100" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p2" value="" style="ellipse;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+            <mxGeometry x="1020" y="900" width="16" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-p2-text" value="P2 - MEDIUM" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" parent="1" vertex="1">
+            <mxGeometry x="1045" y="894" width="100" height="24" as="geometry"/>
+        </mxCell>
+    </root>
+</mxGraphModel>

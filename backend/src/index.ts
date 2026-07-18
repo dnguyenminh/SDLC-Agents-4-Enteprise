@@ -51,7 +51,7 @@ async function main() {
   const memoryModule = registry.getModule('memory') as MemoryModule | undefined;
   if (memoryModule && memoryModule.status === 'ready') {
     const memEngine = memoryModule.getEngine();
-    const db = memEngine.getDb();
+    const db = memEngine.getDb() as any;
     // Include proxied child-server tools so find_tools can discover them (hidden but discoverable).
     const orchestrationModule = registry.getModule('orchestration') as OrchestrationModule | undefined;
     const proxiedTools = orchestrationModule?.getClientManager().getProxiedTools() ?? [];

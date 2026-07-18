@@ -1,0 +1,11 @@
+row,symbol_id,name,kind,relative_path,project_id,is_exported,complexity
+1,101,IndexingEngine,class,src/engine/indexer/indexing-engine.ts,proj-1,1,15
+2,102,indexFile,method,src/engine/indexer/indexing-engine.ts,proj-1,1,8
+3,103,MemoryEngineCrud,class,src/modules/memory/engine/crud.ts,proj-1,1,12
+4,104,insert,method,src/modules/memory/engine/crud.ts,proj-1,1,5
+5,105,GraphSyncService,class,src/engine/graph/graph-sync-service.ts,proj-1,1,10
+6,106,syncProjectSymbols,method,src/engine/graph/graph-sync-service.ts,proj-1,1,20
+7,107,DialectHelper,class,src/database/dialect/DialectHelper.ts,proj-1,1,6
+8,108,TreeSitterIndexer,class,src/engine/parsers/tree-sitter-indexer.ts,proj-1,1,18
+9,109,DatabaseAdapter,interface,src/database/adapters/DatabaseAdapter.ts,proj-1,1,0
+10,110,SqliteDbAdapter,class,src/modules/memory/task-queue/SqliteDbAdapter.ts,proj-1,1,3

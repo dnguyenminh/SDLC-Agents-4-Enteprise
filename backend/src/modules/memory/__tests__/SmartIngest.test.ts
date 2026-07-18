@@ -4,6 +4,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Database from 'better-sqlite3';
+import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 import { MemoryEngine } from '../engine/index.js';
 import { MEMORY_SCHEMA } from '../schema/index.js';
 import { handleSmartIngest, handleSmartIngestCleanup } from '../dispatchers/smart-ingest.js';
@@ -41,7 +42,7 @@ describe('handleSmartIngest', () => {
 
   beforeEach(() => {
     db = createTestDb();
-    engine = new MemoryEngine(db);
+    engine = new MemoryEngine(new SqliteDbAdapter(db));
     engine.startSession('test');
   });
 
@@ -170,7 +171,7 @@ describe('handleSmartIngestCleanup', () => {
 
   beforeEach(() => {
     db = createTestDb();
-    engine = new MemoryEngine(db);
+    engine = new MemoryEngine(new SqliteDbAdapter(db));
     engine.startSession('test');
   });
 

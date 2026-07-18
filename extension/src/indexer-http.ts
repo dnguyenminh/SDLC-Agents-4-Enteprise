@@ -64,8 +64,9 @@ export async function uploadDocumentFile(relPath: string, content: string, token
 export async function uploadSourceFiles(report: vscode.Progress<{ message?: string }>, token?: string): Promise<string> {
   const backendUrl = getBackendUrl();
   if (!backendUrl) return "❌ Backend URL not configured.";
+  const libraryExcludes = "{node_modules,dist,.git,build,out,backend,.opencode,vendor,packages,bower_components}/**";
   const files = await vscode.workspace.findFiles(
-    "**/*.{ts,js,kt,java,py,go,rs,tsx,jsx}", "{node_modules,dist,.git,build,out,backend}/**"
+    "**/*.{ts,js,kt,java,py,go,rs,tsx,jsx}", libraryExcludes
   );
   if (files.length === 0) return "ℹ️ No source files found";
   const url = `${backendUrl}/api/index/source`;
@@ -73,7 +74,7 @@ export async function uploadSourceFiles(report: vscode.Progress<{ message?: stri
   let errors = 0;
 
   for (let i = 0; i < files.length; i += 50) {
-    report.report({ message: `Uploading source files ${i + 1}/${files.length}...` });
+    report.report({ message: `Indexing project code ${i + 1}/${files.length}...` });
     const batch = files.slice(i, i + 50);
     const entries = await Promise.all(
       batch.map(async (file) => {
@@ -85,7 +86,7 @@ export async function uploadSourceFiles(report: vscode.Progress<{ message?: stri
     const success = await httpPost(url, { files: entries }, token, http);
     if (success) uploaded += batch.length; else errors += batch.length;
   }
-  return `✅ Uploaded ${uploaded} source files` + (errors > 0 ? `, ⚠️ Failed: ${errors}` : "");
+  return `✅ Indexed ${uploaded} project files` + (errors > 0 ? `, ⚠️ Failed: ${errors}` : "");
 }
 
 async function httpPost(url: string, payload: unknown, token: string | undefined, http: any): Promise<boolean> {

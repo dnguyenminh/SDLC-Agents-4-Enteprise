@@ -4,6 +4,68 @@
 
 1. **SOLID Coder** — Mọi code PHẢI tuân thủ SOLID principles (xem chi tiết bên dưới)
 2. **OOP Design Patterns bắt buộc** — PHẢI sử dụng Design Patterns phù hợp, KHÔNG viết code procedural/spaghetti
+3. **Code Comments bắt buộc** — Mọi code PHẢI có comment đầy đủ (xem section Code Comments bên dưới)
+
+## ⛔ Code Comments bắt buộc
+
+### Quy tắc chung
+
+Mọi code PHẢI có comment rõ ràng, hữu ích. Comment giải thích **WHY** (tại sao), không chỉ **WHAT** (cái gì).
+
+### Bắt buộc comment ở các vị trí sau
+
+| Vị trí | Yêu cầu | Ví dụ |
+|--------|----------|-------|
+| **File header** | Mô tả mục đích file (1-3 dòng) | `/** SA4E-41 — GraphSyncService. Projects code symbols into graph_nodes. */` |
+| **Class/Interface** | TSDoc/JSDoc/KDoc mô tả trách nhiệm | `/** Manages provider lifecycle: connect, scan, disconnect. */` |
+| **Public function/method** | TSDoc/JSDoc/KDoc với @param, @returns, @throws | `/** Sync symbols to graph. @param projectId - tenant ID */` |
+| **Complex logic** | Inline comment giải thích WHY | `// Fibonacci sphere: distributes nodes evenly on 3D surface` |
+| **Business rules** | Reference tới BR-ID hoặc UC-ID | `// BR-03: Rate limit 100 req/min per API key` |
+| **Workarounds/Hacks** | Giải thích tại sao cần hack + TODO fix | `// HACK: SQLite doesn't support SKIP LOCKED, use busy timeout instead` |
+| **Non-obvious parameters** | Giải thích magic numbers | `const BATCH = 200; // Optimal batch for SQLite WAL throughput` |
+
+### KHÔNG cần comment (tránh noise)
+
+- Getter/setter đơn giản (`getName()` → không cần comment "gets the name")
+- Code đã tự mô tả qua naming (`isUserLoggedIn()` → tên đã rõ)
+- Import statements
+- Closing braces
+
+### Format theo ngôn ngữ
+
+**TypeScript / JavaScript:**
+```typescript
+/**
+ * Resolve available tools from all connected MCP servers.
+ * Merges tools from child servers, deduplicates by name.
+ * @param projectId - Tenant project identifier for scoping
+ * @returns Array of tool definitions with server origin
+ * @throws ConnectionError if orchestrator is unreachable
+ */
+export async function resolveTools(projectId: string): Promise<ToolDef[]> {
+```
+
+**Kotlin:**
+```kotlin
+/**
+ * Validate provider configuration before connection attempt.
+ * Checks transport compatibility, required fields, and URL format.
+ * @param config Provider configuration to validate
+ * @return ValidationResult with errors list (empty = valid)
+ * @throws IllegalArgumentException if config is null
+ */
+fun validateProviderConfig(config: ProviderConfig): ValidationResult {
+```
+
+### Checklist code review (thêm vào checklist hiện có)
+
+- [ ] File header comment mô tả mục đích?
+- [ ] Tất cả public classes/interfaces có TSDoc/JSDoc/KDoc?
+- [ ] Tất cả public methods có doc comment với @param/@returns?
+- [ ] Complex logic có inline comment giải thích WHY?
+- [ ] Magic numbers có comment giải thích?
+- [ ] Workarounds/hacks có TODO + giải thích?
+- [ ] Không có comments thừa (restating obvious code)?
 
 ## ⛔ Giới hạn kích thước bắt buộc
 
@@ -225,3 +287,9 @@ try {
 - [ ] Naming rõ ràng, tự mô tả (không cần comment giải thích tên)?
 - [ ] Error handling đúng cách (không swallow errors)?
 - [ ] Mọi exception đều được thông báo cho user?
+- [ ] File header comment mô tả mục đích?
+- [ ] Public classes/interfaces có TSDoc/JSDoc/KDoc?
+- [ ] Public methods có doc comment (@param/@returns)?
+- [ ] Complex logic có inline comment giải thích WHY?
+- [ ] Magic numbers có comment giải thích?
+- [ ] Workarounds có TODO + giải thích?

@@ -1,0 +1,9 @@
+{
+  "src/**/*.ts": [
+    "eslint --max-warnings 0",
+    "bash -c 'npx tsc --noEmit'"
+  ],
+  "src/**/*.{ts,test.ts}": [
+    "vitest related --run"
+  ]
+}

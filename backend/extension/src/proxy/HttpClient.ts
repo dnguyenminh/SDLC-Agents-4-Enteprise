@@ -46,6 +46,9 @@ export class HttpClient {
 
   async get<T>(path: string, timeout?: number, _retried = false): Promise<T> {
     const headers = await this.getAuthHeaders();
+    if (!headers["Authorization"] && !path.startsWith("/health")) {
+      throw new HttpError(401, "Not authenticated — please login to use this feature.");
+    }
     const url = this._baseUrl + path;
     const response = await fetch(url, {
       method: "GET",
@@ -64,6 +67,9 @@ export class HttpClient {
 
   async post<T>(path: string, body: unknown, timeout?: number, _retried = false): Promise<T> {
     const headers = await this.getAuthHeaders();
+    if (!headers["Authorization"]) {
+      throw new HttpError(401, "Not authenticated — please login to use this feature.");
+    }
     const url = this._baseUrl + path;
     const response = await fetch(url, {
       method: "POST",
@@ -87,6 +93,9 @@ export class HttpClient {
 
   async stream(path: string, body: unknown, timeout?: number, _retried = false): Promise<ReadableStream<Uint8Array>> {
     const headers = await this.getAuthHeaders();
+    if (!headers["Authorization"]) {
+      throw new HttpError(401, "Not authenticated — please login to use this feature.");
+    }
     const url = this._baseUrl + path;
     const response = await fetch(url, {
       method: "POST",

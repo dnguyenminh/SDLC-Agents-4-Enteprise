@@ -271,11 +271,11 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
   afterEach(() => ctx.close());
 
   it('IT-01: buildReadFilter enforces strict isolation against real DB (SA4E-31)', () => {
-    ctx.engine.getDb().prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
+    ((ctx.engine.getDb() as any) as any).prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
     const pCtx = createProjectContext('app-A', 'u1');
     const { clause, params } = buildReadFilter(pCtx);
     const sql = `SELECT * FROM knowledge_entries WHERE archived = 0 AND ${clause}`;
-    const rows = ctx.engine.getDb().prepare(sql).all(...params) as any[];
+    const rows = (ctx.engine.getDb() as any).prepare(sql).all(...params) as any[];
     const summaries = rows.map((r: any) => r.summary);
     expect(summaries).toContain('proj-A');       // PROJECT app-A
     expect(summaries).toContain('shared');        // SHARED granted for app-A
@@ -292,10 +292,10 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
 
     const pCtx = createProjectContext('app-A', 'u1');
     const { clause, params } = buildIngestFileDeleteClause(pCtx, '/test/file.md');
-    ctx.engine.getDb().prepare(clause).run(...params);
+    (ctx.engine.getDb() as any).prepare(clause).run(...params);
 
     // Only app-A entry should be deleted
-    const remaining = ctx.engine.getDb().prepare(
+    const remaining = (ctx.engine.getDb() as any).prepare(
       "SELECT * FROM knowledge_entries WHERE source = '/test/file.md'",
     ).all() as any[];
     expect(remaining.length).toBe(1);

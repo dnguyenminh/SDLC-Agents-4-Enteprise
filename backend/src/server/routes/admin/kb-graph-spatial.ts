@@ -1,9 +1,8 @@
 import { Hono } from 'hono';
 import * as fs from 'fs';
-import * as path from 'path';
 import Database from 'better-sqlite3';
-import { loadConfig, getWorkspacePath } from '../../../config/index.js';
 import { getKbEntries, getKbEntryCount } from '../../../admin/admin-db.js';
+import { getIndexDbPath } from '../../../admin/db/core.js';
 import type { AdminContext } from './context.js';
 
 export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
@@ -21,7 +20,7 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
     try {
       // SA4E-41: count only the requesting tenant's code symbols (fail-closed).
       const pid = ctx.getRequestProjectId(c);
-      const indexDbPath = path.resolve(getWorkspacePath(), '.code-intel', 'index.db');
+      const indexDbPath = getIndexDbPath();
       if (pid && fs.existsSync(indexDbPath)) {
         const indexDb = new Database(indexDbPath, { readonly: true });
         const row = indexDb.prepare("SELECT COUNT(*) as cnt FROM symbols WHERE project_id = ? AND kind IN ('function','class','interface','method','type','enum','constructor')").get(pid) as { cnt: number } | undefined;

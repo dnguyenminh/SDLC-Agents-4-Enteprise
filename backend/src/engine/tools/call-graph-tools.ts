@@ -2,7 +2,8 @@
  * KSA-154: MCP Tool Registration for code_callers and code_callees.
  */
 
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
+import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { GraphRepository } from '../database/graph-repository.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { CallGraphService, CallGraphResponse } from '../graph/call-graph-service.js';
@@ -49,7 +50,8 @@ export function handleCodeCallers(args: Record<string, unknown>, db: Database.Da
   const fileFilter = args.file_filter as string | undefined;
   const kindFilter = (args.kind_filter as string) ?? 'calls';
 
-  const graphRepo = new GraphRepository(db, projectId);
+  const adapter = new SqliteDbAdapter(db);
+  const graphRepo = new GraphRepository(adapter, projectId);
   const resolver = new SymbolResolver(db, projectId);
   const service = new CallGraphService(graphRepo, resolver);
 
@@ -66,7 +68,8 @@ export function handleCodeCallees(args: Record<string, unknown>, db: Database.Da
   const fileFilter = args.file_filter as string | undefined;
   const includeExternal = (args.include_external as boolean) ?? true;
 
-  const graphRepo = new GraphRepository(db, projectId);
+  const adapter = new SqliteDbAdapter(db);
+  const graphRepo = new GraphRepository(adapter, projectId);
   const resolver = new SymbolResolver(db, projectId);
   const service = new CallGraphService(graphRepo, resolver);
 

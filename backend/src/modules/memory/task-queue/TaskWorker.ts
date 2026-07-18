@@ -1,12 +1,13 @@
 /**
- * TaskWorker — SA4E-44
+ * TaskWorker — SA4E-44 / SA4E-47
  * Background polling worker for pending tasks.
  * Non-blocking start, exponential backoff, graceful shutdown.
+ * Supports context chain + structured_map persistence.
  */
 
 import type { Logger } from 'pino';
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
-import type { TagAnalyzerService } from '../llm/analyzer.js';
+import type { TagAnalyzerService, TagAnalysisResult } from '../llm/analyzer.js';
 import type { EmbeddingService } from '../../../engine/parsers/embedding/EmbeddingService.js';
 import { PendingTaskRepository } from './PendingTaskRepository.js';
 import { TaskType } from './models.js';
@@ -14,6 +15,8 @@ import type { PendingTask } from './models.js';
 import type { TaskWorkerConfig } from './TaskWorkerConfig.js';
 import { DEFAULT_TASK_WORKER_CONFIG } from './TaskWorkerConfig.js';
 import type { MemoryEngine } from '../engine/index.js';
+import type { ContextChainInput, StructuredMapData } from '../llm/types.js';
+import { safeParseStructuredMap } from '../llm/types.js';
 
 export interface TaskWorkerStats {
   pending: number;
@@ -29,10 +32,9 @@ export class TaskWorker {
   private readonly config: TaskWorkerConfig;
   private readonly logger: Logger;
   private readonly engine: MemoryEngine;
-
   private tagAnalyzer?: TagAnalyzerService;
   private embeddingService?: EmbeddingService;
-
+  private llmService?: { getConfig(): { model: string } };
   private running = false;
   private pollTimer: ReturnType<typeof setTimeout> | null = null;
   private consecutiveEmpty = 0;
@@ -52,15 +54,10 @@ export class TaskWorker {
     this.config = { ...DEFAULT_TASK_WORKER_CONFIG, ...config };
   }
 
-  setTagAnalyzer(analyzer: TagAnalyzerService): void {
-    this.tagAnalyzer = analyzer;
-  }
+  setTagAnalyzer(analyzer: TagAnalyzerService): void { this.tagAnalyzer = analyzer; }
+  setEmbeddingService(service: EmbeddingService): void { this.embeddingService = service; }
+  setLlmService(service: { getConfig(): { model: string } }): void { this.llmService = service; }
 
-  setEmbeddingService(service: EmbeddingService): void {
-    this.embeddingService = service;
-  }
-
-  /** Start the polling loop. Non-blocking (BR-8). */
   start(): void {
     if (this.running) return;
     this.running = true;
@@ -68,46 +65,26 @@ export class TaskWorker {
     this.schedulePoll(0);
   }
 
-  /** Graceful shutdown — waits for current task to finish. */
   stop(): Promise<void> {
     if (!this.running) return Promise.resolve();
     this.running = false;
-    if (this.pollTimer) {
-      clearTimeout(this.pollTimer);
-      this.pollTimer = null;
-    }
-    if (!this.processing) {
-      this.logger.info('TaskWorker stopped');
-      return Promise.resolve();
-    }
-    return new Promise<void>(resolve => {
-      this.shutdownResolve = resolve;
-    });
+    if (this.pollTimer) { clearTimeout(this.pollTimer); this.pollTimer = null; }
+    if (!this.processing) { this.logger.info('TaskWorker stopped'); return Promise.resolve(); }
+    return new Promise<void>(resolve => { this.shutdownResolve = resolve; });
   }
 
-  /** Recover stale tasks on startup (UC-3). */
   recoverStaleTasks(): number {
-    const recovered = this.repo.recoverStaleTasks(
-      this.config.staleThreshold,
-    );
-    if (recovered > 0) {
-      this.logger.info({ recovered }, 'Recovered stale tasks');
-    }
+    const recovered = this.repo.recoverStaleTasks(this.config.staleThreshold);
+    if (recovered > 0) this.logger.info({ recovered }, 'Recovered stale tasks');
     return recovered;
   }
 
   getStats(): TaskWorkerStats {
     const dbStats = this.repo.getStats();
-    return {
-      ...dbStats,
-      isRunning: this.running,
-      lastPollAt: this.lastPollAt,
-    };
+    return { ...dbStats, isRunning: this.running, lastPollAt: this.lastPollAt };
   }
 
-  getRepository(): PendingTaskRepository {
-    return this.repo;
-  }
+  getRepository(): PendingTaskRepository { return this.repo; }
 
   // ── Private ──
 
@@ -117,10 +94,7 @@ export class TaskWorker {
   }
 
   private async poll(): Promise<void> {
-    if (!this.running) {
-      this.finishShutdown();
-      return;
-    }
+    if (!this.running) { this.finishShutdown(); return; }
     this.lastPollAt = new Date().toISOString();
     try {
       const task = this.repo.claimNext();
@@ -128,8 +102,7 @@ export class TaskWorker {
         this.consecutiveEmpty++;
         const delay = Math.min(
           this.config.baseInterval * Math.pow(2, this.consecutiveEmpty),
-          this.config.maxInterval,
-        );
+          this.config.maxInterval);
         this.schedulePoll(delay);
         return;
       }
@@ -155,14 +128,10 @@ export class TaskWorker {
   private async processTask(task: PendingTask): Promise<void> {
     try {
       const entry = this.engine.findById(task.entry_id);
-      if (!entry) {
-        this.repo.markFailed(task.id, 'entry_not_found');
-        return;
-      }
+      if (!entry) { this.repo.markFailed(task.id, 'entry_not_found'); return; }
       let payload: any;
       try { payload = JSON.parse(task.payload); }
       catch { this.repo.markFailed(task.id, 'invalid_json_payload'); return; }
-
       switch (task.task_type) {
         case TaskType.TAG_ENRICHMENT:
           await this.processTagEnrichment(task, payload);
@@ -173,21 +142,25 @@ export class TaskWorker {
         default:
           this.repo.markFailed(task.id, `unknown_task_type: ${task.task_type}`);
       }
-    } catch (err: any) {
-      this.handleTaskError(task, err);
-    }
+    } catch (err: any) { this.handleTaskError(task, err); }
   }
 
-  private async processTagEnrichment(
-    task: PendingTask, payload: any,
-  ): Promise<void> {
-    if (!this.tagAnalyzer) {
-      this.repo.resetForRetry(task.id);
-      return;
+  // ── SA4E-47: Enhanced Tag Enrichment ──
+
+  private async processTagEnrichment(task: PendingTask, payload: any): Promise<void> {
+    if (!this.tagAnalyzer) { this.repo.resetForRetry(task.id); return; }
+
+    const context = this.config.enableContextChain
+      ? await this.loadPreviousContext(task.entry_id, payload.source)
+      : null;
+
+    if (context) {
+      this.logger.debug({ entry_id: task.entry_id, prev_section_id: context.previous_section_id,
+        component: 'TaskWorker' }, 'Context chain applied');
     }
-    const result = await this.tagAnalyzer.analyzeTags(
-      payload.content, payload.options,
-    );
+
+    const result = await this.tagAnalyzer.analyzeTags(payload.content, payload.options, context);
+
     if (result.appliedTags.length > 0) {
       const existing = payload.existing_tags
         ? payload.existing_tags.split(',').map((t: string) => t.trim()).filter(Boolean)
@@ -195,19 +168,94 @@ export class TaskWorker {
       const merged = [...new Set([...existing, ...result.appliedTags])];
       this.engine.updateTags(task.entry_id, merged.join(','));
     }
+
+    await this.updateEntryStructuredMap(task.entry_id, result, context);
     this.repo.markCompleted(task.id);
   }
 
-  private async processVectorEmbedding(
-    task: PendingTask, payload: any,
-  ): Promise<void> {
-    if (!this.embeddingService) {
-      this.repo.resetForRetry(task.id);
-      return;
+  private async loadPreviousContext(
+    entryId: number,
+    source: string | null,
+  ): Promise<ContextChainInput | null> {
+    if (!source) return null;
+    try {
+      const prevEntry = (this.engine.getDb() as any).prepare(
+        'SELECT id, structured_map FROM knowledge_entries WHERE source = ? AND id < ? ORDER BY id DESC LIMIT 1',
+      ).get(source, entryId);
+      if (!prevEntry) {
+        this.logger.debug({ entry_id: entryId, component: 'TaskWorker' },
+          'No previous section found');
+        return null;
+      }
+      const map = safeParseStructuredMap(prevEntry.structured_map);
+      if (!map.summary && (!map.business_entities || map.business_entities.length === 0)) {
+        this.logger.debug({ entry_id: entryId, component: 'TaskWorker' },
+          'Previous section has no extractable data');
+        return null;
+      }
+      return {
+        previous_section_id: prevEntry.id,
+        summary: (map.summary || '').slice(0, this.config.contextChainMaxLength),
+        business_entities: (map.business_entities || []).slice(0, 5),
+        actors: (map.actors || []).slice(0, 5),
+        business_rules: (map.business_rules || []).slice(0, 10),
+      };
+    } catch (err) {
+      this.logger.warn({ entry_id: entryId, err, component: 'TaskWorker' },
+        'Failed to load previous context');
+      return null;
     }
+  }
+
+  private async updateEntryStructuredMap(
+    entryId: number,
+    result: TagAnalysisResult,
+    context?: ContextChainInput | null,
+  ): Promise<void> {
+    try {
+      const entry = this.engine.findById(entryId);
+      if (!entry) return;
+      const existing = safeParseStructuredMap(entry.structured_map);
+      const structuredMap: StructuredMapData = {
+        tags: result.appliedTags,
+        summary: result.summary || existing.summary || '',
+        business_entities: result.business_entities || [],
+        actors: result.actors || [],
+        business_rules: result.business_rules || [],
+        fileCreatedAt: existing.fileCreatedAt,
+        fileAuthor: existing.fileAuthor,
+        fileVersion: existing.fileVersion,
+        context_chain: context ? {
+          previous_section_id: context.previous_section_id,
+          previous_summary: context.summary,
+        } : undefined,
+        extraction_meta: {
+          model: this.llmService?.getConfig()?.model || 'unknown',
+          timestamp: new Date().toISOString(),
+          fallback_used: result.fallbackUsed,
+          context_chain_enabled: this.config.enableContextChain,
+        },
+      };
+      let jsonStr = JSON.stringify(structuredMap);
+      if (jsonStr.length > (this.config.structuredMapMaxSize ?? 102400)) {
+        structuredMap.business_rules = (structuredMap.business_rules || []).slice(0, 5);
+        structuredMap.actors = (structuredMap.actors || []).slice(0, 3);
+        this.logger.warn({ entry_id: entryId, size: jsonStr.length, component: 'TaskWorker' },
+          'structured_map truncated due to size limit');
+        jsonStr = JSON.stringify(structuredMap);
+      }
+      this.engine.updateStructuredMap(entryId, jsonStr);
+    } catch (err) {
+      this.logger.warn({ entry_id: entryId, err, component: 'TaskWorker' },
+        'structured_map update failed');
+    }
+  }
+
+  private async processVectorEmbedding(task: PendingTask, payload: any): Promise<void> {
+    if (!this.embeddingService) { this.repo.resetForRetry(task.id); return; }
     const vector = await this.embeddingService.generateEmbedding(payload.text);
     const buf = Buffer.from(new Float32Array(vector).buffer);
-    this.engine.getDb().prepare(
+    (this.engine.getDb() as any).prepare(
       'UPDATE knowledge_entries SET vector = ? WHERE id = ?',
     ).run(buf, task.entry_id);
     this.repo.markCompleted(task.id);

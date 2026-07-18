@@ -1,0 +1,11 @@
+id,message,expected_verdict,expected_reason
+SM-01,"ok",skip,"no business/technical value"
+SM-02,"thanks",skip,"no business/technical value"
+SM-03,"got it",skip,"no business/technical value"
+SM-04,"sure",skip,"no business/technical value"
+SM-05,"sounds good",skip,"no business/technical value"
+SM-06,"nice",skip,"no business/technical value"
+SM-07,"yes",skip,"no business/technical value"
+SM-08,"alright",skip,"no business/technical value"
+SM-09,"cool",skip,"no business/technical value"
+SM-10,"lgtm",skip,"no business/technical value"

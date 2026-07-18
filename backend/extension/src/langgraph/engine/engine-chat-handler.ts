@@ -5,7 +5,7 @@
 
 import * as crypto from "crypto";
 import { debugLog, debugError } from "../../debug-logger";
-import { ChatExtToWebviewMessage } from "../chat-panel/message-protocol";
+import { ChatExtToWebviewMessage } from "../../chat-panel/message-protocol";
 import { StreamHandler } from "../core/stream-handler";
 import { PipelineState, ChatMessage } from "../core/state";
 

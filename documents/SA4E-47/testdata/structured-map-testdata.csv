@@ -1,0 +1,7 @@
+test_case_id,entry_id,existing_structured_map,llm_returned_data,expected_structured_map_size,expected_truncation,description
+UT-09,1,"{}","{""tags"":[{""tag"":""auth""}],""summary"":""test"",""business_entities"":[""E1""],""actors"":[""A1""],""business_rules"":[""R1""]}",<500,no,Basic passage through applyThresholdWithExtended
+IT-01,1,"{}","{""tags"":[{""tag"":""auth""}],""summary"":""Auth flow"",""business_entities"":[""User""],""actors"":[""Admin""],""business_rules"":[""Rule1""]}",<2000,no,Full structured_map population after LLM
+IT-02,2,"{""summary"":""Auth flow desc""}","{""tags"":[{""tag"":""auth""}],""summary"":""Section 2""}",<2000,no,Context chain merge — previous section data preserved
+IT-03,3,"{}","{""tags"":[{""tag"":""tag1""}]}",<500,no,Old format upgrade — empty to populated
+IT-07,4,"{}","{""tags"":[{""tag"":""error""}]}",unchanged,structured_map not updated,structured_map update failure — tags still saved
+SIT-02,6,"{""business_rules"":[""r1"",""r2"",...""r10""],""actors"":[""a1"",""a2"",""a3"",""a4"",""a5""],""fileCreatedAt"":""2026-01-01""}",same + extra data,>102400,true,business_rules truncated to 5

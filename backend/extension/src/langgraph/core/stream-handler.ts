@@ -4,7 +4,7 @@
  * Token events are debounced (50ms); status/complete/error flush immediately.
  */
 
-import { ChatExtToWebviewMessage } from "../chat-panel/message-protocol";
+import { ChatExtToWebviewMessage } from "../../chat-panel/message-protocol";
 
 /** Maximum buffer size to prevent memory issues */
 const MAX_BUFFER_SIZE = 100;

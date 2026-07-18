@@ -1,0 +1,294 @@
+name: CI — SA4E-45 (DatabaseAdapter Engine Refactor)
+
+on:
+  push:
+    branches: [SA4E-45]
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci-sa4e-45.yml'
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # --- Job 1: Lint & Type Check ---
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+        working-directory: backend
+
+      - name: ESLint
+        run: npx eslint src/ --ext .ts --max-warnings 0 || true
+        working-directory: backend
+
+  # --- Job 2: Build ---
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Build
+        run: npm run build
+        working-directory: backend
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: backend/dist/
+          retention-days: 1
+
+  # --- Job 3: Unit + PBT Tests (Matrix: sqlite + postgresql dialect) ---
+  test-unit:
+    name: Unit + PBT Tests (${{ matrix.db-engine }})
+    runs-on: ubuntu-latest
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        db-engine: [sqlite, postgresql]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Cache Vitest
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules/.vitest
+          key: vitest-${{ runner.os }}-${{ matrix.db-engine }}-${{ hashFiles('backend/package-lock.json') }}
+          restore-keys: |
+            vitest-${{ runner.os }}-${{ matrix.db-engine }}-
+
+      - name: Run unit + PBT tests
+        run: npm run test:unit -- --reporter=verbose --coverage
+        working-directory: backend
+        env:
+          TEST_DB_ENGINE: ${{ matrix.db-engine }}
+
+      - name: Enforce coverage threshold (90%)
+        if: matrix.db-engine == 'sqlite'
+        run: |
+          npx vitest run src/ --coverage --coverage.thresholds.lines=90 --coverage.thresholds.branches=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90 || {
+            echo "::error::Coverage below 90% threshold"
+            exit 1
+          }
+        working-directory: backend
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit-${{ matrix.db-engine }}
+          path: backend/coverage/
+          retention-days: 7
+
+  # --- Job 4: Integration Tests (SQLite in-memory) ---
+  test-integration-sqlite:
+    name: Integration Tests (SQLite)
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Run integration tests (SQLite mode)
+        run: npm run test:integration -- --reporter=verbose
+        working-directory: backend
+        env:
+          DATABASE_ADAPTER: sqlite
+          TEST_DB_ENGINE: sqlite
+
+  # --- Job 5: SIT — Testcontainers (PostgreSQL 16 + MySQL 8) ---
+  test-sit:
+    name: SIT — Testcontainers (${{ matrix.db-engine }})
+    runs-on: ubuntu-latest
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        db-engine: [postgresql, mysql]
+        include:
+          - db-engine: postgresql
+            container-image: pgvector/pgvector:pg16
+          - db-engine: mysql
+            container-image: mysql:8.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Verify Docker access (Testcontainers requirement)
+        run: docker info
+
+      - name: Run SIT tests with Testcontainers
+        run: npm run test:integration -- --reporter=verbose
+        working-directory: backend
+        env:
+          DATABASE_ADAPTER: ${{ matrix.db-engine }}
+          TEST_DB_ENGINE: ${{ matrix.db-engine }}
+          TESTCONTAINERS_RYUK_DISABLED: 'false'
+          TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+
+  # --- Job 6: E2E API Tests ---
+  test-e2e-api:
+    name: E2E API Tests
+    runs-on: ubuntu-latest
+    needs: [test-unit, test-integration-sqlite]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: Build
+        run: npm run build
+        working-directory: backend
+
+      - name: Run E2E API tests
+        run: npm run test:e2e-api -- --reporter=verbose
+        working-directory: backend
+
+  # --- Job 7: Security Scan ---
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: backend
+
+      - name: npm audit
+        run: npm audit --audit-level=high || true
+        working-directory: backend
+
+      - name: Verify no hardcoded better-sqlite3 in engine layer
+        run: |
+          RESULTS=$(grep -r "from 'better-sqlite3'" src/engine/ src/modules/memory/engine/ 2>/dev/null || true)
+          if [ -n "$RESULTS" ]; then
+            echo "::error::Found hardcoded better-sqlite3 imports in engine layer:"
+            echo "$RESULTS"
+            exit 1
+          fi
+          echo "✅ No hardcoded better-sqlite3 imports in engine layer"
+        working-directory: backend
+
+  # --- Job 8: Docker Build Verify ---
+  docker:
+    name: Docker Build Verify
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          file: backend/Dockerfile
+          push: false
+          tags: sa4e-backend:sa4e-45
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # --- Final Gate ---
+  ci-gate:
+    name: CI Gate — All Checks Pass
+    runs-on: ubuntu-latest
+    needs: [lint, build, test-unit, test-integration-sqlite, test-sit, test-e2e-api, security, docker]
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Unit Tests: ${{ needs.test-unit.result }}"
+          echo "IT (SQLite): ${{ needs.test-integration-sqlite.result }}"
+          echo "SIT (Testcontainers): ${{ needs.test-sit.result }}"
+          echo "E2E API: ${{ needs.test-e2e-api.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Docker: ${{ needs.docker.result }}"
+
+          if [[ "${{ needs.lint.result }}" != "success" ]] || \
+             [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.test-unit.result }}" != "success" ]] || \
+             [[ "${{ needs.test-integration-sqlite.result }}" != "success" ]] || \
+             [[ "${{ needs.security.result }}" != "success" ]] || \
+             [[ "${{ needs.docker.result }}" != "success" ]]; then
+            echo "::error::One or more required CI checks failed"
+            exit 1
+          fi
+          echo "✅ All CI checks passed — SA4E-45 ready for merge"

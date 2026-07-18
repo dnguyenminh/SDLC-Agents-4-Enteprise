@@ -1,0 +1,11 @@
+id,content,tags,source,type,expected_cleanup_verdict
+UF-01,"Architecture decision: use event-driven pattern for notifications","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",ingest
+UF-02,"ok thanks","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",skip
+UF-03,"Bug: memory leak in connection pool when max connections exceeded","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",ingest
+UF-04,"sure","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",skip
+UF-05,"Decision: rate limit API at 100 req/min per client using token bucket","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",ingest
+UF-06,"got it","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",skip
+UF-07,"Workflow: deploy requires security review sign-off before production push","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",ingest
+UF-08,"nice","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",skip
+UF-09,"Technical: use SHA-256 hash of first 500 chars for dedup check","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",ingest
+UF-10,"alright","chat,stream,user,unfiltered","/chat-prompt","CONTEXT",skip

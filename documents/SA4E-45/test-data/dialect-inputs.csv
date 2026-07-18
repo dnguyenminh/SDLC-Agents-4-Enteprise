@@ -1,0 +1,9 @@
+row,engine,table_name,columns,conflict_key,update_columns,expected_prefix
+1,sqlite,knowledge_entries,"id,content,tags",id,"content,tags",INSERT OR REPLACE INTO
+2,postgresql,knowledge_entries,"id,content,tags",id,"content,tags",INSERT INTO
+3,sqlite,graph_nodes,"entry_id,label",entry_id,,INSERT OR IGNORE INTO
+4,postgresql,graph_nodes,"entry_id,label",entry_id,,INSERT INTO
+5,mysql,knowledge_entries,"id,content,tags",id,"content,tags",INSERT INTO
+6,sqlite,files,"id,path,content_hash",path,"content_hash",INSERT OR REPLACE INTO
+7,postgresql,files,"id,path,content_hash",path,"content_hash",INSERT INTO
+8,sqlite,symbols,"id,name,kind,file_id",id,"name,kind",INSERT OR REPLACE INTO

@@ -24,7 +24,7 @@ export function createSupersessionChain(
   newId: number,
   oldId: number,
 ): ChainResult {
-  const db = engine.getDb();
+  const db = engine.getDb() as any;
 
   const target = db.prepare('SELECT id FROM knowledge_entries WHERE id = ?').get(oldId);
   if (!target) return { ok: false, reason: 'ENTRY_NOT_FOUND' };
@@ -57,7 +57,7 @@ export function detectCircular(
 ): boolean {
   if (newId === oldId) return true;
 
-  const db = engine.getDb();
+  const db = engine.getDb() as any;
   const visited = new Set<number>([oldId]);
   const queue = [oldId];
 

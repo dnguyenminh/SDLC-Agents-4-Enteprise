@@ -6,6 +6,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
+import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { SymbolResolver } from '../symbol-resolver.js';
 import { GraphRepository } from '../../database/graph-repository.js';
 import { CallGraphService } from '../call-graph-service.js';
@@ -78,14 +79,14 @@ describe('SA4E-41 SEC-01 graph tool isolation (two tenants)', () => {
   });
 
   it('GraphRepository.findCallers of a shared symbol is tenant-scoped', () => {
-    const callersB = new GraphRepository(db, PID_B).findCallers('sharedFn');
+    const callersB = new GraphRepository(new SqliteDbAdapter(db), PID_B).findCallers('sharedFn');
     expect(callersB.map(c => c.name)).toEqual(['callerBravo']);
-    const callersA = new GraphRepository(db, PID_A).findCallers('sharedFn');
+    const callersA = new GraphRepository(new SqliteDbAdapter(db), PID_A).findCallers('sharedFn');
     expect(callersA.map(c => c.name)).toEqual(['callerAlpha']);
   });
 
   it('CallGraphService.findCallers does not leak across tenants', () => {
-    const repoB = new GraphRepository(db, PID_B);
+    const repoB = new GraphRepository(new SqliteDbAdapter(db), PID_B);
     const svcB = new CallGraphService(repoB, new SymbolResolver(db, PID_B));
     const res = svcB.findCallers('sharedFn', 1, 20);
     expect(res.results.every(r => r.symbol !== 'callerAlpha')).toBe(true);
@@ -119,7 +120,7 @@ describe('SA4E-41 SEC-01 graph tool isolation (two tenants)', () => {
 
   it('fail-closed: undefined projectId yields no graph data', () => {
     expect(new SymbolResolver(db, undefined).resolve('sharedFn').length).toBe(0);
-    expect(new GraphRepository(db, undefined).findCallers('sharedFn').length).toBe(0);
+    expect(new GraphRepository(new SqliteDbAdapter(db), undefined).findCallers('sharedFn').length).toBe(0);
     expect([...new GraphLoader(db, undefined).loadCallGraph().values()].length).toBe(0);
   });
 });

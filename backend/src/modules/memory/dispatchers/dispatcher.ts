@@ -81,7 +81,7 @@ export class MemoryToolDispatcher {
     switch (resolved) {
       case 'mem_search': return handleSearch(this.engine, this.scopeCtx, merged);
       case 'mem_ingest': return handleIngest(this.engine, this.scopeCtx, this.tagAnalyzer, merged, this.dbAdapter, this.embeddingAvailable);
-      case 'mem_ingest_file': return handleIngestFile(this.engine, this.scopeCtx, this.workspace, merged, this.convertResolver);
+      case 'mem_ingest_file': return handleIngestFile(this.engine, this.scopeCtx, this.workspace, merged, this.convertResolver, this.dbAdapter, this.embeddingAvailable);
       case 'mem_pin': return handlePin(merged);
       case 'mem_map': return handleMap(merged);
       case 'mem_crud': return handleCrud(this.engine, this.scopeCtx, merged);

@@ -1,0 +1,11 @@
+id,input_message,mock_llm_response,expected_parse_result,notes
+LR-01,"Business decision message","{""verdict"":""ingest"",""summary"":""Architecture decision captured""}","verdict=ingest summary=Architecture decision captured","Valid ingest response"
+LR-02,"Social message ok","{""verdict"":""skip""}","verdict=skip","Valid skip response"
+LR-03,"Any message","I think this message is valuable and should be kept","null (parse failure)","Plain text - not JSON"
+LR-04,"Any message","{""wrong_field"":""value""}","null (parse failure)","JSON but wrong schema"
+LR-05,"Any message","","null (parse failure)","Empty response"
+LR-06,"Any message","{""verdict"":""ingest"",""summary"":""AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA""}","verdict=ingest summary.length<=200","Summary exceeds 200 chars - must truncate"
+LR-07,"Any message","{""verdict"":""unknown""}","null (parse failure)","Invalid verdict value"
+LR-08,"Any message","{verdict: ingest}","null (parse failure)","Invalid JSON (unquoted keys)"
+LR-09,"Any message","null","null (parse failure)","Literal null"
+LR-10,"Any message","{""verdict"":""ingest"",""summary"":""""}","verdict=ingest summary=empty","Empty summary edge case"

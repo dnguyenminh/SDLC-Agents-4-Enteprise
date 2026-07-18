@@ -39,6 +39,8 @@ invokeSubAgent(
 
 ### Step 7c: Release Process (MANDATORY)
 
+**⛔ PIC: DevOps Agent — chịu trách nhiệm 100% version consistency khi release.**
+
 **SM invoke DevOps with explicit instructions:**
 ```
 invokeSubAgent(
@@ -46,9 +48,15 @@ invokeSubAgent(
   prompt: "Release {TICKET} — Deploy đã thành công. Thực hiện release process:
   1. Merge branch {TICKET} vào master (--no-ff)
   2. Bump version — tạo git tag (semver: minor cho feature, patch cho bugfix)
-  3. Cập nhật README.md — thêm entry mới vào changelog section
+  3. ⛔ SYNC ALL VERSION REFERENCES (MANDATORY — đây là trách nhiệm của bạn):
+     a. Scan project để tìm TẤT CẢ version sources (package.json, build.gradle.kts, pom.xml, Cargo.toml, pyproject.toml, version.txt, *.csproj, v.v.)
+     b. Scan README/docs tìm hardcoded version strings (badges, install commands, download links)
+     c. Update TẤT CẢ sources tìm được thành version mới
+     d. Thêm changelog entry (README, CHANGELOG.md, hoặc equivalent)
+     e. Báo cáo danh sách files đã update kèm version number
+     Rule: Tất cả version references trong project PHẢI consistent. Không được bỏ sót.
   4. Auto-promote KB: mem_promote(action='promote_on_merge', ticket_key='{TICKET}')
-  Báo cáo kết quả từng bước."
+  Báo cáo: danh sách files đã update + version number đã apply."
 )
 ```
 
@@ -58,10 +66,12 @@ invokeSubAgent(
 |---|------|-----------|
 | 1 | Merge to master | Confirm merge commit exists |
 | 2 | Bump version | Confirm tag exists, semver valid |
-| 3 | Update README | Confirm README changed, has new version |
+| 3 | Version sources discovered | DevOps báo cáo danh sách files chứa version |
+| 4 | All version sources updated | Grep version string trong reported files → tất cả match tag |
+| 5 | Changelog/README updated | New entry exists with correct version |
 
-- If any step missing → ask DevOps to redo
-- Only when ALL 3 PASS → transition READY FOR PRODUCT → DONE
+- If ANY version mismatch → ask DevOps to fix TRƯỚC khi transition
+- Only when ALL checks PASS → transition READY FOR PRODUCT → DONE
 
 ### Step 7d: Finalize
 
@@ -88,6 +98,18 @@ embed_images → export_docx → jira_update_issue
 | 5 | Rollback Flow Diagram (.drawio + .png) | Invoke DevOps for diagrams |
 | 6 | Pre-Deployment Checklist | Ask DevOps to add |
 | 7 | Post-Deployment Verification | Ask DevOps to add |
+
+## Quality Gate — Version Sync (Release) — PIC: DevOps Agent
+
+DevOps PHẢI scan project và báo cáo tất cả version sources. SM verify:
+
+| # | Check | If Fail |
+|---|-------|---------|
+| 1 | DevOps báo cáo danh sách version files đã discovered | Re-invoke: "Scan lại, báo cáo TẤT CẢ files chứa version" |
+| 2 | Tất cả reported files chứa cùng version = git tag | DevOps fix ngay |
+| 3 | README/docs không còn old version string | DevOps fix ngay |
+| 4 | Changelog có entry mới đúng version | DevOps fix ngay |
+| 5 | Tất cả consistent | ⛔ BLOCK transition until fixed |
 
 ## ⛔ Transitions SM KHÔNG ĐƯỢC tự động
 

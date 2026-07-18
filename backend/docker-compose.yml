@@ -1,0 +1,75 @@
+# SA4E-44 Docker Compose — Local Dev & Test Environment
+version: "3.9"
+
+services:
+  # PostgreSQL 15 database
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: sa4e-postgres
+    environment:
+      POSTGRES_DB: sa4e_db
+      POSTGRES_USER: sa4e_user
+      POSTGRES_PASSWORD: sa4e_local_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sa4e_user -d sa4e_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - sa4e-network
+
+  # Backend service (Node.js 20 + Hono)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: sa4e-backend
+    environment:
+      NODE_ENV: development
+      PORT: 48721
+      DATABASE_URL: postgresql://sa4e_user:sa4e_local_dev_password@postgres:5432/sa4e_db
+      DATABASE_ADAPTER: postgresql
+      TASK_WORKER_ENABLED: "true"
+      TASK_WORKER_POLL_INTERVAL_MS: "5000"
+      TASK_WORKER_MAX_RETRIES: "3"
+      TASK_WORKER_BACKOFF_BASE_MS: "1000"
+      CODE_INTEL_ENABLED: "true"
+      CODE_INTEL_MAX_BATCH_SIZE: "100"
+      CODE_INTEL_UPLOAD_TIMEOUT_MS: "30000"
+      ONNX_RUNTIME_URL: http://onnx-runtime:8080
+    ports:
+      - "48721:48721"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - code_intel_data:/app/.code-intel
+    networks:
+      - sa4e-network
+    restart: unless-stopped
+
+  # ONNX Runtime sidecar (optional — for vector embeddings)
+  onnx-runtime:
+    image: mcr.microsoft.com/onnxruntime/server:latest
+    container_name: sa4e-onnx
+    ports:
+      - "8080:8080"
+    networks:
+      - sa4e-network
+    profiles:
+      - embeddings
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  code_intel_data:
+
+networks:
+  sa4e-network:
+    driver: bridge

@@ -66,6 +66,24 @@ MIT
 
 ## Changelog
 
+### v1.11.0 (2026-07-18)
+
+- **SA4E-42: DatabaseAdapter Refactoring** — Complete engine layer overhaul with consistent SQLite adapter patterns:
+  - `DatabaseAdapter` interface with atomic `get()`, `list()`, `create()`, `update()`, `delete()`, `query()` methods
+  - `SqliteDbAdapter` implements all CRUD with prepared statements, transactions, batch operations
+  - Memory module (`MemoryAdapterWrapper`, `GraphNodeAdapter`, `IndexerAdapter`) refactored to use adapter
+  - All 66 test files pass (570 tests, 0 failures)
+- **SA4E-47: LLM Context Chain for Document Indexing** — Enhanced LLM pipeline with contextual reasoning:
+  - `analyzer.ts` — chunking with context chain window, entity/actor/rule extraction, rich structured_map output
+  - `ENHANCED_SYSTEM_PROMPT` in `prompts.ts` — expanded instruction set covering roles, relationships, priority, tags
+  - `LLMService.ts` — maxTokens 300→2048 for deep analysis
+  - `TaskWorker.ts` — context chain query path, structured_map merge into KB
+  - `engine/crud.ts` — `updateStructuredMap()` for persistent structured_map storage
+  - `dispatchers/crud.ts` — full content extraction, automatic task creation on `handleIngestFile`
+  - 12 new unit test files for all added modules
+- **drawio Test Fixes** — `drawio-export.test.ts` + `mcp-drawio-dispatch.test.ts` pass (content_base64 param); export-dependent tests skipped (requires drawio CLI)
+- **Extension 1.11.0** — Packaged as `.vsix`, 30s HTTP timeout in `IndexerHttpClient`
+
 ### v1.9.0 (2026-07-15)
 
 - **Agent Sync to All Platforms** — Synced 9 agent prompts from `.kiro/agents/prompts/` to all 5 conversion targets (Claude Code, OpenCode, GitHub Copilot, Codex OpenAI, Antigravity/Gemini) + root `.claude/` and `.opencode/` folders. Single source of truth maintained.

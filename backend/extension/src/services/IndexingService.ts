@@ -4,7 +4,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { IndexerHttpClient } from "./IndexerHttpClient";
-import { convertFileToMarkdown } from "../converter";
 import { discoverDocuments } from "../indexer-discovery";
 
 export interface IndexOptions {
@@ -48,36 +47,50 @@ export class IndexingService {
         if (docs.length === 0) { return "ℹ️ No documents found in documents/ folder"; }
 
         const mdDocs = docs.filter(d => d.format === "markdown");
-        const nonMdDocs = docs.filter(d => d.format !== "markdown");
-        report.report({ message: `Found ${docs.length} files (${nonMdDocs.length} need conversion)` });
+        const textDocs = docs.filter(d => d.format === "text");
+        const binaryDocs = docs.filter(d => d.format !== "markdown" && d.format !== "text");
+        report.report({ message: `Found ${docs.length} files (${binaryDocs.length} binary → server-side convert)` });
 
-        const convertedDocs: Array<{ path: string; type: string; ticket: string; format: string; content?: string }> = [];
-        let convertedCount = 0;
-        let skippedCount = 0;
-        const errors: Array<{ file: string; error: string }> = [];
         const channel = vscode.window.createOutputChannel("SDLC Indexing");
 
-        for (let i = 0; i < nonMdDocs.length; i++) {
-            const doc = nonMdDocs[i];
-            report.report({ message: `Converting ${i + 1}/${nonMdDocs.length} files...` });
-            const absPath = path.join(root, doc.path);
-            const result = await convertFileToMarkdown(absPath, doc.format, token);
-            if (result.success && result.markdown && result.markdown.trim().length > 0) {
-                convertedDocs.push({ ...doc, content: result.markdown });
-                convertedCount++;
-                channel.appendLine(`  ✅ Converted: ${doc.path} (${result.conversionTime}ms)`);
-            } else {
-                skippedCount++;
-                if (!result.success) { errors.push({ file: doc.path, error: result.error || "unknown" }); }
-                channel.appendLine(`  ⏭️ Skipped: ${doc.path}`);
-            }
-        }
+        // Text formats: read content locally, send with content (Task 7: client only handles text)
+        const textWithContent = await this.readTextDocs(textDocs, root, channel);
 
-        const allDocsForIngest = [...mdDocs, ...convertedDocs];
+        // Binary formats: send file_path only — server handles conversion via ConvertToolResolver (Task 7)
+        const binaryForServer = binaryDocs.map(d => ({ ...d, content: undefined }));
+        for (const d of binaryForServer) { channel.appendLine(`  📤 Server-convert: ${d.path}`); }
+
+        const allDocsForIngest = [...mdDocs, ...textWithContent, ...binaryForServer];
         report.report({ message: `Indexing ${allDocsForIngest.length} files...` });
         const apiResult = await this.httpClient.ingestDocuments(allDocsForIngest, report, token);
 
-        return this.buildSummary(docs.length, mdDocs.length, convertedCount, skippedCount, apiResult.summary, errors);
+        // Server-side un-convertible files → hiển thị log cho user (Design R1/NFR-5)
+        if (apiResult.unconvertible.length > 0) {
+            channel.appendLine("");
+            channel.appendLine(`⚠️ ${apiResult.unconvertible.length} file(s) server không convert được (không index):`);
+            for (const u of apiResult.unconvertible) { channel.appendLine(`   - ${u.file} (reason=${u.reason})`); }
+            channel.show(true);
+        }
+
+        const serverConverted = apiResult.ingested - mdDocs.length - textWithContent.length;
+        const skipped = binaryDocs.length - Math.max(serverConverted, 0);
+        return this.buildSummary(docs.length, mdDocs.length + textWithContent.length, Math.max(serverConverted, 0), skipped, apiResult.summary, []);
+    }
+
+    private async readTextDocs(
+        textDocs: Array<{ path: string; type: string; ticket: string; format: string }>,
+        root: string, channel: vscode.OutputChannel,
+    ): Promise<Array<{ path: string; type: string; ticket: string; format: string; content: string }>> {
+        const results: Array<{ path: string; type: string; ticket: string; format: string; content: string }> = [];
+        for (const doc of textDocs) {
+            try {
+                const absPath = path.join(root, doc.path);
+                const raw = await vscode.workspace.fs.readFile(vscode.Uri.file(absPath));
+                results.push({ ...doc, content: Buffer.from(raw).toString("utf-8") });
+                channel.appendLine(`  📄 Text read: ${doc.path}`);
+            } catch { channel.appendLine(`  ⚠️ Cannot read: ${doc.path}`); }
+        }
+        return results;
     }
 
     private buildSummary(

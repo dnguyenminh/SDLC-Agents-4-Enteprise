@@ -1,0 +1,246 @@
+<mxfile>
+  <diagram name="Use Case">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="&lt;b&gt;Use Case Diagram — SA4E-44: Task Queue + Code Intelligence Migration&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="280" y="10" width="550" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="boundary" value="SA4E Backend + Extension System" style="shape=rectangle;dashed=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=13;spacingTop=10;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="50" width="750" height="700" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_ext" value="IDE Extension&#10;(Caller)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="180" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_worker" value="TaskWorker&#10;(Background)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="50" y="420" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_operator" value="Operator&#10;(DevOps)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="150" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_agent" value="AI Agent&#10;(LangGraph)" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="400" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_llm" value="LLM Service" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="560" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_onnx" value="ONNX Runtime" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="670" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="part1_lbl" value="&lt;b&gt;Part 1: Task Queue&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;strokeColor=none;fillColor=none;fontColor=#0288d1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="60" width="150" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc1" value="UC-1: Ingest Knowledge&#10;Entry (atomic)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="90" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc2" value="UC-2: Create Pending&#10;Tasks in Transaction" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="175" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc3" value="UC-3: Poll &amp;amp; Process&#10;Pending Tasks" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="260" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc4" value="UC-4: Recover Stale&#10;Tasks on Restart" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="345" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc5" value="UC-5: Monitor Queue&#10;Statistics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="430" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc6" value="UC-6: Retry Failed Tasks&#10;(dead letter)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="515" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc7" value="UC-7: Tag Enrichment&#10;(LLM)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="600" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc8" value="UC-8: Vector Embedding&#10;(ONNX)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="690" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="part2_lbl" value="&lt;b&gt;Part 2: Code Intel Migration&lt;/b&gt;" style="text;html=1;align=left;fontSize=11;strokeColor=none;fillColor=none;fontColor=#388e3c;" vertex="1" parent="1">
+          <mxGeometry x="600" y="60" width="200" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc9" value="UC-9: Scan Workspace&#10;Files Locally" style="ellipse;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="90" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc10" value="UC-10: Parse AST &amp;amp;&#10;Extract Symbols" style="ellipse;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="175" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc11" value="UC-11: Upload Index&#10;Data to Backend" style="ellipse;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="260" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc12" value="UC-12: Store Code&#10;Intelligence in DB" style="ellipse;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="345" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc13" value="UC-13: Query code_search&#10;/ code_symbols" style="ellipse;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="430" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc14" value="UC-14: Incremental&#10;Re-index on Save" style="ellipse;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="515" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc15" value="UC-15: Build Call Graph&#10;(enrichment task)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="600" y="600" width="200" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_ext_uc1" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_ext" target="uc1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="122"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc2" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_ext" target="uc2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="207"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_wkr_uc3" style="html=1;endArrow=none;strokeColor=#9673a6;" edge="1" parent="1" source="actor_worker" target="uc3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="292"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_wkr_uc4" style="html=1;endArrow=none;strokeColor=#9673a6;" edge="1" parent="1" source="actor_worker" target="uc4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="377"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_wkr_uc6" style="html=1;endArrow=none;strokeColor=#9673a6;" edge="1" parent="1" source="actor_worker" target="uc6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="160" y="547"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_op_uc5" style="html=1;endArrow=none;strokeColor=#d6b656;" edge="1" parent="1" source="actor_operator" target="uc5">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="990" y="180"/>
+              <mxPoint x="990" y="462"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_llm_uc7" style="html=1;endArrow=none;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="actor_llm" target="uc7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="990" y="590"/>
+              <mxPoint x="990" y="632"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_onnx_uc8" style="html=1;endArrow=none;strokeColor=#666666;dashed=1;" edge="1" parent="1" source="actor_onnx" target="uc8">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="990" y="700"/>
+              <mxPoint x="990" y="722"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc9" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_ext" target="uc9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="70" y="120"/>
+              <mxPoint x="70" y="60"/>
+              <mxPoint x="500" y="60"/>
+              <mxPoint x="500" y="122"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc11" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_ext" target="uc11">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="130" y="210"/>
+              <mxPoint x="130" y="40"/>
+              <mxPoint x="530" y="40"/>
+              <mxPoint x="530" y="292"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_ext_uc14" style="html=1;endArrow=none;strokeColor=#0288d1;" edge="1" parent="1" source="actor_ext" target="uc14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="110" y="240"/>
+              <mxPoint x="110" y="790"/>
+              <mxPoint x="560" y="790"/>
+              <mxPoint x="560" y="547"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_agent_uc13" style="html=1;endArrow=none;strokeColor=#6c8ebf;" edge="1" parent="1" source="actor_agent" target="uc13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="990" y="430"/>
+              <mxPoint x="990" y="462"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_wkr_uc15" style="html=1;endArrow=none;strokeColor=#9673a6;" edge="1" parent="1" source="actor_worker" target="uc15">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="70" y="480"/>
+              <mxPoint x="70" y="800"/>
+              <mxPoint x="540" y="800"/>
+              <mxPoint x="540" y="632"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_inc_12" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="uc1" target="uc2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_inc_37" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="uc3" target="uc7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_inc_38" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="uc3" target="uc8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_ext_63" value="&lt;i&gt;&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#c62828;" edge="1" parent="1" source="uc6" target="uc3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_inc_910" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#388e3c;" edge="1" parent="1" source="uc9" target="uc10">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_inc_1011" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#388e3c;" edge="1" parent="1" source="uc10" target="uc11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_inc_1112" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#388e3c;" edge="1" parent="1" source="uc11" target="uc12">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_inc_1215" value="&lt;i&gt;&amp;lt;&amp;lt;include&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#e65100;" edge="1" parent="1" source="uc12" target="uc15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_ext_1411" value="&lt;i&gt;&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;&lt;/i&gt;" style="dashed=1;endArrow=open;html=1;fontSize=9;strokeColor=#388e3c;" edge="1" parent="1" source="uc14" target="uc11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;fontSize=10;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="220" y="770" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1" value="" style="ellipse;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="220" y="795" width="14" height="10" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1t" value="Part 1: Core Ingest (MUST)" style="text;html=1;align=left;fontSize=9;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="240" y="791" width="140" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2" value="" style="ellipse;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="390" y="795" width="14" height="10" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2t" value="Part 1: Worker (MUST)" style="text;html=1;align=left;fontSize=9;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="410" y="791" width="130" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3" value="" style="ellipse;fillColor=#c8e6c9;strokeColor=#388e3c;" vertex="1" parent="1">
+          <mxGeometry x="550" y="795" width="14" height="10" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3t" value="Part 2: Code Intel (MUST)" style="text;html=1;align=left;fontSize=9;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="570" y="791" width="140" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg4" value="" style="ellipse;fillColor=#ffe0b2;strokeColor=#e65100;" vertex="1" parent="1">
+          <mxGeometry x="720" y="795" width="14" height="10" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg4t" value="Enrichment (via Task Queue)" style="text;html=1;align=left;fontSize=9;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="740" y="791" width="160" height="18" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

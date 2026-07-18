@@ -7,7 +7,7 @@ description: >
   Dùng draw.io để tạo wireframes, export PNG và embed vào tài liệu.
   Tham gia Phase 2.5 (Design — wireframes + UI-SPEC) và Phase 5 (Implementation — HTML/CSS prototype).
   Sử dụng bằng cách cung cấp Jira ticket key (ví dụ: PROJ-123).
-tools: ["read", "@mcp"]
+tools: ["read", "write", "shell", "@mcp"]
 includeMcpJson: true
 ---
 

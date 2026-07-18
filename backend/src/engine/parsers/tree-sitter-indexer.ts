@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { GrammarRegistry } from './grammar-registry.js';
 import { extractSymbols } from '../scanner/signature-extractor.js';
 import type { ParseResult, IndexResult } from './types.js';
@@ -8,12 +8,12 @@ import { storeResults, storeRegexResults, extractAndStoreBodies } from './indexe
 
 export class TreeSitterIndexer {
   private registry: GrammarRegistry;
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private maxFileSize: number;
 
-  constructor(registry: GrammarRegistry, db: Database.Database, maxFileSize: number = 1_048_576) {
+  constructor(registry: GrammarRegistry, adapter: DatabaseAdapter, maxFileSize: number = 1_048_576) {
     this.registry = registry;
-    this.db = db;
+    this.adapter = adapter;
     this.maxFileSize = maxFileSize;
   }
 
@@ -36,8 +36,8 @@ export class TreeSitterIndexer {
     } else {
       return this.regexFallback(filePath, relativePath, projectId, startTime);
     }
-    const symbolIds = storeResults(this.db, relativePath, result, projectId);
-    extractAndStoreBodies(this.db, relativePath, source, result, symbolIds, projectId);
+    const symbolIds = storeResults(this.adapter, relativePath, result, projectId);
+    extractAndStoreBodies(this.adapter, relativePath, source, result, symbolIds, projectId);
     return { filePath: relativePath, symbolCount: result.symbols.length, relationshipCount: result.relationships.length, parseErrors: result.errors.length, duration: Date.now() - startTime, method };
   }
 
@@ -55,7 +55,7 @@ export class TreeSitterIndexer {
       const ext = path.extname(filePath).toLowerCase();
       const language = this.extToLanguage(ext);
       const symbols = extractSymbols(source, language);
-      if (symbols.length > 0) storeRegexResults(this.db, relativePath, symbols, projectId);
+      if (symbols.length > 0) storeRegexResults(this.adapter, relativePath, symbols, projectId);
       return { filePath: relativePath, symbolCount: symbols.length, relationshipCount: 0, parseErrors: 0, duration: Date.now() - startTime, method: 'regex-fallback' };
     } catch {
       return { filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1, duration: Date.now() - startTime, method: 'regex-fallback' };

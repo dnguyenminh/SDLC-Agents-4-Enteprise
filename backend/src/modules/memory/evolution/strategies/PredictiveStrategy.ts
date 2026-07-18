@@ -4,7 +4,7 @@
  * based on weighted recency of success/failure patterns.
  */
 
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../../database/adapters/DatabaseAdapter.js';
 import type { KnowledgeEntry } from '../../models.js';
 import type { ScoringStrategy, ScoreBreakdown, ScoringContext } from '../models.js';
 
@@ -16,10 +16,10 @@ interface OutcomeRow {
 
 export class PredictiveStrategy implements ScoringStrategy {
   readonly name = 'predictive';
-  private readonly db: Database.Database;
+  private readonly adapter: DatabaseAdapter;
 
-  constructor(db: Database.Database) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter) {
+    this.adapter = adapter;
   }
 
   apply(
@@ -36,12 +36,13 @@ export class PredictiveStrategy implements ScoringStrategy {
   }
 
   private getRecentOutcomes(entryId: number): OutcomeRow[] {
-    return this.db.prepare(
+    return this.adapter.all<OutcomeRow>(
       `SELECT outcome FROM entry_outcomes
        WHERE entry_id = ?
        ORDER BY created_at DESC
        LIMIT ?`,
-    ).all(entryId, MAX_OUTCOMES) as OutcomeRow[];
+      [entryId, MAX_OUTCOMES],
+    );
   }
 
   private computeTrend(outcomes: OutcomeRow[]): number {

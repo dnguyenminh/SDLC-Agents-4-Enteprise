@@ -1,0 +1,23 @@
+{
+  "ticket": "SA4E-18",
+  "title": "Tool Visibility Tiers - giảm context bằng cách ẩn tool ít dùng",
+  "architecturePattern": "ai-agent",
+  "currentPhase": "implementation",
+  "phases": {
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-07-07", "diagrams": ["use-case", "business-flow"], "docx": "BRD-v1-SA4E-18.docx", "jiraAttached": false, "jiraAttachNote": "Jira MCP has no upload-attachment tool; DOCX saved locally only" },
+    "specification": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-07-08", "authors": ["BA", "TA"], "diagrams": ["system-context", "sequence-listtools", "state-tool-lifecycle"], "docx": "FSD-v1-SA4E-18.docx", "docxDiagramsEmbedded": false, "note": "3 diagrams shipped as .drawio+.png; DOCX without embedded images due to transport payload limit" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1, "completedAt": "2026-07-08", "diagrams": ["architecture", "component", "class-design"], "docx": "TDD-v1-SA4E-18.docx", "discrepancy": false },
+    "feedback_loop": { "status": "not_needed", "iterations": 0, "maxIterations": 5, "note": "SA found no discrepancy with FSD" },
+    "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "version": 1, "completedAt": "2026-07-08", "review": "approved", "testCases": 34, "rtmCoverage": "100%", "diagrams": ["test-coverage", "test-execution-flow"], "docx": ["STP-v1-SA4E-18.docx", "STC-v1-SA4E-18.docx"] },
+    "implementation": { "status": "done", "completedAt": "2026-07-08", "branch": "SA4E-18", "jiraStatus": "In Review", "buildPassed": true, "filesCreated": ["backend/src/config/CoreTools.ts", "backend/src/server/toolUsageTracker.ts"], "filesModified": ["schema.ts", "models.ts", "MemoryEngine.ts", "mcpServer.ts", "OrchestrationModule.ts", "MemoryToolDispatcher.ts", "MemoryToolDefinitions.ts"], "pushed": true },
+    "user_guide": { "status": "not_started" },
+    "testing": { "status": "done", "completedAt": "2026-07-08", "automatedTests": "21/21 passed (PBT 4, UT 12, IT 5)", "e2eApiSit": "deferred - need live server restart", "qualityReview": "passed - real DB + real getMcpServer, not all-mock", "techDebt": ["O-1: empty CORE_TOOLS no warn (minor)"], "report": "TEST-REPORT.md" },
+    "deployment": { "status": "not_started" }
+  },
+  "decisions": {
+    "approach": "B - central allowlist (CORE_TOOLS config) filtered at mcpServer ListTools",
+    "coreSet": ["mem_search", "mem_ingest", "mem_ingest_file", "code_search", "get_curated_context", "find_tools", "execute_dynamic_tool", "orchestration_status"],
+    "usageTracking": true
+  },
+  "lastUpdated": "2026-07-07"
+}

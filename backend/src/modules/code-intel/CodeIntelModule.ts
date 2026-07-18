@@ -9,6 +9,7 @@ import type { Logger } from 'pino';
 import { DatabaseManager } from '../../engine/db/database-manager.js';
 import { IndexingEngine } from '../../engine/indexer/indexing-engine.js';
 import { loadConfig } from '../../engine/config.js';
+import { SqliteDbAdapter } from '../memory/task-queue/SqliteDbAdapter.js';
 import { CODE_INTEL_TOOL_DEFINITIONS, dispatchCodeIntelTool } from '../../engine/tools/register-tools.js';
 
 export class CodeIntelModule implements IModule {
@@ -36,7 +37,8 @@ export class CodeIntelModule implements IModule {
       this.workspace = config.workspace;
       this.dbManager = new DatabaseManager(config.dbPath, config.projectId);
       this.dbManager.initialize();
-      this.indexer = new IndexingEngine(this.dbManager, config);
+      const adapter = new SqliteDbAdapter(this.dbManager.getDb());
+      this.indexer = new IndexingEngine(adapter, config);
       this.indexer.startBackgroundIndexing();
       this._status = 'ready';
     } catch (error) {

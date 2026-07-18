@@ -17,12 +17,12 @@ const ADAPTERS: Record<LLMProvider, () => LLMAdapter> = {
 };
 
 const DEFAULT_CONFIGS: Record<LLMProvider, Partial<LLMConfig>> = {
-  ollama: { baseUrl: 'http://localhost:11434', model: 'qwen2.5:7b-instruct-q4_K_M', temperature: 0.3, maxTokens: 300 },
-  openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', temperature: 0.3, maxTokens: 300 },
-  anthropic: { baseUrl: 'https://api.anthropic.com/v1', model: 'claude-3-haiku-20240307', temperature: 0.3, maxTokens: 300 },
-  gemini: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-1.5-flash', temperature: 0.3, maxTokens: 300 },
-  lmstudio: { baseUrl: 'http://localhost:1234/v1', model: 'default', temperature: 0.3, maxTokens: 300 },
-  copilot: { baseUrl: 'http://localhost:11435', model: 'copilot', temperature: 0.3, maxTokens: 300 },
+  ollama: { baseUrl: 'http://localhost:11434', model: 'qwen2.5:7b-instruct-q4_K_M', temperature: 0.3, maxTokens: 2048 },
+  openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', temperature: 0.3, maxTokens: 2048 },
+  anthropic: { baseUrl: 'https://api.anthropic.com/v1', model: 'claude-3-haiku-20240307', temperature: 0.3, maxTokens: 2048 },
+  gemini: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-1.5-flash', temperature: 0.3, maxTokens: 2048 },
+  lmstudio: { baseUrl: 'http://localhost:1234/v1', model: 'default', temperature: 0.3, maxTokens: 2048 },
+  copilot: { baseUrl: 'http://localhost:11435', model: 'copilot', temperature: 0.3, maxTokens: 2048 },
 };
 
 export class LLMService {
@@ -39,7 +39,7 @@ export class LLMService {
       baseUrl: config?.baseUrl || process.env.LLM_BASE_URL || defaults.baseUrl || 'http://localhost:11434',
       apiKey: config?.apiKey || process.env.LLM_API_KEY || undefined,
       temperature: config?.temperature ?? defaults.temperature ?? 0.3,
-      maxTokens: config?.maxTokens ?? defaults.maxTokens ?? 300,
+      maxTokens: config?.maxTokens ?? defaults.maxTokens ?? 2048,
     };
 
     this.adapter = ADAPTERS[provider]?.() || new OllamaAdapter();

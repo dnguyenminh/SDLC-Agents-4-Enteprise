@@ -1,0 +1,35 @@
+# SA4E-44 Docker Compose Override — Test Environment
+# Usage: docker compose -f docker-compose.yml -f docker-compose.test.yml up
+version: "3.9"
+
+services:
+  postgres:
+    container_name: sa4e-postgres-test
+    environment:
+      POSTGRES_DB: sa4e_db_test
+      POSTGRES_USER: sa4e_user
+      POSTGRES_PASSWORD: sa4e_test_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  backend:
+    container_name: sa4e-backend-test
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://sa4e_user:sa4e_test_password@postgres:5432/sa4e_db_test
+      TASK_WORKER_ENABLED: "true"
+      TASK_WORKER_POLL_INTERVAL_MS: "1000"
+      TASK_WORKER_MAX_RETRIES: "2"
+      TASK_WORKER_BACKOFF_BASE_MS: "100"
+      CODE_INTEL_ENABLED: "true"
+      CODE_INTEL_MAX_BATCH_SIZE: "100"
+    ports:
+      - "48722:48721"
+    volumes: []
+
+volumes:
+  postgres_test_data:

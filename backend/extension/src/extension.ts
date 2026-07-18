@@ -18,6 +18,7 @@ import { mapServerStatusToWebview } from "./types";
 import { registerCommands } from "./commands/CommandRegistrar";
 import { registerLlmCommands } from "./commands/LlmCommands";
 import { initPlatformSwap } from "./platform-swap";
+import { StatusBarManager } from "./ui/status-bar";
 
 let mcpManager: McpServerManager | undefined;
 let panelManager: WebviewPanelManager | undefined;
@@ -25,6 +26,7 @@ let configWatcher: ConfigWatcher | undefined;
 let kbEventBus: KbEventBus | undefined;
 let treeProvider: KiroTreeViewProvider | undefined;
 let authManager: AuthManager | undefined;
+let statusBarManager: StatusBarManager | undefined;
 
 /** Project ID for multi-tenant isolation — derived from git remote or user+folder hash. */
 let _projectId = "default";
@@ -90,6 +92,10 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   authManager = new AuthManager(context.secrets, backendUrl);
   await authManager.initialize();
 
+  statusBarManager = new StatusBarManager();
+  statusBarManager.setAuthState(authManager.currentState);
+  context.subscriptions.push(statusBarManager);
+
   mcpManager = new McpServerManager(workspaceRoot, outputChannel, authManager, backendUrl);
   context.subscriptions.push(mcpManager);
 
@@ -124,13 +130,26 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
 }
 
 function setupAuthStateHandlers(): void {
+  let wasAuthenticated = authManager?.isAuthenticated ?? false;
   authManager?.onStateChange((state) => {
+    statusBarManager?.setAuthState(state);
     if (state === "AUTHENTICATED") {
+      wasAuthenticated = true;
       treeProvider?.setAuthenticated(true, "admin");
       panelManager?.notifyAllPanels({ type: "serverStatus", status: "connected" });
     } else if (state === "UNAUTHENTICATED") {
       treeProvider?.setAuthenticated(false);
       panelManager?.notifyAllPanels({ type: "serverStatus", status: "disconnected" });
+      // SA4E-39: Warn user when session expires (only if was previously authenticated)
+      if (wasAuthenticated) {
+        wasAuthenticated = false;
+        vscode.window.showWarningMessage(
+          "⚠️ Session expired. Knowledge base sync is paused. Please login to resume.",
+          "Login"
+        ).then((action) => {
+          if (action === "Login") { vscode.commands.executeCommand("kiroSdlc.login"); }
+        });
+      }
     }
   });
 }
@@ -165,6 +184,9 @@ function setupMcpStatusBroadcast(statusBar: vscode.StatusBarItem, workspaceRoot:
     const webviewStatus = mapServerStatusToWebview(status);
     panelManager?.notifyAllPanels({ type: "serverStatus", status: webviewStatus });
     updateStatusBar(statusBar, mcpManager);
+    // SA4E-39: Update StatusBarManager connection state from MCP status
+    const connState = status === "running" ? "CONNECTED" : status === "starting" ? "CONNECTING" : "DISCONNECTED";
+    statusBarManager?.setConnectionState(connState);
     if (status === "running") {
       kbEventBus?.connect();
       configWatcher?.suppressNextChange();

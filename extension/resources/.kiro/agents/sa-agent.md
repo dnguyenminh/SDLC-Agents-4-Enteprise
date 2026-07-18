@@ -2,6 +2,7 @@
 name: sa-agent
 label: Solution Architect
 phase: design
+tools: ["read", "write", "shell", "@mcp"]
 outputDoc: TDD.md
 ---
 

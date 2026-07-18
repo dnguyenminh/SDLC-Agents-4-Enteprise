@@ -5,6 +5,7 @@
 
 import { DatabaseManager } from '../engine/db/database-manager.js';
 import { MemoryEngine } from '../modules/memory/engine/index.js';
+import { SqliteDbAdapter } from '../modules/memory/task-queue/SqliteDbAdapter.js';
 import type { IModule, ModuleStatus } from '../types/module.js';
 import type { ToolHandler, ToolDefinition } from '../types/tool.js';
 import pino from 'pino';
@@ -28,7 +29,7 @@ export function makeTempDb(): TempDb {
   const dbPath = path.join(tmpDir, 'index.db');
   const dbManager = new DatabaseManager(dbPath);
   dbManager.initialize();
-  const engine = new MemoryEngine(dbManager.getDb());
+  const engine = new MemoryEngine(new SqliteDbAdapter(dbManager.getDb()));
   return {
     dbManager,
     engine,

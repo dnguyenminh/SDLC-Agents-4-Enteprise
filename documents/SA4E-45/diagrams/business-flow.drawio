@@ -1,0 +1,138 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="SA4E-45: Current State vs Target State - Data Flow" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="234" y="10" width="700" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="CURRENT STATE (AS-IS)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=5;fontColor=#CC0000;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="300" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="Admin Portal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="110" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="DatabaseAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="110" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="SQLite / PostgreSQL" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="480" y="95" width="140" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="IndexingEngine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="200" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="8" value="MemoryEngine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="270" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="GraphSyncService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="340" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="better-sqlite3&#xa;(HARDCODED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontColor=#CC0000;" vertex="1" parent="1">
+      <mxGeometry x="250" y="260" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="SQLite ONLY" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="480" y="245" width="140" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="4" target="5" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="5" target="6" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="7" target="10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="15" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="8" target="10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="9" target="10" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="10" target="11" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="Data Split Problem" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=1;fontColor=#CC0000;fillColor=#FFF2CC;strokeColor=#d6b656;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="680" y="170" width="160" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="Admin data goes to PG&#xa;Engine data stuck in SQLite" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#CC0000;" vertex="1" parent="1">
+      <mxGeometry x="680" y="210" width="200" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="30" value="TARGET STATE (TO-BE)" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=5;fontColor=#006600;" vertex="1" parent="1">
+      <mxGeometry x="40" y="430" width="300" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="Admin Portal" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="480" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="32" value="IndexingEngine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="550" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="33" value="MemoryEngine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="620" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="34" value="GraphSyncService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="690" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="DatabaseAdapter&#xa;(Unified Interface)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="270" y="560" width="170" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="36" value="DatabaseAdapterFactory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6E6E6;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="270" y="480" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="37" value="SQLite" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="510" y="480" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="38" value="PostgreSQL" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="640" y="480" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="39" value="MySQL" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="770" y="480" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="40" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="31" target="36" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="41" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="32" target="35" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="42" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="33" target="35" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="43" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="34" target="35" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="44" value="" style="endArrow=block;html=1;endFill=1;" edge="1" source="36" target="35" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="45" value="" style="endArrow=block;html=1;endFill=1;dashed=1;" edge="1" source="35" target="37" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="46" value="" style="endArrow=block;html=1;endFill=1;dashed=1;" edge="1" source="35" target="38" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="47" value="" style="endArrow=block;html=1;endFill=1;dashed=1;" edge="1" source="35" target="39" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="48" value="Migration Tool" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="510" y="620" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="49" value="ALL tables&#xa;(admin + engine)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#006600;" vertex="1" parent="1">
+      <mxGeometry x="510" y="675" width="130" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="50" value="Unified: ALL data flows&#xa;to selected DB engine" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=1;fontColor=#006600;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="680" y="610" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="51" value="Legend" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=5;" vertex="1" parent="1">
+      <mxGeometry x="40" y="770" width="60" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="52" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="40" y="800" width="20" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="53" value="Working / Via Adapter" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="70" y="800" width="130" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="54" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="220" y="800" width="20" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="55" value="Problem / Hardcoded" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="250" y="800" width="130" height="20" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

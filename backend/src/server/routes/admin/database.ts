@@ -29,7 +29,7 @@ let activeMigration: MigrationService | null = null;
 export function createDatabaseRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
   const cfg = loadConfig();
-  const dataDir = path.resolve(cfg.dataDir || '.code-intel');
+  const dataDir = path.isAbsolute(cfg.dataDir) ? cfg.dataDir : path.resolve(cfg.workspace, cfg.dataDir);
   const configService = new DatabaseConfigService(dataDir);
 
   app.get('/api/admin/database/status', (c) => {

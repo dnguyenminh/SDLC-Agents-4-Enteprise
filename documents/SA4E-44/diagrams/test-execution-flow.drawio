@@ -1,0 +1,177 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Test Execution Flow — SA4E-44&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="200" y="10" width="400" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="start" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="60" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="env_setup" value="Environment Setup&#10;(Docker + Testcontainers)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="130" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="pbt" value="PBT&#10;(fast-check)&#10;9 properties" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="220" width="140" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut" value="Unit Tests&#10;(Vitest + Mocha)&#10;42 tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="230" y="220" width="140" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="it" value="Integration Tests&#10;(Testcontainers PG)&#10;27 tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="220" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="gate1" value="All Pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="330" y="310" width="120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e_api" value="E2E-API&#10;(Supertest/MCP)&#10;28 tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="160" y="420" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e_ui" value="E2E-UI&#10;(VS Code Host)&#10;8 tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="370" y="420" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="gate2" value="All Pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="330" y="510" width="120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit" value="System Integration&#10;(Full Stack)&#10;10 tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="610" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="perf" value="Performance Tests&#10;(Benchmarks)&#10;5 tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="610" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="gate3" value="Exit Criteria&#10;Met?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="330" y="700" width="120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="report" value="Generate&#10;TEST-REPORT.md" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="330" y="800" width="140" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="done" value="Done" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="880" width="80" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="fix" value="Fix &amp; Retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="340" width="100" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_start_env" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="start" target="env_setup">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_env_pbt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.25;exitY=1;" edge="1" parent="1" source="env_setup" target="pbt">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="355" y="200"/>
+          <mxPoint x="130" y="200"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_env_ut" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;" edge="1" parent="1" source="env_setup" target="ut">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_env_it" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.75;exitY=1;" edge="1" parent="1" source="env_setup" target="it">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="445" y="200"/>
+          <mxPoint x="480" y="200"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_pbt_gate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="pbt" target="gate1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="130" y="295"/>
+          <mxPoint x="390" y="295"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_ut_gate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="ut" target="gate1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_it_gate" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="it" target="gate1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="480" y="295"/>
+          <mxPoint x="390" y="295"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_gate1_api" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.25;exitY=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="gate1" target="e2e_api">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="360" y="395"/>
+          <mxPoint x="235" y="395"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_gate1_ui" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.75;exitY=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="gate1" target="e2e_ui">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="420" y="395"/>
+          <mxPoint x="445" y="395"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_gate1_fix" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=1;exitY=0.5;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="gate1" target="fix">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_api_gate2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="e2e_api" target="gate2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="235" y="495"/>
+          <mxPoint x="390" y="495"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_ui_gate2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="e2e_ui" target="gate2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="445" y="495"/>
+          <mxPoint x="390" y="495"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_gate2_sit" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.25;exitY=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="gate2" target="sit">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="360" y="590"/>
+          <mxPoint x="280" y="590"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_gate2_perf" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.75;exitY=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="gate2" target="perf">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="420" y="590"/>
+          <mxPoint x="480" y="590"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_sit_gate3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="sit" target="gate3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="280" y="685"/>
+          <mxPoint x="390" y="685"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_perf_gate3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="perf" target="gate3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="480" y="685"/>
+          <mxPoint x="390" y="685"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_gate3_report" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;exitX=0.5;exitY=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="gate3" target="report">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_report_done" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="report" target="done">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_fix_back" value="Retest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;labelBackgroundColor=#ffffff;fontSize=10;" edge="1" parent="1" source="fix" target="env_setup">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="660" y="360"/>
+          <mxPoint x="660" y="155"/>
+          <mxPoint x="490" y="155"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

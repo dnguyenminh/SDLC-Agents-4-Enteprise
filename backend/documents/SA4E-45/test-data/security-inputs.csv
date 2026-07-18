@@ -1,0 +1,13 @@
+row,input,type,expected_result,description
+1,"'; DROP TABLE knowledge_entries--",sql_injection,rejected/sanitized,Classic SQL injection
+2,"1 OR 1=1",sql_injection,treated as literal param,Boolean injection
+3,"content:secret_column",fts_injection,colon stripped,FTS column filter attack
+4,"MATCH(evil)",fts_injection,parens stripped,FTS function injection
+5,"users; DROP TABLE files--",table_name_injection,rejected by validator,Table name injection
+6,"valid_table",table_name_valid,accepted,Normal identifier
+7,"table with spaces",table_name_injection,rejected,Space in identifier
+8,"<script>alert(1)</script>",xss_in_content,stored as-is (not rendered),XSS payload stored safely
+9,"NULL",null_handling,treated as string NULL,NULL string vs null value
+10,"",empty_input,handled gracefully,Empty string edge case
+11,"a]b[c{d}e",special_chars,sanitized for FTS,Brackets and braces
+12,"SELECT * FROM sqlite_master",sql_in_search,sanitized,SQL as search query

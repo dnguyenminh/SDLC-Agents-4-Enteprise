@@ -4,7 +4,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import type { AppConfig } from '../config.js';
 import type { Logger } from 'pino';
 
@@ -28,12 +28,12 @@ function readPackageDirectories(workspace: string): string[] {
   return ['force-app'];
 }
 
-function queryModuleStats(db: Database.Database): { apex_classes: number; apex_triggers: number; flows: number; objects: number; lwc_components: number; } {
-  const moduleCounts = db.prepare(`
-    SELECT module, COUNT(*) as count FROM files
-    WHERE module IN ('apex-classes', 'apex-triggers', 'sf-flows', 'sf-objects', 'lwc-components')
-    GROUP BY module
-  `).all() as { module: string; count: number }[];
+function queryModuleStats(adapter: DatabaseAdapter): { apex_classes: number; apex_triggers: number; flows: number; objects: number; lwc_components: number; } {
+  const moduleCounts = adapter.all<{ module: string; count: number }>(
+    `SELECT module, COUNT(*) as count FROM files
+     WHERE module IN ('apex-classes', 'apex-triggers', 'sf-flows', 'sf-objects', 'lwc-components')
+     GROUP BY module`,
+  );
 
   const stats = { apex_classes: 0, apex_triggers: 0, flows: 0, objects: 0, lwc_components: 0 };
   for (const row of moduleCounts) {
@@ -48,29 +48,30 @@ function queryModuleStats(db: Database.Database): { apex_classes: number; apex_t
   return stats;
 }
 
-function querySfRelationships(db: Database.Database): Record<string, number> {
+function querySfRelationships(adapter: DatabaseAdapter): Record<string, number> {
   const sfKinds = ['trigger-on', 'soql', 'dml', 'wire', 'flow-action', 'flow-object', 'apex-import', 'inherits', 'implements'];
-  const relCounts = db.prepare(`
-    SELECT kind, COUNT(*) as count FROM relationships
-    WHERE kind IN (${sfKinds.map(() => '?').join(',')})
-    GROUP BY kind
-  `).all(...sfKinds) as { kind: string; count: number }[];
+  const relCounts = adapter.all<{ kind: string; count: number }>(
+    `SELECT kind, COUNT(*) as count FROM relationships
+     WHERE kind IN (${sfKinds.map(() => '?').join(',')})
+     GROUP BY kind`,
+    sfKinds,
+  );
 
   const relationships: Record<string, number> = {};
   for (const row of relCounts) relationships[row.kind] = row.count;
   return relationships;
 }
 
-function queryLastIndexed(db: Database.Database): string | null {
-  const lastRow = db.prepare(
-    `SELECT MAX(last_indexed) as t FROM files WHERE language IN ('apex', 'salesforce-meta')`
-  ).get() as { t: string | null };
+function queryLastIndexed(adapter: DatabaseAdapter): string | null {
+  const lastRow = adapter.get<{ t: string | null }>(
+    `SELECT MAX(last_indexed) as t FROM files WHERE language IN ('apex', 'salesforce-meta')`,
+  );
   return lastRow?.t ?? null;
 }
 
 /** Get SFDX project stats from database. */
 export function getSfdxStats(
-  db: Database.Database, config: AppConfig
+  adapter: DatabaseAdapter, config: AppConfig
 ): {
   detected: boolean;
   projectRoot: string | null;
@@ -84,15 +85,15 @@ export function getSfdxStats(
     detected: true,
     projectRoot: config.workspace,
     packageDirectories: readPackageDirectories(config.workspace),
-    stats: queryModuleStats(db),
-    lastIndexed: queryLastIndexed(db),
-    relationships: querySfRelationships(db),
+    stats: queryModuleStats(adapter),
+    lastIndexed: queryLastIndexed(adapter),
+    relationships: querySfRelationships(adapter),
   };
 }
 
 /** Log SFDX-specific stats after indexing. */
-export function logSfdxStats(db: Database.Database, config: AppConfig, logger: Logger): void {
-  const sfdxStats = getSfdxStats(db, config);
+export function logSfdxStats(adapter: DatabaseAdapter, config: AppConfig, logger: Logger): void {
+  const sfdxStats = getSfdxStats(adapter, config);
   if (!sfdxStats) return;
 
   const { stats, relationships } = sfdxStats;

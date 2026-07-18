@@ -2,7 +2,8 @@
  * KSA-158/159/160: AI Context MCP tool handlers and definitions.
  */
 
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
+import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { CallGraphService } from '../graph/call-graph-service.js';
 import { TestDetector } from '../graph/test-detector.js';
@@ -73,8 +74,9 @@ export const AI_CONTEXT_TOOL_DEFINITIONS = [
 
 /** Handle get_ai_context tool call. */
 export function handleGetAIContext(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
+  const adapter = new SqliteDbAdapter(db);
   const resolver = new SymbolResolver(db, projectId);
-  const graphRepo = new GraphRepository(db, projectId);
+  const graphRepo = new GraphRepository(adapter, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
   const service = new AIContextService(db, resolver, callGraph, workspace);
 
@@ -92,8 +94,9 @@ export function handleGetAIContext(args: Record<string, unknown>, db: Database.D
 
 /** Handle get_edit_context tool call. */
 export function handleGetEditContext(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
+  const adapter = new SqliteDbAdapter(db);
   const resolver = new SymbolResolver(db, projectId);
-  const graphRepo = new GraphRepository(db, projectId);
+  const graphRepo = new GraphRepository(adapter, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
   const testDetector = new TestDetector(db, projectId);
   const service = new EditContextService(db, resolver, callGraph, testDetector, workspace);

@@ -1,0 +1,11 @@
+row,content,summary,type,tier,scope,tags,confidence
+1,DatabaseAdapter pattern for Node.js applications,DB adapter guide,NOTE,WORKING,USER,"typescript,database",1.0
+2,GraphSyncService syncs code symbols to 3D graph,Graph sync doc,CONTEXT,REFERENCE,PROJECT,"graph,sync",0.9
+3,FTS5 full-text search with ranking,FTS implementation,NOTE,WORKING,USER,"search,fts5",0.85
+4,Migration tool copies all tables atomically,Migration guide,CONTEXT,REFERENCE,SHARED,"migration,database",0.95
+5,TreeSitter parser extracts AST symbols,Parser documentation,NOTE,WORKING,PROJECT,"parser,treesitter",0.8
+6,,Empty content test,NOTE,WORKING,USER,,0.5
+7,Special chars: quotes '' and semicolons ;,Special char test,NOTE,WORKING,USER,"edge-case",1.0
+8,Very long content repeated 1000 times for stress testing,Stress test entry,NOTE,WORKING,USER,"stress,large",0.7
+9,Unicode content: kanji hiragana emoji,Unicode test,NOTE,WORKING,USER,"unicode,i18n",1.0
+10,Content with newlines and tabs embedded,Multiline test,NOTE,WORKING,USER,"format",0.9

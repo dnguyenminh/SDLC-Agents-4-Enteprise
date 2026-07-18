@@ -1,0 +1,108 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-44 — Background Worker Processing Loop&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="450" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_worker" value="TaskWorker" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="110" height="750" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_db" value="DatabaseAdapter" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="300" y="60" width="130" height="750" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_tag" value="TagAnalyzerService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="550" y="60" width="140" height="750" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_embed" value="EmbeddingService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="800" y="60" width="140" height="750" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_engine" value="MemoryEngine" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="1050" y="60" width="120" height="750" as="geometry" />
+    </mxCell>
+    <mxCell id="loop_box" value="LOOP [polling interval]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;strokeWidth=1;dashed=1;verticalAlign=top;fontSize=10;fontStyle=1;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="60" y="120" width="1140" height="580" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="SELECT WHERE status=PENDING LIMIT 1" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="160" as="sourcePoint" />
+        <mxPoint x="365" y="160" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="task row" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="365" y="190" as="sourcePoint" />
+        <mxPoint x="135" y="190" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="UPDATE status=PROCESSING, started_at=now()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="230" as="sourcePoint" />
+        <mxPoint x="365" y="230" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="alt_box" value="ALT [task_type]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#0288d1;strokeWidth=1;dashed=1;verticalAlign=top;fontSize=10;fontStyle=1;fontColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="270" width="1070" height="300" as="geometry" />
+    </mxCell>
+    <mxCell id="alt_tag_label" value="[TAG_ENRICHMENT]" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;fontColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="110" y="290" width="150" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="m4" value="analyzeTags(content, options)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="320" as="sourcePoint" />
+        <mxPoint x="620" y="320" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="TagAnalysisResult" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#82b366;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="620" y="360" as="sourcePoint" />
+        <mxPoint x="135" y="360" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="updateTags(entry_id, mergedTags)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="390" as="sourcePoint" />
+        <mxPoint x="1110" y="390" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="sep_line" value="" style="line;strokeColor=#0288d1;strokeWidth=1;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="420" width="1070" height="10" as="geometry" />
+    </mxCell>
+    <mxCell id="alt_vec_label" value="[VECTOR_EMBEDDING]" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;fontColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="110" y="435" width="160" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="m7" value="generateEmbedding(text)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="470" as="sourcePoint" />
+        <mxPoint x="870" y="470" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="number[] (vector)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#82b366;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="870" y="510" as="sourcePoint" />
+        <mxPoint x="135" y="510" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="store vector in entry" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="540" as="sourcePoint" />
+        <mxPoint x="365" y="540" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="UPDATE status=COMPLETED, completed_at=now()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="610" as="sourcePoint" />
+        <mxPoint x="365" y="610" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="sleep(baseInterval)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#666666;dashed=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="660" as="sourcePoint" />
+        <mxPoint x="200" y="660" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note_backoff" value="BR-2: Exponential backoff&#10;when queue empty" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;size=14;" vertex="1" parent="1">
+      <mxGeometry x="200" y="640" width="180" height="45" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

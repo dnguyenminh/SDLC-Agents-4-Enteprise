@@ -1,0 +1,17 @@
+table_name,category,has_fk,expected_in_migration,row_count_test
+files,engine,no,yes,100
+symbols,engine,yes (files.id),yes,500
+knowledge_entries,engine,no,yes,50
+memory_sessions,engine,no,yes,10
+memory_audit,engine,yes (knowledge_entries),yes,25
+tool_usage,engine,no,yes,8
+graph_nodes,admin,no,yes,10
+graph_edges,admin,yes (graph_nodes),yes,15
+knowledge_graph_edges,engine,yes (knowledge_entries),yes,20
+consolidation_log,engine,yes (knowledge_entries),yes,5
+decay_config,engine,no,yes,3
+mcp_tools,engine,no,yes,12
+knowledge_fts,fts_virtual,no,no (skip),0
+symbols_fts,fts_virtual,no,no (skip),0
+sqlite_stat1,sqlite_internal,no,no (skip),0
+schema_version,metadata,no,no (skip),0

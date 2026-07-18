@@ -1,0 +1,93 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-44 — Crash Recovery Sequence&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_startup" value="Server Startup" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="110" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_worker" value="TaskWorker" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="300" y="60" width="110" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_db" value="DatabaseAdapter" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="550" y="60" width="130" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_http" value="HTTP Server" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="800" y="60" width="110" height="650" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="new TaskWorker(db)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="130" as="sourcePoint" />
+        <mxPoint x="355" y="130" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="recoverStaleTasks()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#d6b656;strokeWidth=2;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="170" as="sourcePoint" />
+        <mxPoint x="355" y="170" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="SELECT WHERE status=PROCESSING AND started_at &lt; threshold" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="355" y="210" as="sourcePoint" />
+        <mxPoint x="615" y="210" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="stale tasks [ ]" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="615" y="245" as="sourcePoint" />
+        <mxPoint x="355" y="245" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="UPDATE status=PENDING, started_at=NULL (for each stale)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#d6b656;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="355" y="285" as="sourcePoint" />
+        <mxPoint x="615" y="285" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5b" value="BR-4: stale_threshold = 5min" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#82b366;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="615" y="315" as="sourcePoint" />
+        <mxPoint x="355" y="315" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="return recoveredCount" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="355" y="355" as="sourcePoint" />
+        <mxPoint x="135" y="355" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="worker.start()" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="400" as="sourcePoint" />
+        <mxPoint x="355" y="400" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7b" value="(non-blocking — setInterval)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="355" y="430" as="sourcePoint" />
+        <mxPoint x="135" y="430" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="bind port (ready &lt; 100ms)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#0288d1;strokeWidth=2;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="470" as="sourcePoint" />
+        <mxPoint x="855" y="470" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="listening on :port" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#0288d1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="855" y="500" as="sourcePoint" />
+        <mxPoint x="135" y="500" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note_parallel" value="BR-8: Worker runs in&#10;background — HTTP not blocked" style="shape=note;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;size=14;" vertex="1" parent="1">
+      <mxGeometry x="450" y="540" width="220" height="45" as="geometry" />
+    </mxCell>
+    <mxCell id="note_recovery" value="UC-3: Tasks interrupted by&#10;crash are auto-recovered" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;size=14;" vertex="1" parent="1">
+      <mxGeometry x="80" y="540" width="200" height="45" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -2,7 +2,8 @@
  * KSA-156: MCP Tool Registration for code_impact.
  */
 
-import Database from 'better-sqlite3';
+import type Database from 'better-sqlite3';
+import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { GraphRepository } from '../database/graph-repository.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { CallGraphService } from '../graph/call-graph-service.js';
@@ -38,7 +39,8 @@ export function handleCodeImpact(args: Record<string, unknown>, db: Database.Dat
   const includeTests = (args.include_tests as boolean) ?? true;
   const severityThreshold = (args.severity_threshold as Severity) ?? 'low';
 
-  const graphRepo = new GraphRepository(db, projectId);
+  const adapter = new SqliteDbAdapter(db);
+  const graphRepo = new GraphRepository(adapter, projectId);
   const resolver = new SymbolResolver(db, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
   const fileResolver = new FileResolver(db, workspace, projectId);

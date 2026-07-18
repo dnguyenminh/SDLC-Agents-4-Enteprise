@@ -7,7 +7,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { McpServerManager } from "../mcp-server-manager";
+import { McpServerManager } from "../../mcp-server-manager";
 import { McpServerNotRunningError } from "../../types";
 import type { McpToolDefinition } from "../vscode/tool-registry";
 

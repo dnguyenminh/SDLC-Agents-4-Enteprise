@@ -1,0 +1,35 @@
+{
+  "ticket": "SA4E-45",
+  "summary": "Refactor engine layer — DatabaseAdapter abstraction cho IndexingEngine, MemoryEngine, GraphSync",
+  "issueType": "Story",
+  "jiraStatus": "To Do",
+  "autonomyLevel": "L3",
+  "architecturePattern": "monolith",
+  "currentPhase": "implementation",
+  "phases": {
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-07-18T15:00:00Z" },
+    "specification": { "status": "done", "file": "FSD.md", "version": 2, "completedAt": "2026-07-18T15:20:00Z" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1, "completedAt": "2026-07-18T15:40:00Z" },
+    "feedback_loop": { "status": "not_started", "iterations": 0, "maxIterations": 5 },
+    "security_design_review": { "status": "done", "file": "SECURITY-REVIEW.md", "completedAt": "2026-07-18T16:00:00Z", "findings": { "critical": 0, "high": 1, "medium": 4, "low": 3, "info": 2 } },
+    "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "version": 1, "completedAt": "2026-07-18T16:15:00Z", "review": "approved", "totalTestCases": 70 },
+    "devops_pipeline_setup": { "status": "done", "completedAt": "2026-07-18T16:30:00Z", "ciWorkflow": ".github/workflows/ci-sa4e-45.yml" },
+    "implementation": { "status": "not_started" },
+    "user_guide": { "status": "not_started" },
+    "security_code_review": { "status": "not_started" },
+    "testing": { "status": "not_started" },
+    "pentest": { "status": "not_started" },
+    "security_deploy_review": { "status": "not_started" },
+    "deployment": { "status": "not_started" }
+  },
+  "tokenBudget": {
+    "dailyCap": 500000,
+    "usedToday": 350000,
+    "lastReset": "2026-07-18T00:00:00Z",
+    "warningThreshold": 0.8,
+    "mode": "normal"
+  },
+  "circuitBreaker": {},
+  "lastUpdated": "2026-07-18T16:00:00Z",
+  "lastCommentProcessed": null
+}

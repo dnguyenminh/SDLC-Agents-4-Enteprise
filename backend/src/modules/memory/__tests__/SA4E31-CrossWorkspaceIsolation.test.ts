@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { MemoryEngine } from '../engine/core.js';
+import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 import { TABLES } from '../schema/tables.js';
 import { buildReadFilter } from '../IsolationLayer.js';
 import { createProjectContext } from '../ProjectContext.js';
@@ -27,7 +28,7 @@ function makeDb(): TempDb {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e31-'));
   const db = new Database(path.join(dir, 'index.db'));
   db.exec(TABLES);
-  const engine = new MemoryEngine(db);
+  const engine = new MemoryEngine(new SqliteDbAdapter(db));
   return { db, engine, dir, close: () => { db.close(); fs.rmSync(dir, { recursive: true, force: true }); } };
 }
 

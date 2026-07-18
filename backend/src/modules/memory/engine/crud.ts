@@ -2,25 +2,36 @@
  * MemoryEngine Crud Base — core CRUD + graph operations.
  */
 
-import Database from 'better-sqlite3';
-import type { KnowledgeEntry, SearchResult, GraphEdge } from '../models.js';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
+import type { KnowledgeEntry, GraphEdge } from '../models.js';
 
 export class MemoryEngineCrud {
-  protected readonly db: Database.Database;
+  protected readonly adapter: DatabaseAdapter;
+  protected readonly dialect: DialectHelper;
 
-  constructor(db: Database.Database) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter) {
+    this.adapter = adapter;
+    this.dialect = new DialectHelper(adapter.getEngine());
   }
 
-  getDb(): Database.Database { return this.db; }
+  /** @deprecated Use adapter directly. Removed in SA4E-47. */
+  getDb(): unknown { return (this.adapter as any).db ?? this.adapter; }
+
+  /** SA4E-47: Update structured_map JSON column for an entry. */
+  updateStructuredMap(id: number, structuredMap: string): void {
+    this.adapter.run(
+      `UPDATE knowledge_entries SET structured_map = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
+      [structuredMap, id],
+    );
+  }
 
   insert(entry: Partial<KnowledgeEntry> & { project_id?: string | null }): number {
-    const stmt = this.db.prepare(`
+    const result = this.adapter.run(`
       INSERT INTO knowledge_entries
       (content, summary, type, tier, scope, user_id, project_id, source, source_ref, tags, confidence, agent_name, owner)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const result = stmt.run(
+    `, [
       entry.content, entry.summary, entry.type,
       entry.tier ?? 'WORKING', entry.scope ?? 'USER',
       entry.user_id ?? null,
@@ -29,45 +40,50 @@ export class MemoryEngineCrud {
       entry.source_ref ?? null, entry.tags ?? '',
       entry.confidence ?? 1.0, entry.agent_name ?? null,
       entry.owner ?? null,
-    );
+    ]);
     return result.lastInsertRowid as number;
   }
 
   findById(id: number): KnowledgeEntry | undefined {
-    return this.db.prepare('SELECT * FROM knowledge_entries WHERE id = ?')
-      .get(id) as KnowledgeEntry | undefined;
+    return this.adapter.get<KnowledgeEntry>('SELECT * FROM knowledge_entries WHERE id = ?', [id]);
   }
 
   deleteEntry(id: number): void {
-    this.db.prepare('DELETE FROM knowledge_entries WHERE id = ?').run(id);
+    this.adapter.run('DELETE FROM knowledge_entries WHERE id = ?', [id]);
   }
 
   updateTags(id: number, tags: string): void {
-    this.db.prepare('UPDATE knowledge_entries SET tags = ?, updated_at = datetime(\'now\') WHERE id = ?').run(tags, id);
+    this.adapter.run(
+      `UPDATE knowledge_entries SET tags = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
+      [tags, id],
+    );
   }
 
   recordAccess(id: number): void {
-    this.db.prepare(`
+    this.adapter.run(`
       UPDATE knowledge_entries
-      SET access_count = access_count + 1, last_accessed_at = datetime('now')
+      SET access_count = access_count + 1, last_accessed_at = ${this.dialect.now()}
       WHERE id = ?
-    `).run(id);
+    `, [id]);
   }
 
   addEdge(sourceId: number, targetId: number, relation = 'RELATES_TO', weight = 1.0): number {
-    const result = this.db.prepare(
-      `INSERT INTO knowledge_graph_edges (source_id, target_id, relation, weight) VALUES (?, ?, ?, ?)`
-    ).run(sourceId, targetId, relation, weight);
+    const result = this.adapter.run(
+      `INSERT INTO knowledge_graph_edges (source_id, target_id, relation, weight) VALUES (?, ?, ?, ?)`,
+      [sourceId, targetId, relation, weight],
+    );
     return result.lastInsertRowid as number;
   }
 
   getNeighbors(nodeId: number): GraphEdge[] {
-    return this.db.prepare(
-      'SELECT * FROM knowledge_graph_edges WHERE source_id = ? OR target_id = ?'
-    ).all(nodeId, nodeId) as GraphEdge[];
+    return this.adapter.all<GraphEdge>(
+      'SELECT * FROM knowledge_graph_edges WHERE source_id = ? OR target_id = ?',
+      [nodeId, nodeId],
+    );
   }
 
   countEdges(): number {
-    return (this.db.prepare('SELECT COUNT(*) as cnt FROM knowledge_graph_edges').get() as any).cnt;
+    const row = this.adapter.get<{ cnt: number }>('SELECT COUNT(*) as cnt FROM knowledge_graph_edges');
+    return row?.cnt ?? 0;
   }
 }

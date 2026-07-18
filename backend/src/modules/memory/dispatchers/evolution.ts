@@ -24,7 +24,7 @@ export function handleOutcome(engine: MemoryEngine, a: Args): string {
   const context = a.context as string | undefined;
 
   try {
-    const svc = new OutcomeService(engine.getDb());
+    const svc = new OutcomeService(engine.getDb() as any);
     const result = svc.record(entryId, outcome, agentName, context);
     return JSON.stringify({
       recorded: result.recorded,
@@ -47,7 +47,7 @@ export function handleVerify(engine: MemoryEngine, a: Args): string {
   const comment = a.comment as string | undefined;
 
   try {
-    const svc = new EpochService(engine.getDb(), logger);
+    const svc = new EpochService(engine.getDb() as any, logger);
     if (action === 'reject') {
       svc.reject(entryId, comment);
       return buildVerifyResponse(engine, entryId);
@@ -75,7 +75,7 @@ export function handleConfigureDecay(engine: MemoryEngine, a: Args): string {
 }
 
 function dispatchDecayAction(engine: MemoryEngine, action: string, a: Args): string {
-  const db = engine.getDb();
+  const db = engine.getDb() as any;
 
   switch (action) {
     case 'get_config':

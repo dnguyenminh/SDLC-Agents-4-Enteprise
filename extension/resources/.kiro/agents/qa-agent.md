@@ -2,6 +2,7 @@
 name: qa-agent
 label: Quality Assurance
 phase: test_planning
+tools: ["read", "write", "shell", "@mcp"]
 outputDoc: test_plan.md
 ---
 

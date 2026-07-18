@@ -12,6 +12,7 @@ import {
   getQueryLogs,
   getRecentActivity,
 } from '../../../admin/admin-db.js';
+import { getIndexDbPath } from '../../../admin/db/core.js';
 import { formatUptime, formatBytes } from './utils.js';
 import type { AdminContext } from './context.js';
 
@@ -45,7 +46,7 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
     const recentActivity = getRecentActivity(10);
     let codeSymbols = 0;
     try {
-      const indexDbPath = path.resolve(getWorkspacePath(), '.code-intel', 'index.db');
+      const indexDbPath = getIndexDbPath();
       if (fs.existsSync(indexDbPath)) {
         const indexDb = new Database(indexDbPath, { readonly: true });
         const row = indexDb.prepare("SELECT COUNT(*) as cnt FROM symbols WHERE kind IN ('function','class','interface','method','type','enum','constructor')").get() as { cnt: number } | undefined;

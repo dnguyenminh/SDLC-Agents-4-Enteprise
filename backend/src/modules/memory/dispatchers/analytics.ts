@@ -10,7 +10,7 @@ export function handleAdmin(engine: MemoryEngine, a: Args): string {
   const action = (a.action as string) || 'status';
   switch (action) {
     case 'status': {
-      const db = engine.getDb();
+      const db = engine.getDb() as any;
       const entries = (db.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as any).cnt;
       const edges = (db.prepare('SELECT COUNT(*) as cnt FROM knowledge_graph_edges').get() as any).cnt;
       return `Entries: ${entries} | Edges: ${edges}`;

@@ -52,7 +52,7 @@ function truncateMessage(message: string): string {
 
 function isDuplicate(engine: MemoryEngine, content: string): boolean {
   const hash = content.slice(0, 500);
-  const rows = engine.getDb().prepare(
+  const rows = (engine.getDb() as any).prepare(
     `SELECT id FROM knowledge_entries WHERE content = ? AND source = '/chat-prompt' LIMIT 1`,
   ).all(hash);
   return rows.length > 0;
@@ -106,7 +106,7 @@ async function processCleanupEntry(
     if (!dryRun) {
       const newTags = entry.tags.replace(/\bunfiltered\b/, 'smart-ingest').replace(/,,/g, ',');
       const summary = result.summary || entry.content.slice(0, MAX_SUMMARY_LENGTH);
-      engine.getDb().prepare(
+      (engine.getDb() as any).prepare(
         `UPDATE knowledge_entries SET content = ?, summary = ?, tags = ?, updated_at = datetime('now') WHERE id = ?`,
       ).run(summary, summary, newTags.replace(/^,|,$/g, ''), entry.id);
     }
@@ -177,7 +177,7 @@ export async function handleSmartIngestCleanup(
     const batchSize = Math.min(MAX_BATCH_SIZE, Math.max(1, Number(args.batch_size) || DEFAULT_BATCH_SIZE));
     const dryRun = Boolean(args.dry_run);
 
-    const entries = engine.getDb().prepare(
+    const entries = (engine.getDb() as any).prepare(
       `SELECT * FROM knowledge_entries WHERE tags LIKE '%unfiltered%' ORDER BY created_at ASC LIMIT ?`,
     ).all(batchSize) as KnowledgeEntry[];
 
@@ -210,7 +210,7 @@ export async function handleSmartIngestCleanup(
 }
 
 function countUnfiltered(engine: MemoryEngine): number {
-  const row = engine.getDb().prepare(
+  const row = (engine.getDb() as any).prepare(
     `SELECT COUNT(*) as cnt FROM knowledge_entries WHERE tags LIKE '%unfiltered%'`,
   ).get() as { cnt: number };
   return row.cnt;

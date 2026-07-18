@@ -1,0 +1,7 @@
+test_case_id,content_length,content,expected_tags,expected_summary,expected_entities,description
+UT-01,5000,"A".repeat(5000),at least 1,non-empty,non-empty,Full content 5000 chars — no truncation happy path
+UT-02,500,"Normal section content that describes the user login flow with authentication credentials.",at least 1,non-empty,non-empty,Short content 500 chars — baseline no degradation
+UT-03,5,"short",empty,empty,empty,Content < 10 chars — skip LLM
+UT-03,0,"",empty,empty,empty,Empty content — skip LLM
+UT-03,3,"   ",empty,empty,empty,Whitespace only — skip LLM
+UT-03,0,,empty,empty,empty,Null content — skip LLM

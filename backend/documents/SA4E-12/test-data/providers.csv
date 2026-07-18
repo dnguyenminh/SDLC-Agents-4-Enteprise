@@ -1,0 +1,7 @@
+provider_id,display_name,requires_api_key,is_local,default_base_url,secret_key,test_case_id,description
+anthropic,Anthropic — Claude models (recommended),true,false,,kiroSdlc.anthropicApiKey,"UT-01,UT-02,UT-03,IT-01,E2E-UI-02",Cloud provider with API key
+openai,OpenAI — GPT models,true,false,https://api.openai.com/v1,kiroSdlc.openaiApiKey,"E2E-UI-11,E2E-UI-12",Cloud provider with shared key
+openrouter,OpenRouter — Multi-model gateway,true,false,https://openrouter.ai/api/v1,kiroSdlc.openaiApiKey,"UT-16",Cloud provider with shared key
+lmstudio,LM Studio — Local models,false,true,http://localhost:1234/v1,kiroSdlc.openaiApiKey,"UT-17",Local provider no key needed
+ollama,Ollama — Local models (no API key needed),false,true,http://localhost:11434,,"UT-17,IT-07,IT-09,E2E-UI-01",Local provider with custom URL
+onnx,ONNX — CPU-only local (Phi-3 SmolLM2),false,true,N/A,,"E2E-UI-01",Local ONNX runtime

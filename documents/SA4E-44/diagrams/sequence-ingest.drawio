@@ -1,0 +1,87 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-44 — mem_ingest Sequence (with Task Creation)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="500" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_client" value="MCP Client" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="100" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_handler" value="handleIngest()" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="280" y="60" width="120" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_adapter" value="DatabaseAdapter" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="500" y="60" width="120" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_engine" value="MemoryEngine" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="720" y="60" width="120" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_tasks" value="pending_tasks" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;size=40;" vertex="1" parent="1">
+      <mxGeometry x="940" y="60" width="120" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="m1" value="mem_ingest(content, type, tags)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#0288d1;strokeWidth=2;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="130" as="sourcePoint" />
+        <mxPoint x="340" y="130" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="transaction(() =&gt; { ... })" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#9673a6;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="170" as="sourcePoint" />
+        <mxPoint x="560" y="170" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tx_box" value="TRANSACTION" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9673a6;strokeWidth=2;dashed=1;verticalAlign=top;fontSize=10;fontStyle=1;fontColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="300" y="185" width="780" height="260" as="geometry" />
+    </mxCell>
+    <mxCell id="m3" value="insert(entry)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="220" as="sourcePoint" />
+        <mxPoint x="780" y="220" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="entry_id = 42" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#82b366;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="780" y="255" as="sourcePoint" />
+        <mxPoint x="340" y="255" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="INSERT pending_tasks (TAG_ENRICHMENT)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="300" as="sourcePoint" />
+        <mxPoint x="1000" y="300" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="INSERT pending_tasks (VECTOR_EMBEDDING)" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#d6b656;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="360" as="sourcePoint" />
+        <mxPoint x="1000" y="360" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="COMMIT" style="html=1;verticalAlign=bottom;endArrow=block;rounded=1;strokeColor=#9673a6;strokeWidth=2;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="420" as="sourcePoint" />
+        <mxPoint x="560" y="420" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="OK" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#82b366;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="455" as="sourcePoint" />
+        <mxPoint x="340" y="455" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="return &quot;entry created: id=42&quot;" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;rounded=1;strokeColor=#0288d1;strokeWidth=2;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="510" as="sourcePoint" />
+        <mxPoint x="130" y="510" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note1" value="Response &lt; 100ms (BR-8)&#10;No async in critical path" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;size=14;" vertex="1" parent="1">
+      <mxGeometry x="80" y="560" width="200" height="45" as="geometry" />
+    </mxCell>
+    <mxCell id="note2" value="BR-1: Atomicity&#10;Entry + Tasks same TX" style="shape=note;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;size=14;" vertex="1" parent="1">
+      <mxGeometry x="750" y="560" width="180" height="45" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

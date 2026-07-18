@@ -7,6 +7,7 @@ import Database from 'better-sqlite3';
 import pino from 'pino';
 import { SCHEMA_V1 } from './schema.js';
 import { runGraphMigrations } from '../database/migrator.js';
+import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { applyMigrationV5 } from './migration-v5.js';
 
 const logger = pino({ name: 'migrations' });
@@ -82,7 +83,7 @@ export function runMigrations(db: Database.Database, legacyProjectId: string = '
   // Run V3 graph migrations (KSA-145/153/169) — idempotent
   if (current < 3) {
     try {
-      runGraphMigrations(db);
+      runGraphMigrations(new SqliteDbAdapter(db));
     } catch (err) {
       logger.error({ err }, '[migrations] V3 graph migration error (graceful):');
     }
