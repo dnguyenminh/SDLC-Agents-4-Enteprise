@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.12.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.13.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,13 @@ MIT
 ---
 
 ## Changelog
+
+### v1.13.0 (2026-07-19)
+
+- **Presentation Servers** — Added FastAPI (Python) + Next.js (React) presentation generation servers with full slide templates, LLM integration, and chat services
+- **Electron Desktop App** — Added Electron wrapper with IPC and slide metadata support
+- **Presentation Diagrams** — Architecture overview and agent pipeline draw.io diagrams
+- **Scripts & Utilities** — `rebuild_notice_all.py`, `start.js`, `test_server.py`
 
 ### v1.12.0 (2026-07-19)
 
