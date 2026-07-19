@@ -1,0 +1,54 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <!-- Lifelines -->
+    <mxCell id="cli" value="OpenCode CLI&#xa;(MCP Client)" style="html=1;shape=umlLifeline;perimeter=umlLifeline;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="110" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="ws" value="WrapperServer&#xa;(port 9186)" style="html=1;shape=umlLifeline;perimeter=umlLifeline;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="340" y="40" width="110" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="back" value="Backend&#xa;REST API" style="html=1;shape=umlLifeline;perimeter=umlLifeline;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="40" width="110" height="560" as="geometry"/>
+    </mxCell>
+    <!-- Activation bars -->
+    <mxCell id="ws-act" value="" style="html=1;shape=rect;fillColor=#ffffff;strokeColor=#000000;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="375" y="100" width="20" height="60" as="geometry"/>
+    </mxCell>
+    <!-- Messages -->
+    <mxCell id="m1" value="1. GET /mcp (SSE connect)" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=1;exitY=0.1;entryX=0;entryY=0.1;fontSize=11;strokeColor=#000000;" edge="1" parent="1" source="cli" target="ws">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m2" value="2. 200 OK + text/event-stream" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.2;entryX=1;entryY=0.2;fontSize=11;strokeColor=#82b366;fillColor=#d5e8d4;" edge="1" parent="1" source="ws" target="cli">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m3" value="3. event: endpoint&#xa;data: /mcp" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.3;entryX=1;entryY=0.3;fontSize=11;strokeColor=#82b366;fillColor=#d5e8d4;fontStyle=1;" edge="1" parent="1" source="ws" target="cli">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m4" value="4. event: message&#xa;data: initialized" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.4;entryX=1;entryY=0.4;fontSize=11;strokeColor=#82b366;fillColor=#d5e8d4;" edge="1" parent="1" source="ws" target="cli">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m5" value="5. keep-alive (every 15s)" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.5;entryX=1;entryY=0.5;fontSize=11;strokeColor=#d6b656;fillColor=#fff2cc;dashed=1;" edge="1" parent="1" source="ws" target="cli">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note1" value="⚠️ FIX: Line 150-152&#xa;event: endpoint&#xa;data: /mcp" style="html=1;shape=note;whiteSpace=wrap;fontSize=10;fillColor=#ffe680;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="160" y="145" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="m6" value="6. POST /mcp (initialize)" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.6;entryX=0;entryY=0.6;fontSize=11;" edge="1" parent="1" source="cli" target="ws">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m7" value="7. result: protocolVersion&#xa;capabilities, serverInfo" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.7;entryX=1;entryY=0.7;fontSize=11;strokeColor=#82b366;fillColor=#d5e8d4;" edge="1" parent="1" source="ws" target="cli">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m8" value="8. POST /mcp (notifications/initialized)" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.8;entryX=0;entryY=0.8;fontSize=11;" edge="1" parent="1" source="cli" target="ws">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m9" value="9. 202 Accepted (empty body)" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.85;entryX=1;entryY=0.85;fontSize=11;strokeColor=#82b366;fillColor=#d5e8d4;" edge="1" parent="1" source="ws" target="cli">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m10" value="10. POST /mcp (tools/list)" style="html=1;verticalAlign=bottom;endArrow=blockThin;exitX=0;exitY=0.9;entryX=0;entryY=0.9;fontSize=11;" edge="1" parent="1" source="cli" target="ws">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

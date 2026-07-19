@@ -1,0 +1,7 @@
+test_case_id,mock_tool_name,mock_tool_schema,expected_http_code,description
+TC-003,initialize,n/a,200,Standard initialize request with known protocol version
+TC-007,drawio_export_png,"{""inputSchema"":{""properties"":{""file_path"":{""type"":""string""},""content_base64"":{""type"":""string""}}}}",200,Tool with content_base64 for proxy detection tests
+TC-007,mem_search,"{""inputSchema"":{""properties"":{""query"":{""type"":""string""}}}}",200,Tool without content_base64 for non-proxy tests
+TC-012,drawio_export_png,input_file: tmp/input.drawio,200,File tool proxy test with temp file
+TC-104,stream_write_file,file_path: tmp/output.txt content: test,200,Local tool execution test
+TC-105,execute_dynamic_tool,wrapped: mem_search,200,Dynamic tool through handleDynamic

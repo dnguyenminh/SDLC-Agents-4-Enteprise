@@ -1,0 +1,8 @@
+test_case_id,reg_test_id,required_methods,expected_error_code_not,expected_error_code_is,description
+TC-800,REG-01,initialize,-32601,,initialize must NOT return -32601
+TC-801,REG-02,initialize,,,"result.protocolVersion, result.capabilities, result.serverInfo all defined"
+TC-802,REG-03,"initialize, notifications/initialized, tools/list",,,Full handshake flow works
+TC-803,REG-04,ping,,,"result={}, no error"
+TC-804,REG-05,GET /mcp,,,"Status 200, Content-Type: text/event-stream, event: message received"
+TC-805,REG-06,"initialize, ping, tools/list, tools/call",-32601,,No required method returns -32601
+TC-806,REG-07,some_future_method,,-32601,Unknown method still returns -32601

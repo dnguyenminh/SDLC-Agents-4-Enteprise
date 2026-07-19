@@ -1,0 +1,120 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Test Coverage Overview — SA4E-48" style="html=1;textAlign=center;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="0" y="0" width="800" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h-req" value="Requirement" style="html=1;whiteSpace=wrap;fillColor=#d9e1f2;strokeColor=#4a6fb5;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="20" y="50" width="180" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h-pbt" value="PBT" style="html=1;whiteSpace=wrap;fillColor=#d9e1f2;strokeColor=#4a6fb5;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="210" y="50" width="90" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h-it" value="IT" style="html=1;whiteSpace=wrap;fillColor=#d9e1f2;strokeColor=#4a6fb5;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="310" y="50" width="90" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h-e2e-api" value="E2E-API" style="html=1;whiteSpace=wrap;fillColor=#d9e1f2;strokeColor=#4a6fb5;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="410" y="50" width="90" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h-sit" value="SIT (Manual)" style="html=1;whiteSpace=wrap;fillColor=#d9e1f2;strokeColor=#4a6fb5;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="510" y="50" width="100" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h-status" value="Status" style="html=1;whiteSpace=wrap;fillColor=#d9e1f2;strokeColor=#4a6fb5;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="620" y="50" width="160" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-uc1" value="UC-01 SSE Handshake" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=10;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="20" y="90" width="180" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1-pbt" value="-" style="html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="210" y="90" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1-it" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="310" y="90" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1-e2e" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="410" y="90" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1-sit" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="510" y="90" width="100" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1-st" value="TC-001, TC-002, TC-010, TC-011, TC-200, TC-300-307, TC-313, TC-804" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=8;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="620" y="90" width="160" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-uc2" value="UC-02 JSON-RPC POST" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=10;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="20" y="120" width="180" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2-pbt" value="-" style="html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="210" y="120" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2-it" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="310" y="120" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2-e2e" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="410" y="120" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2-sit" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="510" y="120" width="100" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2-st" value="TC-003-009, TC-012, TC-100-105, TC-207-211, TC-308-312, TC-315, TC-800-803, TC-805-806" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=8;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="620" y="120" width="160" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-uc3" value="UC-03 Regression Tests" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=10;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="20" y="150" width="180" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3-pbt" value="-" style="html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="210" y="150" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3-it" value="-" style="html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="310" y="150" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3-e2e" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="410" y="150" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3-sit" value="-" style="html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="510" y="150" width="100" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3-st" value="TC-800-806 (all 7 REG tests)" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=8;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="620" y="150" width="160" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-br" value="BR-1 to BR-28 (28 rules)" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=10;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="20" y="180" width="180" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="br-pbt" value="-" style="html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="210" y="180" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="br-it" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="310" y="180" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="br-e2e" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="410" y="180" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="br-sit" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="510" y="180" width="100" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="br-st" value="TC-300-315 (21 BR validation tests)" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=8;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="620" y="180" width="160" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="r-err" value="Error Flows (EF-1 to EF-12)" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=10;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="20" y="210" width="180" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="err-pbt" value="-" style="html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="210" y="210" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="err-it" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="310" y="210" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="err-e2e" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="410" y="210" width="90" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="err-sit" value="✅" style="html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="510" y="210" width="100" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="err-st" value="TC-200-211 (12 error tests)" style="html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#cccccc;fontSize=8;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="620" y="210" width="160" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="legend" value="✅ Covered   - Not Applicable" style="html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="20" y="250" width="300" height="24" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

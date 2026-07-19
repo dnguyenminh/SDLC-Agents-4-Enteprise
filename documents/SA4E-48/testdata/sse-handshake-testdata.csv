@@ -1,0 +1,13 @@
+test_case_id,http_method,url_path,expected_http_code,expected_content_type,expected_events,description
+TC-001,GET,/mcp,200,text/event-stream,"event: endpoint, event: message",SSE connection opens with correct headers
+TC-002,GET,/mcp,200,text/event-stream,"event: endpoint BEFORE event: message",SSE event ordering verification
+TC-010,GET,/mcp,200,text/event-stream,"event: endpoint, event: message, : keep-alive",SSE keep-alive received within 20s
+TC-011,GET,/mcp,200,text/event-stream,N/A,SSE timer cleanup on server stop
+TC-013,OPTIONS,/mcp,204,N/A,N/A,CORS preflight returns 204
+TC-203,PUT,/mcp,405,N/A,N/A,Method not allowed - PUT
+TC-203,DELETE,/mcp,405,N/A,N/A,Method not allowed - DELETE
+TC-204,GET,/unknown,404,N/A,N/A,Unknown path returns 404
+TC-204,POST,/api/v1/test,404,N/A,N/A,Unknown path POST
+TC-313,GET,/mcp,200,text/event-stream,"event: endpoint",GET /mcp is NOT rejected (was the bug)
+TC-700,OPTIONS,/health,204,N/A,N/A,CORS preflight on health endpoint
+TC-700,OPTIONS,/unknown-path,204,N/A,N/A,CORS preflight on unknown path

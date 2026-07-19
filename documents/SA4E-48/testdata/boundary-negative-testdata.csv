@@ -1,0 +1,16 @@
+test_case_id,input_data,expected_http_code,expected_result,description
+TC-211,body_size=1048577,null or error,Body > 1MB destroys connection
+TC-315,body_size=1048576,200 or 400,Exactly 1MB is allowed (boundary)
+TC-315,body_size=1048577,null or error,1MB + 1 byte destroys connection (boundary)
+TC-400,content_type=text/plain body={}"jsonrpc":"2.0","id":1,"method":"ping"{},400,"error.code=-32700, expected application/json",Wrong Content-Type text/plain
+TC-400,content_type=application/x-www-form-urlencoded body={}"jsonrpc":"2.0","id":1,"method":"ping"{},400,"error.code=-32700, expected application/json",Wrong Content-Type form
+TC-400,content_type=missing,400,"error.code=-32700, expected application/json",Missing Content-Type header
+TC-401,body=not-json,400,error.code=-32700,Invalid JSON string
+TC-401,body={"unclosed,400,error.code=-32700,Unclosed JSON
+TC-401,body="",400,error.code=-32700,Empty body string
+TC-402,body=,400,error.code=-32700,Empty body
+TC-403,body_size=1048576,200 or 400,N/A,Exactly 1MB boundary (valid JSON)
+TC-403,body_size=1048577,null or error,N/A,1MB + 1 boundary (connection destroyed)
+TC-404,body={}"jsonrpc":"2.0","id":1{},200,error.code=-32601,Missing method field
+TC-404,body={}"jsonrpc":"2.0","id":1,"method":""{},200,error.code=-32601,Empty method string
+TC-405,body={}"jsonrpc":"2.0","method":"initialized"{},202,empty body,Defensive initialized acceptance

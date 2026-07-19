@@ -1,0 +1,32 @@
+test_case_id,http_method,request_body,expected_http_code,expected_result,expected_error_code,description
+TC-003,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize"",""params"":{""protocolVersion"":""2024-11-05"",""capabilities"":{},""clientInfo"":{""name"":""vscode"",""version"":""1.128.0""}}}",200,"protocolVersion=2024-11-05, capabilities.tools.listChanged=false, serverInfo.name=sdlc-agents-4-enterprise",,Initialize exact match
+TC-004,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize"",""params"":{""protocolVersion"":""2024-11-05"",""capabilities"":{},""clientInfo"":{""name"":""x"",""version"":""1""}}}",200,result.protocolVersion=2024-11-05,,Initialize step 1 of handshake
+TC-004,POST,"{""jsonrpc"":""2.0"",""method"":""notifications/initialized""}",202,empty body,,Initialized notification step 2
+TC-004,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""tools/list"",""params"":{}}",200,"result.tools is array",,tools/list step 3
+TC-005,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""ping""}",200,"result={}",,Ping returns empty result
+TC-006,POST,"{""jsonrpc"":""2.0"",""method"":""notifications/initialized""}",202,empty body,,Notification returns 202
+TC-008,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize"",""params"":{""protocolVersion"":""2024-11-05""}}",200,protocolVersion=2024-11-05,,Version exact match
+TC-008,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize"",""params"":{""protocolVersion"":""2025-03-26""}}",200,protocolVersion=2025-03-26,,Version exact match 2
+TC-008,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize"",""params"":{""protocolVersion"":""2025-06-18""}}",200,protocolVersion=2025-06-18,,Version exact match 3
+TC-009,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize"",""params"":{""protocolVersion"":""2099-01-01""}}",200,protocolVersion=2025-06-18,,Unknown version falls back to newest
+TC-009,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize""}",200,protocolVersion=2025-06-18,,Missing version falls back to newest
+TC-100,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize""}",200,result defined,,POST without prior SSE
+TC-101,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize"",""params"":{""protocolVersion"":""2099-01-01""}}",200,protocolVersion=2025-06-18,,Unknown version AF-2
+TC-102,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize""}",200,protocolVersion=2025-06-18,,Empty params AF-3
+TC-103,POST,"{""jsonrpc"":""2.0"",""method"":""notifications/initialized""}",202,empty body,,Notification without prior init AF-4
+TC-104,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""tools/call"",""params"":{""name"":""stream_write_file"",""arguments"":{""file_path"":""testdata/out.txt"",""content"":""test""}}}",200,result defined,,Local tool AF-5
+TC-105,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""tools/call"",""params"":{""name"":""execute_dynamic_tool"",""arguments"":{""toolName"":""mem_search"",""arguments"":{""query"":""x""}}}}",200,result defined,,Dynamic tool AF-6
+TC-207,POST,not-valid-json{{,400,,error.code=-32700,Invalid JSON parse error
+TC-208,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""ping""}",400,,error.code=-32700,Wrong Content-Type
+TC-209,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""some_future_method""}",200,,error.code=-32601,Unknown method
+TC-210,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""tools/call"",""params"":{""name"":""mem_search"",""arguments"":{""query"":""x""}}}",200,,error.code=-32603,Backend error
+TC-404,POST,"{""jsonrpc"":""2.0"",""id"":1}",200,,error.code=-32601,Missing method
+TC-405,POST,"{""jsonrpc"":""2.0"",""method"":""initialized""}",202,empty body,,Defensive initialized (without notifications/ prefix)
+TC-800,POST,"{""jsonrpc"":""2.0"",""id"":1,""method"":""initialize"",""params"":{""protocolVersion"":""2024-11-05"",""capabilities"":{},""clientInfo"":{""name"":""vscode"",""version"":""1.128.0""}}}",200,"result defined, error undefined, error.code NOT -32601",,REG-01 initialize implemented
+TC-801,POST,"{""jsonrpc"":""2.0"",""id"":2,""method"":""initialize"",""params"":{""protocolVersion"":""2024-11-05"",""capabilities"":{},""clientInfo"":{""name"":""x"",""version"":""1""}}}",200,"result.protocolVersion=2024-11-05, result.capabilities defined, result.serverInfo defined, result.serverInfo.name=sdlc-agents-4-enterprise",,REG-02 initialize structure
+TC-803,POST,"{""jsonrpc"":""2.0"",""id"":5,""method"":""ping""}",200,"result={}, error undefined",,REG-04 ping response
+TC-805,POST,"{""jsonrpc"":""2.0"",""id"":100,""method"":""initialize"",""params"":{""protocolVersion"":""2024-11-05"",""capabilities"":{},""clientInfo"":{""name"":""x"",""version"":""1""}}}",200,"error.code NOT -32601",,REG-06 initialize no 32601
+TC-805,POST,"{""jsonrpc"":""2.0"",""id"":100,""method"":""ping""}",200,"error.code NOT -32601",,REG-06 ping no 32601
+TC-805,POST,"{""jsonrpc"":""2.0"",""id"":100,""method"":""tools/list"",""params"":{""protocolVersion"":""2024-11-05"",""capabilities"":{},""clientInfo"":{""name"":""x"",""version"":""1""}}}",200,"error.code NOT -32601",,REG-06 tools/list no 32601
+TC-805,POST,"{""jsonrpc"":""2.0"",""id"":100,""method"":""tools/call"",""params"":{""name"":""mem_search"",""arguments"":{""query"":""x""}}}",200,"error.code NOT -32601",,REG-06 tools/call no 32601
+TC-806,POST,"{""jsonrpc"":""2.0"",""id"":101,""method"":""some_future_method""}",200,,error.code=-32601,REG-07 unknown method still returns 32601
