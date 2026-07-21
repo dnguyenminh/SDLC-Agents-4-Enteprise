@@ -10,7 +10,6 @@ import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import { DatabaseConfigService } from '../../database/config/DatabaseConfigService.js';
 import { DatabaseAdapterFactory } from '../../database/factory/DatabaseAdapterFactory.js';
 import { MigrationService, type MigrationProgress } from '../../database/migration/MigrationService.js';
-import { getAdminDb } from '../../admin/db/core.js';
 import { z } from 'zod';
 
 const connectionSchema = z.object({
@@ -27,8 +26,7 @@ let activeMigration: MigrationService | null = null;
 
 export function createDatabaseRoute(registry: ModuleRegistry, logger: Logger, dataDir: string): Hono {
   const app = new Hono();
-  // SA4E-50: Pass DB instance + dataDir for config service
-  const configService = new DatabaseConfigService(getAdminDb(), dataDir);
+  const configService = new DatabaseConfigService(dataDir);
 
   app.get('/api/admin/database/status', (c) => {
     try {

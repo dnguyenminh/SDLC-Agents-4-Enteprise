@@ -1,0 +1,25 @@
+{
+  "name": "sm-agent",
+  "description": "Scrum Master agent điều phối toàn bộ pipeline multi-agent theo SDLC. Entry point duy nhất — user chỉ cần cung cấp Jira ticket key.",
+  "prompt": "file:.kiro/agents/prompts/sm-agent.md",
+  "tools": ["fs_read", "fs_write", "execute_bash", "grep", "glob", "code", "use_subagent"],
+  "allowedTools": ["*"],
+  "useLegacyMcpJson": true,
+  "keyboardShortcut": "ctrl+shift+s",
+  "welcomeMessage": "🏃 Scrum Master sẵn sàng! Cung cấp Jira ticket key để bắt đầu pipeline.",
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": ".kiro/hooks/file-watcher.sh .",
+        "description": "Start file watcher for code indexing"
+      }
+    ],
+    "postToolUse": [
+      {
+        "matcher": "fs_write",
+        "command": ".kiro/hooks/validate-drawio.sh",
+        "description": "Validate drawio XML after write"
+      }
+    ]
+  }
+}

@@ -105,12 +105,6 @@ export function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_graph_edges_source ON graph_edges(source);
     CREATE INDEX IF NOT EXISTS idx_graph_edges_target ON graph_edges(target);
     CREATE INDEX IF NOT EXISTS idx_graph_edges_source_target ON graph_edges(source, target);
-
-    CREATE TABLE IF NOT EXISTS app_config (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL,
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
   `);
 
   // Idempotent migration: add project_id to graph_nodes for existing DBs
@@ -120,22 +114,7 @@ export function initSchema(db: Database.Database): void {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_graph_nodes_project ON graph_nodes(project_id)`);
 }
 
-/**
- * Seed default database configuration into app_config table.
- * Sets SQLite as the active engine with default path if not yet configured.
- * @param db - The SQLite database instance
- */
-export function seedDbConfigDefaults(db: Database.Database): void {
-  const exists = db.prepare("SELECT 1 FROM app_config WHERE key = ?").get('db.activeEngine');
-  if (!exists) {
-    const stmt = db.prepare("INSERT OR IGNORE INTO app_config (key, value) VALUES (?, ?)");
-    stmt.run('db.activeEngine', 'sqlite');
-    stmt.run('db.sqlite.dbPath', 'index.db');
-  }
-}
-
 export function seedDefaults(db: Database.Database): void {
-  seedDbConfigDefaults(db);
   const groupExists = db.prepare('SELECT 1 FROM access_groups WHERE access_group_id = ?').get('grp-admin');
   if (!groupExists) {
     const now = new Date().toISOString();

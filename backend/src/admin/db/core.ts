@@ -36,21 +36,24 @@ export function getIndexDbPath(): string {
   return DB_PATH;
 }
 
-/** Get active database engine from app_config table (SA4E-50) */
+/** Get active database engine from database.json config */
 export function getActiveEngine(): string {
   try {
-    const db = getAdminDb();
-    const row = db.prepare("SELECT value FROM app_config WHERE key = 'db.activeEngine'").get() as { value: string } | undefined;
-    return row?.value || 'sqlite';
+    const configPath = path.join(DATA_DIR, 'database.json');
+    if (!fs.existsSync(configPath)) return 'sqlite';
+    const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    return raw.activeEngine || 'sqlite';
   } catch { return 'sqlite'; }
 }
 
-/** Get connection config for the active engine from app_config table (SA4E-50) */
+/** Get connection config for the active engine */
 export function getActiveDbConfig() {
   try {
-    const db = getAdminDb();
-    const configService = new DatabaseConfigService(db, DATA_DIR);
-    return configService.getActiveConfig();
+    const configPath = path.join(DATA_DIR, 'database.json');
+    if (!fs.existsSync(configPath)) return { engine: 'sqlite' as const, dbPath: DB_PATH };
+    const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    if (raw.activeEngine === 'sqlite' || !raw.activeEngine) return { engine: 'sqlite' as const, dbPath: DB_PATH };
+    return { engine: raw.activeEngine, ...raw.engines[raw.activeEngine] };
   } catch { return { engine: 'sqlite' as const, dbPath: DB_PATH }; }
 }
 
@@ -87,8 +90,7 @@ export function getIndexAdapter(): DatabaseAdapter {
       // SA4E-49: Reuse the same DB handle as getAdminDb() — single unified DB.
       indexAdapter = new SqliteDbAdapter(getAdminDb());
     } else {
-      // SA4E-50: Pass DB instance instead of dataDir string
-      const configService = new DatabaseConfigService(getAdminDb(), DATA_DIR);
+      const configService = new DatabaseConfigService(DATA_DIR);
       const activeConfig = configService.getActiveConfig();
       indexAdapter = DatabaseAdapterFactory.create(activeConfig);
       indexAdapter.connect().catch((err) => {
@@ -110,8 +112,7 @@ export function getAdminAdapter(): DatabaseAdapter {
     if (engine === 'sqlite') {
       adminAdapter = new SqliteDbAdapter(getAdminDb());
     } else {
-      // SA4E-50: Pass DB instance instead of dataDir string
-      const configService = new DatabaseConfigService(getAdminDb(), DATA_DIR);
+      const configService = new DatabaseConfigService(DATA_DIR);
       const activeConfig = configService.getActiveConfig();
       adminAdapter = DatabaseAdapterFactory.create(activeConfig);
       adminAdapter.connect().catch((err) => {

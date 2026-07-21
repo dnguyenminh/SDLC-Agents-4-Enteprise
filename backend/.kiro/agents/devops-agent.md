@@ -2,7 +2,6 @@
 name: devops-agent
 label: DevOps Engineer
 phase: deployment
-tools: ["read", "write", "shell", "@mcp"]
 outputDoc: deployment_guide.md
 ---
 

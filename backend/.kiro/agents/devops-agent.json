@@ -1,0 +1,18 @@
+{
+  "name": "devops-agent",
+  "description": "DevOps Engineer agent chuyên tạo Deployment Guide, CI/CD pipeline, Docker configuration, và Release Notes.",
+  "prompt": "file:.kiro/agents/prompts/devops-agent.md",
+  "tools": ["fs_read", "fs_write", "execute_bash", "grep", "glob", "code"],
+  "allowedTools": ["*"],
+  "useLegacyMcpJson": true,
+  "keyboardShortcut": "ctrl+shift+o",
+  "welcomeMessage": "🚀 DevOps agent sẵn sàng! Cung cấp Jira ticket key để tạo deployment guide.",
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": ".kiro/hooks/file-watcher.sh .",
+        "description": "Start file watcher for code indexing"
+      }
+    ]
+  }
+}
