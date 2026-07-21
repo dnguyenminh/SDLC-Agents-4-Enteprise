@@ -18,6 +18,26 @@ import { createAnalyticsRoutes } from './analytics.js';
 import { createSseRoutes } from './sse.js';
 import { createMcpCrudRoutes } from './mcp-crud.js';
 import { createDatabaseRoutes } from './database.js';
+import type { AdminContext } from './context.js';
+
+/** GET /api/admin/projects — list registered workspaces from project_registry. */
+function createProjectsRoutes(ctx: AdminContext): Hono {
+  const app = new Hono();
+  app.get('/api/admin/projects', async (c) => {
+    const user = await ctx.requireAuth(c);
+    if (user instanceof Response) return user;
+    try {
+      const db = getAdminDb();
+      const rows = db.prepare(
+        'SELECT project_id, display_name, workspace_path, last_seen FROM project_registry ORDER BY last_seen DESC LIMIT 100'
+      ).all() as { project_id: string; display_name: string; workspace_path: string; last_seen: string }[];
+      return c.json({ projects: rows });
+    } catch {
+      return c.json({ projects: [] });
+    }
+  });
+  return app;
+}
 
 export function createAdminRoute(logger: Logger, registry?: any): Hono {
   const ctx = createAdminContext(logger, registry);
@@ -41,6 +61,7 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
   app.route('/', createAnalyticsRoutes(ctx));
   app.route('/', createSseRoutes(ctx));
   app.route('/', createDatabaseRoutes(ctx));
+  app.route('/', createProjectsRoutes(ctx));
 
   logger.info('Admin portal routes registered: /admin + /api/admin/* (with auth, SSE)');
   return app;

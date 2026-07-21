@@ -112,6 +112,17 @@ export function initSchema(db: Database.Database): void {
     db.exec(`ALTER TABLE graph_nodes ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
   } catch { /* column already exists */ }
   db.exec(`CREATE INDEX IF NOT EXISTS idx_graph_nodes_project ON graph_nodes(project_id)`);
+
+  // SA4E-50: project_registry — workspace → projectId mapping
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS project_registry (
+      project_id TEXT PRIMARY KEY,
+      display_name TEXT NOT NULL DEFAULT '',
+      workspace_path TEXT NOT NULL DEFAULT '',
+      last_seen TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_project_registry_seen ON project_registry(last_seen);
+  `);
 }
 
 export function seedDefaults(db: Database.Database): void {
