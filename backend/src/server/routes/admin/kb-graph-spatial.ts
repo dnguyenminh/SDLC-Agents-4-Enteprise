@@ -1,17 +1,17 @@
 /**
  * KB Graph Spatial routes — 3D spatial queries for graph visualization.
  * SA4E-45: Uses getIndexAdapter() for multi-DB support.
+ * SA4E-49: Counts use graph_nodes table (authoritative) instead of knowledge_entries/symbols.
  */
 
 import { Hono } from 'hono';
 import { getKbEntries, getKbEntryCount } from '../../../admin/admin-db.js';
-import { getIndexAdapter, getActiveEngine } from '../../../admin/db/core.js';
 import type { AdminContext } from './context.js';
 
 export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
 
-  app.get('/api/admin/kb/graph/positions', (c) => {
+  app.get('/api/admin/kb/graph/positions', async (c) => {
     const user = ctx.requireAuth(c);
     if (user instanceof Response) return user;
     const kbPermCheck = ctx.requirePermission(c, user.userId, 'KB_READ');
@@ -19,28 +19,24 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
     const allowedTiers = (kbPermCheck.roleData as { allowedTiers?: string[] })?.allowedTiers;
     let kbCount = 0;
     let codeCount = 0;
-    try { kbCount = getKbEntryCount(ctx.getRequestProjectId(c)); } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to get KB entry count'); }
+    // SA4E-49: Use graph_nodes counts (authoritative source) instead of knowledge_entries/symbols.
+    // knowledge_entries may be empty while graph_nodes has projected data from ingestion.
+    // This matches the Dashboard stats logic (analytics.ts) which correctly shows counts.
     try {
-      // SA4E-41: count only the requesting tenant's code symbols (fail-closed).
-      // SA4E-49: Fall back to include NULL project_id entries (legacy/unscoped symbols).
       const pid = ctx.getRequestProjectId(c);
-      if (pid) {
-        const adapter = getIndexAdapter();
-        const row = adapter.get<{ cnt: number }>(
-          "SELECT COUNT(*) as cnt FROM symbols WHERE project_id = ? AND kind IN ('function','class','interface','method','type','enum','constructor')",
-          [pid]
-        );
-        codeCount = row?.cnt || 0;
-        // SA4E-49: If scoped count is 0, try including NULL project_id entries
-        if (codeCount === 0) {
-          const fallbackRow = adapter.get<{ cnt: number }>(
-            "SELECT COUNT(*) as cnt FROM symbols WHERE (project_id = ? OR project_id IS NULL) AND kind IN ('function','class','interface','method','type','enum','constructor')",
-            [pid]
-          );
-          codeCount = fallbackRow?.cnt || 0;
-        }
+      const { getAdminDb } = await import('../../../admin/admin-db.js');
+      const d = getAdminDb();
+      const CODE_TYPES = "('FUNCTION','METHOD','CLASS','INTERFACE','TYPE','CONSTRUCTOR','ENUM','CONSTANT','VARIABLE')";
+      let totalNodes = (d.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ?').get(pid) as { cnt: number }).cnt || 0;
+      let codeNodes = (d.prepare(`SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? AND type IN ${CODE_TYPES}`).get(pid) as { cnt: number }).cnt || 0;
+      // Fallback: include NULL project_id (legacy/unscoped nodes)
+      if (totalNodes === 0) {
+        totalNodes = (d.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? OR project_id IS NULL').get(pid) as { cnt: number }).cnt || 0;
+        codeNodes = (d.prepare(`SELECT COUNT(*) as cnt FROM graph_nodes WHERE (project_id = ? OR project_id IS NULL) AND type IN ${CODE_TYPES}`).get(pid) as { cnt: number }).cnt || 0;
       }
-    } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to count code symbols'); }
+      codeCount = codeNodes;
+      kbCount = totalNodes - codeNodes;
+    } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to count graph nodes'); }
     const graphService = (globalThis as Record<string, unknown>).__sqliteGraphService as { ready?: boolean; getAllPositions?: (projectId?: string) => any } | undefined;
     if (graphService && graphService.ready) {
       try {
