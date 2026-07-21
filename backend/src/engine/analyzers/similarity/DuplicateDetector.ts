@@ -3,7 +3,7 @@
  * Uses cosine similarity on body embeddings + Union-Find clustering.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import { ClusterBuilder } from './ClusterBuilder.js';
 import type { SimilarityPair, DuplicateCluster, DuplicateReport, ClusterMember } from './types.js';
 import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
@@ -25,7 +25,7 @@ interface SymbolRow {
 }
 
 export class DuplicateDetector {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private minSimilarity: number;
   private minLines: number;
   private projectId: string | undefined;
@@ -33,8 +33,8 @@ export class DuplicateDetector {
   /**
    * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
    */
-  constructor(db: Database.Database, minSimilarity: number = 0.85, minLines: number = 5, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, minSimilarity: number = 0.85, minLines: number = 5, projectId?: string) {
+    this.adapter = adapter;
     this.minSimilarity = minSimilarity;
     this.minLines = minLines;
     this.projectId = projectId;
@@ -91,7 +91,7 @@ export class DuplicateDetector {
       params.push(module);
     }
 
-    const rows = this.db.prepare(sql).all(...params) as Array<EmbeddingRow & SymbolRow>;
+    const rows = this.adapter.prepare(sql).all(...params) as Array<EmbeddingRow & SymbolRow>;
 
     return rows.map(row => ({
       symbolId: row.symbol_id,

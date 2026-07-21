@@ -1,10 +1,11 @@
 /**
  * KSA-155: File Resolver - resolves import paths to indexed file paths.
  * Handles relative imports, bare specifiers, and extension resolution.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
 import * as path from 'path';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { buildCodeScopeFilter } from '../query/code-intel-isolation.js';
 
 export class FileResolver {
@@ -25,46 +26,35 @@ export class FileResolver {
   ]);
 
   /**
-   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no files).
+   * @param projectId  SA4E-41 tenant scope. Undefined => fail-closed (no files).
    */
-  constructor(db: Database.Database, workspaceRoot: string, projectId?: string) {
+  constructor(adapter: DatabaseAdapter, workspaceRoot: string, projectId?: string) {
     this.workspaceRoot = workspaceRoot;
     this.projectId = projectId;
-    this.indexedFiles = this.loadIndexedFiles(db);
+    this.indexedFiles = this.loadIndexedFiles(adapter);
   }
 
-  private loadIndexedFiles(db: Database.Database): Set<string> {
+  private loadIndexedFiles(adapter: DatabaseAdapter): Set<string> {
     const scope = buildCodeScopeFilter(this.projectId, 'files');
-    const rows = db.prepare(
-      `SELECT relative_path FROM files WHERE ${scope.clause}`
-    ).all(...scope.params) as { relative_path: string }[];
+    const rows = adapter.all<{ relative_path: string }>(
+      `SELECT relative_path FROM files WHERE ${scope.clause}`, [...scope.params]);
     return new Set(rows.map(r => r.relative_path));
   }
 
   /** Resolve an input file path to a canonical indexed path. */
   resolveFile(input: string): string | null {
-    // Exact match on relative path
     if (this.indexedFiles.has(input)) return input;
-
-    // Try normalizing separators
     const normalized = input.replace(/\\/g, '/');
     if (this.indexedFiles.has(normalized)) return normalized;
-
-    // Try stripping workspace root prefix
     if (input.startsWith(this.workspaceRoot)) {
       const relative = input.substring(this.workspaceRoot.length).replace(/^[/\\]/, '').replace(/\\/g, '/');
       if (this.indexedFiles.has(relative)) return relative;
     }
-
-    // Try with extensions
     const withExt = this.findWithExtensions(normalized);
     if (withExt) return withExt;
-
-    // Fuzzy: find by basename
     const basename = path.basename(input);
     const matches = [...this.indexedFiles].filter(f => f.endsWith(basename) || f.endsWith('/' + basename));
     if (matches.length === 1) return matches[0];
-
     return null;
   }
 
@@ -75,8 +65,6 @@ export class FileResolver {
       const resolved = path.posix.resolve('/' + dir, target).substring(1);
       return this.findWithExtensions(resolved);
     }
-
-    // Try as workspace-relative path
     return this.findWithExtensions(target);
   }
 
@@ -84,8 +72,6 @@ export class FileResolver {
   isExternal(target: string): boolean {
     const base = target.split('/')[0].split('.')[0];
     if (FileResolver.STDLIB_MODULES.has(base)) return true;
-
-    // Bare specifier that doesn't start with . or /
     if (!target.startsWith('.') && !target.startsWith('/')) {
       const resolved = this.resolveImportTarget('', target);
       return resolved === null;
@@ -94,14 +80,12 @@ export class FileResolver {
   }
 
   /** Refresh the indexed files set (call after re-indexing). */
-  refresh(db: Database.Database): void {
-    this.indexedFiles = this.loadIndexedFiles(db);
+  refresh(adapter: DatabaseAdapter): void {
+    this.indexedFiles = this.loadIndexedFiles(adapter);
   }
 
   private findWithExtensions(basePath: string): string | null {
-    // Try exact first
     if (this.indexedFiles.has(basePath)) return basePath;
-
     for (const ext of FileResolver.EXTENSIONS) {
       const candidate = basePath + ext;
       if (this.indexedFiles.has(candidate)) return candidate;

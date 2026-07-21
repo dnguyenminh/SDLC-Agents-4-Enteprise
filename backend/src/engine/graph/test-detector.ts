@@ -1,9 +1,10 @@
 /**
  * KSA-156: Test Detector - identifies test files and finds related tests for symbols.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
 import * as path from 'path';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { ResolvedSymbol } from './symbol-resolver.js';
 import { buildCodeScopeFilter } from '../query/code-intel-isolation.js';
 
@@ -13,7 +14,7 @@ export interface RelatedTest {
 }
 
 export class TestDetector {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private projectId: string | undefined;
 
   private static readonly TEST_PATH_PATTERNS = [
@@ -31,10 +32,10 @@ export class TestDetector {
   ];
 
   /**
-   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
+   * @param projectId  SA4E-41 tenant scope. Undefined => fail-closed (no rows).
    */
-  constructor(db: Database.Database, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, projectId?: string) {
+    this.adapter = adapter;
     this.projectId = projectId;
   }
 
@@ -46,22 +47,17 @@ export class TestDetector {
   }
 
   /** Find test files related to the given symbols and impacts. */
-  findRelatedTests(
-    symbols: ResolvedSymbol[],
-    impactFiles: string[]
-  ): RelatedTest[] {
+  findRelatedTests(symbols: ResolvedSymbol[], impactFiles: string[]): RelatedTest[] {
     const results: RelatedTest[] = [];
     const seen = new Set<string>();
 
     for (const sym of symbols) {
       const sourceBasename = path.basename(sym.filePath, path.extname(sym.filePath));
-
-      // Find test files that import the source file (tenant-scoped, fail-closed)
       const scope = buildCodeScopeFilter(this.projectId, 'relationships');
-      const testFiles = this.db.prepare(`
+      const testFiles = this.adapter.all<{ file_path: string }>(`
         SELECT DISTINCT file_path FROM relationships
         WHERE kind = 'imports' AND target_symbol LIKE ? AND ${scope.clause}
-      `).all(`%${sourceBasename}%`, ...scope.params) as { file_path: string }[];
+      `, [`%${sourceBasename}%`, ...scope.params]);
 
       for (const tf of testFiles) {
         if (this.isTestFile(tf.file_path) && !seen.has(tf.file_path)) {
@@ -71,7 +67,6 @@ export class TestDetector {
       }
     }
 
-    // Check if any impact targets are in test files
     for (const file of impactFiles) {
       if (this.isTestFile(file) && !seen.has(file)) {
         seen.add(file);

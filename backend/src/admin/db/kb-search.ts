@@ -1,31 +1,41 @@
-import * as fs from 'fs';
-import Database from 'better-sqlite3';
-import { getIndexDbPath } from './core.js';
+/**
+ * admin/db/kb-search.ts — KB full-text search via DatabaseAdapter.
+ * SA4E-45: Uses getIndexAdapter() for multi-DB support.
+ */
+
+import { getIndexAdapter, getActiveEngine, logger } from './core.js';
 import { buildAdminScopeFilter } from './kb-scope-filter.js';
 
-export function searchKbEntries(query: string, projectId?: string, userId?: string): { items: any[]; total: number } {
-  try {
-    const indexDbPath = getIndexDbPath();
-    if (!fs.existsSync(indexDbPath)) return { items: [], total: 0 };
-    const indexDb = new Database(indexDbPath, { readonly: true });
+/** Check if knowledge_entries table exists */
+function tableExists(): boolean {
+  const adapter = getIndexAdapter();
+  if (getActiveEngine() === 'sqlite') {
+    const row = adapter.get<{ cnt: number }>(
+      "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'"
+    );
+    return (row?.cnt ?? 0) > 0;
+  }
+  return true;
+}
 
-    const tableExists = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'").get() as { cnt: number } | undefined;
-    if (!tableExists || tableExists.cnt === 0) {
-      indexDb.close();
-      return { items: [], total: 0 };
-    }
+export function searchKbEntries(
+  query: string, projectId?: string, userId?: string
+): { items: any[]; total: number } {
+  try {
+    if (!tableExists()) return { items: [], total: 0 };
+    const adapter = getIndexAdapter();
 
     const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
-    if (queryTerms.length === 0) {
-      indexDb.close();
-      return { items: [], total: 0 };
-    }
+    if (queryTerms.length === 0) return { items: [], total: 0 };
 
-    const totalDocs = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as { cnt: number }).cnt;
+    const totalRow = adapter.get<{ cnt: number }>(
+      'SELECT COUNT(*) as cnt FROM knowledge_entries'
+    );
+    const totalDocs = totalRow?.cnt ?? 0;
 
     const searchCols = ['content', 'source', 'summary', 'tags'];
     const likeClauses: string[] = [];
-    const likeParams: string[] = [];
+    const likeParams: unknown[] = [];
     for (const term of queryTerms) {
       for (const col of searchCols) {
         likeClauses.push(`${col} LIKE ?`);
@@ -34,10 +44,11 @@ export function searchKbEntries(query: string, projectId?: string, userId?: stri
     }
     const filter = buildAdminScopeFilter(projectId, userId);
     const projectFilter = filter ? ` AND (${filter.clause})` : '';
-    const projectParams = filter ? filter.params : [];
+    const projectParams = filter ? (filter.params as unknown[]) : [];
     const sql = `SELECT * FROM knowledge_entries WHERE (${likeClauses.join(' OR ')})${projectFilter} LIMIT 200`;
-    const rows = indexDb.prepare(sql).all(...likeParams, ...projectParams) as Record<string, unknown>[];
+    const rows = adapter.all<Record<string, unknown>>(sql, [...likeParams, ...projectParams]);
 
+    // TF-IDF scoring
     const termDocFreq: Record<string, number> = {};
     for (const term of queryTerms) {
       let docCount = 0;
@@ -104,10 +115,9 @@ export function searchKbEntries(query: string, projectId?: string, userId?: stri
     });
 
     scoredRows.sort((a: any, b: any) => b.score - a.score);
-
-    indexDb.close();
     return { items: scoredRows.slice(0, 50), total: scoredRows.length };
-  } catch {
+  } catch (err) {
+    logger.error({ err }, 'Error in searchKbEntries');
     return { items: [], total: 0 };
   }
 }

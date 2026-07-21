@@ -1,30 +1,44 @@
-import * as fs from 'fs';
-import Database from 'better-sqlite3';
-import { getIndexDbPath } from './core.js';
+/**
+ * admin/db/kb-embeddings.ts — KB embedding data for visualization via DatabaseAdapter.
+ * SA4E-45: Uses getIndexAdapter() for multi-DB support.
+ */
 
-export function getKbEmbeddings(limit = 100): { items: { id: string; label: string; x: number; y: number; type: string }[]; hasRealData: boolean } {
+import { getIndexAdapter, getActiveEngine } from './core.js';
+
+/** Check if a table exists in the index database */
+function hasTable(adapter: ReturnType<typeof getIndexAdapter>, tableName: string): boolean {
+  if (getActiveEngine() === 'sqlite') {
+    const row = adapter.get<{ cnt: number }>(
+      "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name=?",
+      [tableName]
+    );
+    return (row?.cnt ?? 0) > 0;
+  }
+  // PG/MySQL: assume table exists (managed by migrations)
+  return true;
+}
+
+export function getKbEmbeddings(limit = 100): {
+  items: { id: string; label: string; x: number; y: number; type: string }[];
+  hasRealData: boolean;
+} {
   try {
-    const indexDbPath = getIndexDbPath();
-    if (!fs.existsSync(indexDbPath)) return { items: [], hasRealData: false };
-    const indexDb = new Database(indexDbPath, { readonly: true });
-
-    const tableExists = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'").get() as { cnt: number } | undefined;
-    if (!tableExists || tableExists.cnt === 0) {
-      indexDb.close();
+    const adapter = getIndexAdapter();
+    if (!hasTable(adapter, 'knowledge_entries')) {
       return { items: [], hasRealData: false };
     }
 
-    const vectorsExist = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_vectors'").get() as { cnt: number } | undefined;
-
-    if (vectorsExist && vectorsExist.cnt > 0) {
-      const rows = indexDb.prepare(`
-        SELECT e.id, e.source, e.summary, e.type, e.tier, v.vector
-        FROM knowledge_entries e
-        INNER JOIN knowledge_vectors v ON v.entry_id = e.id
-        WHERE v.vector IS NOT NULL
-        ORDER BY e.created_at DESC
-        LIMIT ?
-      `).all(limit) as Record<string, unknown>[];
+    // Try real vector data first
+    if (hasTable(adapter, 'knowledge_vectors')) {
+      const rows = adapter.all<Record<string, unknown>>(
+        `SELECT e.id, e.source, e.summary, e.type, e.tier, v.vector
+         FROM knowledge_entries e
+         INNER JOIN knowledge_vectors v ON v.entry_id = e.id
+         WHERE v.vector IS NOT NULL
+         ORDER BY e.created_at DESC
+         LIMIT ?`,
+        [limit]
+      );
 
       if (rows.length > 0) {
         const items = rows.map((row: any, i: number) => {
@@ -38,7 +52,6 @@ export function getKbEmbeddings(limit = 100): { items: { id: string; label: stri
               const floats = new Float32Array(buf.buffer, buf.byteOffset, buf.length / 4);
               embedding = Array.from(floats);
             }
-
             if (embedding.length >= 2) {
               const half = Math.floor(embedding.length / 2);
               let sumX = 0, sumY = 0;
@@ -54,7 +67,8 @@ export function getKbEmbeddings(limit = 100): { items: { id: string; label: stri
               y = Math.max(0, Math.min(1, y));
             }
           } catch {
-            const content = row.source || row.summary || '';
+            // Fallback: hash-based positioning
+            const content = (row.source || row.summary || '') as string;
             let h1 = 0, h2 = 0;
             for (let j = 0; j < content.length; j++) {
               h1 = (h1 * 31 + content.charCodeAt(j)) & 0x7fffffff;
@@ -63,7 +77,6 @@ export function getKbEmbeddings(limit = 100): { items: { id: string; label: stri
             x = +((h1 % 1000) / 1000).toFixed(3);
             y = +((h2 % 1000) / 1000).toFixed(3);
           }
-
           return {
             id: String(row.id),
             label: row.source || row.summary || `Entry ${i + 1}`,
@@ -71,13 +84,15 @@ export function getKbEmbeddings(limit = 100): { items: { id: string; label: stri
             type: row.type || 'document',
           };
         });
-        indexDb.close();
         return { items, hasRealData: true };
       }
     }
 
-    const rows = indexDb.prepare('SELECT id, source, summary, type, content FROM knowledge_entries ORDER BY created_at DESC LIMIT ?').all(limit) as Record<string, unknown>[];
-    indexDb.close();
+    // Fallback: hash-based positions from knowledge_entries content
+    const rows = adapter.all<Record<string, unknown>>(
+      'SELECT id, source, summary, type, content FROM knowledge_entries ORDER BY created_at DESC LIMIT ?',
+      [limit]
+    );
     if (rows.length === 0) return { items: [], hasRealData: false };
 
     const items = rows.map((row: any, i: number) => {

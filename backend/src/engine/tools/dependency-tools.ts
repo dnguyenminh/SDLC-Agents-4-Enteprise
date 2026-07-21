@@ -1,8 +1,9 @@
 /**
  * KSA-155: MCP Tool Registration for code_dependencies.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { FileResolver } from '../graph/file-resolver.js';
 import { DependencyGraphService } from '../graph/dependency-graph-service.js';
 import { formatDependencyResult } from '../graph/dependency-formatters.js';
@@ -26,29 +27,25 @@ export const DEPENDENCY_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeDependencies(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
+export function handleCodeDependencies(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
   const file = args.file as string;
   if (!file) return JSON.stringify({ error: 'Parameter "file" is required' });
-
   const direction = (args.direction as 'incoming' | 'outgoing' | 'both') ?? 'outgoing';
   const depth = (args.depth as number) ?? 1;
   const includeExternal = (args.include_external as boolean) ?? false;
   const format = (args.format as string) ?? 'tree';
   const limit = (args.limit as number) ?? 50;
 
-  const fileResolver = new FileResolver(db, workspace, projectId);
-  const service = new DependencyGraphService(db, fileResolver, projectId);
-
+  const fileResolver = new FileResolver(adapter, workspace, projectId);
+  const service = new DependencyGraphService(adapter, fileResolver, projectId);
   const result = service.query(file, direction, depth, includeExternal, limit);
 
   if (result.results.length === 0 && result.root === file) {
     return `File "${file}" not found in index. Make sure the file has been indexed.`;
   }
-
   if (result.results.length === 0) {
     return `No ${direction} dependencies found for "${result.root}"`;
   }
-
   const formatted = formatDependencyResult(result, format);
   return JSON.stringify(formatted, null, 2);
 }

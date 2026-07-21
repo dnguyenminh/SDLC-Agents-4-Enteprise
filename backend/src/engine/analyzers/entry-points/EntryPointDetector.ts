@@ -2,7 +2,7 @@
  * KSA-162: Entry Point Detector — Main orchestrator.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { EntryPoint, EntryPointFilters, EntryPointQueryResult } from './types.js';
 import { PatternRegistry } from './PatternRegistry.js';
 import { FrameworkDetector } from './FrameworkDetector.js';
@@ -20,20 +20,20 @@ export class EntryPointDetector {
   private cliDetector: CLIDetector;
   private eventDetector: EventDetector;
   private store: EntryPointStore;
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
 
   /**
    * @param projectId  SA4E-41 read scope. Undefined ⇒ query() is fail-closed.
    */
-  constructor(db: Database.Database, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, projectId?: string) {
+    this.adapter = adapter;
     this.registry = new PatternRegistry();
     this.frameworkDetector = new FrameworkDetector(this.registry);
     this.httpDetector = new HTTPHandlerDetector(this.registry);
     this.mainDetector = new MainDetector(this.registry);
     this.cliDetector = new CLIDetector();
     this.eventDetector = new EventDetector();
-    this.store = new EntryPointStore(db, projectId);
+    this.store = new EntryPointStore(adapter, projectId);
   }
 
   /** Detect all entry points in a file. */

@@ -27,6 +27,8 @@ import type { TaskWorkerConfig } from './task-queue/TaskWorkerConfig.js';
 import { migrate003PendingTasks } from './migrations/003-pending-tasks.js';
 import { EmbeddingService } from '../../engine/parsers/embedding/EmbeddingService.js';
 import { SqliteDbAdapter } from './task-queue/SqliteDbAdapter.js';
+import { resolveEngineAdapter } from '../../database/factory/resolveEngineAdapter.js';
+import * as path from 'path';
 import { LLMService } from './llm/LLMService.js';
 import { ClassifyService } from './llm/classify-service.js';
 import type { ScopeContext } from './models.js';
@@ -66,7 +68,7 @@ export class MemoryModule implements IModule {
       migrate002AddEvolutionColumns(this.dbManager.getDb());
       migrate003PendingTasks(this.dbManager.getDb());
 
-      const memAdapter = new SqliteDbAdapter(this.dbManager.getDb());
+      const memAdapter = await resolveEngineAdapter(this.dbManager.getDb(), path.dirname(config.dbPath));
       this.engine = new MemoryEngine(memAdapter);
       // Start session with configurable name (unique per instance)
       this.engine.startSession(this.sessionName);
@@ -83,8 +85,8 @@ export class MemoryModule implements IModule {
         this.logger.info('No registry available — binary files will be marked unconvertible (no-tool)');
       }
 
-      // SA4E-44: Wire DatabaseAdapter for transactional ingest
-      const dbAdapter = new SqliteDbAdapter(this.dbManager.getDb());
+      // SA4E-45: Use same active adapter for transactional ingest and task worker
+      const dbAdapter = memAdapter;
       this.dispatcher.setDbAdapter(dbAdapter);
 
       // SA4E-44: Initialize TaskWorker

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SymbolResolver, ResolvedSymbol } from '../graph/symbol-resolver.js';
 import { CallGraphService } from '../graph/call-graph-service.js';
 import { TestDetector } from '../graph/test-detector.js';
@@ -14,7 +14,7 @@ export interface ResolvedSymbolFull extends ResolvedSymbol {
   signature?: string;
 }
 
-export function resolveSymbolInput(input: string, db: Database.Database, resolver: SymbolResolver): ResolvedSymbolFull | null {
+export function resolveSymbolInput(input: string, db: DatabaseAdapter, resolver: SymbolResolver): ResolvedSymbolFull | null {
   if (input.includes(':') && /:\d+$/.test(input)) {
     const colonIdx = input.lastIndexOf(':');
     const file = input.substring(0, colonIdx);
@@ -37,7 +37,7 @@ export function resolveSymbolInput(input: string, db: Database.Database, resolve
   };
 }
 
-export function findSymbolAtLine(file: string, line: number, db: Database.Database): ResolvedSymbolFull | null {
+export function findSymbolAtLine(file: string, line: number, db: DatabaseAdapter): ResolvedSymbolFull | null {
   const row = db.prepare(`
     SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as line,
            s.end_line as endLine, s.signature, s.parent_symbol_id as parentSymbolId
@@ -63,7 +63,7 @@ export function readSymbolSource(symbol: ResolvedSymbolFull, workspace: string):
   }
 }
 
-export function getSignature(symbol: ResolvedSymbolFull, db: Database.Database): string | null {
+export function getSignature(symbol: ResolvedSymbolFull, db: DatabaseAdapter): string | null {
   if (symbol.signature) return symbol.signature;
   const row = db.prepare(`SELECT signature FROM symbols WHERE id = ?`).get(symbol.id) as { signature: string | null } | undefined;
   return row?.signature || null;
@@ -139,7 +139,7 @@ export async function getGitContext(symbol: ResolvedSymbolFull, gitService: GitS
   return gitService.getFileHistory(symbol.filePath, 5);
 }
 
-export async function getSiblingContext(symbol: ResolvedSymbolFull, db: Database.Database): Promise<SiblingContext[]> {
+export async function getSiblingContext(symbol: ResolvedSymbolFull, db: DatabaseAdapter): Promise<SiblingContext[]> {
   const query = symbol.parentSymbolId
     ? `SELECT name, kind, signature, start_line as line FROM symbols WHERE parent_symbol_id = ? AND id != ? ORDER BY start_line`
     : `SELECT s.name, s.kind, s.signature, s.start_line as line FROM symbols s JOIN files f ON s.file_id = f.id WHERE f.relative_path = ? AND s.parent_symbol_id IS NULL AND s.id != ? ORDER BY s.start_line`;

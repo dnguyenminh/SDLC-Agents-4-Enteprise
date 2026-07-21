@@ -1,9 +1,10 @@
 /**
  * KSA-156: Impact Analysis Service - blast radius prediction.
  * Combines call graph + dependency graph + test detection for comprehensive impact analysis.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { CallGraphService } from './call-graph-service.js';
 import { DependencyGraphService } from './dependency-graph-service.js';
 import { SymbolResolver } from './symbol-resolver.js';
@@ -21,16 +22,16 @@ export class ImpactAnalysisService {
   private depGraph: DependencyGraphService;
   private resolver: SymbolResolver;
   private testDetector: TestDetector;
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
 
   constructor(
-    db: Database.Database,
+    adapter: DatabaseAdapter,
     callGraph: CallGraphService,
     depGraph: DependencyGraphService,
     resolver: SymbolResolver,
     testDetector: TestDetector
   ) {
-    this.db = db;
+    this.adapter = adapter;
     this.callGraph = callGraph;
     this.depGraph = depGraph;
     this.resolver = resolver;
@@ -65,7 +66,7 @@ export class ImpactAnalysisService {
       });
     }
 
-    const implImpacts = findImplementorImpacts(resolved, symbolName, this.db);
+    const implImpacts = findImplementorImpacts(resolved, symbolName, this.adapter);
     impacts.push(...implImpacts);
 
     const depResult = this.depGraph.query(resolved[0].filePath, 'incoming', Math.min(clampedDepth, 2), false, 50);

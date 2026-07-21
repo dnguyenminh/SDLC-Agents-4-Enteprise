@@ -3,13 +3,13 @@
  * Parses git log, stores commit metadata, enables text-based search.
  * SA4E-41: commits are stamped with project_id and search is tenant-scoped (fail-closed).
  */
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { GitCommit, GitCommitResult, GitIndexSummary } from './types.js';
 import { parseGitLog, getLastIndexedHash } from './GitLogParser.js';
 import { buildCodeScopeFilter, requireProjectId } from '../../query/code-intel-isolation.js';
 
 export class GitMiner {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private repoPath: string;
   private maxCommits: number;
   private projectId: string | undefined;
@@ -18,8 +18,8 @@ export class GitMiner {
    * @param projectId  SA4E-41 tenant scope. indexHistory requires it (write);
    *   search/getSummary are fail-closed when it is missing.
    */
-  constructor(db: Database.Database, repoPath: string, maxCommits: number = 10000, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, repoPath: string, maxCommits: number = 10000, projectId?: string) {
+    this.adapter = adapter;
     this.repoPath = repoPath;
     this.maxCommits = maxCommits;
     this.projectId = projectId;
@@ -29,31 +29,30 @@ export class GitMiner {
   indexHistory(force: boolean = false): GitIndexSummary {
     // Writes must fail loudly when there is no tenant context.
     const pid = requireProjectId(this.projectId);
-    const lastHash = force ? null : getLastIndexedHash(this.db, pid);
+    const lastHash = force ? null : getLastIndexedHash(this.adapter, pid);
     const commits = parseGitLog(lastHash, this.repoPath, this.maxCommits);
     if (commits.length === 0) return this.getSummary();
-    const insert = this.db.prepare(`
+    const insert = this.adapter.prepare(`
       INSERT OR IGNORE INTO git_commits (project_id, hash, author, date, message, files_changed, insertions, deletions)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    const transaction = this.db.transaction((items: GitCommit[]) => {
-      for (const commit of items) {
+    this.adapter.transaction(() => {
+      for (const commit of commits) {
         insert.run(
           pid, commit.hash, commit.author, commit.date, commit.message,
           JSON.stringify(commit.filesChanged), commit.insertions, commit.deletions
         );
       }
     });
-    transaction(commits);
     this.recordIndexMeta(pid, commits[0].hash);
     return this.getSummary();
   }
 
   private recordIndexMeta(pid: string, lastHash: string): void {
-    this.db.prepare(
+    this.adapter.prepare(
       `INSERT OR REPLACE INTO git_index_meta (project_id, key, value) VALUES (?, 'last_indexed_hash', ?)`
     ).run(pid, lastHash);
-    this.db.prepare(
+    this.adapter.prepare(
       `INSERT OR REPLACE INTO git_index_meta (project_id, key, value) VALUES (?, 'last_indexed_at', datetime('now'))`
     ).run(pid);
   }
@@ -72,7 +71,7 @@ export class GitMiner {
     if (options.since) { sql += ` AND date >= ?`; params.push(options.since); }
     sql += ` ORDER BY date DESC LIMIT ?`;
     params.push(limit);
-    const rows = this.db.prepare(sql).all(...params) as Array<{
+    const rows = this.adapter.prepare(sql).all(...params) as Array<{
       hash: string; author: string; date: string; message: string;
       files_changed: string; insertions: number; deletions: number;
     }>;
@@ -87,10 +86,10 @@ export class GitMiner {
     if (!this.projectId) {
       return { totalCommits: 0, indexed: 0, lastHash: null, lastIndexedAt: null };
     }
-    const countRow = this.db.prepare(
+    const countRow = this.adapter.prepare(
       `SELECT COUNT(*) as count FROM git_commits WHERE project_id = ?`
     ).get(this.projectId) as { count: number };
-    const meta = (key: string) => (this.db.prepare(
+    const meta = (key: string) => (this.adapter.prepare(
       `SELECT value FROM git_index_meta WHERE key = ? AND project_id = ?`
     ).get(key, this.projectId) as { value: string } | undefined)?.value ?? null;
     return {
@@ -100,7 +99,7 @@ export class GitMiner {
   }
 
   private ensureSchema(): void {
-    this.db.exec(`
+    this.adapter.exec(`
       CREATE TABLE IF NOT EXISTS git_commits (
         project_id TEXT NOT NULL DEFAULT '',
         hash TEXT NOT NULL,
@@ -127,13 +126,13 @@ export class GitMiner {
 
   /** Add project_id to pre-SA4E-41 git tables when missing (idempotent). */
   private migrateLegacyGitSchema(): void {
-    const cols = this.db.pragma('table_info(git_commits)') as { name: string }[];
+    const cols = this.adapter.all<{ name: string }>('PRAGMA table_info(git_commits)');
     if (!cols.some(c => c.name === 'project_id')) {
-      this.db.exec(`ALTER TABLE git_commits ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
+      this.adapter.exec(`ALTER TABLE git_commits ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
     }
-    const metaCols = this.db.pragma('table_info(git_index_meta)') as { name: string }[];
+    const metaCols = this.adapter.all<{ name: string }>('PRAGMA table_info(git_index_meta)');
     if (!metaCols.some(c => c.name === 'project_id')) {
-      this.db.exec(`ALTER TABLE git_index_meta ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
+      this.adapter.exec(`ALTER TABLE git_index_meta ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
     }
   }
 }

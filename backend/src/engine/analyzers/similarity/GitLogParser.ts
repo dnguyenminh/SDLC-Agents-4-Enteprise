@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import pino from 'pino';
 import type { GitCommit } from './types.js';
 
@@ -56,10 +56,10 @@ export function parseLogOutput(output: string): GitCommit[] {
   return commits;
 }
 
-export function getLastIndexedHash(db: Database.Database, projectId?: string): string | null {
+export function getLastIndexedHash(adapter: DatabaseAdapter, projectId?: string): string | null {
   try {
     // SA4E-41: scope the incremental checkpoint per tenant.
-    const row = db.prepare(
+    const row = adapter.prepare(
       `SELECT value FROM git_index_meta WHERE key = 'last_indexed_hash' AND project_id = ?`
     ).get(projectId ?? '') as { value: string } | undefined;
     return row?.value ?? null;

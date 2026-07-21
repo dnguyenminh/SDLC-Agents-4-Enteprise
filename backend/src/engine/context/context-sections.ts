@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SymbolResolver, ResolvedSymbol } from '../graph/symbol-resolver.js';
 import { CallGraphService } from '../graph/call-graph-service.js';
 import { GitService } from './git-service.js';
@@ -11,7 +11,7 @@ export function fetchSection(
   section: SectionDef,
   symbol: ResolvedSymbol,
   callerDepth: number,
-  db: Database.Database,
+  db: DatabaseAdapter,
   callGraph: CallGraphService,
   resolver: SymbolResolver,
   gitService: GitService,
@@ -38,12 +38,12 @@ export function fetchSection(
   }
 }
 
-export function getSymbolEndLine(symbol: ResolvedSymbol, db: Database.Database): number | null {
+export function getSymbolEndLine(symbol: ResolvedSymbol, db: DatabaseAdapter): number | null {
   const row = db.prepare(`SELECT end_line FROM symbols WHERE id = ?`).get(symbol.id) as { end_line: number } | undefined;
   return row?.end_line || null;
 }
 
-export function fetchSource(symbol: ResolvedSymbol, workspace: string, db: Database.Database): string | null {
+export function fetchSource(symbol: ResolvedSymbol, workspace: string, db: DatabaseAdapter): string | null {
   try {
     const fullPath = path.resolve(workspace, symbol.filePath);
     if (!fs.existsSync(fullPath)) return null;
@@ -76,7 +76,7 @@ export function fetchCallees(symbol: ResolvedSymbol, depth: number, callGraph: C
   }));
 }
 
-export function fetchSiblings(symbol: ResolvedSymbol, db: Database.Database): any {
+export function fetchSiblings(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
   const query = symbol.parentSymbolId
     ? `SELECT name, kind, signature, start_line as line FROM symbols WHERE parent_symbol_id = ? AND id != ? ORDER BY start_line`
     : `SELECT s.name, s.kind, s.signature, s.start_line as line FROM symbols s JOIN files f ON s.file_id = f.id WHERE f.relative_path = ? AND s.parent_symbol_id IS NULL AND s.id != ? ORDER BY s.start_line`;
@@ -90,7 +90,7 @@ export function fetchSiblings(symbol: ResolvedSymbol, db: Database.Database): an
   return rows.map(r => ({ name: r.name, kind: r.kind, signature: r.signature, line: r.line }));
 }
 
-export function fetchImports(symbol: ResolvedSymbol, db: Database.Database): any {
+export function fetchImports(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
   const rows = db.prepare(`
     SELECT DISTINCT r.target_symbol as name, r.file_path
     FROM relationships r
@@ -100,7 +100,7 @@ export function fetchImports(symbol: ResolvedSymbol, db: Database.Database): any
   return rows.map(r => r.name);
 }
 
-export function fetchRelatedTests(symbol: ResolvedSymbol, db: Database.Database): any {
+export function fetchRelatedTests(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
   const rows = db.prepare(`
     SELECT DISTINCT f.relative_path as file_path
     FROM relationships r
@@ -113,7 +113,7 @@ export function fetchRelatedTests(symbol: ResolvedSymbol, db: Database.Database)
   return rows.map(r => r.file_path);
 }
 
-export function fetchTypeDefinitions(symbol: ResolvedSymbol, db: Database.Database): any {
+export function fetchTypeDefinitions(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
   const rows = db.prepare(`
     SELECT DISTINCT s.name, s.kind, s.signature, f.relative_path as file
     FROM relationships r
@@ -126,12 +126,12 @@ export function fetchTypeDefinitions(symbol: ResolvedSymbol, db: Database.Databa
   return rows;
 }
 
-export function fetchDocComment(symbol: ResolvedSymbol, db: Database.Database): string | null {
+export function fetchDocComment(symbol: ResolvedSymbol, db: DatabaseAdapter): string | null {
   const row = db.prepare(`SELECT doc_comment FROM symbols WHERE id = ?`).get(symbol.id) as { doc_comment: string | null } | undefined;
   return row?.doc_comment || null;
 }
 
-export function fetchErrorPatterns(symbol: ResolvedSymbol, db: Database.Database, workspace: string): any {
+export function fetchErrorPatterns(symbol: ResolvedSymbol, db: DatabaseAdapter, workspace: string): any {
   const source = fetchSource(symbol, workspace, db);
   if (!source) return null;
   const patterns: any[] = [];
@@ -150,7 +150,7 @@ export function fetchRecentChanges(symbol: ResolvedSymbol, gitService: GitServic
   return commits.length > 0 ? commits : null;
 }
 
-export function fetchTestPatterns(symbol: ResolvedSymbol, db: Database.Database): any {
+export function fetchTestPatterns(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
   const rows = db.prepare(`
     SELECT DISTINCT s.name, s.signature
     FROM symbols s

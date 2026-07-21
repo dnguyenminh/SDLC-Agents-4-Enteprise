@@ -1,0 +1,8 @@
+{
+	"mcpServers": {
+		"code-intelligence": {
+			"type": "httpStreamable",
+			"url": "http://127.0.0.1:9186/mcp"
+		}
+	}
+}

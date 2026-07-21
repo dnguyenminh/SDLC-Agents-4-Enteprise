@@ -3,7 +3,7 @@
  * SA4E-41: tenant-scoped and fail-closed via CodeIntelIsolation.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { ModuleSummary } from './types.js';
 import { GraphLoader } from './utils/GraphLoader.js';
 import { CircularDepDetector } from './CircularDepDetector.js';
@@ -12,17 +12,17 @@ import { DeadImportDetector } from './DeadImportDetector.js';
 import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
 export class ModuleSummarizer {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private graphLoader: GraphLoader;
   private projectId: string | undefined;
 
   /**
    * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
    */
-  constructor(db: Database.Database, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, projectId?: string) {
+    this.adapter = adapter;
     this.projectId = projectId;
-    this.graphLoader = new GraphLoader(db, projectId);
+    this.graphLoader = new GraphLoader(adapter, projectId);
   }
 
   /** Generate summary for a specific module or all modules. */
@@ -33,7 +33,7 @@ export class ModuleSummarizer {
     for (const mod of modules) {
       const circularDetector = new CircularDepDetector(this.graphLoader);
       const hotPathAnalyzer = new HotPathAnalyzer(this.graphLoader);
-      const deadImportDetector = new DeadImportDetector(this.db, this.projectId);
+      const deadImportDetector = new DeadImportDetector(this.adapter, this.projectId);
 
       const circularDeps = circularDetector.detect({ module: mod.name });
       const hotPaths = hotPathAnalyzer.analyze({ module: mod.name, limit: 5 });
@@ -62,7 +62,7 @@ export class ModuleSummarizer {
       sql += ' AND name = ?';
       params.push(name);
     }
-    return this.db.prepare(sql).all(...params) as Array<{
+    return this.adapter.prepare(sql).all(...params) as Array<{
       name: string; fileCount: number; symbolCount: number;
     }>;
   }
@@ -70,7 +70,7 @@ export class ModuleSummarizer {
   private getAvgComplexity(module: string): number | null {
     // complexity has no project_id column — scope via the joined symbols table.
     const scope = buildCodeScopeFilter(this.projectId, 's');
-    const row = this.db.prepare(`
+    const row = this.adapter.prepare(`
       SELECT AVG(c.cyclomatic_complexity) as avg
       FROM complexity c
       JOIN symbols s ON s.id = c.symbol_id

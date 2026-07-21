@@ -1,10 +1,11 @@
 /**
  * KSA-155: Dependency Graph helpers - extracted from DependencyGraphService.
  * Pure functions for BFS traversal, module extraction, and result merging.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
 import * as path from 'path';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { FileResolver } from './file-resolver.js';
 import { buildCodeScopeFilter } from '../query/code-intel-isolation.js';
 
@@ -37,7 +38,7 @@ export function bfsTraversal(
   limit: number,
   kinds: string[] | undefined,
   fileResolver: FileResolver,
-  db: Database.Database,
+  adapter: DatabaseAdapter,
   projectId?: string
 ): { results: DependencyNode[]; cycles: string[][] } {
   const visited = new Set<string>([root]);
@@ -50,8 +51,8 @@ export function bfsTraversal(
     const { file: current, depth: currentDepth, path: currentPath } = queue.shift()!;
     if (currentDepth >= maxDepth) continue;
     const deps = direction === 'outgoing'
-      ? getOutgoingDeps(current, kinds, db, projectId)
-      : getIncomingDeps(current, kinds, db, projectId);
+      ? getOutgoingDeps(current, kinds, adapter, projectId)
+      : getIncomingDeps(current, kinds, adapter, projectId);
     for (const dep of deps) {
       const isExternal = fileResolver.isExternal(dep.target);
       if (isExternal && !includeExternal) continue;
@@ -84,16 +85,17 @@ export function bfsTraversal(
   return { results, cycles };
 }
 
-export function getOutgoingDeps(filePath: string, kinds: string[] | undefined, db: Database.Database, projectId?: string): Array<{ target: string; symbols: string[] }> {
+/** Get outgoing dependency edges from a file (tenant-scoped). */
+export function getOutgoingDeps(filePath: string, kinds: string[] | undefined, adapter: DatabaseAdapter, projectId?: string): Array<{ target: string; symbols: string[] }> {
   const queryKinds = kinds ?? ['imports', 'trigger-on', 'soql', 'dml', 'wire', 'flow-action', 'flow-object', 'apex-import', 'calls', 'inherits', 'implements'];
   const placeholders = queryKinds.map(() => '?').join(',');
-  const scope = buildCodeScopeFilter(projectId, 'relationships'); // fail-closed
-  const rows = db.prepare(`
+  const scope = buildCodeScopeFilter(projectId, 'relationships');
+  const rows = adapter.all<{ target_symbol: string; metadata: string | null; kind: string }>(`
     SELECT target_symbol, metadata, kind
     FROM relationships
     WHERE file_path = ? AND kind IN (${placeholders}) AND ${scope.clause}
     ORDER BY line
-  `).all(filePath, ...queryKinds, ...scope.params) as { target_symbol: string; metadata: string | null; kind: string }[];
+  `, [filePath, ...queryKinds, ...scope.params]);
   const grouped = new Map<string, string[]>();
   for (const row of rows) {
     const module = extractModule(row.target_symbol);
@@ -104,18 +106,19 @@ export function getOutgoingDeps(filePath: string, kinds: string[] | undefined, d
   return Array.from(grouped.entries()).map(([target, symbols]) => ({ target, symbols }));
 }
 
-export function getIncomingDeps(filePath: string, kinds: string[] | undefined, db: Database.Database, projectId?: string): Array<{ target: string; symbols: string[] }> {
+/** Get incoming dependency edges to a file (tenant-scoped). */
+export function getIncomingDeps(filePath: string, kinds: string[] | undefined, adapter: DatabaseAdapter, projectId?: string): Array<{ target: string; symbols: string[] }> {
   const basename = path.basename(filePath, path.extname(filePath));
   const queryKinds = kinds ?? ['imports', 'trigger-on', 'soql', 'dml', 'wire', 'flow-action', 'flow-object', 'apex-import', 'calls', 'inherits', 'implements'];
   const placeholders = queryKinds.map(() => '?').join(',');
-  const scope = buildCodeScopeFilter(projectId, 'relationships'); // fail-closed
-  const rows = db.prepare(`
+  const scope = buildCodeScopeFilter(projectId, 'relationships');
+  const rows = adapter.all<{ file_path: string; target_symbol: string }>(`
     SELECT DISTINCT file_path, target_symbol
     FROM relationships
     WHERE kind IN (${placeholders})
       AND (target_symbol LIKE ? OR target_symbol LIKE ? OR target_symbol LIKE ?)
       AND ${scope.clause}
-  `).all(...queryKinds, `%/${basename}`, `%${basename}%`, filePath, ...scope.params) as { file_path: string; target_symbol: string }[];
+  `, [...queryKinds, `%/${basename}`, `%${basename}%`, filePath, ...scope.params]);
   const grouped = new Map<string, string[]>();
   for (const row of rows) {
     if (row.file_path === filePath) continue;

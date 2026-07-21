@@ -1,9 +1,9 @@
 /**
  * KSA-154: MCP Tool Registration for code_callers and code_callees.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
-import type Database from 'better-sqlite3';
-import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { GraphRepository } from '../database/graph-repository.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { CallGraphService, CallGraphResponse } from '../graph/call-graph-service.js';
@@ -41,38 +41,30 @@ export const CALL_GRAPH_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeCallers(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
+export function handleCodeCallers(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
   const symbol = args.symbol as string;
   if (!symbol) return JSON.stringify({ error: 'Parameter "symbol" is required' });
-
   const depth = (args.depth as number) ?? 1;
   const limit = (args.limit as number) ?? 20;
   const fileFilter = args.file_filter as string | undefined;
   const kindFilter = (args.kind_filter as string) ?? 'calls';
-
-  const adapter = new SqliteDbAdapter(db);
   const graphRepo = new GraphRepository(adapter, projectId);
-  const resolver = new SymbolResolver(db, projectId);
+  const resolver = new SymbolResolver(adapter, projectId);
   const service = new CallGraphService(graphRepo, resolver);
-
   const result = service.findCallers(symbol, depth, limit, fileFilter, kindFilter);
   return formatCallGraphResult(result, 'callers');
 }
 
-export function handleCodeCallees(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
+export function handleCodeCallees(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
   const symbol = args.symbol as string;
   if (!symbol) return JSON.stringify({ error: 'Parameter "symbol" is required' });
-
   const depth = (args.depth as number) ?? 1;
   const limit = (args.limit as number) ?? 20;
   const fileFilter = args.file_filter as string | undefined;
   const includeExternal = (args.include_external as boolean) ?? true;
-
-  const adapter = new SqliteDbAdapter(db);
   const graphRepo = new GraphRepository(adapter, projectId);
-  const resolver = new SymbolResolver(db, projectId);
+  const resolver = new SymbolResolver(adapter, projectId);
   const service = new CallGraphService(graphRepo, resolver);
-
   const result = service.findCallees(symbol, depth, limit, fileFilter, includeExternal);
   return formatCallGraphResult(result, 'callees');
 }
@@ -85,28 +77,21 @@ function formatCallGraphResult(result: CallGraphResponse, direction: string): st
     }
     return `Symbol "${result.symbol}" not found in index.`;
   }
-
   if (result.results.length === 0) {
     return `No ${direction} found for "${result.symbol}" (resolved to ${result.resolvedTo.length} definition(s))`;
   }
-
   const lines: string[] = [];
   lines.push(`${direction === 'callers' ? 'Callers' : 'Callees'} of "${result.symbol}" (depth ${result.metadata.depthSearched}):\n`);
-
   if (result.resolvedTo.length > 0) {
     lines.push(`Resolved to:`);
-    for (const r of result.resolvedTo) {
-      lines.push(`  [${r.kind}] ${r.file}:${r.line}`);
-    }
+    for (const r of result.resolvedTo) { lines.push(`  [${r.kind}] ${r.file}:${r.line}`); }
     lines.push('');
   }
-
   for (const item of result.results) {
     const prefix = '  '.repeat(item.depthLevel);
     lines.push(`${prefix}[${item.kind}] ${item.qualifiedName}`);
     lines.push(`${prefix}  ${item.filePath}:${item.callSiteLine} (def: L${item.definitionLine})`);
   }
-
   lines.push(`\n--- ${result.metadata.totalCount} results | ${result.metadata.queryTimeMs}ms${result.metadata.truncated ? ' | TRUNCATED' : ''}`);
   return lines.join('\n');
 }

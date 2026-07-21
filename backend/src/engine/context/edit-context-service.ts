@@ -3,7 +3,7 @@
  * Gathers everything needed before modifying a symbol.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { CallGraphService } from '../graph/call-graph-service.js';
 import { TestDetector } from '../graph/test-detector.js';
@@ -23,7 +23,7 @@ import {
 } from './edit-helpers.js';
 
 export class EditContextService {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private resolver: SymbolResolver;
   private callGraph: CallGraphService;
   private testDetector: TestDetector;
@@ -32,13 +32,13 @@ export class EditContextService {
   private workspace: string;
 
   constructor(
-    db: Database.Database,
+    adapter: DatabaseAdapter,
     resolver: SymbolResolver,
     callGraph: CallGraphService,
     testDetector: TestDetector,
     workspace: string
   ) {
-    this.db = db;
+    this.adapter = adapter;
     this.resolver = resolver;
     this.callGraph = callGraph;
     this.testDetector = testDetector;
@@ -60,19 +60,19 @@ export class EditContextService {
       caller_depth = 1
     } = params;
 
-    const symbol = resolveSymbolInput(symbolInput, this.db, this.resolver);
+    const symbol = resolveSymbolInput(symbolInput, this.adapter, this.resolver);
     if (!symbol) {
       return symbolNotFoundResponse(symbolInput, token_budget, startTime);
     }
 
     const source = readSymbolSource(symbol, this.workspace);
-    const signature = getSignature(symbol, this.db);
+    const signature = getSignature(symbol, this.adapter);
 
     const [callers, tests, gitHistory, siblings] = await Promise.all([
       include_callers ? getCallerContext(symbol, caller_depth, this.callGraph, this.workspace) : Promise.resolve(null),
       include_tests ? getTestContext(symbol, this.testDetector, this.workspace) : Promise.resolve(null),
       include_git ? getGitContext(symbol, this.gitService) : Promise.resolve(null),
-      getSiblingContext(symbol, this.db)
+      getSiblingContext(symbol, this.adapter)
     ]);
 
     const sections: Record<string, { content: any; priority: number }> = {

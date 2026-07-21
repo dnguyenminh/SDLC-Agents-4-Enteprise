@@ -1,9 +1,10 @@
 /**
  * KSA-155: Dependency Graph Service - BFS traversal on import relationships.
  * Supports outgoing (what does this file import?) and incoming (who imports this file?) queries.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { FileResolver } from './file-resolver.js';
 import type { DependencyNode, DependencyResult } from './dep-helpers.js';
 import {
@@ -13,15 +14,15 @@ import {
 export type { DependencyNode, DependencyResult } from './dep-helpers.js';
 
 export class DependencyGraphService {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private fileResolver: FileResolver;
   private projectId: string | undefined;
 
   /**
-   * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
+   * @param projectId  SA4E-41 tenant scope. Undefined => fail-closed (no rows).
    */
-  constructor(db: Database.Database, fileResolver: FileResolver, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, fileResolver: FileResolver, projectId?: string) {
+    this.adapter = adapter;
     this.fileResolver = fileResolver;
     this.projectId = projectId;
   }
@@ -48,12 +49,12 @@ export class DependencyGraphService {
     let cycles: string[][];
 
     if (direction === 'both') {
-      const outgoing = bfsTraversal(resolved, 'outgoing', clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db, this.projectId);
-      const incoming = bfsTraversal(resolved, 'incoming', clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db, this.projectId);
+      const outgoing = bfsTraversal(resolved, 'outgoing', clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.adapter, this.projectId);
+      const incoming = bfsTraversal(resolved, 'incoming', clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.adapter, this.projectId);
       results = mergeResults(outgoing.results, incoming.results);
       cycles = [...outgoing.cycles, ...incoming.cycles];
     } else {
-      const traversal = bfsTraversal(resolved, direction, clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.db, this.projectId);
+      const traversal = bfsTraversal(resolved, direction, clampedDepth, includeExternal, limit, kinds, this.fileResolver, this.adapter, this.projectId);
       results = traversal.results;
       cycles = traversal.cycles;
     }

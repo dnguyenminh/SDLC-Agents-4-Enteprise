@@ -1,84 +1,108 @@
-import * as fs from 'fs';
-import Database from 'better-sqlite3';
-import { getIndexDbPath } from './core.js';
+/**
+ * admin/db/kb-entries.ts — Knowledge base entry queries via DatabaseAdapter.
+ * SA4E-45: Uses getIndexAdapter() instead of direct SQLite for multi-DB support.
+ */
+
+import { getIndexAdapter, getActiveEngine, logger } from './core.js';
 import { buildAdminScopeFilter } from './kb-scope-filter.js';
+
+/** Check if knowledge_entries table exists in the active database */
+function tableExists(adapter: ReturnType<typeof getIndexAdapter>): boolean {
+  if (getActiveEngine() === 'sqlite') {
+    const row = adapter.get<{ cnt: number }>(
+      "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'"
+    );
+    return (row?.cnt ?? 0) > 0;
+  }
+  // PG/MySQL: assume table exists (migrations create it)
+  return true;
+}
 
 export function getKbEntryById(entryId: string): any | null {
   try {
-    const indexDbPath = getIndexDbPath();
-    if (!fs.existsSync(indexDbPath)) return null;
-    const indexDb = new Database(indexDbPath, { readonly: true });
-
-    const tableExists = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'").get() as { cnt: number } | undefined;
-    if (!tableExists || tableExists.cnt === 0) {
-      indexDb.close();
-      return null;
-    }
-
-    const row = indexDb.prepare('SELECT * FROM knowledge_entries WHERE id = ?').get(entryId) as Record<string, unknown> | undefined;
-    indexDb.close();
+    const adapter = getIndexAdapter();
+    if (!tableExists(adapter)) return null;
+    const row = adapter.get<Record<string, unknown>>(
+      'SELECT * FROM knowledge_entries WHERE id = ?', [entryId]
+    );
     return row || null;
-  } catch {
+  } catch (err) {
+    logger.error({ err }, 'Error in getKbEntryById');
     return null;
   }
 }
 
 export function getKbEntryCount(projectId?: string, userId?: string): number {
   try {
-    const indexDbPath = getIndexDbPath();
-    if (!fs.existsSync(indexDbPath)) return 0;
-    const indexDb = new Database(indexDbPath, { readonly: true });
-    const result = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'").get() as { cnt: number } | undefined;
-    if (!result || result.cnt === 0) {
-      indexDb.close();
-      return 0;
-    }
+    const adapter = getIndexAdapter();
+    if (!tableExists(adapter)) return 0;
     const filter = buildAdminScopeFilter(projectId, userId);
-    let count: number;
     if (filter) {
-      count = (indexDb.prepare(`SELECT COUNT(*) as cnt FROM knowledge_entries WHERE ${filter.clause}`).get(...filter.params) as { cnt: number }).cnt;
-    } else {
-      count = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as { cnt: number }).cnt;
+      const row = adapter.get<{ cnt: number }>(
+        `SELECT COUNT(*) as cnt FROM knowledge_entries WHERE ${filter.clause}`,
+        filter.params as unknown[]
+      );
+      return row?.cnt ?? 0;
     }
-    indexDb.close();
-    return count;
-  } catch {
+    const row = adapter.get<{ cnt: number }>(
+      'SELECT COUNT(*) as cnt FROM knowledge_entries'
+    );
+    return row?.cnt ?? 0;
+  } catch (err) {
+    logger.error({ err }, 'Error in getKbEntryCount');
     return 0;
   }
 }
 
-export function getKbEntries(page = 1, pageSize = 20, sortBy = 'created_at', sortDir: 'asc' | 'desc' = 'desc', projectId?: string, userId?: string): { items: any[]; total: number } {
+export function getKbEntries(
+  page = 1,
+  pageSize = 20,
+  sortBy = 'created_at',
+  sortDir: 'asc' | 'desc' = 'desc',
+  projectId?: string,
+  userId?: string
+): { items: any[]; total: number } {
   try {
-    const indexDbPath = getIndexDbPath();
-    if (!fs.existsSync(indexDbPath)) return { items: [], total: 0 };
-    const indexDb = new Database(indexDbPath, { readonly: true });
+    const adapter = getIndexAdapter();
+    if (!tableExists(adapter)) return { items: [], total: 0 };
 
-    const tableExists = indexDb.prepare("SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'").get() as { cnt: number } | undefined;
-    if (!tableExists || tableExists.cnt === 0) {
-      indexDb.close();
-      return { items: [], total: 0 };
-    }
-
-    const columns = indexDb.prepare("PRAGMA table_info(knowledge_entries)").all() as { name: string }[];
-    const validColumns = columns.map((c: { name: string }) => c.name);
+    // Validate sort column to prevent SQL injection
+    const validColumns = [
+      'id', 'created_at', 'updated_at', 'source', 'type',
+      'tier', 'quality_score', 'tags', 'summary', 'content',
+    ];
     const safeSort = validColumns.includes(sortBy) ? sortBy : 'created_at';
     const safeDir = sortDir === 'asc' ? 'ASC' : 'DESC';
 
     const filter = buildAdminScopeFilter(projectId, userId);
     let total: number;
     let rows: Record<string, unknown>[];
+
     if (filter) {
       const whereClause = `WHERE ${filter.clause}`;
-      total = (indexDb.prepare(`SELECT COUNT(*) as cnt FROM knowledge_entries ${whereClause}`).get(...filter.params) as { cnt: number }).cnt;
-      rows = indexDb.prepare(`SELECT * FROM knowledge_entries ${whereClause} ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`).all(...filter.params, pageSize, (page - 1) * pageSize) as Record<string, unknown>[];
+      const countRow = adapter.get<{ cnt: number }>(
+        `SELECT COUNT(*) as cnt FROM knowledge_entries ${whereClause}`,
+        filter.params as unknown[]
+      );
+      total = countRow?.cnt ?? 0;
+      rows = adapter.all<Record<string, unknown>>(
+        `SELECT * FROM knowledge_entries ${whereClause} ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`,
+        [...(filter.params as unknown[]), pageSize, (page - 1) * pageSize]
+      );
     } else {
-      total = (indexDb.prepare('SELECT COUNT(*) as cnt FROM knowledge_entries').get() as { cnt: number }).cnt;
-      rows = indexDb.prepare(`SELECT * FROM knowledge_entries ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`).all(pageSize, (page - 1) * pageSize) as Record<string, unknown>[];
+      const countRow = adapter.get<{ cnt: number }>(
+        'SELECT COUNT(*) as cnt FROM knowledge_entries'
+      );
+      total = countRow?.cnt ?? 0;
+      rows = adapter.all<Record<string, unknown>>(
+        `SELECT * FROM knowledge_entries ORDER BY ${safeSort} ${safeDir} LIMIT ? OFFSET ?`,
+        [pageSize, (page - 1) * pageSize]
+      );
     }
 
-    indexDb.close();
     return { items: rows, total };
-  } catch {
+  } catch (err) {
+    logger.error({ err }, 'Error in getKbEntries');
     return { items: [], total: 0 };
   }
 }

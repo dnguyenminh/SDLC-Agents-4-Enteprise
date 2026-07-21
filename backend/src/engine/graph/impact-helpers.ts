@@ -1,9 +1,10 @@
 /**
  * KSA-156: Impact Analysis helpers - extracted from ImpactAnalysisService.
  * Pure functions for severity classification, recommendation generation, etc.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { ResolvedSymbol } from './symbol-resolver.js';
 import { TestDetector, RelatedTest } from './test-detector.js';
 
@@ -52,22 +53,22 @@ export function classifySeverity(depth: number, action: ImpactAction, type: stri
   return 'low';
 }
 
-export function findImplementorImpacts(resolved: ResolvedSymbol[], symbolName: string, db: Database.Database): ImpactItem[] {
+/** Find implementors of an interface method that would be impacted. */
+export function findImplementorImpacts(resolved: ResolvedSymbol[], symbolName: string, adapter: DatabaseAdapter): ImpactItem[] {
   const impacts: ImpactItem[] = [];
   for (const sym of resolved) {
     if (sym.kind !== 'method') continue;
     if (!sym.parentSymbolId) continue;
-    const parent = db.prepare(
-      'SELECT kind, name FROM symbols WHERE id = ?'
-    ).get(sym.parentSymbolId) as { kind: string; name: string } | undefined;
+    const parent = adapter.get<{ kind: string; name: string }>(
+      'SELECT kind, name FROM symbols WHERE id = ?', [sym.parentSymbolId]);
     if (!parent || parent.kind !== 'interface') continue;
-    const implementors = db.prepare(`
+    const implementors = adapter.all<{ name: string; file_path: string; line: number }>(`
       SELECT DISTINCT s.name, f.relative_path as file_path, s.start_line as line
       FROM relationships r
       JOIN symbols s ON s.id = r.source_symbol_id
       JOIN files f ON s.file_id = f.id
       WHERE r.target_symbol = ? AND r.kind = 'implements'
-    `).all(parent.name) as { name: string; file_path: string; line: number }[];
+    `, [parent.name]);
     for (const impl of implementors) {
       impacts.push({
         symbol: `${impl.name}.${sym.name}`,
@@ -130,9 +131,7 @@ export function severityOrder(severity: Severity): number {
 
 export function buildSummary(impacts: ImpactItem[]): Record<Severity, number> {
   const summary: Record<Severity, number> = { critical: 0, high: 0, medium: 0, low: 0 };
-  for (const i of impacts) {
-    summary[i.severity]++;
-  }
+  for (const i of impacts) { summary[i.severity]++; }
   return summary;
 }
 

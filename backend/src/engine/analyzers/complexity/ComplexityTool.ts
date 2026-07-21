@@ -1,8 +1,9 @@
 /**
  * KSA-161: MCP Tool registration for complexity_analysis.
+ * SA4E-45: Refactored to accept DatabaseAdapter.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import { ComplexityAnalyzer } from './ComplexityAnalyzer.js';
 import type { Grade } from './types.js';
 
@@ -24,8 +25,8 @@ export const COMPLEXITY_TOOL_DEFINITION = {
 };
 
 /** Handle complexity_analysis tool call (SA4E-41: tenant-scoped, fail-closed). */
-export function handleComplexityTool(args: Record<string, unknown>, db: Database.Database, projectId?: string): string {
-  const analyzer = new ComplexityAnalyzer(db, projectId);
+export function handleComplexityTool(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+  const analyzer = new ComplexityAnalyzer(adapter, projectId);
 
   const filters = {
     filePath: args.file_path as string | undefined,

@@ -3,7 +3,7 @@
  * Coordinates calculation, grading, and storage.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { SyntaxNode } from '../../parsers/types.js';
 import type { ComplexityResult, ComplexityFilters, ComplexityQueryResult, FileComplexityResult } from './types.js';
 import { ComplexityCalculator } from './ComplexityCalculator.js';
@@ -15,18 +15,18 @@ export class ComplexityAnalyzer {
   private calculator: ComplexityCalculator;
   private grader: GradeAssigner;
   private store: ComplexityStore;
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private projectId: string | undefined;
 
   /**
    * @param projectId  SA4E-41 read scope. Undefined ⇒ query()/getBySymbolName fail-closed.
    */
-  constructor(db: Database.Database, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, projectId?: string) {
+    this.adapter = adapter;
     this.projectId = projectId;
     this.calculator = new ComplexityCalculator();
     this.grader = new GradeAssigner();
-    this.store = new ComplexityStore(db, projectId);
+    this.store = new ComplexityStore(adapter, projectId);
   }
 
   /** Analyze a single function given its body AST node. */
@@ -59,7 +59,7 @@ export class ComplexityAnalyzer {
 
   /** Analyze all functions in a file (from DB symbols). Returns file-level summary. */
   analyzeFileFromDB(filePath: string, parseAndGetBody: (symbolId: number, startLine: number, endLine: number) => SyntaxNode | null): FileComplexityResult {
-    const symbols = this.db.prepare(`
+    const symbols = this.adapter.prepare(`
       SELECT s.id, s.name, s.start_line, s.end_line, f.language, f.relative_path
       FROM symbols s
       JOIN files f ON f.id = s.file_id
@@ -110,7 +110,7 @@ export class ComplexityAnalyzer {
     }
     sql += ' LIMIT 1';
 
-    const row = this.db.prepare(sql).get(...params) as { id: number } | undefined;
+    const row = this.adapter.prepare(sql).get(...params) as { id: number } | undefined;
     if (!row) return null;
     return this.store.getBySymbol(row.id);
   }

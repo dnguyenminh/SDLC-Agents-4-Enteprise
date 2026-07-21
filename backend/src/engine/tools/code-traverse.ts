@@ -1,8 +1,9 @@
 /**
  * KSA-157: MCP Tool Registration for code_traverse.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { GraphTraverser, TraverseConfig } from '../graph/traverser.js';
 
@@ -35,10 +36,9 @@ export const TRAVERSE_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeTraverse(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
+export function handleCodeTraverse(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
   const start = args.start as string;
   if (!start) return JSON.stringify({ error: 'Parameter "start" is required' });
-
   const edgeTypes = (args.edge_types as string[]) ?? [];
   const nodeTypes = (args.node_types as string[]) ?? [];
   const direction = (args.direction as 'outgoing' | 'incoming' | 'both') ?? 'outgoing';
@@ -47,10 +47,9 @@ export function handleCodeTraverse(args: Record<string, unknown>, db: Database.D
   const includeSource = (args.include_source as boolean) ?? false;
   const sourceLines = (args.source_lines as number) ?? 5;
 
-  const resolver = new SymbolResolver(db, projectId);
-  const traverser = new GraphTraverser(db, resolver, workspace, projectId);
+  const resolver = new SymbolResolver(adapter, projectId);
+  const traverser = new GraphTraverser(adapter, resolver, workspace, projectId);
 
-  // Resolve start node
   const startNode = traverser.resolveNode(start);
   if (!startNode) {
     const suggestions = resolver.suggest(start);
@@ -61,7 +60,6 @@ export function handleCodeTraverse(args: Record<string, unknown>, db: Database.D
   }
 
   const config: TraverseConfig = { edgeTypes, nodeTypes, direction, maxDepth, maxResults };
-
   const startTime = Date.now();
   const results = traverser.traverse(startNode, config);
   const executionTimeMs = Date.now() - startTime;

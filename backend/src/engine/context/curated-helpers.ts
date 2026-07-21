@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { GraphTraverser } from '../graph/traverser.js';
 import { QueryLayer } from '../query/query-layer.js';
@@ -42,7 +42,7 @@ export async function searchCode(
 
 export async function searchMemory(
   analysis: { ftsQuery: string; keywords: string[] },
-  db: Database.Database,
+  db: DatabaseAdapter,
   projectId?: string
 ): Promise<{ source: string; results: any[] }> {
   try {

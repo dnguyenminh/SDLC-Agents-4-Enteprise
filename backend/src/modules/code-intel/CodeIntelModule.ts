@@ -10,6 +10,8 @@ import { DatabaseManager } from '../../engine/db/database-manager.js';
 import { IndexingEngine } from '../../engine/indexer/indexing-engine.js';
 import { loadConfig } from '../../engine/config.js';
 import { SqliteDbAdapter } from '../memory/task-queue/SqliteDbAdapter.js';
+import { resolveEngineAdapter } from '../../database/factory/resolveEngineAdapter.js';
+import * as path from 'path';
 import { CODE_INTEL_TOOL_DEFINITIONS, dispatchCodeIntelTool } from '../../engine/tools/register-tools.js';
 
 export class CodeIntelModule implements IModule {
@@ -37,7 +39,7 @@ export class CodeIntelModule implements IModule {
       this.workspace = config.workspace;
       this.dbManager = new DatabaseManager(config.dbPath, config.projectId);
       this.dbManager.initialize();
-      const adapter = new SqliteDbAdapter(this.dbManager.getDb());
+      const adapter = await resolveEngineAdapter(this.dbManager.getDb(), path.dirname(config.dbPath));
       this.indexer = new IndexingEngine(adapter, config);
       this.indexer.startBackgroundIndexing();
       this._status = 'ready';

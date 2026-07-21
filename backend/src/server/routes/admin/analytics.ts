@@ -1,7 +1,11 @@
+/**
+ * Admin analytics routes — dashboard stats and analytics.
+ * SA4E-45: Uses getIndexAdapter()/getAdminAdapter() for multi-DB support.
+ */
+
 import { Hono } from 'hono';
 import * as fs from 'fs';
 import * as path from 'path';
-import Database from 'better-sqlite3';
 import { loadConfig, getWorkspacePath } from '../../../config/index.js';
 import {
   getAdminDb,
@@ -12,7 +16,7 @@ import {
   getQueryLogs,
   getRecentActivity,
 } from '../../../admin/admin-db.js';
-import { getIndexDbPath } from '../../../admin/db/core.js';
+import { getIndexAdapter } from '../../../admin/db/core.js';
 import { formatUptime, formatBytes } from './utils.js';
 import type { AdminContext } from './context.js';
 
@@ -46,13 +50,11 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
     const recentActivity = getRecentActivity(10);
     let codeSymbols = 0;
     try {
-      const indexDbPath = getIndexDbPath();
-      if (fs.existsSync(indexDbPath)) {
-        const indexDb = new Database(indexDbPath, { readonly: true });
-        const row = indexDb.prepare("SELECT COUNT(*) as cnt FROM symbols WHERE kind IN ('function','class','interface','method','type','enum','constructor')").get() as { cnt: number } | undefined;
-        codeSymbols = row?.cnt || 0;
-        indexDb.close();
-      }
+      const adapter = getIndexAdapter();
+      const row = adapter.get<{ cnt: number }>(
+        "SELECT COUNT(*) as cnt FROM symbols WHERE kind IN ('function','class','interface','method','type','enum','constructor')"
+      );
+      codeSymbols = row?.cnt || 0;
     } catch { ctx.logger.warn({ context: 'dashboard' }, 'Failed to read code symbols count from index.db'); }
     let graphTotalNodes = 0, graphKbNodes = 0, graphCodeNodes = 0;
     try {

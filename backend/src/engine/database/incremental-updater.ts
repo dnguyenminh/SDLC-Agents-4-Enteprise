@@ -4,7 +4,7 @@
  */
 
 import * as fs from 'fs';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'incremental-updater' });
@@ -17,10 +17,10 @@ export interface ChangeSet {
 }
 
 export class IncrementalUpdater {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
 
-  constructor(db: Database.Database) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter) {
+    this.adapter = adapter;
   }
 
   /** Scan workspace and compare against stored file index. */
@@ -28,7 +28,7 @@ export class IncrementalUpdater {
     const result: ChangeSet = { added: [], modified: [], deleted: [], unchanged: 0 };
 
     const indexedPaths = new Set<string>();
-    const rows = this.db.prepare('SELECT path, content_hash, mtime FROM file_index').all() as {
+    const rows = this.adapter.prepare('SELECT path, content_hash, mtime FROM file_index').all() as {
       path: string; content_hash: string; mtime: number;
     }[];
     const indexMap = new Map(rows.map(r => [r.path, r]));
@@ -80,7 +80,7 @@ export class IncrementalUpdater {
       const content = fs.readFileSync(absolutePath);
       const hash = fnv1aHash(content);
 
-      this.db.prepare(`
+      this.adapter.prepare(`
         INSERT OR REPLACE INTO file_index (path, mtime, content_hash, size_bytes, last_indexed, symbol_count)
         VALUES (?, ?, ?, ?, datetime('now'), ?)
       `).run(relativePath, Math.floor(stat.mtimeMs), hash, stat.size, symbolCount);
@@ -91,17 +91,17 @@ export class IncrementalUpdater {
 
   /** Remove a file from the index. */
   removeFromIndex(relativePath: string): void {
-    this.db.prepare('DELETE FROM file_index WHERE path = ?').run(relativePath);
+    this.adapter.prepare('DELETE FROM file_index WHERE path = ?').run(relativePath);
   }
 
   /** Get total indexed file count. */
   getIndexedCount(): number {
-    const row = this.db.prepare('SELECT COUNT(*) as count FROM file_index').get() as { count: number };
+    const row = this.adapter.prepare('SELECT COUNT(*) as count FROM file_index').get() as { count: number };
     return row.count;
   }
 
   private updateMtime(relativePath: string, mtime: number): void {
-    this.db.prepare('UPDATE file_index SET mtime = ? WHERE path = ?').run(mtime, relativePath);
+    this.adapter.prepare('UPDATE file_index SET mtime = ? WHERE path = ?').run(mtime, relativePath);
   }
 }
 

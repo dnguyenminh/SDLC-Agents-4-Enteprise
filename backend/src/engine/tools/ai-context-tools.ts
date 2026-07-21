@@ -1,9 +1,9 @@
 /**
  * KSA-158/159/160: AI Context MCP tool handlers and definitions.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
-import type Database from 'better-sqlite3';
-import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { CallGraphService } from '../graph/call-graph-service.js';
 import { TestDetector } from '../graph/test-detector.js';
@@ -73,12 +73,11 @@ export const AI_CONTEXT_TOOL_DEFINITIONS = [
 ];
 
 /** Handle get_ai_context tool call. */
-export function handleGetAIContext(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
-  const adapter = new SqliteDbAdapter(db);
-  const resolver = new SymbolResolver(db, projectId);
+export function handleGetAIContext(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
+  const resolver = new SymbolResolver(adapter, projectId);
   const graphRepo = new GraphRepository(adapter, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
-  const service = new AIContextService(db, resolver, callGraph, workspace);
+  const service = new AIContextService(adapter, resolver, callGraph, workspace);
 
   const params = {
     symbol: args.symbol as string,
@@ -87,19 +86,17 @@ export function handleGetAIContext(args: Record<string, unknown>, db: Database.D
     caller_depth: (args.caller_depth as number) || 1
   };
 
-  // Execute synchronously (all DB operations are sync with better-sqlite3)
   const result = executeSync(() => service.getContext(params));
   return JSON.stringify(result, null, 2);
 }
 
 /** Handle get_edit_context tool call. */
-export function handleGetEditContext(args: Record<string, unknown>, db: Database.Database, workspace: string, projectId?: string): string {
-  const adapter = new SqliteDbAdapter(db);
-  const resolver = new SymbolResolver(db, projectId);
+export function handleGetEditContext(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
+  const resolver = new SymbolResolver(adapter, projectId);
   const graphRepo = new GraphRepository(adapter, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
-  const testDetector = new TestDetector(db, projectId);
-  const service = new EditContextService(db, resolver, callGraph, testDetector, workspace);
+  const testDetector = new TestDetector(adapter, projectId);
+  const service = new EditContextService(adapter, resolver, callGraph, testDetector, workspace);
 
   const params = {
     symbol: args.symbol as string,
@@ -118,15 +115,15 @@ export function handleGetEditContext(args: Record<string, unknown>, db: Database
 /** Handle get_curated_context tool call. */
 export function handleGetCuratedContext(
   args: Record<string, unknown>,
-  db: Database.Database,
+  adapter: DatabaseAdapter,
   workspace: string,
   dbManager: DatabaseManager,
   projectId?: string
 ): string {
-  const resolver = new SymbolResolver(db, projectId);
-  const traverser = new GraphTraverser(db, resolver, workspace, projectId);
+  const resolver = new SymbolResolver(adapter, projectId);
+  const traverser = new GraphTraverser(adapter, resolver, workspace, projectId);
   const queryLayer = new QueryLayer(dbManager);
-  const service = new CuratedContextService(db, queryLayer, traverser, resolver);
+  const service = new CuratedContextService(adapter, queryLayer, traverser, resolver);
 
   const params = {
     query: args.query as string,
@@ -150,11 +147,7 @@ export function handleGetCuratedContext(
 function executeSync<T>(fn: () => Promise<T>): T {
   let result: T | undefined;
   let error: Error | undefined;
-
   fn().then(r => { result = r; }).catch(e => { error = e; });
-
-  // Since all operations are sync (better-sqlite3 + fs.readFileSync),
-  // the promise resolves in the same microtask
   if (error) throw error;
   return result as T;
 }

@@ -1,10 +1,12 @@
 /**
  * Tool registration and dispatch for Code Intelligence and Graph Analysis.
  * Read-tool handlers live in ./code-intel-handlers.ts (size split, SA4E-41).
+ * SA4E-45: All tool handlers now accept DatabaseAdapter instead of Database.Database.
  */
 import { DatabaseManager } from '../db/database-manager.js';
 import { IndexingEngine } from '../indexer/indexing-engine.js';
 import { QueryLayer } from '../query/query-layer.js';
+import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { handleDrawioLayout, DRAWIO_TOOL_DEFINITION } from './drawio-tool.js';
 import { handleDrawioExportPng, DRAWIO_EXPORT_PNG_DEFINITION } from './drawio-export-png.js';
 import { CALL_GRAPH_TOOL_DEFINITIONS, handleCodeCallers, handleCodeCallees } from './call-graph-tools.js';
@@ -51,7 +53,8 @@ export async function dispatchCodeIntelTool(
   projectId?: string
 ): Promise<string> {
   const queryLayer = new QueryLayer(dbManager);
-  const db = () => dbManager.getDb();
+  // SA4E-45: create adapter once, pass to all tool handlers
+  const adapter = new SqliteDbAdapter(dbManager.getDb());
   switch (name) {
     case 'code_search': return handleCodeSearch(args, queryLayer, projectId);
     case 'code_symbols': return handleCodeSymbols(args, queryLayer, projectId);
@@ -62,28 +65,28 @@ export async function dispatchCodeIntelTool(
     case 'code_kb_export': return handleCodeKbExport(args, queryLayer, workspace);
     case 'drawio_auto_layout': return handleDrawioLayout(args, workspace);
     case 'drawio_export_png': return handleDrawioExportPng(args, workspace, null as any);
-    // SA4E-41 SEC-01: thread projectId into every graph/analysis tool (fail-closed).
-    case 'code_callers': return handleCodeCallers(args, db(), projectId);
-    case 'code_callees': return handleCodeCallees(args, db(), projectId);
-    case 'code_dependencies': return handleCodeDependencies(args, db(), workspace, projectId);
-    case 'code_impact': return handleCodeImpact(args, db(), workspace, projectId);
-    case 'code_traverse': return handleCodeTraverse(args, db(), workspace, projectId);
-    case 'complexity_analysis': return handleComplexityTool(args, db(), projectId);
-    case 'find_entry_points': return handleEntryPointTool(args, db(), projectId);
+    // SA4E-41 SEC-01 + SA4E-45: thread adapter+projectId into every graph/analysis tool.
+    case 'code_callers': return handleCodeCallers(args, adapter, projectId);
+    case 'code_callees': return handleCodeCallees(args, adapter, projectId);
+    case 'code_dependencies': return handleCodeDependencies(args, adapter, workspace, projectId);
+    case 'code_impact': return handleCodeImpact(args, adapter, workspace, projectId);
+    case 'code_traverse': return handleCodeTraverse(args, adapter, workspace, projectId);
+    case 'complexity_analysis': return handleComplexityTool(args, adapter, projectId);
+    case 'find_entry_points': return handleEntryPointTool(args, adapter, projectId);
     case 'find_circular_deps':
     case 'find_related_tests':
     case 'find_hot_paths':
     case 'find_dead_imports':
     case 'module_summary':
-      return handleGraphAnalysisTool(name, args, db(), projectId) ?? `Unknown tool: ${name}`;
-    case 'get_ai_context': return handleGetAIContext(args, db(), workspace, projectId);
-    case 'get_edit_context': return handleGetEditContext(args, db(), workspace, projectId);
-    case 'get_curated_context': return handleGetCuratedContext(args, db(), workspace, dbManager, projectId);
+      return handleGraphAnalysisTool(name, args, adapter, projectId) ?? `Unknown tool: ${name}`;
+    case 'get_ai_context': return handleGetAIContext(args, adapter, workspace, projectId);
+    case 'get_edit_context': return handleGetEditContext(args, adapter, workspace, projectId);
+    case 'get_curated_context': return handleGetCuratedContext(args, adapter, workspace, dbManager, projectId);
     case 'find_duplicates':
     case 'find_dead_code':
     case 'git_search':
     case 'git_index':
-      return handleSimilarityTool(name, args, db(), workspace, projectId) ?? `Unknown tool: ${name}`;
+      return handleSimilarityTool(name, args, adapter, workspace, projectId) ?? `Unknown tool: ${name}`;
     default:
       return `Unknown tool: ${name}`;
   }

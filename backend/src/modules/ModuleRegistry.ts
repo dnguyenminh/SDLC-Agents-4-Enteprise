@@ -51,6 +51,37 @@ export class ModuleRegistry {
     await Promise.allSettled(shutdownPromises);
   }
 
+  /**
+   * SA4E-45: Hot-swap a module — shutdown then reinitialize.
+   * Used when database engine is switched on-the-fly via admin UI.
+   */
+  async reinitializeModule(name: string): Promise<void> {
+    const module = this.modules.get(name);
+    if (!module) {
+      this.logger.warn({ module: name }, 'Cannot reinitialize: module not found');
+      return;
+    }
+    try {
+      this.logger.info({ module: name }, 'Reinitializing module (hot-swap)');
+      await module.shutdown();
+      await module.initialize();
+      this.logger.info({ module: name, status: module.status }, 'Module reinitialized');
+    } catch (err) {
+      this.logger.error({ module: name, err }, 'Module reinitialization failed');
+    }
+  }
+
+  /**
+   * SA4E-45: Reinitialize all engine modules after DB switch.
+   * Shuts down memory + codeIntel, then reinitializes with new adapter.
+   */
+  async reinitializeEngineModules(): Promise<void> {
+    const engineModules = ['memory', 'codeIntel'];
+    for (const name of engineModules) {
+      await this.reinitializeModule(name);
+    }
+  }
+
   getToolHandlers(): Map<string, ToolHandler> {
     const handlers = new Map<string, ToolHandler>();
     for (const module of this.modules.values()) {

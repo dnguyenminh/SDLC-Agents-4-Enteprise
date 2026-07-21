@@ -3,7 +3,7 @@
  * BFS from entry points through call graph, then score unreachable functions.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { DeadCodeCandidate, DeadCodeReport } from './types.js';
 import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
@@ -20,15 +20,15 @@ interface FunctionInfo {
 }
 
 export class DeadCodeDetector {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private minConfidence: number;
   private projectId: string | undefined;
 
   /**
    * @param projectId  SA4E-41 tenant scope. Undefined ⇒ fail-closed (no rows).
    */
-  constructor(db: Database.Database, minConfidence: number = 60, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, minConfidence: number = 60, projectId?: string) {
+    this.adapter = adapter;
     this.minConfidence = minConfidence;
     this.projectId = projectId;
   }
@@ -83,7 +83,7 @@ export class DeadCodeDetector {
   private getEntryPoints(): number[] {
     const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     try {
-      const rows = this.db.prepare(`
+      const rows = this.adapter.prepare(`
         SELECT ep.symbol_id FROM entry_points ep
         JOIN symbols s ON s.id = ep.symbol_id
         WHERE ${scope.clause}
@@ -91,7 +91,7 @@ export class DeadCodeDetector {
       return rows.map(r => r.symbol_id);
     } catch {
       // entry_points table may not exist — fall back to exported symbols (scoped)
-      const rows = this.db.prepare(
+      const rows = this.adapter.prepare(
         `SELECT id FROM symbols s WHERE is_exported = 1 AND ${scope.clause}`
       ).all(...scope.params) as { id: number }[];
       return rows.map(r => r.id);
@@ -104,7 +104,7 @@ export class DeadCodeDetector {
 
     // Load call graph edges (tenant-scoped, fail-closed)
     const edgeScope = buildCodeScopeFilter(this.projectId, 'relationships');
-    const edges = this.db.prepare(`
+    const edges = this.adapter.prepare(`
       SELECT source_symbol_id, target_symbol_id
       FROM relationships
       WHERE kind = 'calls' AND target_symbol_id IS NOT NULL AND ${edgeScope.clause}
@@ -155,7 +155,7 @@ export class DeadCodeDetector {
       params.push(module);
     }
 
-    const rows = this.db.prepare(sql).all(...params) as Array<{
+    const rows = this.adapter.prepare(sql).all(...params) as Array<{
       id: number; name: string; kind: string; filePath: string; startLine: number;
       isExported: number; isAsync: number; decorators: string | null;
     }>;
@@ -215,7 +215,7 @@ export class DeadCodeDetector {
   private hasTestReferences(symbolId: number): boolean {
     const scope = buildCodeScopeFilter(this.projectId, 'r'); // fail-closed
     try {
-      const row = this.db.prepare(`
+      const row = this.adapter.prepare(`
         SELECT COUNT(*) as count
         FROM relationships r
         JOIN files f ON f.id = (SELECT file_id FROM symbols WHERE id = r.source_symbol_id)

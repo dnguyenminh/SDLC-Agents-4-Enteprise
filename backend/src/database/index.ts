@@ -10,4 +10,5 @@ export { MysqlAdapter } from './adapters/MysqlAdapter.js';
 export { DatabaseAdapterFactory } from './factory/DatabaseAdapterFactory.js';
 export { DatabaseConfigService } from './config/DatabaseConfigService.js';
 export { MigrationService } from './migration/MigrationService.js';
+export { TypeMapper } from './migration/TypeMapper.js';
 export { DialectHelper } from './dialect/DialectHelper.js';

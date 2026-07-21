@@ -2,7 +2,7 @@
  * KSA-162: Entry Point Store — SQLite CRUD for detected entry points.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter, PreparedStatement } from '../../../database/adapters/DatabaseAdapter.js';
 import type { EntryPoint, EntryPointFilters, EntryPointQueryResult } from './types.js';
 import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
@@ -30,18 +30,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_ep_symbol ON entry_points(symbol_id);
 `;
 
 export class EntryPointStore {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private projectId: string | undefined;
   private stmts!: {
-    upsert: Database.Statement;
-    deleteBySymbol: Database.Statement;
+    upsert: PreparedStatement;
+    deleteBySymbol: PreparedStatement;
   };
 
   /**
    * @param projectId  SA4E-41 read scope. Undefined ⇒ query() is fail-closed.
    */
-  constructor(db: Database.Database, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, projectId?: string) {
+    this.adapter = adapter;
     this.projectId = projectId;
     this.ensureTable();
     this.prepareStatements();
@@ -66,10 +66,7 @@ export class EntryPointStore {
 
   /** Batch upsert entry points. */
   upsertBatch(entries: EntryPoint[]): void {
-    const transaction = this.db.transaction((items: EntryPoint[]) => {
-      for (const ep of items) this.upsert(ep);
-    });
-    transaction(entries);
+    this.adapter.transaction(() => { for (const ep of entries) this.upsert(ep); });
   }
 
   /** Query entry points with filters. */
@@ -112,13 +109,13 @@ export class EntryPointStore {
 
     // Count
     const countSql = sql.replace(/SELECT ep\.\*.*?FROM/, 'SELECT COUNT(*) as total FROM');
-    const totalRow = this.db.prepare(countSql).get(...params) as { total: number } | undefined;
+    const totalRow = this.adapter.prepare(countSql).get(...params) as { total: number } | undefined;
     const total = totalRow?.total ?? 0;
 
     sql += ' ORDER BY ep.entry_type, ep.full_route LIMIT ?';
     params.push(filters.limit);
 
-    const rows = this.db.prepare(sql).all(...params) as Array<EntryPoint & { middleware: string }>;
+    const rows = this.adapter.prepare(sql).all(...params) as Array<EntryPoint & { middleware: string }>;
     const results = rows.map(r => ({
       ...r,
       middleware: r.middleware ? JSON.parse(r.middleware as string) : [],
@@ -130,15 +127,15 @@ export class EntryPointStore {
       SELECT ep.${col}, COUNT(*) as count
       FROM entry_points ep JOIN symbols s ON s.id = ep.symbol_id
       WHERE ${scope.clause} ${extra} GROUP BY ep.${col}`;
-    const typeRows = this.db.prepare(scoped('entry_type')).all(...scope.params) as Array<{ entry_type: string; count: number }>;
+    const typeRows = this.adapter.prepare(scoped('entry_type')).all(...scope.params) as Array<{ entry_type: string; count: number }>;
     const byType: Record<string, number> = {};
     for (const r of typeRows) byType[r.entry_type] = r.count;
 
-    const fwRows = this.db.prepare(scoped('framework', 'AND ep.framework IS NOT NULL')).all(...scope.params) as Array<{ framework: string; count: number }>;
+    const fwRows = this.adapter.prepare(scoped('framework', 'AND ep.framework IS NOT NULL')).all(...scope.params) as Array<{ framework: string; count: number }>;
     const byFramework: Record<string, number> = {};
     for (const r of fwRows) byFramework[r.framework] = r.count;
 
-    const authRows = this.db.prepare(scoped('has_auth')).all(...scope.params) as Array<{ has_auth: number; count: number }>;
+    const authRows = this.adapter.prepare(scoped('has_auth')).all(...scope.params) as Array<{ has_auth: number; count: number }>;
     const authCoverage = { withAuth: 0, withoutAuth: 0 };
     for (const r of authRows) {
       if (r.has_auth) authCoverage.withAuth = r.count;
@@ -154,18 +151,18 @@ export class EntryPointStore {
   }
 
   private ensureTable(): void {
-    this.db.exec(CREATE_TABLE);
+    this.adapter.exec(CREATE_TABLE);
   }
 
   private prepareStatements(): void {
     this.stmts = {
-      upsert: this.db.prepare(`
+      upsert: this.adapter.prepare(`
         INSERT OR REPLACE INTO entry_points
           (symbol_id, entry_type, framework, http_method, route_path, full_route,
            middleware, has_auth, controller, event_name, confidence, detected_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       `),
-      deleteBySymbol: this.db.prepare('DELETE FROM entry_points WHERE symbol_id = ?'),
+      deleteBySymbol: this.adapter.prepare('DELETE FROM entry_points WHERE symbol_id = ?'),
     };
   }
 }

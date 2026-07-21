@@ -2,7 +2,7 @@
  * KSA-160: Curated Context Service — NL query → parallel search → RRF merge → budget allocation.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { QueryAnalyzer } from './query-analyzer.js';
 import { RRFMerger } from './rrf-merger.js';
 import { BudgetAllocator } from './budget-allocator.js';
@@ -16,13 +16,13 @@ export class CuratedContextService {
   private analyzer: QueryAnalyzer;
   private merger: RRFMerger;
   private allocator: BudgetAllocator;
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private queryLayer: QueryLayer;
   private traverser: GraphTraverser;
   private resolver: SymbolResolver;
 
   constructor(
-    db: Database.Database,
+    adapter: DatabaseAdapter,
     queryLayer: QueryLayer,
     traverser: GraphTraverser,
     resolver: SymbolResolver
@@ -30,7 +30,7 @@ export class CuratedContextService {
     this.analyzer = new QueryAnalyzer();
     this.merger = new RRFMerger();
     this.allocator = new BudgetAllocator();
-    this.db = db;
+    this.adapter = adapter;
     this.queryLayer = queryLayer;
     this.traverser = traverser;
     this.resolver = resolver;
@@ -53,7 +53,7 @@ export class CuratedContextService {
 
     const [codeResults, memoryResults] = await Promise.all([
       include_source ? searchCode(analysis, this.queryLayer, this.resolver, projectId) : Promise.resolve({ source: 'code', results: [] }),
-      include_memory ? searchMemory(analysis, this.db, projectId) : Promise.resolve({ source: 'memory', results: [] })
+      include_memory ? searchMemory(analysis, this.adapter, projectId) : Promise.resolve({ source: 'memory', results: [] })
     ]);
 
     let graphResults = { source: 'graph', results: [] as any[] };

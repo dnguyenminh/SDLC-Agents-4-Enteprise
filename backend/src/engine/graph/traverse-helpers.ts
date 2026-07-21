@@ -1,59 +1,69 @@
 /**
  * KSA-157: Traverse helpers - extracted from GraphTraverser.
  * Pure functions for neighbor resolution and source snippet extraction.
+ * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
 
 import * as fs from 'fs';
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { GraphNode, TraverseConfig } from './traverser.js';
 import { resolveWithinWorkspace } from '../../shared/path-safety.js';
 import { buildCodeScopeFilter } from '../query/code-intel-isolation.js';
 
-export function getNeighbors(nodeId: number, config: TraverseConfig, db: Database.Database, projectId?: string): GraphNode[] {
-  const edgeFilter = config.edgeTypes.length > 0
-    ? `AND r.kind IN (${config.edgeTypes.map(e => `'${e}'`).join(',')})`
+/** Allowed edge types for traversal queries (SEC-01: allowlist prevents SQL injection). */
+const ALLOWED_EDGE_TYPES = new Set([
+  'calls', 'imports', 'inherits', 'implements', 'uses',
+  'decorates', 'overrides', 'extends', 'references', 'type_of',
+]);
+
+/** Retrieve neighbor nodes from the graph within a tenant scope. */
+export function getNeighbors(nodeId: number, config: TraverseConfig, adapter: DatabaseAdapter, projectId?: string): GraphNode[] {
+  // SEC-01 fix: validate edgeTypes against allowlist, use parameterized placeholders
+  const validEdgeTypes = config.edgeTypes.filter(e => ALLOWED_EDGE_TYPES.has(e));
+  const edgeFilter = validEdgeTypes.length > 0
+    ? `AND r.kind IN (${validEdgeTypes.map(() => '?').join(',')})`
     : '';
-  // SA4E-41: scope neighbor symbols to the tenant; fail-closed ('1=0') with no projectId.
+  const edgeParams = validEdgeTypes;
   const scope = buildCodeScopeFilter(projectId, 's');
   let rows: any[] = [];
   switch (config.direction) {
     case 'outgoing':
-      rows = db.prepare(`
+      rows = adapter.all(`
         SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine, r.kind as _incomingEdgeType
         FROM relationships r
         JOIN symbols s ON s.id = r.target_symbol_id
         JOIN files f ON s.file_id = f.id
         WHERE r.source_symbol_id = ? AND ${scope.clause} ${edgeFilter}
         LIMIT 100
-      `).all(nodeId, ...scope.params);
+      `, [nodeId, ...scope.params, ...edgeParams]);
       break;
     case 'incoming':
-      rows = db.prepare(`
+      rows = adapter.all(`
         SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine, r.kind as _incomingEdgeType
         FROM relationships r
         JOIN symbols s ON s.id = r.source_symbol_id
         JOIN files f ON s.file_id = f.id
         WHERE r.target_symbol_id = ? AND ${scope.clause} ${edgeFilter}
         LIMIT 100
-      `).all(nodeId, ...scope.params);
+      `, [nodeId, ...scope.params, ...edgeParams]);
       break;
     case 'both': {
-      const outgoing = db.prepare(`
+      const outgoing = adapter.all(`
         SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine, r.kind as _incomingEdgeType
         FROM relationships r
         JOIN symbols s ON s.id = r.target_symbol_id
         JOIN files f ON s.file_id = f.id
         WHERE r.source_symbol_id = ? AND ${scope.clause} ${edgeFilter}
         LIMIT 50
-      `).all(nodeId, ...scope.params);
-      const incoming = db.prepare(`
+      `, [nodeId, ...scope.params, ...edgeParams]);
+      const incoming = adapter.all(`
         SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine, r.kind as _incomingEdgeType
         FROM relationships r
         JOIN symbols s ON s.id = r.source_symbol_id
         JOIN files f ON s.file_id = f.id
         WHERE r.target_symbol_id = ? AND ${scope.clause} ${edgeFilter}
         LIMIT 50
-      `).all(nodeId, ...scope.params);
+      `, [nodeId, ...scope.params, ...edgeParams]);
       rows = [...outgoing, ...incoming];
       break;
     }
@@ -61,9 +71,9 @@ export function getNeighbors(nodeId: number, config: TraverseConfig, db: Databas
   return rows as GraphNode[];
 }
 
+/** Extract source snippet from a file for display in traversal results. */
 export function getSourceSnippet(filePath: string, startLine: number, contextLines: number, workspace: string): string | null {
   try {
-    // SEC-04: never read outside the workspace even for indexed relative paths.
     const fullPath = resolveWithinWorkspace(workspace, filePath);
     if (!fullPath || !fs.existsSync(fullPath)) return null;
     const content = fs.readFileSync(fullPath, 'utf-8');

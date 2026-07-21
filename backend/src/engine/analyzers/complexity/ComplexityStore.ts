@@ -2,7 +2,7 @@
  * KSA-161: SQLite CRUD for complexity results.
  */
 
-import Database from 'better-sqlite3';
+import type { DatabaseAdapter, PreparedStatement } from '../../../database/adapters/DatabaseAdapter.js';
 import type { ComplexityResult, ComplexityFilters, ComplexityQueryResult, Grade } from './types.js';
 import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
@@ -28,20 +28,20 @@ CREATE INDEX IF NOT EXISTS idx_complexity_symbol ON complexity(symbol_id);
 `;
 
 export class ComplexityStore {
-  private db: Database.Database;
+  private adapter: DatabaseAdapter;
   private projectId: string | undefined;
   private stmts!: {
-    upsert: Database.Statement;
-    getBySymbol: Database.Statement;
-    deleteBySymbol: Database.Statement;
+    upsert: PreparedStatement;
+    getBySymbol: PreparedStatement;
+    deleteBySymbol: PreparedStatement;
   };
 
   /**
    * @param projectId  SA4E-41 read scope. Undefined ⇒ query() is fail-closed.
    *   Write paths (upsert) are keyed by symbol_id and don't require a scope.
    */
-  constructor(db: Database.Database, projectId?: string) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, projectId?: string) {
+    this.adapter = adapter;
     this.projectId = projectId;
     this.ensureTable();
     this.prepareStatements();
@@ -64,10 +64,7 @@ export class ComplexityStore {
 
   /** Batch upsert complexity results. */
   upsertBatch(results: ComplexityResult[]): void {
-    const transaction = this.db.transaction((items: ComplexityResult[]) => {
-      for (const r of items) this.upsert(r);
-    });
-    transaction(results);
+    this.adapter.transaction(() => { for (const r of results) this.upsert(r); });
   }
 
   /** Get complexity for a specific symbol. */
@@ -113,7 +110,7 @@ export class ComplexityStore {
 
     // Count total before limit
     const countSql = sql.replace(/SELECT c\.\*.*?FROM/, 'SELECT COUNT(*) as total FROM');
-    const totalRow = this.db.prepare(countSql).get(...params) as { total: number } | undefined;
+    const totalRow = this.adapter.prepare(countSql).get(...params) as { total: number } | undefined;
     const total = totalRow?.total ?? 0;
 
     // Sort and limit
@@ -125,7 +122,7 @@ export class ComplexityStore {
     sql += ' LIMIT ?';
     params.push(filters.limit);
 
-    const results = this.db.prepare(sql).all(...params) as ComplexityResult[];
+    const results = this.adapter.prepare(sql).all(...params) as ComplexityResult[];
 
     // Grade distribution (tenant-scoped)
     const distSql = `
@@ -137,7 +134,7 @@ export class ComplexityStore {
       GROUP BY c.grade
     `;
     const distParams = filters.module ? [...scope.params, filters.module] : [...scope.params];
-    const distRows = this.db.prepare(distSql).all(...distParams) as { grade: Grade; count: number }[];
+    const distRows = this.adapter.prepare(distSql).all(...distParams) as { grade: Grade; count: number }[];
     const gradeDistribution: Record<Grade, number> = { A: 0, B: 0, C: 0, D: 0, F: 0 };
     for (const row of distRows) gradeDistribution[row.grade] = row.count;
 
@@ -148,7 +145,7 @@ export class ComplexityStore {
       JOIN symbols s ON s.id = c.symbol_id
       WHERE ${scope.clause}
     `;
-    const avgRow = this.db.prepare(avgSql).get(...scope.params) as { avg: number | null };
+    const avgRow = this.adapter.prepare(avgSql).get(...scope.params) as { avg: number | null };
 
     return {
       results,
@@ -166,18 +163,18 @@ export class ComplexityStore {
   }
 
   private ensureTable(): void {
-    this.db.exec(CREATE_TABLE);
+    this.adapter.exec(CREATE_TABLE);
   }
 
   private prepareStatements(): void {
     this.stmts = {
-      upsert: this.db.prepare(`
+      upsert: this.adapter.prepare(`
         INSERT OR REPLACE INTO complexity
           (symbol_id, cyclomatic_complexity, branches, loops, logical_ops,
            nesting_depth, early_returns, exception_handlers, grade, computed_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       `),
-      getBySymbol: this.db.prepare(`
+      getBySymbol: this.adapter.prepare(`
         SELECT c.*, s.name as symbol_name, f.relative_path as file_path,
                s.start_line, s.end_line
         FROM complexity c
@@ -185,7 +182,7 @@ export class ComplexityStore {
         JOIN files f ON f.id = s.file_id
         WHERE c.symbol_id = ?
       `),
-      deleteBySymbol: this.db.prepare('DELETE FROM complexity WHERE symbol_id = ?'),
+      deleteBySymbol: this.adapter.prepare('DELETE FROM complexity WHERE symbol_id = ?'),
     };
   }
 }
