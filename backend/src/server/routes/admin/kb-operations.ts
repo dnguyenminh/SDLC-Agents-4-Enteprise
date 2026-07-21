@@ -131,5 +131,30 @@ export function createKbOperationsRoutes(ctx: AdminContext): Hono {
     } catch { return c.json({ error: 'Invalid JSON body' }, 400); }
   });
 
+  /** DELETE /api/admin/kb/entries/all — wipe all KB entries + graph nodes (admin only). */
+  app.delete('/api/admin/kb/entries/all', async (c) => {
+    const user = await ctx.requireAuth(c);
+    if (user instanceof Response) return user;
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_WRITE');
+    if (permCheck instanceof Response) return permCheck;
+    try {
+      const { getIndexAdapter } = await import('../../../admin/db/core.js');
+      const adapter = getIndexAdapter();
+      const result = await adapter.runAsync('DELETE FROM knowledge_entries');
+      // resetGraph uses sync transaction — use async variant for PG compatibility
+      const { getAdminAdapter } = await import('../../../admin/db/core.js');
+      const adminAdapter = getAdminAdapter();
+      await adminAdapter.transactionAsync(async () => {
+        await adminAdapter.execAsync('DELETE FROM graph_nodes');
+        await adminAdapter.execAsync('DELETE FROM graph_edges');
+      });
+      await recordAudit(user.userId, user.username, 'KB_DELETE_ALL', 'kb', undefined, `Deleted ${result.changes} entries`);
+      return c.json({ success: true, deleted: result.changes });
+    } catch (err: any) {
+      ctx.logger.error({ err }, 'Failed to delete all KB entries');
+      return c.json({ error: err.message || 'Failed' }, 500);
+    }
+  });
+
   return app;
 }
