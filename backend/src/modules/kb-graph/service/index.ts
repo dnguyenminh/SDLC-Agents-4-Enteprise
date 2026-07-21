@@ -1,9 +1,9 @@
 /**
  * SqliteGraphService — Embedded graph layer using SQLite for KB Graph visualization.
  *
- * Zero external dependencies — uses the existing admin.db with graph_nodes + graph_edges tables.
+ * Zero external dependencies — uses the unified database with graph_nodes + graph_edges tables.
  * Provides spatial bounding-box queries for progressive 3D loading.
- * Syncs BOTH knowledge_entries (Documents) AND code symbols from index.db.
+ * Syncs BOTH knowledge_entries (Documents) AND code symbols.
  */
 
 import type { Logger } from 'pino';

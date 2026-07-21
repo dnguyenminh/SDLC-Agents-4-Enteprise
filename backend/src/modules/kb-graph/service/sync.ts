@@ -117,7 +117,7 @@ export function fullSync(logger: Logger): { nodesCreated: number; edgesCreated: 
   function processCodeSymbols(): void {
     const indexDbPath = getIndexDbPath();
     if (!fs.existsSync(indexDbPath)) {
-      logger.warn({ indexDbPath }, 'index.db not found — skipping code symbols');
+      logger.warn({ indexDbPath }, 'Database not found — skipping code symbols');
       return;
     }
     try {
@@ -126,7 +126,7 @@ export function fullSync(logger: Logger): { nodesCreated: number; edgesCreated: 
       if (hasTables && hasTables.cnt >= 2) readSymbolBatches(indexDb);
       indexDb.close();
     } catch (err: any) {
-      logger.warn({ error: err.message }, 'Failed to read code symbols from index.db — skipping');
+      logger.warn({ error: err.message }, 'Failed to read code symbols from database — skipping');
     }
   }
 

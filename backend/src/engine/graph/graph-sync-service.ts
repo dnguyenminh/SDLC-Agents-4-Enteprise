@@ -1,7 +1,7 @@
 /**
  * SA4E-41 — GraphSyncService (Facade).
  *
- * Projects a tenant's code symbols (index.db) into admin.db `graph_nodes` so the
+ * Projects a tenant's code symbols into graph_nodes table in the unified DB so the
  * KB Graph visualization shows per-project code nodes. Scoped + idempotent:
  * only touches rows for the given project_id with `entry_id LIKE 'code:%'`.
  */
@@ -33,7 +33,7 @@ export class GraphSyncService {
     }
   }
 
-  /** Re-project a tenant's code symbols into admin.db graph_nodes (bounded). */
+  /** Re-project a tenant's code symbols into graph_nodes (bounded). */
   syncProjectSymbols(projectId: string, limit = 2000): void {
     if (!projectId) return; // fail-closed
     try {

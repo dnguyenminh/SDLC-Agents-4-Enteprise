@@ -27,5 +27,4 @@ function scanDb(dbPath, label) {
   db.close();
 }
 
-scanDb('.code-intel/admin.db', 'ADMIN DB');
-scanDb('.code-intel/index.db', 'INDEX DB');
+scanDb('.code-intel/index.db', 'UNIFIED DB');

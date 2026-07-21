@@ -1,9 +1,8 @@
 /**
  * admin/db/core.ts — Central database access layer (unified single DB).
  * SA4E-45: getIndexAdapter() / getAdminAdapter() enable PostgreSQL/MySQL support.
- * SA4E-49: Consolidated into single DB file — admin tables live alongside index tables.
- *          Previously admin.db (users, graph_nodes) was separate from index.db
- *          (knowledge_entries, symbols), causing split-data bugs.
+ * SA4E-49: Consolidated into single unified DB file (index.db) — admin tables
+ *          (users, graph_nodes) live alongside index tables (knowledge_entries, symbols).
  */
 
 import Database from 'better-sqlite3';
@@ -103,7 +102,7 @@ export function getIndexAdapter(): DatabaseAdapter {
 
 /**
  * Get DatabaseAdapter for admin data (users, sessions, graph_nodes, etc.).
- * When engine=sqlite: wraps admin.db via SqliteDbAdapter.
+ * When engine=sqlite: wraps the unified DB via SqliteDbAdapter.
  * When engine=postgresql/mysql: connects to the configured remote DB.
  */
 export function getAdminAdapter(): DatabaseAdapter {

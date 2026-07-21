@@ -13,7 +13,7 @@ export const CODE_TYPES = [
 /** Pre-computed SQL IN clause string for CODE_TYPES. */
 export const CODE_TYPES_SQL = CODE_TYPES.map(t => `'${t}'`).join(',');
 
-/** Symbol kinds used in index.db symbols table queries (lowercase). */
+/** Symbol kinds used in symbols table queries (lowercase). */
 export const SYMBOL_KINDS = [
   'function', 'class', 'interface', 'method',
   'type', 'enum', 'constructor',

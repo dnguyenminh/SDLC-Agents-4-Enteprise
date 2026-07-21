@@ -35,7 +35,7 @@ export class DatabaseManager {
     private readonly indexAdapter: DatabaseAdapter,
   ) {}
 
-  /** Graph node/edge operations (admin.db). */
+  /** Graph node/edge operations (unified DB). */
   get graph(): IGraphRepository {
     if (!this._graph) {
       this._graph = new GraphRepository(this.adminAdapter);
@@ -43,7 +43,7 @@ export class DatabaseManager {
     return this._graph;
   }
 
-  /** User count and profile operations (admin.db). */
+  /** User count and profile operations (unified DB). */
   get user(): IUserRepository {
     if (!this._user) {
       this._user = new UserRepository(this.adminAdapter);
@@ -51,7 +51,7 @@ export class DatabaseManager {
     return this._user;
   }
 
-  /** Code symbol count queries (index.db). */
+  /** Code symbol count queries (unified DB). */
   get symbol(): ISymbolRepository {
     if (!this._symbol) {
       this._symbol = new SymbolRepository(this.indexAdapter);
@@ -59,7 +59,7 @@ export class DatabaseManager {
     return this._symbol;
   }
 
-  /** Audit log recording and retrieval (admin.db). */
+  /** Audit log recording and retrieval (unified DB). */
   get audit(): IAuditRepository {
     if (!this._audit) {
       this._audit = new AuditRepository(this.adminAdapter);
@@ -67,7 +67,7 @@ export class DatabaseManager {
     return this._audit;
   }
 
-  /** Knowledge base entry queries (index.db / admin.db unified). */
+  /** Knowledge base entry queries (unified DB). */
   get kb(): IKbRepository {
     if (!this._kb) {
       this._kb = new KbRepository(this.adminAdapter);
