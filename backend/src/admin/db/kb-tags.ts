@@ -8,8 +8,9 @@ import { buildAdminScopeFilter } from './kb-scope-filter.js';
 
 /** Check if knowledge_entries table exists (SQLite only guard). */
 async function tableExists(): Promise<boolean> {
-  if (getActiveEngine() !== 'sqlite') return true;
   const adapter = getIndexAdapter();
+  if (!adapter.isConnected()) return false; // PG not yet connected — skip gracefully
+  if (getActiveEngine() !== 'sqlite') return true;
   const row = await adapter.getAsync<{ cnt: number }>(
     "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'",
   );

@@ -10,8 +10,10 @@ import { buildAdminScopeFilter } from './kb-scope-filter.js';
 
 /** Check if knowledge_entries table exists (SQLite only). */
 async function tableExists(): Promise<boolean> {
-  if (getActiveEngine() !== 'sqlite') return true; // PG: always exists if schema was run
   const adapter = getIndexAdapter();
+  // Guard: if PG adapter not yet connected (async connect in progress), skip gracefully
+  if (!adapter.isConnected()) return false;
+  if (getActiveEngine() !== 'sqlite') return true; // PG: always exists if schema was run
   const row = await adapter.getAsync<{ cnt: number }>(
     "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'",
   );
