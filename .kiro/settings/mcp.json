@@ -78,7 +78,8 @@
         "transitionJiraIssue",
         "addCommentToJiraIssue",
         "searchJiraIssuesUsingJql",
-        "getJiraIssue"
+        "getJiraIssue",
+        "createIssueLink"
       ]
     },
     "atlassian": {

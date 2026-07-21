@@ -10,7 +10,7 @@ import type { AdminContext } from './context.js';
 import { DatabaseConfigService } from '../../../database/config/DatabaseConfigService.js';
 import { DatabaseAdapterFactory } from '../../../database/factory/DatabaseAdapterFactory.js';
 import { MigrationService, type MigrationProgress } from '../../../database/migration/MigrationService.js';
-import { resetAdminDb } from '../../../admin/db/core.js';
+import { getAdminDb, resetAdminDb } from '../../../admin/db/core.js';
 import { loadConfig } from '../../../config/index.js';
 import { z } from 'zod';
 
@@ -30,7 +30,8 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
   const cfg = loadConfig();
   const dataDir = path.isAbsolute(cfg.dataDir) ? cfg.dataDir : path.resolve(cfg.workspace, cfg.dataDir);
-  const configService = new DatabaseConfigService(dataDir);
+  // SA4E-50: Pass DB instance from getAdminDb() + dataDir for .dbkey resolution
+  const configService = new DatabaseConfigService(getAdminDb(), dataDir);
   // SA4E-45: registry for hot-swap after engine switch
   const registry = ctx.registry;
 

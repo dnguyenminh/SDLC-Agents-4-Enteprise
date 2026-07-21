@@ -65,6 +65,31 @@ export function getNodeCount(db: Database.Database, projectId?: string): number 
   return (db.prepare('SELECT COUNT(*) as cnt FROM graph_nodes').get() as any).cnt;
 }
 
+/**
+ * SA4E-49: Get graph node counts split by KB vs Code.
+ * Single source of truth — use this instead of inline SQL in routes.
+ * Includes fallback for NULL project_id (legacy/unscoped nodes).
+ */
+export const CODE_NODE_TYPES = ['FUNCTION', 'METHOD', 'CLASS', 'INTERFACE', 'TYPE', 'CONSTRUCTOR', 'ENUM', 'CONSTANT', 'VARIABLE'] as const;
+
+export interface GraphNodeCounts {
+  total: number;
+  code: number;
+  kb: number;
+}
+
+export function getGraphNodeCounts(db: Database.Database, projectId: string): GraphNodeCounts {
+  const CODE_TYPES_SQL = `('${CODE_NODE_TYPES.join("','")}')`;
+  let total = (db.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ?').get(projectId) as { cnt: number }).cnt || 0;
+  let code = (db.prepare(`SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? AND type IN ${CODE_TYPES_SQL}`).get(projectId) as { cnt: number }).cnt || 0;
+  // Fallback: include NULL project_id (legacy/unscoped nodes)
+  if (total === 0) {
+    total = (db.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? OR project_id IS NULL').get(projectId) as { cnt: number }).cnt || 0;
+    code = (db.prepare(`SELECT COUNT(*) as cnt FROM graph_nodes WHERE (project_id = ? OR project_id IS NULL) AND type IN ${CODE_TYPES_SQL}`).get(projectId) as { cnt: number }).cnt || 0;
+  }
+  return { total, code, kb: total - code };
+}
+
 export function addNode(entryId: string, label: string, type: string, tier: string, db: Database.Database, logger: Logger, projectId = ''): GraphNode {
   const existing = db.prepare('SELECT entry_id FROM graph_nodes WHERE entry_id = ?').get(entryId);
   if (existing) return getNode(entryId, db, logger)!;

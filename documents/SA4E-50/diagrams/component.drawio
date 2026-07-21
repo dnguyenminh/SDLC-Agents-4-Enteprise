@@ -1,0 +1,99 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="2" value="SA4E-50 Component Diagram: Repository Interfaces and Dependencies" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="20" width="600" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="&lt;&lt;interface&gt;&gt;&#xa;IGraphRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="80" width="180" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="+ getNodeCounts(projectId): GraphNodeCounts&#xa;+ resetGraph(): void&#xa;+ upsertNode(params): void" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="45" y="120" width="170" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="&lt;&lt;interface&gt;&gt;&#xa;IUserRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="80" width="180" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="+ getUserCount(): number&#xa;+ getUserCountByGroup(gid): number&#xa;+ updateEmail(uid, email): void" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="255" y="120" width="170" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="30" value="&lt;&lt;interface&gt;&gt;&#xa;ISymbolRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="460" y="80" width="180" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="31" value="+ getSymbolCount(): number" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="465" y="120" width="170" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="35" value="&lt;&lt;interface&gt;&gt;&#xa;IAuditRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="670" y="80" width="180" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="36" value="+ recordAudit(...): void&#xa;+ getAuditLogs(limit?): AuditEntry[]" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="675" y="120" width="170" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="37" value="&lt;&lt;interface&gt;&gt;&#xa;IKbRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="880" y="80" width="180" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="38" value="+ getEntryCount(pid, uid?): number&#xa;+ getEntries(...): PaginatedResult" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="885" y="120" width="170" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="50" value="DatabaseManager" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="350" y="230" width="250" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="51" value="- adminAdapter: DatabaseAdapter&#xa;- indexAdapter: DatabaseAdapter&#xa;+ get graph: IGraphRepository&#xa;+ get user: IUserRepository&#xa;+ get symbol: ISymbolRepository&#xa;+ get audit: IAuditRepository&#xa;+ get kb: IKbRepository" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="355" y="260" width="240" height="85" as="geometry" />
+    </mxCell>
+    <mxCell id="60" value="GraphRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="420" width="180" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="61" value="UserRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="250" y="420" width="180" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="62" value="SymbolRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="420" width="180" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="63" value="AuditRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="670" y="420" width="180" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="64" value="KbRepository" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="880" y="420" width="180" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="70" value="&lt;&lt;interface&gt;&gt;&#xa;DatabaseAdapter" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="520" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="75" value="constants.ts&#xa;CODE_TYPES | SYMBOL_KINDS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="520" width="180" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="80" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="60" target="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="81" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="61" target="20">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="82" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="62" target="30">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="83" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="63" target="35">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="84" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="64" target="37">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="85" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="60" target="70">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="86" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="62" target="70">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="87" value="imports" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="60" target="75">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="90" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.1;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="50" target="60">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="91" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.3;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="50" target="61">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="92" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="50" target="62">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

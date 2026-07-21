@@ -1,0 +1,60 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="Route Handler&#xa;(kb-graph sync)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;size=40;" vertex="1" parent="1">
+      <mxGeometry x="80" y="40" width="160" height="450" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="GraphRepository" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;size=40;" vertex="1" parent="1">
+      <mxGeometry x="340" y="40" width="160" height="450" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="DatabaseAdapter" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;size=40;" vertex="1" parent="1">
+      <mxGeometry x="600" y="40" width="160" height="450" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="GraphService" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;size=40;" vertex="1" parent="1">
+      <mxGeometry x="860" y="40" width="140" height="450" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="1. resetGraph()" style="html=1;" edge="1" parent="1" source="2" target="3">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="160" y="120" as="sourcePoint"/>
+        <mxPoint x="420" y="120" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="11" value="2. transaction begin" style="html=1;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="160" as="sourcePoint"/>
+        <mxPoint x="680" y="160" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="12" value="3. DELETE FROM graph_nodes" style="html=1;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="200" as="sourcePoint"/>
+        <mxPoint x="680" y="200" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="13" value="4. DELETE FROM graph_edges" style="html=1;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="240" as="sourcePoint"/>
+        <mxPoint x="680" y="240" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="14" value="5. transaction commit" style="html=1;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="280" as="sourcePoint"/>
+        <mxPoint x="680" y="280" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="15" value="6. void (success)" style="html=1;dashed=1;" edge="1" parent="1" source="3" target="2">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="320" as="sourcePoint"/>
+        <mxPoint x="160" y="320" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="16" value="7. fullSync() [async]" style="html=1;dashed=1;strokeColor=#82b366;" edge="1" parent="1" source="2" target="5">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="160" y="380" as="sourcePoint"/>
+        <mxPoint x="930" y="380" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

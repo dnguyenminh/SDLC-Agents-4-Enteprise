@@ -1,0 +1,73 @@
+<mxGraphModel dx="1422" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="Route Handler" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;size=40;" vertex="1" parent="1">
+      <mxGeometry x="80" y="40" width="120" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="AdminContext" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;size=40;" vertex="1" parent="1">
+      <mxGeometry x="280" y="40" width="120" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="DatabaseManager" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;size=40;" vertex="1" parent="1">
+      <mxGeometry x="480" y="40" width="140" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="GraphRepository" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;size=40;" vertex="1" parent="1">
+      <mxGeometry x="700" y="40" width="140" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="DatabaseAdapter" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;size=40;" vertex="1" parent="1">
+      <mxGeometry x="920" y="40" width="140" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="1. ctx.db.graph" style="html=1;" edge="1" parent="1" source="2" target="3">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="140" y="120" as="sourcePoint"/>
+        <mxPoint x="340" y="120" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="11" value="2. get graph" style="html=1;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="340" y="160" as="sourcePoint"/>
+        <mxPoint x="550" y="160" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="12" value="3. return GraphRepository" style="html=1;dashed=1;" edge="1" parent="1" source="4" target="3">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="550" y="200" as="sourcePoint"/>
+        <mxPoint x="340" y="200" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="13" value="4. getNodeCounts(projectId)" style="html=1;" edge="1" parent="1" source="2" target="5">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="140" y="260" as="sourcePoint"/>
+        <mxPoint x="770" y="260" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="14" value="5. get(sql, [projectId])" style="html=1;" edge="1" parent="1" source="5" target="6">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="770" y="310" as="sourcePoint"/>
+        <mxPoint x="990" y="310" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="15" value="6. { cnt: N }" style="html=1;dashed=1;" edge="1" parent="1" source="6" target="5">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="990" y="350" as="sourcePoint"/>
+        <mxPoint x="770" y="350" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="16" value="7. { total, code, kb }" style="html=1;dashed=1;" edge="1" parent="1" source="5" target="2">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="770" y="410" as="sourcePoint"/>
+        <mxPoint x="140" y="410" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="17" value="8. c.json(response)" style="html=1;" edge="1" parent="1" source="2" target="2">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="140" y="460" as="sourcePoint"/>
+        <mxPoint x="140" y="480" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="40" y="460"/>
+          <mxPoint x="40" y="480"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

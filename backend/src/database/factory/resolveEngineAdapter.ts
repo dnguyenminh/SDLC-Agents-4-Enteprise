@@ -19,12 +19,13 @@ const logger = pino({ name: 'resolve-engine-adapter' });
  * If admin config says "sqlite" or unavailable → wraps given SQLite db.
  *
  * @param sqliteDb - Fallback SQLite database handle (from DatabaseManager)
- * @param dataDir - Data directory containing database.json config
+ * @param dataDir - Data directory for encryption key resolution
  * @returns Promise resolving to DatabaseAdapter for the active engine
  */
 export async function resolveEngineAdapter(sqliteDb: Database.Database, dataDir: string): Promise<DatabaseAdapter> {
   try {
-    const configService = new DatabaseConfigService(dataDir);
+    // SA4E-50: Pass DB instance and dataDir (for .dbkey path)
+    const configService = new DatabaseConfigService(sqliteDb, dataDir);
     const activeConfig = configService.getActiveConfig();
 
     if (activeConfig.engine === 'sqlite') {

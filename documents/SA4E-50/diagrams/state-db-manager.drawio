@@ -1,0 +1,44 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="UNINITIALIZED" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="80" y="300" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="INITIALIZED&#xa;(adapters set)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="340" y="300" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="REPOS_CREATED&#xa;(lazy, on demand)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="300" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="ERROR" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="380" y="480" width="120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="" style="ellipse;html=1;shape=doubleCircle;whiteSpace=wrap;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="20" y="315" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="start" style="html=1;" edge="1" parent="1" source="6" target="2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="constructor(adminAdapter, indexAdapter)" style="html=1;" edge="1" parent="1" source="2" target="3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="12" value="first .graph / .user / .kb access" style="html=1;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="13" value="adapter disconnected" style="html=1;" edge="1" parent="1" source="3" target="5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="14" value="adapter reconnected" style="html=1;" edge="1" parent="1" source="5" target="3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="15" value="subsequent access&#xa;(return cached)" style="html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="4" target="4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="710" y="250"/>
+          <mxPoint x="750" y="250"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
