@@ -66,18 +66,6 @@ export async function validateSession(
   token: string,
 ): Promise<{ userId: string; username: string; accessGroupId: string } | null> {
   const adapter = getAdminAdapter();
-  // Guard: if PG adapter not yet connected, fall back to local SQLite for auth
-  if (!adapter.isConnected()) {
-    const { getAdminDb } = await import('./core.js');
-    const d = getAdminDb();
-    const row = d.prepare(
-      `SELECT s.user_id, s.expires_at, s.is_active, u.username, u.access_group_id, u.status
-       FROM sessions s JOIN users u ON s.user_id = u.user_id WHERE s.token = ?`
-    ).get(token) as any;
-    if (!row || !row.is_active || row.status !== 'ACTIVE') return null;
-    if (new Date(row.expires_at) < new Date()) return null;
-    return { userId: row.user_id, username: row.username, accessGroupId: row.access_group_id };
-  }
   const row = await adapter.getAsync<SessionUserRow>(
     `SELECT s.user_id, s.expires_at, s.is_active, u.username, u.access_group_id, u.status
      FROM sessions s JOIN users u ON s.user_id = u.user_id

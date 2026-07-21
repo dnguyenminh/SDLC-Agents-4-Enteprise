@@ -109,6 +109,31 @@ export function postRaw(port: number, data: Buffer): Promise<{ status: number | 
   });
 }
 
+/**
+ * Open the GET /mcp SSE channel and resolve on the first event.
+ * Closes the request after the first `event: message` frame.
+ */
+export function openSse(port: number, timeoutMs = 3000): Promise<{ status: number; contentType: string; chunk: string }> {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      { hostname: '127.0.0.1', port, path: '/mcp', method: 'GET', timeout: timeoutMs },
+      (res) => {
+        let data = '';
+        res.on('data', (c: Buffer) => {
+          data += c.toString('utf-8');
+          if (data.includes('event: message')) {
+            resolve({ status: res.statusCode!, contentType: res.headers['content-type'] || '', chunk: data });
+            req.destroy();
+          }
+        });
+        res.on('error', reject);
+      },
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 export function ensureTmpDir(): void {
   if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true });
 }

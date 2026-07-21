@@ -87,13 +87,6 @@ export async function getUserByUsername(
   username: string,
 ): Promise<(User & { passwordHash: string }) | null> {
   const adapter = getAdminAdapter();
-  // Guard: if PG not yet connected, fall back to local SQLite for login
-  if (!adapter.isConnected()) {
-    const { getAdminDb } = await import('./core.js');
-    const r = getAdminDb().prepare('SELECT * FROM users WHERE username = ?').get(username) as Record<string, unknown> | undefined;
-    if (!r) return null;
-    return { ...rowToUser(r), passwordHash: r.password_hash as string };
-  }
   const r = await adapter.getAsync<Record<string, unknown>>(
     'SELECT * FROM users WHERE username = ?', [username],
   );

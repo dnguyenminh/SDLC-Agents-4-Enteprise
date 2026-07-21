@@ -30,6 +30,7 @@ function providerWithToolsResponse(response: LlmResponse): LlmProvider {
     chatStream: vi.fn(),
     chatWithTools: vi.fn().mockResolvedValue(response),
     isAvailable: vi.fn().mockResolvedValue(true),
+    getContextWindow: vi.fn().mockReturnValue(200000),
     dispose: vi.fn(),
   } as unknown as LlmProvider;
 }

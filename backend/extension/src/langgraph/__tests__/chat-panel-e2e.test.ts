@@ -265,8 +265,9 @@ describe("Chat Panel E2E — Working Status (KSA-240)", () => {
     await graph.invoke(makeInitialState());
 
     const tcUpdates = emitted.filter((m) => m.type === "chat:toolCallUpdate");
-    expect(tcUpdates[0].result.length).toBeLessThanOrEqual(503); // 500 + "..."
-    expect(tcUpdates[0].result).toContain("...");
+    // Long tool results are truncated to keep the UI responsive (no "..." suffix added).
+    expect(tcUpdates[0].result.length).toBeLessThanOrEqual(500);
+    expect(tcUpdates[0].result).toBe("x".repeat(500));
   });
 
   it("TC-E2E-08: Graph with no MCP bridge still completes without hanging", async () => {

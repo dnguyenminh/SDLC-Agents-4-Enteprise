@@ -80,7 +80,19 @@ export class WrapperServer {
     }
   }
 
+  /**
+   * Supported MCP protocol versions (newest first).
+   * VS Code negotiates via the initialize request.
+   */
+  private static readonly PROTOCOL_VERSIONS = [
+    "2025-06-18",
+    "2025-03-26",
+    "2024-11-05",
+  ];
+
   private async handleMcp(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    // Streamable HTTP: GET opens an SSE stream for server-initiated messages.
+    if (req.method === "GET") { this.handleMcpGet(res); return; }
     if (req.method !== "POST") { res.writeHead(405); res.end('{"error":"Method not allowed"}'); return; }
     if (!(req.headers["content-type"] || "").includes("application/json")) {
       this.sendError(res, null, -32700, "Expected application/json");
@@ -91,6 +103,23 @@ export class WrapperServer {
     try { rpc = JSON.parse(body); } catch { this.sendError(res, null, -32700, "Parse error"); return; }
     if (rpc.id === undefined) rpc.id = ++this.requestId;
     try {
+      // MCP lifecycle handshake — required by the protocol.
+      if (rpc.method === "initialize") {
+        const clientVersion = rpc.params?.protocolVersion as string | undefined;
+        const negotiated = WrapperServer.PROTOCOL_VERSIONS.find((v) => v === clientVersion)
+          || WrapperServer.PROTOCOL_VERSIONS[0];
+        this.sendResult(res, rpc.id, {
+          protocolVersion: negotiated,
+          capabilities: {
+            tools: { listChanged: false },
+          },
+          serverInfo: { name: "sdlc-agents-4-enterprise", version: "1.11.0" },
+        });
+        return;
+      }
+      // Notifications have no id and must not receive a response.
+      if (rpc.method === "notifications/initialized" || rpc.method === "initialized") { res.writeHead(202); res.end(); return; }
+      if (rpc.method === "ping") { this.sendResult(res, rpc.id, {}); return; }
       if (rpc.method === "tools/list") {
         const tools = await this.getToolsRewritten();
         this.sendResult(res, rpc.id, { tools });
@@ -106,6 +135,27 @@ export class WrapperServer {
       this.deps.outputChannel.appendLine(`[WrapperServer] Error: ${err.message}`);
       this.sendError(res, rpc.id, err.code || -32603, err.message);
     }
+  }
+
+  /**
+   * GET /mcp — Streamable HTTP SSE channel for server-to-client messages.
+   * VS Code opens this after initialize to receive unsolicited notifications.
+   */
+  private handleMcpGet(res: http.ServerResponse): void {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+    });
+    // SSE client needs 'endpoint' event to know where to POST (MCP SDK SSEClientTransport waits for this)
+    res.write("event: endpoint\n");
+    res.write("data: /mcp\n\n");
+    res.write("event: message\n");
+    res.write("data: {\"jsonrpc\":\"2.0\",\"method\":\"initialized\"}\n\n");
+    const keepAlive = setInterval(() => {
+      try { res.write(": keep-alive\n\n"); } catch { /* ignore */ }
+    }, 15000);
+    res.on("close", () => clearInterval(keepAlive));
   }
 
   private async getToolsRewritten(): Promise<any[]> {

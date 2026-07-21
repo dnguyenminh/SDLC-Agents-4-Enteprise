@@ -96,7 +96,7 @@ export async function buildChatSubgraph(
   const wsRoot = workspaceRoot || require("vscode").workspace.workspaceFolders?.[0]?.uri.fsPath || "";
 
   // Detect context window for budget-aware message building
-  const contextWindow = llmProvider?.getContextWindow() || 0;
+  const contextWindow = llmProvider?.getContextWindow?.() || 0;
   if (contextWindow > 0) {
     debugLog(`[chat-graph] Context window detected: ${contextWindow} tokens`);
   }

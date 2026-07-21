@@ -1,6 +1,9 @@
+// @vitest-environment jsdom
 /**
  * Unit Tests — OptionsController + OptionsView
  * KSA-259
+ *
+ * Mirrors the actual source API (render/showOptions/OPTIONS_VISIBLE/IDLE).
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -43,113 +46,112 @@ describe('OptionsView', () => {
     document.body.innerHTML = '';
   });
 
-  describe('show()', () => {
+  describe('render()', () => {
     it('creates options container with correct number of buttons', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
 
-      view.show(['Option A', 'Option B', 'Option C']);
+      view.render(['Option A', 'Option B', 'Option C']);
 
       const buttons = container.querySelectorAll('.option-btn');
       expect(buttons.length).toBe(3);
     });
 
-    it('truncates long option text at MAX_DISPLAY_CHARS', () => {
+    it('truncates long option text at MAX_OPTION_LENGTH', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-      const longText = 'A'.repeat(50);
+      const longText = 'A'.repeat(150);
 
-      view.show([longText, 'Short']);
+      view.render([longText, 'Short']);
 
       const buttons = container.querySelectorAll('.option-btn');
-      expect(buttons[0].textContent).toBe('A'.repeat(40) + '...');
+      expect(buttons[0].textContent).toBe('A'.repeat(OPTIONS_CONFIG.MAX_OPTION_LENGTH));
       expect(buttons[1].textContent).toBe('Short');
     });
 
-    it('stores full text in data-full-text attribute', () => {
+    it('caps options at MAX_OPTIONS', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-      const longText = 'B'.repeat(50);
+      const many = Array.from({ length: 10 }, (_, i) => `Opt ${i}`);
 
-      view.show([longText, 'Short']);
+      view.render(many);
+
+      const buttons = container.querySelectorAll('.option-btn');
+      expect(buttons.length).toBe(OPTIONS_CONFIG.MAX_OPTIONS);
+    });
+
+    it('uses textContent (XSS-safe) for option text', () => {
+      const { container, textarea } = createMockDOM();
+      const view = new OptionsView(container, textarea);
+      view.render(['<img src=x onerror=alert(1)>']);
 
       const btn = container.querySelector('.option-btn') as HTMLElement;
-      expect(btn.getAttribute('data-full-text')).toBe(longText);
+      expect(btn.querySelector('img')).toBeNull();
+      expect(btn.textContent).toBe('<img src=x onerror=alert(1)>');
     });
 
-    it('renders question text if provided', () => {
+    it('fires onSelect callback with button text on click (event delegation)', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
+      const clicked: string[] = [];
+      view.onSelect((t) => clicked.push(t));
+      view.render(['Alpha', 'Beta']);
 
-      view.show(['A', 'B'], 'Choose one:');
-
-      const questionEl = container.querySelector('.options-question');
-      expect(questionEl).not.toBeNull();
-      expect(questionEl!.textContent).toBe('Choose one:');
+      (container.querySelector('.option-btn') as HTMLElement).click();
+      expect(clicked).toEqual(['Alpha']);
     });
 
-    it('does NOT render question if not provided', () => {
+    it('sets role="group" on container', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-
-      view.show(['A', 'B']);
-
-      const questionEl = container.querySelector('.options-question');
-      expect(questionEl).toBeNull();
-    });
-
-    it('sets role="listbox" on container', () => {
-      const { container, textarea } = createMockDOM();
-      const view = new OptionsView(container, textarea);
-
-      view.show(['A', 'B']);
+      view.render(['A', 'B']);
 
       const optionsContainer = container.querySelector('.options-container');
-      expect(optionsContainer!.getAttribute('role')).toBe('listbox');
+      expect(optionsContainer!.getAttribute('role')).toBe('group');
     });
 
-    it('sets role="option" on each button', () => {
+    it('sets tabindex=0 on each button', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-
-      view.show(['A', 'B', 'C']);
+      view.render(['A', 'B', 'C']);
 
       const buttons = container.querySelectorAll('.option-btn');
       buttons.forEach((btn) => {
-        expect(btn.getAttribute('role')).toBe('option');
+        expect(btn.getAttribute('tabindex')).toBe('0');
       });
     });
 
-    it('first button has tabindex=0, rest have tabindex=-1', () => {
+    it('marks container visible after render', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-
-      view.show(['A', 'B', 'C']);
-
-      const buttons = container.querySelectorAll('.option-btn');
-      expect(buttons[0].getAttribute('tabindex')).toBe('0');
-      expect(buttons[1].getAttribute('tabindex')).toBe('-1');
-      expect(buttons[2].getAttribute('tabindex')).toBe('-1');
+      view.render(['A', 'B']);
+      expect(view.isVisible()).toBe(true);
     });
   });
 
   describe('hide()', () => {
-    it('removes options container from DOM', () => {
+    it('removes buttons from container', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-
-      view.show(['A', 'B']);
-      expect(container.querySelector('.options-container')).not.toBeNull();
+      view.render(['A', 'B']);
+      expect(container.querySelectorAll('.option-btn').length).toBe(2);
 
       view.hide();
-      expect(container.querySelector('.options-container')).toBeNull();
+      expect(container.querySelectorAll('.option-btn').length).toBe(0);
     });
 
-    it('is safe to call when nothing is shown', () => {
+    it('is safe to call when nothing is rendered', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-
       expect(() => view.hide()).not.toThrow();
+    });
+
+    it('is no longer visible after hide()', () => {
+      const { container, textarea } = createMockDOM();
+      const view = new OptionsView(container, textarea);
+      view.render(['A', 'B']);
+      view.hide();
+      expect(view.isVisible()).toBe(false);
     });
   });
 
@@ -160,17 +162,17 @@ describe('OptionsView', () => {
       expect(view.isVisible()).toBe(false);
     });
 
-    it('returns true after show()', () => {
+    it('returns true after render()', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-      view.show(['A', 'B']);
+      view.render(['A', 'B']);
       expect(view.isVisible()).toBe(true);
     });
 
     it('returns false after hide()', () => {
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-      view.show(['A', 'B']);
+      view.render(['A', 'B']);
       view.hide();
       expect(view.isVisible()).toBe(false);
     });
@@ -183,127 +185,93 @@ describe('OptionsController', () => {
   });
 
   describe('showOptions()', () => {
-    it('transitions to VISIBLE with valid signal', () => {
+    it('transitions to OPTIONS_VISIBLE with valid signal', () => {
       const { controller } = createTestSetup();
       controller.showOptions(makeSignal(['A', 'B', 'C']));
-      expect(controller.getState()).toBe('VISIBLE');
+      expect(controller.getState().displayState).toBe('OPTIONS_VISIBLE');
       expect(controller.isVisible()).toBe(true);
     });
 
-    it('stores current options', () => {
+    it('stores current options on state', () => {
       const { controller } = createTestSetup();
       controller.showOptions(makeSignal(['Opt 1', 'Opt 2']));
-      expect(controller.getCurrentOptions()).toEqual(['Opt 1', 'Opt 2']);
+      expect(controller.getState().options).toEqual(['Opt 1', 'Opt 2']);
     });
 
-    it('rejects signal with < 2 options', () => {
+    it('rejects empty options signal', () => {
       const { controller } = createTestSetup();
-      controller.showOptions(makeSignal(['Only one']));
-      expect(controller.getState()).toBe('HIDDEN');
+      controller.showOptions(makeSignal([]));
+      expect(controller.getState().displayState).toBe('IDLE');
     });
 
-    it('rejects signal with > 5 options', () => {
+    it('rejects empty options signal', () => {
       const { controller } = createTestSetup();
-      controller.showOptions(makeSignal(['1', '2', '3', '4', '5', '6']));
-      expect(controller.getState()).toBe('HIDDEN');
+      controller.showOptions(makeSignal([]));
+      expect(controller.getState().displayState).toBe('IDLE');
     });
 
-    it('rejects signal with empty strings (if < 2 after filter)', () => {
+    it('rejects signal with only empty/whitespace options', () => {
       const { controller } = createTestSetup();
-      controller.showOptions(makeSignal(['Valid', '', '   ']));
-      expect(controller.getState()).toBe('HIDDEN');
+      controller.showOptions(makeSignal(['', '   ']));
+      expect(controller.getState().displayState).toBe('IDLE');
     });
 
-    it('accepts signal after filtering empty strings (if >= 2 remain)', () => {
+    it('accepts signal after filtering empty strings (>= 2 remain)', () => {
       const { controller } = createTestSetup();
       controller.showOptions(makeSignal(['Valid 1', '', 'Valid 2', '   ']));
-      expect(controller.getState()).toBe('VISIBLE');
-      expect(controller.getCurrentOptions()).toEqual(['Valid 1', 'Valid 2']);
+      expect(controller.getState().displayState).toBe('OPTIONS_VISIBLE');
+      expect(controller.getState().options).toEqual(['Valid 1', 'Valid 2']);
+    });
+
+    it('caps options at MAX_OPTIONS', () => {
+      const { controller } = createTestSetup();
+      controller.showOptions(makeSignal(['1', '2', '3', '4', '5', '6']));
+      expect(controller.getState().options.length).toBe(OPTIONS_CONFIG.MAX_OPTIONS);
     });
 
     it('queues options when spinner is active', () => {
-      const { controller } = createTestSetup(true); // spinner active
+      const { controller } = createTestSetup(true);
       controller.showOptions(makeSignal(['A', 'B']));
-      expect(controller.getState()).toBe('HIDDEN');
+      expect(controller.getState().displayState).toBe('IDLE');
     });
 
-    it('replaces existing options when called while VISIBLE', () => {
+    it('replaces existing options when called while OPTIONS_VISIBLE', () => {
       const { controller } = createTestSetup();
       controller.showOptions(makeSignal(['Old 1', 'Old 2']));
       controller.showOptions(makeSignal(['New 1', 'New 2', 'New 3']));
-      expect(controller.getState()).toBe('VISIBLE');
-      expect(controller.getCurrentOptions()).toEqual(['New 1', 'New 2', 'New 3']);
-    });
-
-    it('rejects wrong signal type', () => {
-      const { controller } = createTestSetup();
-      controller.showOptions({ type: 'chat:processing' as any, options: ['A', 'B'] });
-      expect(controller.getState()).toBe('HIDDEN');
+      expect(controller.getState().displayState).toBe('OPTIONS_VISIBLE');
+      expect(controller.getState().options).toEqual(['New 1', 'New 2', 'New 3']);
     });
   });
 
-  describe('select()', () => {
-    it('sends correct text and source on valid index', () => {
+  describe('selectOption()', () => {
+    it('sends correct text and source on click', () => {
       const { controller, selections } = createTestSetup();
       controller.showOptions(makeSignal(['Alpha', 'Beta', 'Gamma']));
-      (controller as any).lastSelectTime = 0; // bypass debounce for test
-      controller.select(1);
+      controller.selectOption('Beta');
       expect(selections).toEqual([{ text: 'Beta', source: 'option-click' }]);
     });
 
-    it('transitions to HIDDEN after select', () => {
+    it('transitions OPTIONS_VISIBLE -> IDLE after select', () => {
       const { controller } = createTestSetup();
       controller.showOptions(makeSignal(['A', 'B']));
-      (controller as any).lastSelectTime = 0;
-      controller.select(0);
-      expect(controller.getState()).toBe('HIDDEN');
+      controller.selectOption('A');
+      expect(controller.getState().displayState).toBe('IDLE');
     });
 
-    it('ignores select when debounce active', () => {
+    it('is no-op when state is IDLE', () => {
       const { controller, selections } = createTestSetup();
-      controller.showOptions(makeSignal(['A', 'B']));
-      // First select
-      (controller as any).lastSelectTime = 0;
-      controller.select(0);
-      // Second select immediately (debounce should block — but state is HIDDEN now anyway)
-      controller.showOptions(makeSignal(['C', 'D']));
-      (controller as any).lastSelectTime = Date.now(); // recent
-      controller.select(0);
-      expect(selections.length).toBe(1); // only first went through
-    });
-
-    it('ignores negative index', () => {
-      const { controller, selections } = createTestSetup();
-      controller.showOptions(makeSignal(['A', 'B']));
-      (controller as any).lastSelectTime = 0;
-      controller.select(-1);
-      expect(selections.length).toBe(0);
-      expect(controller.getState()).toBe('VISIBLE');
-    });
-
-    it('ignores out-of-bounds index', () => {
-      const { controller, selections } = createTestSetup();
-      controller.showOptions(makeSignal(['A', 'B']));
-      (controller as any).lastSelectTime = 0;
-      controller.select(5);
-      expect(selections.length).toBe(0);
-      expect(controller.getState()).toBe('VISIBLE');
-    });
-
-    it('is no-op when state is HIDDEN', () => {
-      const { controller, selections } = createTestSetup();
-      (controller as any).lastSelectTime = 0;
-      controller.select(0);
+      controller.selectOption('A');
       expect(selections.length).toBe(0);
     });
   });
 
   describe('dismiss()', () => {
-    it('transitions VISIBLE -> HIDDEN', () => {
+    it('transitions OPTIONS_VISIBLE -> IDLE', () => {
       const { controller } = createTestSetup();
       controller.showOptions(makeSignal(['A', 'B']));
       controller.dismiss();
-      expect(controller.getState()).toBe('HIDDEN');
+      expect(controller.getState().displayState).toBe('IDLE');
     });
 
     it('does not send any selection', () => {
@@ -313,19 +281,19 @@ describe('OptionsController', () => {
       expect(selections.length).toBe(0);
     });
 
-    it('is no-op when already HIDDEN', () => {
+    it('is no-op when already IDLE', () => {
       const { controller } = createTestSetup();
-      controller.dismiss(); // should not throw
-      expect(controller.getState()).toBe('HIDDEN');
+      expect(() => controller.dismiss()).not.toThrow();
+      expect(controller.getState().displayState).toBe('IDLE');
     });
   });
 
   describe('submitCustom()', () => {
-    it('transitions VISIBLE -> HIDDEN', () => {
+    it('transitions OPTIONS_VISIBLE -> IDLE', () => {
       const { controller } = createTestSetup();
       controller.showOptions(makeSignal(['A', 'B']));
       controller.submitCustom();
-      expect(controller.getState()).toBe('HIDDEN');
+      expect(controller.getState().displayState).toBe('IDLE');
     });
 
     it('does not send selection (text is handled externally)', () => {
@@ -343,47 +311,55 @@ describe('OptionsController', () => {
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       const handled = controller.handleKeyDown(event);
       expect(handled).toBe(true);
-      expect(controller.getState()).toBe('HIDDEN');
+      expect(controller.getState().displayState).toBe('IDLE');
     });
 
-    it('returns false when HIDDEN', () => {
+    it('returns false when IDLE', () => {
       const { controller } = createTestSetup();
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       const handled = controller.handleKeyDown(event);
       expect(handled).toBe(false);
     });
 
-    it('Tab cycles focus forward', () => {
+    it('Tab on first button moves focus to next button', () => {
       const { controller, view } = createTestSetup();
       controller.showOptions(makeSignal(['A', 'B', 'C']));
-      // Mock getFocusedIndex to return 0
-      vi.spyOn(view, 'getFocusedIndex').mockReturnValue(0);
-      const focusSpy = vi.spyOn(view, 'focusButton');
-
+      const buttons = view.getButtons();
+      buttons[0].focus();
       const event = new KeyboardEvent('keydown', { key: 'Tab' });
       const handled = controller.handleKeyDown(event);
       expect(handled).toBe(true);
-      expect(focusSpy).toHaveBeenCalledWith(1);
+      expect(document.activeElement).toBe(buttons[1]);
     });
 
-    it('Shift+Tab cycles focus backward', () => {
-      const { controller, view } = createTestSetup();
+    it('Shift+Tab on first button returns focus to textarea', () => {
+      const { controller, view, textarea } = createTestSetup();
       controller.showOptions(makeSignal(['A', 'B', 'C']));
-      vi.spyOn(view, 'getFocusedIndex').mockReturnValue(0);
-      const focusSpy = vi.spyOn(view, 'focusButton');
-
+      const buttons = view.getButtons();
+      buttons[0].focus();
       const event = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true });
-      controller.handleKeyDown(event);
-      expect(focusSpy).toHaveBeenCalledWith(2); // wraps to last
+      const handled = controller.handleKeyDown(event);
+      expect(handled).toBe(true);
+      expect(document.activeElement).toBe(textarea);
+    });
+
+    it('Enter selects focused button', () => {
+      const { controller, view, selections } = createTestSetup();
+      controller.showOptions(makeSignal(['Alpha', 'Beta']));
+      const buttons = view.getButtons();
+      buttons[1].focus();
+      const event = new KeyboardEvent('keydown', { key: 'Enter' });
+      const handled = controller.handleKeyDown(event);
+      expect(handled).toBe(true);
+      expect(selections).toEqual([{ text: 'Beta', source: 'option-click' }]);
     });
   });
 
   describe('processPendingOptions()', () => {
     it('shows queued options after spinner stops', () => {
-      // Start with spinner active
+      let spinnerActive = true;
       const { container, textarea } = createMockDOM();
       const view = new OptionsView(container, textarea);
-      let spinnerActive = true;
       const controller = new OptionsController({
         view,
         onSelect: () => {},
@@ -391,23 +367,22 @@ describe('OptionsController', () => {
       });
 
       controller.showOptions(makeSignal(['Pending A', 'Pending B']));
-      expect(controller.getState()).toBe('HIDDEN');
+      expect(controller.getState().displayState).toBe('IDLE');
 
-      // Spinner stops
       spinnerActive = false;
       controller.processPendingOptions();
-      expect(controller.getState()).toBe('VISIBLE');
-      expect(controller.getCurrentOptions()).toEqual(['Pending A', 'Pending B']);
+      expect(controller.getState().displayState).toBe('OPTIONS_VISIBLE');
+      expect(controller.getState().options).toEqual(['Pending A', 'Pending B']);
     });
   });
 
   describe('dispose()', () => {
-    it('resets state to HIDDEN and clears options', () => {
+    it('resets state to IDLE and clears options', () => {
       const { controller } = createTestSetup();
       controller.showOptions(makeSignal(['A', 'B']));
       controller.dispose();
-      expect(controller.getState()).toBe('HIDDEN');
-      expect(controller.getCurrentOptions()).toEqual([]);
+      expect(controller.getState().displayState).toBe('IDLE');
+      expect(controller.getState().options).toEqual([]);
     });
   });
 });

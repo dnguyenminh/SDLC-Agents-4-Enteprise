@@ -86,7 +86,6 @@ export function getIndexAdapter(): DatabaseAdapter {
   if (!indexAdapter) {
     const engine = getActiveEngine();
     if (engine === 'sqlite') {
-      // SA4E-49: Reuse the same DB handle as getAdminDb() — single unified DB.
       indexAdapter = new SqliteDbAdapter(getAdminDb());
     } else {
       const configService = new DatabaseConfigService(DATA_DIR);
@@ -100,11 +99,6 @@ export function getIndexAdapter(): DatabaseAdapter {
   return indexAdapter;
 }
 
-/**
- * Get DatabaseAdapter for admin data (users, sessions, graph_nodes, etc.).
- * When engine=sqlite: wraps the unified DB via SqliteDbAdapter.
- * When engine=postgresql/mysql: connects to the configured remote DB.
- */
 export function getAdminAdapter(): DatabaseAdapter {
   if (!adminAdapter) {
     const engine = getActiveEngine();
@@ -120,6 +114,37 @@ export function getAdminAdapter(): DatabaseAdapter {
     }
   }
   return adminAdapter;
+}
+
+/**
+ * Initialize DB adapters and await connection.
+ * MUST be called at startup BEFORE any module initialization.
+ * For SQLite: instant (sync). For PostgreSQL/MySQL: awaits pool connection.
+ * @throws Error if connection fails (server should not start)
+ */
+export async function initAdapters(): Promise<void> {
+  const engine = getActiveEngine();
+  if (engine === 'sqlite') {
+    // SQLite: create adapters synchronously — nothing async to await
+    getIndexAdapter();
+    getAdminAdapter();
+    return;
+  }
+
+  const configService = new DatabaseConfigService(DATA_DIR);
+  const activeConfig = configService.getActiveConfig();
+
+  // Create and await both adapters in parallel
+  const idx = DatabaseAdapterFactory.create(activeConfig);
+  const adm = DatabaseAdapterFactory.create(activeConfig);
+
+  await Promise.all([idx.connect(), adm.connect()]);
+
+  // Cache after successful connection
+  indexAdapter = idx;
+  adminAdapter = adm;
+
+  logger.info({ engine }, '[admin] DB adapters connected and ready');
 }
 
 /** Reset cached DB instance and adapters (used after DB switch/migration) */

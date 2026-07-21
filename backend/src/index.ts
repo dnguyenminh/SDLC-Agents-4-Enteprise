@@ -15,6 +15,7 @@ import { AnalyticsModule } from './modules/analytics/AnalyticsModule.js';
 import { EmbeddingService } from './engine/parsers/embedding/EmbeddingService.js';
 import { KBGraphModule } from './modules/kb-graph/KBGraphModule.js';
 import { UtilityModule } from './modules/utility/UtilityModule.js';
+import { initAdapters } from './admin/db/core.js';
 
 const VERSION = '1.0.0';
 
@@ -32,6 +33,9 @@ async function main() {
   });
 
   logger.info({ version: VERSION, config: { port: config.port, host: config.host } }, 'Starting Backend MCP Server');
+
+  // Initialize DB adapters FIRST — await PG connection before any module touches the DB
+  await initAdapters();
 
   // Initialize module registry
   const registry = new ModuleRegistry(logger);

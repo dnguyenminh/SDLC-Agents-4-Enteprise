@@ -140,6 +140,7 @@ export class IndexerHttpClient {
                 res.on("end", () => resolve({ ok: res.statusCode === 200 || res.statusCode === 201, body: data }));
             });
             req.on("error", () => resolve({ ok: false, body: "" }));
+            req.setTimeout(30000, () => { req.destroy(); resolve({ ok: false, body: '{"error":"timeout"}' }); });
             req.write(body);
             req.end();
         });
@@ -162,6 +163,7 @@ export class IndexerHttpClient {
                 res.on("end", () => resolve(res.statusCode === 200 || res.statusCode === 201));
             });
             req.on("error", () => resolve(false));
+            req.setTimeout(30000, () => { req.destroy(); resolve(false); });
             req.write(body);
             req.end();
         });

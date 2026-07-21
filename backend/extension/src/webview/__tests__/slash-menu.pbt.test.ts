@@ -52,7 +52,7 @@ describe('PBT — Slash Filter', () => {
   it('PBT-03: filter is case-insensitive', () => {
     fc.assert(
       fc.property(
-        fc.stringOf(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split('')), { minLength: 1, maxLength: 5 }),
+        fc.string({ base: fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split('')), minLength: 1, maxLength: 5 }),
         (query) => {
           const lower = filterSlashItems(agents, steering, query.toLowerCase());
           const upper = filterSlashItems(agents, steering, query.toUpperCase());
@@ -216,7 +216,7 @@ describe('PBT — Slash Trigger Detection', () => {
   it('PBT-12: after non-whitespace character is invalid', () => {
     fc.assert(
       fc.property(
-        fc.stringOf(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split('')), { minLength: 1, maxLength: 10 }),
+        fc.string({ base: fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split('')), minLength: 1, maxLength: 10 }).filter((p) => !/\s$/.test(p)),
         (prefix) => {
           const text = prefix + '/';
           const slashPos = text.length - 1;

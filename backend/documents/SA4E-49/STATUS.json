@@ -1,0 +1,45 @@
+{
+  "ticket": "SA4E-49",
+  "ticketType": "Bug",
+  "autonomyLevel": "L3",
+  "currentPhase": "testing",
+  "architecturePattern": "monolith",
+  "phases": {
+    "requirements": { "status": "skipped", "reason": "Bug ticket — no BRD needed" },
+    "specification": { "status": "skipped", "reason": "Bug ticket — no FSD needed" },
+    "design": { "status": "skipped", "reason": "Bug ticket — no TDD needed" },
+    "implementation": {
+      "status": "done",
+      "startedAt": "2026-07-21T08:17:00Z",
+      "completedAt": "2026-07-21T08:24:00Z",
+      "branch": "SA4E-49",
+      "commit": "0f00f6b",
+      "filesChanged": [
+        "backend/src/admin/db/kb-entries.ts",
+        "backend/src/server/routes/admin/kb-graph-spatial.ts",
+        "backend/src/server/routes/admin/analytics.ts",
+        "backend/src/admin/db/__tests__/kb-entry-count.test.ts"
+      ]
+    },
+    "testing": {
+      "status": "done",
+      "testsTotal": 573,
+      "testsPassed": 573,
+      "testsSkipped": 4,
+      "testFiles": 67,
+      "completedAt": "2026-07-21T08:24:00Z"
+    },
+    "deployment": { "status": "not_started" }
+  },
+  "tokenBudget": {
+    "dailyCap": 500000,
+    "usedToday": 30000,
+    "lastReset": "2026-07-21T00:00:00Z",
+    "warningThreshold": 0.8,
+    "mode": "normal"
+  },
+  "circuitBreaker": {
+    "phase_implementation": { "attempts": 0, "lastError": null, "state": "closed" }
+  },
+  "lastUpdated": "2026-07-21T08:25:00Z"
+}

@@ -27,10 +27,11 @@ describe('IT — SpinnerController ↔ SpinnerView', () => {
 
   beforeEach(() => {
     dom = setupDOM();
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame', 'cancelAnimationFrame', 'Date'] });
   });
 
   afterEach(() => {
+    try { vi.runAllTimers(); } catch { /* no pending timers */ }
     vi.useRealTimers();
   });
 
@@ -118,6 +119,7 @@ describe('IT — SpinnerController ↔ SpinnerView', () => {
     const ctrl = new SpinnerController(view);
 
     ctrl.startProcessing();
+    vi.advanceTimersByTime(16);
 
     const announcer = document.getElementById('sr-announcer');
     expect(announcer).not.toBeNull();
@@ -136,6 +138,7 @@ describe('IT — SpinnerController ↔ SpinnerView', () => {
 
     ctrl.startProcessing();
     ctrl.stopProcessing('complete');
+    vi.runAllTimers();
 
     const announcer = document.getElementById('sr-announcer');
     expect(announcer!.textContent).toBe('AI response complete');
@@ -152,6 +155,7 @@ describe('IT — SpinnerController ↔ SpinnerView', () => {
 
     ctrl.startProcessing();
     ctrl.stopProcessing('error');
+    vi.runAllTimers();
 
     const announcer = document.getElementById('sr-announcer');
     expect(announcer!.textContent).toBe('An error occurred');
@@ -168,6 +172,7 @@ describe('IT — SpinnerController ↔ SpinnerView', () => {
 
     ctrl.startProcessing();
     ctrl.stopProcessing('timeout');
+    vi.runAllTimers();
 
     const announcer = document.getElementById('sr-announcer');
     expect(announcer!.textContent).toBe('Request timed out');

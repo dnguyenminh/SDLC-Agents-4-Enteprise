@@ -195,4 +195,69 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
     expect(res.body.error.code).toBe(-32700);
     expect(res.body.error.message).toContain('Parse error');
   });
+
+  it('TC-32: initialize returns negotiated protocol + capabilities', async () => {
+    const res = await postMcp(port, {
+      jsonrpc: '2.0', id: 9, method: 'initialize',
+      params: {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: 'kilo-check', version: '1.0.0' },
+      },
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.result).toBeDefined();
+    expect(res.body.result.protocolVersion).toBe('2024-11-05');
+    expect(res.body.result.capabilities.tools).toBeDefined();
+    expect(res.body.result.serverInfo.name).toBe('sdlc-agents-4-enterprise');
+  });
+
+  it('TC-33: initialize negotiates newest known version for unknown client', async () => {
+    const res = await postMcp(port, {
+      jsonrpc: '2.0', id: 10, method: 'initialize',
+      params: { protocolVersion: '2099-01-01', capabilities: {}, clientInfo: { name: 'x', version: '1' } },
+    });
+
+    expect(res.body.result.protocolVersion).toBe('2025-06-18');
+  });
+
+  it('TC-34: ping returns empty result', async () => {
+    const res = await postMcp(port, { jsonrpc: '2.0', id: 11, method: 'ping' });
+    expect(res.status).toBe(200);
+    expect(res.body.result).toEqual({});
+  });
+
+  it('TC-35: notifications/initialized returns 202 with no body', async () => {
+    const res = await postMcp(port, { jsonrpc: '2.0', method: 'notifications/initialized' });
+    expect(res.status).toBe(202);
+    expect(res.body).toBe('');
+  });
+
+  it('TC-36: GET /mcp opens SSE stream', async () => {
+    const http = await import('http');
+    const net = await import('net');
+    const get$: Promise<{ status: number; contentType: string; chunk: string }> = new Promise((resolve, reject) => {
+      const req = http.request(
+        { host: '127.0.0.1', port, path: '/mcp', method: 'GET', timeout: 3000 },
+        (r) => {
+          let data = '';
+          r.on('data', (c) => {
+            data += c;
+            if (data.includes('event: message')) {
+              resolve({ status: r.statusCode!, contentType: r.headers['content-type'] || '', chunk: data });
+              req.destroy();
+            }
+          });
+          r.on('error', reject);
+        },
+      );
+      req.on('error', reject);
+      req.end();
+    });
+    const out = await get$;
+    expect(out.status).toBe(200);
+    expect(out.contentType).toContain('text/event-stream');
+    expect(out.chunk).toContain('event: message');
+  });
 });

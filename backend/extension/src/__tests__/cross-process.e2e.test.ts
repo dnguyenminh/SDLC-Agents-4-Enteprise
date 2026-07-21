@@ -33,7 +33,16 @@ vi.mock('vscode', () => {
         dispose: vi.fn()
       }))
     },
-    EventEmitter
+    EventEmitter,
+    TreeItem: class {
+      label: string;
+      collapsibleState: number;
+      constructor(label: string, collapsibleState = 0) {
+        this.label = label;
+        this.collapsibleState = collapsibleState;
+      }
+    },
+    TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
   };
 });
 

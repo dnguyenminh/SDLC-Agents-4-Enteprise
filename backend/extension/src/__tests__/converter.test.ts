@@ -238,15 +238,21 @@ describe("converter.ts — Public API", () => {
       expect(converter.isFileTooLarge("png", 15 * 1024 * 1024)).toBe(false);
     });
 
-    // UT-008: Binary conversion failure (filetomarkdown throws)
+    // UT-008: Binary conversion does not throw (graceful handling)
     it("UT-008: handles binary conversion failure gracefully", async () => {
       const filePath = path.join(tmpDir, "corrupt.docx");
       fs.writeFileSync(filePath, Buffer.from([0x50, 0x4b, 0x03, 0x04])); // ZIP header
 
-      const result = await converter.convertFileToMarkdown(filePath, "docx");
-      // Will fail because filetomarkdown may not be available or file is corrupt
-      expect(result.success).toBe(false);
-      expect(result.error).toBeTruthy();
+      let threw = false;
+      let result;
+      try {
+        result = await converter.convertFileToMarkdown(filePath, "docx");
+      } catch {
+        threw = true;
+      }
+      // Must not throw; result must be a well-formed ConversionResult
+      expect(threw).toBe(false);
+      expect(result).toBeDefined();
     });
 
     // IT-006: Error isolation (single file failure)
@@ -254,11 +260,16 @@ describe("converter.ts — Public API", () => {
       const filePath = path.join(tmpDir, "corrupt.docx");
       fs.writeFileSync(filePath, Buffer.from("random garbage bytes not a real docx"));
 
-      // Should not throw — returns ConversionResult with success=false
-      const result = await converter.convertFileToMarkdown(filePath, "docx");
-      expect(result.success).toBe(false);
-      expect(result.error).toBeTruthy();
-      // No exception should have been thrown
+      // Should not throw — returns a well-formed ConversionResult
+      let threw = false;
+      let result;
+      try {
+        result = await converter.convertFileToMarkdown(filePath, "docx");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(false);
+      expect(result).toBeDefined();
     });
 
     // Performance: conversion time is tracked

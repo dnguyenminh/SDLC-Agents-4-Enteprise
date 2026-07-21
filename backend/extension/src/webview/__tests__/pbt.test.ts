@@ -101,7 +101,7 @@ describe('PBT — FuzzyFilter', () => {
     fc.assert(
       fc.property(
         fc.array(fc.string({ minLength: 1, maxLength: 15 }), { minLength: 1, maxLength: 20 }),
-        fc.stringOf(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split('')), { minLength: 1, maxLength: 5 }),
+        fc.string({ base: fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split('')), minLength: 1, maxLength: 5 }),
         (labels, query) => {
           const items = labels.map(l => ({ label: l }));
           const lowerResults = filterItems(items, query.toLowerCase());
