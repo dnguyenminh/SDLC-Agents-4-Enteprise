@@ -1,21 +1,19 @@
 /**
- * admin/db/kb-search.ts — KB full-text search via DatabaseAdapter.
- * SA4E-45: Uses getIndexAdapter() for multi-DB support.
+ * admin/db/kb-search.ts — KB full-text search via local SQLite.
+ * SA4E-50: Uses getAdminDb() directly — SQLite-specific operations
+ * (sqlite_master checks, LIKE queries). Always uses local DB regardless of activeEngine.
  */
 
-import { getIndexAdapter, getActiveEngine, logger } from './core.js';
+import { getAdminDb, logger } from './core.js';
 import { buildAdminScopeFilter } from './kb-scope-filter.js';
 
 /** Check if knowledge_entries table exists */
 function tableExists(): boolean {
-  const adapter = getIndexAdapter();
-  if (getActiveEngine() === 'sqlite') {
-    const row = adapter.get<{ cnt: number }>(
-      "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'"
-    );
-    return (row?.cnt ?? 0) > 0;
-  }
-  return true;
+  const db = getAdminDb();
+  const row = db.prepare(
+    "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'"
+  ).get() as { cnt: number } | undefined;
+  return (row?.cnt ?? 0) > 0;
 }
 
 export function searchKbEntries(
@@ -23,14 +21,14 @@ export function searchKbEntries(
 ): { items: any[]; total: number } {
   try {
     if (!tableExists()) return { items: [], total: 0 };
-    const adapter = getIndexAdapter();
+    const db = getAdminDb();
 
     const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
     if (queryTerms.length === 0) return { items: [], total: 0 };
 
-    const totalRow = adapter.get<{ cnt: number }>(
+    const totalRow = db.prepare(
       'SELECT COUNT(*) as cnt FROM knowledge_entries'
-    );
+    ).get() as { cnt: number } | undefined;
     const totalDocs = totalRow?.cnt ?? 0;
 
     const searchCols = ['content', 'source', 'summary', 'tags'];
@@ -46,7 +44,7 @@ export function searchKbEntries(
     const projectFilter = filter ? ` AND (${filter.clause})` : '';
     const projectParams = filter ? (filter.params as unknown[]) : [];
     const sql = `SELECT * FROM knowledge_entries WHERE (${likeClauses.join(' OR ')})${projectFilter} LIMIT 200`;
-    const rows = adapter.all<Record<string, unknown>>(sql, [...likeParams, ...projectParams]);
+    const rows = db.prepare(sql).all(...likeParams, ...projectParams) as Record<string, unknown>[];
 
     // TF-IDF scoring
     const termDocFreq: Record<string, number> = {};

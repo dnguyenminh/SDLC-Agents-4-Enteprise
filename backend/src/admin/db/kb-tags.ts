@@ -1,21 +1,19 @@
 /**
- * admin/db/kb-tags.ts — KB tag management via DatabaseAdapter.
- * SA4E-45: Uses getIndexAdapter() for multi-DB support.
+ * admin/db/kb-tags.ts — KB tag management via local SQLite.
+ * SA4E-50: Uses getAdminDb() directly — SQLite-specific operations.
+ * Always uses local DB regardless of activeEngine.
  */
 
-import { getIndexAdapter, getActiveEngine, logger } from './core.js';
+import { getAdminDb, logger } from './core.js';
 import { buildAdminScopeFilter } from './kb-scope-filter.js';
 
 /** Check if knowledge_entries table exists */
 function tableExists(): boolean {
-  const adapter = getIndexAdapter();
-  if (getActiveEngine() === 'sqlite') {
-    const row = adapter.get<{ cnt: number }>(
-      "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'"
-    );
-    return (row?.cnt ?? 0) > 0;
-  }
-  return true;
+  const db = getAdminDb();
+  const row = db.prepare(
+    "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='knowledge_entries'"
+  ).get() as { cnt: number } | undefined;
+  return (row?.cnt ?? 0) > 0;
 }
 
 export function getAllKbTags(
@@ -24,18 +22,17 @@ export function getAllKbTags(
   const tagCounts: Record<string, { count: number; lastUsed: string }> = {};
   try {
     if (!tableExists()) return tagCounts;
-    const adapter = getIndexAdapter();
+    const db = getAdminDb();
     const filter = buildAdminScopeFilter(projectId, userId);
     let rows: { tags: string; created_at: string }[];
     if (filter) {
-      rows = adapter.all<{ tags: string; created_at: string }>(
-        `SELECT tags, created_at FROM knowledge_entries WHERE tags IS NOT NULL AND tags != '' AND (${filter.clause})`,
-        filter.params as unknown[]
-      );
+      rows = db.prepare(
+        `SELECT tags, created_at FROM knowledge_entries WHERE tags IS NOT NULL AND tags != '' AND (${filter.clause})`
+      ).all(...(filter.params as unknown[])) as { tags: string; created_at: string }[];
     } else {
-      rows = adapter.all<{ tags: string; created_at: string }>(
+      rows = db.prepare(
         "SELECT tags, created_at FROM knowledge_entries WHERE tags IS NOT NULL AND tags != ''"
-      );
+      ).all() as { tags: string; created_at: string }[];
     }
     for (const row of rows) {
       if (!row.tags) continue;
@@ -59,9 +56,9 @@ export function getAllKbTags(
 export function updateKbEntryTags(entryId: string, tags: string[]): void {
   try {
     if (!tableExists()) return;
-    const adapter = getIndexAdapter();
+    const db = getAdminDb();
     const tagsStr = tags.join(',');
-    adapter.run('UPDATE knowledge_entries SET tags = ? WHERE id = ?', [tagsStr, entryId]);
+    db.prepare('UPDATE knowledge_entries SET tags = ? WHERE id = ?').run(tagsStr, entryId);
   } catch (e) {
     logger.error({ err: e }, 'Error in updateKbEntryTags:');
   }
@@ -71,18 +68,17 @@ export function renameKbTag(oldName: string, newName: string): number {
   let renamed = 0;
   try {
     if (!tableExists()) return 0;
-    const adapter = getIndexAdapter();
-    const rows = adapter.all<{ id: string; tags: string }>(
-      'SELECT id, tags FROM knowledge_entries WHERE tags LIKE ?',
-      [`%${oldName}%`]
-    );
+    const db = getAdminDb();
+    const rows = db.prepare(
+      'SELECT id, tags FROM knowledge_entries WHERE tags LIKE ?'
+    ).all(`%${oldName}%`) as { id: string; tags: string }[];
     for (const row of rows) {
       if (!row.tags) continue;
       const tagArr = row.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
       const idx = tagArr.indexOf(oldName);
       if (idx !== -1) {
         tagArr[idx] = newName.trim();
-        adapter.run('UPDATE knowledge_entries SET tags = ? WHERE id = ?', [tagArr.join(','), row.id]);
+        db.prepare('UPDATE knowledge_entries SET tags = ? WHERE id = ?').run(tagArr.join(','), row.id);
         renamed++;
       }
     }
@@ -96,18 +92,17 @@ export function deleteKbTag(tagName: string): number {
   let removed = 0;
   try {
     if (!tableExists()) return 0;
-    const adapter = getIndexAdapter();
-    const rows = adapter.all<{ id: string; tags: string }>(
-      'SELECT id, tags FROM knowledge_entries WHERE tags LIKE ?',
-      [`%${tagName}%`]
-    );
+    const db = getAdminDb();
+    const rows = db.prepare(
+      'SELECT id, tags FROM knowledge_entries WHERE tags LIKE ?'
+    ).all(`%${tagName}%`) as { id: string; tags: string }[];
     for (const row of rows) {
       if (!row.tags) continue;
       const tagArr = row.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
       const idx = tagArr.indexOf(tagName);
       if (idx !== -1) {
         tagArr.splice(idx, 1);
-        adapter.run('UPDATE knowledge_entries SET tags = ? WHERE id = ?', [tagArr.join(','), row.id]);
+        db.prepare('UPDATE knowledge_entries SET tags = ? WHERE id = ?').run(tagArr.join(','), row.id);
         removed++;
       }
     }
@@ -121,21 +116,18 @@ export function mergeKbTags(sourceTag: string, targetTag: string): number {
   let merged = 0;
   try {
     if (!tableExists()) return 0;
-    const adapter = getIndexAdapter();
-    const rows = adapter.all<{ id: string; tags: string }>(
-      'SELECT id, tags FROM knowledge_entries WHERE tags LIKE ?',
-      [`%${sourceTag}%`]
-    );
+    const db = getAdminDb();
+    const rows = db.prepare(
+      'SELECT id, tags FROM knowledge_entries WHERE tags LIKE ?'
+    ).all(`%${sourceTag}%`) as { id: string; tags: string }[];
     for (const row of rows) {
       if (!row.tags) continue;
       const tagArr = row.tags.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
       const idx = tagArr.indexOf(sourceTag);
       if (idx !== -1) {
         tagArr.splice(idx, 1);
-        if (!tagArr.includes(targetTag)) {
-          tagArr.push(targetTag);
-        }
-        adapter.run('UPDATE knowledge_entries SET tags = ? WHERE id = ?', [tagArr.join(','), row.id]);
+        if (!tagArr.includes(targetTag)) tagArr.push(targetTag);
+        db.prepare('UPDATE knowledge_entries SET tags = ? WHERE id = ?').run(tagArr.join(','), row.id);
         merged++;
       }
     }
@@ -151,26 +143,22 @@ export function getKbEntriesByTag(
   const entries: any[] = [];
   try {
     if (!tableExists()) return entries;
-    const adapter = getIndexAdapter();
+    const db = getAdminDb();
     const filter = buildAdminScopeFilter(projectId, userId);
     let rows: Record<string, unknown>[];
     if (filter) {
-      rows = adapter.all<Record<string, unknown>>(
-        `SELECT * FROM knowledge_entries WHERE tags LIKE ? AND (${filter.clause})`,
-        [`%${tagName}%`, ...(filter.params as unknown[])]
-      );
+      rows = db.prepare(
+        `SELECT * FROM knowledge_entries WHERE tags LIKE ? AND (${filter.clause})`
+      ).all(`%${tagName}%`, ...(filter.params as unknown[])) as Record<string, unknown>[];
     } else {
-      rows = adapter.all<Record<string, unknown>>(
-        'SELECT * FROM knowledge_entries WHERE tags LIKE ?',
-        [`%${tagName}%`]
-      );
+      rows = db.prepare(
+        'SELECT * FROM knowledge_entries WHERE tags LIKE ?'
+      ).all(`%${tagName}%`) as Record<string, unknown>[];
     }
     for (const row of rows) {
       if (!row.tags) continue;
       const tagArr = (row.tags as string).split(',').map((t) => t.trim());
-      if (tagArr.includes(tagName)) {
-        entries.push(row);
-      }
+      if (tagArr.includes(tagName)) entries.push(row);
     }
   } catch (e) {
     logger.error({ err: e }, 'Error in getKbEntriesByTag:');
