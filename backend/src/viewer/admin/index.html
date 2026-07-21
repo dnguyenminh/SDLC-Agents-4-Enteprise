@@ -305,8 +305,7 @@ function WorkspaceSelector({onProjectChange}){
   const[selected,setSelected]=useState(__projectId||'');
   useEffect(()=>{api('/projects').then(d=>{if(d&&!d.__error){const ps=d.projects||[];setProjects(ps);if(!selected&&ps.length>0){const first=ps[0].project_id;setSelected(first);__projectId=first;localStorage.setItem('admin_projectId',first);}}});  },[]);
   const handleChange=(e)=>{const pid=e.target.value;setSelected(pid);__projectId=pid;if(pid)localStorage.setItem('admin_projectId',pid);else localStorage.removeItem('admin_projectId');if(onProjectChange)onProjectChange('dashboard');};
-  if(projects.length===0)return null;
-  return(<div style={{padding:'6px 12px 10px',borderBottom:'1px solid #e2e8f0',marginBottom:4}}><div style={{fontSize:10,color:'#64748b',marginBottom:4}}>Project Scope</div><select value={selected} onChange={handleChange} style={{width:'100%',fontSize:12,padding:'4px 6px',border:'1px solid #cbd5e1',borderRadius:4,background:'#fff',color:'#1e293b',cursor:'pointer'}}><option value="">All (Shared)</option>{projects.map(p=>(<option key={p.project_id} value={p.project_id} title={p.workspace_path}>{p.display_name||p.project_id.slice(0,10)}</option>))}</select></div>);
+  return(<div style={{padding:'6px 12px 10px',borderBottom:'1px solid #e2e8f0',marginBottom:4}}><div style={{fontSize:10,color:'#64748b',marginBottom:4}}>🗂 Project Scope</div><select value={selected} onChange={handleChange} style={{width:'100%',fontSize:12,padding:'4px 6px',border:'1px solid #cbd5e1',borderRadius:4,background:'#fff',color:'#1e293b',cursor:'pointer'}}><option value="">All (Shared)</option>{projects.map(p=>(<option key={p.project_id} value={p.project_id} title={p.workspace_path}>{p.display_name||p.project_id.slice(0,10)}</option>))}</select></div>);
 }
 
 function PortalInstance({permissions,username,isActive,impersonateUserId}){
