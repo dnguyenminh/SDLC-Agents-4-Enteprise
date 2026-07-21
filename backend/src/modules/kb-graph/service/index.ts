@@ -1,9 +1,7 @@
 /**
  * SqliteGraphService — Embedded graph layer using SQLite for KB Graph visualization.
- *
- * Zero external dependencies — uses the unified database with graph_nodes + graph_edges tables.
- * Provides spatial bounding-box queries for progressive 3D loading.
- * Syncs BOTH knowledge_entries (Documents) AND code symbols.
+ * SA4E-50: fullSync is now async (getKbEntries is async); addEdge uses getAdminDb()
+ * directly since graph operations are always local-SQLite (graph_nodes/graph_edges).
  */
 
 import type { Logger } from 'pino';
@@ -41,8 +39,8 @@ export class SqliteGraphService {
     }
   }
 
-  fullSync(): { nodesCreated: number; edgesCreated: number; sources: Record<string, number> } {
-    const result = sync.fullSync(this.logger);
+  async fullSync(): Promise<{ nodesCreated: number; edgesCreated: number; sources: Record<string, number> }> {
+    const result = await sync.fullSync(this.logger);
     this._ready = true;
     return result;
   }
@@ -63,8 +61,12 @@ export class SqliteGraphService {
     return nodes.getNode(entryId, getAdminDb(), this.logger);
   }
 
+  /** Insert a graph edge using the local SQLite db (graph_edges is always local). */
   addEdge(source: string, target: string, weight = 0.5, relType = 'RELATED_TO'): void {
-    getAdminDb().prepare('INSERT OR IGNORE INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?)').run(source, target, weight, relType);
+    const db = getAdminDb();
+    db.prepare(
+      'INSERT OR IGNORE INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?)',
+    ).run(source, target, weight, relType);
   }
 
   getAllPositions(projectId?: string): { nodes: { id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[]; total: number } {

@@ -74,7 +74,7 @@ export class MigrationService {
           if ('execAsync' in target) {
             await (target as any).execAsync(`DROP TABLE IF EXISTS "${table}" CASCADE`);
           } else {
-            target.exec(`DROP TABLE IF EXISTS "${table}" CASCADE`);
+            (target as DatabaseAdapter).exec(`DROP TABLE IF EXISTS "${table}" CASCADE`);
           }
         } catch { /* ignore if table doesn't exist */ }
         const ddl = typeMapper.generateCreateTable(
@@ -83,7 +83,7 @@ export class MigrationService {
         if ('execAsync' in target) {
           await (target as any).execAsync(ddl);
         } else {
-          target.exec(ddl);
+          (target as DatabaseAdapter).exec(ddl);
         }
         tablesCreatedInSession.push(table);
       }
@@ -151,7 +151,7 @@ export class MigrationService {
       if (isAsync) {
         await (target as any).runAsync(`DELETE FROM "${table}"`);
       } else {
-        target.run(`DELETE FROM "${table}"`, []);
+        (target as DatabaseAdapter).run(`DELETE FROM "${table}"`, []);
       }
     } catch { /* table may be empty or not exist yet */ }
 
@@ -179,14 +179,14 @@ export class MigrationService {
           }
         });
       } else {
-        target.transaction(() => {
+        (target as DatabaseAdapter).transaction(() => {
           for (const row of rows) {
             const cols = Object.keys(row);
             const ph = cols.map(() => '?').join(', ');
             const values = Object.values(row).map(v =>
               typeof v === 'string' ? v.replace(/\x00/g, '') : v
             );
-            target.run(
+            (target as DatabaseAdapter).run(
               `INSERT INTO "${table}" (${cols.map(c => `"${c}"`).join(', ')}) VALUES (${ph})`,
               values
             );
@@ -214,3 +214,4 @@ export class MigrationService {
 }
 
 class CancelledError extends Error { constructor() { super('Cancelled'); } }
+

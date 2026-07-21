@@ -1,7 +1,8 @@
 /**
- * SqliteDbAdapter — SA4E-44
+ * SqliteDbAdapter — SA4E-44, SA4E-50
  * Wraps an existing better-sqlite3 Database instance as a DatabaseAdapter.
- * Used when MemoryModule already has an open connection.
+ * SA4E-50: Async variants delegate to sync methods (SQLite is sync anyway),
+ * fulfilling the async contract so admin/db layer works with both SQLite and PG.
  */
 
 import type Database from 'better-sqlite3';
@@ -56,6 +57,30 @@ export class SqliteDbAdapter implements DatabaseAdapter {
       get: <T>(...p: unknown[]) => stmt.get(...p) as T | undefined,
       all: <T>(...p: unknown[]) => stmt.all(...p) as T[],
     };
+  }
+
+  // SA4E-50: Async variants — SQLite is sync so we simply resolve immediately.
+  // This satisfies the DatabaseAdapter async contract without overhead.
+  async runAsync(sql: string, params?: unknown[]): Promise<RunResult> {
+    return this.run(sql, params);
+  }
+
+  async getAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T | undefined> {
+    return this.get<T>(sql, params);
+  }
+
+  async allAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
+    return this.all<T>(sql, params);
+  }
+
+  async execAsync(sql: string): Promise<void> {
+    this.exec(sql);
+  }
+
+  async transactionAsync<T>(fn: () => Promise<T>): Promise<T> {
+    // SQLite transactions are sync; we run the async fn and let better-sqlite3
+    // handle its own sync calls within. Outer async wrapper provides PG parity.
+    return fn();
   }
 
   getEngine(): DatabaseEngine { return 'sqlite'; }

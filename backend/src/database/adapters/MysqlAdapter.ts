@@ -101,6 +101,26 @@ export class MysqlAdapter implements DatabaseAdapter {
     };
   }
 
+
+  // SA4E-50: Async variants
+  async runAsync(sql: string, params?: unknown[]): Promise<RunResult> {
+    const [result] = await this.pool.promise().query(sql, params);
+    return { changes: (result as any).affectedRows ?? 0, lastInsertRowid: (result as any).insertId ?? 0 };
+  }
+  async getAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T | undefined> {
+    const [rows] = await this.pool.promise().query(sql, params);
+    return (rows as any[])[0] as T | undefined;
+  }
+  async allAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
+    const [rows] = await this.pool.promise().query(sql, params);
+    return rows as T[];
+  }
+  async execAsync(sql: string): Promise<void> { await this.pool.promise().query(sql); }
+  async transactionAsync<T>(fn: () => Promise<T>): Promise<T> {
+    await this.pool.promise().query('START TRANSACTION');
+    try { const r = await fn(); await this.pool.promise().query('COMMIT'); return r; }
+    catch (err) { await this.pool.promise().query('ROLLBACK'); throw err; }
+  }
   getEngine(): DatabaseEngine { return 'mysql'; }
   async getVersion(): Promise<string> { return this.serverVersion; }
 
@@ -119,3 +139,4 @@ export class MysqlAdapter implements DatabaseAdapter {
     return this.pool.promise().query(sql, params);
   }
 }
+

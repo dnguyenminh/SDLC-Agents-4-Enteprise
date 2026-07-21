@@ -85,9 +85,9 @@ export class PostgresAdapter implements DatabaseAdapter {
     await this.pool.query(sql);
   }
 
-  async transactionAsync(fn: () => Promise<void>): Promise<void> {
+  async transactionAsync<T>(fn: () => Promise<T>): Promise<T> {
     await this.pool.query('BEGIN');
-    try { await fn(); await this.pool.query('COMMIT'); }
+    try { const r = await fn(); await this.pool.query('COMMIT'); return r; }
     catch (err) { await this.pool.query('ROLLBACK'); throw err; }
   }
 
@@ -109,3 +109,4 @@ export class PostgresAdapter implements DatabaseAdapter {
     return sql.replace(/\?/g, () => `$${++idx}`);
   }
 }
+

@@ -1,10 +1,29 @@
-export { getAdminDb, getIndexDbPath, getActiveEngine, getActiveDbConfig, resetAdminDb, getIndexAdapter, getAdminAdapter, hashPassword, verifyPassword, generateToken } from './db/core.js';
+/**
+ * admin-db.ts — Barrel export for all admin database functions.
+ * SA4E-50: All exported functions are async (return Promise<T>).
+ */
 
-export { getUsers, getUserById, getUserByUsername, createUser, updateUserStatus, deleteUser, resetUserPassword, changePassword, updateLastLogin } from './db/users.js';
+export {
+  getAdminDb, getIndexDbPath, getActiveEngine, getActiveDbConfig,
+  resetAdminDb, getIndexAdapter, getAdminAdapter,
+  hashPassword, verifyPassword, generateToken,
+} from './db/core.js';
 
-export { getGroups, getGroupById, createGroup, updateGroup, deleteGroup, getUserPermissions, getGroupPermissionIds } from './db/groups.js';
+export {
+  getUsers, getUserById, getUserByUsername, createUser, updateUserStatus,
+  deleteUser, resetUserPassword, changePassword, updateLastLogin,
+  updateUserEmail, getUserCount, getUserCountByGroup,
+} from './db/users.js';
 
-export { createSession, validateSession, invalidateSession, invalidateUserSessions, refreshSession, getUserSessions } from './db/sessions.js';
+export {
+  getGroups, getGroupById, createGroup, updateGroup, deleteGroup,
+  getUserPermissions, getGroupPermissionIds,
+} from './db/groups.js';
+
+export {
+  createSession, validateSession, invalidateSession,
+  invalidateUserSessions, refreshSession, getUserSessions,
+} from './db/sessions.js';
 
 export { recordAudit, getAuditLogs, getRecentActivity } from './db/audit.js';
 
@@ -21,4 +40,7 @@ export { getKbEmbeddings } from './db/kb-embeddings.js';
 
 export { getKbEntryById, getKbEntryCount, getKbEntries } from './db/kb-entries.js';
 
-export { getAllKbTags, updateKbEntryTags, renameKbTag, deleteKbTag, mergeKbTags, getKbEntriesByTag } from './db/kb-tags.js';
+export {
+  getAllKbTags, updateKbEntryTags, renameKbTag,
+  deleteKbTag, mergeKbTags, getKbEntriesByTag,
+} from './db/kb-tags.js';

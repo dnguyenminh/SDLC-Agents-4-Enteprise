@@ -1,12 +1,12 @@
+/**
+ * admin/routes/config.ts — Configuration management and audit log endpoints.
+ * SA4E-50: All admin-db calls are awaited since they are now async.
+ */
+
 import { Hono } from 'hono';
 import { loadConfig } from '../../../config/index.js';
 import { validateExternalUrl } from '../../middleware/url-validator.js';
-import {
-  getConfigChanges,
-  recordConfigChange,
-  recordAudit,
-  getAuditLogs,
-} from '../../../admin/admin-db.js';
+import { getConfigChanges, recordConfigChange, recordAudit, getAuditLogs } from '../../../admin/admin-db.js';
 import type { AdminContext } from './context.js';
 
 function getEffectiveConfig(ctx: AdminContext): Record<string, Record<string, any>> {
@@ -38,7 +38,7 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
 
   app.get('/api/admin/llm/models', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
     const config = getEffectiveConfig(ctx);
     const llm = config.llm || {};
@@ -56,14 +56,14 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
       if (!r.ok) return c.json({ error: 'HTTP ' + r.status, models: [] });
       const d = await r.json() as Record<string, unknown>;
       let models: { id: string; name: string }[];
-      if (prov === 'ollama') models = ((d as Record<string, unknown>).models as { name?: string; model?: string }[] || []).map((m: { name?: string; model?: string }) => ({ id: m.name || m.model || '', name: m.name || m.model || '' }));
-      else models = ((d as Record<string, unknown>).data as { id?: string }[] || []).map((m: { id?: string }) => ({ id: m.id || '', name: m.id || '' }));
+      if (prov === 'ollama') models = ((d.models as { name?: string; model?: string }[] || [])).map((m: any) => ({ id: m.name || m.model || '', name: m.name || m.model || '' }));
+      else models = ((d.data as { id?: string }[] || [])).map((m: any) => ({ id: m.id || '', name: m.id || '' }));
       return c.json({ models, provider: prov });
     } catch (e: any) { return c.json({ error: e.message || 'Connection failed', models: [] }); }
   });
 
   app.post('/api/admin/llm/test', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
     const config = getEffectiveConfig(ctx);
     const llm = config.llm || {};
@@ -76,37 +76,37 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     }
     try {
       const start = Date.now();
-      let r: Response;
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (llm.apiKey && llm.apiKey !== '***') { headers['Authorization'] = 'Bearer ' + llm.apiKey; headers['x-api-key'] = llm.apiKey; }
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
-      if (prov === 'ollama') r = await fetch(base + '/api/generate', { method: 'POST', headers, signal: controller.signal, body: JSON.stringify({ model: llm.model || 'llama3.1', prompt: 'Say hello in 5 words', stream: false, options: { num_predict: 20 } }) });
-      else r = await fetch(base + '/models', { headers, signal: controller.signal });
+      const r = prov === 'ollama'
+        ? await fetch(base + '/api/generate', { method: 'POST', headers, signal: controller.signal, body: JSON.stringify({ model: llm.model || 'llama3.1', prompt: 'Say hello in 5 words', stream: false, options: { num_predict: 20 } }) })
+        : await fetch(base + '/models', { headers, signal: controller.signal });
       clearTimeout(timeout);
       const ms = Date.now() - start;
       if (r.ok) {
         const d = await r.json() as Record<string, unknown>;
-        const info = prov === 'ollama' ? ((d as Record<string, unknown>).response as string || '').substring(0, 80) : ((d as Record<string, unknown>).data as unknown[] || []).length + ' models available';
-        return c.json({ success: true, message: 'Connected (' + ms + 'ms) — ' + info, latencyMs: ms });
+        const info = prov === 'ollama' ? ((d.response as string || '').substring(0, 80)) : ((d.data as unknown[] || []).length + ' models available');
+        return c.json({ success: true, message: `Connected (${ms}ms) — ${info}`, latencyMs: ms });
       } else return c.json({ success: false, message: 'HTTP ' + r.status, latencyMs: ms });
     } catch (e: any) { return c.json({ success: false, message: e.message || 'Connection failed' }); }
   });
 
-  app.get('/api/admin/config', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/config', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
     if (permCheck instanceof Response) return permCheck;
     const config = getEffectiveConfig(ctx);
-    const history = getConfigChanges(10);
+    const history = await getConfigChanges(10);
     return c.json({ config, history, restartRequired: ctx.RESTART_REQUIRED_KEYS });
   });
 
   app.patch('/api/admin/config/:section/:key', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
     if (permCheck instanceof Response) return permCheck;
     if (permCheck.roleData && (permCheck.roleData as { readOnly?: boolean }).readOnly === true) return c.json({ error: 'Forbidden: CONFIG_EDIT is read-only for this user' }, 403);
     const section = c.req.param('section');
@@ -121,24 +121,24 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     const requiresRestart = (ctx.RESTART_REQUIRED_KEYS[section] || []).includes(key);
     if (!ctx.configOverrides[section]) ctx.configOverrides[section] = {};
     ctx.configOverrides[section][key] = value;
-    recordConfigChange(section, key, oldValue, newValue, user.username, requiresRestart);
-    recordAudit(user.userId, user.username, 'CONFIG_CHANGE', 'config', `${section}.${key}`, JSON.stringify({ oldValue, newValue, requiresRestart }));
+    await recordConfigChange(section, key, oldValue, newValue, user.username, requiresRestart);
+    await recordAudit(user.userId, user.username, 'CONFIG_CHANGE', 'config', `${section}.${key}`, JSON.stringify({ oldValue, newValue, requiresRestart }));
     return c.json({ success: true, requiresRestart, section, key, value });
   });
 
-  app.get('/api/admin/config/history', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/config/history', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
     if (permCheck instanceof Response) return permCheck;
-    const history = getConfigChanges(20);
+    const history = await getConfigChanges(20);
     return c.json({ history });
   });
 
-  app.post('/api/admin/config/:section/reset', (c) => {
-    const user = ctx.requireAuth(c);
+  app.post('/api/admin/config/:section/reset', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
     if (permCheck instanceof Response) return permCheck;
     if (permCheck.roleData && (permCheck.roleData as { readOnly?: boolean }).readOnly === true) return c.json({ error: 'Forbidden: CONFIG_EDIT is read-only for this user' }, 403);
     const section = c.req.param('section');
@@ -146,28 +146,26 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     if (!config[section]) return c.json({ error: `Section "${section}" not found` }, 404);
     const overridesExisted = !!ctx.configOverrides[section] && Object.keys(ctx.configOverrides[section]).length > 0;
     delete ctx.configOverrides[section];
-    recordAudit(user.userId, user.username, 'CONFIG_RESET', 'config', section, JSON.stringify({ section, overridesCleared: overridesExisted }));
-    const freshConfig = getEffectiveConfig(ctx);
-    return c.json({ success: true, section, config: freshConfig[section] });
+    await recordAudit(user.userId, user.username, 'CONFIG_RESET', 'config', section, JSON.stringify({ section, overridesCleared: overridesExisted }));
+    return c.json({ success: true, section, config: getEffectiveConfig(ctx)[section] });
   });
 
-  app.post('/api/admin/config/reset-all', (c) => {
-    const user = ctx.requireAuth(c);
+  app.post('/api/admin/config/reset-all', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
     if (permCheck instanceof Response) return permCheck;
     if (permCheck.roleData && (permCheck.roleData as { readOnly?: boolean }).readOnly === true) return c.json({ error: 'Forbidden: CONFIG_EDIT is read-only for this user' }, 403);
     const sections = Object.keys(ctx.configOverrides);
     for (const key of Object.keys(ctx.configOverrides)) delete ctx.configOverrides[key];
-    recordAudit(user.userId, user.username, 'CONFIG_RESET_ALL', 'config', undefined, JSON.stringify({ sectionsCleared: sections }));
-    const freshConfig = getEffectiveConfig(ctx);
-    return c.json({ success: true, config: freshConfig });
+    await recordAudit(user.userId, user.username, 'CONFIG_RESET_ALL', 'config', undefined, JSON.stringify({ sectionsCleared: sections }));
+    return c.json({ success: true, config: getEffectiveConfig(ctx) });
   });
 
-  app.get('/api/admin/audit', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/audit', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'AUDIT_VIEW');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'AUDIT_VIEW');
     if (permCheck instanceof Response) return permCheck;
     const page = parseInt(c.req.query('page') || '1');
     const pageSize = parseInt(c.req.query('pageSize') || '50');
@@ -175,7 +173,7 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     const dateFrom = c.req.query('dateFrom') || undefined;
     const dateTo = c.req.query('dateTo') || undefined;
     const userId = (user as { impersonating?: boolean }).impersonating ? user.userId : undefined;
-    const result = getAuditLogs({ userId, action, dateFrom, dateTo }, page, pageSize);
+    const result = await getAuditLogs({ userId, action, dateFrom, dateTo }, page, pageSize);
     return c.json({ entries: result.items, total: result.total, page, pageSize, totalPages: Math.ceil(result.total / pageSize) });
   });
 

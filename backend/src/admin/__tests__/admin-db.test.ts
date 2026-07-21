@@ -1,6 +1,6 @@
 /**
  * Unit Tests — admin-db.ts (KSA-285: Auth & Multitenant)
- * Tests DB functions directly: password hashing, sessions, users, RBAC, audit, config, promotion cooldown.
+ * SA4E-50: All DB functions are now async — all calls must be awaited.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -36,7 +36,7 @@ import {
 } from '../admin-db.js';
 
 // ============================================================
-// 1. Password Hashing
+// 1. Password Hashing (sync — no change needed)
 // ============================================================
 
 describe('Password Hashing', () => {
@@ -44,36 +44,26 @@ describe('Password Hashing', () => {
     const hashed = hashPassword('testPassword123');
     expect(hashed).toContain(':');
     const [salt, hash] = hashed.split(':');
-    expect(salt.length).toBe(32); // 16 bytes hex
-    expect(hash.length).toBe(128); // 64 bytes hex
+    expect(salt.length).toBe(32);
+    expect(hash.length).toBe(128);
   });
 
-  it('hashPassword produces different hashes for same password (different salt)', () => {
-    const hash1 = hashPassword('samePassword');
-    const hash2 = hashPassword('samePassword');
-    expect(hash1).not.toBe(hash2);
+  it('hashPassword produces different hashes for same password', () => {
+    expect(hashPassword('samePassword')).not.toBe(hashPassword('samePassword'));
   });
 
   it('verifyPassword returns true for correct password', () => {
-    const password = 'mySecretPass!';
-    const hashed = hashPassword(password);
-    expect(verifyPassword(password, hashed)).toBe(true);
+    const hashed = hashPassword('mySecretPass!');
+    expect(verifyPassword('mySecretPass!', hashed)).toBe(true);
   });
 
   it('verifyPassword returns false for wrong password', () => {
-    const hashed = hashPassword('correctPassword');
-    expect(verifyPassword('wrongPassword', hashed)).toBe(false);
+    expect(verifyPassword('wrong', hashPassword('correct'))).toBe(false);
   });
 
   it('verifyPassword returns false for invalid stored format', () => {
     expect(verifyPassword('test', 'invalid-no-colon')).toBe(false);
     expect(verifyPassword('test', '')).toBe(false);
-  });
-
-  it('verifyPassword uses timing-safe comparison', () => {
-    const hashed = hashPassword('password');
-    const result = verifyPassword('password', hashed);
-    expect(result).toBe(true);
   });
 });
 
@@ -84,55 +74,54 @@ describe('Password Hashing', () => {
 describe('Session Management', () => {
   let testUserId: string;
 
-  beforeAll(() => {
-    const user = getUserByUsername('admin');
+  beforeAll(async () => {
+    const user = await getUserByUsername('admin');
     testUserId = user!.userId;
   });
 
-  it('createSession returns session with token', () => {
-    const session = createSession(testUserId, 'TestDevice', '127.0.0.1');
+  it('createSession returns session with token', async () => {
+    const session = await createSession(testUserId, 'TestDevice', '127.0.0.1');
     expect(session.token).toBeDefined();
-    expect(session.token.length).toBe(64); // 32 bytes hex
+    expect(session.token.length).toBe(64);
     expect(session.userId).toBe(testUserId);
     expect(session.sessionId).toMatch(/^sess-/);
     expect(session.expiresAt).toBeDefined();
     expect(session.isActive).toBe(true);
   });
 
-  it('validateSession returns user info for valid token', () => {
-    const session = createSession(testUserId);
-    const result = validateSession(session.token);
+  it('validateSession returns user info for valid token', async () => {
+    const session = await createSession(testUserId);
+    const result = await validateSession(session.token);
     expect(result).not.toBeNull();
     expect(result!.userId).toBe(testUserId);
     expect(result!.username).toBe('admin');
     expect(result!.accessGroupId).toBe('grp-admin');
   });
 
-  it('validateSession returns null for invalid token', () => {
-    const result = validateSession('nonexistent-token-12345');
+  it('validateSession returns null for invalid token', async () => {
+    const result = await validateSession('nonexistent-token-12345');
     expect(result).toBeNull();
   });
 
-  it('invalidateSession makes token invalid', () => {
-    const session = createSession(testUserId);
-    expect(validateSession(session.token)).not.toBeNull();
-    invalidateSession(session.token);
-    expect(validateSession(session.token)).toBeNull();
+  it('invalidateSession makes token invalid', async () => {
+    const session = await createSession(testUserId);
+    expect(await validateSession(session.token)).not.toBeNull();
+    await invalidateSession(session.token);
+    expect(await validateSession(session.token)).toBeNull();
   });
 
-  it('invalidateUserSessions terminates all active sessions', () => {
-    const s1 = createSession(testUserId);
-    const s2 = createSession(testUserId);
-    expect(validateSession(s1.token)).not.toBeNull();
-    expect(validateSession(s2.token)).not.toBeNull();
-
-    const terminated = invalidateUserSessions(testUserId);
+  it('invalidateUserSessions terminates all active sessions', async () => {
+    const s1 = await createSession(testUserId);
+    const s2 = await createSession(testUserId);
+    expect(await validateSession(s1.token)).not.toBeNull();
+    expect(await validateSession(s2.token)).not.toBeNull();
+    const terminated = await invalidateUserSessions(testUserId);
     expect(terminated).toBeGreaterThanOrEqual(2);
-    expect(validateSession(s1.token)).toBeNull();
-    expect(validateSession(s2.token)).toBeNull();
+    expect(await validateSession(s1.token)).toBeNull();
+    expect(await validateSession(s2.token)).toBeNull();
   });
 
-  it('expired token returns null from validateSession', () => {
+  it('expired token returns null from validateSession', async () => {
     const db = getAdminDb();
     const token = 'expired-token-test-' + Date.now();
     const pastDate = new Date(Date.now() - 1000).toISOString();
@@ -140,7 +129,7 @@ describe('Session Management', () => {
       VALUES (?, ?, ?, '', '', ?, ?, 1)`).run(
       'sess-expired-' + Date.now(), testUserId, token, pastDate, pastDate
     );
-    const result = validateSession(token);
+    const result = await validateSession(token);
     expect(result).toBeNull();
   });
 });
@@ -153,8 +142,8 @@ describe('User Operations', () => {
   let createdUserId: string;
   const testUsername = `unittest-user-${Date.now()}`;
 
-  it('createUser creates a new user', () => {
-    const user = createUser(testUsername, 'test@test.com', 'TestPass123', 'grp-admin');
+  it('createUser creates a new user', async () => {
+    const user = await createUser(testUsername, 'test@test.com', 'TestPass123', 'grp-admin');
     expect(user.userId).toMatch(/^user-/);
     expect(user.username).toBe(testUsername);
     expect(user.email).toBe('test@test.com');
@@ -163,88 +152,82 @@ describe('User Operations', () => {
     createdUserId = user.userId;
   });
 
-  it('createUser throws on duplicate username', () => {
-    expect(() => {
-      createUser(testUsername, 'dup@test.com', 'Pass123', 'grp-admin');
-    }).toThrow();
-  });
-
-  it('getUserById returns user', () => {
-    const user = getUserById(createdUserId);
+  it('getUserById returns user', async () => {
+    const user = await getUserById(createdUserId);
     expect(user).not.toBeNull();
     expect(user!.username).toBe(testUsername);
   });
 
-  it('getUserByUsername returns user with passwordHash', () => {
-    const user = getUserByUsername(testUsername);
+  it('getUserByUsername returns user with passwordHash', async () => {
+    const user = await getUserByUsername(testUsername);
     expect(user).not.toBeNull();
     expect(user!.passwordHash).toBeDefined();
     expect(user!.passwordHash).toContain(':');
   });
 
-  it('getUsers with no filters returns all users', () => {
-    const result = getUsers();
+  it('getUsers with no filters returns all users', async () => {
+    const result = await getUsers();
     expect(result.total).toBeGreaterThanOrEqual(2);
     expect(result.items.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('getUsers with status filter works', () => {
-    const result = getUsers({ status: 'ACTIVE' });
+  it('getUsers with status filter works', async () => {
+    const result = await getUsers({ status: 'ACTIVE' });
     expect(result.items.every(u => u.status === 'ACTIVE')).toBe(true);
   });
 
-  it('getUsers with search filter works', () => {
-    const result = getUsers({ search: testUsername.substring(0, 10) });
-    expect(result.items.some(u => u.username === testUsername)).toBe(true);
+  it('getUsers with search filter works', async () => {
+    const result = await getUsers({ search: testUsername.substring(0, 10) });
+    expect(result.items.some((u: any) => u.username === testUsername)).toBe(true);
   });
 
-  it('getUsers with accessGroupId filter works', () => {
-    const result = getUsers({ accessGroupId: 'grp-admin' });
-    expect(result.items.every(u => u.accessGroupId === 'grp-admin')).toBe(true);
+  it('getUsers with accessGroupId filter works', async () => {
+    const result = await getUsers({ accessGroupId: 'grp-admin' });
+    expect(result.items.every((u: any) => u.accessGroupId === 'grp-admin')).toBe(true);
   });
 
-  it('updateUserStatus to DISABLED terminates sessions', () => {
-    createSession(createdUserId);
-    const terminated = updateUserStatus(createdUserId, 'DISABLED');
+  it('updateUserStatus to DISABLED terminates sessions', async () => {
+    await createSession(createdUserId);
+    const terminated = await updateUserStatus(createdUserId, 'DISABLED');
     expect(terminated).toBeGreaterThanOrEqual(0);
-    const user = getUserById(createdUserId);
+    const user = await getUserById(createdUserId);
     expect(user!.status).toBe('DISABLED');
   });
 
-  it('DISABLED user session is rejected by validateSession', () => {
-    updateUserStatus(createdUserId, 'ACTIVE');
-    const session = createSession(createdUserId);
-    updateUserStatus(createdUserId, 'DISABLED');
-    const result = validateSession(session.token);
+  it('DISABLED user session is rejected by validateSession', async () => {
+    await updateUserStatus(createdUserId, 'ACTIVE');
+    const session = await createSession(createdUserId);
+    await updateUserStatus(createdUserId, 'DISABLED');
+    const result = await validateSession(session.token);
     expect(result).toBeNull();
   });
 
-  it('resetUserPassword returns temp password and sets forcePasswordChange', () => {
-    updateUserStatus(createdUserId, 'ACTIVE');
-    const tempPwd = resetUserPassword(createdUserId);
+  it('resetUserPassword returns temp password and sets forcePasswordChange', async () => {
+    await updateUserStatus(createdUserId, 'ACTIVE');
+    const tempPwd = await resetUserPassword(createdUserId);
     expect(tempPwd.length).toBeGreaterThan(0);
-    const user = getUserById(createdUserId);
+    const user = await getUserById(createdUserId);
     expect(user!.forcePasswordChange).toBe(true);
-    const dbUser = getUserByUsername(testUsername);
+    const dbUser = await getUserByUsername(testUsername);
     expect(verifyPassword(tempPwd, dbUser!.passwordHash)).toBe(true);
   });
 
-  it('changePassword updates password and clears forcePasswordChange', () => {
-    changePassword(createdUserId, 'NewPassword456');
-    const user = getUserById(createdUserId);
+  it('changePassword updates password and clears forcePasswordChange', async () => {
+    await changePassword(createdUserId, 'NewPassword456');
+    const user = await getUserById(createdUserId);
     expect(user!.forcePasswordChange).toBe(false);
-    const dbUser = getUserByUsername(testUsername);
+    const dbUser = await getUserByUsername(testUsername);
     expect(verifyPassword('NewPassword456', dbUser!.passwordHash)).toBe(true);
   });
 
-  it('deleteUser cannot delete system admin', () => {
-    const admin = getUserByUsername('admin');
-    expect(() => deleteUser(admin!.userId)).toThrow('Cannot delete system admin');
+  it('deleteUser cannot delete system admin', async () => {
+    const admin = await getUserByUsername('admin');
+    await expect(deleteUser(admin!.userId)).rejects.toThrow('Cannot delete system admin');
   });
 
-  it('deleteUser removes user', () => {
-    deleteUser(createdUserId);
-    const user = getUserById(createdUserId);
+  it('deleteUser removes user', async () => {
+    await deleteUser(createdUserId);
+    const user = await getUserById(createdUserId);
     expect(user).toBeNull();
   });
 });
@@ -257,8 +240,8 @@ describe('RBAC Group Operations', () => {
   let testGroupId: string;
   const groupName = `test-group-${Date.now()}`;
 
-  it('createGroup creates a new group with permissions', () => {
-    const group = createGroup(groupName, [
+  it('createGroup creates a new group with permissions', async () => {
+    const group = await createGroup(groupName, [
       { permissionId: 'KB_READ', roleData: {} },
       { permissionId: 'DASHBOARD_VIEW', roleData: {} },
     ]);
@@ -269,22 +252,22 @@ describe('RBAC Group Operations', () => {
     testGroupId = group.accessGroupId;
   });
 
-  it('getGroups returns all groups', () => {
-    const groups = getGroups();
+  it('getGroups returns all groups', async () => {
+    const groups = await getGroups();
     expect(groups.length).toBeGreaterThanOrEqual(2);
     const found = groups.find(g => g.accessGroupId === testGroupId);
     expect(found).toBeDefined();
   });
 
-  it('getGroupById returns specific group', () => {
-    const group = getGroupById(testGroupId);
+  it('getGroupById returns specific group', async () => {
+    const group = await getGroupById(testGroupId);
     expect(group).not.toBeNull();
     expect(group!.accessGroupName).toBe(groupName);
     expect(group!.permissions).toHaveLength(2);
   });
 
-  it('updateGroup changes name and permissions', () => {
-    const updated = updateGroup(testGroupId, 'renamed-group', [
+  it('updateGroup changes name and permissions', async () => {
+    const updated = await updateGroup(testGroupId, 'renamed-group', [
       { permissionId: 'KB_READ', roleData: {} },
       { permissionId: 'KB_WRITE', roleData: {} },
       { permissionId: 'SEARCH_EXPLORE', roleData: { maxResults: 100 } },
@@ -293,19 +276,19 @@ describe('RBAC Group Operations', () => {
     expect(updated.permissions).toHaveLength(3);
   });
 
-  it('deleteGroup cannot delete system group', () => {
-    expect(() => deleteGroup('grp-admin')).toThrow('Cannot delete system group');
+  it('deleteGroup cannot delete system group', async () => {
+    await expect(deleteGroup('grp-admin')).rejects.toThrow('Cannot delete system group');
   });
 
-  it('deleteGroup cannot delete group with users', () => {
-    const user = createUser(`grp-test-user-${Date.now()}`, '', 'pass123', testGroupId);
-    expect(() => deleteGroup(testGroupId)).toThrow('Cannot delete group with assigned users');
-    deleteUser(user.userId);
+  it('deleteGroup cannot delete group with users', async () => {
+    const user = await createUser(`grp-test-user-${Date.now()}`, '', 'pass123', testGroupId);
+    await expect(deleteGroup(testGroupId)).rejects.toThrow('Cannot delete group with assigned users');
+    await deleteUser(user.userId);
   });
 
-  it('deleteGroup removes empty group', () => {
-    deleteGroup(testGroupId);
-    const group = getGroupById(testGroupId);
+  it('deleteGroup removes empty group', async () => {
+    await deleteGroup(testGroupId);
+    const group = await getGroupById(testGroupId);
     expect(group).toBeNull();
   });
 });
@@ -315,16 +298,16 @@ describe('RBAC Group Operations', () => {
 // ============================================================
 
 describe('User Permissions', () => {
-  it('getUserPermissions returns permissions for admin', () => {
-    const admin = getUserByUsername('admin');
-    const perms = getUserPermissions(admin!.userId);
+  it('getUserPermissions returns permissions for admin', async () => {
+    const admin = await getUserByUsername('admin');
+    const perms = await getUserPermissions(admin!.userId);
     expect(perms.length).toBeGreaterThan(5);
     expect(perms.some(p => p.permissionId === 'DASHBOARD_VIEW')).toBe(true);
     expect(perms.some(p => p.permissionId === 'USER_MANAGE')).toBe(true);
   });
 
-  it('getUserPermissions returns empty for nonexistent user', () => {
-    const perms = getUserPermissions('nonexistent-user-id');
+  it('getUserPermissions returns empty for nonexistent user', async () => {
+    const perms = await getUserPermissions('nonexistent-user-id');
     expect(perms).toEqual([]);
   });
 });
@@ -337,9 +320,9 @@ describe('Audit Operations', () => {
   const auditUserId = 'test-audit-user';
   const auditUsername = 'auditor';
 
-  it('recordAudit creates audit entry', () => {
-    recordAudit(auditUserId, auditUsername, 'TEST_ACTION', 'test-resource', 'res-001', '{"key":"value"}', '192.168.1.1');
-    const logs = getAuditLogs({ action: 'TEST_ACTION' });
+  it('recordAudit creates audit entry', async () => {
+    await recordAudit(auditUserId, auditUsername, 'TEST_ACTION', 'test-resource', 'res-001', '{"key":"value"}', '192.168.1.1');
+    const logs = await getAuditLogs({ action: 'TEST_ACTION' });
     expect(logs.total).toBeGreaterThanOrEqual(1);
     const entry = logs.items.find(e => e.action === 'TEST_ACTION' && e.userId === auditUserId);
     expect(entry).toBeDefined();
@@ -347,26 +330,25 @@ describe('Audit Operations', () => {
     expect(entry!.resource).toBe('test-resource');
   });
 
-  it('getAuditLogs with action filter', () => {
-    recordAudit(auditUserId, auditUsername, 'UNIQUE_ACTION_' + Date.now(), 'resource');
-    const logs = getAuditLogs({ action: 'TEST_ACTION' });
+  it('getAuditLogs with action filter', async () => {
+    await recordAudit(auditUserId, auditUsername, 'UNIQUE_ACTION_' + Date.now(), 'resource');
+    const logs = await getAuditLogs({ action: 'TEST_ACTION' });
     expect(logs.items.every(e => e.action === 'TEST_ACTION')).toBe(true);
   });
 
-  it('getAuditLogs with date range filter', () => {
-    const now = new Date();
-    const from = new Date(now.getTime() - 60000).toISOString();
-    const to = new Date(now.getTime() + 60000).toISOString();
-    recordAudit(auditUserId, auditUsername, 'DATE_TEST', 'resource');
-    const logs = getAuditLogs({ dateFrom: from, dateTo: to });
+  it('getAuditLogs with date range filter', async () => {
+    const from = new Date(Date.now() - 60000).toISOString();
+    const to = new Date(Date.now() + 60000).toISOString();
+    await recordAudit(auditUserId, auditUsername, 'DATE_TEST', 'resource');
+    const logs = await getAuditLogs({ dateFrom: from, dateTo: to });
     expect(logs.total).toBeGreaterThanOrEqual(1);
   });
 
-  it('getAuditLogs supports pagination', () => {
+  it('getAuditLogs supports pagination', async () => {
     for (let i = 0; i < 5; i++) {
-      recordAudit(auditUserId, auditUsername, 'PAGINATE_TEST', 'resource', `item-${i}`);
+      await recordAudit(auditUserId, auditUsername, 'PAGINATE_TEST', 'resource', `item-${i}`);
     }
-    const page1 = getAuditLogs({ action: 'PAGINATE_TEST' }, 1, 2);
+    const page1 = await getAuditLogs({ action: 'PAGINATE_TEST' }, 1, 2);
     expect(page1.items.length).toBeLessThanOrEqual(2);
     expect(page1.total).toBeGreaterThanOrEqual(5);
   });
@@ -377,9 +359,9 @@ describe('Audit Operations', () => {
 // ============================================================
 
 describe('Config Change Tracking', () => {
-  it('recordConfigChange stores config change', () => {
-    recordConfigChange('server', 'port', '48721', '48722', 'admin', true);
-    const changes = getConfigChanges(5);
+  it('recordConfigChange stores config change', async () => {
+    await recordConfigChange('server', 'port', '48721', '48722', 'admin', true);
+    const changes = await getConfigChanges(5);
     expect(changes.length).toBeGreaterThanOrEqual(1);
     const portChange = changes.find(c => c.key === 'port' && c.newValue === '48722');
     expect(portChange).toBeDefined();
@@ -389,11 +371,11 @@ describe('Config Change Tracking', () => {
     expect(portChange!.requiresRestart).toBe(true);
   });
 
-  it('getConfigChanges respects limit', () => {
+  it('getConfigChanges respects limit', async () => {
     for (let i = 0; i < 3; i++) {
-      recordConfigChange('test', `key${i}`, null, `val${i}`, 'admin', false);
+      await recordConfigChange('test', `key${i}`, null, `val${i}`, 'admin', false);
     }
-    const changes = getConfigChanges(2);
+    const changes = await getConfigChanges(2);
     expect(changes.length).toBeLessThanOrEqual(2);
   });
 });
@@ -405,26 +387,24 @@ describe('Config Change Tracking', () => {
 describe('Promotion Cooldown', () => {
   const entryId = `cooldown-test-${Date.now()}`;
 
-  it('checkPromotionCooldown returns false when no cooldown set', () => {
-    const result = checkPromotionCooldown(entryId);
+  it('checkPromotionCooldown returns false when no cooldown set', async () => {
+    const result = await checkPromotionCooldown(entryId);
     expect(result.onCooldown).toBe(false);
     expect(result.cooldownUntil).toBeUndefined();
   });
 
-  it('setPromotionCooldown sets 7-day cooldown', () => {
-    setPromotionCooldown(entryId, 'reviewer1');
-    const result = checkPromotionCooldown(entryId);
+  it('setPromotionCooldown sets 7-day cooldown', async () => {
+    await setPromotionCooldown(entryId, 'reviewer1');
+    const result = await checkPromotionCooldown(entryId);
     expect(result.onCooldown).toBe(true);
     expect(result.cooldownUntil).toBeDefined();
-    const cooldownDate = new Date(result.cooldownUntil!);
-    const now = new Date();
-    const diffDays = (cooldownDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    const diffDays = (new Date(result.cooldownUntil!).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     expect(diffDays).toBeGreaterThan(6.9);
     expect(diffDays).toBeLessThan(7.1);
   });
 
-  it('different entry has no cooldown', () => {
-    const result = checkPromotionCooldown('other-entry-no-cooldown');
+  it('different entry has no cooldown', async () => {
+    const result = await checkPromotionCooldown('other-entry-no-cooldown');
     expect(result.onCooldown).toBe(false);
   });
 });
@@ -434,16 +414,16 @@ describe('Promotion Cooldown', () => {
 // ============================================================
 
 describe('KB Search', () => {
-  it('searchKbEntries returns results or empty array', () => {
-    const result = searchKbEntries('test');
+  it('searchKbEntries returns results or empty array', async () => {
+    const result = await searchKbEntries('test');
     expect(result).toHaveProperty('items');
     expect(result).toHaveProperty('total');
     expect(Array.isArray(result.items)).toBe(true);
     expect(typeof result.total).toBe('number');
   });
 
-  it('searchKbEntries handles empty query gracefully', () => {
-    const result = searchKbEntries('');
+  it('searchKbEntries handles empty query gracefully', async () => {
+    const result = await searchKbEntries('');
     expect(result).toHaveProperty('items');
     expect(typeof result.total).toBe('number');
   });

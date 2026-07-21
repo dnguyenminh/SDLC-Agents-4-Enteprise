@@ -1,6 +1,7 @@
 /**
  * JWT Authentication Middleware for multi-tenant KB isolation.
  * SA4E-30: Replaces API-key-only auth with full JWT identity injection.
+ * SA4E-50: validateSession is now async — safeValidateSession awaits it.
  *
  * Behavior:
  * - If CODE_INTEL_REQUIRE_AUTH=true -> JWT required on all /api/v1/* requests
@@ -64,7 +65,6 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
     const authHeader = c.req.header('Authorization');
     const mustAuth = REQUIRE_AUTH || alwaysRequire;
 
-    // Helper: build anonymous context, preserving X-Project-Id
     const anonymous = () => {
       const ctx = createProjectContext(projectId, 'anonymous');
       c.set('projectContext', ctx);
@@ -81,22 +81,17 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
 
     const token = authHeader.slice(7);
 
-    // Empty/blank token is not a valid credential
     if (token.trim().length === 0) {
       if (mustAuth) return unauthorized('AUTH_REQUIRED', 'Authentication required');
       return anonymous();
     }
 
-    // Two supported credential formats:
+    // Two supported formats:
     //  1. JWT (header.payload.signature) — signed with KB_TOKEN_SECRET
-    //  2. Admin session token — opaque hex issued by /api/admin/auth/login,
-    //     validated against the sessions table (checks is_active, expiry, status).
-    // A fresh admin session token is NOT a JWT, so we must accept both here or
-    // logged-in admins get a misleading 401 on /api/index/* (indexing).
+    //  2. Admin session token — opaque hex, validated against sessions table
     const looksLikeJwt = token.split('.').length === 3;
 
     if (looksLikeJwt) {
-      // Verify signature
       if (TOKEN_SECRET) {
         const valid = await verifyHs256(token, TOKEN_SECRET);
         if (!valid) {
@@ -104,13 +99,11 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
           return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
         }
       }
-      // Decode payload
       const payload = decodeJwtPayload(token);
       if (!payload || isExpired(payload)) {
         if (!mustAuth) return anonymous();
         return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
       }
-      // X-Project-Id header takes precedence over JWT pid claim
       const ctx = createProjectContext(
         projectId || payload.pid || '',
         payload.sub || 'anonymous',
@@ -121,9 +114,8 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
       return next();
     }
 
-    // Opaque token → validate as an admin session (revocation + expiry + status
-    // are all enforced inside validateSession).
-    const session = safeValidateSession(token);
+    // SA4E-50: validateSession is now async — await it
+    const session = await safeValidateSession(token);
     if (!session) {
       if (!mustAuth) return anonymous();
       return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
@@ -135,9 +127,11 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
 }
 
 /** validateSession wrapped so a DB error never crashes auth (fails closed). */
-function safeValidateSession(token: string): { userId: string; username: string; accessGroupId: string } | null {
+async function safeValidateSession(
+  token: string,
+): Promise<{ userId: string; username: string; accessGroupId: string } | null> {
   try {
-    return validateSession(token);
+    return await validateSession(token);
   } catch {
     return null;
   }
@@ -150,8 +144,7 @@ export interface JwtVerification {
 }
 
 /**
- * Verify a bearer credential as a JWT. Opaque (non-JWT) tokens return
- * `{ valid: false }` so callers can decide how to treat non-JWT principals.
+ * Verify a bearer credential as a JWT.
  * SA4E-41 SEC-03: shared by the tools route to bind X-Project-Id to identity.
  */
 export async function verifyJwtToken(token: string): Promise<JwtVerification> {

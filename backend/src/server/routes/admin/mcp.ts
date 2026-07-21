@@ -14,10 +14,10 @@ export function addMcpLog(ctx: AdminContext, serverId: string, level: string, me
 export function createMcpRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
 
-  app.get('/api/admin/mcp/servers', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/mcp/servers', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'MCP_ACCESS');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'MCP_ACCESS');
     if (permCheck instanceof Response) return permCheck;
     const cfg = loadConfig();
     const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
@@ -64,16 +64,16 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
   });
 
   app.post('/api/admin/mcp/servers/:id/restart', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
     if (permCheck instanceof Response) return permCheck;
     if ((permCheck.roleData as { allowRestart?: boolean })?.allowRestart === false) return c.json({ error: 'Forbidden: not allowed to restart servers' }, 403);
     const serverId = c.req.param('id');
     const allowedServers = (permCheck.roleData as any)?.allowedServers;
     if (Array.isArray(allowedServers) && !allowedServers.includes('*') && !allowedServers.includes(serverId)) return c.json({ error: 'Forbidden: server not in allowedServers' }, 403);
     addMcpLog(ctx, serverId, 'INFO', `Server restart requested by ${user.username}`);
-    recordAudit(user.userId, user.username, 'RESTART_SERVER', 'mcp', serverId);
+    await recordAudit(user.userId, user.username, 'RESTART_SERVER', 'mcp', serverId);
     const orchestration = ctx.registry?.getModule?.('orchestration');
     const clientManager = orchestration?.getClientManager?.();
     if (clientManager) {
@@ -97,9 +97,9 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
   });
 
   app.post('/api/admin/mcp/servers/:id/tools/:toolName/toggle', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
     if (permCheck instanceof Response) return permCheck;
     const serverId = c.req.param('id');
     const allowedServers = (permCheck.roleData as any)?.allowedServers;
@@ -109,14 +109,14 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
     if (!ctx.toolToggles[serverId]) ctx.toolToggles[serverId] = {};
     ctx.toolToggles[serverId][toolName] = enabled !== false;
     addMcpLog(ctx, serverId, 'INFO', `Tool "${toolName}" ${enabled !== false ? 'enabled' : 'disabled'} by ${user.username}`);
-    recordAudit(user.userId, user.username, 'TOGGLE_TOOL', 'mcp', `${serverId}/${toolName}`, JSON.stringify({ enabled }));
+    await recordAudit(user.userId, user.username, 'TOGGLE_TOOL', 'mcp', `${serverId}/${toolName}`, JSON.stringify({ enabled }));
     return c.json({ success: true, serverId, toolName, enabled: enabled !== false });
   });
 
-  app.get('/api/admin/mcp/servers/:id/logs', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/mcp/servers/:id/logs', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'MCP_ACCESS');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'MCP_ACCESS');
     if (permCheck instanceof Response) return permCheck;
     const serverId = c.req.param('id');
     const allowedServers = (permCheck.roleData as any)?.allowedServers;
@@ -141,3 +141,5 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
 
   return app;
 }
+
+

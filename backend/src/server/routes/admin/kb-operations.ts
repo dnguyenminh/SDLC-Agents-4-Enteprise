@@ -1,10 +1,12 @@
+/**
+ * admin/routes/kb-operations.ts — KB links, promotions, import/export.
+ * SA4E-50: All admin-db calls are awaited since they are now async.
+ */
+
 import { Hono } from 'hono';
 import {
-  getKbEntries,
-  getKbEntryById,
-  recordAudit,
-  checkPromotionCooldown,
-  setPromotionCooldown,
+  getKbEntries, getKbEntryById, recordAudit,
+  checkPromotionCooldown, setPromotionCooldown,
 } from '../../../admin/admin-db.js';
 import { containsHtml, sanitizeKbEntry } from '../../../admin/sanitize.js';
 import type { AdminContext } from './context.js';
@@ -13,31 +15,31 @@ export function createKbOperationsRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
 
   app.post('/api/admin/kb/entries/:id/link', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'KB_WRITE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_WRITE');
     if (permCheck instanceof Response) return permCheck;
     const entryId = c.req.param('id');
     const { targetId, linkType } = await c.req.json();
     if (!targetId) return c.json({ error: 'targetId is required' }, 400);
     if (!ctx.kbLinks[entryId]) ctx.kbLinks[entryId] = [];
     ctx.kbLinks[entryId].push({ targetId, linkType: linkType || 'related', createdAt: new Date().toISOString() });
-    recordAudit(user.userId, user.username, 'LINK_ENTRY', 'kb', entryId, JSON.stringify({ targetId, linkType }));
+    await recordAudit(user.userId, user.username, 'LINK_ENTRY', 'kb', entryId, JSON.stringify({ targetId, linkType }));
     return c.json({ success: true, links: ctx.kbLinks[entryId] });
   });
 
-  app.get('/api/admin/kb/entries/:id/links', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/kb/entries/:id/links', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'KB_READ');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_READ');
     if (permCheck instanceof Response) return permCheck;
     return c.json({ entryId: c.req.param('id'), links: ctx.kbLinks[c.req.param('id')] || [] });
   });
 
-  app.get('/api/admin/kb/promotions', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/kb/promotions', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'KB_PROMOTE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_PROMOTE');
     if (permCheck instanceof Response) return permCheck;
     const status = c.req.query('status') || undefined;
     let filtered = [...ctx.promotionQueue];
@@ -46,24 +48,24 @@ export function createKbOperationsRoutes(ctx: AdminContext): Hono {
   });
 
   app.post('/api/admin/kb/promotions', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'KB_PROMOTE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_PROMOTE');
     if (permCheck instanceof Response) return permCheck;
     const { entryId, fromTier, toTier, reason } = await c.req.json();
     if (!entryId || !toTier) return c.json({ error: 'entryId and toTier required' }, 400);
-    const cooldownStatus = checkPromotionCooldown(entryId);
+    const cooldownStatus = await checkPromotionCooldown(entryId);
     if (cooldownStatus.onCooldown) return c.json({ error: 'Entry is on promotion cooldown after a recent rejection', cooldownUntil: cooldownStatus.cooldownUntil }, 400);
     const promotion = { id: 'promo-' + Date.now().toString(36), entryId, fromTier: fromTier || 'USER', toTier, reason: reason || '', requestedBy: user.username, requestedAt: new Date().toISOString(), status: 'pending' };
     ctx.promotionQueue.push(promotion);
-    recordAudit(user.userId, user.username, 'REQUEST_PROMOTION', 'kb', entryId, JSON.stringify({ fromTier, toTier }));
+    await recordAudit(user.userId, user.username, 'REQUEST_PROMOTION', 'kb', entryId, JSON.stringify({ fromTier, toTier }));
     return c.json({ success: true, promotion }, 201);
   });
 
   app.post('/api/admin/kb/promotions/:id/review', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'KB_PROMOTE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_PROMOTE');
     if (permCheck instanceof Response) return permCheck;
     const promoId = c.req.param('id');
     const { action } = await c.req.json();
@@ -73,28 +75,28 @@ export function createKbOperationsRoutes(ctx: AdminContext): Hono {
     promo.status = action === 'approve' ? 'approved' : 'rejected';
     promo.reviewedBy = user.username;
     promo.reviewedAt = new Date().toISOString();
-    if (action === 'reject') setPromotionCooldown(promo.entryId, user.username);
-    recordAudit(user.userId, user.username, action === 'approve' ? 'APPROVE_PROMOTION' : 'REJECT_PROMOTION', 'kb', promo.entryId);
+    if (action === 'reject') await setPromotionCooldown(promo.entryId, user.username);
+    await recordAudit(user.userId, user.username, action === 'approve' ? 'APPROVE_PROMOTION' : 'REJECT_PROMOTION', 'kb', promo.entryId);
     return c.json({ success: true, promotion: promo });
   });
 
-  app.get('/api/admin/kb/export', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/kb/export', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'KB_IMPORT_EXPORT');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_IMPORT_EXPORT');
     if (permCheck instanceof Response) return permCheck;
-    const result = getKbEntries(1, 100000, 'created_at', 'desc', ctx.getRequestProjectId(c));
+    const result = await getKbEntries(1, 100000, 'created_at', 'desc', ctx.getRequestProjectId(c));
     const allowedTiers = (permCheck.roleData as any)?.allowedTiers;
     let entries = result.items;
     if (Array.isArray(allowedTiers)) entries = entries.filter((e: any) => { const t = e.tier || e.scope || 'SHARED'; return allowedTiers.includes(t); });
-    recordAudit(user.userId, user.username, 'KB_EXPORT', 'kb', undefined, JSON.stringify({ count: entries.length }));
+    await recordAudit(user.userId, user.username, 'KB_EXPORT', 'kb', undefined, JSON.stringify({ count: entries.length }));
     return c.json({ entries, exportedAt: new Date().toISOString(), count: entries.length });
   });
 
   app.post('/api/admin/kb/import', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'KB_IMPORT_EXPORT');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_IMPORT_EXPORT');
     if (permCheck instanceof Response) return permCheck;
     try {
       const { entries: rawEntries, conflictMode } = await c.req.json();
@@ -107,10 +109,9 @@ export function createKbOperationsRoutes(ctx: AdminContext): Hono {
       const entries = rawEntries.map((e: any) => sanitizeKbEntry(e));
       const mode = conflictMode || 'skip';
       if (!['skip', 'overwrite', 'merge'].includes(mode)) return c.json({ error: 'conflictMode must be skip, overwrite, or merge' }, 400);
-      const existingEntries = getKbEntries(1, 100000, 'created_at', 'desc', ctx.getRequestProjectId(c));
+      const existingEntries = await getKbEntries(1, 100000, 'created_at', 'desc', ctx.getRequestProjectId(c));
       const existingIds = new Set(existingEntries.items.map((e: any) => e.id || e.entry_id));
-      const conflicts: any[] = [];
-      const newEntries: any[] = [];
+      const conflicts: any[] = [], newEntries: any[] = [];
       for (const entry of entries) {
         const entryId = entry.id || entry.entry_id;
         if (entryId && existingIds.has(entryId)) conflicts.push({ id: entryId, existing: existingEntries.items.find((e: any) => (e.id || e.entry_id) === entryId), incoming: entry });
@@ -125,7 +126,7 @@ export function createKbOperationsRoutes(ctx: AdminContext): Hono {
           case 'merge': merged = conflicts.length; imported += conflicts.length; break;
         }
       }
-      recordAudit(user.userId, user.username, 'KB_IMPORT', 'kb', undefined, JSON.stringify({ count: entries.length, conflictMode: mode, imported, skipped, overwritten, merged }));
+      await recordAudit(user.userId, user.username, 'KB_IMPORT', 'kb', undefined, JSON.stringify({ count: entries.length, conflictMode: mode, imported, skipped, overwritten, merged }));
       return c.json({ success: true, imported, skipped, overwritten, merged, conflicts: conflicts.map(cf => ({ id: cf.id, existingSource: cf.existing?.source || cf.existing?.title || 'unknown', incomingSource: cf.incoming?.source || cf.incoming?.title || 'unknown' })), message: `${imported} entries imported (${skipped} skipped, ${overwritten} overwritten, ${merged} merged)` });
     } catch { return c.json({ error: 'Invalid JSON body' }, 400); }
   });

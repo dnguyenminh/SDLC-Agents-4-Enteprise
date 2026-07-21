@@ -10,9 +10,9 @@ export function createMcpCrudRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
 
   app.post('/api/admin/mcp/servers', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
     if (permCheck instanceof Response) return permCheck;
     if ((permCheck.roleData as { allowAdd?: boolean })?.allowAdd === false) return c.json({ error: 'Forbidden: not allowed to add servers' }, 403);
     const body = await c.req.json();
@@ -39,7 +39,7 @@ export function createMcpCrudRoutes(ctx: AdminContext): Hono {
     fs.writeFileSync(tmpPath, JSON.stringify(orch, null, 2), 'utf-8');
     fs.renameSync(tmpPath, orchPath);
     addMcpLog(ctx, name, 'INFO', `Server added by ${user.username}`);
-    recordAudit(user.userId, user.username, 'ADD_SERVER', 'mcp', name);
+    await recordAudit(user.userId, user.username, 'ADD_SERVER', 'mcp', name);
     let status = disabled ? 'stopped' : 'disconnected';
     let toolCount = 0;
     const orchestration = ctx.registry?.getModule?.('orchestration');
@@ -52,9 +52,9 @@ export function createMcpCrudRoutes(ctx: AdminContext): Hono {
   });
 
   app.delete('/api/admin/mcp/servers/:id', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
     if (permCheck instanceof Response) return permCheck;
     if ((permCheck.roleData as { allowRemove?: boolean })?.allowRemove === false) return c.json({ error: 'Forbidden: not allowed to remove servers' }, 403);
     const serverId = c.req.param('id');
@@ -70,14 +70,14 @@ export function createMcpCrudRoutes(ctx: AdminContext): Hono {
     fs.writeFileSync(tmpPath, JSON.stringify(orch, null, 2), 'utf-8');
     fs.renameSync(tmpPath, orchPath);
     addMcpLog(ctx, serverId, 'INFO', `Server removed by ${user.username}`);
-    recordAudit(user.userId, user.username, 'REMOVE_SERVER', 'mcp', serverId);
+    await recordAudit(user.userId, user.username, 'REMOVE_SERVER', 'mcp', serverId);
     return c.json({ success: true, removed: serverId });
   });
 
   app.put('/api/admin/mcp/servers/:id', async (c) => {
-    const user = ctx.requireAuth(c);
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'MCP_MANAGE');
     if (permCheck instanceof Response) return permCheck;
     if ((permCheck.roleData as { allowEdit?: boolean })?.allowEdit === false) return c.json({ error: 'Forbidden: not allowed to edit server config' }, 403);
     const serverId = c.req.param('id');
@@ -101,7 +101,7 @@ export function createMcpCrudRoutes(ctx: AdminContext): Hono {
     fs.writeFileSync(tmpPath, JSON.stringify(orch, null, 2), 'utf-8');
     fs.renameSync(tmpPath, orchPath);
     addMcpLog(ctx, serverId, 'INFO', `Config updated by ${user.username}`);
-    recordAudit(user.userId, user.username, 'UPDATE_SERVER', 'mcp', serverId);
+    await recordAudit(user.userId, user.username, 'UPDATE_SERVER', 'mcp', serverId);
     const orchestration = ctx.registry?.getModule?.('orchestration');
     const clientManager = orchestration?.getClientManager?.();
     if (clientManager && !existing.disabled) {
@@ -113,3 +113,4 @@ export function createMcpCrudRoutes(ctx: AdminContext): Hono {
 
   return app;
 }
+

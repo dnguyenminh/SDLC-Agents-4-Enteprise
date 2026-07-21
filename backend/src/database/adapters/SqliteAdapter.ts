@@ -93,6 +93,13 @@ export class SqliteAdapter implements DatabaseAdapter {
     };
   }
 
+
+  // SA4E-50: Async variants — SQLite is sync so we delegate immediately.
+  async runAsync(sql: string, params?: unknown[]): Promise<RunResult> { return this.run(sql, params); }
+  async getAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T | undefined> { return this.get<T>(sql, params); }
+  async allAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> { return this.all<T>(sql, params); }
+  async execAsync(sql: string): Promise<void> { this.exec(sql); }
+  async transactionAsync<T>(fn: () => Promise<T>): Promise<T> { return fn(); }
   getEngine(): DatabaseEngine {
     return 'sqlite';
   }
@@ -123,3 +130,4 @@ export class SqliteAdapter implements DatabaseAdapter {
     return this.db;
   }
 }
+

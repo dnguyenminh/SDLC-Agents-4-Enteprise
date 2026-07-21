@@ -1,64 +1,167 @@
-# SA4E-50 User Guide — Migrate Remaining DB Calls to Local SQLite
+# User Guide — SA4E-50: Full Async Refactor of Admin/DB Layer
 
 ## Overview
 
-SA4E-50 eliminates the "Use getAsync" crash that occurs when `activeEngine: "postgresql"` is set in `database.json`. The root cause: `admin/db/kb-*.ts` files called sync methods (`.get()`, `.all()`) on `getIndexAdapter()`, which returns a `PostgresAdapter` that only supports async operations.
+SA4E-50 refactors the entire `admin/db` layer and its callers to use async/await throughout. This eliminates the PostgreSQL crash ("Use getAsync") and ensures all KB data is visible regardless of the database engine configured.
+
+---
 
 ## What Changed
 
-| File | Before | After |
-|------|--------|-------|
-| `admin/db/kb-entries.ts` | `getIndexAdapter().get(...)` | `getAdminDb().prepare(...).get(...)` |
-| `admin/db/kb-search.ts` | `getIndexAdapter().all(...)` | `getAdminDb().prepare(...).all(...)` |
-| `admin/db/kb-embeddings.ts` | `getIndexAdapter().get(...)` | `getAdminDb().prepare(...).get(...)` |
-| `admin/db/kb-tags.ts` | `getIndexAdapter().all(...)` | `getAdminDb().prepare(...).all(...)` |
+### Architecture
 
-## Architecture Rationale
+| Layer | Before | After |
+|-------|--------|-------|
+| `DatabaseAdapter` interface | Sync methods only | + async variants (`runAsync`, `getAsync`, `allAsync`, `execAsync`, `transactionAsync`) |
+| `SqliteDbAdapter` | Sync only | + async variants (delegate to sync — zero overhead) |
+| `PostgresAdapter` | Async only (threw on sync) | + generic `transactionAsync<T>` matching interface |
+| `SqliteAdapter` / `MysqlAdapter` | Missing async | + async variants |
+| `admin/db/*.ts` | `getAdminDb()` raw better-sqlite3 | `getAdminAdapter()` / `getIndexAdapter()` async calls |
+| Route handlers | Mix of sync/async | Fully async; all DB calls awaited |
+| `jwt-auth.ts` middleware | Sync `safeValidateSession` | Async — awaits `validateSession` |
 
-These KB query functions are **SQLite-specific by design** — they use `sqlite_master` table checks, `LIKE` queries optimized for SQLite, and synchronous call patterns. They operate on the **local unified DB** (`index.db`) which is always SQLite regardless of `activeEngine`.
+### Files Modified
 
-The `getAdminDb()` function always returns the local `better-sqlite3` handle. It is the correct access point for:
-- KB entries (knowledge_entries table)
-- Sessions, audit, config changes
-- Graph nodes/edges
-- Query logs, promotion cooldowns
+**Interface & Adapters:**
+- `database/adapters/DatabaseAdapter.ts` — added 5 async method signatures
+- `modules/memory/task-queue/SqliteDbAdapter.ts` — added 5 async methods (delegates to sync)
+- `database/adapters/SqliteAdapter.ts` — added 5 async methods
+- `database/adapters/MysqlAdapter.ts` — added 5 async methods
+- `database/adapters/PostgresAdapter.ts` — made `transactionAsync` generic `<T>`
 
-The `getIndexAdapter()` / `getAdminAdapter()` abstractions should only be used by code that explicitly needs PostgreSQL/MySQL support (route-level repositories via `DatabaseManager`).
+**Admin DB Layer (all now async):**
+- `admin/db/users.ts` — 9 functions → async
+- `admin/db/sessions.ts` — 6 functions → async
+- `admin/db/groups.ts` — 6 functions → async
+- `admin/db/audit.ts` — 3 functions → async
+- `admin/db/config.ts` — 2 functions → async
+- `admin/db/kb-entries.ts` — 3 functions → async, uses `getIndexAdapter()`
+- `admin/db/kb-search.ts` — 1 function → async, uses `getIndexAdapter()`
+- `admin/db/kb-tags.ts` — 6 functions → async, uses `getIndexAdapter()`
+- `admin/db/kb-embeddings.ts` — 1 function → async, uses `getIndexAdapter()`
+- `admin/db/promotion.ts` — 2 functions → async
+- `admin/db/query-logs.ts` — 3 functions → async
+- `admin/admin-db.ts` — barrel updated with new exports
 
-## Configuration
+**Route Layer (all handlers async + awaited):**
+- `server/routes/admin/auth.ts`
+- `server/routes/admin/users.ts`
+- `server/routes/admin/rbac.ts`
+- `server/routes/admin/analytics.ts`
+- `server/routes/admin/kb-entries.ts`
+- `server/routes/admin/kb-graph.ts`
+- `server/routes/admin/kb-graph-spatial.ts`
+- `server/routes/admin/kb-quality.ts`
+- `server/routes/admin/kb-tags.ts`
+- `server/routes/admin/kb-operations.ts`
+- `server/routes/admin/config.ts`
+- `server/routes/admin/mcp.ts`
+- `server/routes/admin/mcp-crud.ts`
+- `server/routes/admin/sse.ts`
+- `server/routes/admin/context.ts` — `authenticate`, `requireAuth`, `checkPermission`, `requirePermission` all async
 
-No configuration changes needed. The fix is transparent:
+**Other:**
+- `server/middleware/jwt-auth.ts` — `safeValidateSession` is now async
+- `admin/services/dashboard.service.ts` — `getHealth()` is now async
+- `modules/kb-graph/service/sync.ts` — `fullSync()` is async; `processKbEntries` awaits `getKbEntries`
+- `modules/kb-graph/service/index.ts` — `fullSync()` returns `Promise`
+- `database/migration/MigrationService.ts` — type cast fixes for `target` narrowing
+- `admin/__tests__/admin-db.test.ts` — all test cases updated to `await` async functions
+- `admin/db/__tests__/kb-entry-count.test.ts` — updated to `await`
 
-- `activeEngine: "sqlite"` — Works as before (no change in behavior)
-- `activeEngine: "postgresql"` — No longer crashes with "Use getAsync" errors
+---
 
-## Verification
+## Migration Guide (for downstream code)
 
-After deploying, verify with:
+If you call admin-db functions directly, you must now `await` them:
 
-```bash
-# Set database.json to postgresql mode
-# Start the server — should not crash
-# Access KB search, entries, embeddings, tags endpoints
-# All should return data from the local SQLite DB
+```typescript
+// Before (will now return Promise, not value)
+const user = getUserById(userId);
+const count = getKbEntryCount();
+
+// After (correct)
+const user = await getUserById(userId);
+const count = await getKbEntryCount();
 ```
 
-## Files Not Changed (Already Correct)
+Route handlers must be `async`:
 
-| File | Uses | Status |
-|------|------|--------|
-| `admin/db/sessions.ts` | `getAdminDb()` | Already correct |
-| `admin/db/audit.ts` | `getAdminDb()` | Already correct |
-| `admin/db/promotion.ts` | `getAdminDb()` | Already correct |
-| `admin/db/query-logs.ts` | `getAdminDb()` | Already correct |
-| `admin/db/config.ts` | `getAdminDb()` | Already correct |
-| `modules/kb-graph/service/index.ts` | `getAdminDb()` | Already correct |
-| `modules/kb-graph/service/sync.ts` | `getAdminDb()` + `getKbEntries()` | Fixed transitively |
+```typescript
+// Before
+app.get('/path', (c) => {
+  const user = ctx.requireAuth(c);
+  ...
+});
+
+// After
+app.get('/path', async (c) => {
+  const user = await ctx.requireAuth(c);
+  ...
+});
+```
+
+---
+
+## PostgreSQL Mode
+
+With the async refactor complete, running the server with PostgreSQL is fully supported:
+
+1. Set `database.json` in your data directory with `activeEngine: "postgresql"`:
+
+```json
+{
+  "activeEngine": "postgresql",
+  "engines": {
+    "postgresql": {
+      "host": "localhost",
+      "port": 5432,
+      "username": "kiro",
+      "password": "...",
+      "database": "kiro_db",
+      "ssl": false
+    }
+  }
+}
+```
+
+2. The admin dashboard, KB entries, tags, search, and graph will all use PostgreSQL.
+3. Schema initialization still uses the local SQLite DB via `getAdminDb()` (this is by design — schema is bootstrapped locally).
+
+---
+
+## Schema Init (SQLite-only)
+
+`initSchema` and `seedDefaults` in `schema.ts` still use raw better-sqlite3 via `getAdminDb()`. This is intentional — they run once at startup against the local SQLite DB for default data seeding. They are not called against PostgreSQL.
+
+---
 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| "Use getAsync" error | Code calling sync on PostgresAdapter | Ensure file uses `getAdminDb()` not `getIndexAdapter()` |
-| Empty KB results | `knowledge_entries` table missing | Run server once with SQLite to auto-create schema |
-| Build error "cannot find getIndexAdapter" | Import not updated | Use `import { getAdminDb, logger } from './core.js'` |
+| `Promise { <pending> }` in route response | Forgot `await` on DB call | Add `await` |
+| `Use runAsync` error | Using sync method on PG adapter | Use `runAsync`/`getAsync`/`allAsync` |
+| KB count shows 0 in PostgreSQL mode | Old sync path returning 0 | Fixed in SA4E-50 — uses async adapter |
+| TypeScript error: Property does not exist on type 'never' | TypeScript narrowed type to `never` after `'x' in obj` check | Cast with `(obj as DatabaseAdapter).method()` |
+
+---
+
+## Testing
+
+Run the test suite after upgrading:
+
+```bash
+cd backend
+npx vitest run
+```
+
+Expected: **571 tests pass**, 4 skipped (native addon tests). Zero failures.
+
+TypeScript check:
+
+```bash
+npx tsc --noEmit
+```
+
+Expected: **zero errors**.

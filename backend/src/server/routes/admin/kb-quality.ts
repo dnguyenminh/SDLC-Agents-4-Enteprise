@@ -1,3 +1,8 @@
+/**
+ * KB quality routes — quality scoring and distribution for KB entries.
+ * SA4E-50: All admin-db calls are awaited since they are now async.
+ */
+
 import { Hono } from 'hono';
 import { getKbEntries } from '../../../admin/admin-db.js';
 import type { AdminContext } from './context.js';
@@ -5,10 +10,10 @@ import type { AdminContext } from './context.js';
 export function createKbQualityRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
 
-  app.get('/api/admin/kb/quality', (c) => {
-    const user = ctx.requireAuth(c);
+  app.get('/api/admin/kb/quality', async (c) => {
+    const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = ctx.requirePermission(c, user.userId, 'KB_READ');
+    const permCheck = await ctx.requirePermission(c, user.userId, 'KB_READ');
     if (permCheck instanceof Response) return permCheck;
     const allowedTiers = (permCheck.roleData as any)?.allowedTiers;
     const page = parseInt(c.req.query('page') || '1');
@@ -16,7 +21,7 @@ export function createKbQualityRoutes(ctx: AdminContext): Hono {
     const tierFilter = c.req.query('tier') || undefined;
     const sortBy = c.req.query('sortBy') || 'quality_score';
     const sortDir = (c.req.query('sortDir') || 'desc') as 'asc' | 'desc';
-    const result = getKbEntries(1, 100000, 'created_at', 'desc', ctx.getRequestProjectId(c));
+    const result = await getKbEntries(1, 100000, 'created_at', 'desc', ctx.getRequestProjectId(c));
     let entries = result.items.map((e: any) => ({
       id: e.id || e.entry_id,
       source: e.source || e.title || 'Untitled',

@@ -1,8 +1,14 @@
-import { getAdminDb } from './core.js';
+/**
+ * admin/db/promotion.ts — KB entry promotion cooldown tracking.
+ * SA4E-50: All functions are async; use getAdminAdapter() for multi-DB support.
+ */
 
-function initPromotionCooldownTable(): void {
-  const d = getAdminDb();
-  d.exec(`
+import { getAdminAdapter } from './core.js';
+
+/** Ensure the promotion_cooldowns table exists (lazy-init). */
+async function ensureTable(): Promise<void> {
+  const adapter = getAdminAdapter();
+  await adapter.execAsync(`
     CREATE TABLE IF NOT EXISTS promotion_cooldowns (
       entry_id TEXT NOT NULL,
       cooldown_until TEXT NOT NULL,
@@ -13,20 +19,35 @@ function initPromotionCooldownTable(): void {
   `);
 }
 
-export function setPromotionCooldown(entryId: string, rejectedBy: string): void {
-  const d = getAdminDb();
-  initPromotionCooldownTable();
+/**
+ * Place an entry on a 7-day promotion cooldown after rejection.
+ * @param entryId - KB entry being put on cooldown
+ * @param rejectedBy - Username of the reviewer who rejected
+ */
+export async function setPromotionCooldown(entryId: string, rejectedBy: string): Promise<void> {
+  await ensureTable();
+  const adapter = getAdminAdapter();
   const cooldownUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  d.prepare('INSERT INTO promotion_cooldowns (entry_id, cooldown_until, rejected_at, rejected_by) VALUES (?, ?, ?, ?)').run(
-    entryId, cooldownUntil, new Date().toISOString(), rejectedBy
+  await adapter.runAsync(
+    'INSERT INTO promotion_cooldowns (entry_id, cooldown_until, rejected_at, rejected_by) VALUES (?, ?, ?, ?)',
+    [entryId, cooldownUntil, new Date().toISOString(), rejectedBy],
   );
 }
 
-export function checkPromotionCooldown(entryId: string): { onCooldown: boolean; cooldownUntil?: string } {
-  const d = getAdminDb();
-  initPromotionCooldownTable();
+/**
+ * Check whether an entry is currently on promotion cooldown.
+ * @returns Cooldown status and optional expiry timestamp
+ */
+export async function checkPromotionCooldown(
+  entryId: string,
+): Promise<{ onCooldown: boolean; cooldownUntil?: string }> {
+  await ensureTable();
+  const adapter = getAdminAdapter();
   const now = new Date().toISOString();
-  const row = d.prepare('SELECT cooldown_until FROM promotion_cooldowns WHERE entry_id = ? AND cooldown_until > ? ORDER BY cooldown_until DESC LIMIT 1').get(entryId, now) as any;
+  const row = await adapter.getAsync<{ cooldown_until: string }>(
+    'SELECT cooldown_until FROM promotion_cooldowns WHERE entry_id = ? AND cooldown_until > ? ORDER BY cooldown_until DESC LIMIT 1',
+    [entryId, now],
+  );
   if (row) return { onCooldown: true, cooldownUntil: row.cooldown_until };
   return { onCooldown: false };
 }
