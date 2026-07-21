@@ -19,6 +19,8 @@ import { isFileUnchanged, indexFileSymbolsRegex, upsertFileInDb, upsertFileRegex
 import { FileWatcher } from './file-watcher.js';
 import { IndexScope, resolveScope } from './index-scope.js';
 import { GraphSyncService } from '../graph/graph-sync-service.js';
+import { GraphRepository as AdminGraphRepository } from '../../database/repositories/GraphRepository.js';
+import { getAdminAdapter } from '../../admin/db/core.js';
 
 
 const logger = pino({ name: 'indexing-engine' });
@@ -94,6 +96,8 @@ export class IndexingEngine {
       this.syncGraphNodes(projectId);
       await new Promise<void>(resolve => setImmediate(resolve));
       logSfdxStats(this.adapter, this.config, logger);
+      // Register workspace in project_registry so admin UI can show it in dropdown
+      this.registerWorkspace(projectId, workspace);
       logger.error('[indexer] Full index complete');
     } finally {
       this.indexing.delete(projectId);
@@ -106,6 +110,16 @@ export class IndexingEngine {
       new GraphSyncService(this.adapter, this.adapter, logger).syncProjectSymbols(projectId);
     } catch (err) {
       logger.error({ err }, '[indexer] Graph node sync skipped');
+    }
+  }
+
+  /** Register workspace in project_registry so admin dropdown shows it (non-fatal). */
+  private registerWorkspace(projectId: string, workspace: string): void {
+    try {
+      const repo = new AdminGraphRepository(getAdminAdapter());
+      repo.registerProject(projectId, path.basename(workspace), workspace);
+    } catch (err) {
+      logger.warn({ err }, '[indexer] project_registry upsert skipped (non-fatal)');
     }
   }
 
