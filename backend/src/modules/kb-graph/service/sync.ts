@@ -1,8 +1,7 @@
 /**
  * SA4E-51 — Full sync and bulk node/edge creation for KB Graph.
  * Accepts DatabaseAdapter so writes go to the active engine (SQLite or PostgreSQL).
- * processCodeSymbols still opens index.db via better-sqlite3 (READ only) because
- * symbols/files tables always live in the local SQLite index file.
+ * processCodeSymbols reads symbols via getIndexAdapter() — same engine as the indexer.
  */
 
 import * as fs from 'fs';
@@ -10,7 +9,7 @@ import Database from 'better-sqlite3';
 import type { Logger } from 'pino';
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import { getKbEntries } from '../../../admin/admin-db.js';
-import { getIndexDbPath } from '../../../admin/db/core.js';
+import { getIndexAdapter, getIndexDbPath, getActiveEngine } from '../../../admin/db/core.js';
 import { loadConfig } from '../../../config/index.js';
 import { KIND_TO_TYPE } from './constants.js';
 import { computePositionByIndex } from './nodes.js';
@@ -153,29 +152,58 @@ function readSymbolBatches(
 }
 
 /**
- * Read code symbols from index.db (always local SQLite — READ only).
- * Symbols/files tables are never migrated to PostgreSQL; only graph_nodes/edges are.
+ * Read code symbols from the index adapter — same engine as the indexer wrote to.
+ * Falls back to opening index.db directly only if activeEngine=sqlite (local file).
  */
 function processCodeSymbols(
   allEntries: EntryRow[], sources: Record<string, number>,
   ksaGroupMap: Map<string, number>, groupCounter: { value: number }, logger: Logger,
 ): void {
-  const indexDbPath = getIndexDbPath();
-  if (!fs.existsSync(indexDbPath)) {
-    logger.warn({ indexDbPath }, 'Database not found — skipping code symbols');
-    return;
-  }
-  try {
-    const indexDb = new Database(indexDbPath, { readonly: true });
-    const hasTables = indexDb.prepare(
-      "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name IN ('symbols','files')",
-    ).get() as any;
-    if (hasTables && hasTables.cnt >= 2) {
-      readSymbolBatches(indexDb, allEntries, sources, ksaGroupMap, groupCounter, logger);
+  const engine = getActiveEngine();
+  if (engine === 'sqlite') {
+    // SQLite: open index.db directly for batch reads (avoid adapter overhead)
+    const indexDbPath = getIndexDbPath();
+    if (!fs.existsSync(indexDbPath)) {
+      logger.warn({ indexDbPath }, 'Database not found — skipping code symbols');
+      return;
     }
-    indexDb.close();
+    try {
+      const indexDb = new Database(indexDbPath, { readonly: true });
+      const hasTables = indexDb.prepare(
+        "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name IN ('symbols','files')",
+      ).get() as any;
+      if (hasTables && hasTables.cnt >= 2) {
+        readSymbolBatches(indexDb, allEntries, sources, ksaGroupMap, groupCounter, logger);
+      }
+      indexDb.close();
+    } catch (err: any) {
+      logger.warn({ error: err.message }, 'Failed to read code symbols — skipping');
+    }
+  } else {
+    // PostgreSQL/MySQL: read via adapter (symbols written there by indexer)
+    processCodeSymbolsViaAdapter(allEntries, sources, ksaGroupMap, groupCounter, logger);
+  }
+}
+
+/** Read symbols using DatabaseAdapter (for non-SQLite engines). */
+function processCodeSymbolsViaAdapter(
+  allEntries: EntryRow[], sources: Record<string, number>,
+  ksaGroupMap: Map<string, number>, groupCounter: { value: number }, logger: Logger,
+): void {
+  try {
+    const adapter = getIndexAdapter();
+    const INCLUDE_KINDS = ['function', 'class', 'interface', 'method', 'type', 'enum', 'constructor'];
+    const placeholders = INCLUDE_KINDS.map(() => '?').join(',');
+    const rows = adapter.all<any>(
+      `SELECT s.id, s.name, s.kind, f.path as file_path, f.language
+       FROM symbols s LEFT JOIN files f ON f.id = s.file_id
+       WHERE s.kind IN (${placeholders})`,
+      INCLUDE_KINDS,
+    );
+    for (const sym of rows) processSymbolRow(sym, allEntries, sources, ksaGroupMap, groupCounter);
+    logger.info({ symbolCount: rows.length }, 'Collected code symbols via adapter');
   } catch (err: any) {
-    logger.warn({ error: err.message }, 'Failed to read code symbols from database — skipping');
+    logger.warn({ error: err.message }, 'Failed to read code symbols via adapter — skipping');
   }
 }
 
