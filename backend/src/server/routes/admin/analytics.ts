@@ -8,7 +8,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { loadConfig, getWorkspacePath } from '../../../config/index.js';
 import {
-  getAdminDb,
   getKbEntries,
   getKbEntryCount,
   getKbEmbeddings,
@@ -16,7 +15,6 @@ import {
   getQueryLogs,
   getRecentActivity,
 } from '../../../admin/admin-db.js';
-import { getIndexAdapter } from '../../../admin/db/core.js';
 import { formatUptime, formatBytes } from './utils.js';
 import type { AdminContext } from './context.js';
 
@@ -30,8 +28,7 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
     if (permCheck instanceof Response) return permCheck;
     const kbPerm = ctx.checkPermission(user.userId, 'KB_READ');
     const allowedTiers = (kbPerm.roleData as { allowedTiers?: string[] })?.allowedTiers;
-    const d = getAdminDb();
-    const userCount = (d.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number }).cnt;
+    const userCount = ctx.db.user.getUserCount();
     const cfg = loadConfig();
     const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
     let mcpCount = 0;
@@ -50,23 +47,14 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
     const recentActivity = getRecentActivity(10);
     let codeSymbols = 0;
     try {
-      const adapter = getIndexAdapter();
-      const row = adapter.get<{ cnt: number }>(
-        "SELECT COUNT(*) as cnt FROM symbols WHERE kind IN ('function','class','interface','method','type','enum','constructor')"
-      );
-      codeSymbols = row?.cnt || 0;
+      codeSymbols = ctx.db.symbol.getSymbolCount();
     } catch { ctx.logger.warn({ context: 'dashboard' }, 'Failed to read code symbols count from index.db'); }
     let graphTotalNodes = 0, graphKbNodes = 0, graphCodeNodes = 0;
     try {
-      graphTotalNodes = (d.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ?').get(currentProjectId) as { cnt: number }).cnt || 0;
-      graphCodeNodes = (d.prepare("SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? AND type IN ('FUNCTION','METHOD','CLASS','INTERFACE','TYPE','CONSTRUCTOR','ENUM','CONSTANT','VARIABLE')").get(currentProjectId) as { cnt: number }).cnt || 0;
-      graphKbNodes = graphTotalNodes - graphCodeNodes;
-      // SA4E-49: If scoped graph_nodes count is 0, fall back to include NULL project_id
-      if (graphTotalNodes === 0) {
-        graphTotalNodes = (d.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? OR project_id IS NULL').get(currentProjectId) as { cnt: number }).cnt || 0;
-        graphCodeNodes = (d.prepare("SELECT COUNT(*) as cnt FROM graph_nodes WHERE (project_id = ? OR project_id IS NULL) AND type IN ('FUNCTION','METHOD','CLASS','INTERFACE','TYPE','CONSTRUCTOR','ENUM','CONSTANT','VARIABLE')").get(currentProjectId) as { cnt: number }).cnt || 0;
-        graphKbNodes = graphTotalNodes - graphCodeNodes;
-      }
+      const counts = ctx.db.graph.getNodeCounts(currentProjectId);
+      graphTotalNodes = counts.total;
+      graphCodeNodes = counts.code;
+      graphKbNodes = counts.kb;
     } catch { ctx.logger.warn({ context: 'dashboard' }, 'Failed to query graph node counts from database'); }
     // SA4E-31: report project-scoped graph counts, not the unfiltered index.db composite.
     return c.json({

@@ -12,7 +12,6 @@ import {
   recordAudit,
   getGroupById,
   getGroupPermissionIds,
-  getAdminDb,
 } from '../../../admin/admin-db.js';
 import type { AdminContext } from './context.js';
 
@@ -65,8 +64,7 @@ export function createUsersRoutes(ctx: AdminContext): Hono {
     if (user instanceof Response) return user;
     const { email } = await c.req.json();
     if (email !== undefined) {
-      const d = getAdminDb();
-      d.prepare('UPDATE users SET email = ? WHERE user_id = ?').run(email, user.userId);
+      ctx.db.user.updateEmail(user.userId, email);
       recordAudit(user.userId, user.username, 'UPDATE_PROFILE', 'users', user.userId, JSON.stringify({ email }));
     }
     const dbUser = getUserById(user.userId);

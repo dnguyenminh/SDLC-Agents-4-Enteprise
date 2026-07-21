@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { getAdminDb, getKbEntryCount } from '../../../admin/admin-db.js';
+import { getKbEntryCount } from '../../../admin/admin-db.js';
 import { formatUptime, formatBytes } from './utils.js';
 import type { AdminContext } from './context.js';
 
@@ -17,8 +17,7 @@ export function createSseRoutes(ctx: AdminContext): Hono {
     const buildStats = () => {
       const uptimeMs = Date.now() - ctx.SERVER_START_TIME;
       const mem = process.memoryUsage();
-      const d = getAdminDb();
-      const userCount = (d.prepare('SELECT COUNT(*) as cnt FROM users').get() as any).cnt;
+      const userCount = ctx.db.user.getUserCount();
       const kbCount = getKbEntryCount(ctx.getRequestProjectId(c));
       return JSON.stringify({
         kbEntries: kbCount, users: userCount,

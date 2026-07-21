@@ -5,7 +5,6 @@ import {
   createGroup,
   updateGroup,
   deleteGroup,
-  getAdminDb,
   recordAudit,
 } from '../../../admin/admin-db.js';
 import type { AdminContext } from './context.js';
@@ -19,12 +18,10 @@ export function createRbacRoutes(ctx: AdminContext): Hono {
     const permCheck = ctx.requirePermission(c, user.userId, 'RBAC_MANAGE');
     if (permCheck instanceof Response) return permCheck;
     const groups = getGroups();
-    const d = getAdminDb();
-    const countStmt = d.prepare('SELECT COUNT(*) as cnt FROM users WHERE access_group_id = ?');
     const result = groups.map(g => ({
       ...g, id: g.accessGroupId, name: g.accessGroupName,
       isSystem: g.isSystemGroup,
-      userCount: (countStmt.get(g.accessGroupId) as any).cnt,
+      userCount: ctx.db.user.getUserCountByGroup(g.accessGroupId),
       permissions: g.permissions.map(p => ({ name: p.permissionId, roleData: p.roleData })),
     }));
     return c.json({ groups: result });

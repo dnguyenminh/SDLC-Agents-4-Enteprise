@@ -87,8 +87,7 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     c.header('Content-Type', 'application/json');
     setImmediate(async () => {
       try {
-        const db = (await import('../../../admin/admin-db.js')).getAdminDb();
-        db.exec('DELETE FROM graph_nodes; DELETE FROM graph_edges;');
+        ctx.db.graph.resetGraph();
         await graphService.fullSync();
       } catch (err: any) { ctx.logger.error({ error: err.message }, 'Graph sync failed'); }
     });

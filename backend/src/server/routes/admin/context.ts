@@ -5,10 +5,14 @@ import {
   getUserById,
 } from '../../../admin/admin-db.js';
 import { loadConfig } from '../../../config/index.js';
+import { DatabaseManager } from '../../../database/DatabaseManager.js';
+import { getAdminAdapter, getIndexAdapter } from '../../../admin/db/core.js';
 
 export interface AdminContext {
   logger: Logger;
   registry?: any;
+  /** SA4E-50: Typed repository access via DatabaseManager facade. */
+  db: DatabaseManager;
   authenticate: (c: any) => any;
   requireAuth: (c: any) => any;
   checkPermission: (userId: string, requiredPermission: string) => { has: boolean; roleData: Record<string, unknown> };
@@ -72,9 +76,13 @@ export function createAdminContext(logger: Logger, registry?: any): AdminContext
     return loadConfig().projectId;
   };
 
+  // SA4E-50: Wire DatabaseManager with pre-resolved adapters
+  const db = DatabaseManager.createDefault(getAdminAdapter(), getIndexAdapter());
+
   return {
     logger,
     registry,
+    db,
     authenticate,
     requireAuth,
     checkPermission,

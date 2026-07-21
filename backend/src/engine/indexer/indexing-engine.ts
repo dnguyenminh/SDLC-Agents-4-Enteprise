@@ -19,8 +19,7 @@ import { isFileUnchanged, indexFileSymbolsRegex, upsertFileInDb, upsertFileRegex
 import { FileWatcher } from './file-watcher.js';
 import { IndexScope, resolveScope } from './index-scope.js';
 import { GraphSyncService } from '../graph/graph-sync-service.js';
-import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
-import { getAdminDb } from '../../admin/admin-db.js';
+
 
 const logger = pino({ name: 'indexing-engine' });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -101,11 +100,10 @@ export class IndexingEngine {
     }
   }
 
-  /** Project this tenant's code symbols into admin.db graph_nodes (non-fatal). */
+  /** Project this tenant's code symbols into graph_nodes in index DB (non-fatal). */
   private syncGraphNodes(projectId: string): void {
     try {
-      const adminDb = getAdminDb();
-      new GraphSyncService(this.adapter, new SqliteDbAdapter(adminDb), logger).syncProjectSymbols(projectId);
+      new GraphSyncService(this.adapter, this.adapter, logger).syncProjectSymbols(projectId);
     } catch (err) {
       logger.error({ err }, '[indexer] Graph node sync skipped');
     }
