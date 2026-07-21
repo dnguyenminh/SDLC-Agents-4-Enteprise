@@ -22,6 +22,7 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
     try { kbCount = getKbEntryCount(ctx.getRequestProjectId(c)); } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to get KB entry count'); }
     try {
       // SA4E-41: count only the requesting tenant's code symbols (fail-closed).
+      // SA4E-49: Fall back to include NULL project_id entries (legacy/unscoped symbols).
       const pid = ctx.getRequestProjectId(c);
       if (pid) {
         const adapter = getIndexAdapter();
@@ -30,6 +31,14 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
           [pid]
         );
         codeCount = row?.cnt || 0;
+        // SA4E-49: If scoped count is 0, try including NULL project_id entries
+        if (codeCount === 0) {
+          const fallbackRow = adapter.get<{ cnt: number }>(
+            "SELECT COUNT(*) as cnt FROM symbols WHERE (project_id = ? OR project_id IS NULL) AND kind IN ('function','class','interface','method','type','enum','constructor')",
+            [pid]
+          );
+          codeCount = fallbackRow?.cnt || 0;
+        }
       }
     } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to count code symbols'); }
     const graphService = (globalThis as Record<string, unknown>).__sqliteGraphService as { ready?: boolean; getAllPositions?: (projectId?: string) => any } | undefined;

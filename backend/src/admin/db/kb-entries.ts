@@ -42,7 +42,13 @@ export function getKbEntryCount(projectId?: string, userId?: string): number {
         `SELECT COUNT(*) as cnt FROM knowledge_entries WHERE ${filter.clause}`,
         filter.params as unknown[]
       );
-      return row?.cnt ?? 0;
+      const scopedCount = row?.cnt ?? 0;
+      // SA4E-49: If scoped count is 0, fall back to project_id match or total count.
+      // Entries may lack scope column or kb_shared_grants may be missing.
+      if (scopedCount === 0) {
+        return getUnfilteredKbEntryCount(adapter, projectId);
+      }
+      return scopedCount;
     }
     const row = adapter.get<{ cnt: number }>(
       'SELECT COUNT(*) as cnt FROM knowledge_entries'
@@ -52,6 +58,31 @@ export function getKbEntryCount(projectId?: string, userId?: string): number {
     logger.error({ err }, 'Error in getKbEntryCount');
     return 0;
   }
+}
+
+/**
+ * SA4E-49: Fallback count when scope-based filter returns 0.
+ * Tries project_id match first, then total count as last resort.
+ * Admin views need accurate counts even if scope metadata is incomplete.
+ */
+function getUnfilteredKbEntryCount(
+  adapter: ReturnType<typeof getIndexAdapter>,
+  projectId?: string,
+): number {
+  // Try counting by project_id direct match (includes NULL project_id for legacy entries)
+  if (projectId) {
+    const row = adapter.get<{ cnt: number }>(
+      'SELECT COUNT(*) as cnt FROM knowledge_entries WHERE project_id = ? OR project_id IS NULL',
+      [projectId]
+    );
+    const count = row?.cnt ?? 0;
+    if (count > 0) return count;
+  }
+  // Last resort: total unfiltered count
+  const row = adapter.get<{ cnt: number }>(
+    'SELECT COUNT(*) as cnt FROM knowledge_entries'
+  );
+  return row?.cnt ?? 0;
 }
 
 export function getKbEntries(

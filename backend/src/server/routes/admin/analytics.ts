@@ -61,6 +61,12 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
       graphTotalNodes = (d.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ?').get(currentProjectId) as { cnt: number }).cnt || 0;
       graphCodeNodes = (d.prepare("SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? AND type IN ('FUNCTION','METHOD','CLASS','INTERFACE','TYPE','CONSTRUCTOR','ENUM','CONSTANT','VARIABLE')").get(currentProjectId) as { cnt: number }).cnt || 0;
       graphKbNodes = graphTotalNodes - graphCodeNodes;
+      // SA4E-49: If scoped graph_nodes count is 0, fall back to include NULL project_id
+      if (graphTotalNodes === 0) {
+        graphTotalNodes = (d.prepare('SELECT COUNT(*) as cnt FROM graph_nodes WHERE project_id = ? OR project_id IS NULL').get(currentProjectId) as { cnt: number }).cnt || 0;
+        graphCodeNodes = (d.prepare("SELECT COUNT(*) as cnt FROM graph_nodes WHERE (project_id = ? OR project_id IS NULL) AND type IN ('FUNCTION','METHOD','CLASS','INTERFACE','TYPE','CONSTRUCTOR','ENUM','CONSTANT','VARIABLE')").get(currentProjectId) as { cnt: number }).cnt || 0;
+        graphKbNodes = graphTotalNodes - graphCodeNodes;
+      }
     } catch { ctx.logger.warn({ context: 'dashboard' }, 'Failed to query graph node counts from database'); }
     // SA4E-31: report project-scoped graph counts, not the unfiltered index.db composite.
     return c.json({
