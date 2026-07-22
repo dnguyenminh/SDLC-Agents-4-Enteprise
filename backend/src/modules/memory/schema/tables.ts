@@ -111,43 +111,12 @@ CREATE TABLE IF NOT EXISTS conversation_turns (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS entity_index (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  entry_id INTEGER NOT NULL,
-  entity_name TEXT NOT NULL,
-  entity_type TEXT NOT NULL,
-  FOREIGN KEY (entry_id) REFERENCES knowledge_entries(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS agent_scope_config (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  agent_role TEXT NOT NULL UNIQUE,
-  tag_set TEXT NOT NULL DEFAULT '[]',
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
 CREATE TABLE IF NOT EXISTS quality_scores (
   entry_id INTEGER PRIMARY KEY,
   total_score INTEGER NOT NULL DEFAULT 0,
   dimensions TEXT NOT NULL DEFAULT '{}',
   scored_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (entry_id) REFERENCES knowledge_entries(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS tags (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  category TEXT DEFAULT NULL,
-  parent_tag TEXT DEFAULT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS entry_tags (
-  entry_id INTEGER NOT NULL,
-  tag_id INTEGER NOT NULL,
-  PRIMARY KEY (entry_id, tag_id),
-  FOREIGN KEY (entry_id) REFERENCES knowledge_entries(id) ON DELETE CASCADE,
-  FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS citations (
@@ -160,58 +129,11 @@ CREATE TABLE IF NOT EXISTS citations (
   UNIQUE(entry_id, cited_by, context)
 );
 
-CREATE TABLE IF NOT EXISTS attachments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  entry_id INTEGER NOT NULL,
-  file_path TEXT NOT NULL,
-  file_name TEXT NOT NULL,
-  mime_type TEXT NOT NULL DEFAULT 'application/octet-stream',
-  description TEXT DEFAULT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (entry_id) REFERENCES knowledge_entries(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS templates (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  type TEXT NOT NULL,
-  required_sections TEXT NOT NULL DEFAULT '[]',
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS feedback (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  entry_id INTEGER NOT NULL,
-  rating INTEGER NOT NULL,
-  comment TEXT DEFAULT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (entry_id) REFERENCES knowledge_entries(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS reminders (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  entry_id INTEGER NOT NULL,
-  assignee TEXT DEFAULT NULL,
-  interval_days INTEGER NOT NULL DEFAULT 90,
-  next_due TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  snoozed_until TEXT DEFAULT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (entry_id) REFERENCES knowledge_entries(id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS search_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   query TEXT NOT NULL,
   result_count INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE TABLE IF NOT EXISTS popular_queries (
-  query TEXT PRIMARY KEY,
-  hit_count INTEGER NOT NULL DEFAULT 1,
-  avg_results REAL NOT NULL DEFAULT 0,
-  last_searched TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS kb_shared_grants (

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Admin analytics routes — dashboard stats and analytics.
  * SA4E-50: All admin-db calls are awaited since they are now async.
  */
@@ -24,7 +24,7 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
     if (permCheck instanceof Response) return permCheck;
     const kbPerm = await ctx.checkPermission(user.userId, 'KB_READ');
     const allowedTiers = (kbPerm.roleData as { allowedTiers?: string[] })?.allowedTiers;
-    const userCount = ctx.db.user.getUserCount();
+    const userCount = await ctx.db.user.getUserCount();
     const cfg = loadConfig();
     const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
     let mcpCount = 0;
@@ -42,15 +42,15 @@ export function createAnalyticsRoutes(ctx: AdminContext): Hono {
     const mem = process.memoryUsage();
     const recentActivity = await getRecentActivity(10);
     let codeSymbols = 0;
-    try { codeSymbols = ctx.db.symbol.getSymbolCount(); }
+    try { codeSymbols = await ctx.db.symbol.getSymbolCount(); }
     catch { ctx.logger.warn({ context: 'dashboard' }, 'Failed to read code symbols count from index.db'); }
     let graphTotalNodes = 0, graphKbNodes = 0, graphCodeNodes = 0;
     try {
-      const counts = ctx.db.graph.getNodeCounts(currentProjectId);
+      const counts = await ctx.db.graph.getNodeCounts(currentProjectId);
       graphTotalNodes = counts.total; graphCodeNodes = counts.code; graphKbNodes = counts.kb;
     } catch { ctx.logger.warn({ context: 'dashboard' }, 'Failed to query graph node counts from database'); }
     return c.json({
-      kbEntries, codeSymbols: graphCodeNodes,
+      kbEntries, codeSymbols,
       graphTotalNodes, graphKbNodes, graphCodeNodes,
       users: userCount, mcpServers: mcpCount,
       uptime: { ms: uptimeMs, formatted: formatUptime(uptimeMs) },

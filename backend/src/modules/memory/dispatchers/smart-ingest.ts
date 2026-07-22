@@ -50,20 +50,21 @@ function truncateMessage(message: string): string {
 
 // ─── Duplicate Detection ────────────────────────────────────────────
 
-function isDuplicate(engine: MemoryEngine, content: string): boolean {
+async function isDuplicate(engine: MemoryEngine, content: string): Promise<boolean> {
   const hash = content.slice(0, 500);
-  const rows = (engine.getDb() as any).prepare(
+  const rows = await engine.getAdapter().allAsync<{ id: number }>(
     `SELECT id FROM knowledge_entries WHERE content = ? AND source = '/chat-prompt' LIMIT 1`,
-  ).all(hash);
+    [hash],
+  );
   return rows.length > 0;
 }
 
 // ─── Ingest Helpers ─────────────────────────────────────────────────
 
-function ingestWithSummary(
+async function ingestWithSummary(
   engine: MemoryEngine, scopeCtx: ScopeContext | undefined, summary: string,
-): number {
-  return engine.insert({
+): Promise<number> {
+  return await engine.insert({
     content: summary.slice(0, MAX_SUMMARY_LENGTH),
     summary: summary.slice(0, MAX_SUMMARY_LENGTH),
     type: 'CONTEXT',
@@ -76,10 +77,10 @@ function ingestWithSummary(
   });
 }
 
-function ingestUnfiltered(
+async function ingestUnfiltered(
   engine: MemoryEngine, scopeCtx: ScopeContext | undefined, message: string,
-): number {
-  return engine.insert({
+): Promise<number> {
+  return await engine.insert({
     content: message.slice(0, MAX_FALLBACK_LENGTH),
     summary: message.slice(0, 120),
     type: 'CONTEXT',
@@ -106,16 +107,18 @@ async function processCleanupEntry(
     if (!dryRun) {
       const newTags = entry.tags.replace(/\bunfiltered\b/, 'smart-ingest').replace(/,,/g, ',');
       const summary = result.summary || entry.content.slice(0, MAX_SUMMARY_LENGTH);
-      (engine.getDb() as any).prepare(
-        `UPDATE knowledge_entries SET content = ?, summary = ?, tags = ?, updated_at = datetime('now') WHERE id = ?`,
-      ).run(summary, summary, newTags.replace(/^,|,$/g, ''), entry.id);
+      const dialect = engine.getDialect();
+      await engine.getAdapter().runAsync(
+        `UPDATE knowledge_entries SET content = ?, summary = ?, tags = ?, updated_at = ${dialect.now()} WHERE id = ?`,
+        [summary, summary, newTags.replace(/^,|,$/g, ''), entry.id],
+      );
     }
     return 'ingested';
   }
 
   if (!dryRun) {
-    engine.deleteEntry(entry.id);
-    engine.auditLog('SMART_CLEANUP_DELETE', entry.id);
+    await engine.deleteEntry(entry.id);
+    await engine.auditLog('SMART_CLEANUP_DELETE', entry.id);
   }
   return 'deleted';
 }
@@ -135,7 +138,7 @@ export async function handleSmartIngest(
     const message = truncateMessage(args.message as string);
 
     if (!classifyService || !(await classifyService.isAvailable())) {
-      ingestUnfiltered(engine, scopeCtx, message);
+      await ingestUnfiltered(engine, scopeCtx, message);
       return JSON.stringify({ action: 'ingest_unfiltered', reason: 'llm_unavailable' });
     }
 
@@ -143,7 +146,7 @@ export async function handleSmartIngest(
     try {
       result = await classifyService.classify(message);
     } catch {
-      ingestUnfiltered(engine, scopeCtx, message);
+      await ingestUnfiltered(engine, scopeCtx, message);
       return JSON.stringify({ action: 'ingest_unfiltered', reason: 'llm_parse_error' });
     }
 
@@ -152,11 +155,11 @@ export async function handleSmartIngest(
     }
 
     const summary = result.summary || message.slice(0, MAX_SUMMARY_LENGTH);
-    if (isDuplicate(engine, summary)) {
+    if (await isDuplicate(engine, summary)) {
       return JSON.stringify({ action: 'skip', reason: 'duplicate' });
     }
 
-    ingestWithSummary(engine, scopeCtx, summary);
+    await ingestWithSummary(engine, scopeCtx, summary);
     return JSON.stringify({ action: 'ingest', summary });
   } catch {
     return JSON.stringify({ action: 'error', reason: 'ingest_failed' });
@@ -177,9 +180,10 @@ export async function handleSmartIngestCleanup(
     const batchSize = Math.min(MAX_BATCH_SIZE, Math.max(1, Number(args.batch_size) || DEFAULT_BATCH_SIZE));
     const dryRun = Boolean(args.dry_run);
 
-    const entries = (engine.getDb() as any).prepare(
+    const entries = await engine.getAdapter().allAsync<KnowledgeEntry>(
       `SELECT * FROM knowledge_entries WHERE tags LIKE '%unfiltered%' ORDER BY created_at ASC LIMIT ?`,
-    ).all(batchSize) as KnowledgeEntry[];
+      [batchSize],
+    );
 
     let ingested = 0;
     let deleted = 0;
@@ -192,7 +196,7 @@ export async function handleSmartIngestCleanup(
         processed++;
       } catch {
         // LLM failed mid-batch — stop processing
-        const remaining = countUnfiltered(engine);
+        const remaining = await countUnfiltered(engine);
         return JSON.stringify({
           processed, ingested, deleted, remaining,
           dry_run: dryRun, reason: 'llm_unavailable_mid_batch',
@@ -200,7 +204,7 @@ export async function handleSmartIngestCleanup(
       }
     }
 
-    const remaining = countUnfiltered(engine);
+    const remaining = await countUnfiltered(engine);
     return JSON.stringify({
       processed, ingested, deleted, remaining, dry_run: dryRun,
     } satisfies CleanupResult);
@@ -209,9 +213,11 @@ export async function handleSmartIngestCleanup(
   }
 }
 
-function countUnfiltered(engine: MemoryEngine): number {
-  const row = (engine.getDb() as any).prepare(
+async function countUnfiltered(engine: MemoryEngine): Promise<number> {
+  const row = await engine.getAdapter().getAsync<{ cnt: number }>(
     `SELECT COUNT(*) as cnt FROM knowledge_entries WHERE tags LIKE '%unfiltered%'`,
-  ).get() as { cnt: number };
-  return row.cnt;
+  );
+  return row?.cnt ?? 0;
 }
+
+

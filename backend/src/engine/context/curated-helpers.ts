@@ -1,4 +1,4 @@
-import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+﻿import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { GraphTraverser } from '../graph/traverser.js';
 import { QueryLayer } from '../query/query-layer.js';
@@ -13,11 +13,11 @@ export async function searchCode(
   projectId?: string
 ): Promise<{ source: string; results: any[] }> {
   try {
-    const ftsResults = queryLayer.searchCode(projectId, analysis.ftsQuery, 30);
+    const ftsResults = await queryLayer.searchCode(projectId, analysis.ftsQuery, 30);
 
     const symbolResults: any[] = [];
     for (const candidate of analysis.symbolCandidates.slice(0, 5)) {
-      const resolved = resolver.resolve(candidate);
+      const resolved = await resolver.resolve(candidate);
       for (const sym of resolved.slice(0, 3)) {
         symbolResults.push({
           id: sym.id, name: sym.name, kind: sym.kind,
@@ -50,7 +50,7 @@ export async function searchMemory(
     if (!projectId) return { source: 'memory', results: [] };
     const query = analysis.keywords.slice(0, 5).join(' ');
     // Scope KB results to the tenant's project_id (mirrors the memory IsolationLayer).
-    const rows = db.prepare(`
+    const rows = await db.allAsync<any>(`
       SELECT id, content, summary, type, tags, created_at
       FROM knowledge_entries
       WHERE project_id = ?
@@ -59,7 +59,7 @@ export async function searchMemory(
         )
       ORDER BY created_at DESC
       LIMIT 10
-    `).all(projectId, query) as any[];
+    `, [projectId, query]);
 
     return {
       source: 'memory',
@@ -82,10 +82,10 @@ export async function expandGraph(topSymbols: any[], traverser: GraphTraverser):
 
   for (const symbol of topSymbols) {
     try {
-      const startNode = traverser.resolveNode(symbol.name);
+      const startNode = await traverser.resolveNode(symbol.name);
       if (!startNode) continue;
 
-      const results = traverser.traverse(startNode, {
+      const results = await traverser.traverse(startNode, {
         edgeTypes: ['calls', 'imports', 'inherits'],
         nodeTypes: [],
         direction: 'both',

@@ -6,8 +6,9 @@
 
 import * as vscode from "vscode";
 import { WebviewToExtMessage } from "../types";
-import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
 import { BasePanel } from "./base-panel";
+import { openFileAndReveal } from "../utils/panel-utils";
 
 interface ImpactResult {
   symbol: string;
@@ -20,35 +21,20 @@ interface ImpactResult {
 export class ImpactPanel extends BasePanel {
   private currentSymbol = "";
 
-  constructor(mcpManager: McpServerManager, extensionUri: vscode.Uri) {
-    super("analytics", mcpManager, extensionUri);
+  constructor(mcpManager: IServerManager, extensionUri: vscode.Uri) {
+    super("impact", mcpManager, extensionUri);
   }
 
-  get viewType(): string {
-    return "kiroImpactPanel";
-  }
-
-  protected create(column: vscode.ViewColumn = vscode.ViewColumn.One): void {
-    this._panel = vscode.window.createWebviewPanel(
-      "kiroImpactPanel",
-      "Impact Analysis",
-      column,
-      { enableScripts: true, retainContextWhenHidden: true }
-    );
-    this._panel.webview.html = this.getHtml(this._panel.webview);
-    this._panel.webview.onDidReceiveMessage((msg: WebviewToExtMessage) => this.handleMessage(msg));
-    this._panel.onDidDispose(() => { this._panel = undefined; });
-  }
+  /** viewType is now derived from PANEL_VIEW_TYPES["impact"] — no override needed. */
 
   setSymbol(symbol: string): void {
     this.currentSymbol = symbol;
   }
 
-  getHtml(_webview: vscode.Webview): string {
+  getHtml(webview: vscode.Webview): string {
     const nonce = this.getNonce();
-    return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
+    // Body content with embedded styles — getBaseHtml provides CSP/nonce wrapper
+    const bodyContent = `
 <style>
 body{font-family:var(--vscode-font-family);padding:16px;color:var(--vscode-foreground);background:var(--vscode-editor-background)}
 .section{margin-bottom:16px}.section-title{font-weight:bold;margin-bottom:8px;font-size:1.1em}
@@ -57,7 +43,7 @@ body{font-family:var(--vscode-font-family);padding:16px;color:var(--vscode-foreg
 .summary{display:flex;gap:16px;margin-bottom:16px;padding:12px;background:var(--vscode-editor-inactiveSelectionBackground);border-radius:4px}
 .stat{text-align:center}.stat-value{font-size:1.5em;font-weight:bold}.stat-label{font-size:.8em;opacity:.7}
 .loading{text-align:center;padding:40px;opacity:.7}
-</style></head><body>
+</style>
 <h2>Impact Analysis</h2>
 <div id="loading" class="loading">Analyzing impact...</div>
 <div id="content" style="display:none">
@@ -85,7 +71,10 @@ data.tests.forEach(t=>{h+='<div class="item" data-file="'+t.file+'" data-line="'
 document.getElementById('sections').innerHTML=h||'<p>No impact detected.</p>';
 document.querySelectorAll('.item').forEach(el=>{el.addEventListener('click',()=>{
 vscode.postMessage({type:'openFile',file:el.dataset.file,line:parseInt(el.dataset.line)});});});}
-</script></body></html>`;
+</script>`;
+
+    // Delegate CSP/nonce wrapper to shared getBaseHtml (no external assets needed)
+    return this.getBaseHtml(webview, bodyContent, [], []);
   }
 
   async loadData(): Promise<void> {
@@ -106,7 +95,11 @@ vscode.postMessage({type:'openFile',file:el.dataset.file,line:parseInt(el.datase
         await this.loadData();
         break;
       case "manualRetry":
-        try { await this.mcpManager.reconnect(); } catch { /* ignore */ }
+        try {
+          await (this.mcpManager.reconnect?.() ?? this.mcpManager.restart());
+        } catch (err) {
+          console.debug(`[ImpactPanel] reconnect failed (non-fatal): ${(err as Error).message}`);
+        }
         break;
       default:
         await this.handleOpenFile(msg as any);
@@ -117,25 +110,27 @@ vscode.postMessage({type:'openFile',file:el.dataset.file,line:parseInt(el.datase
   private async handleOpenFile(msg: { type: string; file?: string; line?: number }): Promise<void> {
     if (msg.type !== "openFile" || !msg.file) { return; }
     try {
-      const doc = await vscode.workspace.openTextDocument(msg.file);
-      const editor = await vscode.window.showTextDocument(doc);
-      const pos = new vscode.Position(Math.max(0, (msg.line || 1) - 1), 0);
-      editor.selection = new vscode.Selection(pos, pos);
-      editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
-    } catch { /* file may not exist */ }
+      await openFileAndReveal(msg.file, msg.line || 1);
+    } catch (err) {
+      console.debug(`[ImpactPanel] openFileAndReveal failed (non-fatal): ${(err as Error).message}`);
+    }
   }
 
   private parseImpact(raw: string): ImpactResult {
+    // Pass arrays directly to avoid JSON.stringify -> JSON.parse round-trip.
     try {
       const parsed = JSON.parse(raw);
       return {
         symbol: this.currentSymbol,
-        affectedFiles: parsed.affectedFiles || parsed.files || [],
-        callers: parsed.callers || parsed.references || [],
-        tests: parsed.tests || [],
+        affectedFiles: Array.isArray(parsed.affectedFiles) ? parsed.affectedFiles :
+                       Array.isArray(parsed.files) ? parsed.files : [],
+        callers: Array.isArray(parsed.callers) ? parsed.callers :
+                 Array.isArray(parsed.references) ? parsed.references : [],
+        tests: Array.isArray(parsed.tests) ? parsed.tests : [],
         totalImpact: parsed.totalImpact || 0,
       };
-    } catch {
+    } catch (err) {
+      console.debug(`[ImpactPanel] parseImpact failed (non-fatal): ${(err as Error).message}`);
       return { symbol: this.currentSymbol, affectedFiles: [], callers: [], tests: [], totalImpact: 0 };
     }
   }
@@ -144,7 +139,7 @@ vscode.postMessage({type:'openFile',file:el.dataset.file,line:parseInt(el.datase
 /**
  * Show impact analysis command — prompts user for symbol, then opens panel.
  */
-export async function showImpactAnalysis(mcpManager: McpServerManager, extensionUri: vscode.Uri): Promise<void> {
+export async function showImpactAnalysis(mcpManager: IServerManager, extensionUri: vscode.Uri): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   let defaultSymbol = "";
 

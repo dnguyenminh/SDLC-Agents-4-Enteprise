@@ -78,17 +78,17 @@ describe('SA4E-41 SEC-01 graph tool isolation (two tenants)', () => {
     expect(new SymbolResolver(new SqliteDbAdapter(db), PID_B).resolve('callerBravo').length).toBe(1);
   });
 
-  it('GraphRepository.findCallers of a shared symbol is tenant-scoped', () => {
-    const callersB = new GraphRepository(new SqliteDbAdapter(db), PID_B).findCallers('sharedFn');
+  it('GraphRepository.findCallers of a shared symbol is tenant-scoped', async () => {
+    const callersB = await new GraphRepository(new SqliteDbAdapter(db), PID_B).findCallers('sharedFn');
     expect(callersB.map(c => c.name)).toEqual(['callerBravo']);
-    const callersA = new GraphRepository(new SqliteDbAdapter(db), PID_A).findCallers('sharedFn');
+    const callersA = await new GraphRepository(new SqliteDbAdapter(db), PID_A).findCallers('sharedFn');
     expect(callersA.map(c => c.name)).toEqual(['callerAlpha']);
   });
 
-  it('CallGraphService.findCallers does not leak across tenants', () => {
+  it('CallGraphService.findCallers does not leak across tenants', async () => {
     const repoB = new GraphRepository(new SqliteDbAdapter(db), PID_B);
     const svcB = new CallGraphService(repoB, new SymbolResolver(new SqliteDbAdapter(db), PID_B));
-    const res = svcB.findCallers('sharedFn', 1, 20);
+    const res = await svcB.findCallers('sharedFn', 1, 20);
     expect(res.results.every(r => r.symbol !== 'callerAlpha')).toBe(true);
     expect(res.results.some(r => r.symbol === 'callerBravo')).toBe(true);
   });
@@ -118,9 +118,9 @@ describe('SA4E-41 SEC-01 graph tool isolation (two tenants)', () => {
     expect(edgeCount(new GraphLoader(new SqliteDbAdapter(db), PID_A).loadCallGraph())).toBe(1);
   });
 
-  it('fail-closed: undefined projectId yields no graph data', () => {
+  it('fail-closed: undefined projectId yields no graph data', async () => {
     expect(new SymbolResolver(new SqliteDbAdapter(db), undefined).resolve('sharedFn').length).toBe(0);
-    expect(new GraphRepository(new SqliteDbAdapter(db), undefined).findCallers('sharedFn').length).toBe(0);
+    expect((await new GraphRepository(new SqliteDbAdapter(db), undefined).findCallers('sharedFn')).length).toBe(0);
     expect([...new GraphLoader(new SqliteDbAdapter(db), undefined).loadCallGraph().values()].length).toBe(0);
   });
 });

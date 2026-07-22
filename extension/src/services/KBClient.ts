@@ -1,10 +1,10 @@
 /**
  * KBClient — REST API client for Knowledge Base backend.
  * SA4E-30: Replaces MCP tool calls with direct REST API calls.
- * Uses AuthManager for JWT token management.
+ * Uses IAuthManager (DIP) for JWT token management.
  */
 
-import type { AuthManager } from '../auth/AuthManager';
+import type { IAuthManager } from '../types/server-types';
 
 export interface SearchParams {
   query: string;
@@ -45,7 +45,7 @@ export class KBClientError extends Error {
 export class KBClient {
   constructor(
     private baseUrl: string,
-    private authManager: AuthManager,
+    private authManager: IAuthManager,
   ) {}
 
   async search(params: SearchParams): Promise<any> {

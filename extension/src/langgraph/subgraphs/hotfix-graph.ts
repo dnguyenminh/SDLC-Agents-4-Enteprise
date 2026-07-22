@@ -44,8 +44,8 @@ export async function buildHotfixSubgraph(
             ],
             { temperature: 0.3, maxTokens: 1024 }
           );
-        } catch {
-          // Use basic analysis if LLM fails
+        } catch (err) {
+          console.debug(`[HotfixGraph] LLM analysis failed, using basic analysis (non-fatal): ${(err as Error).message}`);
         }
       }
 
@@ -90,3 +90,4 @@ export async function buildHotfixSubgraph(
 
   return graph.compile();
 }
+

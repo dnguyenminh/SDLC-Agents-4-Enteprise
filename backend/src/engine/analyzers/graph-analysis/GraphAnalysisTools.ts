@@ -40,14 +40,14 @@ export const GRAPH_ANALYSIS_TOOL_DEFINITIONS = [
 ];
 
 /** Dispatch a graph analysis tool call (SA4E-41: tenant-scoped, fail-closed). */
-export function handleGraphAnalysisTool(name: string, args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string | null {
+export async function handleGraphAnalysisTool(name: string, args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string | null> {
   const graphLoader = new GraphLoader(adapter, projectId);
   switch (name) {
     case 'find_circular_deps': return handleCircularDeps(args, graphLoader);
     case 'find_related_tests': return handleRelatedTests(args, graphLoader);
     case 'find_hot_paths': return handleHotPaths(args, graphLoader);
-    case 'find_dead_imports': return handleDeadImports(args, adapter, projectId);
-    case 'module_summary': return handleModuleSummary(args, adapter, projectId);
+    case 'find_dead_imports': return await handleDeadImports(args, adapter, projectId);
+    case 'module_summary': return await handleModuleSummary(args, adapter, projectId);
     default: return null;
   }
 }
@@ -95,18 +95,18 @@ function handleHotPaths(args: Record<string, unknown>, graphLoader: GraphLoader)
   return lines.join('\n');
 }
 
-function handleDeadImports(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+async function handleDeadImports(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string> {
   const detector = new DeadImportDetector(adapter, projectId);
-  const results = detector.detect({ filePath: args.file_path as string | undefined, module: args.module as string | undefined, limit: args.limit as number | undefined });
+  const results = await detector.detect({ filePath: args.file_path as string | undefined, module: args.module as string | undefined, limit: args.limit as number | undefined });
   if (results.length === 0) return 'No dead imports found.';
   const lines = [`Found ${results.length} potentially unused imports:\n`];
   for (const imp of results) { lines.push(`  ${imp.filePath}:${imp.line} — ${imp.importedSymbol}${imp.fromModule ? ` from "${imp.fromModule}"` : ''}`); }
   return lines.join('\n');
 }
 
-function handleModuleSummary(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+async function handleModuleSummary(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string> {
   const summarizer = new ModuleSummarizer(adapter, projectId);
-  const results = summarizer.summarize(args.module as string | undefined);
+  const results = await summarizer.summarize(args.module as string | undefined);
   if (results.length === 0) return 'No modules found.';
   const lines = [`Module Quality Summary (${results.length} modules):\n`];
   for (const mod of results) {

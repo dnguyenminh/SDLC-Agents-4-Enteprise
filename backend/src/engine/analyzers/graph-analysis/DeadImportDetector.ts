@@ -19,7 +19,7 @@ export class DeadImportDetector {
   }
 
   /** Find dead (unused) imports in a file or across the project. */
-  detect(options: { filePath?: string; module?: string; limit?: number } = {}): DeadImport[] {
+  async detect(options: { filePath?: string; module?: string; limit?: number } = {}): Promise<DeadImport[]> {
     const limit = options.limit ?? 50;
     const scope = buildCodeScopeFilter(this.projectId, 'r'); // fail-closed
 
@@ -53,12 +53,12 @@ export class DeadImportDetector {
     sql += ' ORDER BY r.file_path, r.line LIMIT ?';
     params.push(limit);
 
-    const rows = this.adapter.prepare(sql).all(...params) as Array<{
+    const rows = await this.adapter.allAsync<{
       filePath: string;
       line: number;
       importedSymbol: string;
       metadata: string | null;
-    }>;
+    }>(sql, params);
 
     return rows.map(row => {
       let fromModule = '';

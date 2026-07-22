@@ -63,7 +63,7 @@ export function downloadFile(
 
     req.on("timeout", () => { req.destroy(); reject(new Error("Download timed out (60s)")); });
     req.on("error", (err) => {
-      if (fs.existsSync(target)) { try { fs.unlinkSync(target); } catch { } }
+      if (fs.existsSync(target)) { try { fs.unlinkSync(target); } catch (unlinkErr) { console.debug('[addon-download-helpers] cleanup unlink failed: ' + (unlinkErr as Error).message); } }
       reject(err);
     });
   });
@@ -129,7 +129,9 @@ export function getProxyUrl(): string | undefined {
   try {
     const config = vscode.workspace.getConfiguration("http");
     return config.get<string>("proxy") || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
-  } catch {
+  } catch (err) {
+    console.warn('[addon-download-helpers] getProxyUrl failed: ' + (err as Error).message);
     return process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
   }
 }
+

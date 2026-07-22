@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-import { execSync } from "child_process";
 import { downloadFile, computeSha256, getProxyUrl } from "./addon-download-helpers";
+import { detectSystemNodeMajorVersion, tryNodeVersionFallback, tryNapiVersionFallback } from "./platform-detector";
 
 interface NativeAddonManifestEntry { url: string; size: number; sha256: string; }
 interface NativeAddonManifest { "better-sqlite3": { version: string; releaseUrl: string; binaries: Record<string, NativeAddonManifestEntry> } }
@@ -58,75 +58,29 @@ export class NativeAddonManager {
     const platform = process.platform;
     const arch = process.arch;
     const napiVersion = process.versions.napi || "9";
-    const nodeMajorVersion = this.getSystemNodeMajorVersion();
+    const nodeMajorVersion = detectSystemNodeMajorVersion(this.outputChannel);
     const electronVersion = process.versions.electron || "unknown";
     const version = this.manifest["better-sqlite3"].version;
     const binaries = this.manifest["better-sqlite3"].binaries;
+
     let cacheKey = `node-v${nodeMajorVersion}-${platform}-${arch}`;
     let supported = cacheKey in binaries;
-    if (!supported) { supported = this.tryNodeFallback(binaries, platform, arch, nodeMajorVersion, (k) => { cacheKey = k; }); }
-    if (!supported) { supported = this.tryNapiFallback(binaries, platform, arch, napiVersion, (k) => { cacheKey = k; }); }
+    if (!supported) {
+      const fallbackKey = tryNodeVersionFallback(binaries, platform, arch, nodeMajorVersion, this.outputChannel);
+      if (fallbackKey) { cacheKey = fallbackKey; supported = true; }
+    }
+    if (!supported) {
+      const napiKey = tryNapiVersionFallback(binaries, platform, arch, napiVersion, this.outputChannel);
+      if (napiKey) { cacheKey = napiKey; supported = true; }
+    }
     const cacheDir = path.join(this.globalStoragePath, "native-addons", "better-sqlite3", `v${version}`, cacheKey);
     return { platform, arch, napiVersion, nodeMajorVersion, electronVersion, supported, cacheKey, cacheDir };
-  }
-
-  private tryNodeFallback(binaries: Record<string, any>, platform: string, arch: string, nodeMajor: string, setCacheKey: (k: string) => void): boolean {
-    const runtimeMajor = parseInt(nodeMajor, 10);
-    const candidates = Object.keys(binaries)
-      .filter(k => k.startsWith("node-v") && k.endsWith(`-${platform}-${arch}`))
-      .map(k => ({ key: k, major: parseInt(k.match(/node-v(\d+)/)?.[1] || "0", 10) }))
-      .filter(c => c.major <= runtimeMajor)
-      .sort((a, b) => b.major - a.major);
-    if (candidates.length > 0) {
-      setCacheKey(candidates[0].key);
-      this.outputChannel.appendLine(`[NativeAddon] Node v${nodeMajor}, using compatible binary: ${candidates[0].key}`);
-      return true;
-    }
-    return false;
-  }
-
-  private tryNapiFallback(binaries: Record<string, any>, platform: string, arch: string, napiVersion: string, setCacheKey: (k: string) => void): boolean {
-    const runtimeNapi = parseInt(napiVersion, 10);
-    const candidates = Object.keys(binaries)
-      .filter(k => k.startsWith("napi-v") && k.endsWith(`-${platform}-${arch}`))
-      .map(k => ({ key: k, napi: parseInt(k.match(/napi-v(\d+)/)?.[1] || "0", 10) }))
-      .filter(c => c.napi <= runtimeNapi)
-      .sort((a, b) => b.napi - a.napi);
-    if (candidates.length > 0) {
-      setCacheKey(candidates[0].key);
-      this.outputChannel.appendLine(`[NativeAddon] Legacy fallback — N-API v${napiVersion}, using: ${candidates[0].key}`);
-      return true;
-    }
-    return false;
   }
 
   private loadManifest(): NativeAddonManifest {
     const manifestPath = path.join(this.extensionPath, "resources", "release-manifest.json");
     if (!fs.existsSync(manifestPath)) { throw new Error(`Release manifest not found: ${manifestPath}`); }
     return JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
-  }
-
-  private getSystemNodeMajorVersion(): string {
-    try {
-      try {
-        const mv = execSync(`"${process.execPath}" -p "process.versions.modules"`, { encoding: "utf-8", timeout: 5000 }).trim();
-        const major = this.moduleVersionToNodeMajor(mv);
-        if (major) { this.outputChannel.appendLine(`[NativeAddon] Runtime MODULE_VERSION=${mv} → Node v${major}`); return major; }
-      } catch { /* fallback */ }
-      const output = execSync(`"${process.execPath}" --version`, { encoding: "utf-8", timeout: 5000 }).trim();
-      const major = output.replace("v", "").split(".")[0];
-      this.outputChannel.appendLine(`[NativeAddon] System Node: ${output} (major: ${major})`);
-      return major;
-    } catch {
-      const fallback = process.versions.node.split(".")[0];
-      this.outputChannel.appendLine(`[NativeAddon] Cannot detect system Node, using host: v${fallback}`);
-      return fallback;
-    }
-  }
-
-  private moduleVersionToNodeMajor(moduleVersion: string): string | null {
-    const map: Record<string, string> = { "83": "14", "93": "16", "108": "18", "115": "20", "127": "22", "131": "22", "132": "23", "135": "24", "137": "24", "139": "24", "141": "25" };
-    return map[moduleVersion] || null;
   }
 
   private async downloadWithProgress(info: PlatformInfo): Promise<string | null> {
@@ -167,7 +121,10 @@ export class NativeAddonManager {
         return bindingPath;
       } catch (err: any) {
         this.outputChannel.appendLine(`[NativeAddon] Attempt ${attempt + 1} failed: ${err.message}`);
-        if (fs.existsSync(bindingPath)) { try { fs.unlinkSync(bindingPath); } catch { } }
+        if (fs.existsSync(bindingPath)) {
+          try { fs.unlinkSync(bindingPath); }
+          catch (unlinkErr) { console.debug(`[NativeAddon] cleanup unlink failed (non-fatal): ${(unlinkErr as Error).message}`); }
+        }
       }
     }
     this.showDownloadError(info);

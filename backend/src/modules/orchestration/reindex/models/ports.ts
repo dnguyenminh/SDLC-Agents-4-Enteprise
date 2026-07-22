@@ -1,8 +1,9 @@
 /**
  * SA4E-42 — dependency-inversion ports so the re-index collaborators depend on
  * abstractions (testable with fakes), not concretions (DIP).
+ * SA4E-53: DbProvider now returns DatabaseAdapter for cross-engine async support.
  */
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../../database/adapters/DatabaseAdapter.js';
 import type { ToolDefinition } from '../../../../types/tool.js';
 import type { ServerStateChangeCallback, Unsubscribe } from '../../types/health.js';
 
@@ -22,5 +23,5 @@ export interface IStateChangeSource {
   onServerStateChange(cb: ServerStateChangeCallback): Unsubscribe;
 }
 
-/** Lazily resolves the memory DB at event time; returns null when not ready (IR-8). */
-export type DbProvider = () => Database.Database | null;
+/** Lazily resolves the memory DB adapter at event time; returns null when not ready (IR-8). */
+export type DbProvider = () => DatabaseAdapter | null;

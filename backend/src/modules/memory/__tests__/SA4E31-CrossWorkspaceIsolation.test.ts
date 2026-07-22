@@ -95,13 +95,13 @@ describe('SA4E-31 — cross-workspace KB isolation', () => {
     expect(rows.find(r => r.summary === 'A-project')).toBeDefined();
   });
 
-  it('LLM path: MemoryEngine.search respects isolation (B sees nothing from A)', () => {
-    const results = t.engine.search('secret doc shared', 20, undefined, undefined, { userId: UB, projectId: PB });
+  it('LLM path: MemoryEngine.search respects isolation (B sees nothing from A)', async () => {
+    const results = await t.engine.search('secret doc shared', 20, undefined, undefined, { userId: UB, projectId: PB });
     expect(results.length).toBe(0);
   });
 
-  it('LLM path: MemoryEngine.findFiltered respects isolation', () => {
-    const rows = t.engine.findFiltered(undefined, undefined, 50, { userId: UB, projectId: PB });
+  it('LLM path: MemoryEngine.findFiltered respects isolation', async () => {
+    const rows = await t.engine.findFiltered(undefined, undefined, 50, { userId: UB, projectId: PB });
     expect(rows.length).toBe(0);
   });
 });

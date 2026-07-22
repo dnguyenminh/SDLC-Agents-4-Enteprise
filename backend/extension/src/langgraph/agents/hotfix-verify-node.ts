@@ -98,8 +98,9 @@ export class HotfixVerifyNode extends BaseNode {
         }
         return this.fail(parsed.feedback || "Fix does not pass verification");
       }
-    } catch {
-      /* fall through */
+    } catch (parseErr) {
+      // LLM returned non-JSON — log and fail-open (hotfix urgency)
+      console.warn(`[HotfixVerifyNode:${this.nodeId}] Could not parse LLM response, treating as pass:`, (parseErr as Error).message);
     }
     return this.pass();
   }

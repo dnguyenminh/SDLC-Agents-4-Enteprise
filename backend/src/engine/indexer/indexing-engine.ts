@@ -1,6 +1,6 @@
-/** Indexing Engine — Full scan and incremental indexing. KSA-145. */
+﻿/** Indexing Engine — Full scan and incremental indexing. KSA-145. SA4E-53: async refactor. */
 
-import type { DatabaseAdapter, PreparedStatement } from '../../database/adapters/DatabaseAdapter.js';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { DialectHelper } from '../../database/dialect/DialectHelper.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -8,7 +8,6 @@ import { fileURLToPath } from 'url';
 import pino from 'pino';
 import { AppConfig } from '../config.js';
 import { scanWorkspace, scanSingleFile, ScannedFile } from '../scanner/file-scanner.js';
-import { scanWorkspaceAsync } from './async-file-scanner.js';
 import { TreeSitterIndexer } from '../parsers/tree-sitter-indexer.js';
 import { GrammarRegistry, loadGrammarConfig } from '../parsers/grammar-registry.js';
 import { GraphRepository } from '../database/graph-repository.js';
@@ -46,8 +45,11 @@ export class IndexingEngine {
   }
 
   private initTreeSitter(): void {
+    // SA4E-53: schema check is async — run migrations lazily, non-blocking
+    this.ensureGraphSchema().catch(err => {
+      logger.error({ err }, '[indexer] Graph schema init failed');
+    });
     try {
-      if (!isGraphSchemaReady(this.adapter)) runGraphMigrations(this.adapter);
       this.graphRepo = new GraphRepository(this.adapter);
       const configPath = [path.resolve(__dirname, '../parsers/grammar-config.json'), path.resolve(__dirname, '../../src/parsers/grammar-config.json')].find(fs.existsSync);
       if (configPath) {
@@ -63,6 +65,12 @@ export class IndexingEngine {
       logger.error({ err }, '[indexer] Tree-sitter init failed, using regex fallback:');
       this.treeSitterReady = false;
     }
+  }
+
+  /** SA4E-53: Ensure graph schema is ready (async migration). */
+  private async ensureGraphSchema(): Promise<void> {
+    const ready = await isGraphSchemaReady(this.adapter);
+    if (!ready) await runGraphMigrations(this.adapter);
   }
 
   async startBackgroundIndexing(): Promise<void> {
@@ -84,16 +92,16 @@ export class IndexingEngine {
       logger.error(`[indexer] Found ${files.length} files to index`);
       await this.indexFiles(files, projectId);
       await new Promise<void>(resolve => setImmediate(resolve));
-      updateModules(this.adapter, projectId);
+      await updateModules(this.adapter, projectId);
       await new Promise<void>(resolve => setImmediate(resolve));
-      detectAndStorePatterns(this.adapter, new Map(), logger, projectId);
+      await detectAndStorePatterns(this.adapter, new Map(), logger, projectId);
       if (this.graphRepo) {
         await new Promise<void>(resolve => setImmediate(resolve));
-        const resolved = this.graphRepo.resolveTargets(5000, projectId);
+        const resolved = await this.graphRepo.resolveTargets(5000, projectId);
         if (resolved > 0) logger.error(`[indexer] Resolved ${resolved} cross-file symbol references`);
       }
       await new Promise<void>(resolve => setImmediate(resolve));
-      this.syncGraphNodes(projectId);
+      await this.syncGraphNodes(projectId);
       await new Promise<void>(resolve => setImmediate(resolve));
       logSfdxStats(this.adapter, this.config, logger);
       // Register workspace in project_registry so admin UI can show it in dropdown
@@ -104,10 +112,10 @@ export class IndexingEngine {
     }
   }
 
-  /** Project this tenant's code symbols into graph_nodes in index DB (non-fatal). */
-  private syncGraphNodes(projectId: string): void {
+  /** Project this tenant's code symbols into graph_nodes in index DB (non-fatal). SA4E-53: async. */
+  private async syncGraphNodes(projectId: string): Promise<void> {
     try {
-      new GraphSyncService(this.adapter, this.adapter, logger).syncProjectSymbols(projectId);
+      await new GraphSyncService(this.adapter, this.adapter, logger).syncProjectSymbols(projectId);
     } catch (err) {
       logger.error({ err }, '[indexer] Graph node sync skipped');
     }
@@ -137,15 +145,19 @@ export class IndexingEngine {
   async indexSingleFile(filePath: string): Promise<void> {
     const projectId = this.bootProjectId(); // SEC-06: boot-tenant scope only
     const file = scanSingleFile(filePath, this.config.workspace);
-    if (!file || isFileUnchanged(this.adapter, file, projectId)) return;
+    // SA4E-53: isFileUnchanged is now async
+    if (!file || await isFileUnchanged(this.adapter, file, projectId)) return;
     await this.upsertFile(file, projectId);
   }
 
   removeFile(filePath: string): void {
     const relativePath = filePath.replace(/\\/g, '/');
     const projectId = this.bootProjectId(); // SEC-06: boot-tenant scope only
-    this.adapter.run('DELETE FROM files WHERE relative_path = ? AND project_id = ?', [relativePath, projectId]);
-    this.graphRepo?.deleteFileRelationships(relativePath, projectId);
+    // SA4E-53: fire-and-forget async (non-fatal for watcher events)
+    this.adapter.runAsync('DELETE FROM files WHERE relative_path = ? AND project_id = ?', [relativePath, projectId])
+      .catch(err => logger.error({ err }, '[indexer] removeFile run failed'));
+    this.graphRepo?.deleteFileRelationships(relativePath, projectId)
+      .catch(err => logger.error({ err }, '[indexer] removeFile deleteFileRelationships failed'));
   }
 
   isRunning(projectId?: string): boolean {
@@ -166,28 +178,40 @@ export class IndexingEngine {
   /** KSA-191: Get SFDX project stats from database. */
   getSfdxStats() { return getSfdxStatsImpl(this.adapter, this.config); }
 
+  /**
+   * SA4E-53: replaced prepare() calls with inline runAsync/allAsync.
+   * Uses transactionAsync batches for PostgreSQL compatibility.
+   */
   private async indexFiles(files: ScannedFile[], projectId: string): Promise<void> {
-    const insertFile = this.adapter.prepare(`INSERT OR REPLACE INTO files (project_id,path,relative_path,language,module,content_hash,size_bytes,line_count,last_indexed,file_created_at,file_author,file_version) VALUES (?,?,?,?,?,?,?,?,${this.dialect.now()},?,?,?)`);
-    const deleteSymbols = this.adapter.prepare('DELETE FROM symbols WHERE file_id = ?');
-    const insertSymbol = this.adapter.prepare(`INSERT INTO symbols (project_id,file_id,name,kind,signature,start_line,end_line,parent_symbol,visibility,doc_comment) VALUES (?,?,?,?,?,?,?,?,?,?)`);
-    const { filesToIndex, skippedCount } = await this.registerFilesForIndex(files, insertFile, projectId);
+    const { filesToIndex, skippedCount } = await this.registerFilesForIndex(files, projectId);
     const counts = this.treeSitterReady && this.treeSitterIndexer
       ? await this.indexFileSymbolsTreeSitter(filesToIndex, projectId)
-      : await this.indexFileSymbolsRegexFallback(filesToIndex, deleteSymbols, insertSymbol, projectId);
+      : await this.indexFileSymbolsRegexFallback(filesToIndex, projectId);
     logger.error(`[indexer] Indexed ${counts.treeSitterCount} files via tree-sitter, ${counts.regexCount} via regex fallback, ${skippedCount} unchanged`);
   }
 
-  private async registerFilesForIndex(files: ScannedFile[], insertFile: PreparedStatement, projectId: string) {
+  /**
+   * Register files into DB and collect those needing symbol indexing.
+   * SA4E-53: replaces prepare()+transaction() with runAsync()+transactionAsync().
+   */
+  private async registerFilesForIndex(files: ScannedFile[], projectId: string) {
     const filesToIndex: ScannedFile[] = [];
     let skippedCount = 0;
     const BATCH = 200;
+    const insertSql = this.adapter.getEngine() === 'sqlite'
+      ? `INSERT OR REPLACE INTO files (project_id,path,relative_path,language,module,content_hash,size_bytes,line_count,last_indexed,file_created_at,file_author,file_version) VALUES (?,?,?,?,?,?,?,?,${this.dialect.now()},?,?,?)`
+      : `INSERT INTO files (project_id,path,relative_path,language,module,content_hash,size_bytes,line_count,last_indexed,file_created_at,file_author,file_version) VALUES (?,?,?,?,?,?,?,?,${this.dialect.now()},?,?,?) ON CONFLICT (project_id, path) DO UPDATE SET content_hash=EXCLUDED.content_hash, size_bytes=EXCLUDED.size_bytes, line_count=EXCLUDED.line_count, last_indexed=EXCLUDED.last_indexed, file_created_at=EXCLUDED.file_created_at, file_author=EXCLUDED.file_author, file_version=EXCLUDED.file_version`;
     for (let i = 0; i < files.length; i += BATCH) {
       const batch = files.slice(i, i + BATCH);
-      this.adapter.transaction(() => {
+      await this.adapter.transactionAsync(async () => {
         for (const file of batch) {
-          if (isFileUnchanged(this.adapter, file, projectId)) { skippedCount++; continue; }
+          if (await isFileUnchanged(this.adapter, file, projectId)) { skippedCount++; continue; }
           filesToIndex.push(file);
-          insertFile.run(projectId, file.absolutePath, file.relativePath, file.language, detectModule(file.relativePath), file.contentHash, file.sizeBytes, file.lineCount, file.fileCreatedAt ?? null, file.fileAuthor ?? null, file.fileVersion ?? null);
+          await this.adapter.runAsync(insertSql, [
+            projectId, file.absolutePath, file.relativePath, file.language,
+            detectModule(file.relativePath), file.contentHash, file.sizeBytes, file.lineCount,
+            file.fileCreatedAt ?? null, file.fileAuthor ?? null, file.fileVersion ?? null,
+          ]);
         }
       });
       await new Promise<void>(resolve => setImmediate(resolve));
@@ -207,18 +231,26 @@ export class IndexingEngine {
     return { treeSitterCount, regexCount };
   }
 
-  private async indexFileSymbolsRegexFallback(filesToIndex: ScannedFile[], deleteSymbols: PreparedStatement, insertSymbol: PreparedStatement, projectId: string) {
+  /**
+   * SA4E-53: replaced prepare()+transaction() with transactionAsync()+runAsync().
+   * indexFileSymbolsRegex uses PreparedStatement internally (SQLite-only path).
+   */
+  private async indexFileSymbolsRegexFallback(filesToIndex: ScannedFile[], projectId: string) {
     logger.error('[indexer] Tree-sitter not available, using regex extraction');
     let regexCount = 0;
     const BATCH = 25;
+    const insertSymbolSql = `INSERT INTO symbols (project_id,file_id,name,kind,signature,start_line,end_line,parent_symbol,visibility,doc_comment) VALUES (?,?,?,?,?,?,?,?,?,?)`;
     for (let i = 0; i < filesToIndex.length; i += BATCH) {
       const batch = filesToIndex.slice(i, i + BATCH);
-      this.adapter.transaction(() => {
+      await this.adapter.transactionAsync(async () => {
         for (const file of batch) {
-          const fileRow = this.adapter.get<{ id: number }>('SELECT id FROM files WHERE relative_path = ? AND project_id = ?', [file.relativePath, projectId]);
+          const fileRow = await this.adapter.getAsync<{ id: number }>(
+            'SELECT id FROM files WHERE relative_path = ? AND project_id = ?',
+            [file.relativePath, projectId],
+          );
           if (!fileRow) continue;
-          deleteSymbols.run(fileRow.id);
-          indexFileSymbolsRegex(file, fileRow.id, projectId, insertSymbol, logger);
+          await this.adapter.runAsync('DELETE FROM symbols WHERE file_id = ?', [fileRow.id]);
+          await indexFileSymbolsRegex(file, fileRow.id, projectId, this.adapter, logger);
           regexCount++;
         }
       });
@@ -228,11 +260,11 @@ export class IndexingEngine {
   }
 
   private async upsertFile(file: ScannedFile, projectId: string): Promise<void> {
-    upsertFileInDb(this.adapter, file, projectId);
+    await upsertFileInDb(this.adapter, file, projectId);
     if (this.treeSitterReady && this.treeSitterIndexer) {
       await this.treeSitterIndexer.indexFile(file.absolutePath, file.relativePath, projectId);
     } else {
-      upsertFileRegexFallback(this.adapter, file, projectId, logger);
+      await upsertFileRegexFallback(this.adapter, file, projectId, logger);
     }
   }
 

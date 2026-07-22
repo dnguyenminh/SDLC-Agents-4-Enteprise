@@ -44,7 +44,12 @@ export async function executeAction(
         break;
       }
       case "fetch_jira": {
-        try { ctx.jiraContext = await node.callMcp("execute_dynamic_tool", { tool_name: "jira_get_issue", arguments: { issue_key: ticketKey, fields: "*all" } }); } catch { ctx.jiraContext = "[Jira unavailable]"; }
+        try {
+          ctx.jiraContext = await node.callMcp("execute_dynamic_tool", { tool_name: "jira_get_issue", arguments: { issue_key: ticketKey, fields: "*all" } });
+        } catch (err) {
+          console.debug(`[workflow-executor] fetch_jira failed (non-fatal): ${(err as Error).message}`);
+          ctx.jiraContext = "[Jira unavailable]";
+        }
         break;
       }
       case "fetch_jira_recursive": {
@@ -61,17 +66,19 @@ export async function executeAction(
           }
           await traverse(ticketKey, 0);
           ctx.jiraContext = allData;
-        } catch { ctx.jiraContext = "[Jira unavailable]"; }
+        } catch (err) {
+          console.debug(`[workflow-executor] fetch_jira_recursive failed (non-fatal): ${(err as Error).message}`);
+          ctx.jiraContext = "[Jira unavailable]";
+        }
         break;
       }
       case "kb_search": {
         try {
           const query = (action.params.query || `${ticketKey} context`).replace(/\{TICKET-KEY\}/g, ticketKey).replace(/\{TICKET\}/g, ticketKey);
           ctx.kbContext += "\n" + await node.kbSearch(query);
-        } catch { /* */ }
-        break;
-      }
-      case "kb_ingest": {
+        } catch (err) {
+          console.debug(`[workflow-executor] kb_search failed (non-fatal): ${(err as Error).message}`);
+        }
         await node.kbIngest(ctx.generatedContent.slice(0, 5000), "DOCUMENT", `workflow-${ctx.docType || "doc"}`, [ticketKey, ctx.docType || "document", "langgraph"]);
         break;
       }
@@ -117,12 +124,18 @@ export async function executeAction(
       }
       case "exec_shell": {
         const command = (action.params.command || "").replace(/\{TICKET-KEY\}/g, ticketKey).replace(/\{TICKET\}/g, ticketKey);
-        if (command) { try { await node.execShell(command); } catch { /* */ } }
+        if (command) {
+          try { await node.execShell(command); }
+          catch (err) { console.debug(`[workflow-executor] exec_shell failed (non-fatal): ${(err as Error).message}`); }
+        }
         break;
       }
       case "exec_git": {
         const args = (action.params.args || "").replace(/\{TICKET-KEY\}/g, ticketKey).replace(/\{TICKET\}/g, ticketKey);
-        if (args) { try { await node.execGit(args); } catch { /* */ } }
+        if (args) {
+          try { await node.execGit(args); }
+          catch (err) { console.debug(`[workflow-executor] exec_git failed (non-fatal): ${(err as Error).message}`); }
+        }
         break;
       }
       case "discover_tools": {
@@ -137,7 +150,10 @@ export async function executeAction(
       }
       default: break;
     }
-  } catch { /* Individual action failure is non-blocking */ }
+  } catch (err) {
+    // Individual action failures are non-blocking — log and continue
+    console.debug(`[workflow-executor] executeAction '${action.type}' failed (non-fatal): ${(err as Error).message}`);
+  }
 }
 
 function buildLlmPrompt(ctx: ExecutionContext, state: PipelineState): string {

@@ -30,27 +30,12 @@ CREATE INDEX IF NOT EXISTS idx_ct_session ON conversation_turns(session_id, turn
 CREATE INDEX IF NOT EXISTS idx_ct_role ON conversation_turns(role);
 CREATE INDEX IF NOT EXISTS idx_ct_created ON conversation_turns(created_at);
 CREATE INDEX IF NOT EXISTS idx_ct_summarized ON conversation_turns(summarized);
-CREATE INDEX IF NOT EXISTS idx_ei_name ON entity_index(entity_name);
-CREATE INDEX IF NOT EXISTS idx_ei_type ON entity_index(entity_type);
-CREATE INDEX IF NOT EXISTS idx_ei_entry ON entity_index(entry_id);
 CREATE INDEX IF NOT EXISTS idx_citations_entry ON citations(entry_id);
-CREATE INDEX IF NOT EXISTS idx_attachments_entry ON attachments(entry_id);
-CREATE INDEX IF NOT EXISTS idx_feedback_entry ON feedback(entry_id);
-CREATE INDEX IF NOT EXISTS idx_reminders_entry ON reminders(entry_id);
-CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
 CREATE INDEX IF NOT EXISTS idx_search_log_created ON search_log(created_at);
 
 -- Indexes for project isolation
 CREATE INDEX IF NOT EXISTS idx_ke_project_id ON knowledge_entries(project_id);
 CREATE INDEX IF NOT EXISTS idx_ke_scope_project ON knowledge_entries(scope, project_id);
-
--- Default agent scope config
-INSERT OR IGNORE INTO agent_scope_config (agent_role, tag_set) VALUES
-  ('QA', '["testing","qa","test-plan","test-case","bug"]'),
-  ('DEV', '["code","api","architecture","implementation","design"]'),
-  ('BA', '["requirement","business","stakeholder","process"]'),
-  ('SA', '["architecture","design","infrastructure","security"]'),
-  ('DEVOPS', '["deployment","infrastructure","ci-cd","monitoring"]');
 `;
 
 export function migrateProjectId(db: { exec: (sql: string) => void }): void {

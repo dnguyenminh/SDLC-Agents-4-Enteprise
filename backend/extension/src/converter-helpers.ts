@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Converter helpers — size limits, format checks, text wrapping, and
  * local fallback conversion via filetomarkdown.
  */
@@ -87,7 +87,8 @@ export function loadFileToMarkdown(): any {
     try {
         filetomarkdownModule = require("filetomarkdown");
         return filetomarkdownModule;
-    } catch {
+    } catch (err) {
+        console.debug("[converter-helpers] filetomarkdown not available: " + (err as Error).message);
         return null;
     }
 }
@@ -123,3 +124,4 @@ export async function convertWithTimeout(ftm: any, filePath: string, timeoutMs: 
             });
     });
 }
+

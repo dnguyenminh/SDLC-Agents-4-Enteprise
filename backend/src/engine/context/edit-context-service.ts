@@ -60,7 +60,7 @@ export class EditContextService {
       caller_depth = 1
     } = params;
 
-    const symbol = resolveSymbolInput(symbolInput, this.adapter, this.resolver);
+    const symbol = await resolveSymbolInput(symbolInput, this.adapter, this.resolver);
     if (!symbol) {
       return symbolNotFoundResponse(symbolInput, token_budget, startTime);
     }

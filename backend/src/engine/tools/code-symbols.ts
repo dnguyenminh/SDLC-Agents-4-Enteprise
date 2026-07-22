@@ -1,4 +1,4 @@
-/**
+﻿/**
  * code_symbols tool — Lookup symbols by name, kind, or file path.
  */
 
@@ -20,10 +20,10 @@ export function registerCodeSymbols(server: McpServer, queryLayer: QueryLayer): 
     async ({ name, file, kind, limit, __projectId }) => {
       let text: string;
       if (file) {
-        const symbols = queryLayer.getFileSymbols(__projectId, file);
+        const symbols = await queryLayer.getFileSymbols(__projectId, file);
         text = formatFileSymbols(file, symbols);
       } else if (name) {
-        const symbols = queryLayer.findSymbols(__projectId, name, kind, limit);
+        const symbols = await queryLayer.findSymbols(__projectId, name, kind, limit);
         text = formatSymbolList(symbols, name);
       } else {
         text = 'Provide either "name" or "file" parameter';

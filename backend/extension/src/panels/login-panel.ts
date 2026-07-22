@@ -41,11 +41,13 @@ export class LoginPanel implements vscode.Disposable {
 
   private getHtml(): string {
     const nonce = getNonce();
+    const cspSource = this.panel!.webview.cspSource;
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; img-src ${cspSource} data:;">
   <title>Login</title>
   <style>
     body { font-family: var(--vscode-font-family); padding: 0; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--vscode-editor-background); color: var(--vscode-foreground); }

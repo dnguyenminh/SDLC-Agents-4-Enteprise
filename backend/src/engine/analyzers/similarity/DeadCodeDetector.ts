@@ -34,17 +34,17 @@ export class DeadCodeDetector {
   }
 
   /** Detect dead code with confidence scoring. */
-  detect(options: { filePath?: string; module?: string; limit?: number } = {}): DeadCodeReport {
+  async detect(options: { filePath?: string; module?: string; limit?: number } = {}): Promise<DeadCodeReport> {
     const t0 = performance.now();
 
     // 1. Get all entry points
-    const entryPointIds = this.getEntryPoints();
+    const entryPointIds = await this.getEntryPoints();
 
     // 2. Compute reachability via BFS
-    const reachable = this.computeReachability(entryPointIds);
+    const reachable = await this.computeReachability(entryPointIds);
 
     // 3. Get all functions
-    const allFunctions = this.getAllFunctions(options.filePath, options.module);
+    const allFunctions = await this.getAllFunctions(options.filePath, options.module);
 
     // 4. Find unreachable functions
     const unreachable = allFunctions.filter(f => !reachable.has(f.id));
@@ -52,7 +52,7 @@ export class DeadCodeDetector {
     // 5. Score each candidate
     const candidates: DeadCodeCandidate[] = [];
     for (const func of unreachable) {
-      const { confidence, reasons } = this.scoreCandidate(func);
+      const { confidence, reasons } = await this.scoreCandidate(func);
       if (confidence >= this.minConfidence) {
         candidates.push({
           symbolId: func.id,
@@ -80,35 +80,36 @@ export class DeadCodeDetector {
     };
   }
 
-  private getEntryPoints(): number[] {
+  private async getEntryPoints(): Promise<number[]> {
     const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     try {
-      const rows = this.adapter.prepare(`
+      const rows = await this.adapter.allAsync<{ symbol_id: number }>(`
         SELECT ep.symbol_id FROM entry_points ep
         JOIN symbols s ON s.id = ep.symbol_id
         WHERE ${scope.clause}
-      `).all(...scope.params) as { symbol_id: number }[];
+      `, [...scope.params]);
       return rows.map(r => r.symbol_id);
     } catch {
       // entry_points table may not exist — fall back to exported symbols (scoped)
-      const rows = this.adapter.prepare(
-        `SELECT id FROM symbols s WHERE is_exported = 1 AND ${scope.clause}`
-      ).all(...scope.params) as { id: number }[];
+      const rows = await this.adapter.allAsync<{ id: number }>(
+        `SELECT id FROM symbols s WHERE is_exported = 1 AND ${scope.clause}`,
+        [...scope.params],
+      );
       return rows.map(r => r.id);
     }
   }
 
-  private computeReachability(entryPointIds: number[]): Set<number> {
+  private async computeReachability(entryPointIds: number[]): Promise<Set<number>> {
     const visited = new Set<number>();
     const queue: number[] = [...entryPointIds];
 
     // Load call graph edges (tenant-scoped, fail-closed)
     const edgeScope = buildCodeScopeFilter(this.projectId, 'relationships');
-    const edges = this.adapter.prepare(`
+    const edges = await this.adapter.allAsync<{ source_symbol_id: number; target_symbol_id: number }>(`
       SELECT source_symbol_id, target_symbol_id
       FROM relationships
       WHERE kind = 'calls' AND target_symbol_id IS NOT NULL AND ${edgeScope.clause}
-    `).all(...edgeScope.params) as { source_symbol_id: number; target_symbol_id: number }[];
+    `, [...edgeScope.params]);
 
     // Build adjacency list (caller → callees)
     const callGraph = new Map<number, number[]>();
@@ -134,7 +135,7 @@ export class DeadCodeDetector {
     return visited;
   }
 
-  private getAllFunctions(filePath?: string, module?: string): FunctionInfo[] {
+  private async getAllFunctions(filePath?: string, module?: string): Promise<FunctionInfo[]> {
     const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     let sql = `
       SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine,
@@ -155,10 +156,10 @@ export class DeadCodeDetector {
       params.push(module);
     }
 
-    const rows = this.adapter.prepare(sql).all(...params) as Array<{
+    const rows = await this.adapter.allAsync<{
       id: number; name: string; kind: string; filePath: string; startLine: number;
       isExported: number; isAsync: number; decorators: string | null;
-    }>;
+    }>(sql, params);
 
     return rows.map(r => ({
       id: r.id,
@@ -173,7 +174,7 @@ export class DeadCodeDetector {
     }));
   }
 
-  private scoreCandidate(func: FunctionInfo): { confidence: number; reasons: string[] } {
+  private async scoreCandidate(func: FunctionInfo): Promise<{ confidence: number; reasons: string[] }> {
     let score = 0;
     const reasons: string[] = [];
 
@@ -188,7 +189,7 @@ export class DeadCodeDetector {
     }
 
     // Check if it has tests referencing it
-    const hasTests = this.hasTestReferences(func.id);
+    const hasTests = await this.hasTestReferences(func.id);
     if (!hasTests) {
       score += 15;
       reasons.push('no_tests');
@@ -212,18 +213,18 @@ export class DeadCodeDetector {
     return { confidence: Math.max(0, Math.min(100, score)), reasons };
   }
 
-  private hasTestReferences(symbolId: number): boolean {
+  private async hasTestReferences(symbolId: number): Promise<boolean> {
     const scope = buildCodeScopeFilter(this.projectId, 'r'); // fail-closed
     try {
-      const row = this.adapter.prepare(`
+      const row = await this.adapter.getAsync<{ count: number }>(`
         SELECT COUNT(*) as count
         FROM relationships r
         JOIN files f ON f.id = (SELECT file_id FROM symbols WHERE id = r.source_symbol_id)
         WHERE r.target_symbol_id = ?
           AND (f.relative_path LIKE '%test%' OR f.relative_path LIKE '%spec%')
           AND ${scope.clause}
-      `).get(symbolId, ...scope.params) as { count: number };
-      return row.count > 0;
+      `, [symbolId, ...scope.params]);
+      return (row?.count ?? 0) > 0;
     } catch {
       return false;
     }

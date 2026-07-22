@@ -1,7 +1,8 @@
-// Checksum management --- per-file version tracking and modification detection
+﻿// Checksum management --- per-file version tracking and modification detection
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
+import { readJsonFile, writeJsonFile } from "./utils/mcp-config-file";
 
 export interface ChecksumManifest {
     version: string;
@@ -53,10 +54,10 @@ export function computeFileHash(filePath: string): string {
 /** Load bundled checksums manifest from extension package. */
 export function loadBundledManifest(extensionPath: string): ChecksumManifest | null {
     const manifestFile = path.join(extensionPath, BUNDLED_MANIFEST);
-    if (!fs.existsSync(manifestFile)) { return null; }
     try {
-        return JSON.parse(fs.readFileSync(manifestFile, "utf-8"));
-    } catch {
+        return readJsonFile<ChecksumManifest>(manifestFile);
+    } catch (err) {
+        console.warn("[checksum] Failed to parse bundled manifest: " + (err as Error).message);
         return null;
     }
 }
@@ -64,10 +65,10 @@ export function loadBundledManifest(extensionPath: string): ChecksumManifest | n
 /** Load per-file workspace manifest. */
 export function loadWorkspaceManifest(root: string): WorkspaceManifest | null {
     const manifestFile = path.join(root, WORKSPACE_MANIFEST);
-    if (!fs.existsSync(manifestFile)) { return null; }
     try {
-        return JSON.parse(fs.readFileSync(manifestFile, "utf-8"));
-    } catch {
+        return readJsonFile<WorkspaceManifest>(manifestFile);
+    } catch (err) {
+        console.warn("[checksum] Failed to parse workspace manifest: " + (err as Error).message);
         return null;
     }
 }
@@ -75,9 +76,8 @@ export function loadWorkspaceManifest(root: string): WorkspaceManifest | null {
 /** Save workspace manifest to disk. */
 export function saveWorkspaceManifest(root: string, manifest: WorkspaceManifest): void {
     const manifestFile = path.join(root, WORKSPACE_MANIFEST);
-    fs.mkdirSync(path.dirname(manifestFile), { recursive: true });
     manifest.lastUpdated = new Date().toISOString();
-    fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2), "utf-8");
+    writeJsonFile(manifestFile, manifest);
 }
 
 /** Get per-file status comparing workspace vs bundled manifest. */
@@ -157,9 +157,11 @@ export function migrateLegacyVersion(root: string, extensionPath: string): void 
 
     let legacyVersion = "1.0.0";
     try {
-        const raw = JSON.parse(fs.readFileSync(legacyFile, "utf-8"));
-        legacyVersion = raw.version || "1.0.0";
-    } catch { /* default to 1.0.0 */ }
+        const raw = readJsonFile<{ version?: string }>(legacyFile);
+        legacyVersion = raw?.version || "1.0.0";
+    } catch (err) {
+        console.debug("[checksum] Could not parse legacy version file, using 1.0.0: " + (err as Error).message);
+    }
 
     const wsManifest: WorkspaceManifest = { lastUpdated: new Date().toISOString(), files: {} };
     for (const [relativePath] of Object.entries(bundled.files)) {

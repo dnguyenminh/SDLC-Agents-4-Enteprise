@@ -63,7 +63,9 @@ async function listDirectory(args: Record<string, unknown>, workspaceRoot: strin
           }
         }
       }
-    } catch { /* skip */ }
+    } catch (err) {
+      console.debug(`[vscode-tools] listDirectory readDirectory failed for ${dir} (non-fatal): ${(err as Error).message}`);
+    }
     return results;
   }
 
@@ -102,7 +104,7 @@ async function searchText(args: Record<string, unknown>, workspaceRoot: string):
           if (results.length >= maxResults) break;
           if (regex.test(lines[i])) { results.push(`${vscode.workspace.asRelativePath(file)}:${i + 1}: ${lines[i].trim().substring(0, 200)}`); regex.lastIndex = 0; }
         }
-      } catch { /* skip */ }
+      } catch (err) { console.debug(`[vscode-tools] searchText skip file (non-fatal): ${(err as Error).message}`); }
     }
     return results.length > 0 ? results.join("\n") : `No matches for '${pattern}'`;
   } catch (error) { return `Error searching: ${(error as Error).message}`; }
@@ -144,3 +146,5 @@ async function getOpenFiles(): Promise<string> {
   const files = tabs.filter(t => t.input instanceof vscode.TabInputText).map(t => vscode.workspace.asRelativePath((t.input as vscode.TabInputText).uri));
   return files.length > 0 ? files.join("\n") : "No files open";
 }
+
+

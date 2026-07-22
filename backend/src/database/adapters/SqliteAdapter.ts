@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SQLite Adapter — wraps better-sqlite3 with DatabaseAdapter interface.
  * Default adapter for fresh installations. Zero overhead.
  * Implements: SA4E-33, BR-1

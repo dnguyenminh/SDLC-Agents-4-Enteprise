@@ -6,6 +6,8 @@
 
 import * as vscode from "vscode";
 import { McpServerManager } from "./mcp-server-manager";
+import { IServerManager } from "./types/server-types";
+import { normalizeResponse } from "./utils/panel-utils";
 
 interface CodeIssue {
   file: string;
@@ -26,7 +28,7 @@ const DIAGNOSTIC_SOURCE = "Kiro Code Intelligence";
  */
 export function registerDiagnosticsProvider(
   context: vscode.ExtensionContext,
-  mcpManager: McpServerManager
+  mcpManager: IServerManager
 ): vscode.DiagnosticCollection {
   const diagnostics = vscode.languages.createDiagnosticCollection("kiroCodeIntel");
   context.subscriptions.push(diagnostics);
@@ -59,7 +61,7 @@ export function registerDiagnosticsProvider(
 
 async function analyzeDocument(
   doc: vscode.TextDocument,
-  mcpManager: McpServerManager,
+  mcpManager: IServerManager,
   diagnostics: vscode.DiagnosticCollection
 ): Promise<void> {
   if (mcpManager.status !== "running") { return; }
@@ -73,19 +75,16 @@ async function analyzeDocument(
     });
     const issues = parseIssues(raw, doc);
     diagnostics.set(doc.uri, issues);
-  } catch {
-    // Silently fail — don't disrupt user workflow
+  } catch (err) {
+    // Tool unavailable or network error — clear stale diagnostics and log
+    diagnostics.delete(doc.uri);
+    console.warn(`[DiagnosticsProvider] code_search failed for ${relativePath}: ${(err as Error).message}`);
   }
 }
 
 function parseIssues(raw: string, doc: vscode.TextDocument): vscode.Diagnostic[] {
-  try {
-    const parsed = JSON.parse(raw);
-    const items: CodeIssue[] = Array.isArray(parsed) ? parsed : (parsed.issues || parsed.results || []);
-    return items.map((issue) => toDiagnostic(issue, doc)).filter(Boolean) as vscode.Diagnostic[];
-  } catch {
-    return [];
-  }
+  const items = normalizeResponse<CodeIssue>(raw, "issues");
+  return items.map((issue) => toDiagnostic(issue, doc)).filter(Boolean) as vscode.Diagnostic[];
 }
 
 function toDiagnostic(issue: CodeIssue, doc: vscode.TextDocument): vscode.Diagnostic | null {

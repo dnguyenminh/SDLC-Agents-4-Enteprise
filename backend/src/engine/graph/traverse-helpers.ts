@@ -2,6 +2,7 @@
  * KSA-157: Traverse helpers - extracted from GraphTraverser.
  * Pure functions for neighbor resolution and source snippet extraction.
  * SA4E-45: Refactored to use DatabaseAdapter abstraction.
+ * SA4E-53: Async API for PostgreSQL compatibility.
  */
 
 import * as fs from 'fs';
@@ -17,7 +18,7 @@ const ALLOWED_EDGE_TYPES = new Set([
 ]);
 
 /** Retrieve neighbor nodes from the graph within a tenant scope. */
-export function getNeighbors(nodeId: number, config: TraverseConfig, adapter: DatabaseAdapter, projectId?: string): GraphNode[] {
+export async function getNeighbors(nodeId: number, config: TraverseConfig, adapter: DatabaseAdapter, projectId?: string): Promise<GraphNode[]> {
   // SEC-01 fix: validate edgeTypes against allowlist, use parameterized placeholders
   const validEdgeTypes = config.edgeTypes.filter(e => ALLOWED_EDGE_TYPES.has(e));
   const edgeFilter = validEdgeTypes.length > 0
@@ -28,7 +29,7 @@ export function getNeighbors(nodeId: number, config: TraverseConfig, adapter: Da
   let rows: any[] = [];
   switch (config.direction) {
     case 'outgoing':
-      rows = adapter.all(`
+      rows = await adapter.allAsync(`
         SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine, r.kind as _incomingEdgeType
         FROM relationships r
         JOIN symbols s ON s.id = r.target_symbol_id
@@ -38,7 +39,7 @@ export function getNeighbors(nodeId: number, config: TraverseConfig, adapter: Da
       `, [nodeId, ...scope.params, ...edgeParams]);
       break;
     case 'incoming':
-      rows = adapter.all(`
+      rows = await adapter.allAsync(`
         SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine, r.kind as _incomingEdgeType
         FROM relationships r
         JOIN symbols s ON s.id = r.source_symbol_id
@@ -48,7 +49,7 @@ export function getNeighbors(nodeId: number, config: TraverseConfig, adapter: Da
       `, [nodeId, ...scope.params, ...edgeParams]);
       break;
     case 'both': {
-      const outgoing = adapter.all(`
+      const outgoing = await adapter.allAsync(`
         SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine, r.kind as _incomingEdgeType
         FROM relationships r
         JOIN symbols s ON s.id = r.target_symbol_id
@@ -56,7 +57,7 @@ export function getNeighbors(nodeId: number, config: TraverseConfig, adapter: Da
         WHERE r.source_symbol_id = ? AND ${scope.clause} ${edgeFilter}
         LIMIT 50
       `, [nodeId, ...scope.params, ...edgeParams]);
-      const incoming = adapter.all(`
+      const incoming = await adapter.allAsync(`
         SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as startLine, r.kind as _incomingEdgeType
         FROM relationships r
         JOIN symbols s ON s.id = r.source_symbol_id

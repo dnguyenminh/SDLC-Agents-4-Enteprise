@@ -150,9 +150,14 @@ export class HookExecutor {
     try {
       process.kill(pid, "SIGTERM");
       setTimeout(() => {
-        try { process.kill(pid, "SIGKILL"); } catch { /* already dead */ }
+        try { process.kill(pid, "SIGKILL"); }
+        catch (err) {
+          console.debug(`[hook-executor] SIGKILL failed — process already dead (non-fatal): ${(err as Error).message}`);
+        }
       }, 5000);
-    } catch { /* process already exited */ }
+    } catch (err) {
+      console.debug(`[hook-executor] SIGTERM failed — process already exited (non-fatal): ${(err as Error).message}`);
+    }
   }
 
   /**

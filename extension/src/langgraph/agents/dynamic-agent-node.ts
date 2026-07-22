@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DynamicAgentNode — KSA (Dynamic Agent Support)
  * Extends BaseNode to support dynamic agent config from agent-registry.
  * Uses LLM provider first, falls back to MCP bridge if no LLM is configured.
@@ -98,7 +98,8 @@ export class DynamicAgentNode extends BaseNode {
     try {
       const parsed = JSON.parse(mcpResult);
       content = parsed?.content?.[0]?.text ?? mcpResult;
-    } catch {
+    } catch (err) {
+      console.debug("[DynamicAgentNode] MCP result JSON parse failed, using raw: " + (err as Error).message);
       content = mcpResult || "(no output)";
     }
 
@@ -165,3 +166,4 @@ export class DynamicAgentNode extends BaseNode {
     // In production: call codeIntel.memIngest({ content, type: "CONTEXT", source: this.config.id })
   }
 }
+

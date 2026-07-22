@@ -1,11 +1,12 @@
 /**
  * SA4E-41 CRITICAL isolation test — two projects with a same-relative-path file.
- * Project B queries must NEVER return Project A's symbols; counts exclude A.
+ * SA4E-53: Updated to use SqliteDbAdapter instead of raw Database.Database.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { QueryLayer } from '../query-layer.js';
+import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 
 const PID_A = 'proj_aaaa';
 const PID_B = 'proj_bbbb';
@@ -61,38 +62,38 @@ describe('SA4E-41 query isolation (same relative path, two tenants)', () => {
     db.exec(SCHEMA);
     seedProject(db, PID_A, 'authenticateAlpha');
     seedProject(db, PID_B, 'authenticateBravo');
-    ql = new QueryLayer({ getDb: () => db } as any);
+    ql = new QueryLayer(new SqliteDbAdapter(db));
   });
 
   afterEach(() => db.close());
 
-  it('searchCode from B never returns A symbols', () => {
-    const resB = ql.searchCode(PID_B, 'authentication');
+  it('searchCode from B never returns A symbols', async () => {
+    const resB = await ql.searchCode(PID_B, 'authentication');
     expect(resB.map(r => r.name)).toEqual(['authenticateBravo']);
-    const resA = ql.searchCode(PID_A, 'authentication');
+    const resA = await ql.searchCode(PID_A, 'authentication');
     expect(resA.map(r => r.name)).toEqual(['authenticateAlpha']);
   });
 
-  it('findSymbols is tenant-scoped', () => {
-    expect(ql.findSymbols(PID_B, 'authenticate').map(s => s.name)).toEqual(['authenticateBravo']);
-    expect(ql.findSymbols(PID_A, 'authenticate').map(s => s.name)).toEqual(['authenticateAlpha']);
+  it('findSymbols is tenant-scoped', async () => {
+    expect((await ql.findSymbols(PID_B, 'authenticate')).map(s => s.name)).toEqual(['authenticateBravo']);
+    expect((await ql.findSymbols(PID_A, 'authenticate')).map(s => s.name)).toEqual(['authenticateAlpha']);
   });
 
-  it('getFileSymbols scopes same relative path per tenant', () => {
-    const b = ql.getFileSymbols(PID_B, 'src/app.ts');
+  it('getFileSymbols scopes same relative path per tenant', async () => {
+    const b = await ql.getFileSymbols(PID_B, 'src/app.ts');
     expect(b.map(s => s.name)).toEqual(['authenticateBravo']);
   });
 
-  it('getIndexStatus counts exclude the other tenant', () => {
-    const status = ql.getIndexStatus(PID_B);
+  it('getIndexStatus counts exclude the other tenant', async () => {
+    const status = await ql.getIndexStatus(PID_B);
     expect(status.totalFiles).toBe(1);
     expect(status.totalSymbols).toBe(1);
     expect(status.totalModules).toBe(1);
   });
 
-  it('fail-closed: missing projectId returns nothing / zero', () => {
-    expect(ql.searchCode(undefined, 'authentication')).toEqual([]);
-    expect(ql.findSymbols(undefined, 'authenticate')).toEqual([]);
-    expect(ql.getIndexStatus(undefined).totalSymbols).toBe(0);
+  it('fail-closed: missing projectId returns nothing / zero', async () => {
+    expect(await ql.searchCode(undefined, 'authentication')).toEqual([]);
+    expect(await ql.findSymbols(undefined, 'authenticate')).toEqual([]);
+    expect((await ql.getIndexStatus(undefined)).totalSymbols).toBe(0);
   });
 });

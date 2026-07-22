@@ -40,7 +40,10 @@ export class OpenAIProvider extends BaseLlmProvider {
           this.contextWindowTokens = model.context_length;
         }
       }
-    } catch { /* keep default */ }
+    } catch (err) {
+      console.debug(`[OpenAIProvider] context window detection failed (non-fatal): ${(err as Error).message}`);
+      /* keep default */
+    }
   }
 
   async chat(messages: LlmMessage[], options?: LlmOptions): Promise<string> {
@@ -99,7 +102,12 @@ export class OpenAIProvider extends BaseLlmProvider {
     if (toolCalls && toolCalls.length > 0) {
       const calls: LlmToolCall[] = toolCalls.map(tc => {
         let args: Record<string, unknown> = {};
-        try { args = JSON.parse(tc.function.arguments); } catch { /* empty */ }
+        try {
+          args = JSON.parse(tc.function.arguments);
+        } catch (parseErr) {
+          // Malformed tool call arguments — log and continue with empty args rather than silently failing
+          console.warn(`[OpenAIProvider] Failed to parse tool call arguments for '${tc.function.name}': ${(parseErr as Error).message}`);
+        }
         return { id: tc.id, name: tc.function.name, arguments: args };
       });
       return { type: "tool_use", toolCalls: calls };

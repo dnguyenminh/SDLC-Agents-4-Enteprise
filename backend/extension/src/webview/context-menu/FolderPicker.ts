@@ -34,7 +34,9 @@ export class FolderPicker {
     let folders: FolderTreeNode[];
     try {
       folders = await this.bridge.getFolderTree();
-    } catch {
+    } catch (err) {
+      console.debug(`[FolderPicker] getFolderTree failed (non-fatal): ${(err as Error).message}`);
+      // Bridge unavailable (webview not connected) — degrade gracefully with empty list
       folders = [];
     }
 
@@ -96,3 +98,4 @@ export class FolderPicker {
     return this.panel?.isVisible() ?? false;
   }
 }
+

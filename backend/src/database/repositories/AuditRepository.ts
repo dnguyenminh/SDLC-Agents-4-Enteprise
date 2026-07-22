@@ -28,16 +28,16 @@ export class AuditRepository implements IAuditRepository {
    * @param details - Optional additional context
    * @throws RepositoryError on database failure
    */
-  recordAudit(
+  async recordAudit(
     userId: string,
     username: string,
     action: string,
     resource: string,
     resourceId?: string,
     details?: string,
-  ): void {
+  ): Promise<void> {
     try {
-      this.adapter.run(
+      await this.adapter.runAsync(
         `INSERT INTO audit_logs (user_id, username, action, resource, resource_id, details)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [userId, username, action, resource, resourceId ?? null, details ?? null],

@@ -181,62 +181,62 @@ describe('CallGraphService', () => {
   before(() => { db = setupTestDb(); });
   after(() => { db.close(); });
 
-  it('finds direct callers of a method', () => {
+  it('finds direct callers of a method', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
-    const result = service.findCallers('getUser', 1, 20);
+    const result = await service.findCallers('getUser', 1, 20);
     assert.ok(result.results.length >= 1);
     assert.ok(result.results.some(r => r.symbol === 'handleGetUser'));
     assert.equal(result.metadata.depthSearched, 1);
   });
 
-  it('finds transitive callers with depth 2', () => {
+  it('finds transitive callers with depth 2', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
-    const result = service.findCallers('findById', 2, 20);
+    const result = await service.findCallers('findById', 2, 20);
     // findById <- getUser <- handleGetUser
     assert.ok(result.results.length >= 1);
   });
 
-  it('finds callees of a method', () => {
+  it('finds callees of a method', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
-    const result = service.findCallees('handleGetUser', 1, 20);
+    const result = await service.findCallees('handleGetUser', 1, 20);
     assert.ok(result.results.length >= 1);
     assert.ok(result.results.some(r => r.symbol === 'getUser'));
   });
 
-  it('returns empty for unknown symbol', () => {
+  it('returns empty for unknown symbol', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
-    const result = service.findCallers('unknownFunction', 1, 20);
+    const result = await service.findCallers('unknownFunction', 1, 20);
     assert.equal(result.results.length, 0);
     assert.equal(result.resolvedTo.length, 0);
   });
 
-  it('respects limit parameter', () => {
+  it('respects limit parameter', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
-    const result = service.findCallers('getUser', 3, 1);
+    const result = await service.findCallers('getUser', 3, 1);
     assert.ok(result.results.length <= 1);
   });
 
-  it('clamps depth to max 5', () => {
+  it('clamps depth to max 5', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const service = new CallGraphService(graphRepo, resolver);
 
-    const result = service.findCallers('getUser', 10, 20);
+    const result = await service.findCallers('getUser', 10, 20);
     assert.equal(result.metadata.depthSearched, 5);
   });
 });
@@ -333,7 +333,7 @@ describe('ImpactAnalysisService', () => {
   before(() => { db = setupTestDb(); });
   after(() => { db.close(); });
 
-  it('analyzes impact of modifying a method', () => {
+  it('analyzes impact of modifying a method', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
@@ -342,7 +342,7 @@ describe('ImpactAnalysisService', () => {
     const testDetector = new TestDetector(new SqliteDbAdapter(db), 'test_proj');
     const service = new ImpactAnalysisService(new SqliteDbAdapter(db), callGraph, depGraph, resolver, testDetector);
 
-    const result = service.analyzeImpact('getUser', 'modify', 3, true, 'low');
+    const result = await service.analyzeImpact('getUser', 'modify', 3, true, 'low');
     assert.equal(result.symbol, 'getUser');
     assert.equal(result.action, 'modify');
     assert.ok(result.blastRadius.totalAffected >= 0);
@@ -350,7 +350,7 @@ describe('ImpactAnalysisService', () => {
     assert.ok(Array.isArray(result.recommendations));
   });
 
-  it('classifies delete action as higher severity', () => {
+  it('classifies delete action as higher severity', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
@@ -359,8 +359,8 @@ describe('ImpactAnalysisService', () => {
     const testDetector = new TestDetector(new SqliteDbAdapter(db), 'test_proj');
     const service = new ImpactAnalysisService(new SqliteDbAdapter(db), callGraph, depGraph, resolver, testDetector);
 
-    const modifyResult = service.analyzeImpact('getUser', 'modify', 2, false, 'low');
-    const deleteResult = service.analyzeImpact('getUser', 'delete', 2, false, 'low');
+    const modifyResult = await service.analyzeImpact('getUser', 'modify', 2, false, 'low');
+    const deleteResult = await service.analyzeImpact('getUser', 'delete', 2, false, 'low');
 
     // Delete should have same or more critical/high items
     const modifyCritical = modifyResult.blastRadius.summary.critical + modifyResult.blastRadius.summary.high;
@@ -368,7 +368,7 @@ describe('ImpactAnalysisService', () => {
     assert.ok(deleteCritical >= modifyCritical);
   });
 
-  it('returns empty result for unknown symbol', () => {
+  it('returns empty result for unknown symbol', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const callGraph = new CallGraphService(graphRepo, resolver);
@@ -377,7 +377,7 @@ describe('ImpactAnalysisService', () => {
     const testDetector = new TestDetector(new SqliteDbAdapter(db), 'test_proj');
     const service = new ImpactAnalysisService(new SqliteDbAdapter(db), callGraph, depGraph, resolver, testDetector);
 
-    const result = service.analyzeImpact('nonExistent', 'modify', 3, true, 'low');
+    const result = await service.analyzeImpact('nonExistent', 'modify', 3, true, 'low');
     assert.equal(result.blastRadius.totalAffected, 0);
     assert.ok(result.recommendations.length > 0);
   });

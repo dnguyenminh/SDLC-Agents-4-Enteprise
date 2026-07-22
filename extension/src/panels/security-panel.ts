@@ -6,8 +6,9 @@
 
 import * as vscode from "vscode";
 import { WebviewToExtMessage } from "../types";
-import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
 import { BasePanel } from "./base-panel";
+import { openFileAndReveal, normalizeResponse } from "../utils/panel-utils";
 
 interface SecurityFinding {
   id: string;
@@ -20,31 +21,16 @@ interface SecurityFinding {
 }
 
 export class SecurityPanel extends BasePanel {
-  constructor(mcpManager: McpServerManager, extensionUri: vscode.Uri) {
-    super("quality", mcpManager, extensionUri);
+  constructor(mcpManager: IServerManager, extensionUri: vscode.Uri) {
+    super("security", mcpManager, extensionUri);
   }
 
-  get viewType(): string {
-    return "kiroSecurityPanel";
-  }
+  /** viewType is now derived from PANEL_VIEW_TYPES["security"] — no override needed. */
 
-  protected create(column: vscode.ViewColumn = vscode.ViewColumn.One): void {
-    this._panel = vscode.window.createWebviewPanel(
-      "kiroSecurityPanel",
-      "Security Findings",
-      column,
-      { enableScripts: true, retainContextWhenHidden: true }
-    );
-    this._panel.webview.html = this.getHtml(this._panel.webview);
-    this._panel.webview.onDidReceiveMessage((msg: WebviewToExtMessage) => this.handleMessage(msg));
-    this._panel.onDidDispose(() => { this._panel = undefined; });
-  }
-
-  getHtml(_webview: vscode.Webview): string {
+  getHtml(webview: vscode.Webview): string {
     const nonce = this.getNonce();
-    return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
+    // Body content with embedded styles — getBaseHtml provides CSP/nonce wrapper
+    const bodyContent = `
 <style>
 body{font-family:var(--vscode-font-family);padding:16px;color:var(--vscode-foreground);background:var(--vscode-editor-background)}
 .severity-group{margin-bottom:16px}.severity-header{font-weight:bold;padding:4px 8px;border-radius:3px;margin-bottom:8px}
@@ -54,7 +40,7 @@ body{font-family:var(--vscode-font-family);padding:16px;color:var(--vscode-foreg
 .finding-file{font-size:.85em;opacity:.8}.remediation{font-size:.85em;color:var(--vscode-descriptionForeground);margin-top:4px}
 .loading{text-align:center;padding:40px;opacity:.7}#summary{display:flex;gap:12px;margin-bottom:16px}
 .badge{padding:2px 8px;border-radius:10px;font-size:.85em}
-</style></head><body>
+</style>
 <h2>Security Findings</h2><div id="summary"></div>
 <div id="loading" class="loading">Scanning for security issues...</div><div id="findings"></div>
 <script nonce="${nonce}">
@@ -73,7 +59,10 @@ document.getElementById('summary').innerHTML=s||'<span>No findings</span>';
 document.getElementById('findings').innerHTML=h||'<p>No security issues found.</p>';
 document.querySelectorAll('.finding').forEach(el=>{el.addEventListener('click',()=>{
 vscode.postMessage({type:'openFile',file:el.dataset.file,line:parseInt(el.dataset.line)});});});}
-</script></body></html>`;
+</script>`;
+
+    // Delegate CSP/nonce wrapper to shared getBaseHtml (no external assets needed)
+    return this.getBaseHtml(webview, bodyContent, [], []);
   }
 
   async loadData(): Promise<void> {
@@ -92,7 +81,11 @@ vscode.postMessage({type:'openFile',file:el.dataset.file,line:parseInt(el.datase
         await this.loadData();
         break;
       case "manualRetry":
-        try { await this.mcpManager.reconnect(); } catch { /* ignore */ }
+        try {
+          await (this.mcpManager.reconnect?.() ?? this.mcpManager.restart());
+        } catch (err) {
+          console.debug(`[SecurityPanel] reconnect failed (non-fatal): ${(err as Error).message}`);
+        }
         break;
       default:
         await this.handleOpenFile(msg as any);
@@ -103,12 +96,10 @@ vscode.postMessage({type:'openFile',file:el.dataset.file,line:parseInt(el.datase
   private async handleOpenFile(msg: { type: string; file?: string; line?: number }): Promise<void> {
     if (msg.type !== "openFile" || !msg.file) { return; }
     try {
-      const doc = await vscode.workspace.openTextDocument(msg.file);
-      const editor = await vscode.window.showTextDocument(doc);
-      const pos = new vscode.Position(Math.max(0, (msg.line || 1) - 1), 0);
-      editor.selection = new vscode.Selection(pos, pos);
-      editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
-    } catch { /* file may not exist */ }
+      await openFileAndReveal(msg.file, msg.line || 1);
+    } catch (err) {
+      console.debug(`[SecurityPanel] openFileAndReveal failed (non-fatal): ${(err as Error).message}`);
+    }
   }
 
   private async fetchFindings(): Promise<SecurityFinding[]> {
@@ -116,37 +107,39 @@ vscode.postMessage({type:'openFile',file:el.dataset.file,line:parseInt(el.datase
 
     try {
       const raw = await this.mcpManager.invokeTool("code_search", { query: "security vulnerability", limit: 50 });
-      const parsed = JSON.parse(raw);
-      const items = Array.isArray(parsed) ? parsed : (parsed.results || []);
+      const items = normalizeResponse<Record<string, unknown>>(raw, "results");
       for (const item of items) {
         findings.push({
-          id: String(item.id || findings.length),
-          severity: toSeverity(item.severity || item.kind),
-          title: item.name || item.title || "Security Issue",
-          file: item.file || item.path || "",
-          line: item.line || 1,
-          description: item.description || item.content || "",
-          remediation: item.remediation || item.suggestion || "Review and fix this issue.",
+          id: String(item["id"] ?? findings.length),
+          severity: toSeverity(item["severity"] as string || item["kind"] as string),
+          title: item["name"] as string || item["title"] as string || "Security Issue",
+          file: item["file"] as string || item["path"] as string || "",
+          line: item["line"] as number || 1,
+          description: item["description"] as string || item["content"] as string || "",
+          remediation: item["remediation"] as string || item["suggestion"] as string || "Review and fix this issue.",
         });
       }
-    } catch { /* MCP tool may not be available */ }
+    } catch (err) {
+      console.warn(`[SecurityPanel] code_search unavailable: ${(err as Error).message}`);
+    }
 
     try {
       const raw = await this.mcpManager.invokeTool("mem_search", { query: "security", type: "ERROR_PATTERN", limit: 20 });
-      const parsed = JSON.parse(raw);
-      const items = Array.isArray(parsed) ? parsed : (parsed.results || []);
+      const items = normalizeResponse<Record<string, unknown>>(raw, "results");
       for (const item of items) {
         findings.push({
-          id: String(item.id || findings.length),
+          id: String(item["id"] ?? findings.length),
           severity: "medium",
-          title: item.title || item.summary || "Error Pattern",
-          file: item.source || "",
+          title: item["title"] as string || item["summary"] as string || "Error Pattern",
+          file: item["source"] as string || "",
           line: 1,
-          description: item.content || "",
-          remediation: item.suggestion || "Review error pattern for security implications.",
+          description: item["content"] as string || "",
+          remediation: item["suggestion"] as string || "Review error pattern for security implications.",
         });
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.warn(`[SecurityPanel] mem_search unavailable: ${(err as Error).message}`);
+    }
 
     return findings;
   }

@@ -79,7 +79,9 @@ export class ListPicker {
         label: name,
         icon: '\u{1F4C4}',
       }));
-    } catch {
+    } catch (err) {
+      console.debug(`[ListPicker] loadSpecs failed (non-fatal): ${(err as Error).message}`);
+      // Bridge unavailable — degrade gracefully with empty spec list
       return [];
     }
   }
@@ -92,7 +94,9 @@ export class ListPicker {
         label: name.replace(/\.md$/, ''),
         icon: '\u{1F3AF}',
       }));
-    } catch {
+    } catch (err) {
+      console.debug(`[ListPicker] loadSteering failed (non-fatal): ${(err as Error).message}`);
+      // Bridge unavailable — degrade gracefully with empty steering list
       return [];
     }
   }
@@ -106,7 +110,9 @@ export class ListPicker {
         description: `${r.server} - ${r.type}`,
         icon: '\u{1F48E}',
       }));
-    } catch {
+    } catch (err) {
+      console.debug(`[ListPicker] loadMcp failed (non-fatal): ${(err as Error).message}`);
+      // Bridge unavailable — degrade gracefully with empty MCP resource list
       return [];
     }
   }
@@ -170,3 +176,4 @@ export class ListPicker {
     return this.panel?.isVisible() ?? false;
   }
 }
+

@@ -14,7 +14,7 @@ export interface ResolvedSymbolFull extends ResolvedSymbol {
   signature?: string;
 }
 
-export function resolveSymbolInput(input: string, db: DatabaseAdapter, resolver: SymbolResolver): ResolvedSymbolFull | null {
+export async function resolveSymbolInput(input: string, db: DatabaseAdapter, resolver: SymbolResolver): Promise<ResolvedSymbolFull | null> {
   if (input.includes(':') && /:\d+$/.test(input)) {
     const colonIdx = input.lastIndexOf(':');
     const file = input.substring(0, colonIdx);
@@ -22,13 +22,14 @@ export function resolveSymbolInput(input: string, db: DatabaseAdapter, resolver:
     return findSymbolAtLine(file, line, db);
   }
 
-  const resolved = resolver.resolve(input);
+  const resolved = await resolver.resolve(input);
   if (resolved.length === 0) return null;
 
   const sym = resolved[0];
-  const extra = db.prepare(`
-    SELECT end_line as endLine, signature FROM symbols WHERE id = ?
-  `).get(sym.id) as { endLine: number; signature: string } | undefined;
+  const extra = await db.getAsync<{ endLine: number; signature: string }>(
+    `SELECT end_line as endLine, signature FROM symbols WHERE id = ?`,
+    [sym.id],
+  );
 
   return {
     ...sym,
@@ -70,7 +71,7 @@ export function getSignature(symbol: ResolvedSymbolFull, db: DatabaseAdapter): s
 }
 
 export async function getCallerContext(symbol: ResolvedSymbolFull, depth: number, callGraph: CallGraphService, workspace: string): Promise<CallerContext[]> {
-  const result = callGraph.findCallers(symbol.name, depth, 10);
+  const result = await callGraph.findCallers(symbol.name, depth, 10);
   return result.results.map(caller => {
     const context = getLineContext(caller.filePath, caller.callSiteLine, 2, workspace);
     return {
@@ -173,3 +174,5 @@ export function symbolNotFoundResponse(symbol: string, budget: number, startTime
     }
   };
 }
+
+

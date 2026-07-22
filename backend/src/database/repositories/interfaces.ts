@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SA4E-50 — Repository interfaces (Interface Segregation Principle).
  * Each interface is small and focused on a single domain area.
  * Implements: UC-05, ISP
@@ -12,13 +12,13 @@ import type { GraphNodeCounts, UpsertNodeParams, AuditEntry, PaginatedResult, Sy
  */
 export interface IGraphRepository {
   /** Get node counts with NULL project_id fallback. [BR-04] */
-  getNodeCounts(projectId: string): GraphNodeCounts;
+  getNodeCounts(projectId: string): Promise<GraphNodeCounts>;
   /** Delete all graph_nodes and graph_edges in a transaction. [UC-06] */
-  resetGraph(): void;
+  resetGraph(): Promise<void>;
   /** INSERT OR REPLACE a graph node. */
-  upsertNode(params: UpsertNodeParams): void;
+  upsertNode(params: UpsertNodeParams): Promise<void>;
   /** Register/update a project in project_registry. [Source: api-index.ts] */
-  registerProject(projectId: string, displayName: string, workspacePath: string): void;
+  registerProject(projectId: string, displayName: string, workspacePath: string): Promise<void>;
 }
 
 /**
@@ -27,11 +27,11 @@ export interface IGraphRepository {
  */
 export interface IUserRepository {
   /** Total user count. [Source: sse.ts, analytics.ts] */
-  getUserCount(): number;
+  getUserCount(): Promise<number>;
   /** User count for a specific access group. [Source: rbac.ts] */
-  getUserCountByGroup(accessGroupId: string): number;
+  getUserCountByGroup(accessGroupId: string): number | Promise<number>;
   /** Update user email by userId. [Source: users.ts] */
-  updateEmail(userId: string, email: string): void;
+  updateEmail(userId: string, email: string): void | Promise<void>;
 }
 
 /**
@@ -40,9 +40,9 @@ export interface IUserRepository {
  */
 export interface ISymbolRepository {
   /** Count of code symbols matching SYMBOL_KINDS. */
-  getSymbolCount(): number;
+  getSymbolCount(): Promise<number>;
   /** Get detail of a single symbol by ID (for KB Graph node click). */
-  getSymbolDetail(symbolId: string): SymbolDetail | null;
+  getSymbolDetail(symbolId: string): Promise<SymbolDetail | null>;
 }
 
 /**

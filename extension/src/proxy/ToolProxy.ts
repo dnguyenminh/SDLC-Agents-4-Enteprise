@@ -25,7 +25,10 @@ export class ToolProxy {
       const tools = await this.httpClient.get<ToolDefinition[]>("/mcp/tools/list");
       this.toolRegistry.clear();
       for (const tool of tools) { this.toolRegistry.set(tool.name, tool); }
-    } catch { /* non-fatal */ }
+    } catch (err) {
+      // Non-fatal — keep existing registry, but log so stale registry is visible
+      console.warn(`[ToolProxy] refreshTools failed, keeping existing registry: ${(err as Error).message}`);
+    }
   }
 
   async callTool(name: string, args: Record<string, unknown>): Promise<ToolResult> {

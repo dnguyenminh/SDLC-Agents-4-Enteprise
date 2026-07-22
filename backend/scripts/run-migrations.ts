@@ -1,4 +1,4 @@
-#!/usr/bin/env npx tsx
+﻿#!/usr/bin/env npx tsx
 /**
  * SA4E-44 Database Migration Runner
  *
@@ -85,7 +85,7 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
       );
       CREATE INDEX IF NOT EXISTS idx_pending_tasks_status ON pending_tasks(status);
       CREATE INDEX IF NOT EXISTS idx_pending_tasks_type_status ON pending_tasks(task_type, status);
-      CREATE INDEX IF NOT EXISTS idx_pending_tasks_priority ON pending_tasks(priority DESC, created_at ASC);
+      -- idx_pending_tasks_priority created in 003b after priority column is added
     `,
   },
   {
@@ -151,6 +151,13 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
         dependency_type VARCHAR(20) NOT NULL DEFAULT 'import'
       );
       CREATE INDEX IF NOT EXISTS idx_code_deps_source ON code_dependencies(source_file_id);
+      -- idx_code_deps_target: created in 007b after ensuring column exists
+    `,
+  },
+  {
+    name: '007b-code-deps-patch',
+    sql: `
+      ALTER TABLE code_dependencies ADD COLUMN IF NOT EXISTS target_file_id INTEGER;
       CREATE INDEX IF NOT EXISTS idx_code_deps_target ON code_dependencies(target_file_id);
     `,
   },
@@ -166,6 +173,29 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
       );
       CREATE INDEX IF NOT EXISTS idx_call_graph_caller ON code_call_graph(caller_symbol_id);
       CREATE INDEX IF NOT EXISTS idx_call_graph_callee ON code_call_graph(callee_symbol_id);
+    `,
+  },
+  {
+    name: '009-drop-unused-tables',
+    sql: `
+      DROP TABLE IF EXISTS entry_tags;
+      DROP TABLE IF EXISTS tags;
+      DROP TABLE IF EXISTS attachments;
+      DROP TABLE IF EXISTS templates;
+      DROP TABLE IF EXISTS feedback;
+      DROP TABLE IF EXISTS reminders;
+      DROP TABLE IF EXISTS popular_queries;
+      DROP TABLE IF EXISTS entity_index;
+      DROP TABLE IF EXISTS agent_scope_config;
+    `,
+  },
+  {
+    name: '010-fix-pending-tasks-serial',
+    sql: `
+      CREATE SEQUENCE IF NOT EXISTS pending_tasks_id_seq;
+      ALTER TABLE pending_tasks ALTER COLUMN id SET DEFAULT nextval('pending_tasks_id_seq');
+      SELECT setval('pending_tasks_id_seq', COALESCE((SELECT MAX(id) FROM pending_tasks), 0) + 1);
+      ALTER SEQUENCE pending_tasks_id_seq OWNED BY pending_tasks.id;
     `,
   },
 ];
@@ -219,3 +249,8 @@ main().catch((err) => {
   console.error('Migration runner error:', err);
   process.exit(1);
 });
+
+
+
+
+

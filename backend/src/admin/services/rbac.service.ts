@@ -1,4 +1,4 @@
-// KSA-286: RBAC Service
+// KSA-286: RBAC Service — SQLite-only path (uses raw better-sqlite3 directly)
 import { AccessGroupWithPermissions, GroupPermission, AdminErrorCode } from '../types/admin.types.js';
 import { invalidateRBACCache } from '../middleware/rbac.middleware.js';
 
@@ -7,6 +7,7 @@ export class RBACService {
 
   private rolesTableExists: boolean | null = null;
 
+  // SQLite-only path: uses raw better-sqlite3 Database.prepare() directly
   private hasRolesTable(): boolean {
     if (this.rolesTableExists === null) {
       const result = this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='roles'").get();
@@ -47,7 +48,9 @@ export class RBACService {
     const group = this.db.prepare('SELECT * FROM access_groups WHERE access_group_id = ?').get(groupId);
     if (!group) throw { code: AdminErrorCode.ENTRY_NOT_FOUND };
     this.db.transaction(() => {
-      this.db.prepare("UPDATE access_groups SET access_group_name = ?, updated_at = datetime('now') WHERE access_group_id = ?").run(name, groupId);
+      // SQLite-only path: rbac uses raw better-sqlite3
+      const nowExpr = "datetime('now')";
+      this.db.prepare(`UPDATE access_groups SET access_group_name = ?, updated_at = ${nowExpr} WHERE access_group_id = ?`).run(name, groupId);
       this.db.prepare('DELETE FROM group_permissions WHERE access_group_id = ?').run(groupId);
       for (const p of permissions) { this.db.prepare('INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)').run(groupId, p.permissionId, JSON.stringify(p.roleData || {})); }
     })();
@@ -96,4 +99,3 @@ export class RBACService {
     invalidateRBACCache();
   }
 }
-

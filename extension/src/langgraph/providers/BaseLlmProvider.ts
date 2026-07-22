@@ -92,7 +92,12 @@ export abstract class BaseLlmProvider implements LlmProvider {
             const parsed = JSON.parse(data);
             const token = extractToken(parsed);
             if (token) yield token;
-          } catch { /* skip malformed */ }
+          } catch {
+            // Skip malformed SSE line — log only in debug to avoid stream noise
+            if (data && data.length < 500) {
+              console.debug(`[BaseLlmProvider] Skipped malformed SSE line: ${data.slice(0, 80)}`);
+            }
+          }
         }
       }
       // Flush remaining buffer
@@ -104,10 +109,14 @@ export abstract class BaseLlmProvider implements LlmProvider {
             const token = extractToken(parsed);
             if (token) yield token;
           }
-        } catch { /* ignore */ }
+        } catch (flushErr) {
+          // Flush parse failure means the last SSE chunk was incomplete — not critical
+          console.debug(`[BaseLlmProvider] Flush buffer parse error (non-fatal): ${(flushErr as Error).message}`);
+        }
       }
     } finally {
       reader.releaseLock();
     }
   }
 }
+

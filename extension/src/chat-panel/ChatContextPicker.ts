@@ -6,6 +6,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { ChatExtToWebviewMessage } from "./message-protocol";
+import { httpPostJson } from "../utils/http-client-utils";
 
 type ContextItem = { type: string; label: string; path?: string; content?: string };
 
@@ -109,7 +110,10 @@ export class ChatContextPicker {
         await vscode.commands.executeCommand("workbench.action.terminal.copySelection");
         content = (await vscode.env.clipboard.readText()).slice(-20000);
         await vscode.commands.executeCommand("workbench.action.terminal.clearSelection");
-      } catch { content = `Terminal "${activeTerminal.name}" content could not be read.`; }
+      } catch (err) {
+        console.debug(`[ChatContextPicker] pickTerminal clipboard read failed (non-fatal): ${(err as Error).message}`);
+        content = `Terminal "${activeTerminal.name}" content could not be read.`;
+      }
     } else { content = "No active terminal."; }
     return { type: "terminal", label: "Terminal", content };
   }
@@ -169,23 +173,17 @@ export class ChatContextPicker {
     return undefined;
   }
 
-  private fetchMcpTools(url: string): Promise<Array<{ name: string; description?: string }>> {
-    const http = require("http");
-    return new Promise((resolve) => {
-      const body = JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} });
-      const parsedUrl = new URL(url);
-      const req = http.request({
-        hostname: parsedUrl.hostname, port: parsedUrl.port, path: parsedUrl.pathname,
-        method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) }, timeout: 5000,
-      }, (res: any) => {
-        let data = "";
-        res.on("data", (chunk: string) => data += chunk);
-        res.on("end", () => { try { resolve(JSON.parse(data).result?.tools || []); } catch { resolve([]); } });
-      });
-      req.on("error", () => resolve([]));
-      req.on("timeout", () => { req.destroy(); resolve([]); });
-      req.write(body);
-      req.end();
-    });
+  private async fetchMcpTools(url: string): Promise<Array<{ name: string; description?: string }>> {
+    try {
+      const result = await httpPostJson<{ result?: { tools?: Array<{ name: string; description?: string }> } }>(
+        url,
+        { jsonrpc: "2.0", id: 1, method: "tools/list", params: {} },
+        { timeoutMs: 5000 }
+      );
+      return result.result?.tools || [];
+    } catch (err) {
+      console.debug(`[ChatContextPicker] fetchMcpTools failed for ${url} (non-fatal): ${(err as Error).message}`);
+      return [];
+    }
   }
 }

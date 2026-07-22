@@ -1,4 +1,4 @@
-/**
+﻿/**
  * code_context tool — Get surrounding context for a symbol or file region.
  * Reads actual source code lines around a symbol definition.
  */
@@ -24,17 +24,17 @@ export function registerCodeContext(
       __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
     async ({ file, symbol, startLine, endLine, contextLines, __projectId }) => {
-      const text = getContext(workspace, file, symbol, startLine, endLine, contextLines, queryLayer, __projectId);
+      const text = await getContext(workspace, file, symbol, startLine, endLine, contextLines, queryLayer, __projectId);
       return { content: [{ type: 'text', text }] };
     }
   );
 }
 
-function getContext(
+async function getContext(
   workspace: string, file: string, symbol: string | undefined,
   startLine: number | undefined, endLine: number | undefined,
   contextLines: number, queryLayer: QueryLayer, projectId?: string
-): string {
+): Promise<string> {
   // SEC-04: reject absolute/traversal/null-byte paths and confirm containment.
   const fullPath = resolveWithinWorkspace(workspace, file);
   if (!fullPath) return `Invalid path: ${file}`;
@@ -52,11 +52,11 @@ function getContext(
   return formatLines(lines, start, end, file);
 }
 
-function getSymbolContext(
+async function getSymbolContext(
   file: string, symbol: string, lines: string[],
   contextLines: number, queryLayer: QueryLayer, projectId?: string
-): string {
-  const symbols = queryLayer.getFileSymbols(projectId, file);
+): Promise<string> {
+  const symbols = await queryLayer.getFileSymbols(projectId, file);
   const match = symbols.find(s => s.name === symbol);
   if (!match) return `Symbol "${symbol}" not found in ${file}`;
 

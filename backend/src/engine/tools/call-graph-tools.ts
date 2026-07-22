@@ -41,7 +41,7 @@ export const CALL_GRAPH_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeCallers(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+export async function handleCodeCallers(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string> {
   const symbol = args.symbol as string;
   if (!symbol) return JSON.stringify({ error: 'Parameter "symbol" is required' });
   const depth = (args.depth as number) ?? 1;
@@ -51,11 +51,11 @@ export function handleCodeCallers(args: Record<string, unknown>, adapter: Databa
   const graphRepo = new GraphRepository(adapter, projectId);
   const resolver = new SymbolResolver(adapter, projectId);
   const service = new CallGraphService(graphRepo, resolver);
-  const result = service.findCallers(symbol, depth, limit, fileFilter, kindFilter);
+  const result = await service.findCallers(symbol, depth, limit, fileFilter, kindFilter);
   return formatCallGraphResult(result, 'callers');
 }
 
-export function handleCodeCallees(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+export async function handleCodeCallees(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string> {
   const symbol = args.symbol as string;
   if (!symbol) return JSON.stringify({ error: 'Parameter "symbol" is required' });
   const depth = (args.depth as number) ?? 1;
@@ -65,7 +65,7 @@ export function handleCodeCallees(args: Record<string, unknown>, adapter: Databa
   const graphRepo = new GraphRepository(adapter, projectId);
   const resolver = new SymbolResolver(adapter, projectId);
   const service = new CallGraphService(graphRepo, resolver);
-  const result = service.findCallees(symbol, depth, limit, fileFilter, includeExternal);
+  const result = await service.findCallees(symbol, depth, limit, fileFilter, includeExternal);
   return formatCallGraphResult(result, 'callees');
 }
 
@@ -95,3 +95,7 @@ function formatCallGraphResult(result: CallGraphResponse, direction: string): st
   lines.push(`\n--- ${result.metadata.totalCount} results | ${result.metadata.queryTimeMs}ms${result.metadata.truncated ? ' | TRUNCATED' : ''}`);
   return lines.join('\n');
 }
+
+
+
+

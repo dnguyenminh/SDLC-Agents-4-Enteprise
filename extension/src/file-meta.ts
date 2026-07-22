@@ -12,7 +12,8 @@ function isGitRepo(workspaceRoot: string): boolean {
   try {
     const gitDir = path.join(workspaceRoot, '.git');
     return fs.existsSync(gitDir);
-  } catch {
+  } catch (err) {
+    console.debug("[file-meta] isGitRepo check failed: " + (err as Error).message);
     return false;
   }
 }
@@ -20,7 +21,8 @@ function isGitRepo(workspaceRoot: string): boolean {
 function execGit(args: string[], cwd: string): string | null {
   try {
     return execSync(`git ${args.join(' ')}`, { cwd, encoding: 'utf-8', timeout: 30000, maxBuffer: 50 * 1024 * 1024 });
-  } catch {
+  } catch (err) {
+    console.debug("[file-meta] git command failed: " + (err as Error).message);
     return null;
   }
 }
@@ -75,8 +77,8 @@ export function collectFileMetas(workspaceRoot: string): { fileMetas: Map<string
       fileMetas.set(relPath, { fileCreatedAt: info.fileCreatedAt, fileAuthor: info.fileAuthor });
     }
     repoVersion = extractRepoVersion(workspaceRoot);
-  } catch {
-    // git failed entirely, fall back below
+  } catch (err) {
+    console.warn("[file-meta] collectFileMetas git failed, using fallback: " + (err as Error).message);
   }
 
   return { fileMetas, repoVersion };
@@ -86,7 +88,9 @@ export function getFileMetaFallback(filePath: string): FileMetaInfo {
   try {
     const stat = fs.statSync(filePath);
     return { fileCreatedAt: stat.birthtime?.toISOString() };
-  } catch {
+  } catch (err) {
+    console.debug("[file-meta] getFileMetaFallback stat failed: " + (err as Error).message);
     return {};
   }
 }
+

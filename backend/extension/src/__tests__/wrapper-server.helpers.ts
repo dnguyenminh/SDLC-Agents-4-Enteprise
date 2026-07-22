@@ -1,6 +1,11 @@
 /**
  * Test helpers for WrapperServer integration tests.
  * Provides mock deps, HTTP request utility, and shared fixtures.
+ *
+ * NOTE: Raw http.request() is intentional here — this is the TEST CLIENT
+ * that exercises the WrapperServer from the outside. Using the production
+ * httpPostJson/httpGetJson utilities would mask real integration issues.
+ * Test clients need fine-grained control over headers and raw bytes.
  */
 import * as http from 'http';
 import * as fs from 'fs';
@@ -68,7 +73,7 @@ export function createTestServer(overrides?: Partial<MockDeps>): { server: Wrapp
   return { server, deps };
 }
 
-/** Send a JSON-RPC request to the server */
+/** Send a JSON-RPC request to the server — raw http.request intentional (test client) */
 export function postMcp(port: number, body: unknown): Promise<{ status: number; body: any }> {
   return new Promise((resolve, reject) => {
     const data = typeof body === 'string' ? body : JSON.stringify(body);
@@ -91,7 +96,7 @@ export function postMcp(port: number, body: unknown): Promise<{ status: number; 
   });
 }
 
-/** Send raw bytes to the server (for oversized body test) */
+/** Send raw bytes to the server (for oversized body test) — raw intentional */
 export function postRaw(port: number, data: Buffer): Promise<{ status: number | null; error?: string }> {
   return new Promise((resolve) => {
     const req = http.request(
@@ -112,6 +117,7 @@ export function postRaw(port: number, data: Buffer): Promise<{ status: number | 
 /**
  * Open the GET /mcp SSE channel and resolve on the first event.
  * Closes the request after the first `event: message` frame.
+ * Raw http.request intentional — SSE streaming requires direct socket control.
  */
 export function openSse(port: number, timeoutMs = 3000): Promise<{ status: number; contentType: string; chunk: string }> {
   return new Promise((resolve, reject) => {

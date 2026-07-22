@@ -1,9 +1,11 @@
 /**
  * EpochService — epoch boundary management.
+ * SA4E-53: converted to async DatabaseAdapter for PostgreSQL compatibility.
  * Triggers re-verification of knowledge entries when a major version change occurs.
  */
 
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
 import type { Logger } from 'pino';
 
 export interface EpochTriggerResult {
@@ -18,116 +20,119 @@ export interface EpochStatus {
 }
 
 export class EpochService {
-  private readonly db: Database.Database;
+  private readonly adapter: DatabaseAdapter;
+  private readonly dialect: DialectHelper;
   private readonly logger: Logger;
 
-  constructor(db: Database.Database, logger: Logger) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, logger: Logger) {
+    this.adapter = adapter;
+    this.dialect = new DialectHelper(adapter.getEngine());
     this.logger = logger.child({ service: 'epoch' });
   }
 
-  trigger(scope: string, epochId: string): EpochTriggerResult {
+  async trigger(scope: string, epochId: string): Promise<EpochTriggerResult> {
     const pattern = `%${scope}%`;
-    const entries = this.db.prepare(`
+    const entries = await this.adapter.allAsync<{ id: number }>(`
       SELECT id FROM knowledge_entries
       WHERE archived = 0
         AND (source_ref LIKE ? OR tags LIKE ? OR scope = ?)
-    `).all(pattern, pattern, scope) as Array<{ id: number }>;
+    `, [pattern, pattern, scope]);
 
     const ids = entries.map(e => e.id);
     if (ids.length > 0) {
-      this.flagEntries(ids, epochId);
+      await this.flagEntries(ids, epochId);
     }
 
-    this.auditEpoch(epochId, scope, ids.length);
+    await this.auditEpoch(epochId, scope, ids.length);
     this.logger.info({ epochId, scope, affected: ids.length }, 'Epoch triggered');
     return { epoch_id: epochId, affected_count: ids.length, entry_ids: ids };
   }
 
-  verify(entryId: number, comment?: string): boolean {
-    const entry = this.getEntry(entryId);
+  async verify(entryId: number, comment?: string): Promise<boolean> {
+    const entry = await this.getEntry(entryId);
     if (!entry) throw new Error('ENTRY_NOT_FOUND');
     if (entry.needs_verification !== 1) throw new Error('NOT_FLAGGED');
 
-    this.db.prepare(`
+    await this.adapter.runAsync(`
       UPDATE knowledge_entries
-      SET needs_verification = 0, confidence = 1.0, updated_at = datetime('now')
+      SET needs_verification = 0, confidence = 1.0, updated_at = ${this.dialect.now()}
       WHERE id = ?
-    `).run(entryId);
+    `, [entryId]);
 
-    this.auditAction('EPOCH_VERIFY', entryId, comment);
+    await this.auditAction('EPOCH_VERIFY', entryId, comment);
     return true;
   }
 
-  reject(entryId: number, comment?: string): boolean {
-    const entry = this.getEntry(entryId);
+  async reject(entryId: number, comment?: string): Promise<boolean> {
+    const entry = await this.getEntry(entryId);
     if (!entry) throw new Error('ENTRY_NOT_FOUND');
     if (entry.needs_verification !== 1) throw new Error('NOT_FLAGGED');
 
-    this.db.prepare(`
+    await this.adapter.runAsync(`
       UPDATE knowledge_entries
-      SET archived = 1, needs_verification = 0, updated_at = datetime('now')
+      SET archived = 1, needs_verification = 0, updated_at = ${this.dialect.now()}
       WHERE id = ?
-    `).run(entryId);
+    `, [entryId]);
 
-    this.auditAction('EPOCH_REJECT', entryId, comment);
+    await this.auditAction('EPOCH_REJECT', entryId, comment);
     return true;
   }
 
-  getStatus(epochId?: string): EpochStatus {
-    if (epochId) {
-      return this.statusByEpoch(epochId);
-    }
+  async getStatus(epochId?: string): Promise<EpochStatus> {
+    if (epochId) return this.statusByEpoch(epochId);
     return this.statusAll();
   }
 
-  private flagEntries(ids: number[], epochId: string): void {
-    const stmt = this.db.prepare(`
-      UPDATE knowledge_entries
-      SET needs_verification = 1, epoch_id = ?, updated_at = datetime('now')
-      WHERE id = ?
-    `);
-    const txn = this.db.transaction(() => {
-      for (const id of ids) stmt.run(epochId, id);
-    });
-    txn();
+  private async flagEntries(ids: number[], epochId: string): Promise<void> {
+    for (const id of ids) {
+      await this.adapter.runAsync(`
+        UPDATE knowledge_entries
+        SET needs_verification = 1, epoch_id = ?, updated_at = ${this.dialect.now()}
+        WHERE id = ?
+      `, [epochId, id]);
+    }
   }
 
-  private getEntry(entryId: number): { id: number; needs_verification: number } | undefined {
-    return this.db.prepare(
+  private async getEntry(entryId: number): Promise<{ id: number; needs_verification: number } | undefined> {
+    return this.adapter.getAsync<{ id: number; needs_verification: number }>(
       'SELECT id, needs_verification FROM knowledge_entries WHERE id = ?',
-    ).get(entryId) as { id: number; needs_verification: number } | undefined;
+      [entryId],
+    );
   }
 
-  private statusByEpoch(epochId: string): EpochStatus {
-    const pending = this.db.prepare(
+  private async statusByEpoch(epochId: string): Promise<EpochStatus> {
+    const pending = await this.adapter.getAsync<{ cnt: number }>(
       'SELECT COUNT(*) as cnt FROM knowledge_entries WHERE epoch_id = ? AND needs_verification = 1',
-    ).get(epochId) as { cnt: number };
-    const verified = this.db.prepare(
+      [epochId],
+    );
+    const verified = await this.adapter.getAsync<{ cnt: number }>(
       'SELECT COUNT(*) as cnt FROM knowledge_entries WHERE epoch_id = ? AND needs_verification = 0',
-    ).get(epochId) as { cnt: number };
-    return { pending_count: pending.cnt, verified_count: verified.cnt };
+      [epochId],
+    );
+    return { pending_count: pending?.cnt ?? 0, verified_count: verified?.cnt ?? 0 };
   }
 
-  private statusAll(): EpochStatus {
-    const pending = this.db.prepare(
+  private async statusAll(): Promise<EpochStatus> {
+    const pending = await this.adapter.getAsync<{ cnt: number }>(
       'SELECT COUNT(*) as cnt FROM knowledge_entries WHERE needs_verification = 1',
-    ).get() as { cnt: number };
-    const verified = this.db.prepare(
+    );
+    const verified = await this.adapter.getAsync<{ cnt: number }>(
       'SELECT COUNT(*) as cnt FROM knowledge_entries WHERE needs_verification = 0 AND epoch_id IS NOT NULL',
-    ).get() as { cnt: number };
-    return { pending_count: pending.cnt, verified_count: verified.cnt };
+    );
+    return { pending_count: pending?.cnt ?? 0, verified_count: verified?.cnt ?? 0 };
   }
 
-  private auditEpoch(epochId: string, scope: string, count: number): void {
-    this.db.prepare(
+  private async auditEpoch(epochId: string, scope: string, count: number): Promise<void> {
+    await this.adapter.runAsync(
       `INSERT INTO memory_audit (operation, details) VALUES (?, ?)`,
-    ).run('EPOCH_TRIGGER', JSON.stringify({ epoch_id: epochId, scope, affected: count }));
+      ['EPOCH_TRIGGER', JSON.stringify({ epoch_id: epochId, scope, affected: count })],
+    );
   }
 
-  private auditAction(operation: string, entryId: number, comment?: string): void {
-    this.db.prepare(
+  private async auditAction(operation: string, entryId: number, comment?: string): Promise<void> {
+    await this.adapter.runAsync(
       `INSERT INTO memory_audit (operation, entry_id, details) VALUES (?, ?, ?)`,
-    ).run(operation, entryId, comment ?? null);
+      [operation, entryId, comment ?? null],
+    );
   }
 }

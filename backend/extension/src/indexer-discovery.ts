@@ -97,6 +97,10 @@ export function resolveViewerPort(root: string): number {
         if (env.CODE_INTEL_VIEWER_PORT) { return parseInt(env.CODE_INTEL_VIEWER_PORT, 10); }
       }
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.debug(`[indexer-discovery] resolveViewerPort failed (non-fatal): ${(err as Error).message}`);
+  }
   return 3200;
 }
+
+

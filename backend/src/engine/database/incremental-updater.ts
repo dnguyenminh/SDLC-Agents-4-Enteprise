@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../database/dialect/DialectHelper.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'incremental-updater' });
@@ -18,19 +19,21 @@ export interface ChangeSet {
 
 export class IncrementalUpdater {
   private adapter: DatabaseAdapter;
+  private dialect: DialectHelper;
 
   constructor(adapter: DatabaseAdapter) {
     this.adapter = adapter;
+    this.dialect = new DialectHelper(adapter.getEngine());
   }
 
   /** Scan workspace and compare against stored file index. */
-  scanChanges(files: { relativePath: string; absolutePath: string }[]): ChangeSet {
+  async scanChanges(files: { relativePath: string; absolutePath: string }[]): Promise<ChangeSet> {
     const result: ChangeSet = { added: [], modified: [], deleted: [], unchanged: 0 };
 
     const indexedPaths = new Set<string>();
-    const rows = this.adapter.prepare('SELECT path, content_hash, mtime FROM file_index').all() as {
+    const rows = await this.adapter.allAsync<{
       path: string; content_hash: string; mtime: number;
-    }[];
+    }>('SELECT path, content_hash, mtime FROM file_index');
     const indexMap = new Map(rows.map(r => [r.path, r]));
     for (const r of rows) indexedPaths.add(r.path);
 
@@ -55,7 +58,7 @@ export class IncrementalUpdater {
           if (hash !== indexed.content_hash) {
             result.modified.push(file.relativePath);
           } else {
-            this.updateMtime(file.relativePath, mtime);
+            await this.updateMtime(file.relativePath, mtime);
             result.unchanged++;
           }
         } else {
@@ -74,34 +77,35 @@ export class IncrementalUpdater {
   }
 
   /** Update file index entry after successful indexing. */
-  updateFileIndex(relativePath: string, absolutePath: string, symbolCount: number): void {
+  async updateFileIndex(relativePath: string, absolutePath: string, symbolCount: number): Promise<void> {
     try {
       const stat = fs.statSync(absolutePath);
       const content = fs.readFileSync(absolutePath);
       const hash = fnv1aHash(content);
-
-      this.adapter.prepare(`
-        INSERT OR REPLACE INTO file_index (path, mtime, content_hash, size_bytes, last_indexed, symbol_count)
-        VALUES (?, ?, ?, ?, datetime('now'), ?)
-      `).run(relativePath, Math.floor(stat.mtimeMs), hash, stat.size, symbolCount);
+      const columns = ['path', 'mtime', 'content_hash', 'size_bytes', 'last_indexed', 'symbol_count'];
+      const updateCols = ['mtime', 'content_hash', 'size_bytes', 'last_indexed', 'symbol_count'];
+      const sql = this.adapter.getEngine() === 'sqlite'
+        ? `INSERT OR REPLACE INTO file_index (${columns.join(', ')}) VALUES (?, ?, ?, ?, datetime('now'), ?)`
+        : `INSERT INTO file_index (${columns.join(', ')}) VALUES (?, ?, ?, ?, NOW(), ?) ON CONFLICT (path) DO UPDATE SET ${updateCols.map(c => `${c} = EXCLUDED.${c}`).join(', ')}`;
+      await this.adapter.runAsync(sql, [relativePath, Math.floor(stat.mtimeMs), hash, stat.size, symbolCount]);
     } catch (err) {
       logger.error({ err }, `[incremental-updater] Failed to update index for ${relativePath}:`);
     }
   }
 
   /** Remove a file from the index. */
-  removeFromIndex(relativePath: string): void {
-    this.adapter.prepare('DELETE FROM file_index WHERE path = ?').run(relativePath);
+  async removeFromIndex(relativePath: string): Promise<void> {
+    await this.adapter.runAsync('DELETE FROM file_index WHERE path = ?', [relativePath]);
   }
 
   /** Get total indexed file count. */
-  getIndexedCount(): number {
-    const row = this.adapter.prepare('SELECT COUNT(*) as count FROM file_index').get() as { count: number };
-    return row.count;
+  async getIndexedCount(): Promise<number> {
+    const row = await this.adapter.getAsync<{ count: number }>('SELECT COUNT(*) as count FROM file_index');
+    return row?.count ?? 0;
   }
 
-  private updateMtime(relativePath: string, mtime: number): void {
-    this.adapter.prepare('UPDATE file_index SET mtime = ? WHERE path = ?').run(mtime, relativePath);
+  private async updateMtime(relativePath: string, mtime: number): Promise<void> {
+    await this.adapter.runAsync('UPDATE file_index SET mtime = ? WHERE path = ?', [mtime, relativePath]);
   }
 }
 

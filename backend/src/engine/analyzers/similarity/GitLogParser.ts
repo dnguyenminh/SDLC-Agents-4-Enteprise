@@ -56,12 +56,13 @@ export function parseLogOutput(output: string): GitCommit[] {
   return commits;
 }
 
-export function getLastIndexedHash(adapter: DatabaseAdapter, projectId?: string): string | null {
+export async function getLastIndexedHash(adapter: DatabaseAdapter, projectId?: string): Promise<string | null> {
   try {
     // SA4E-41: scope the incremental checkpoint per tenant.
-    const row = adapter.prepare(
-      `SELECT value FROM git_index_meta WHERE key = 'last_indexed_hash' AND project_id = ?`
-    ).get(projectId ?? '') as { value: string } | undefined;
+    const row = await adapter.getAsync<{ value: string }>(
+      `SELECT value FROM git_index_meta WHERE key = 'last_indexed_hash' AND project_id = ?`,
+      [projectId ?? ''],
+    );
     return row?.value ?? null;
   } catch {
     return null;

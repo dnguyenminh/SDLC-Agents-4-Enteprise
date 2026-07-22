@@ -88,8 +88,8 @@ export async function buildSecurityAuditSubgraph(
             ],
             { temperature: 0.2, maxTokens: 4096 }
           );
-        } catch {
-          // Use basic report
+        } catch (err) {
+          console.debug(`[SecurityAuditGraph] LLM report generation failed, using basic report (non-fatal): ${(err as Error).message}`);
         }
       }
 
@@ -123,3 +123,4 @@ export async function buildSecurityAuditSubgraph(
 
   return graph.compile();
 }
+

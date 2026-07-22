@@ -12,6 +12,7 @@ import {
 } from "../injector";
 import { promptIndexAfterInject, handleIndexWorkspace } from "../indexer";
 import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
 import { WebviewPanelManager } from "../webview-panel-manager";
 import { removeBundledMcpConfig } from "../mcp-injector";
 import { registerSymbolSearch } from "../symbol-search";
@@ -23,9 +24,11 @@ import { SettingsPanel } from "../panels/settings-panel";
 import { LoginPanel } from "../panels/login-panel";
 import { AuthManager } from "../auth/AuthManager";
 import { KiroTreeViewProvider } from "../sidebar/tree-view-provider";
+import { showUserError } from "../utils/panel-utils";
+import { writeJsonFile } from "../utils/mcp-config-file";
 
 interface CommandDeps {
-  mcpManager?: McpServerManager;
+  mcpManager?: IServerManager;
   panelManager?: WebviewPanelManager;
   authManager?: AuthManager;
   treeProvider?: KiroTreeViewProvider;
@@ -100,7 +103,7 @@ async function handleInjectAll(context: vscode.ExtensionContext): Promise<void> 
     const injected = await injectAll(root, context.extensionPath);
     vscode.window.showInformationMessage(`✅ Injected ${injected.length} components`);
     await promptIndexAfterInject(root);
-  } catch (err) { vscode.window.showErrorMessage(`Inject failed: ${(err as Error).message}`); }
+  } catch (err) { showUserError("Inject", err); }
 }
 
 async function handleInjectSelective(context: vscode.ExtensionContext): Promise<void> {
@@ -129,20 +132,31 @@ async function handleStatus(context: vscode.ExtensionContext): Promise<void> {
   } else if (action === "Inject Missing") { vscode.commands.executeCommand("kiroSdlc.injectSelective"); }
 }
 
-async function handleOpenKbBrowser(mcpManager?: McpServerManager): Promise<void> {
+async function handleOpenKbBrowser(mcpManager?: IServerManager): Promise<void> {
   if (!mcpManager || mcpManager.status !== "running") { vscode.window.showErrorMessage("MCP server not running."); return; }
   await vscode.env.openExternal(vscode.Uri.parse(`http://localhost:${mcpManager.port}/`));
 }
 
-async function handleRestartServer(mcpManager?: McpServerManager): Promise<void> {
+async function handleRestartServer(mcpManager?: IServerManager): Promise<void> {
   if (!mcpManager) { vscode.window.showErrorMessage("No workspace open."); return; }
-  try { await mcpManager.reconnect(); vscode.window.showInformationMessage("MCP server reconnected."); }
+  try {
+    if (mcpManager.reconnect) {
+      await mcpManager.reconnect();
+    } else {
+      await mcpManager.restart();
+    }
+    vscode.window.showInformationMessage("MCP server reconnected.");
+  }
   catch (err) { vscode.window.showErrorMessage(`Reconnect failed: ${(err as Error).message}`); }
 }
 
-async function handleStopServer(mcpManager?: McpServerManager, workspaceRoot?: string): Promise<void> {
+async function handleStopServer(mcpManager?: IServerManager, workspaceRoot?: string): Promise<void> {
   if (!mcpManager) { vscode.window.showErrorMessage("No workspace open."); return; }
-  try { await mcpManager.disconnect(); if (workspaceRoot) { removeBundledMcpConfig(workspaceRoot); } vscode.window.showInformationMessage("MCP server disconnected."); }
+  try {
+    await mcpManager.kill();
+    if (workspaceRoot) { removeBundledMcpConfig(workspaceRoot); }
+    vscode.window.showInformationMessage("MCP server disconnected.");
+  }
   catch (err) { vscode.window.showErrorMessage(`Disconnect failed: ${(err as Error).message}`); }
 }
 
@@ -157,12 +171,12 @@ async function handleEditConfig(): Promise<void> {
     if (create !== "Create") { return; }
     const dir = path.dirname(fullPath);
     if (!fs.existsSync(dir)) { fs.mkdirSync(dir, { recursive: true }); }
-    fs.writeFileSync(fullPath, JSON.stringify({ servers: [], routing: {} }, null, 2));
+    writeJsonFile(fullPath, { servers: [], routing: {} });
   }
   await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(fullPath));
 }
 
-async function handleChangeConfig(mcpManager?: McpServerManager): Promise<void> {
+async function handleChangeConfig(mcpManager?: IServerManager): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) { return; }
   const config = vscode.workspace.getConfiguration("kiroSdlc");
@@ -175,3 +189,5 @@ async function handleChangeConfig(mcpManager?: McpServerManager): Promise<void> 
   vscode.window.showInformationMessage(`Config changed to: ${relPath}. Restarting...`);
   await handleRestartServer(mcpManager);
 }
+
+

@@ -22,7 +22,7 @@ export class TreeSitterIndexer {
     let source: string;
     try {
       const stat = fs.statSync(filePath);
-      if (stat.size > this.maxFileSize) return this.regexFallback(filePath, relativePath, projectId, startTime);
+      if (stat.size > this.maxFileSize) return await this.regexFallback(filePath, relativePath, projectId, startTime);
       source = fs.readFileSync(filePath, 'utf-8');
     } catch {
       return { filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1, duration: Date.now() - startTime, method: 'regex-fallback' };
@@ -34,10 +34,10 @@ export class TreeSitterIndexer {
       result = parser.parse(source, relativePath);
       method = 'tree-sitter';
     } else {
-      return this.regexFallback(filePath, relativePath, projectId, startTime);
+      return await this.regexFallback(filePath, relativePath, projectId, startTime);
     }
-    const symbolIds = storeResults(this.adapter, relativePath, result, projectId);
-    extractAndStoreBodies(this.adapter, relativePath, source, result, symbolIds, projectId);
+    const symbolIds = await storeResults(this.adapter, relativePath, result, projectId);
+    await extractAndStoreBodies(this.adapter, relativePath, source, result, symbolIds, projectId);
     return { filePath: relativePath, symbolCount: result.symbols.length, relationshipCount: result.relationships.length, parseErrors: result.errors.length, duration: Date.now() - startTime, method };
   }
 
@@ -49,13 +49,13 @@ export class TreeSitterIndexer {
     return results;
   }
 
-  private regexFallback(filePath: string, relativePath: string, projectId: string, startTime: number): IndexResult {
+  private async regexFallback(filePath: string, relativePath: string, projectId: string, startTime: number): Promise<IndexResult> {
     try {
       const source = fs.readFileSync(filePath, 'utf-8');
       const ext = path.extname(filePath).toLowerCase();
       const language = this.extToLanguage(ext);
       const symbols = extractSymbols(source, language);
-      if (symbols.length > 0) storeRegexResults(this.adapter, relativePath, symbols, projectId);
+      if (symbols.length > 0) await storeRegexResults(this.adapter, relativePath, symbols, projectId);
       return { filePath: relativePath, symbolCount: symbols.length, relationshipCount: 0, parseErrors: 0, duration: Date.now() - startTime, method: 'regex-fallback' };
     } catch {
       return { filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1, duration: Date.now() - startTime, method: 'regex-fallback' };

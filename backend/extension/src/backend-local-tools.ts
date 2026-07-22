@@ -4,13 +4,28 @@
  *
  * Base64 proxy logic has been extracted to services/Base64ProxyService.ts
  * following SRP — this file only handles local tool execution + definitions.
+ *
+ * OCP: Tool handlers registered in LOCAL_TOOL_REGISTRY — adding a new local
+ * tool does NOT require editing executeLocalTool().
  */
 import * as fs from "fs";
 import * as path from "path";
 
-export async function executeLocalTool(name: string, args: Record<string, unknown>): Promise<any> {
-  if (name === "stream_write_file") return handleStreamWriteFile(args);
-  if (name === "embed_image") return handleEmbedImage(args);
+/** Type for a local tool handler function. */
+type LocalToolHandler = (args: Record<string, unknown>) => unknown;
+
+/**
+ * Registry of local tool handlers — OCP compliant.
+ * To add a new local tool: add an entry here and a definition in getLocalToolDefinitions().
+ */
+const LOCAL_TOOL_REGISTRY: Map<string, LocalToolHandler> = new Map([
+  ["stream_write_file", handleStreamWriteFile],
+  ["embed_image", handleEmbedImage],
+]);
+
+export async function executeLocalTool(name: string, args: Record<string, unknown>): Promise<unknown> {
+  const handler = LOCAL_TOOL_REGISTRY.get(name);
+  if (handler) return handler(args);
   return { isError: true, content: [{ type: "text", text: `Local tool '${name}' not implemented.` }] };
 }
 
@@ -114,9 +129,13 @@ function imageToDataUri(imagePath: string): string | null {
   try {
     const mime = IMAGE_MIME[path.extname(imagePath).toLowerCase()] || "application/octet-stream";
     return `data:${mime};base64,${fs.readFileSync(imagePath).toString("base64")}`;
-  } catch { return null; }
+  } catch (err) {
+    console.debug("[backend-local-tools] imageToDataUri failed for " + imagePath + ": " + (err as Error).message);
+    return null;
+  }
 }
 
 function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
+

@@ -1,12 +1,15 @@
-/**
+﻿/**
  * Tool registration and dispatch for Code Intelligence and Graph Analysis.
- * Read-tool handlers live in ./code-intel-handlers.ts (size split, SA4E-41).
- * SA4E-45: All tool handlers now accept DatabaseAdapter instead of Database.Database.
+ * OCP fix: replaced 28-case switch with a Map-based handler registry.
+ * Adding a new code-intel tool requires only: add definition + add registry entry.
+ *
+ * DIP fix: QueryLayer and DatabaseAdapter are injected, not created per-call.
+ * SA4E-45: All tool handlers accept DatabaseAdapter instead of Database.Database.
  */
-import { DatabaseManager } from '../db/database-manager.js';
-import { IndexingEngine } from '../indexer/indexing-engine.js';
-import { QueryLayer } from '../query/query-layer.js';
-import { SqliteDbAdapter } from '../../modules/memory/task-queue/SqliteDbAdapter.js';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import type { IndexingEngine } from '../indexer/indexing-engine.js';
+import type { QueryLayer } from '../query/query-layer.js';
+import type { DatabaseManager } from '../db/database-manager.js';
 import { handleDrawioLayout, DRAWIO_TOOL_DEFINITION } from './drawio-tool.js';
 import { handleDrawioExportPng, DRAWIO_EXPORT_PNG_DEFINITION } from './drawio-export-png.js';
 import { CALL_GRAPH_TOOL_DEFINITIONS, handleCodeCallers, handleCodeCallees } from './call-graph-tools.js';
@@ -44,50 +47,79 @@ export const CODE_INTEL_TOOL_DEFINITIONS = [
   ...SIMILARITY_TOOL_DEFINITIONS,
 ];
 
+/** Context bag injected into every code-intel tool handler. */
+interface CodeIntelContext {
+  queryLayer: QueryLayer;
+  adapter: DatabaseAdapter;
+  dbManager: DatabaseManager | null;
+  indexer: IndexingEngine;
+  workspace: string;
+  projectId?: string;
+}
+
+/** All handlers return Promise<string> — sync handlers are wrapped with resolve(). */
+type CodeIntelHandlerFn = (args: Record<string, unknown>, ctx: CodeIntelContext) => Promise<string>;
+
+/** Helper: normalise sync-or-async result to Promise<string>. */
+function p(v: string | Promise<string> | Promise<string | null> | null | undefined, fallback = 'Unknown tool'): Promise<string> {
+  if (v == null) return Promise.resolve(fallback);
+  if (typeof v === 'string') return Promise.resolve(v);
+  return v.then(r => r ?? fallback);
+}
+
+/**
+ * OCP registry: tool name -> handler function.
+ * To add a new code-intel tool: import its handler and add one line here.
+ * dispatchCodeIntelTool() requires NO changes.
+ */
+const TOOL_HANDLER_REGISTRY: Record<string, CodeIntelHandlerFn> = {
+  code_search:        (a, ctx) => p(handleCodeSearch(a, ctx.queryLayer, ctx.projectId)),
+  code_symbols:       (a, ctx) => p(handleCodeSymbols(a, ctx.queryLayer, ctx.projectId)),
+  code_context:       (a, ctx) => p(handleCodeContext(a, ctx.queryLayer, ctx.workspace, ctx.projectId)),
+  code_modules:       (a, ctx) => p(handleCodeModules(a, ctx.queryLayer, ctx.projectId)),
+  code_index_status:  (a, ctx) => p(handleCodeIndexStatus(a, ctx.queryLayer, ctx.indexer, ctx.workspace, ctx.projectId)),
+  stream_write_file:  (a, ctx) => p(handleStreamWriteFile(a, ctx.workspace, ctx.projectId)),
+  code_kb_export:     (a, ctx) => p(handleCodeKbExport(a, ctx.queryLayer, ctx.workspace)),
+  drawio_auto_layout: (a, ctx) => p(handleDrawioLayout(a, ctx.workspace)),
+  drawio_export_png:  (a, ctx) => p(handleDrawioExportPng(a, ctx.workspace, null as any)),
+  code_callers:       (a, ctx) => p(handleCodeCallers(a, ctx.adapter, ctx.projectId)),
+  code_callees:       (a, ctx) => p(handleCodeCallees(a, ctx.adapter, ctx.projectId)),
+  code_dependencies:  (a, ctx) => p(handleCodeDependencies(a, ctx.adapter, ctx.workspace, ctx.projectId)),
+  code_impact:        (a, ctx) => p(handleCodeImpact(a, ctx.adapter, ctx.workspace, ctx.projectId)),
+  code_traverse:      (a, ctx) => p(handleCodeTraverse(a, ctx.adapter, ctx.workspace, ctx.projectId)),
+  complexity_analysis:(a, ctx) => p(handleComplexityTool(a, ctx.adapter, ctx.projectId)),
+  find_entry_points:  (a, ctx) => p(handleEntryPointTool(a, ctx.adapter, ctx.projectId)),
+  find_circular_deps: (a, ctx) => p(handleGraphAnalysisTool('find_circular_deps', a, ctx.adapter, ctx.projectId), 'Unknown tool: find_circular_deps'),
+  find_related_tests: (a, ctx) => p(handleGraphAnalysisTool('find_related_tests', a, ctx.adapter, ctx.projectId), 'Unknown tool: find_related_tests'),
+  find_hot_paths:     (a, ctx) => p(handleGraphAnalysisTool('find_hot_paths', a, ctx.adapter, ctx.projectId), 'Unknown tool: find_hot_paths'),
+  find_dead_imports:  (a, ctx) => p(handleGraphAnalysisTool('find_dead_imports', a, ctx.adapter, ctx.projectId), 'Unknown tool: find_dead_imports'),
+  module_summary:     (a, ctx) => p(handleGraphAnalysisTool('module_summary', a, ctx.adapter, ctx.projectId), 'Unknown tool: module_summary'),
+  get_ai_context:     (a, ctx) => p(handleGetAIContext(a, ctx.adapter, ctx.workspace, ctx.projectId)),
+  get_edit_context:   (a, ctx) => p(handleGetEditContext(a, ctx.adapter, ctx.workspace, ctx.projectId)),
+  get_curated_context:(a, ctx) => p(handleGetCuratedContext(a, ctx.adapter, ctx.workspace, ctx.dbManager, ctx.projectId)),
+  find_duplicates:    (a, ctx) => p(handleSimilarityTool('find_duplicates', a, ctx.adapter, ctx.workspace, ctx.projectId), 'Unknown tool: find_duplicates'),
+  find_dead_code:     (a, ctx) => p(handleSimilarityTool('find_dead_code', a, ctx.adapter, ctx.workspace, ctx.projectId), 'Unknown tool: find_dead_code'),
+  git_search:         (a, ctx) => p(handleSimilarityTool('git_search', a, ctx.adapter, ctx.workspace, ctx.projectId), 'Unknown tool: git_search'),
+  git_index:          (a, ctx) => p(handleSimilarityTool('git_index', a, ctx.adapter, ctx.workspace, ctx.projectId), 'Unknown tool: git_index'),
+};
+
+/**
+ * Dispatch a code-intelligence tool call via the handler registry.
+ * OCP: adding a new tool requires only adding to TOOL_HANDLER_REGISTRY above.
+ * DIP: QueryLayer and DatabaseAdapter are injected (created once at module init).
+ */
 export async function dispatchCodeIntelTool(
   name: string,
   args: Record<string, unknown>,
-  dbManager: DatabaseManager,
+  queryLayer: QueryLayer,
+  adapter: DatabaseAdapter,
+  dbManager: DatabaseManager | null,
   indexer: IndexingEngine,
   workspace: string,
-  projectId?: string
+  projectId?: string,
 ): Promise<string> {
-  const queryLayer = new QueryLayer(dbManager);
-  // SA4E-45: create adapter once, pass to all tool handlers
-  const adapter = new SqliteDbAdapter(dbManager.getDb());
-  switch (name) {
-    case 'code_search': return handleCodeSearch(args, queryLayer, projectId);
-    case 'code_symbols': return handleCodeSymbols(args, queryLayer, projectId);
-    case 'code_context': return handleCodeContext(args, queryLayer, workspace, projectId);
-    case 'code_modules': return handleCodeModules(args, queryLayer, projectId);
-    case 'code_index_status': return handleCodeIndexStatus(args, queryLayer, indexer, workspace, projectId);
-    case 'stream_write_file': return handleStreamWriteFile(args, workspace, projectId);
-    case 'code_kb_export': return handleCodeKbExport(args, queryLayer, workspace);
-    case 'drawio_auto_layout': return handleDrawioLayout(args, workspace);
-    case 'drawio_export_png': return handleDrawioExportPng(args, workspace, null as any);
-    // SA4E-41 SEC-01 + SA4E-45: thread adapter+projectId into every graph/analysis tool.
-    case 'code_callers': return handleCodeCallers(args, adapter, projectId);
-    case 'code_callees': return handleCodeCallees(args, adapter, projectId);
-    case 'code_dependencies': return handleCodeDependencies(args, adapter, workspace, projectId);
-    case 'code_impact': return handleCodeImpact(args, adapter, workspace, projectId);
-    case 'code_traverse': return handleCodeTraverse(args, adapter, workspace, projectId);
-    case 'complexity_analysis': return handleComplexityTool(args, adapter, projectId);
-    case 'find_entry_points': return handleEntryPointTool(args, adapter, projectId);
-    case 'find_circular_deps':
-    case 'find_related_tests':
-    case 'find_hot_paths':
-    case 'find_dead_imports':
-    case 'module_summary':
-      return handleGraphAnalysisTool(name, args, adapter, projectId) ?? `Unknown tool: ${name}`;
-    case 'get_ai_context': return handleGetAIContext(args, adapter, workspace, projectId);
-    case 'get_edit_context': return handleGetEditContext(args, adapter, workspace, projectId);
-    case 'get_curated_context': return handleGetCuratedContext(args, adapter, workspace, dbManager, projectId);
-    case 'find_duplicates':
-    case 'find_dead_code':
-    case 'git_search':
-    case 'git_index':
-      return handleSimilarityTool(name, args, adapter, workspace, projectId) ?? `Unknown tool: ${name}`;
-    default:
-      return `Unknown tool: ${name}`;
-  }
+  const handler = TOOL_HANDLER_REGISTRY[name];
+  if (!handler) return `Unknown tool: ${name}`;
+  const ctx: CodeIntelContext = { queryLayer, adapter, dbManager, indexer, workspace, projectId };
+  return handler(args, ctx);
 }

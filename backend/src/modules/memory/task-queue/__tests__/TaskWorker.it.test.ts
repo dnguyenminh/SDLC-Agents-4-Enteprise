@@ -90,7 +90,7 @@ describe('TaskWorker Integration Tests', () => {
   // IT-01: Full CRUD lifecycle
   describe('IT-01: Full CRUD lifecycle', () => {
     it('creates entry, processes task, and updates structured_map', async () => {
-      const id = engine.insert({
+      const id = await engine.insert({
         content: 'Authentication flow with JWT tokens and user login',
         summary: 'Auth section',
         type: 'CONTEXT',
@@ -101,19 +101,19 @@ describe('TaskWorker Integration Tests', () => {
       expect(db.prepare('SELECT structured_map FROM knowledge_entries WHERE id = ?').get(id)).toBeTruthy();
 
       const repo = new PendingTaskRepository(adapter);
-      const taskId = repo.create({
+      const taskId = await repo.create({
         task_type: TaskType.TAG_ENRICHMENT,
         entry_id: id,
         payload: { entry_id: id, content: 'Authentication flow with JWT tokens and user login', existing_tags: '', options: { threshold: 0.7 } },
       });
 
       // Claim and process the task
-      const task = repo.claimNext();
+      const task = await repo.claimNext();
       expect(task).not.toBeNull();
       const payload = JSON.parse(task!.payload);
       await (worker as any).processTagEnrichment(task!, payload);
 
-      const entry = engine.findById(id);
+      const entry = await engine.findById(id);
       expect(entry).toBeDefined();
       expect(entry!.tags).toContain('auth-flow-login');
 
@@ -134,7 +134,7 @@ describe('TaskWorker Integration Tests', () => {
   describe('IT-02: Context chain between sections', () => {
     it('passes section 1 summary as context to section 2', async () => {
       // Insert section 1 with structured_map containing summary
-      const id1 = engine.insert({
+      const id1 = await engine.insert({
         content: 'Section 1 about auth',
         summary: 'Auth summary',
         type: 'CONTEXT',
@@ -151,7 +151,7 @@ describe('TaskWorker Integration Tests', () => {
       }));
 
       // Insert section 2
-      const id2 = engine.insert({
+      const id2 = await engine.insert({
         content: 'Section 2 about auth',
         summary: 'Auth section 2',
         type: 'CONTEXT',
@@ -163,12 +163,12 @@ describe('TaskWorker Integration Tests', () => {
       // Use the real DB for the context chain lookup — query by source
       // Both entries share the same source, so loadPreviousContext will find entry 1
       const repo = new PendingTaskRepository(adapter);
-      const taskId = repo.create({
+      const taskId = await repo.create({
         task_type: TaskType.TAG_ENRICHMENT,
         entry_id: id2,
         payload: { entry_id: id2, content: 'Section 2 content', existing_tags: '', source: '/doc.md' },
       });
-      const task = repo.findById(taskId);
+      const task = await repo.findById(taskId);
       const payload = JSON.parse(task!.payload);
 
       // Spy on loadPreviousContext to verify it's called
@@ -176,7 +176,7 @@ describe('TaskWorker Integration Tests', () => {
       await (worker as any).processTagEnrichment(task!, payload);
 
       expect(loadCtxSpy).toHaveBeenCalledWith(id2, '/doc.md');
-      const entry2 = engine.findById(id2);
+      const entry2 = await engine.findById(id2);
       const sm2 = JSON.parse(entry2!.structured_map);
       expect(sm2.context_chain).toBeDefined();
       expect(sm2.context_chain.previous_section_id).toBe(id1);
@@ -186,7 +186,7 @@ describe('TaskWorker Integration Tests', () => {
   // IT-03: Backward compatibility — Old entry with structured_map='{}'
   describe('IT-03: Backward compatibility', () => {
     it('processes old entry with structured_map="{}" without errors', async () => {
-      const id = engine.insert({
+      const id = await engine.insert({
         content: 'Legacy content',
         summary: 'Legacy',
         type: 'CONTEXT',
@@ -196,23 +196,23 @@ describe('TaskWorker Integration Tests', () => {
       db.prepare('UPDATE knowledge_entries SET structured_map = ? WHERE id = ?').run('{}', id);
 
       const repo = new PendingTaskRepository(adapter);
-      const taskId = repo.create({
+      const taskId = await repo.create({
         task_type: TaskType.TAG_ENRICHMENT,
         entry_id: id,
         payload: { entry_id: id, content: 'Legacy content', existing_tags: '' },
       });
-      const task = repo.findById(taskId);
+      const task = await repo.findById(taskId);
       const payload = JSON.parse(task!.payload);
       await (worker as any).processTagEnrichment(task!, payload);
 
-      const entry = engine.findById(id);
+      const entry = await engine.findById(id);
       const sm = JSON.parse(entry!.structured_map);
       expect(sm.tags).toBeDefined();
       expect(sm.extraction_meta).toBeDefined();
     });
 
     it('processes old entry with minimal structured_map without errors', async () => {
-      const id = engine.insert({
+      const id = await engine.insert({
         content: 'Minimal map content',
         summary: 'Minimal map',
         type: 'CONTEXT',
@@ -222,16 +222,16 @@ describe('TaskWorker Integration Tests', () => {
       // structured_map is NOT NULL DEFAULT '{}', so we keep it as '{}'
 
       const repo = new PendingTaskRepository(adapter);
-      const taskId = repo.create({
+      const taskId = await repo.create({
         task_type: TaskType.TAG_ENRICHMENT,
         entry_id: id,
         payload: { entry_id: id, content: 'Minimal map content', existing_tags: '' },
       });
-      const task = repo.findById(taskId);
+      const task = await repo.findById(taskId);
       const payload = JSON.parse(task!.payload);
       await (worker as any).processTagEnrichment(task!, payload);
 
-      const entry = engine.findById(id);
+      const entry = await engine.findById(id);
       const sm = JSON.parse(entry!.structured_map);
       expect(sm.tags).toBeDefined();
     });
@@ -242,7 +242,7 @@ describe('TaskWorker Integration Tests', () => {
     it('uses fallback extraction when LLM times out, still updates structured_map', async () => {
       vi.mocked(llm.complete).mockRejectedValue(new Error('LLM timeout'));
 
-      const id = engine.insert({
+      const id = await engine.insert({
         content: 'Error: bug fix for login decision',
         summary: 'Bug fix',
         type: 'CONTEXT',
@@ -251,16 +251,16 @@ describe('TaskWorker Integration Tests', () => {
       });
 
       const repo = new PendingTaskRepository(adapter);
-      const taskId = repo.create({
+      const taskId = await repo.create({
         task_type: TaskType.TAG_ENRICHMENT,
         entry_id: id,
         payload: { entry_id: id, content: 'Error: bug fix for login decision', existing_tags: '' },
       });
-      const task = repo.findById(taskId);
+      const task = await repo.findById(taskId);
       const payload = JSON.parse(task!.payload);
       await (worker as any).processTagEnrichment(task!, payload);
 
-      const entry = engine.findById(id);
+      const entry = await engine.findById(id);
       expect(entry!.tags).toContain('error-pattern');
 
       const sm = JSON.parse(entry!.structured_map);
@@ -277,7 +277,7 @@ describe('TaskWorker Integration Tests', () => {
       workerNoContext.setTagAnalyzer(analyzer);
       (workerNoContext as any).llmService = llm;
 
-      const id1 = engine.insert({
+      const id1 = await engine.insert({
         content: 'Section 1',
         summary: 'S1',
         type: 'CONTEXT',
@@ -287,7 +287,7 @@ describe('TaskWorker Integration Tests', () => {
       });
       engine.updateStructuredMap(id1, JSON.stringify({ summary: 'Section 1 summary' }));
 
-      const id2 = engine.insert({
+      const id2 = await engine.insert({
         content: 'Section 2',
         summary: 'S2',
         type: 'CONTEXT',
@@ -297,12 +297,12 @@ describe('TaskWorker Integration Tests', () => {
       });
 
       const repo = new PendingTaskRepository(adapter);
-      const taskId = repo.create({
+      const taskId = await repo.create({
         task_type: TaskType.TAG_ENRICHMENT,
         entry_id: id2,
         payload: { entry_id: id2, content: 'Section 2', existing_tags: '', source: '/doc.md' },
       });
-      const task = repo.findById(taskId);
+      const task = await repo.findById(taskId);
       const payload = JSON.parse(task!.payload);
 
       // Capture context pass to analyzer
@@ -312,7 +312,7 @@ describe('TaskWorker Integration Tests', () => {
       // With context disabled, context param should be null
       expect(analyzeSpy).toHaveBeenCalledWith(payload.content, payload.options, null);
 
-      const entry2 = engine.findById(id2);
+      const entry2 = await engine.findById(id2);
       const sm2 = JSON.parse(entry2!.structured_map);
       expect(sm2.context_chain).toBeUndefined();
     });
@@ -321,7 +321,7 @@ describe('TaskWorker Integration Tests', () => {
   // IT-06: Context chain — Previous section LLM failed
   describe('IT-06: Previous section fallback', () => {
     it('returns null context when previous section has no summary', async () => {
-      const id1 = engine.insert({
+      const id1 = await engine.insert({
         content: 'Failed section',
         summary: 'FS',
         type: 'CONTEXT',
@@ -334,7 +334,7 @@ describe('TaskWorker Integration Tests', () => {
         extraction_meta: { fallback_used: true },
       }));
 
-      const id2 = engine.insert({
+      const id2 = await engine.insert({
         content: 'Next section',
         summary: 'NS',
         type: 'CONTEXT',
@@ -357,7 +357,7 @@ describe('TaskWorker Integration Tests', () => {
         throw new Error('DB write error');
       });
 
-      const id = engine.insert({
+      const id = await engine.insert({
         content: 'Test content for tag persistence',
         summary: 'Test',
         type: 'CONTEXT',
@@ -366,16 +366,16 @@ describe('TaskWorker Integration Tests', () => {
       });
 
       const repo = new PendingTaskRepository(adapter);
-      const taskId = repo.create({
+      const taskId = await repo.create({
         task_type: TaskType.TAG_ENRICHMENT,
         entry_id: id,
         payload: { entry_id: id, content: 'Test content for tag persistence', existing_tags: '' },
       });
-      const task = repo.findById(taskId);
+      const task = await repo.findById(taskId);
       const payload = JSON.parse(task!.payload);
       await (worker as any).processTagEnrichment(task!, payload);
 
-      const entry = engine.findById(id);
+      const entry = await engine.findById(id);
       // Tags should be updated despite structured_map failure
       expect(entry!.tags).toContain('auth-flow-login');
 

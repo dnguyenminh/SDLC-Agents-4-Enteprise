@@ -68,8 +68,8 @@ export class GraphTraverser {
     this.projectId = projectId;
   }
 
-  resolveNode(identifier: string): GraphNode | null {
-    const resolved = this.resolver.resolve(identifier);
+  async resolveNode(identifier: string): Promise<GraphNode | null> {
+    const resolved = await this.resolver.resolve(identifier);
     if (resolved.length === 0) return null;
     return {
       id: resolved[0].id,
@@ -80,7 +80,7 @@ export class GraphTraverser {
     };
   }
 
-  traverse(startNode: GraphNode, config: TraverseConfig): TraverseResultItem[] {
+  async traverse(startNode: GraphNode, config: TraverseConfig): Promise<TraverseResultItem[]> {
     const visited = new Set<number>();
     const queue: Array<{ node: GraphNode; depth: number; path: string[] }> = [
       { node: startNode, depth: 0, path: [startNode.name] },
@@ -96,7 +96,7 @@ export class GraphTraverser {
         }
       }
       if (depth < config.maxDepth) {
-        const neighbors = getNeighbors(node.id, config, this.adapter, this.projectId);
+        const neighbors = await getNeighbors(node.id, config, this.adapter, this.projectId);
         for (const neighbor of neighbors) {
           if (!visited.has(neighbor.id)) {
             queue.push({ node: neighbor, depth: depth + 1, path: [...currentPath, neighbor.name] });

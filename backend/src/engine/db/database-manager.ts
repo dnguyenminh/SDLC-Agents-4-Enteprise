@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DatabaseManager — SQLite lifecycle management.
  * Handles open, WAL mode, migrations, and graceful close.
  */

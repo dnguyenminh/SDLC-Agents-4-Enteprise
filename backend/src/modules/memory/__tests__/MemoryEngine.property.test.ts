@@ -18,15 +18,15 @@ function rng(seed: number): () => number {
 }
 
 describe('MemoryEngine.incrementToolUsage property', () => {
-  it('PBT-04: N increments yield call_count === N (60 random cases)', () => {
+  it('PBT-04: N increments yield call_count === N (60 random cases)', async () => {
     const rand = rng(999);
     for (let c = 0; c < 60; c++) {
       const ctx = makeTempDb();
       try {
         const name = `tool_${Math.floor(rand() * 1e6).toString(36)}`;
         const n = 1 + Math.floor(rand() * 200);
-        for (let i = 0; i < n; i++) ctx.engine.incrementToolUsage(name);
-        const rows = ctx.engine.getToolUsage(name);
+        for (let i = 0; i < n; i++) await ctx.engine.incrementToolUsage(name);
+        const rows = await ctx.engine.getToolUsage(name);
         expect(rows).toHaveLength(1);
         expect(rows[0].call_count).toBe(n);
         expect(rows[0].last_called_at).toBeTruthy();

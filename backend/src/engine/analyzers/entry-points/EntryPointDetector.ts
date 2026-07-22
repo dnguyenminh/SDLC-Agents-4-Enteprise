@@ -37,10 +37,10 @@ export class EntryPointDetector {
   }
 
   /** Detect all entry points in a file. */
-  detectFile(filePath: string, source: string, language: string, symbols: Array<{
+  async detectFile(filePath: string, source: string, language: string, symbols: Array<{
     id: number; name: string; decorators?: string[]; parentName?: string | null;
     filePath: string; startLine: number;
-  }>): EntryPoint[] {
+  }>): Promise<EntryPoint[]> {
     const allEntryPoints: EntryPoint[] = [];
 
     // 1. Detect framework
@@ -66,14 +66,14 @@ export class EntryPointDetector {
 
     // Store results
     if (allEntryPoints.length > 0) {
-      this.store.upsertBatch(allEntryPoints);
+      await this.store.upsertBatch(allEntryPoints);
     }
 
     return allEntryPoints;
   }
 
   /** Query stored entry points. */
-  query(filters: EntryPointFilters): EntryPointQueryResult {
+  async query(filters: EntryPointFilters): Promise<EntryPointQueryResult> {
     return this.store.query(filters);
   }
 }

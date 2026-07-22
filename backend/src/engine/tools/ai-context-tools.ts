@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KSA-158/159/160: AI Context MCP tool handlers and definitions.
  * SA4E-45: Refactored to use DatabaseAdapter abstraction.
  */
@@ -117,12 +117,12 @@ export function handleGetCuratedContext(
   args: Record<string, unknown>,
   adapter: DatabaseAdapter,
   workspace: string,
-  dbManager: DatabaseManager,
+  dbManager: DatabaseManager | null,
   projectId?: string
 ): string {
   const resolver = new SymbolResolver(adapter, projectId);
   const traverser = new GraphTraverser(adapter, resolver, workspace, projectId);
-  const queryLayer = new QueryLayer(dbManager);
+  const queryLayer = new QueryLayer(adapter);
   const service = new CuratedContextService(adapter, queryLayer, traverser, resolver);
 
   const params = {

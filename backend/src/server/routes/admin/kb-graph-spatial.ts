@@ -22,14 +22,14 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
     // SA4E-49/50: Use repository for graph_nodes counts (authoritative source).
     try {
       const pid = ctx.getRequestProjectId(c);
-      const counts = ctx.db.graph.getNodeCounts(pid);
+      const counts = await ctx.db.graph.getNodeCounts(pid);
       codeCount = counts.code;
       kbCount = counts.kb;
     } catch { ctx.logger.warn({ context: 'kb-graph' }, 'Failed to count graph nodes'); }
     const graphService = (globalThis as Record<string, unknown>).__sqliteGraphService as { ready?: boolean; getAllPositions?: (projectId?: string) => any } | undefined;
     if (graphService && graphService.ready) {
       try {
-        const result = graphService.getAllPositions!(ctx.getRequestProjectId(c));
+        const result = await graphService.getAllPositions!(ctx.getRequestProjectId(c));
         if (Array.isArray(allowedTiers)) result.nodes = result.nodes.filter((n: any) => n.tier === 'CODE' || allowedTiers.includes(n.tier));
         result.kbCount = kbCount; result.codeCount = codeCount;
         return c.json(result);
@@ -73,7 +73,7 @@ export function createKbGraphSpatialRoutes(ctx: AdminContext): Hono {
     const zoom = parseFloat(c.req.query('zoom') || '500');
     const graphService = (globalThis as Record<string, unknown>).__sqliteGraphService as { ready?: boolean; spatialQuery?: Function } | undefined;
     if (graphService && graphService.ready) {
-      try { return c.json(graphService.spatialQuery!({ camX, camY, camZ, zoom }, ctx.getRequestProjectId(c))); }
+      try { return c.json(await graphService.spatialQuery!({ camX, camY, camZ, zoom }, ctx.getRequestProjectId(c))); }
       catch (err: any) { ctx.logger.warn({ error: err.message }, 'SQLite graph spatial query failed, using inline fallback'); }
     }
     const graphPermCheck = await ctx.checkPermission(user.userId, 'GRAPH_VIEW');

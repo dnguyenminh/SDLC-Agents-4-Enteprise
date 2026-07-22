@@ -86,7 +86,10 @@ export async function routeUserMessage(
   debugLog(` handleUserMessage: invokeChat RETURNED`);
 
   // Fire agentStop hooks
-  try { const engine = getEngine(); await engine.hookEngine.fireAgentStop(engine.getStreamHandler()); } catch { /* */ }
+  try { const engine = getEngine(); await engine.hookEngine.fireAgentStop(engine.getStreamHandler()); } catch (hookErr) {
+    // agentStop hook failures are non-fatal but must be logged for observability
+    debugLog(`[MessageRouting] agentStop hook error (non-fatal): ${(hookErr as Error).message}`);
+  }
   sendToWebview({ type: "chat:workingStatus", working: false });
 }
 

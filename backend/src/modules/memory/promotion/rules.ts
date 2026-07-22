@@ -1,4 +1,8 @@
-import type Database from 'better-sqlite3';
+/**
+ * Promotion rules — criteria evaluation for KB entry scope promotion.
+ * SA4E-53: migrated from raw better-sqlite3 to DatabaseAdapter async API.
+ */
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { KBScope } from '../models.js';
 
 export interface PromotionCandidate {
@@ -27,18 +31,24 @@ export const DEFAULT_CONFIG: PromotionConfig = {
   autoApproveToProject: false,
 };
 
-export function evaluateCriteria(
-  db: Database.Database,
+/**
+ * Evaluate promotion criteria for a candidate entry.
+ * SA4E-53: async for PostgreSQL compatibility.
+ */
+export async function evaluateCriteria(
+  adapter: DatabaseAdapter,
   entry: any,
   config: PromotionConfig,
-): { metCount: number; reasons: string[]; score: number } {
+): Promise<{ metCount: number; reasons: string[]; score: number }> {
   const reasons: string[] = [];
   let metCount = 0;
   let score = 0;
 
-  const citationCount = (db.prepare(
-    'SELECT COUNT(*) as cnt FROM citations WHERE entry_id = ?'
-  ).get(entry.id) as any)?.cnt ?? 0;
+  const citationRow = await adapter.getAsync<{ cnt: number }>(
+    'SELECT COUNT(*) as cnt FROM citations WHERE entry_id = ?',
+    [entry.id],
+  );
+  const citationCount = citationRow?.cnt ?? 0;
 
   if (citationCount >= config.minCitations) {
     metCount++;
@@ -58,9 +68,11 @@ export function evaluateCriteria(
     score += 25;
   }
 
-  const crossAgentCites = (db.prepare(
-    'SELECT COUNT(DISTINCT cited_by) as cnt FROM citations WHERE entry_id = ?'
-  ).get(entry.id) as any)?.cnt ?? 0;
+  const crossAgentRow = await adapter.getAsync<{ cnt: number }>(
+    'SELECT COUNT(DISTINCT cited_by) as cnt FROM citations WHERE entry_id = ?',
+    [entry.id],
+  );
+  const crossAgentCites = crossAgentRow?.cnt ?? 0;
 
   if (crossAgentCites >= 2) {
     metCount++;

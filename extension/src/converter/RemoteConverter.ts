@@ -3,9 +3,9 @@
  * Handles all non-text formats as first attempt.
  */
 import * as fs from "fs";
-import * as http from "http";
 import * as vscode from "vscode";
 import { IFileConverter, ConversionResult } from "./IFileConverter";
+import { httpPostJson } from "../utils/http-client-utils";
 
 export class RemoteConverter implements IFileConverter {
     canConvert(_format: string): boolean {
@@ -49,38 +49,24 @@ export class RemoteConverter implements IFileConverter {
             arguments: { toolName: "convert_to_markdown", arguments: { uri } },
         };
 
-        const body = JSON.stringify(payload);
-        const headers: Record<string, string> = {
-            "Content-Type": "application/json",
-            "Content-Length": Buffer.byteLength(body).toString(),
-        };
-        if (token) { headers["Authorization"] = `Bearer ${token}`; }
+        const authHeaders: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
 
-        return new Promise<string | null>((resolve) => {
-            const req = http.request(`${backendUrl}/mcp/tools/call`, {
-                method: "POST", headers, timeout: 30000,
-            }, (res) => {
-                let data = "";
-                res.on("data", chunk => { data += chunk; });
-                res.on("end", () => {
-                    if (res.statusCode === 200) {
-                        try {
-                            const parsed = JSON.parse(data);
-                            if (parsed?.content && Array.isArray(parsed.content)) {
-                                const textObj = parsed.content.find((c: any) => c.type === "text");
-                                if (textObj && typeof textObj.text === "string") {
-                                    resolve(textObj.text);
-                                    return;
-                                }
-                            }
-                            resolve(null);
-                        } catch { resolve(null); }
-                    } else { resolve(null); }
-                });
-            });
-            req.on("error", () => resolve(null));
-            req.write(body);
-            req.end();
-        });
+        try {
+            const parsed = await httpPostJson<{ content?: Array<{ type: string; text: string }> }>(
+                `${backendUrl}/mcp/tools/call`,
+                payload,
+                { headers: authHeaders, timeoutMs: 30000 }
+            );
+            if (parsed?.content && Array.isArray(parsed.content)) {
+                const textObj = parsed.content.find((c) => c.type === "text");
+                if (textObj && typeof textObj.text === "string") {
+                    return textObj.text;
+                }
+            }
+            return null;
+        } catch (err) {
+            console.warn(`[RemoteConverter] callRemote failed: ${(err as Error).message}`);
+            return null;
+        }
     }
 }

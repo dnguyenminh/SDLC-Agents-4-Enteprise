@@ -30,7 +30,7 @@ export class ComplexityAnalyzer {
   }
 
   /** Analyze a single function given its body AST node. */
-  analyzeFunction(
+  async analyzeFunction(
     symbolId: number,
     symbolName: string,
     filePath: string,
@@ -38,7 +38,7 @@ export class ComplexityAnalyzer {
     endLine: number,
     bodyNode: SyntaxNode,
     language: string
-  ): ComplexityResult | null {
+  ): Promise<ComplexityResult | null> {
     const breakdown = this.calculator.calculate(bodyNode, language);
     if (!breakdown) return null;
 
@@ -53,27 +53,27 @@ export class ComplexityAnalyzer {
       ...breakdown,
     };
 
-    this.store.upsert(result);
+    await this.store.upsert(result);
     return result;
   }
 
   /** Analyze all functions in a file (from DB symbols). Returns file-level summary. */
-  analyzeFileFromDB(filePath: string, parseAndGetBody: (symbolId: number, startLine: number, endLine: number) => SyntaxNode | null): FileComplexityResult {
-    const symbols = this.adapter.prepare(`
+  async analyzeFileFromDB(filePath: string, parseAndGetBody: (symbolId: number, startLine: number, endLine: number) => SyntaxNode | null): Promise<FileComplexityResult> {
+    const symbols = await this.adapter.allAsync<{
+      id: number; name: string; start_line: number; end_line: number;
+      language: string; relative_path: string;
+    }>(`
       SELECT s.id, s.name, s.start_line, s.end_line, f.language, f.relative_path
       FROM symbols s
       JOIN files f ON f.id = s.file_id
       WHERE f.relative_path LIKE ? AND s.kind IN ('function', 'method')
-    `).all(`%${filePath}%`) as Array<{
-      id: number; name: string; start_line: number; end_line: number;
-      language: string; relative_path: string;
-    }>;
+    `, [`%${filePath}%`]);
 
     const results: ComplexityResult[] = [];
     for (const sym of symbols) {
       const bodyNode = parseAndGetBody(sym.id, sym.start_line, sym.end_line);
       if (!bodyNode) continue;
-      const result = this.analyzeFunction(
+      const result = await this.analyzeFunction(
         sym.id, sym.name, sym.relative_path,
         sym.start_line, sym.end_line, bodyNode, sym.language
       );
@@ -91,12 +91,12 @@ export class ComplexityAnalyzer {
   }
 
   /** Query stored complexity results with filters. */
-  query(filters: ComplexityFilters): ComplexityQueryResult {
+  async query(filters: ComplexityFilters): Promise<ComplexityQueryResult> {
     return this.store.query(filters);
   }
 
   /** Get complexity for a specific symbol by name. */
-  getBySymbolName(symbolName: string, filePath?: string): ComplexityResult | null {
+  async getBySymbolName(symbolName: string, filePath?: string): Promise<ComplexityResult | null> {
     const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     let sql = `
       SELECT s.id FROM symbols s
@@ -110,7 +110,7 @@ export class ComplexityAnalyzer {
     }
     sql += ' LIMIT 1';
 
-    const row = this.adapter.prepare(sql).get(...params) as { id: number } | undefined;
+    const row = await this.adapter.getAsync<{ id: number }>(sql, params);
     if (!row) return null;
     return this.store.getBySymbol(row.id);
   }

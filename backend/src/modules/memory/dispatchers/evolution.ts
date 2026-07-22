@@ -1,5 +1,6 @@
 /**
  * Evolution dispatcher — handles mem_outcome, mem_verify, mem_configure_decay tool calls.
+ * SA4E-53: fully async — all services now use DatabaseAdapter.
  */
 
 import type { MemoryEngine } from '../engine/core.js';
@@ -13,7 +14,7 @@ const logger = pino({ name: 'evolution-dispatcher' });
 
 type Args = Record<string, unknown>;
 
-export function handleOutcome(engine: MemoryEngine, a: Args): string {
+export async function handleOutcome(engine: MemoryEngine, a: Args): Promise<string> {
   const entryId = a.entry_id as number | undefined;
   if (!entryId) return errorJson('INVALID_OUTCOME', 'entry_id is required');
 
@@ -24,8 +25,8 @@ export function handleOutcome(engine: MemoryEngine, a: Args): string {
   const context = a.context as string | undefined;
 
   try {
-    const svc = new OutcomeService(engine.getDb() as any);
-    const result = svc.record(entryId, outcome, agentName, context);
+    const svc = new OutcomeService(engine.getAdapter());
+    const result = await svc.record(entryId, outcome, agentName, context);
     return JSON.stringify({
       recorded: result.recorded,
       entry_id: entryId,
@@ -39,7 +40,7 @@ export function handleOutcome(engine: MemoryEngine, a: Args): string {
   }
 }
 
-export function handleVerify(engine: MemoryEngine, a: Args): string {
+export async function handleVerify(engine: MemoryEngine, a: Args): Promise<string> {
   const entryId = a.entry_id as number | undefined;
   if (!entryId) return errorJson('ENTRY_NOT_FOUND', 'entry_id is required');
 
@@ -47,13 +48,13 @@ export function handleVerify(engine: MemoryEngine, a: Args): string {
   const comment = a.comment as string | undefined;
 
   try {
-    const svc = new EpochService(engine.getDb() as any, logger);
+    const svc = new EpochService(engine.getAdapter(), logger);
     if (action === 'reject') {
-      svc.reject(entryId, comment);
-      return buildVerifyResponse(engine, entryId);
+      await svc.reject(entryId, comment);
+      return await buildVerifyResponse(engine, entryId);
     }
-    svc.verify(entryId, comment);
-    return buildVerifyResponse(engine, entryId);
+    await svc.verify(entryId, comment);
+    return await buildVerifyResponse(engine, entryId);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.warn({ entryId, action, err: msg }, 'Verify failed');
@@ -61,12 +62,12 @@ export function handleVerify(engine: MemoryEngine, a: Args): string {
   }
 }
 
-export function handleConfigureDecay(engine: MemoryEngine, a: Args): string {
+export async function handleConfigureDecay(engine: MemoryEngine, a: Args): Promise<string> {
   const action = a.action as string | undefined;
   if (!action) return errorJson('INVALID_ACTION', 'action is required');
 
   try {
-    return dispatchDecayAction(engine, action, a);
+    return await dispatchDecayAction(engine, action, a);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.warn({ action, err: msg }, 'Configure decay failed');
@@ -74,32 +75,32 @@ export function handleConfigureDecay(engine: MemoryEngine, a: Args): string {
   }
 }
 
-function dispatchDecayAction(engine: MemoryEngine, action: string, a: Args): string {
-  const db = engine.getDb() as any;
+async function dispatchDecayAction(engine: MemoryEngine, action: string, a: Args): Promise<string> {
+  const adapter = engine.getAdapter();
 
   switch (action) {
     case 'get_config':
-      return JSON.stringify(new DecayService(db, logger).getConfig());
+      return JSON.stringify(await new DecayService(adapter, logger).getConfig());
 
     case 'set_config':
-      return handleSetConfig(db, a);
+      return await handleSetConfig(engine, a);
 
     case 'run_decay':
-      return JSON.stringify(new DecayService(db, logger).runDecayCycle());
+      return JSON.stringify(await new DecayService(adapter, logger).runDecayCycle());
 
     case 'epoch':
-      return handleEpoch(db, a);
+      return await handleEpoch(engine, a);
 
     case 'stagnation_check':
-      return JSON.stringify(new StagnationDetector(db, logger).analyze());
+      return JSON.stringify(await new StagnationDetector(adapter, logger).analyze());
 
     default:
       return errorJson('INVALID_ACTION', `Unknown action: ${action}`);
   }
 }
 
-function handleSetConfig(db: import('better-sqlite3').Database, a: Args): string {
-  const updates: Record<string, unknown> = {};
+async function handleSetConfig(engine: MemoryEngine, a: Args): Promise<string> {
+  const updates: Partial<Record<string, unknown>> = {};
   if (a.halfLifeDays !== undefined) updates.halfLifeDays = a.halfLifeDays;
   if (a.half_life_days !== undefined) updates.half_life_days = a.half_life_days;
   if (a.decayRate !== undefined) updates.decayRate = a.decayRate;
@@ -107,32 +108,37 @@ function handleSetConfig(db: import('better-sqlite3').Database, a: Args): string
   if (a.confidenceFloor !== undefined) updates.confidenceFloor = a.confidenceFloor;
   if (a.confidence_floor !== undefined) updates.confidence_floor = a.confidence_floor;
   if (a.enable_predictive !== undefined) updates.enable_predictive = String(a.enable_predictive);
-  const svc = new DecayService(db, logger);
-  const stmt = db.prepare(
-    `UPDATE decay_config SET value = ?, updated_at = datetime('now') WHERE key = ?`,
-  );
+
+  const adapter = engine.getAdapter();
+  const dialect = engine.getDialect();
   for (const [key, val] of Object.entries(updates)) {
-    if (val !== undefined) stmt.run(String(val), key);
+    if (val !== undefined) {
+      await adapter.runAsync(
+        `UPDATE decay_config SET value = ?, updated_at = ${dialect.now()} WHERE key = ?`,
+        [String(val), key],
+      );
+    }
   }
-  return JSON.stringify(svc.getConfig());
+  return JSON.stringify(await new DecayService(adapter, logger).getConfig());
 }
 
-function handleEpoch(db: import('better-sqlite3').Database, a: Args): string {
+async function handleEpoch(engine: MemoryEngine, a: Args): Promise<string> {
   const scope = a.scope as string;
   const epochId = a.epoch_id as string;
   if (!scope || !epochId) {
     return errorJson('INVALID_CONFIG', 'scope and epoch_id required for epoch action');
   }
-  return JSON.stringify(new EpochService(db, logger).trigger(scope, epochId));
+  const svc = new EpochService(engine.getAdapter(), logger);
+  return JSON.stringify(await svc.trigger(scope, epochId));
 }
 
-function buildVerifyResponse(engine: MemoryEngine, entryId: number): string {
-  const entry = engine.findById(entryId);
+async function buildVerifyResponse(engine: MemoryEngine, entryId: number): Promise<string> {
+  const entry = await engine.findById(entryId);
   return JSON.stringify({
     verified: true,
     entry_id: entryId,
-    confidence: entry?.confidence ?? 0,
-    needs_verification: entry?.needs_verification ?? 0,
+    confidence: (entry as any)?.confidence ?? 0,
+    needs_verification: (entry as any)?.needs_verification ?? 0,
   });
 }
 

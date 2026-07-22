@@ -30,7 +30,9 @@ export function detectSfdxProject(root: string): string | null {
             const dirPath = path.join(root, dir.name);
             if (fs.existsSync(path.join(dirPath, "sfdx-project.json"))) { return dirPath; }
         }
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.debug(`[sf-indexer] findSalesforceRoot failed (non-fatal): ${(err as Error).message}`);
+    }
     return null;
 }
 
@@ -42,7 +44,11 @@ export function countSalesforceMetadata(sfdxRoot: string): SfIndexResult {
 
     const walkDir = (dir: string, ext: string): number => {
         if (!fs.existsSync(dir)) { return 0; }
-        try { return countFilesRecursive(dir, ext); } catch { return 0; }
+        try { return countFilesRecursive(dir, ext); }
+        catch (err) {
+          console.debug(`[sf-indexer] countFilesRecursive failed (non-fatal): ${(err as Error).message}`);
+          return 0;
+        }
     };
 
     const forcePath = path.join(sfdxRoot, "force-app", "main", "default");
@@ -72,7 +78,10 @@ function countFilesRecursive(dir: string, ext: string): number {
             if (entry.isDirectory()) { count += countFilesRecursive(fullPath, ext); }
             else if (entry.name.endsWith(ext)) { count++; }
         }
-    } catch { /* permission errors */ }
+    } catch (err) {
+      // Permission error or IO failure — log and return partial count
+      console.warn(`[sf-indexer] countFilesRecursive error in '${dir}': ${(err as Error).message}`);
+    }
     return count;
 }
 
@@ -81,5 +90,8 @@ function countDirectories(dir: string): number {
     try {
         return fs.readdirSync(dir, { withFileTypes: true })
             .filter(d => d.isDirectory() && !d.name.startsWith(".")).length;
-    } catch { return 0; }
+    } catch (err) {
+      console.warn(`[sf-indexer] countDirectories error in '${dir}': ${(err as Error).message}`);
+      return 0;
+    }
 }

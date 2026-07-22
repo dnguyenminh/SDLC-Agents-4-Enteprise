@@ -1,10 +1,11 @@
 /**
  * DecayService — confidence decay background job.
- * Processes entries in batches of 100 per transaction.
+ * SA4E-53: converted to async DatabaseAdapter for PostgreSQL compatibility.
  * Formula: confidence = MAX(confidence * (1 - decayRate), confidenceFloor)
  */
 
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
 import type { Logger } from 'pino';
 
 export interface DecayConfig {
@@ -25,58 +26,60 @@ export interface DecayCycleResult {
 }
 
 const BATCH_SIZE = 100;
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 100;
 
 export class DecayService {
-  private readonly db: Database.Database;
+  private readonly adapter: DatabaseAdapter;
+  private readonly dialect: DialectHelper;
   private readonly logger: Logger;
   private running = false;
 
-  constructor(db: Database.Database, logger: Logger) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, logger: Logger) {
+    this.adapter = adapter;
+    this.dialect = new DialectHelper(adapter.getEngine());
     this.logger = logger.child({ service: 'decay' });
   }
 
-  runDecayCycle(): DecayCycleResult {
+  async runDecayCycle(): Promise<DecayCycleResult> {
     if (this.running) throw new Error('JOB_IN_PROGRESS');
     this.running = true;
     const start = Date.now();
     try {
-      return this.executeCycle(start);
+      return await this.executeCycle(start);
     } finally {
       this.running = false;
     }
   }
 
-  getConfig(): DecayConfig {
-    const rows = this.db.prepare(
+  async getConfig(): Promise<DecayConfig> {
+    const rows = await this.adapter.allAsync<{ key: string; value: string }>(
       'SELECT key, value FROM decay_config',
-    ).all() as Array<{ key: string; value: string }>;
+    );
     const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
     return this.parseConfig(map);
   }
 
-  setConfig(updates: Partial<DecayConfig>): DecayConfig {
-    const stmt = this.db.prepare(
-      `UPDATE decay_config SET value = ?, updated_at = datetime('now') WHERE key = ?`,
-    );
+  async setConfig(updates: Partial<DecayConfig>): Promise<DecayConfig> {
     for (const [key, val] of Object.entries(updates)) {
-      if (val !== undefined) stmt.run(String(val), key);
+      if (val !== undefined) {
+        await this.adapter.runAsync(
+          `UPDATE decay_config SET value = ?, updated_at = ${this.dialect.now()} WHERE key = ?`,
+          [String(val), key],
+        );
+      }
     }
     return this.getConfig();
   }
 
-  private executeCycle(start: number): DecayCycleResult {
-    const config = this.getConfig();
+  private async executeCycle(start: number): Promise<DecayCycleResult> {
+    const config = await this.getConfig();
     const threshold = this.buildThreshold(config);
-    const entries = this.fetchDecayable(config, threshold);
+    const entries = await this.fetchDecayable(config, threshold);
     let decayed = 0;
     let skipped = 0;
 
     for (let i = 0; i < entries.length; i += BATCH_SIZE) {
       const batch = entries.slice(i, i + BATCH_SIZE);
-      const result = this.processBatch(batch, config);
+      const result = await this.processBatch(batch, config);
       decayed += result.decayed;
       skipped += result.skipped;
     }
@@ -91,67 +94,43 @@ export class DecayService {
     return new Date(Date.now() - ms).toISOString();
   }
 
-  private fetchDecayable(
+  private async fetchDecayable(
     config: DecayConfig, threshold: string,
-  ): Array<{ id: number; confidence: number }> {
-    return this.db.prepare(`
+  ): Promise<Array<{ id: number; confidence: number }>> {
+    return this.adapter.allAsync<{ id: number; confidence: number }>(`
       SELECT id, confidence FROM knowledge_entries
       WHERE pinned = 0
         AND confidence > ?
         AND archived = 0
         AND (last_accessed_at < ? OR last_accessed_at IS NULL)
       ORDER BY id
-    `).all(config.confidenceFloor, threshold) as any[];
+    `, [config.confidenceFloor, threshold]);
   }
 
-  private processBatch(
+  private async processBatch(
     batch: Array<{ id: number; confidence: number }>,
     config: DecayConfig,
-  ): { decayed: number; skipped: number } {
+  ): Promise<{ decayed: number; skipped: number }> {
     let decayed = 0;
-    let skipped = 0;
-    const run = () => {
-      const txn = this.db.transaction(() => {
-        const stmt = this.db.prepare(
-          `UPDATE knowledge_entries SET confidence = ?, updated_at = datetime('now') WHERE id = ?`,
-        );
-        for (const entry of batch) {
-          const newConf = Math.max(
-            entry.confidence * (1 - config.decayRate),
-            config.confidenceFloor,
-          );
-          stmt.run(newConf, entry.id);
-          decayed++;
-        }
-      });
-      txn();
-    };
-
+    const skipped = 0;
     try {
-      this.retryOnLocked(run);
+      for (const entry of batch) {
+        const newConf = Math.max(
+          entry.confidence * (1 - config.decayRate),
+          config.confidenceFloor,
+        );
+        await this.adapter.runAsync(
+          `UPDATE knowledge_entries SET confidence = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
+          [newConf, entry.id],
+        );
+        decayed++;
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       this.logger.warn({ batchSize: batch.length, err: msg }, 'Batch failed');
-      skipped += batch.length;
-      decayed = 0;
+      return { decayed: 0, skipped: batch.length };
     }
     return { decayed, skipped };
-  }
-
-  private retryOnLocked(fn: () => void): void {
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      try { fn(); return; } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : '';
-        if (!msg.includes('SQLITE_BUSY') && !msg.includes('database is locked')) throw err;
-        if (attempt === MAX_RETRIES - 1) throw err;
-        this.sleep(RETRY_DELAY_MS * (attempt + 1));
-      }
-    }
-  }
-
-  private sleep(ms: number): void {
-    const end = Date.now() + ms;
-    while (Date.now() < end) { /* busy wait for sync */ }
   }
 
   private parseConfig(map: Record<string, string>): DecayConfig {

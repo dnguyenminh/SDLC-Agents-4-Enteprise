@@ -1,6 +1,7 @@
 /**
  * MemoryEngine — facade for the KB Memory system.
  * Single entry point for all memory operations in the backend.
+ * SA4E-53: converted to async API for PostgreSQL compatibility.
  */
 
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
@@ -27,7 +28,7 @@ export class MemoryEngine extends MemoryEngineCrud {
 
   // ─── FTS Search ───────────────────────────────────────────────────
 
-  findFiltered(tier?: string, type?: string, limit = 20, scopeCtx?: ScopeContext): KnowledgeEntry[] {
+  async findFiltered(tier?: string, type?: string, limit = 20, scopeCtx?: ScopeContext): Promise<KnowledgeEntry[]> {
     const clauses: string[] = ['archived = 0'];
     const params: unknown[] = [];
     if (tier) { clauses.push('tier = ?'); params.push(tier); }
@@ -38,13 +39,13 @@ export class MemoryEngine extends MemoryEngineCrud {
     }
     const where = `WHERE ${clauses.join(' AND ')}`;
     params.push(limit);
-    return this.adapter.all<KnowledgeEntry>(
+    return this.adapter.allAsync<KnowledgeEntry>(
       `SELECT * FROM knowledge_entries ${where} ORDER BY created_at DESC LIMIT ?`,
       params,
     );
   }
 
-  search(query: string, limit = 10, tier?: string, type?: string, scopeCtx?: ScopeContext): SearchResult[] {
+  async search(query: string, limit = 10, tier?: string, type?: string, scopeCtx?: ScopeContext): Promise<SearchResult[]> {
     const clauses: string[] = [
       'ke.archived = 0',
       `(ke.expires_at IS NULL OR ke.expires_at >= ${this.dialect.now()})`,
@@ -67,7 +68,7 @@ export class MemoryEngine extends MemoryEngineCrud {
         WHERE ${clauses.join(' AND ')}
         ORDER BY f.rank LIMIT ?`;
       try {
-        const rows = this.adapter.all<any>(sql, [ftsQuery, ...params, limit]);
+        const rows = await this.adapter.allAsync<any>(sql, [ftsQuery, ...params, limit]);
         return this.applyCompositeScoring(rows);
       } catch { return []; }
     }
@@ -75,14 +76,15 @@ export class MemoryEngine extends MemoryEngineCrud {
     if (engine === 'postgresql') {
       const sanitized = query.replace(/[^\w\s*":.]/g, ' ').trim();
       if (!sanitized) {
-        return this.findFiltered(tier, type, limit, scopeCtx).map(e => ({ entry: e, score: 0, matchType: 'all' }));
+        const filtered = await this.findFiltered(tier, type, limit, scopeCtx);
+        return filtered.map(e => ({ entry: e, score: 0, matchType: 'all' }));
       }
       const sql = `SELECT ke.*, ts_rank(ke.tsvector_content, plainto_tsquery('english', ?)) as rank
         FROM knowledge_entries ke
         WHERE ke.tsvector_content @@ plainto_tsquery('english', ?) AND ${clauses.join(' AND ')}
         ORDER BY rank DESC LIMIT ?`;
       try {
-        const rows = this.adapter.all<any>(sql, [sanitized, sanitized, ...params, limit]);
+        const rows = await this.adapter.allAsync<any>(sql, [sanitized, sanitized, ...params, limit]);
         return this.applyCompositeScoring(rows);
       } catch { return []; }
     }
@@ -92,14 +94,14 @@ export class MemoryEngine extends MemoryEngineCrud {
       WHERE MATCH(ke.content, ke.summary) AGAINST(? IN NATURAL LANGUAGE MODE) AND ${clauses.join(' AND ')}
       ORDER BY rank DESC LIMIT ?`;
     try {
-      const rows = this.adapter.all<any>(sql, [query, query, ...params, limit]);
+      const rows = await this.adapter.allAsync<any>(sql, [query, query, ...params, limit]);
       return this.applyCompositeScoring(rows);
     } catch { return []; }
   }
 
   private applyCompositeScoring(rows: any[]): SearchResult[] {
     try {
-      const options = this.readScoringOptions();
+      const options = this.readScoringOptionsSync();
       const scored = rows.map(row => {
         const { rank, ...entry } = row;
         const ftsRank = -rank;
@@ -125,11 +127,18 @@ export class MemoryEngine extends MemoryEngineCrud {
     }
   }
 
-  private readScoringOptions(): CompositeScoreOptions {
+  /**
+   * Sync scoring options read — only called after allAsync returns rows.
+   * SA4E-53: scoring config is read via sync path since it's called from applyCompositeScoring
+   * which is a synchronous post-processing step on already-fetched rows.
+   * TODO: convert to fully async in future if needed.
+   */
+  private readScoringOptionsSync(): CompositeScoreOptions {
     try {
-      const row = this.adapter.get<{ value: string }>(
+      // For SQLite: use sync path (adapter wraps sync as async, so this is safe)
+      const row = (this.adapter as any).get?.(
         `SELECT value FROM decay_config WHERE key = 'enable_predictive'`,
-      );
+      ) as { value: string } | undefined;
       return { enablePredictive: row?.value === 'true' };
     } catch {
       return {};
@@ -137,29 +146,29 @@ export class MemoryEngine extends MemoryEngineCrud {
   }
 
   // ─── Sessions ─────────────────────────────────────────────────────
-  startSession(agentName?: string): string {
+  async startSession(agentName?: string): Promise<string> {
     const sid = `sess-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    this.adapter.run(
+    await this.adapter.runAsync(
       `INSERT INTO memory_sessions (session_id, agent_name) VALUES (?, ?)`,
       [sid, agentName ?? null],
     );
     this.currentSessionId = sid;
-    this.auditLog('SESSION_START', undefined, sid);
+    await this.auditLog('SESSION_START', undefined, sid);
     return sid;
   }
 
-  endSession(): void {
+  async endSession(): Promise<void> {
     if (!this.currentSessionId) return;
-    this.adapter.run(
+    await this.adapter.runAsync(
       `UPDATE memory_sessions SET ended_at = ${this.dialect.now()}, status = 'ended' WHERE session_id = ?`,
       [this.currentSessionId],
     );
-    this.auditLog('SESSION_END', undefined, this.currentSessionId);
+    await this.auditLog('SESSION_END', undefined, this.currentSessionId);
     this.currentSessionId = null;
   }
 
-  listSessions(limit = 20): any[] {
-    return this.adapter.all<any>(
+  async listSessions(limit = 20): Promise<any[]> {
+    return this.adapter.allAsync<any>(
       'SELECT * FROM memory_sessions ORDER BY started_at DESC LIMIT ?',
       [limit],
     );
@@ -167,21 +176,21 @@ export class MemoryEngine extends MemoryEngineCrud {
 
   // ─── Audit ────────────────────────────────────────────────────────
 
-  auditLog(operation: string, entryId?: number, sessionId?: string): void {
-    this.adapter.run(
+  async auditLog(operation: string, entryId?: number, sessionId?: string): Promise<void> {
+    await this.adapter.runAsync(
       `INSERT INTO memory_audit (operation, entry_id, session_id) VALUES (?, ?, ?)`,
       [operation, entryId ?? null, sessionId ?? this.currentSessionId ?? null],
     );
   }
 
-  listAudit(limit = 20, operation?: string): any[] {
+  async listAudit(limit = 20, operation?: string): Promise<any[]> {
     if (operation) {
-      return this.adapter.all<any>(
+      return this.adapter.allAsync<any>(
         'SELECT * FROM memory_audit WHERE operation = ? ORDER BY created_at DESC LIMIT ?',
         [operation, limit],
       );
     }
-    return this.adapter.all<any>(
+    return this.adapter.allAsync<any>(
       'SELECT * FROM memory_audit ORDER BY created_at DESC LIMIT ?',
       [limit],
     );
@@ -189,8 +198,8 @@ export class MemoryEngine extends MemoryEngineCrud {
 
   // ─── Scope Operations ─────────────────────────────────────────────
 
-  promoteEntry(entryId: number, targetScope: KBScope, projectId?: string): boolean {
-    const entry = this.findById(entryId);
+  async promoteEntry(entryId: number, targetScope: KBScope, projectId?: string): Promise<boolean> {
+    const entry = await this.findById(entryId);
     if (!entry) return false;
 
     const validTransitions: Record<string, KBScope[]> = {
@@ -203,28 +212,28 @@ export class MemoryEngine extends MemoryEngineCrud {
     if (!validTransitions[currentScope]?.includes(targetScope)) return false;
 
     if (currentScope === 'USER' && targetScope === 'PROJECT' && projectId) {
-      this.adapter.run(
+      await this.adapter.runAsync(
         `UPDATE knowledge_entries SET scope = ?, project_id = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
         [targetScope, projectId, entryId],
       );
     } else {
-      this.adapter.run(
+      await this.adapter.runAsync(
         `UPDATE knowledge_entries SET scope = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
         [targetScope, entryId],
       );
     }
 
-    this.adapter.run(
+    await this.adapter.runAsync(
       `INSERT INTO consolidation_log (entry_id, from_tier, to_tier, reason) VALUES (?, ?, ?, ?)`,
       [entryId, currentScope, targetScope, `Promoted: ${currentScope} → ${targetScope}`],
     );
 
-    this.auditLog('PROMOTE', entryId);
+    await this.auditLog('PROMOTE', entryId);
     return true;
   }
 
-  demoteEntry(entryId: number, targetScope: KBScope): boolean {
-    const entry = this.findById(entryId);
+  async demoteEntry(entryId: number, targetScope: KBScope): Promise<boolean> {
+    const entry = await this.findById(entryId);
     if (!entry) return false;
 
     const validTransitions: Record<string, KBScope[]> = {
@@ -236,12 +245,12 @@ export class MemoryEngine extends MemoryEngineCrud {
     const currentScope = (entry.scope ?? 'USER') as KBScope;
     if (!validTransitions[currentScope]?.includes(targetScope)) return false;
 
-    this.adapter.run(
+    await this.adapter.runAsync(
       `UPDATE knowledge_entries SET scope = ?, updated_at = ${this.dialect.now()} WHERE id = ?`,
       [targetScope, entryId],
     );
 
-    this.auditLog('DEMOTE', entryId);
+    await this.auditLog('DEMOTE', entryId);
     return true;
   }
 
@@ -261,8 +270,8 @@ export class MemoryEngine extends MemoryEngineCrud {
 
   // ─── Tool Usage (SA4E-18) ─────────────────────────────────────────
 
-  incrementToolUsage(toolName: string): void {
-    this.adapter.run(`
+  async incrementToolUsage(toolName: string): Promise<void> {
+    await this.adapter.runAsync(`
       INSERT INTO tool_usage (tool_name, call_count, last_called_at)
       VALUES (?, 1, ${this.dialect.now()})
       ON CONFLICT(tool_name) DO UPDATE SET
@@ -271,13 +280,13 @@ export class MemoryEngine extends MemoryEngineCrud {
     `, [toolName]);
   }
 
-  getToolUsage(toolName?: string): ToolUsageRow[] {
+  async getToolUsage(toolName?: string): Promise<ToolUsageRow[]> {
     return (toolName
-      ? this.adapter.all<ToolUsageRow>(
+      ? this.adapter.allAsync<ToolUsageRow>(
           'SELECT tool_name, call_count, last_called_at FROM tool_usage WHERE tool_name = ?',
           [toolName],
         )
-      : this.adapter.all<ToolUsageRow>(
+      : this.adapter.allAsync<ToolUsageRow>(
           'SELECT tool_name, call_count, last_called_at FROM tool_usage ORDER BY call_count DESC',
         ));
   }

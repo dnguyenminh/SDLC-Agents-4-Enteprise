@@ -20,9 +20,9 @@ export class UserRepository implements IUserRepository {
    * @returns Number of users in the database
    * @throws RepositoryError on database failure
    */
-  getUserCount(): number {
+  async getUserCount(): Promise<number> {
     try {
-      const row = this.adapter.get<{ cnt: number }>(
+      const row = await this.adapter.getAsync<{ cnt: number }>(
         'SELECT COUNT(*) as cnt FROM users',
       );
       return row?.cnt ?? 0;
@@ -37,9 +37,9 @@ export class UserRepository implements IUserRepository {
    * @returns Number of users in the specified group
    * @throws RepositoryError on database failure
    */
-  getUserCountByGroup(accessGroupId: string): number {
+  async getUserCountByGroup(accessGroupId: string): Promise<number> {
     try {
-      const row = this.adapter.get<{ cnt: number }>(
+      const row = await this.adapter.getAsync<{ cnt: number }>(
         'SELECT COUNT(*) as cnt FROM users WHERE access_group_id = ?',
         [accessGroupId],
       );
@@ -55,9 +55,9 @@ export class UserRepository implements IUserRepository {
    * @param email - The new email address
    * @throws RepositoryError on database failure
    */
-  updateEmail(userId: string, email: string): void {
+  async updateEmail(userId: string, email: string): Promise<void> {
     try {
-      this.adapter.run(
+      await this.adapter.runAsync(
         'UPDATE users SET email = ? WHERE user_id = ?',
         [email, userId],
       );

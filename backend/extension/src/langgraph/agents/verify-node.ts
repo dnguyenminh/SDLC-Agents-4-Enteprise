@@ -61,8 +61,10 @@ export class VerifyNode extends BaseNode {
         return this.buildVerifyFailure(state, evaluation.feedback);
       }
     } catch (error) {
-      // EF-4: VerifyNode itself errors -> treat as pass (BR-12: fail-open)
-      console.warn(`VerifyNode '${this.nodeId}' error, treating as pass:`, error);
+      // EF-4: VerifyNode itself errors -> log and treat as pass (BR-12: fail-open by design)
+      // NOTE: Intentional fail-open — verify errors must not block pipeline progress.
+      // Log with warn so the error is visible in diagnostics.
+      console.warn(`[VerifyNode:${this.nodeId}] Evaluation error — treating as pass (fail-open):`, (error as Error).message);
       return this.buildVerifyPass(state);
     }
   }
@@ -104,10 +106,11 @@ export class VerifyNode extends BaseNode {
         const parsed = JSON.parse(jsonMatch[0]);
         return { passed: Boolean(parsed.passed), feedback: parsed.feedback || "" };
       }
-    } catch {
-      /* fall through */
+    } catch (parseErr) {
+      // LLM returned non-JSON — log and fail-open
+      console.warn(`[VerifyNode:${this.nodeId}] Could not parse LLM verify response, treating as pass:`, (parseErr as Error).message);
     }
-    // If parsing fails, treat as pass (fail-open)
+    // If parsing fails, treat as pass (fail-open per BR-12)
     return { passed: true, feedback: "" };
   }
 

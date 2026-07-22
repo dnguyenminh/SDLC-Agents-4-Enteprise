@@ -147,12 +147,16 @@ export abstract class BaseNode {
           });
           return JSON.stringify(tools);
         }
-      } catch (e) {
-        // ignore parse error
+      } catch (parseErr) {
+        // JSON parse failed for tool list — return raw response as-is
+        console.warn(`[BaseNode:${this.nodeId}] discoverTools parse error: ${(parseErr as Error).message}`);
       }
       return res;
     }
-    catch { return ""; }
+    catch (err) {
+      console.warn(`[BaseNode:${this.nodeId}] discoverTools failed: ${(err as Error).message}`);
+      return "";
+    }
   }
 
   // === Workspace Delegates ===
@@ -173,10 +177,14 @@ export abstract class BaseNode {
   // === Knowledge Base Delegates ===
   protected kbSearch(query: string, limit = 10, scope?: string) { return this.callMcp("mem_search", { query, limit, ...(scope ? { scope } : {}) }); }
   protected async kbIngest(content: string, type: string, source: string, tags: string[], scope: string = 'USER') {
-    try { await this.callMcp("mem_ingest", { content, type, source, tags, scope }); } catch {}
+    try { await this.callMcp("mem_ingest", { content, type, source, tags, scope }); } catch (err) {
+      console.warn(`[BaseNode:${this.nodeId}] kbIngest failed (non-fatal): ${(err as Error).message}`);
+    }
   }
   protected async kbIngestFile(filePath: string, type = "DOCUMENT", scope: string = 'USER') {
-    try { await this.callMcp("mem_ingest_file", { file_path: filePath, type, scope }); } catch {}
+    try { await this.callMcp("mem_ingest_file", { file_path: filePath, type, scope }); } catch (err) {
+      console.warn(`[BaseNode:${this.nodeId}] kbIngestFile failed (non-fatal): ${(err as Error).message}`);
+    }
   }
 
   // === Hook & Shell Delegates ===
@@ -196,7 +204,8 @@ export abstract class BaseNode {
         const raw = fs.readFileSync(filePath, "utf-8");
         const match = raw.match(/^---\n[\s\S]*?\n---\n*/);
         return match ? raw.slice(match[0].length).trim() : raw.trim();
-      } catch {
+      } catch (err) {
+        console.debug(`[BaseNode] stripFrontMatter parse failed (non-fatal): ${(err as Error).message}`);
         return fallback;
       }
     }
@@ -300,3 +309,4 @@ export abstract class BaseNode {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
+

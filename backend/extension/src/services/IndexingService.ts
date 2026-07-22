@@ -88,7 +88,10 @@ export class IndexingService {
                 const raw = await vscode.workspace.fs.readFile(vscode.Uri.file(absPath));
                 results.push({ ...doc, content: Buffer.from(raw).toString("utf-8") });
                 channel.appendLine(`  📄 Text read: ${doc.path}`);
-            } catch { channel.appendLine(`  ⚠️ Cannot read: ${doc.path}`); }
+            } catch (err) {
+                console.debug(`[IndexingService] readTextDocs failed for ${doc.path} (non-fatal): ${(err as Error).message}`);
+                channel.appendLine(`  ⚠️ Cannot read: ${doc.path}`);
+            }
         }
         return results;
     }

@@ -5,13 +5,13 @@
 
 import * as vscode from "vscode";
 import { createLlmProvider } from "../langgraph/providers";
-import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
 import { mapServerStatusToWebview } from "../types";
 import { ChatExtToWebviewMessage } from "./message-protocol";
 
 export class ChatStatusManager {
   constructor(
-    private readonly mcpManager: McpServerManager,
+    private readonly mcpManager: IServerManager,
     private readonly secrets?: vscode.SecretStorage,
     private readonly sendToWebview?: (msg: ChatExtToWebviewMessage) => void
   ) {}
@@ -42,8 +42,10 @@ export class ChatStatusManager {
       provider.dispose();
       const status = llmAvailable ? "connected" : "disconnected";
       this.sendToWebview?.({ type: "serverStatus", status });
-    } catch {
+    } catch (err) {
+      console.debug(`[ChatStatusManager] LLM availability check failed (non-fatal): ${(err as Error).message}`);
       this.sendToWebview?.({ type: "serverStatus", status: "disconnected" });
     }
   }
 }
+

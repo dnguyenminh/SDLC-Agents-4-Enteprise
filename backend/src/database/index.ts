@@ -12,3 +12,8 @@ export { DatabaseConfigService } from './config/DatabaseConfigService.js';
 export { MigrationService } from './migration/MigrationService.js';
 export { TypeMapper } from './migration/TypeMapper.js';
 export { DialectHelper } from './dialect/DialectHelper.js';
+
+// SA4E-44: Async-only interface and implementations (LSP fix)
+export type { AsyncDatabaseAdapter } from './adapters/AsyncDatabaseAdapter.js';
+export { SqliteAsyncAdapter } from './adapters/SqliteAsyncAdapter.js';
+export { PostgresAsyncAdapter } from './adapters/PostgresAsyncAdapter.js';

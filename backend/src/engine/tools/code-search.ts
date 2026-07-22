@@ -1,4 +1,4 @@
-/**
+﻿/**
  * code_search tool — Full-text search across indexed codebase using FTS5.
  */
 
@@ -16,7 +16,7 @@ export function registerCodeSearch(server: McpServer, queryLayer: QueryLayer): v
       __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
     async ({ query, limit, __projectId }) => {
-      const results = queryLayer.searchCode(__projectId, query, limit);
+      const results = await queryLayer.searchCode(__projectId, query, limit);
       const text = formatSearchResults(results, query);
       return { content: [{ type: 'text', text }] };
     }

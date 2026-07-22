@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KB entries routes — search, list, and detail for KB entries.
  * SA4E-50: All admin-db calls are awaited since they are now async.
  */
@@ -108,9 +108,9 @@ export function createKbEntriesRoutes(ctx: AdminContext): Hono {
 }
 
 /** Fetch code symbol detail via SymbolRepository for KB Graph node click. */
-function getCodeSymbolDetail(symbolId: string, ctx: AdminContext): Record<string, unknown> | null {
+async function getCodeSymbolDetail(symbolId: string, ctx: AdminContext): Promise<Record<string, unknown> | null> {
   try {
-    const detail = ctx.db.symbol.getSymbolDetail(symbolId);
+    const detail = await ctx.db.symbol.getSymbolDetail(symbolId);
     if (!detail) return null;
     const lines = detail.startLine && detail.endLine ? `Lines ${detail.startLine}\u2013${detail.endLine}` : '';
     const contentParts = [

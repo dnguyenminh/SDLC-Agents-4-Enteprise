@@ -5,6 +5,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
+import { httpPostJson } from "./utils/http-client-utils";
 
 function getBackendUrl(): string | undefined {
   return vscode.workspace.getConfiguration("kiroSdlc").get<string>("backend.url");
@@ -24,9 +25,9 @@ export async function ingestDocumentsViaHttp(
   const url = `${backendUrl}/mcp/tools/call`;
   let ingested = 0;
   let errors = 0;
+  const authHeaders: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
 
   try {
-    const http = await import("http");
     for (let i = 0; i < docs.length; i++) {
       const d = docs[i];
       if (i % 10 === 0) report.report({ message: `Ingesting ${i + 1}/${docs.length} files...` });
@@ -38,14 +39,18 @@ export async function ingestDocumentsViaHttp(
             const raw = await vscode.workspace.fs.readFile(vscode.Uri.file(path.join(root, d.path)));
             fileContent = Buffer.from(raw).toString("utf-8");
           }
-        } catch { /* skip */ }
+        } catch (fileErr) {
+          console.debug("[indexer-http] Failed to read file content for " + d.path + ": " + (fileErr as Error).message);
+        }
       }
       if (fileContent) await uploadDocumentFile(d.path, fileContent, token);
       const payload = {
         tool_name: "mem_ingest_file",
         arguments: { file_path: d.path, type: d.type, format: "markdown", ...(fileContent ? { content: fileContent } : {}) },
       };
-      const success = await httpPost(url, payload, token, http);
+      const success = await httpPostJson<unknown>(url, payload, { headers: authHeaders, timeoutMs: 30000 })
+        .then(() => true)
+        .catch(() => false);
       if (success) ingested++; else errors++;
     }
     return `✅ Indexed: ${ingested} files` + (errors > 0 ? `, ⚠️ Failed: ${errors}` : ``);
@@ -57,8 +62,10 @@ export async function ingestDocumentsViaHttp(
 export async function uploadDocumentFile(relPath: string, content: string, token?: string): Promise<boolean> {
   const backendUrl = getBackendUrl();
   if (!backendUrl) return false;
-  const http = require("http");
-  return httpPost(`${backendUrl}/api/index/document`, { path: relPath, content }, token, http);
+  const authHeaders: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+  return httpPostJson<unknown>(`${backendUrl}/api/index/document`, { path: relPath, content }, { headers: authHeaders })
+    .then(() => true)
+    .catch(() => false);
 }
 
 export async function uploadSourceFiles(report: vscode.Progress<{ message?: string }>, token?: string): Promise<string> {
@@ -68,10 +75,11 @@ export async function uploadSourceFiles(report: vscode.Progress<{ message?: stri
   const files = await vscode.workspace.findFiles(
     "**/*.{ts,js,kt,java,py,go,rs,tsx,jsx}", libraryExcludes
   );
-  if (files.length === 0) return "ℹ️ No source files found";
+  if (files.length === 0) return "❌ No source files found";
   const url = `${backendUrl}/api/index/source`;
   let uploaded = 0;
   let errors = 0;
+  const authHeaders: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
 
   for (let i = 0; i < files.length; i += 50) {
     report.report({ message: `Indexing project code ${i + 1}/${files.length}...` });
@@ -82,26 +90,10 @@ export async function uploadSourceFiles(report: vscode.Progress<{ message?: stri
         return { path: vscode.workspace.asRelativePath(file), content: Buffer.from(content).toString("utf-8") };
       })
     );
-    const http = require("http");
-    const success = await httpPost(url, { files: entries }, token, http);
+    const success = await httpPostJson<unknown>(url, { files: entries }, { headers: authHeaders })
+      .then(() => true)
+      .catch(() => false);
     if (success) uploaded += batch.length; else errors += batch.length;
   }
   return `✅ Indexed ${uploaded} project files` + (errors > 0 ? `, ⚠️ Failed: ${errors}` : "");
-}
-
-async function httpPost(url: string, payload: unknown, token: string | undefined, http: any): Promise<boolean> {
-  const body = JSON.stringify(payload);
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body).toString(),
-  };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return new Promise<boolean>((resolve) => {
-    const req = http.request(url, { method: "POST", headers }, (res: any) => {
-      res.on("data", () => {});
-      res.on("end", () => resolve(res.statusCode === 200));
-    });
-    req.on("error", () => resolve(false));
-    req.write(body);
-    req.end();
-  });
 }

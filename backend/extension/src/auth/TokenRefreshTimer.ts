@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TokenRefreshTimer — Periodically checks token expiry and refreshes.
  * Runs every 5 minutes when authenticated.
  */
@@ -31,8 +31,10 @@ export class TokenRefreshTimer {
     }
     try {
       await this.authManager.refreshToken();
-    } catch {
-      // Refresh failed — AuthManager handles state transition
+    } catch (err) {
+      // Refresh failed
+      console.debug("[TokenRefreshTimer] Token refresh failed - AuthManager will handle state transition: " + (err as Error).message);
     }
   }
 }
+

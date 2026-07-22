@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ChatPanelProvider — KSA-210
  * WebviewViewProvider for the Chat Panel sidebar.
  * Delegates status, models, state to extracted managers.
@@ -6,7 +6,7 @@
 
 import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
-import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
 import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
 import { createLlmProvider } from "../langgraph/providers";
 import { MessageHandler } from "./message-handler";
@@ -32,7 +32,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly mcpManager: McpServerManager,
+    private readonly mcpManager: IServerManager,
     private readonly workspaceRoot: string,
     private readonly secrets?: vscode.SecretStorage,
     private readonly workspaceState?: vscode.Memento
@@ -162,7 +162,9 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     const config = vscode.workspace.getConfiguration("kiroSdlc");
     try {
       await config.update("llmModel", model === "auto" ? undefined : model, vscode.ConfigurationTarget.Global);
-    } catch { /* Non-fatal */ }
+    } catch (err) {
+      console.debug("[ChatPanelProvider] handleSetModel config update failed: " + (err as Error).message);
+    }
   }
 
   private async handlePickContext(contextType: string): Promise<void> {
@@ -187,7 +189,8 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       try {
         const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(fullPath));
         editor = await vscode.window.showTextDocument(doc);
-      } catch {
+      } catch (err) {
+        console.warn("[ChatPanelProvider] handleApplyCode failed to open file: " + (err as Error).message);
         vscode.window.showWarningMessage(`Cannot open file: ${filePath}`);
         return;
       }
@@ -219,3 +222,4 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     return ChatHtmlBuilder.build(webview, this.extensionUri);
   }
 }
+

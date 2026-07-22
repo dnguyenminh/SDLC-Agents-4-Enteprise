@@ -150,7 +150,9 @@ export class BackupManager {
       await fs.access(p);
       return true;
     } catch {
+      // fs.access failure = file does not exist — intentional silent return false
       return false;
     }
   }
 }
+

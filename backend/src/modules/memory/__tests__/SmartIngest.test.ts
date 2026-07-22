@@ -175,7 +175,7 @@ describe('handleSmartIngestCleanup', () => {
     engine.startSession('test');
   });
 
-  function seedUnfiltered(content: string): number {
+  function seedUnfiltered(content: string): Promise<number> {
     return engine.insert({
       content,
       summary: content.slice(0, 120),
@@ -238,7 +238,7 @@ describe('handleSmartIngestCleanup', () => {
   });
 
   it('dry_run does not modify entries', async () => {
-    const id = seedUnfiltered('test entry');
+    const id = await seedUnfiltered('test entry');
     const svc = createMockClassify('skip');
 
     const result = JSON.parse(await handleSmartIngestCleanup(engine, undefined, svc, { dry_run: true }));
@@ -247,7 +247,7 @@ describe('handleSmartIngestCleanup', () => {
     expect(result.deleted).toBe(1);
     expect(result.dry_run).toBe(true);
     // Entry should still exist
-    const entry = engine.findById(id);
+    const entry = await engine.findById(id);
     expect(entry).toBeDefined();
   });
 

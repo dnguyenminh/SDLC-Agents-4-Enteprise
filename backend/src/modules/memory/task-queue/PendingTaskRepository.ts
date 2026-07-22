@@ -1,33 +1,39 @@
 /**
  * PendingTaskRepository — SA4E-44
  * CRUD operations for the pending_tasks table via DatabaseAdapter.
+ * SA4E-53: converted to async API for PostgreSQL compatibility.
  */
 
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
 import type { PendingTask, CreateTaskInput } from './models.js';
 import { TaskStatus } from './models.js';
 
 export class PendingTaskRepository {
-  constructor(private readonly db: DatabaseAdapter) {}
+  private readonly dialect: DialectHelper;
 
-  create(input: CreateTaskInput): number {
-    const result = this.db.run(
+  constructor(private readonly db: DatabaseAdapter) {
+    this.dialect = new DialectHelper(db.getEngine());
+  }
+
+  async create(input: CreateTaskInput): Promise<number> {
+    const result = await this.db.runAsync(
       `INSERT INTO pending_tasks (task_type, entry_id, status, payload, max_retries, created_at)
-       VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+       VALUES (?, ?, ?, ?, ?, ${this.dialect.now()})`,
       [input.task_type, input.entry_id, TaskStatus.PENDING,
        JSON.stringify(input.payload), input.max_retries ?? 3],
     );
     return result.lastInsertRowid as number;
   }
 
-  claimNext(): PendingTask | null {
-    const task = this.db.get<PendingTask>(
+  async claimNext(): Promise<PendingTask | null> {
+    const task = await this.db.getAsync<PendingTask>(
       `SELECT * FROM pending_tasks WHERE status = ? ORDER BY created_at ASC LIMIT 1`,
       [TaskStatus.PENDING],
     );
     if (!task) return null;
-    const updated = this.db.run(
-      `UPDATE pending_tasks SET status = ?, started_at = datetime('now')
+    const updated = await this.db.runAsync(
+      `UPDATE pending_tasks SET status = ?, started_at = ${this.dialect.now()}
        WHERE id = ? AND status = ?`,
       [TaskStatus.PROCESSING, task.id, TaskStatus.PENDING],
     );
@@ -35,40 +41,45 @@ export class PendingTaskRepository {
     return { ...task, status: TaskStatus.PROCESSING };
   }
 
-  markCompleted(id: number): void {
-    this.db.run(
-      `UPDATE pending_tasks SET status = ?, completed_at = datetime('now') WHERE id = ?`,
+  async markCompleted(id: number): Promise<void> {
+    await this.db.runAsync(
+      `UPDATE pending_tasks SET status = ?, completed_at = ${this.dialect.now()} WHERE id = ?`,
       [TaskStatus.COMPLETED, id],
     );
   }
 
-  markFailed(id: number, error: string): void {
-    this.db.run(
+  async markFailed(id: number, error: string): Promise<void> {
+    await this.db.runAsync(
       `UPDATE pending_tasks SET status = ?, error = ?,
-       retry_count = retry_count + 1, completed_at = datetime('now') WHERE id = ?`,
+       retry_count = retry_count + 1, completed_at = ${this.dialect.now()} WHERE id = ?`,
       [TaskStatus.FAILED, error, id],
     );
   }
 
-  resetForRetry(id: number): void {
-    this.db.run(
+  async resetForRetry(id: number): Promise<void> {
+    await this.db.runAsync(
       `UPDATE pending_tasks SET status = ?, started_at = NULL, error = NULL WHERE id = ?`,
       [TaskStatus.PENDING, id],
     );
   }
 
-  recoverStaleTasks(staleThresholdMs: number): number {
+  async recoverStaleTasks(staleThresholdMs: number): Promise<number> {
     const thresholdSec = Math.floor(staleThresholdMs / 1000);
-    const result = this.db.run(
+    // SQLite uses datetime('now', '-N seconds'); PostgreSQL uses NOW() - INTERVAL 'N seconds'
+    const engine = this.db.getEngine();
+    const staleCondition = engine === 'sqlite'
+      ? `started_at < datetime('now', '-' || ? || ' seconds')`
+      : `started_at < NOW() - INTERVAL '1 second' * ?`;
+    const result = await this.db.runAsync(
       `UPDATE pending_tasks SET status = ?, started_at = NULL
-       WHERE status = ? AND started_at < datetime('now', '-' || ? || ' seconds')`,
+       WHERE status = ? AND ${staleCondition}`,
       [TaskStatus.PENDING, TaskStatus.PROCESSING, thresholdSec],
     );
     return result.changes;
   }
 
-  getStats(): { pending: number; processing: number; completed: number; failed: number } {
-    const rows = this.db.all<{ status: string; cnt: number }>(
+  async getStats(): Promise<{ pending: number; processing: number; completed: number; failed: number }> {
+    const rows = await this.db.allAsync<{ status: string; cnt: number }>(
       `SELECT status, COUNT(*) as cnt FROM pending_tasks GROUP BY status`,
     );
     const stats = { pending: 0, processing: 0, completed: 0, failed: 0 };
@@ -79,15 +90,15 @@ export class PendingTaskRepository {
     return stats;
   }
 
-  listFailed(limit = 20): PendingTask[] {
-    return this.db.all<PendingTask>(
+  async listFailed(limit = 20): Promise<PendingTask[]> {
+    return this.db.allAsync<PendingTask>(
       `SELECT * FROM pending_tasks WHERE status = ? ORDER BY completed_at DESC LIMIT ?`,
       [TaskStatus.FAILED, limit],
     );
   }
 
-  findById(id: number): PendingTask | undefined {
-    return this.db.get<PendingTask>(
+  async findById(id: number): Promise<PendingTask | undefined> {
+    return this.db.getAsync<PendingTask>(
       `SELECT * FROM pending_tasks WHERE id = ?`, [id],
     );
   }

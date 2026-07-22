@@ -1,4 +1,4 @@
-import * as fs from "fs";
+﻿import * as fs from "fs";
 import * as path from "path";
 import { PipelineExtractor, type PipelineDefinition, type PhaseDefinition, type AgentRelation } from "./pipeline-extractor";
 import type { LlmProvider } from "../core/llm-provider";
@@ -232,7 +232,8 @@ class AgentRegistry {
         outputDoc: fm.outputDoc,
         stepFilePath: filePath,
       };
-    } catch {
+    } catch (err) {
+      debugError("[AgentRegistry] parseAgentFile failed for " + filePath, err as Error);
       return null;
     }
   }
@@ -271,7 +272,7 @@ class AgentRegistry {
           continue;
         }
         if (rest.startsWith("[")) {
-          try { result[currentKey] = JSON.parse(rest.replace(/'/g, '"')); } catch { result[currentKey] = rest; }
+          try { result[currentKey] = JSON.parse(rest.replace(/'/g, '"')); } catch (parseErr) { console.debug("[AgentRegistry] parseFrontmatter array value - using raw string"); result[currentKey] = rest; }
           continue;
         }
         result[currentKey] = rest.replace(/^["']|["']$/g, "");
@@ -322,3 +323,4 @@ class AgentRegistry {
 }
 
 export const agentRegistry = new AgentRegistry();
+

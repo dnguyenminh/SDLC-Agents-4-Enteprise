@@ -118,7 +118,10 @@ export async function buildChatSubgraph(
         } as any);
       }
     }
-  } catch { /* fallback to base prompt */ }
+  } catch (err) {
+    console.debug(`[chat-graph] steering injection failed (non-fatal): ${(err as Error).message}`);
+    /* fallback to base prompt */
+  }
 
   const verifyNode = createVerifyResponseNode(llmProvider, streamHandler);
 

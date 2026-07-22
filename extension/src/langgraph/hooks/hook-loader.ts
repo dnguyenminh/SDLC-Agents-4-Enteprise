@@ -77,7 +77,9 @@ export async function loadHooks(workspaceRoot: string, forceReload = false): Pro
         if (hook.enabled) { hooks.push(hook); }
       } catch (err) { channel.appendLine(`[ERROR] Failed to parse ${name}: ${(err as Error).message}`); }
     }
-  } catch { /* Hooks directory doesn't exist */ }
+  } catch (err) {
+    console.debug(`[hook-loader] hooks directory not found or unreadable (non-fatal): ${(err as Error).message}`);
+  }
   channel.appendLine(`[INFO] Loaded ${hooks.length} valid hooks`);
   cachedHooks = hooks;
   return hooks;

@@ -27,7 +27,7 @@ export function createSseRoutes(ctx: AdminContext): Hono {
     const buildStats = async () => {
       const uptimeMs = Date.now() - ctx.SERVER_START_TIME;
       const mem = process.memoryUsage();
-      const userCount = ctx.db.user.getUserCount();
+      const userCount = await ctx.db.user.getUserCount();
       const kbCount = await getKbEntryCount(ctx.getRequestProjectId(c));
       return JSON.stringify({
         kbEntries: kbCount, users: userCount,

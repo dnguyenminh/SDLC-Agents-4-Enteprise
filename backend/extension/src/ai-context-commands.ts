@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AI Context Commands — KSA-177
  * Commands to get AI context for symbol at cursor and copy to clipboard.
  * Commands: kiroSdlc.getAIContext, kiroSdlc.getEditContext
@@ -6,13 +6,15 @@
 
 import * as vscode from "vscode";
 import { McpServerManager } from "./mcp-server-manager";
+import { IServerManager } from "./types/server-types";
+import { showUserError } from "./utils/panel-utils";
 
 /**
  * Register AI context commands.
  */
 export function registerAIContextCommands(
   context: vscode.ExtensionContext,
-  mcpManager: McpServerManager
+  mcpManager: IServerManager
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("kiroSdlc.getAIContext", () =>
@@ -24,7 +26,7 @@ export function registerAIContextCommands(
   );
 }
 
-async function getContextForCursor(mcpManager: McpServerManager, toolName: string): Promise<void> {
+async function getContextForCursor(mcpManager: IServerManager, toolName: string): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
     vscode.window.showWarningMessage("No active editor. Open a file first.");
@@ -91,7 +93,10 @@ function formatContext(raw: string, symbol: string, toolName: string): string {
     }
 
     return sections.join("\n") || raw;
-  } catch {
+  } catch (err) {
+    console.debug("[ai-context-commands] formatContext parse failed, returning raw: " + (err as Error).message);
     return raw;
   }
 }
+
+

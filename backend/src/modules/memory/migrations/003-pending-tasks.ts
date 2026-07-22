@@ -1,21 +1,32 @@
 /**
  * Migration 003: Create pending_tasks table.
- * SA4E-44 — Persistent task queue for KB ingest enrichment.
- * Cross-engine compatible SQL (no RETURNING, no engine-specific features).
+ * Cross-engine: PostgreSQL + SQLite compatible.
  */
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 
-import type Database from 'better-sqlite3';
+export async function migrate003PendingTasks(db: DatabaseAdapter): Promise<void> {
+  // Check table existence cross-engine
+  let exists = false;
+  try {
+    const pg = await db.allAsync<{ table_name: string }>(
+      `SELECT table_name FROM information_schema.tables WHERE table_name = $1`,
+      ['pending_tasks'],
+    );
+    exists = pg.length > 0;
+  } catch {
+    try {
+      const lite = await db.allAsync<{ name: string }>(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name='pending_tasks'`,
+      );
+      exists = lite.length > 0;
+    } catch {}
+  }
 
-export function migrate003PendingTasks(db: Database.Database): void {
-  const tables = db.prepare(
-    "SELECT name FROM sqlite_master WHERE type='table' AND name='pending_tasks'",
-  ).all();
+  if (exists) return;
 
-  if (tables.length > 0) return;
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS pending_tasks (
-      id INTEGER PRIMARY KEY,
+  await db.execAsync(`
+    CREATE TABLE pending_tasks (
+      id SERIAL PRIMARY KEY,
       task_type TEXT NOT NULL,
       entry_id INTEGER NOT NULL,
       status TEXT NOT NULL DEFAULT 'PENDING',
@@ -23,16 +34,12 @@ export function migrate003PendingTasks(db: Database.Database): void {
       error TEXT,
       retry_count INTEGER NOT NULL DEFAULT 0,
       max_retries INTEGER NOT NULL DEFAULT 3,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      created_at TEXT NOT NULL DEFAULT current_timestamp,
       started_at TEXT,
       completed_at TEXT,
       FOREIGN KEY (entry_id) REFERENCES knowledge_entries(id)
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_pending_tasks_status_created
-      ON pending_tasks(status, created_at);
-
-    CREATE INDEX IF NOT EXISTS idx_pending_tasks_entry_id
-      ON pending_tasks(entry_id);
+    )
   `);
+  try { await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_pending_tasks_status_created ON pending_tasks(status, created_at)`); } catch {}
+  try { await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_pending_tasks_entry_id ON pending_tasks(entry_id)`); } catch {}
 }

@@ -8,6 +8,7 @@ import * as path from "path";
 import { MCP_VARIANTS } from "./config";
 import { debugError } from "./debug-logger";
 import { resolveConfig, writeDefaultOrchestrationConfig, writeMcpConfig, downloadVariant } from "./mcp-config-builder";
+import { readJsonFile, writeJsonFile } from "./utils/mcp-config-file";
 
 /** Migrate legacy scripts folder and report what was cleaned up. */
 export function migrateLegacyScripts(root: string): { removed: boolean } {
@@ -38,11 +39,8 @@ export async function injectMcpConfig(root: string): Promise<string | null> {
 /** Check if MCP code-intelligence config exists in workspace. */
 export function hasMcpConfig(workspaceRoot: string): boolean {
   const mcpConfigPath = path.join(workspaceRoot, ".kiro", "settings", "mcp.json");
-  if (!fs.existsSync(mcpConfigPath)) { return false; }
-  try {
-    const config = JSON.parse(fs.readFileSync(mcpConfigPath, "utf-8"));
-    return !!config?.mcpServers?.["code-intelligence"];
-  } catch { return false; }
+  const config = readJsonFile<Record<string, unknown>>(mcpConfigPath);
+  return !!(config?.mcpServers as Record<string, unknown>)?.["code-intelligence"];
 }
 
 /** Write HTTP Streamable MCP config for the remote backend. */
@@ -54,15 +52,14 @@ export function writeBundledMcpConfig(workspaceRoot: string, port: number): void
 /** Remove the bundled code-intelligence entry from .kiro/settings/mcp.json. */
 export function removeBundledMcpConfig(workspaceRoot: string): void {
   const mcpConfigPath = path.join(workspaceRoot, ".kiro", "settings", "mcp.json");
-  if (!fs.existsSync(mcpConfigPath)) { return; }
-  try {
-    const config = JSON.parse(fs.readFileSync(mcpConfigPath, "utf-8"));
-    if (config?.mcpServers?.["code-intelligence"]) {
-      delete config.mcpServers["code-intelligence"];
-      if (Object.keys(config.mcpServers).length === 0) { delete config.mcpServers; }
-      fs.writeFileSync(mcpConfigPath, JSON.stringify(config, null, 2));
-    }
-  } catch (err) { debugError("[McpInjector] Failed to remove bundled mcp config", err as Error); }
+  const config = readJsonFile<Record<string, unknown>>(mcpConfigPath);
+  if (!config) { return; }
+  const servers = config.mcpServers as Record<string, unknown> | undefined;
+  if (servers?.["code-intelligence"]) {
+    delete servers["code-intelligence"];
+    if (Object.keys(servers).length === 0) { delete config.mcpServers; }
+    writeJsonFile(mcpConfigPath, config);
+  }
 }
 
 

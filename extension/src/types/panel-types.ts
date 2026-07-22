@@ -3,7 +3,8 @@
  */
 import * as vscode from "vscode";
 
-export type PanelType = "graph" | "dashboard" | "tags" | "quality" | "analytics" | "workflow";
+/** All supported panel types — includes specialized panels (security, impact). */
+export type PanelType = "graph" | "dashboard" | "tags" | "quality" | "analytics" | "workflow" | "security" | "impact";
 
 export interface IPanelManager {
   openPanel(type: PanelType): void;
@@ -12,13 +13,27 @@ export interface IPanelManager {
   notifyAllPanels(message: ExtToWebviewMessage): void;
 }
 
+/**
+ * Minimal panel interface — all panels must implement these.
+ * Use ILoadablePanel / IHandleablePanel for optional capabilities.
+ * (ISP: split from monolithic IKbPanel)
+ */
 export interface IKbPanel {
   readonly viewType: string;
   readonly panel: vscode.WebviewPanel;
   reveal(): void;
   dispose(): void;
   sendMessage(msg: ExtToWebviewMessage): void;
+}
+
+/** Panel that can asynchronously load data from backend. */
+export interface ILoadablePanel extends IKbPanel {
   loadData(): Promise<void>;
+}
+
+/** Panel that can handle messages from the webview. */
+export interface IHandleablePanel extends IKbPanel {
+  handleMessage(msg: WebviewToExtMessage): Promise<void>;
 }
 
 export type WebviewToExtMessage =
@@ -67,11 +82,13 @@ export interface KbEntry { id: number; title: string; content: string; type: str
 export const PANEL_VIEW_TYPES: Record<PanelType, string> = {
   graph: "kiroKbGraph", dashboard: "kiroKbDashboard", tags: "kiroKbTags",
   quality: "kiroKbQuality", analytics: "kiroKbAnalytics", workflow: "kiroWorkflowGraph",
+  security: "kiroSecurityPanel", impact: "kiroImpactPanel",
 };
 
 export const PANEL_TITLES: Record<PanelType, string> = {
   graph: "KB Graph", dashboard: "KB Dashboard", tags: "KB Tags",
   quality: "KB Quality", analytics: "KB Analytics", workflow: "SDLC Workflow Graph",
+  security: "Security Findings", impact: "Impact Analysis",
 };
 
 export const NODE_TYPE_COLORS: Record<string, string> = {

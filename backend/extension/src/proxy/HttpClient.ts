@@ -1,9 +1,9 @@
-/**
+﻿/**
  * HttpClient — Auth-injecting HTTP wrapper for backend communication.
  * Handles token injection, 401 retry, timeouts, and streaming.
  */
 
-import { AuthManager } from "../auth/AuthManager";
+import type { IAuthManager } from "../types/server-types";
 import { getProjectId } from "../extension";
 
 export class HttpError extends Error {
@@ -20,7 +20,7 @@ export interface ToolResult {
 export class HttpClient {
   constructor(
     private _baseUrl: string,
-    private readonly authManager: AuthManager
+    private readonly authManager: IAuthManager
   ) {}
 
   get baseUrl(): string {
@@ -127,8 +127,10 @@ export class HttpClient {
         signal: AbortSignal.timeout(timeout || 5000),
       });
       return response.ok;
-    } catch {
+    } catch (err) {
+      console.debug("[HttpClient] healthCheck failed: " + (err as Error).message);
       return false;
     }
   }
 }
+

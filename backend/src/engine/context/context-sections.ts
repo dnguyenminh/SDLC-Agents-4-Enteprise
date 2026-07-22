@@ -57,8 +57,8 @@ export function fetchSource(symbol: ResolvedSymbol, workspace: string, db: Datab
   }
 }
 
-export function fetchCallers(symbol: ResolvedSymbol, depth: number, format: string, callGraph: CallGraphService): any {
-  const result = callGraph.findCallers(symbol.name, depth, 10);
+export async function fetchCallers(symbol: ResolvedSymbol, depth: number, format: string, callGraph: CallGraphService): Promise<any> {
+  const result = await callGraph.findCallers(symbol.name, depth, 10);
   if (result.results.length === 0) return null;
   if (format === 'summary') {
     return result.results.map(r => `${r.symbol} (${r.filePath}:${r.callSiteLine})`);
@@ -68,8 +68,8 @@ export function fetchCallers(symbol: ResolvedSymbol, depth: number, format: stri
   }));
 }
 
-export function fetchCallees(symbol: ResolvedSymbol, depth: number, callGraph: CallGraphService): any {
-  const result = callGraph.findCallees(symbol.name, depth, 10);
+export async function fetchCallees(symbol: ResolvedSymbol, depth: number, callGraph: CallGraphService): Promise<any> {
+  const result = await callGraph.findCallees(symbol.name, depth, 10);
   if (result.results.length === 0) return null;
   return result.results.map(r => ({
     symbol: r.symbol, file: r.filePath, line: r.callSiteLine, kind: r.kind
@@ -164,8 +164,8 @@ export function fetchTestPatterns(symbol: ResolvedSymbol, db: DatabaseAdapter): 
   return rows.map(r => r.name);
 }
 
-export function fetchMocksNeeded(symbol: ResolvedSymbol, callGraph: CallGraphService): any {
-  const result = callGraph.findCallees(symbol.name, 1, 20);
+export async function fetchMocksNeeded(symbol: ResolvedSymbol, callGraph: CallGraphService): Promise<any> {
+  const result = await callGraph.findCallees(symbol.name, 1, 20);
   if (result.results.length === 0) return null;
   const externalDeps = result.results
     .filter(r => r.filePath !== symbol.filePath && r.filePath !== '(external)')
@@ -173,14 +173,14 @@ export function fetchMocksNeeded(symbol: ResolvedSymbol, callGraph: CallGraphSer
   return externalDeps.length > 0 ? externalDeps : null;
 }
 
-export function notFoundResponse(
+export async function notFoundResponse(
   symbol: string,
   intent: string,
   budget: number,
   startTime: number,
   resolver: SymbolResolver
-): AIContextResponse {
-  const suggestions = resolver.suggest(symbol);
+): Promise<AIContextResponse> {
+  const suggestions = await resolver.suggest(symbol);
   return {
     symbol,
     file_path: '',
@@ -196,3 +196,7 @@ export function notFoundResponse(
     }
   };
 }
+
+
+
+

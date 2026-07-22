@@ -1,4 +1,4 @@
-/**
+﻿/**
  * code_kb_export tool — Export code intelligence data as KB payloads.
  * Returns structured data ready for kb_ingest consumption.
  */
@@ -17,7 +17,7 @@ export function registerCodeKbExport(server: McpServer, queryLayer: QueryLayer, 
       __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
     async ({ module, format, __projectId }) => {
-      const modules = queryLayer.listModulesWithPatterns(__projectId, module ?? null);
+      const modules = await queryLayer.listModulesWithPatterns(__projectId, module ?? null);
       const projectName = extractProjectName(workspace);
       const outputFormat = format ?? 'json';
       const text = outputFormat === 'text'

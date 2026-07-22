@@ -36,7 +36,7 @@ export const TRAVERSE_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeTraverse(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
+export async function handleCodeTraverse(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): Promise<string> {
   const start = args.start as string;
   if (!start) return JSON.stringify({ error: 'Parameter "start" is required' });
   const edgeTypes = (args.edge_types as string[]) ?? [];
@@ -50,9 +50,9 @@ export function handleCodeTraverse(args: Record<string, unknown>, adapter: Datab
   const resolver = new SymbolResolver(adapter, projectId);
   const traverser = new GraphTraverser(adapter, resolver, workspace, projectId);
 
-  const startNode = traverser.resolveNode(start);
+  const startNode = await traverser.resolveNode(start);
   if (!startNode) {
-    const suggestions = resolver.suggest(start);
+    const suggestions = await resolver.suggest(start);
     if (suggestions.length > 0) {
       return `Symbol "${start}" not found. Did you mean: ${suggestions.join(', ')}?`;
     }
@@ -61,7 +61,7 @@ export function handleCodeTraverse(args: Record<string, unknown>, adapter: Datab
 
   const config: TraverseConfig = { edgeTypes, nodeTypes, direction, maxDepth, maxResults };
   const startTime = Date.now();
-  const results = traverser.traverse(startNode, config);
+  const results = await traverser.traverse(startNode, config);
   const executionTimeMs = Date.now() - startTime;
 
   if (results.length === 0) {

@@ -1,3 +1,9 @@
+/**
+ * MCP Server setup — registers tools and handles MCP protocol requests.
+ * OCP fix: notification routing uses a declarative pattern map instead of name.includes() chain.
+ * Adding a new notification type only requires adding a pattern entry — no if/else changes.
+ */
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import type { ModuleRegistry } from '../modules/ModuleRegistry.js';
@@ -9,17 +15,29 @@ import { trackToolUsage } from './toolUsageTracker.js';
 const connectedTransports = new Set<any>();
 const log = pino({ name: 'mcp-server' });
 
-export function getMcpServer(registry: ModuleRegistry, logger: Logger): Server {
-  const server = new Server({
-    name: 'kiro-backend-mcp',
-    version: '1.0.0',
-  }, {
-    capabilities: {
-      tools: {}
-    }
-  });
+/**
+ * OCP: Declarative map of tool name patterns to notification method.
+ * To add a new notification type: add one entry here. getMcpServer() is not modified.
+ * Patterns are matched in order — first match wins.
+ */
+const NOTIFICATION_PATTERNS: Array<{ test: (name: string) => boolean; method: string }> = [
+  { test: (n) => n.includes('ingest') || n.includes('create'),  method: 'kb_entry_added' },
+  { test: (n) => n.includes('update') || n.includes('modify'),  method: 'kb_entry_updated' },
+  { test: (n) => n.includes('delete') || n.includes('remove'),  method: 'kb_entry_deleted' },
+  { test: (n) => n.includes('tag'),                             method: 'tag_created' },
+];
 
-  // Register tools from the registry
+/** Resolve notification method for a tool name, or undefined if no pattern matches. */
+function resolveNotification(toolName: string): string | undefined {
+  return NOTIFICATION_PATTERNS.find(p => p.test(toolName))?.method;
+}
+
+export function getMcpServer(registry: ModuleRegistry, logger: Logger): Server {
+  const server = new Server(
+    { name: 'kiro-backend-mcp', version: '1.0.0' },
+    { capabilities: { tools: {} } },
+  );
+
   const tools = registry.getAllToolDefinitions();
   const handlers = registry.getToolHandlers();
 
@@ -38,46 +56,32 @@ export function getMcpServer(registry: ModuleRegistry, logger: Logger): Server {
       tools: filtered.map(tool => ({
         name: tool.name,
         description: tool.description || '',
-        inputSchema: tool.inputSchema || { type: 'object', properties: {} }
-      }))
+        inputSchema: tool.inputSchema || { type: 'object', properties: {} },
+      })),
     };
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
     const handler = handlers.get(name);
-    
+
     if (!handler) {
-      return {
-        content: [{ type: 'text', text: `Error: Unknown tool ${name}` }],
-        isError: true,
-      };
+      return { content: [{ type: 'text', text: `Error: Unknown tool ${name}` }], isError: true };
     }
 
     try {
       const result = await handler(args || {});
-      
-      // Track usage + auto-emit notifications for KB changes
+
       if (!result.isError) {
         trackToolUsage(registry, logger, name); // BR-07/BR-12: count only success
-        if (name.includes('ingest') || name.includes('create')) {
-          broadcastNotification('kb_entry_added', { tool: name });
-        } else if (name.includes('update') || name.includes('modify')) {
-          broadcastNotification('kb_entry_updated', { tool: name });
-        } else if (name.includes('delete') || name.includes('remove')) {
-          broadcastNotification('kb_entry_deleted', { tool: name });
-        } else if (name.includes('tag')) {
-          broadcastNotification('tag_created', { tool: name });
-        }
+        const notifMethod = resolveNotification(name);
+        if (notifMethod) broadcastNotification(notifMethod, { tool: name });
       }
-      
+
       return result as any;
     } catch (err: any) {
       logger.error({ err, tool: name }, 'Error executing MCP tool');
-      return {
-        content: [{ type: 'text', text: `Error: ${err.message}` }],
-        isError: true,
-      };
+      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
     }
   });
 
@@ -87,11 +91,7 @@ export function getMcpServer(registry: ModuleRegistry, logger: Logger): Server {
 export function broadcastNotification(method: string, params?: any) {
   for (const transport of connectedTransports) {
     try {
-      transport.send({
-        jsonrpc: '2.0',
-        method: `notifications/${method}`,
-        params,
-      });
+      transport.send({ jsonrpc: '2.0', method: `notifications/${method}`, params });
     } catch (err) {
       log.warn({ err }, 'Failed to send broadcast notification to transport');
     }
@@ -100,7 +100,5 @@ export function broadcastNotification(method: string, params?: any) {
 
 export function registerTransport(transport: any) {
   connectedTransports.add(transport);
-  transport.onclose = () => {
-    connectedTransports.delete(transport);
-  };
+  transport.onclose = () => { connectedTransports.delete(transport); };
 }

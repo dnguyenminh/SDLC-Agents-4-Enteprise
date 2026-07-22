@@ -135,7 +135,7 @@ async function getAvailablePlatforms(workspaceRoot: string): Promise<PlatformId[
     try {
       await fs.access(convPath);
       available.push(def.id);
-    } catch { /* not available */ }
+    } catch { /* not available — intentional: fs.access failure = binary absent */ }
   }
   return available;
 }
@@ -159,3 +159,4 @@ function buildQuickPickItems(
     };
   });
 }
+

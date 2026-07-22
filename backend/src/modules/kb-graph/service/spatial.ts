@@ -1,6 +1,6 @@
 /**
  * SA4E-51 — Spatial query and edge-building functions for KB Graph.
- * Uses DatabaseAdapter so queries run on whichever engine is active.
+ * Uses DatabaseAdapter async methods so queries run on whichever engine is active.
  * TEMP TABLE removed: replaced with IN clause for PostgreSQL compatibility.
  */
 
@@ -15,10 +15,12 @@ let cachedNodeCount = 0;
 let cachedCountTime = 0;
 
 /** Refresh in-memory count cache if stale (>60s). */
-function refreshNodeCache(db: DatabaseAdapter): void {
+async function refreshNodeCache(db: DatabaseAdapter): Promise<void> {
   if (cachedCountTime === 0 || Date.now() - cachedCountTime > 60000) {
-    cachedEdgeCount = db.get<{ cnt: number }>('SELECT COUNT(*) as cnt FROM graph_edges', [])?.cnt ?? 0;
-    cachedNodeCount = db.get<{ cnt: number }>('SELECT COUNT(*) as cnt FROM graph_nodes', [])?.cnt ?? 0;
+    const edgeRow = await db.getAsync<{ cnt: number }>('SELECT COUNT(*) as cnt FROM graph_edges', []);
+    const nodeRow = await db.getAsync<{ cnt: number }>('SELECT COUNT(*) as cnt FROM graph_nodes', []);
+    cachedEdgeCount = edgeRow?.cnt ?? 0;
+    cachedNodeCount = nodeRow?.cnt ?? 0;
     cachedCountTime = Date.now();
   }
 }
@@ -26,14 +28,12 @@ function refreshNodeCache(db: DatabaseAdapter): void {
 /**
  * Retrieve edges where BOTH endpoints are in the given node set.
  * Uses IN clause instead of TEMP TABLE — compatible with PostgreSQL.
- * @param nodes - Node set to find edges within
  */
-function getEdgesForNodes(nodes: GraphNode[], db: DatabaseAdapter): GraphEdge[] {
+async function getEdgesForNodes(nodes: GraphNode[], db: DatabaseAdapter): Promise<GraphEdge[]> {
   if (nodes.length === 0) return [];
   const ids = nodes.map(n => n.id);
-  // Parameterised IN clause — avoids TEMP TABLE which is SQLite-only
   const placeholders = ids.map(() => '?').join(',');
-  const rows = db.all<{ source: string; target: string; weight: number; rel_type: string }>(
+  const rows = await db.allAsync<{ source: string; target: string; weight: number; rel_type: string }>(
     `SELECT source, target, weight, rel_type FROM graph_edges
      WHERE source IN (${placeholders}) AND target IN (${placeholders}) LIMIT 3000`,
     [...ids, ...ids],
@@ -42,16 +42,19 @@ function getEdgesForNodes(nodes: GraphNode[], db: DatabaseAdapter): GraphEdge[] 
 }
 
 /** Return macro-level nodes (level=0) sampled evenly across types. */
-function getMacroNodes(db: DatabaseAdapter, projectId?: string): { nodes: GraphNode[]; level: string } {
+async function getMacroNodes(
+  db: DatabaseAdapter, projectId?: string,
+): Promise<{ nodes: GraphNode[]; level: string }> {
   const projectFilter = projectId ? ' AND project_id = ?' : '';
   const projectArgs: unknown[] = projectId ? [projectId] : [];
-  const types = db.all<{ type: string }>(
+  const typeRows = await db.allAsync<{ type: string }>(
     `SELECT DISTINCT type FROM graph_nodes WHERE level = 0${projectFilter}`, projectArgs,
-  ).map(r => r.type);
+  );
+  const types = typeRows.map(r => r.type);
   const perType = Math.max(20, Math.floor(500 / Math.max(types.length, 1)));
   const allNodes: Record<string, unknown>[] = [];
   for (const t of types) {
-    const rows = db.all<Record<string, unknown>>(
+    const rows = await db.allAsync<Record<string, unknown>>(
       `SELECT * FROM graph_nodes WHERE level = 0 AND type = ?${projectFilter} LIMIT ?`,
       [t, ...projectArgs, perType],
     );
@@ -61,27 +64,27 @@ function getMacroNodes(db: DatabaseAdapter, projectId?: string): { nodes: GraphN
 }
 
 /** Return mid-level nodes (level<=1) nearest to camera position. */
-function getMidNodes(
+async function getMidNodes(
   camX: number, camY: number, camZ: number, db: DatabaseAdapter, projectId?: string,
-): { nodes: GraphNode[]; level: string } {
+): Promise<{ nodes: GraphNode[]; level: string }> {
   const projectFilter = projectId ? ' AND project_id = ?' : '';
   const projectArgs: unknown[] = projectId ? [projectId] : [];
-  const nodes = db.all<Record<string, unknown>>(
+  const rows = await db.allAsync<Record<string, unknown>>(
     `SELECT *, ABS(x - ?) + ABS(y - ?) + ABS(z - ?) as manhattan_dist
      FROM graph_nodes WHERE level <= 1${projectFilter}
      ORDER BY manhattan_dist ASC LIMIT 1500`,
     [camX, camY, camZ, ...projectArgs],
-  ).map(rowToNode);
-  return { nodes, level: 'mid' };
+  );
+  return { nodes: rows.map(rowToNode), level: 'mid' };
 }
 
 /** Return micro-level nodes nearest to camera (full detail mode). */
-function getMicroNodes(
+async function getMicroNodes(
   camX: number, camY: number, camZ: number, db: DatabaseAdapter, projectId?: string,
-): { nodes: GraphNode[]; level: string } {
+): Promise<{ nodes: GraphNode[]; level: string }> {
   const projectFilter = projectId ? ' WHERE project_id = ?' : '';
   const projectArgs: unknown[] = projectId ? [projectId] : [];
-  const nearNodes = db.all<Record<string, unknown>>(
+  const nearNodes = await db.allAsync<Record<string, unknown>>(
     `SELECT *, ABS(x - ?) + ABS(y - ?) + ABS(z - ?) as manhattan_dist
      FROM graph_nodes${projectFilter}
      ORDER BY manhattan_dist ASC LIMIT 10000`,
@@ -91,9 +94,9 @@ function getMicroNodes(
 }
 
 /** Dispatch to macro/mid/micro based on zoom level. */
-function getNodesByZoom(
+async function getNodesByZoom(
   params: SpatialQueryParams, db: DatabaseAdapter, projectId?: string,
-): { nodes: GraphNode[]; level: string } {
+): Promise<{ nodes: GraphNode[]; level: string }> {
   const { camX, camY, camZ, zoom } = params;
   if (zoom > 500) return getMacroNodes(db, projectId);
   if (zoom > 200) return getMidNodes(camX, camY, camZ, db, projectId);
@@ -101,9 +104,9 @@ function getNodesByZoom(
 }
 
 /** Build spatial grid buckets (150-unit voxels) from all graph_nodes. */
-function buildBuckets(db: DatabaseAdapter) {
+async function buildBuckets(db: DatabaseAdapter) {
   type NodeRow = { entry_id: string; x: number; y: number; z: number; cluster_id: string; type: string };
-  const allNodeRows = db.all<NodeRow>(
+  const allNodeRows = await db.allAsync<NodeRow>(
     'SELECT entry_id, x, y, z, cluster_id, type FROM graph_nodes', [],
   );
   const buckets = new Map<string, NodeRow[]>();
@@ -116,17 +119,16 @@ function buildBuckets(db: DatabaseAdapter) {
 }
 
 /** Insert SPATIAL edges for nodes that share a voxel bucket. */
-function insertSpatialEdges(
+async function insertSpatialEdges(
   buckets: Map<string, { entry_id: string }[]>, db: DatabaseAdapter,
-): number {
+): Promise<number> {
   let edgesCreated = 0;
-  // Batch inside a transaction to reduce I/O round-trips
-  db.transaction(() => {
+  await db.transactionAsync(async () => {
     for (const [, members] of buckets) {
       for (let i = 0; i < members.length; i++) {
         for (let j = i + 1; j < Math.min(members.length, i + 4); j++) {
-          db.run(
-            'INSERT OR IGNORE INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?)',
+          await db.runAsync(
+            'INSERT INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?) ON CONFLICT (source, target) DO NOTHING',
             [members[i].entry_id, members[j].entry_id, 0.7, 'SPATIAL'],
           );
           edgesCreated++;
@@ -141,17 +143,17 @@ function insertSpatialEdges(
  * Build spatial proximity edges between nodes in the same voxel.
  * @returns Number of edges created
  */
-export function buildSpatialEdges(db: DatabaseAdapter): number {
-  return insertSpatialEdges(buildBuckets(db), db);
+export async function buildSpatialEdges(db: DatabaseAdapter): Promise<number> {
+  return insertSpatialEdges(await buildBuckets(db), db);
 }
 
 /**
  * Build cross-cluster hub edges (one representative per cluster).
  * @returns Number of edges created
  */
-export function buildCrossClusterEdges(db: DatabaseAdapter): number {
+export async function buildCrossClusterEdges(db: DatabaseAdapter): Promise<number> {
   type NodeRow = { entry_id: string; cluster_id: string };
-  const allNodeRows = db.all<NodeRow>(
+  const allNodeRows = await db.allAsync<NodeRow>(
     'SELECT entry_id, cluster_id FROM graph_nodes', [],
   );
   const clusterMap = new Map<string, string>();
@@ -161,11 +163,11 @@ export function buildCrossClusterEdges(db: DatabaseAdapter): number {
   }
   const hubs = Array.from(clusterMap.values());
   let edgesCreated = 0;
-  db.transaction(() => {
+  await db.transactionAsync(async () => {
     for (let i = 0; i < hubs.length; i++) {
       for (let j = i + 1; j < Math.min(hubs.length, i + 5); j++) {
-        db.run(
-          'INSERT OR IGNORE INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?)',
+        await db.runAsync(
+          'INSERT INTO graph_edges (source, target, weight, rel_type) VALUES (?, ?, ?, ?) ON CONFLICT (source, target) DO NOTHING',
           [hubs[i], hubs[j], 0.5, 'CLUSTER_LINK'],
         );
         edgesCreated++;
@@ -179,13 +181,13 @@ export function buildCrossClusterEdges(db: DatabaseAdapter): number {
  * Return flat position list for all nodes (used by 3D viewport initialisation).
  * @param projectId - Optional project scope
  */
-export function getAllPositions(
+export async function getAllPositions(
   db: DatabaseAdapter, projectId?: string,
-): { nodes: { id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[]; total: number } {
+): Promise<{ nodes: { id: string; x: number; y: number; z: number; type: string; tier: string; label: string }[]; total: number }> {
   const projectFilter = projectId ? ' WHERE project_id = ?' : '';
   const projectArgs: unknown[] = projectId ? [projectId] : [];
   type PosRow = { entry_id: string; x: number; y: number; z: number; type: string; tier: string; label: string };
-  const rows = db.all<PosRow>(
+  const rows = await db.allAsync<PosRow>(
     `SELECT entry_id, x, y, z, type, tier, label FROM graph_nodes${projectFilter}`, projectArgs,
   );
   const nodes = rows.map(r => ({ id: r.entry_id, x: r.x, y: r.y, z: r.z, type: r.type, tier: r.tier, label: r.label }));
@@ -199,14 +201,14 @@ export function getAllPositions(
  * @param logger - Pino logger
  * @param projectId - Optional project scope
  */
-export function spatialQuery(
+export async function spatialQuery(
   params: SpatialQueryParams, db: DatabaseAdapter, logger: Logger, projectId?: string,
-): SpatialGraphResult {
+): Promise<SpatialGraphResult> {
   const startTime = performance.now();
-  const { nodes, level } = getNodesByZoom(params, db, projectId);
-  const edges = getEdgesForNodes(nodes, db);
+  const { nodes, level } = await getNodesByZoom(params, db, projectId);
+  const edges = await getEdgesForNodes(nodes, db);
   const queryTimeMs = performance.now() - startTime;
-  refreshNodeCache(db);
+  await refreshNodeCache(db);
   return {
     nodes, edges,
     stats: {

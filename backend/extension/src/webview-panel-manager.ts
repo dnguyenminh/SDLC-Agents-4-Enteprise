@@ -1,6 +1,8 @@
 /**
  * WebviewPanelManager — Factory and singleton registry for KB webview panels.
  * Ensures only one instance of each panel type exists at a time.
+ * OCP: panel creation uses a Map registry — adding a new panel type does not require editing this file.
+ * DIP: depends on IServerManager interface, not concrete McpServerManager.
  */
 
 import * as vscode from "vscode";
@@ -9,8 +11,8 @@ import {
   IPanelManager,
   IKbPanel,
   ExtToWebviewMessage,
+  IServerManager,
 } from "./types";
-import { McpServerManager } from "./mcp-server-manager";
 import { BasePanel } from "./panels/base-panel";
 import { GraphPanel } from "./panels/graph-panel";
 import { DashboardPanel } from "./panels/dashboard-panel";
@@ -18,16 +20,36 @@ import { TagsPanel } from "./panels/tags-panel";
 import { QualityPanel } from "./panels/quality-panel";
 import { AnalyticsPanel } from "./panels/analytics-panel";
 import { WorkflowPanel } from "./panels/workflow-panel";
+import { SecurityPanel } from "./panels/security-panel";
+import { ImpactPanel } from "./panels/impact-panel";
 import { KbEventBus } from "./kb-event-bus";
+
+/** Factory function type for creating a panel. */
+type PanelFactory = () => BasePanel;
 
 export class WebviewPanelManager implements IPanelManager, vscode.Disposable {
   private panels = new Map<PanelType, BasePanel>();
 
+  /** Panel registry — OCP: extend here, don't modify createPanel(). */
+  private readonly registry: Map<PanelType, PanelFactory>;
+
   constructor(
-    private readonly mcpManager: McpServerManager,
+    private readonly mcpManager: IServerManager,
     private readonly extensionUri: vscode.Uri,
     private readonly eventBus?: KbEventBus
-  ) {}
+  ) {
+    // Build registry once; each factory captures the constructor args via closure.
+    this.registry = new Map<PanelType, PanelFactory>([
+      ["graph",     () => new GraphPanel(this.mcpManager, this.extensionUri)],
+      ["dashboard", () => new DashboardPanel(this.mcpManager, this.extensionUri)],
+      ["tags",      () => new TagsPanel(this.mcpManager, this.extensionUri, this.eventBus)],
+      ["quality",   () => new QualityPanel(this.mcpManager, this.extensionUri, this.eventBus)],
+      ["analytics", () => new AnalyticsPanel(this.mcpManager, this.extensionUri, this.eventBus)],
+      ["workflow",  () => new WorkflowPanel(this.mcpManager, this.extensionUri)],
+      ["security",  () => new SecurityPanel(this.mcpManager, this.extensionUri)],
+      ["impact",    () => new ImpactPanel(this.mcpManager, this.extensionUri)],
+    ]);
+  }
 
   /**
    * Open a panel by type. If already open, reveals it. Otherwise creates new.
@@ -96,22 +118,14 @@ export class WebviewPanelManager implements IPanelManager, vscode.Disposable {
   }
 
   /**
-   * Factory method — creates the appropriate panel subclass.
+   * Registry-based factory — OCP compliant.
+   * To add a new panel: add an entry to this.registry in the constructor.
    */
   private createPanel(type: PanelType): BasePanel {
-    switch (type) {
-      case "graph":
-        return new GraphPanel(this.mcpManager, this.extensionUri);
-      case "dashboard":
-        return new DashboardPanel(this.mcpManager, this.extensionUri);
-      case "tags":
-        return new TagsPanel(this.mcpManager, this.extensionUri, this.eventBus);
-      case "quality":
-        return new QualityPanel(this.mcpManager, this.extensionUri, this.eventBus);
-      case "analytics":
-        return new AnalyticsPanel(this.mcpManager, this.extensionUri, this.eventBus);
-      case "workflow":
-        return new WorkflowPanel(this.mcpManager, this.extensionUri);
+    const factory = this.registry.get(type);
+    if (!factory) {
+      throw new Error(`No panel factory registered for type '${type}'`);
     }
+    return factory();
   }
 }

@@ -8,6 +8,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { McpServerManager } from "../../mcp-server-manager";
+import { IServerManager } from "../../types/server-types";
 import { McpServerNotRunningError } from "../../types";
 import type { McpToolDefinition } from "../vscode/tool-registry";
 
@@ -18,7 +19,7 @@ const DEFAULT_TOOL_TIMEOUT_MS = 60_000;
 const LIST_TOOLS_TIMEOUT_MS = 10_000;
 
 export class McpBridge {
-  constructor(private readonly mcpManager: McpServerManager) {}
+  constructor(private readonly mcpManager: IServerManager) {}
 
   /**
    * Invoke an MCP tool with timeout protection.
@@ -101,7 +102,8 @@ export class McpBridge {
         }
       }
     } catch (e) {
-      // Not JSON or doesn't match schema
+      // Not JSON or doesn't match _base64_file schema — return raw result unchanged
+      console.debug(`[McpBridge] interceptResponse parse skipped (non-JSON or no _base64_file key): ${(e as Error).message?.slice(0, 100)}`);
     }
     return resultStr;
   }

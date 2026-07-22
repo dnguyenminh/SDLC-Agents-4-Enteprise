@@ -62,7 +62,8 @@ export class CodeIntelUploader implements ICodeIntelUploader {
         };
       }
       return { accepted: data.accepted ?? 0, skipped: data.skipped ?? 0, errors: data.errors ?? [] };
-    } catch {
+    } catch (err) {
+      console.debug(`[CodeIntelUploader] parseResponse failed (non-fatal): ${(err as Error).message}`);
       return { accepted: 0, skipped: 0, errors: ["Invalid response format"] };
     }
   }
@@ -80,3 +81,4 @@ export class CodeIntelUploader implements ICodeIntelUploader {
     return { accepted, skipped, errors };
   }
 }
+

@@ -55,8 +55,10 @@ export class TimestampResolver implements ITimestampResolver {
       const fullPath = path.join(workspaceRoot, filePath);
       const stat = await fs.stat(fullPath);
       return stat.mtime.toISOString();
-    } catch {
+    } catch (err) {
+      console.debug(`[TimestampResolver] stat failed, using current time (non-fatal): ${(err as Error).message}`);
       return new Date().toISOString();
     }
   }
 }
+

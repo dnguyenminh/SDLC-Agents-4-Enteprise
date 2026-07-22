@@ -1,9 +1,11 @@
 /**
  * StagnationDetector — analyzes search_log for stagnation patterns.
+ * SA4E-53: converted to async DatabaseAdapter for PostgreSQL compatibility.
  * Identifies repeated failed queries (result_count=0) that indicate KB gaps.
  */
 
-import type Database from 'better-sqlite3';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
 import type { Logger } from 'pino';
 
 export interface StagnantQuery {
@@ -20,24 +22,26 @@ export interface StagnationReport {
 const TIMEOUT_MS = 30_000;
 
 export class StagnationDetector {
-  private readonly db: Database.Database;
+  private readonly adapter: DatabaseAdapter;
+  private readonly dialect: DialectHelper;
   private readonly logger: Logger;
 
-  constructor(db: Database.Database, logger: Logger) {
-    this.db = db;
+  constructor(adapter: DatabaseAdapter, logger: Logger) {
+    this.adapter = adapter;
+    this.dialect = new DialectHelper(adapter.getEngine());
     this.logger = logger.child({ service: 'stagnation' });
   }
 
-  analyze(windowDays?: number, threshold?: number): StagnationReport {
-    const config = this.resolveConfig(windowDays, threshold);
+  async analyze(windowDays?: number, threshold?: number): Promise<StagnationReport> {
+    const config = await this.resolveConfig(windowDays, threshold);
     const cutoff = this.buildCutoff(config.windowDays);
 
-    if (!this.tableExists('search_log')) {
+    if (!(await this.tableExists('search_log'))) {
       return { stagnant_queries: [], count: 0 };
     }
 
     const start = Date.now();
-    const rows = this.queryStagnant(cutoff, config.threshold);
+    const rows = await this.queryStagnant(cutoff, config.threshold);
     const elapsed = Date.now() - start;
 
     if (elapsed > TIMEOUT_MS) {
@@ -52,20 +56,20 @@ export class StagnationDetector {
     return { stagnant_queries: rows, count: rows.length };
   }
 
-  private resolveConfig(
+  private async resolveConfig(
     windowDays?: number, threshold?: number,
-  ): { windowDays: number; threshold: number } {
-    const cfg = this.readDecayConfig();
+  ): Promise<{ windowDays: number; threshold: number }> {
+    const cfg = await this.readDecayConfig();
     return {
       windowDays: windowDays ?? cfg.stagnationWindowDays,
       threshold: threshold ?? cfg.stagnationThreshold,
     };
   }
 
-  private readDecayConfig(): { stagnationWindowDays: number; stagnationThreshold: number } {
-    const rows = this.db.prepare(
+  private async readDecayConfig(): Promise<{ stagnationWindowDays: number; stagnationThreshold: number }> {
+    const rows = await this.adapter.allAsync<{ key: string; value: string }>(
       "SELECT key, value FROM decay_config WHERE key IN ('stagnationWindowDays', 'stagnationThreshold')",
-    ).all() as Array<{ key: string; value: string }>;
+    );
     const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
     return {
       stagnationWindowDays: Number(map.stagnationWindowDays ?? '7'),
@@ -78,8 +82,8 @@ export class StagnationDetector {
     return new Date(Date.now() - ms).toISOString();
   }
 
-  private queryStagnant(cutoff: string, threshold: number): StagnantQuery[] {
-    return this.db.prepare(`
+  private async queryStagnant(cutoff: string, threshold: number): Promise<StagnantQuery[]> {
+    return this.adapter.allAsync<StagnantQuery>(`
       SELECT LOWER(TRIM(query)) as query,
              COUNT(*) as count,
              MIN(created_at) as first_seen
@@ -90,13 +94,23 @@ export class StagnationDetector {
       HAVING COUNT(*) >= ?
       ORDER BY count DESC
       LIMIT 50
-    `).all(cutoff, threshold) as StagnantQuery[];
+    `, [cutoff, threshold]);
   }
 
-  private tableExists(name: string): boolean {
-    const row = this.db.prepare(
-      "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
-    ).get(name);
+  private async tableExists(name: string): Promise<boolean> {
+    const engine = this.adapter.getEngine();
+    if (engine === 'postgresql') {
+      const row = await this.adapter.getAsync<{ exists: boolean }>(
+        `SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ?) as exists`,
+        [name],
+      );
+      return row?.exists ?? false;
+    }
+    // SQLite
+    const row = await this.adapter.getAsync<{ n: number }>(
+      "SELECT 1 as n FROM sqlite_master WHERE type='table' AND name=?",
+      [name],
+    );
     return !!row;
   }
 }

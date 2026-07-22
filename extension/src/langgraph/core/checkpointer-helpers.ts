@@ -42,7 +42,9 @@ export function listPersistedPipelines(stateDir: string): PersistedPipelineInfo[
         status: state.pipelineStatus || "idle",
         lastUpdatedAt: data.lastModified || "",
       });
-    } catch { /* skip corrupted */ }
+    } catch (err) {
+      console.debug(`[checkpointer-helpers] skip corrupted pipeline file (non-fatal): ${(err as Error).message}`);
+    }
   }
   return pipelines.sort((a, b) => b.lastUpdatedAt.localeCompare(a.lastUpdatedAt));
 }
@@ -60,7 +62,9 @@ export function cleanupPipelines(stateDir: string, maxAgeDays: number = RETENTIO
       const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
       const modified = new Date(data.lastModified || 0).getTime();
       if (data.state?.pipelineStatus === "completed" && modified < cutoff) { fs.unlinkSync(filePath); }
-    } catch { /* skip */ }
+    } catch (err) {
+      console.debug(`[checkpointer-helpers] cleanupPipelines skip file (non-fatal): ${(err as Error).message}`);
+    }
   }
   enforceMaxPipelines(stateDir);
 }

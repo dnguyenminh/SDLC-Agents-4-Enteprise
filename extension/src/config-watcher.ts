@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ConfigWatcher — Monitors .kiro/settings/mcp.json for changes to code-intelligence server config.
  * Debounces rapid edits (500ms) and only triggers restart when config actually changes.
  */
@@ -7,6 +7,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { McpServerManager } from "./mcp-server-manager";
+import { readJsonFile } from "./utils/mcp-config-file";
 
 export interface CodeIntelConfig {
   url?: string;
@@ -145,7 +146,8 @@ export class ConfigWatcher implements vscode.Disposable {
         return null;
       }
       return serverConfig as CodeIntelConfig;
-    } catch {
+    } catch (err) {
+      console.warn("[ConfigWatcher] Failed to read/parse mcp.json: " + (err as Error).message);
       return null;
     }
   }
@@ -169,3 +171,5 @@ export class ConfigWatcher implements vscode.Disposable {
     this.watcher?.dispose();
   }
 }
+
+

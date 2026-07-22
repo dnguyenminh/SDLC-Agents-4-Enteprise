@@ -1,4 +1,4 @@
-/**
+﻿/**
  * code_index_status tool — Show indexing statistics and health.
  * KSA-191: Enhanced with SFDX stats section when Salesforce project detected.
  */
@@ -22,7 +22,7 @@ export function registerCodeIndexStatus(
       if (reindex) {
         await indexer.runFullIndex(__projectId ? { projectId: __projectId } : undefined);
       }
-      const status = queryLayer.getIndexStatus(__projectId);
+      const status = await queryLayer.getIndexStatus(__projectId);
       const sfdxStats = indexer.getSfdxStats();
       const tsStats = indexer.getTreeSitterStats();
       const text = formatStatus(status, indexer.isRunning(__projectId), sfdxStats, tsStats);

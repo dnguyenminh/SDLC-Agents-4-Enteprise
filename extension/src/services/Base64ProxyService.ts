@@ -85,7 +85,11 @@ export class Base64ProxyService {
       const updated = { ...parsed, file_path: outputPath, size_bytes: buf.length };
       delete updated.output_base64;
       return this.replaceText(result, JSON.stringify(updated));
-    } catch { return result; }
+    } catch (err) {
+      // JSON parse or file write failed — return raw result to avoid silent data loss
+      console.warn(`[Base64ProxyService] proxyOutput failed for '${toolName}': ${(err as Error).message}`);
+      return result;
+    }
   }
 
   /**

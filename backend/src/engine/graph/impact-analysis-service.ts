@@ -38,22 +38,22 @@ export class ImpactAnalysisService {
     this.testDetector = testDetector;
   }
 
-  analyzeImpact(
+  async analyzeImpact(
     symbolName: string,
     action: ImpactAction = 'modify',
     depth: number = 3,
     includeTests: boolean = true,
     severityThreshold: Severity = 'low'
-  ): ImpactResult {
+  ): Promise<ImpactResult> {
     const startTime = Date.now();
     const clampedDepth = Math.min(Math.max(depth, 1), 5);
-    const resolved = this.resolver.resolve(symbolName);
+    const resolved = await this.resolver.resolve(symbolName);
     if (resolved.length === 0) {
       return emptyResult(symbolName, action);
     }
 
     const impacts: ImpactItem[] = [];
-    const callerResult = this.callGraph.findCallers(symbolName, clampedDepth, 100);
+    const callerResult = await this.callGraph.findCallers(symbolName, clampedDepth, 100);
     for (const caller of callerResult.results) {
       const severity = classifySeverity(caller.depthLevel, action, 'caller');
       impacts.push({
@@ -123,3 +123,7 @@ export class ImpactAnalysisService {
     };
   }
 }
+
+
+
+

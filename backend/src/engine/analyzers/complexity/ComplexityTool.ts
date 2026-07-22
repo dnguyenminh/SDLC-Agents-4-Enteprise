@@ -25,7 +25,7 @@ export const COMPLEXITY_TOOL_DEFINITION = {
 };
 
 /** Handle complexity_analysis tool call (SA4E-41: tenant-scoped, fail-closed). */
-export function handleComplexityTool(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+export async function handleComplexityTool(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string> {
   const analyzer = new ComplexityAnalyzer(adapter, projectId);
 
   const filters = {
@@ -40,7 +40,7 @@ export function handleComplexityTool(args: Record<string, unknown>, adapter: Dat
     sortBy: (args.sort_by as 'complexity' | 'name' | 'file') ?? 'complexity',
   };
 
-  const result = analyzer.query(filters);
+  const result = await analyzer.query(filters);
 
   if (result.results.length === 0) {
     return 'No complexity data found. Run indexing first to compute complexity metrics.';

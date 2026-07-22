@@ -1,14 +1,16 @@
 /**
  * BasePanel --- Abstract base class for all KB webview panels.
  * Provides common lifecycle management, message handling, and server status subscription.
+ * DIP: depends on IServerManager interface, not concrete McpServerManager.
  */
 
 import * as vscode from "vscode";
 import {
   IKbPanel, ExtToWebviewMessage, WebviewToExtMessage,
   PanelType, PANEL_VIEW_TYPES, PANEL_TITLES, mapServerStatusToWebview,
+  IServerManager,
 } from "../types";
-import { McpServerManager, getNonce } from "../mcp-server-manager";
+import { getNonce } from "../mcp-server-manager";
 import { getIframeHtml, getBaseHtml } from "./panel-html";
 export { getNonce };
 
@@ -20,7 +22,7 @@ export abstract class BasePanel implements IKbPanel, vscode.Disposable {
 
   constructor(
     protected readonly panelType: PanelType,
-    protected readonly mcpManager: McpServerManager,
+    protected readonly mcpManager: IServerManager,
     protected readonly extensionUri: vscode.Uri
   ) { this.create(); }
 

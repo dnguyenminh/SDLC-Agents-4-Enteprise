@@ -72,7 +72,10 @@ export class OnnxProvider extends BaseLlmProvider {
       const modelConfig = ONNX_MODEL_REGISTRY.find(m => m.id === this.modelId);
       if (!modelConfig) return false;
       return fs.existsSync(path.join(this.modelDir, modelConfig.modelFile));
-    } catch { return false; }
+    } catch (err) {
+      console.debug("[OnnxProvider] isAvailable check failed: " + (err as Error).message);
+      return false;
+    }
   }
 
   dispose(): void {
@@ -149,3 +152,4 @@ export class OnnxProvider extends BaseLlmProvider {
     }).join("\n") + "\n<|assistant|>\n";
   }
 }
+

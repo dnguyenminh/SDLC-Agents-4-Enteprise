@@ -82,7 +82,8 @@ export function createFetchToolsNode(toolRegistry: ToolRegistry | null) {
   return async (_state: PipelineState) => {
     let mcpTools: McpToolDefinition[] = [];
     if (toolRegistry) {
-      try { mcpTools = await toolRegistry.getTools(); } catch { mcpTools = []; }
+      try { mcpTools = await toolRegistry.getTools(); }
+      catch (err) { console.debug(`[chat-graph-nodes] getTools failed (non-fatal): ${(err as Error).message}`); mcpTools = []; }
     }
     const allTools = [...VSCODE_TOOL_DEFINITIONS, ...mcpTools];
     debugLog(`[graph] fetch_tools: ${allTools.length} total tools`);
@@ -102,7 +103,11 @@ export function createAgentStepNode(
     }
     const streamId = state.currentStreamId || `stream-chat-${Date.now()}`;
     let tools: McpToolDefinition[] = [];
-    try { tools = JSON.parse(state.parallelResults?.toolsJson || "[]"); } catch { tools = []; }
+    try { tools = JSON.parse(state.parallelResults?.toolsJson || "[]"); }
+    catch (err) {
+      console.debug(`[chat-graph-nodes] toolsJson parse failed (non-fatal): ${(err as Error).message}`);
+      tools = [];
+    }
 
     if (llmProvider.chatWithTools && tools.length > 0) {
       return await agentStepWithTools(state, llmProvider, streamHandler, streamId, tools.slice(0, 10), enrichedSystemPrompt);
@@ -254,7 +259,14 @@ async function executeSingleTool(
     }
     const dur = Date.now() - start;
     sh.emitDirect({ type: "chat:toolCallUpdate", id: tcId, status: "completed", result: result.slice(0, 500), duration: dur } as any);
-    if (hookEngine) { try { await hookEngine.firePostToolUse(call.name, call.arguments || {}, result, sh, streamId); } catch {} }
+    if (hookEngine) {
+      try {
+        await hookEngine.firePostToolUse(call.name, call.arguments || {}, result, sh, streamId);
+      } catch (hookErr) {
+        // postToolUse hook failures are non-fatal but must be visible
+        debugError(`[chat-graph-nodes] postToolUse hook error for '${call.name}'`, hookErr as Error);
+      }
+    }
     return { toolCallId: call.id, name: call.name, content: result };
   } catch (error) {
     sh.emitDirect({ type: "chat:toolCallUpdate", id: tcId, status: "failed", result: (error as Error).message, duration: Date.now() - start } as any);

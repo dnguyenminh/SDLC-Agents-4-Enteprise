@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Source/document indexing endpoints — POST /api/index/source|document|documents.
  * SA4E-41: every write is path-safe (SEC-04/05) and tenant-scoped (requireProjectId).
  */
@@ -42,10 +42,10 @@ function writeFilesPhase(workspace: string, files: SourceFile[]): { written: num
 }
 
 /** Phase: register/update the project in the admin registry (non-fatal). */
-function registerProjectPhase(projectId: string, workspace: string, logger: Logger): void {
+async function registerProjectPhase(projectId: string, workspace: string, logger: Logger): Promise<void> {
   try {
     const graphRepo = new GraphRepository(getAdminAdapter());
-    graphRepo.registerProject(projectId, path.basename(workspace), workspace);
+    await graphRepo.registerProject(projectId, path.basename(workspace), workspace);
   } catch (err) {
     logger.warn({ err, projectId }, '[index] project registry upsert skipped (non-fatal)');
   }
@@ -62,35 +62,31 @@ function triggerIndexPhase(registry: ModuleRegistry, scope: IndexScope, logger: 
 }
 
 /** Phase: ensure a KB metadata entry + graph node exist for the project (non-fatal). */
-function ensureProjectKbEntry(registry: ModuleRegistry, scope: IndexScope, written: number, logger: Logger): void {
+/** Phase: ensure a KB metadata entry + graph node exist for the project (non-fatal). */
+async function ensureProjectKbEntry(registry: ModuleRegistry, scope: IndexScope, written: number, logger: Logger): Promise<void> {
   try {
     const mem = registry.getModule('memory') as any;
     if (mem?.status !== 'ready') return;
     const engine = mem.getEngine();
     const displayName = path.basename(scope.workspace);
-    const existing = engine.getDb().prepare(
-      `SELECT id FROM knowledge_entries WHERE project_id = ? AND source = 'project-metadata'`
-    ).get(scope.projectId) as { id: number } | undefined;
-    const entryId = existing
-      ? existing.id
-      : engine.insert({
-          content: `Project "${displayName}" indexed. Workspace: ${scope.workspace}. Files: ${written}.`,
-          summary: `Project metadata for ${displayName}`,
-          type: 'CONTEXT', tier: 'SEMANTIC', scope: 'PROJECT',
-          project_id: scope.projectId, source: 'project-metadata', tags: 'project,metadata,indexed',
-        });
-    // Always upsert graph_node so the KB dot appears on the graph.
-    upsertProjectGraphNode(String(entryId), displayName, scope.projectId, logger);
+    // Use async insert — engine.insert() is now async for PostgreSQL compatibility
+    const entryId = await engine.insert({
+      content: `Project "${displayName}" indexed. Workspace: ${scope.workspace}. Files: ${written}.`,
+      summary: `Project metadata for ${displayName}`,
+      type: 'CONTEXT', tier: 'SEMANTIC', scope: 'PROJECT',
+      project_id: scope.projectId, source: 'project-metadata', tags: 'project,metadata,indexed',
+    });
+    await upsertProjectGraphNode(String(entryId), displayName, scope.projectId, logger);
   } catch (err) {
     logger.warn({ err }, '[index] project KB entry skipped (non-fatal)');
   }
 }
 
 /** Upsert the project-metadata graph node (INSERT OR REPLACE to fix stale/missing rows). */
-function upsertProjectGraphNode(entryId: string, displayName: string, projectId: string, logger: Logger): void {
+async function upsertProjectGraphNode(entryId: string, displayName: string, projectId: string, logger: Logger): Promise<void> {
   try {
     const graphRepo = new GraphRepository(getAdminAdapter());
-    graphRepo.upsertNode({
+    await graphRepo.upsertNode({
       entryId, label: `Project: ${displayName}`, type: 'CONTEXT',
       tier: 'SEMANTIC', projectId, x: 0, y: 0, z: 0, level: 'macro', clusterId: '0',
     });
@@ -111,11 +107,11 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
     const { files } = await c.req.json<{ files: SourceFile[] }>();
     if (!files || !Array.isArray(files)) return c.json({ error: 'files array required' }, 400);
     const scope = resolveRequestScope(c);
-    registerProjectPhase(scope.projectId, scope.workspace, logger);
+    await registerProjectPhase(scope.projectId, scope.workspace, logger);
     const { written, rejected } = writeFilesPhase(scope.workspace, files);
     if (rejected.length > 0) logger.warn({ rejected, projectId: scope.projectId }, '[index] rejected unsafe paths');
     const reindexTriggered = triggerIndexPhase(registry, scope, logger);
-    ensureProjectKbEntry(registry, scope, written, logger);
+    await ensureProjectKbEntry(registry, scope, written, logger);
     return c.json({ written, rejected, reindexTriggered, projectId: scope.projectId });
   } catch (err: any) {
     return indexError(c, err, logger, 'Error writing source batch');
@@ -158,3 +154,4 @@ function indexError(c: Context, err: any, logger: Logger, context: string) {
   logger.error({ err }, context);
   return c.json({ error: 'Internal error' }, 500);
 }
+

@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { WebviewToExtMessage, SERVER_CONSTANTS } from "../types";
-import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
 import { BasePanel } from "./base-panel";
 import { KbEventBus } from "../kb-event-bus";
 
@@ -13,7 +13,7 @@ export class TagsPanel extends BasePanel {
   private refreshTimer: NodeJS.Timeout | undefined;
   private eventSubscription: vscode.Disposable | undefined;
 
-  constructor(mcpManager: McpServerManager, extensionUri: vscode.Uri, eventBus?: KbEventBus) {
+  constructor(mcpManager: IServerManager, extensionUri: vscode.Uri, eventBus?: KbEventBus) {
     super("tags", mcpManager, extensionUri);
   }
 

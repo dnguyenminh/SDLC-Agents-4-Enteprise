@@ -131,7 +131,8 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
       }
     }
     // SA4E-49: Single unified DB — migrate one SQLite file into PG/MySQL
-    const unifiedDbPath = path.join(dataDir, 'index.db');
+    // Use cfg.sqliteDbPath (from config/env) instead of hardcoding 'index.db'
+    const unifiedDbPath = path.join(dataDir, cfg.sqliteDbPath);
     const sqliteSource = DatabaseAdapterFactory.create({ engine: 'sqlite' as const, dbPath: unifiedDbPath });
     await sqliteSource.connect();
     return streamSSE(c, async (stream) => {

@@ -25,10 +25,10 @@ export const ENTRY_POINT_TOOL_DEFINITION = {
 };
 
 /** Handle find_entry_points tool call (SA4E-41: tenant-scoped, fail-closed). */
-export function handleEntryPointTool(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+export async function handleEntryPointTool(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string> {
   const detector = new EntryPointDetector(adapter, projectId);
 
-  const result = detector.query({
+  const result = await detector.query({
     entryType: args.entry_type as EntryType | undefined,
     framework: args.framework as string | undefined,
     httpMethod: args.http_method as string | undefined,

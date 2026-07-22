@@ -1,6 +1,7 @@
 /**
  * Handler for the fetch_url tool.
  * Fetches content from URLs with modes: full, truncated, selective.
+ * Responses are cached in-memory (TTL: 5 min) to avoid redundant external calls.
  */
 
 import type { ToolResult } from '../../../types/tool.js';
@@ -12,9 +13,17 @@ import { HtmlExtractor } from '../utils/HtmlExtractor.js';
 import { validateUrl } from '../utils/UrlValidator.js';
 import { WebToolError } from '../models/WebError.js';
 import { successResult, errorResult } from '../models/WebToolResult.js';
+import { ResponseCache } from '../utils/ResponseCache.js';
+
+/** Cache key: url + mode + selector (content varies by these params). */
+function cacheKey(url: string, mode: string, selector?: string): string {
+  return `${mode}::${selector || ''}::${url}`;
+}
 
 export class FetchUrlHandler {
   private htmlExtractor = new HtmlExtractor();
+  // Cache fetch results for 5 minutes to avoid hammering the same URL
+  private cache = new ResponseCache<ToolResult>(5 * 60 * 1000, 200);
 
   constructor(
     private ssrfGuard: SsrfGuard,
@@ -29,9 +38,18 @@ export class FetchUrlHandler {
       const mode = (args.mode as string) || 'full';
       const maxLength = args.max_length as number | undefined;
       const selector = args.selector as string | undefined;
+      // no_cache: bypass cache when caller explicitly requests fresh content
+      const noCache = args.no_cache === true;
 
       validateUrl(url);
       await this.ssrfGuard.validate(url);
+
+      const key = cacheKey(url, mode, selector);
+      if (!noCache) {
+        const cached = this.cache.get(key);
+        if (cached) return cached;
+      }
+
       this.rateLimiter.consumeOrThrow('fetch_url');
 
       const response = await this.fetchWithTimeout(url);
@@ -39,7 +57,7 @@ export class FetchUrlHandler {
       const content = this.processContent(body, mode, maxLength, selector);
       const result = this.truncator.truncate(content, maxLength);
 
-      return successResult({
+      const toolResult = successResult({
         content: result.content,
         metadata: {
           status_code: response.status,
@@ -48,8 +66,12 @@ export class FetchUrlHandler {
           title: this.extractTitle(body),
           truncated: result.truncated,
           url: response.url,
+          cached: false,
         },
       });
+
+      this.cache.set(key, toolResult);
+      return toolResult;
     } catch (err) {
       if (err instanceof WebToolError) return errorResult(err);
       return errorResult(new WebToolError('TIMEOUT', (err as Error).message));

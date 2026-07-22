@@ -98,7 +98,10 @@ export class MessageHandler {
     try {
       const engine = this.getEngine();
       await engine.hookEngine.firePromptSubmit(text, engine.getStreamHandler());
-    } catch { /* hooks must never break main execution */ }
+    } catch (hookErr) {
+      // Hooks must never break main execution, but failures must be visible.
+      debugLog(`[MessageHandler] promptSubmit hook error (non-fatal): ${(hookErr as Error).message}`);
+    }
     await routeUserMessage(text, enrichedText, this.getEngine, this.sendToWebview);
   }
 

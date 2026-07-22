@@ -1,4 +1,4 @@
-/**
+﻿/**
  * KB graph routes — node/edge data for graph visualization.
  * SA4E-50: All admin-db calls are awaited since they are now async.
  */
@@ -88,7 +88,7 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     const graphService = (globalThis as any).__sqliteGraphService;
     if (!graphService) return c.json({ error: 'Graph service not initialized' }, 503);
     setImmediate(async () => {
-      try { ctx.db.graph.resetGraph(); await graphService.fullSync(); }
+      try { await ctx.db.graph.resetGraph(); await graphService.fullSync(); }
       catch (err: any) { ctx.logger.error({ error: err.message }, 'Graph sync failed'); }
     });
     return c.json({ status: 'sync_started', message: 'Graph sync triggered in background.' });

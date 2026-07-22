@@ -27,7 +27,7 @@ export const DEPENDENCY_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeDependencies(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
+export async function handleCodeDependencies(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): Promise<string> {
   const file = args.file as string;
   if (!file) return JSON.stringify({ error: 'Parameter "file" is required' });
   const direction = (args.direction as 'incoming' | 'outgoing' | 'both') ?? 'outgoing';
@@ -37,6 +37,7 @@ export function handleCodeDependencies(args: Record<string, unknown>, adapter: D
   const limit = (args.limit as number) ?? 50;
 
   const fileResolver = new FileResolver(adapter, workspace, projectId);
+  await fileResolver.ready();
   const service = new DependencyGraphService(adapter, fileResolver, projectId);
   const result = service.query(file, direction, depth, includeExternal, limit);
 

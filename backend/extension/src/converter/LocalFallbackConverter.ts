@@ -58,7 +58,10 @@ export class LocalFallbackConverter implements IFileConverter {
         try {
             filetomarkdownModule = require("filetomarkdown");
             return filetomarkdownModule;
-        } catch { return null; }
+        } catch (err) {
+            console.debug("[LocalFallbackConverter] filetomarkdown not available: " + (err as Error).message);
+            return null;
+        }
     }
 
     private async convertWithTimeout(ftm: any, filePath: string): Promise<string> {
@@ -87,3 +90,4 @@ export class LocalFallbackConverter implements IFileConverter {
         });
     }
 }
+

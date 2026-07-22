@@ -153,7 +153,10 @@ export class WrapperServer {
     res.write("event: message\n");
     res.write("data: {\"jsonrpc\":\"2.0\",\"method\":\"initialized\"}\n\n");
     const keepAlive = setInterval(() => {
-      try { res.write(": keep-alive\n\n"); } catch { /* ignore */ }
+      try { res.write(": keep-alive\n\n"); }
+      catch (err) {
+        console.debug(`[WrapperServer] keepalive write failed (non-fatal): ${(err as Error).message}`);
+      }
     }, 15000);
     res.on("close", () => clearInterval(keepAlive));
   }
@@ -197,7 +200,11 @@ export class WrapperServer {
       const rewritten = this.deps.base64Proxy.rewriteSchemasForLlm(tools);
       const output = parsed.tools ? { ...parsed, tools: rewritten } : rewritten;
       return { ...result, content: [{ type: "text", text: JSON.stringify(output) }] };
-    } catch { return result; }
+    } catch (err) {
+      // Not a valid tool list — return original result unchanged
+      console.warn(`[WrapperServer] rewriteFindToolsResponse parse failed: ${(err as Error).message}`);
+      return result;
+    }
   }
 
   private async callWithProxy(name: string, args: Record<string, unknown>): Promise<any> {

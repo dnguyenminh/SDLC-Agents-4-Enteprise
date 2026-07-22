@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SDLC Agents 4 Enterprise — VS Code Extension entry point.
  * Thin activation shell — delegates command registration to CommandRegistrar and LlmCommands.
  */
@@ -51,37 +51,44 @@ export function deactivate() {
   panelManager?.disposeAll();
 }
 
-async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRoot: string, statusBar: vscode.StatusBarItem): Promise<void> {
-  // Derive projectId: .code-intel/project.json → git remote hash → user+folder hash
+/**
+ * Derive a stable project ID for multi-tenant isolation.
+ * Priority: .code-intel/project.json -> git remote hash -> user+folder hash.
+ * SRP: Extracted from initializeWorkspace to keep the main function focused.
+ */
+async function deriveProjectId(workspaceRoot: string): Promise<string> {
   const pathModule = await import("path");
   const fs = await import("fs");
   const crypto = await import("crypto");
   const os = await import("os");
   const cp = await import("child_process");
 
-  let derivedProjectId = "default";
   // 1. Explicit config
   try {
     const pjPath = pathModule.resolve(workspaceRoot, ".code-intel", "project.json");
     if (fs.existsSync(pjPath)) {
       const pj = JSON.parse(fs.readFileSync(pjPath, "utf-8"));
-      if (pj.projectId) { derivedProjectId = pj.projectId; }
+      if (pj.projectId) { return pj.projectId as string; }
     }
-  } catch { /* ignore */ }
+  } catch (err) {
+    console.warn(`[Kiro] Could not read .code-intel/project.json: ${(err as Error).message}`);
+  }
   // 2. Git remote hash
-  if (derivedProjectId === "default") {
-    try {
-      const remote = cp.execSync("git remote get-url origin", { cwd: workspaceRoot, encoding: "utf-8", timeout: 3000 }).trim();
-      if (remote) { derivedProjectId = crypto.createHash("sha256").update(remote).digest("hex").slice(0, 12); }
-    } catch { /* no git */ }
+  try {
+    const remote = cp.execSync("git remote get-url origin", { cwd: workspaceRoot, encoding: "utf-8", timeout: 3000 }).trim();
+    if (remote) { return crypto.createHash("sha256").update(remote).digest("hex").slice(0, 12); }
+  } catch (err) {
+    console.debug(`[extension] git remote lookup failed (non-fatal): ${(err as Error).message}`);
+    /* no git remote - use user+folder hash */
   }
-  // 3. User + folder hash
-  if (derivedProjectId === "default") {
-    const userId = os.userInfo().username || "unknown";
-    const folderName = pathModule.basename(workspaceRoot) || "default";
-    derivedProjectId = crypto.createHash("sha256").update(`${userId}:${folderName}`).digest("hex").slice(0, 12);
-  }
-  _projectId = derivedProjectId;
+  // 3. User + folder hash (always succeeds)
+  const userId = os.userInfo().username || "unknown";
+  const folderName = pathModule.basename(workspaceRoot) || "default";
+  return crypto.createHash("sha256").update(`${userId}:${folderName}`).digest("hex").slice(0, 12);
+}
+
+async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRoot: string, statusBar: vscode.StatusBarItem): Promise<void> {
+  _projectId = await deriveProjectId(workspaceRoot);
 
   const outputChannel = vscode.window.createOutputChannel("Kiro MCP Server");
   context.subscriptions.push(outputChannel);
@@ -124,9 +131,12 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   await autoSpawnServer(mcpConfig, outputChannel);
 
   // Initialize Platform Swap feature (IDE-aware agent config swap)
-  await initPlatformSwap(context, workspaceRoot, outputChannel).catch((err) =>
-    outputChannel.appendLine(`[PlatformSwap] Init failed: ${(err as Error).message}`)
-  );
+  await initPlatformSwap(context, workspaceRoot, outputChannel).catch((err) => {
+    const msg = `[PlatformSwap] Init failed: ${(err as Error).message}`;
+    outputChannel.appendLine(msg);
+    console.warn(msg);
+    vscode.window.showWarningMessage(`Platform Swap initialization failed. Agent config swapping will be unavailable. Check Output > Kiro MCP Server for details.`);
+  });
 }
 
 function setupAuthStateHandlers(): void {
@@ -144,7 +154,7 @@ function setupAuthStateHandlers(): void {
       if (wasAuthenticated) {
         wasAuthenticated = false;
         vscode.window.showWarningMessage(
-          "⚠️ Session expired. Knowledge base sync is paused. Please login to resume.",
+          "Session expired. Knowledge base sync is paused. Please login to resume.",
           "Login"
         ).then((action) => {
           if (action === "Login") { vscode.commands.executeCommand("kiroSdlc.login"); }
@@ -200,10 +210,13 @@ function setupMcpStatusBroadcast(statusBar: vscode.StatusBarItem, workspaceRoot:
 async function autoSpawnServer(config: vscode.WorkspaceConfiguration, outputChannel: vscode.OutputChannel): Promise<void> {
   if (config.get<boolean>("enableMcpServer", true)) {
     try { await mcpManager!.spawn(); }
-    catch (err) { outputChannel.appendLine(`[WARN] Auto-spawn failed: ${(err as Error).message}`); }
+    catch (err) {
+      const msg = `Auto-spawn failed: ${(err as Error).message}`;
+      outputChannel.appendLine(`[WARN] ${msg}`);
+      // Show user-visible warning so they know the server did not start
+      vscode.window.showWarningMessage(`Kiro: MCP server failed to start. ${msg}. Some features may be unavailable.`);
+    }
   } else {
     outputChannel.appendLine("[MCP] Server disabled by setting");
   }
 }
-
-

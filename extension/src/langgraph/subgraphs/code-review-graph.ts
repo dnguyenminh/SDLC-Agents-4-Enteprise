@@ -33,8 +33,8 @@ export async function buildCodeReviewSubgraph(
         if (diffResult) {
           context = diffResult;
         }
-      } catch {
-        // Continue with available context
+      } catch (err) {
+        console.debug(`[CodeReviewGraph] fetch_context context read failed (non-fatal): ${(err as Error).message}`);
       }
 
       streamHandler.emitComplete("fetch_context", 0, streamId);
@@ -72,8 +72,8 @@ export async function buildCodeReviewSubgraph(
             ],
             { temperature: 0.3, maxTokens: 2048 }
           );
-        } catch {
-          // Use basic report
+        } catch (err) {
+          console.debug(`[CodeReviewGraph] LLM report generation failed, using basic report (non-fatal): ${(err as Error).message}`);
         }
       }
 
@@ -99,3 +99,4 @@ export async function buildCodeReviewSubgraph(
 
   return graph.compile();
 }
+

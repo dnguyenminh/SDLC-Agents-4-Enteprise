@@ -1,5 +1,6 @@
 /**
  * SA4E-51 — Full sync and bulk node/edge creation for KB Graph.
+ * SA4E-53: converted to async API for PostgreSQL compatibility.
  * Accepts DatabaseAdapter so writes go to the active engine (SQLite or PostgreSQL).
  * processCodeSymbols reads symbols via getIndexAdapter() — same engine as the indexer.
  */
@@ -17,13 +18,13 @@ type EntryRow = { id: string; label: string; type: string; tier: string; groupId
 
 /**
  * Bulk-insert nodes into graph_nodes using position math.
- * Processes in 5 000-row chunks wrapped in transactions for SQLite WAL throughput.
+ * SA4E-53: uses transactionAsync + runAsync for PostgreSQL compatibility.
  * @param entries - Flat list of nodes to upsert
  * @param db - DatabaseAdapter (write target)
  * @param projectId - Default project ID when entry has none
  * @returns Number of nodes inserted/replaced
  */
-export function insertAllNodes(entries: EntryRow[], db: DatabaseAdapter, projectId = ''): number {
+export async function insertAllNodes(entries: EntryRow[], db: DatabaseAdapter, projectId = ''): Promise<number> {
   const n = entries.length;
   const typeGroups = new Map<string, number>();
   let typeGroupCounter = 0;
@@ -40,13 +41,13 @@ export function insertAllNodes(entries: EntryRow[], db: DatabaseAdapter, project
   const CHUNK = 5000; // Optimal batch for SQLite WAL throughput
   for (let start = 0; start < n; start += CHUNK) {
     const chunk = entries.slice(start, start + CHUNK);
-    db.transaction(() => {
+    await db.transactionAsync(async () => {
       for (let ci = 0; ci < chunk.length; ci++) {
         const entry = chunk[ci];
         const type = entry.type.toUpperCase();
         const gId = resolveGroupId(entry);
         const pos = computePositionByIndex(start + ci, n, type, gId, totalGroups);
-        db.run(
+        await db.runAsync(
           'INSERT OR REPLACE INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [entry.id, entry.label.substring(0, 60), type, entry.tier, entry.projectId || projectId,
            pos.x, pos.y, pos.z, pos.level, pos.clusterId],
@@ -60,16 +61,19 @@ export function insertAllNodes(entries: EntryRow[], db: DatabaseAdapter, project
 
 /**
  * Sync a prepared entry list into graph_nodes then rebuild spatial/cluster edges.
+ * SA4E-53: async for PostgreSQL compatibility.
  * @param entries - Prepared node list
  * @param db - DatabaseAdapter (write target)
  * @param logger - Pino logger
  * @param projectId - Default project ID
  */
-export function syncFromEntries(
+export async function syncFromEntries(
   entries: EntryRow[], db: DatabaseAdapter, logger: Logger, projectId = '',
-): { nodesCreated: number; edgesCreated: number } {
-  const nodesCreated = insertAllNodes(entries, db, projectId);
-  const edgesCreated = buildSpatialEdges(db) + buildCrossClusterEdges(db);
+): Promise<{ nodesCreated: number; edgesCreated: number }> {
+  const nodesCreated = await insertAllNodes(entries, db, projectId);
+  const spatialEdges = await buildSpatialEdges(db);
+  const clusterEdges = await buildCrossClusterEdges(db);
+  const edgesCreated = spatialEdges + clusterEdges;
   logger.info({ nodesCreated, edgesCreated }, 'syncFromEntries complete');
   return { nodesCreated, edgesCreated };
 }
@@ -126,17 +130,19 @@ function processSymbolRow(
 
 /**
  * Read code symbols from the index adapter — same engine as the indexer.
- * Always uses getIndexAdapter() regardless of engine type.
+/**
+ * Read code symbols from the index adapter.
+ * SA4E-53: converted to async for PostgreSQL compatibility.
  */
-function processCodeSymbols(
+async function processCodeSymbols(
   allEntries: EntryRow[], sources: Record<string, number>,
   ksaGroupMap: Map<string, number>, groupCounter: { value: number }, logger: Logger,
-): void {
+): Promise<void> {
   try {
     const adapter = getIndexAdapter();
     const INCLUDE_KINDS = ['function', 'class', 'interface', 'method', 'type', 'enum', 'constructor'];
     const placeholders = INCLUDE_KINDS.map(() => '?').join(',');
-    const rows = adapter.all<any>(
+    const rows = await adapter.allAsync<any>(
       `SELECT s.id, s.name, s.kind, f.path as file_path, f.language
        FROM symbols s LEFT JOIN files f ON f.id = s.file_id
        WHERE s.kind IN (${placeholders})`,
@@ -164,9 +170,9 @@ export async function fullSync(
   const sources: Record<string, number> = {};
 
   await processKbEntries(allEntries, sources, ksaGroupMap, groupCounter, logger);
-  processCodeSymbols(allEntries, sources, ksaGroupMap, groupCounter, logger);
+  await processCodeSymbols(allEntries, sources, ksaGroupMap, groupCounter, logger);
 
-  const result = syncFromEntries(allEntries, db, logger);
+  const result = await syncFromEntries(allEntries, db, logger);
   const elapsed = Date.now() - startTime;
   logger.info({ ...result, sources, elapsed: `${elapsed}ms` }, 'Full graph sync complete');
   return { ...result, sources };

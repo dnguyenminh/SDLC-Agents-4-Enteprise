@@ -19,7 +19,13 @@ export class StateManager {
     try {
       const content = await fs.readFile(filePath, "utf-8");
       return JSON.parse(content) as AgentConfigState;
-    } catch {
+    } catch (err) {
+      // File missing → normal first-run (no log needed)
+      // File corrupt / parse error → log warning so data loss is visible
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code !== "ENOENT") {
+        console.warn(`[StateManager] Could not read ${StateManager.STATE_FILE} (${(err as Error).message}) — using defaults`);
+      }
       return this.getDefaultState();
     }
   }

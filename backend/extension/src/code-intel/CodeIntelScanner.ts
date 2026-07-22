@@ -26,7 +26,9 @@ export class CodeIntelScanner implements ICodeIntelScanner {
       const imports = this.extractImports(sourceFile);
       const exports = this.extractExports(sourceFile);
       return { filePath, language, hash, timestamp: "", symbols, imports, exports };
-    } catch {
+    } catch (err) {
+      // Parse error — log so silent indexing gaps are visible
+      console.warn(`[CodeIntelScanner] scanFile failed for '${filePath}': ${(err as Error).message}`);
       return null;
     }
   }

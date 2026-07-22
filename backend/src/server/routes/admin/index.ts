@@ -1,6 +1,6 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import type { Logger } from 'pino';
-import { getAdminDb } from '../../../admin/admin-db.js';
+import { getAdminAdapter } from '../../../admin/admin-db.js';
 import { createAdminContext } from './context.js';
 import { createStaticRoutes } from './static.js';
 import { createAuthRoutes } from './auth.js';
@@ -27,10 +27,10 @@ function createProjectsRoutes(ctx: AdminContext): Hono {
     const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
     try {
-      const db = getAdminDb();
-      const rows = db.prepare(
+      const adapter = getAdminAdapter();
+      const rows = await adapter.allAsync<{ project_id: string; display_name: string; workspace_path: string; last_seen: string }>(
         'SELECT project_id, display_name, workspace_path, last_seen FROM project_registry ORDER BY last_seen DESC LIMIT 100'
-      ).all() as { project_id: string; display_name: string; workspace_path: string; last_seen: string }[];
+      );
       return c.json({ projects: rows });
     } catch {
       return c.json({ projects: [] });
@@ -41,7 +41,7 @@ function createProjectsRoutes(ctx: AdminContext): Hono {
 
 export function createAdminRoute(logger: Logger, registry?: any): Hono {
   const ctx = createAdminContext(logger, registry);
-  getAdminDb();
+  // getAdminDb() removed — only called when engine is sqlite (lazy init)
 
   const app = new Hono();
 

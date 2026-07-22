@@ -224,7 +224,7 @@ describe('MCP Integration — Utility Tools', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tool_name: 'stream_write_file',
-        arguments: { file_path: '/tmp/test-output.txt', content: 'Test content' },
+        arguments: { path: 'test-output.txt', content: 'Test content' },
       }),
     });
     expect(res.status).toBe(200);

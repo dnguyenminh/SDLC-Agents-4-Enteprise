@@ -1,4 +1,4 @@
-/**
+﻿/**
  * code_modules tool — List discovered modules with file/symbol counts.
  */
 
@@ -15,7 +15,7 @@ export function registerCodeModules(server: McpServer, queryLayer: QueryLayer): 
       __projectId: z.string().optional().describe('SA4E-41 tenant scope (injected)'),
     },
     async ({ name, __projectId }) => {
-      const modules = queryLayer.listModules(__projectId);
+      const modules = await queryLayer.listModules(__projectId);
       const filtered = name
         ? modules.filter(m => m.name.toLowerCase().startsWith(name.toLowerCase()))
         : modules;

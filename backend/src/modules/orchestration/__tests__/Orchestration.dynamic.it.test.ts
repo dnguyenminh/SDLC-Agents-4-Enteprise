@@ -36,8 +36,8 @@ describe('IT-03: dynamic tool usage counting', () => {
     });
     expect(res.isError).toBeFalsy();
 
-    const inner = ctx.engine.getToolUsage('mem_admin');
-    const wrapper = ctx.engine.getToolUsage('execute_dynamic_tool');
+    const inner = await ctx.engine.getToolUsage('mem_admin');
+    const wrapper = await ctx.engine.getToolUsage('execute_dynamic_tool');
     expect(inner[0].call_count).toBe(1);
     expect(wrapper[0].call_count).toBe(1);
     expect(inner[0].tool_name).not.toBe(wrapper[0].tool_name);

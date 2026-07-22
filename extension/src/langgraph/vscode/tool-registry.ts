@@ -51,8 +51,8 @@ export class ToolRegistry {
       const tools = await this.mcpBridge.listTools();
       this.tools = tools;
       return tools;
-    } catch {
-      // MCP unavailable or tools/list failed — return empty
+    } catch (err) {
+      console.debug(`[ToolRegistry] MCP tools/list failed (non-fatal): ${(err as Error).message}`);
       return [];
     }
   }
@@ -83,3 +83,4 @@ export class ToolRegistry {
     this.tools = null;
   }
 }
+

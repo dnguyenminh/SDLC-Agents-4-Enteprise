@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Intent Classifier — Multi-Graph Architecture
  * Classifies user input into a PipelineIntent using regex patterns (fast path)
  * with LLM fallback for ambiguous inputs.
@@ -60,8 +60,9 @@ export async function classifyIntent(
       if (available) {
         return await classifyByLlm(userInput, llmProvider);
       }
-    } catch {
-      // Fall through to regex result
+    } catch (err) {
+      // LLM failed — fall through to regex result
+      console.debug("[intent-classifier] LLM classification failed, using regex result: " + (err as Error).message);
     }
   }
 
@@ -129,3 +130,4 @@ Respond with ONLY the intent string, nothing else.`;
   // LLM returned invalid — fallback to chat
   return { intent: "chat", confidence: 0.5, source: "llm" };
 }
+

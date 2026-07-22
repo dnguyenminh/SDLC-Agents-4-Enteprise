@@ -41,11 +41,11 @@ export class DuplicateDetector {
   }
 
   /** Find duplicate functions in the codebase. */
-  detect(options: { filePath?: string; module?: string; limit?: number } = {}): DuplicateReport {
+  async detect(options: { filePath?: string; module?: string; limit?: number } = {}): Promise<DuplicateReport> {
     const t0 = performance.now();
 
     // 1. Load body embeddings with symbol info
-    const embeddings = this.loadEmbeddings(options.filePath, options.module);
+    const embeddings = await this.loadEmbeddings(options.filePath, options.module);
     if (embeddings.length < 2) {
       return { clusters: [], totalPairsScanned: 0, totalDuplicates: 0, scanDurationMs: 0 };
     }
@@ -68,7 +68,7 @@ export class DuplicateDetector {
     };
   }
 
-  private loadEmbeddings(filePath?: string, module?: string): Array<{ symbolId: number; vector: number[]; info: SymbolRow }> {
+  private async loadEmbeddings(filePath?: string, module?: string): Promise<Array<{ symbolId: number; vector: number[]; info: SymbolRow }>> {
     const scope = buildCodeScopeFilter(this.projectId, 's'); // fail-closed
     let sql = `
       SELECT be.symbol_id, be.chunk_index, be.embedding, be.token_count,
@@ -91,7 +91,7 @@ export class DuplicateDetector {
       params.push(module);
     }
 
-    const rows = this.adapter.prepare(sql).all(...params) as Array<EmbeddingRow & SymbolRow>;
+    const rows = await this.adapter.allAsync<EmbeddingRow & SymbolRow>(sql, params);
 
     return rows.map(row => ({
       symbolId: row.symbol_id,

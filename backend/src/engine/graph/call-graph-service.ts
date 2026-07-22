@@ -40,19 +40,19 @@ export class CallGraphService {
   }
 
   /** Find all callers of a symbol with transitive depth. */
-  findCallers(
+  async findCallers(
     symbolName: string,
     depth: number = 1,
     limit: number = 20,
     fileFilter?: string,
     kindFilter: string | string[] = 'calls'
-  ): CallGraphResponse {
+  ): Promise<CallGraphResponse> {
     const startTime = Date.now();
     const clampedDepth = Math.min(Math.max(depth, 1), 5);
 
-    const resolved = this.symbolResolver.resolve(symbolName);
+    const resolved = await this.symbolResolver.resolve(symbolName);
     if (resolved.length === 0) {
-      return this.symbolNotFoundResponse(symbolName);
+      return await this.symbolNotFoundResponse(symbolName);
     }
 
     // KSA-191: Support multiple kind filters (SF call types: flow-action, wire, apex-import)
@@ -72,7 +72,7 @@ export class CallGraphService {
 
       // Query for each kind
       for (const kind of kinds) {
-        const callers = this.graphRepo.findCallers(current, kind, limit - results.length);
+        const callers = await this.graphRepo.findCallers(current, kind, limit - results.length);
 
         for (const caller of callers) {
           if (visited.has(caller.id)) continue;
@@ -115,20 +115,20 @@ export class CallGraphService {
   }
 
   /** Find all callees of a symbol with transitive depth. */
-  findCallees(
+  async findCallees(
     symbolName: string,
     depth: number = 1,
     limit: number = 20,
     fileFilter?: string,
     includeExternal: boolean = true,
     kindFilter: string | string[] = 'calls'
-  ): CallGraphResponse {
+  ): Promise<CallGraphResponse> {
     const startTime = Date.now();
     const clampedDepth = Math.min(Math.max(depth, 1), 5);
 
-    const resolved = this.symbolResolver.resolve(symbolName);
+    const resolved = await this.symbolResolver.resolve(symbolName);
     if (resolved.length === 0) {
-      return this.symbolNotFoundResponse(symbolName);
+      return await this.symbolNotFoundResponse(symbolName);
     }
 
     // KSA-191: Support multiple kind filters (SF: dml, soql, trigger-on)
@@ -147,7 +147,7 @@ export class CallGraphService {
       if (currentDepth >= clampedDepth) continue;
 
       for (const kind of kinds) {
-        const callees = this.graphRepo.findCallees(symbolId, kind, limit - results.length);
+        const callees = await this.graphRepo.findCallees(symbolId, kind, limit - results.length);
 
         for (const callee of callees) {
           const key = `${callee.name}:${callee.call_line}`;
@@ -171,7 +171,7 @@ export class CallGraphService {
           results.push(item);
 
           if (callee.file_path && currentDepth + 1 < clampedDepth) {
-            const calleeResolved = this.symbolResolver.resolve(callee.name);
+            const calleeResolved = await this.symbolResolver.resolve(callee.name);
             for (const cr of calleeResolved) {
               if (cr.filePath === callee.file_path) {
                 queue.push({ symbolId: cr.id, depth: currentDepth + 1 });
@@ -196,8 +196,8 @@ export class CallGraphService {
     };
   }
 
-  private symbolNotFoundResponse(symbolName: string): CallGraphResponse {
-    const suggestions = this.symbolResolver.suggest(symbolName);
+  private async symbolNotFoundResponse(symbolName: string): Promise<CallGraphResponse> {
+    const suggestions = await this.symbolResolver.suggest(symbolName);
     return {
       symbol: symbolName,
       resolvedTo: [],
@@ -214,3 +214,5 @@ export class CallGraphService {
     return filePath.includes(filter);
   }
 }
+
+

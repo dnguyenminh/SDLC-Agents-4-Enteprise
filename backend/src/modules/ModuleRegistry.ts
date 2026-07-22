@@ -1,23 +1,28 @@
 /**
  * Module lifecycle registry.
- * Manages initialization, shutdown, and health status of all backend modules.
+ * Observer pattern: emits lifecycle events via EventBus.
+ * Modules and wiring logic subscribe to events instead of post-init casting.
  */
 
 import type { IModule, ModuleHealth, ModuleStatus } from '../types/module.js';
 import type { ToolHandler, ToolDefinition } from '../types/tool.js';
 import type { Logger } from 'pino';
+import { bus, Events } from '../shared/EventBus.js';
 
 export class ModuleRegistry {
   private modules: Map<string, IModule> = new Map();
   private logger: Logger;
+  private eventBus: typeof bus;
 
-  constructor(logger: Logger) {
+  constructor(logger: Logger, eventBus?: typeof bus) {
     this.logger = logger;
+    this.eventBus = eventBus || bus;
   }
 
   register(module: IModule): void {
     this.modules.set(module.name, module);
     this.logger.info({ module: module.name }, 'Module registered');
+    this.eventBus.emit(Events.MODULE_REGISTERED, { name: module.name });
   }
 
   async initializeAll(): Promise<void> {
@@ -27,8 +32,14 @@ export class ModuleRegistry {
           this.logger.info({ module: name }, 'Initializing module');
           await module.initialize();
           this.logger.info({ module: name, status: module.status }, 'Module initialized');
+          if (module.status === 'ready') {
+            this.eventBus.emit(Events.MODULE_READY, { name });
+          } else {
+            this.eventBus.emit(Events.MODULE_ERROR, { name, status: module.status });
+          }
         } catch (err) {
           this.logger.error({ module: name, err }, 'Module initialization failed');
+          this.eventBus.emit(Events.MODULE_ERROR, { name, error: String(err) });
         }
       }
     );
@@ -42,6 +53,7 @@ export class ModuleRegistry {
         try {
           await module.shutdown();
           this.logger.info({ module: name }, 'Module shutdown complete');
+          this.eventBus.emit(Events.MODULE_STOPPED, { name });
         } catch (err) {
           this.logger.error({ module: name, err }, 'Module shutdown failed');
         }
@@ -64,10 +76,15 @@ export class ModuleRegistry {
     try {
       this.logger.info({ module: name }, 'Reinitializing module (hot-swap)');
       await module.shutdown();
+      this.eventBus.emit(Events.MODULE_STOPPED, { name });
       await module.initialize();
+      if (module.status === 'ready') {
+        this.eventBus.emit(Events.MODULE_READY, { name });
+      }
       this.logger.info({ module: name, status: module.status }, 'Module reinitialized');
     } catch (err) {
       this.logger.error({ module: name, err }, 'Module reinitialization failed');
+      this.eventBus.emit(Events.MODULE_ERROR, { name, error: String(err) });
     }
   }
 

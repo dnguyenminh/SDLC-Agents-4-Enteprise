@@ -1,13 +1,12 @@
 /**
  * Hono HTTP server setup with all routes and middleware.
+ * DIP fix: ToolRouter and McpConfigService can be injected via HttpServerOptions.
+ * Production defaults create them internally; tests can inject mocks.
  * Implements: UC-2, UC-7, BR-35, BR-37
  */
 
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
-// fs import removed (unused)
-// path import removed (unused)
-// fileURLToPath import removed (unused)
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from '../modules/ModuleRegistry.js';
 import { ToolRouter } from '../tool-router/ToolRouter.js';
@@ -34,6 +33,10 @@ export interface HttpServerOptions {
   logger: Logger;
   registry: ModuleRegistry;
   version: string;
+  /** DIP: optionally inject a pre-built ToolRouter (useful for testing). Defaults to new ToolRouter(registry). */
+  toolRouter?: ToolRouter;
+  /** DIP: optionally inject a pre-built McpConfigService. Defaults to new McpConfigService(workspace, dataDir). */
+  mcpConfigService?: McpConfigService;
 }
 
 export class HttpServer {
@@ -53,51 +56,37 @@ export class HttpServer {
 
   private createApp(): Hono {
     const app = new Hono();
-    const toolRouter = new ToolRouter(this.options.registry, this.logger);
+    // DIP: use injected ToolRouter or create default
+    const toolRouter = this.options.toolRouter ?? new ToolRouter(this.options.registry, this.logger);
 
-    // Global middleware
     app.use('*', securityHeaders);
-    app.use('*', bodyLimit({ maxSize: 100 * 1024 * 1024 })); // 100MB max request body
+    app.use('*', bodyLimit({ maxSize: 100 * 1024 * 1024 }));
     app.use('*', createRequestLogger(this.logger));
-    app.use('/api/admin/*', rateLimiter); // 100 req/min per IP on admin API
-    app.use('/api/admin/auth/login', rateLimiter); // Additional login protection (stacked)
-
-    // SA4E-30: JWT + X-Project-Id auth on indexing endpoints (mandatory headers)
+    app.use('/api/admin/*', rateLimiter);
+    app.use('/api/admin/auth/login', rateLimiter);
     app.use('/api/index/*', jwtAuth);
-    // API key auth on other public endpoints (Finding #3)
     app.use('/api/tags/*', apiKeyAuth);
     app.use('/mcp/*', apiKeyAuth);
     app.onError(createErrorHandler(this.logger));
-    // Routes
-    const healthRoute = createHealthRoute(this.options.registry, this.options.version);
-    const toolsRoute = createToolsRoute(toolRouter, this.logger);
-    const apiRoute = createApiRoute(this.options.registry, this.logger);
-    const adminRoute = createAdminRoute(this.logger, this.options.registry);
 
-    app.route('/', healthRoute);
-    app.route('/', toolsRoute);
-    app.route('/', apiRoute);
-    app.route('/', adminRoute);
+    app.route('/', createHealthRoute(this.options.registry, this.options.version));
+    app.route('/', createToolsRoute(toolRouter, this.logger));
+    app.route('/', createApiRoute(this.options.registry, this.logger));
+    app.route('/', createAdminRoute(this.logger, this.options.registry));
 
-    // MCP Config REST API (Story 13 — config persistence)
     this.registerMcpConfigRoutes(app);
 
-    // SA4E-30: KB REST API with JWT auth
     const kbApiRoutes = createKbApiRoutes(this.options.registry, this.logger);
     app.route('/api/v1', kbApiRoutes);
 
-    // SA4E-30: Tools REST API
     const toolsApiRoutes = createToolsApiRoutes(this.options.registry, this.logger);
     app.route('/api/tools', toolsApiRoutes);
 
-    // MCP Streamable HTTP endpoint (kept for extension connection + tools/list)
     app.all('/mcp', async (c) => {
       const transport = new WebStandardStreamableHTTPServerTransport();
       registerTransport(transport);
-      
       const server = getMcpServer(this.options.registry, this.logger);
       await server.connect(transport);
-      
       return transport.handleRequest(c.req.raw);
     });
 
@@ -126,13 +115,8 @@ export class HttpServer {
     }
   }
 
-  get isRunning(): boolean {
-    return this._isRunning;
-  }
-
-  get honoApp(): Hono {
-    return this.app;
-  }
+  get isRunning(): boolean { return this._isRunning; }
+  get honoApp(): Hono { return this.app; }
 
   private registerMcpConfigRoutes(app: Hono): void {
     const orchestration = this.options.registry.getModule('orchestration') as any;
@@ -145,8 +129,12 @@ export class HttpServer {
       this.logger.warn('McpClientManager not available, skipping MCP config routes');
       return;
     }
-    const cfg = { workspace: process.env.CODE_INTEL_WORKSPACE || process.cwd(), dataDir: process.env.CODE_INTEL_DATA_DIR || '.code-intel' };
-    const configService = new McpConfigService(cfg.workspace, cfg.dataDir, this.logger);
+    // DIP: use injected McpConfigService or create default
+    const configService = this.options.mcpConfigService ?? new McpConfigService(
+      process.env.CODE_INTEL_WORKSPACE || process.cwd(),
+      process.env.CODE_INTEL_DATA_DIR || '.code-intel',
+      this.logger,
+    );
     const mcpConfigApp = createMcpConfigRoutes(configService, clientManager, this.logger);
     app.route('/', mcpConfigApp);
     this.logger.info('MCP Config REST API registered at /api/mcp-servers');

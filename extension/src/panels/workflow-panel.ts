@@ -6,23 +6,39 @@
 
 import * as vscode from "vscode";
 import { WebviewToExtMessage } from "../types";
-import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
 import { BasePanel } from "./base-panel";
 import { SDLC_GRAPH_DEFINITION } from "../langgraph/workflow/workflow-graph-data";
 
 export class WorkflowPanel extends BasePanel {
-  constructor(mcpManager: McpServerManager, extensionUri: vscode.Uri) {
+  constructor(mcpManager: IServerManager, extensionUri: vscode.Uri) {
     super("workflow", mcpManager, extensionUri);
   }
 
   getHtml(webview: vscode.Webview): string {
     const nonce = this.getNonce();
-    const cspSource = webview.cspSource;
     const threeUri = this.getWebviewUri(webview, "webview-assets", "three.min.js");
     const forceGraphUri = this.getWebviewUri(webview, "webview-assets", "3d-force-graph.min.js");
-    const cssUri = this.getWebviewUri(webview, "webview-assets", "workflow-graph.css");
     const jsUri = this.getWebviewUri(webview, "webview-assets", "workflow-graph.js");
 
+    const bodyContent = `
+    <div id="toolbar">
+      <button id="refresh-btn" title="Refresh">&#x21BB; Refresh</button>
+    </div>
+    <div id="phase-bar"></div>
+    <div id="graph-3d"></div>
+    <div id="node-info" class="hidden"></div>
+    <div id="graph-container" style="display:none"></div>
+    <div id="path-section" class="hidden" style="display:none"><div id="path-header"><span id="path-title"></span><button id="path-close"></button></div><div id="path-graph"></div></div>
+    <div id="node-detail" class="hidden" style="display:none"><div id="detail-header"><span id="detail-title"></span><button id="detail-close"></button></div><div id="detail-body"></div></div>
+    <script nonce="${nonce}" src="${threeUri}"></script>
+    <script nonce="${nonce}" src="${forceGraphUri}"></script>
+    <script nonce="${nonce}" src="${jsUri}"></script>`;
+
+    // Use getBaseHtml for consistent CSP/nonce wrapper
+    // workflow-graph panel needs 'unsafe-eval' for three.js/force-graph
+    const cspSource = webview.cspSource;
+    const cssUri = this.getWebviewUri(webview, "webview-assets", "workflow-graph.css");
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,18 +49,7 @@ export class WorkflowPanel extends BasePanel {
     <link rel="stylesheet" href="${cssUri}">
 </head>
 <body>
-    <div id="toolbar">
-      <button id="refresh-btn" title="Refresh">&#x21BB; Refresh</button>
-    </div>
-    <div id="phase-bar"></div>
-    <div id="graph-3d"></div>
-    <div id="node-info" class="hidden"></div>
-    <div id="graph-container" style="display:none"></div>
-    <div id="path-section" class="hidden" style="display:none"><div id="path-header"><span id="path-title"></span><button id="path-close"></button></div><div id="path-graph"></div></div>
-    <div id="node-detail" class="hidden" style="display:none"><div id="detail-header"><span id="detail-title"></span><button id="detail-close"></button></div><div id="detail-body"></div></div>
-
-    <script nonce="${nonce}" src="${threeUri}"></script>
-    <script nonce="${nonce}" src="${forceGraphUri}"></script>
+    ${bodyContent}
     <script nonce="${nonce}">
       const vscode = acquireVsCodeApi();
       window.addEventListener('message', (event) => {
@@ -53,7 +58,6 @@ export class WorkflowPanel extends BasePanel {
       });
       vscode.postMessage({ type: 'ready' });
     </script>
-    <script nonce="${nonce}" src="${jsUri}"></script>
 </body>
 </html>`;
   }

@@ -85,7 +85,8 @@ export class FileChangeWatcher implements vscode.Disposable {
   private async uploadOrQueue(files: FileUploadPayload[]): Promise<void> {
     try {
       await this.uploader.uploadBatch(files);
-    } catch {
+    } catch (err) {
+      console.debug(`[FileChangeWatcher] upload failed, queuing for offline: ${(err as Error).message}`);
       this.offlineQueue.enqueue(files);
     }
   }
@@ -130,3 +131,4 @@ export class FileChangeWatcher implements vscode.Disposable {
     this.disposables = [];
   }
 }
+

@@ -37,11 +37,12 @@ export async function loadSteeringRules(
     rules.sort((a, b) => (b.meta.priority ?? 0) - (a.meta.priority ?? 0));
 
     return rules;
-  } catch {
+  } catch (err) {
+    console.debug(`[SteeringLoader] loadSteeringRules failed (non-fatal): ${(err as Error).message}`);
     return [];
   }
-}
 
+}
 async function scanDirectoryRecursive(
   currentDir: string,
   rootSteeringDir: string,
@@ -53,7 +54,8 @@ async function scanDirectoryRecursive(
 
   try {
     entries = await vscode.workspace.fs.readDirectory(dirUri);
-  } catch {
+  } catch (err) {
+    console.debug(`[SteeringLoader] readDirectory failed (non-fatal): ${(err as Error).message}`);
     return; // Directory unreadable, skip
   }
 
@@ -181,7 +183,8 @@ async function readFileContent(filePath: string): Promise<string | null> {
     const uri = vscode.Uri.file(filePath);
     const bytes = await vscode.workspace.fs.readFile(uri);
     return Buffer.from(bytes).toString("utf-8");
-  } catch {
+  } catch (err) {
+    console.debug(`[SteeringLoader] readFileContent failed (non-fatal): ${(err as Error).message}`);
     return null;
   }
 }

@@ -3,6 +3,7 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import { McpServerManager } from "../../mcp-server-manager";
+import { IServerManager } from "../../types/server-types";
 import { ChatExtToWebviewMessage } from "../../chat-panel/message-protocol";
 import { McpBridge } from "../core/mcp-bridge";
 import { StreamHandler } from "../core/stream-handler";
@@ -41,7 +42,7 @@ export class LangGraphEngine {
   readonly hookEngine: HookEngine;
 
   constructor(
-    private readonly mcpManager: McpServerManager,
+    private readonly mcpManager: IServerManager,
     private readonly workspaceRoot: string,
     private readonly onEvent: (msg: ChatExtToWebviewMessage) => void,
     llmProvider?: LlmProvider

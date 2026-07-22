@@ -38,7 +38,9 @@ export class OllamaProvider extends BaseLlmProvider {
           || data.model_info?.["llama.context_length"] as number;
         if (ctxLen && ctxLen > 0) { this.contextWindowTokens = ctxLen; }
       }
-    } catch { /* keep default */ }
+    } catch (err) {
+      console.debug("[OllamaProvider] detectContextWindow failed, keeping default: " + (err as Error).message);
+    }
   }
 
   async chat(messages: LlmMessage[], options?: LlmOptions): Promise<string> {
@@ -112,3 +114,4 @@ export class OllamaProvider extends BaseLlmProvider {
     });
   }
 }
+

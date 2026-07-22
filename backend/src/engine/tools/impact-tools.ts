@@ -30,7 +30,7 @@ export const IMPACT_TOOL_DEFINITIONS = [
   },
 ];
 
-export function handleCodeImpact(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
+export async function handleCodeImpact(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): Promise<string> {
   const symbol = args.symbol as string;
   if (!symbol) return JSON.stringify({ error: 'Parameter "symbol" is required' });
   const action = (args.action as ImpactAction) ?? 'modify';
@@ -42,11 +42,12 @@ export function handleCodeImpact(args: Record<string, unknown>, adapter: Databas
   const resolver = new SymbolResolver(adapter, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
   const fileResolver = new FileResolver(adapter, workspace, projectId);
+  await fileResolver.ready();
   const depGraph = new DependencyGraphService(adapter, fileResolver, projectId);
   const testDetector = new TestDetector(adapter, projectId);
 
   const service = new ImpactAnalysisService(adapter, callGraph, depGraph, resolver, testDetector);
-  const result = service.analyzeImpact(symbol, action, depth, includeTests, severityThreshold);
+  const result = await service.analyzeImpact(symbol, action, depth, includeTests, severityThreshold);
   return formatImpactResult(result);
 }
 
@@ -83,3 +84,5 @@ function formatImpactResult(result: ImpactResult): string {
   lines.push(`--- ${result.metadata.queryTimeMs}ms | depth ${result.metadata.depthSearched}${result.metadata.truncated ? ' | TRUNCATED' : ''}`);
   return lines.join('\n');
 }
+
+

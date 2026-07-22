@@ -1,11 +1,10 @@
-/**
+﻿/**
  * Query Layer — FTS5 search, symbol lookup, module listing.
- * Provides the data access layer for all MCP tool handlers.
  * SA4E-41: every method is tenant-scoped and fail-closed via CodeIntelIsolation.
+ * SA4E-53: refactored to use DatabaseAdapter (async) instead of Database.Database directly.
  */
 
-import Database from 'better-sqlite3';
-import { DatabaseManager } from '../db/database-manager.js';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { buildCodeScopeFilter } from './code-intel-isolation.js';
 
 export interface SearchResult {
@@ -66,94 +65,102 @@ const SYMBOL_COLUMNS = `s.name, s.kind, s.signature, f.relative_path as filePath
   s.visibility, s.doc_comment as docComment, s.parent_symbol as parentSymbol`;
 
 export class QueryLayer {
-  private db: Database.Database;
-
-  constructor(dbManager: DatabaseManager) {
-    this.db = dbManager.getDb();
-  }
+  constructor(private readonly adapter: DatabaseAdapter) {}
 
   /** Full-text search across symbols using FTS5, scoped to one tenant. */
-  searchCode(projectId: string | undefined, query: string, limit: number = 20): SearchResult[] {
+  async searchCode(projectId: string | undefined, query: string, limit = 20): Promise<SearchResult[]> {
     const ftsQuery = sanitizeFtsQuery(query);
     const scope = buildCodeScopeFilter(projectId, 's');
-    const stmt = this.db.prepare(`
-      SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
-             s.start_line as startLine, s.end_line as endLine,
-             s.doc_comment as docComment, rank
-      FROM symbols_fts
-      JOIN symbols s ON symbols_fts.rowid = s.id
-      JOIN files f ON s.file_id = f.id
-      WHERE symbols_fts MATCH ? AND ${scope.clause}
-      ORDER BY rank
-      LIMIT ?
-    `);
-    return stmt.all(ftsQuery, ...scope.params, limit) as SearchResult[];
+    return this.adapter.allAsync<SearchResult>(
+      `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
+              s.start_line as startLine, s.end_line as endLine,
+              s.doc_comment as docComment, rank
+       FROM symbols_fts
+       JOIN symbols s ON symbols_fts.rowid = s.id
+       JOIN files f ON s.file_id = f.id
+       WHERE symbols_fts MATCH ? AND ${scope.clause}
+       ORDER BY rank LIMIT ?`,
+      [ftsQuery, ...[...scope.params], limit],
+    );
   }
 
   /** Lookup symbols by exact name or prefix, scoped to one tenant. */
-  findSymbols(projectId: string | undefined, name: string, kind?: string, limit: number = 50): SymbolInfo[] {
+  async findSymbols(
+    projectId: string | undefined,
+    name: string,
+    kind?: string,
+    limit = 50,
+  ): Promise<SymbolInfo[]> {
     const scope = buildCodeScopeFilter(projectId, 's');
     let sql = `SELECT ${SYMBOL_COLUMNS} FROM symbols s
       JOIN files f ON s.file_id = f.id
       WHERE s.name LIKE ? AND ${scope.clause}`;
-    const params: any[] = [`${name}%`, ...scope.params];
+    const params: unknown[] = [`${name}%`, ...scope.params];
     if (kind) { sql += ' AND s.kind = ?'; params.push(kind); }
     sql += ' ORDER BY s.name LIMIT ?';
     params.push(limit);
-    return this.db.prepare(sql).all(...params) as SymbolInfo[];
+    return this.adapter.allAsync<SymbolInfo>(sql, params);
   }
 
   /** Get symbols in a specific file, scoped to one tenant. */
-  getFileSymbols(projectId: string | undefined, relativePath: string): SymbolInfo[] {
+  async getFileSymbols(projectId: string | undefined, relativePath: string): Promise<SymbolInfo[]> {
     const scope = buildCodeScopeFilter(projectId, 'f');
-    const stmt = this.db.prepare(`
-      SELECT ${SYMBOL_COLUMNS} FROM symbols s
-      JOIN files f ON s.file_id = f.id
-      WHERE f.relative_path = ? AND ${scope.clause}
-      ORDER BY s.start_line
-    `);
-    return stmt.all(relativePath, ...scope.params) as SymbolInfo[];
+    return this.adapter.allAsync<SymbolInfo>(
+      `SELECT ${SYMBOL_COLUMNS} FROM symbols s
+       JOIN files f ON s.file_id = f.id
+       WHERE f.relative_path = ? AND ${scope.clause}
+       ORDER BY s.start_line`,
+      [relativePath, ...scope.params],
+    );
   }
 
   /** List all modules with stats and pattern metadata for one tenant. */
-  listModules(projectId: string | undefined): ModuleInfo[] {
+  async listModules(projectId: string | undefined): Promise<ModuleInfo[]> {
     const scope = buildCodeScopeFilter(projectId, 'modules');
-    const stmt = this.db.prepare(`SELECT ${MODULE_COLUMNS} FROM modules WHERE ${scope.clause} ORDER BY name`);
-    return stmt.all(...scope.params) as ModuleInfo[];
+    return this.adapter.allAsync<ModuleInfo>(
+      `SELECT ${MODULE_COLUMNS} FROM modules WHERE ${scope.clause} ORDER BY name`,
+      [...scope.params],
+    );
   }
 
   /** List modules with pattern metadata, optionally filtered by name. */
-  listModulesWithPatterns(projectId: string | undefined, name: string | null): ModuleInfo[] {
+  async listModulesWithPatterns(
+    projectId: string | undefined,
+    name: string | null,
+  ): Promise<ModuleInfo[]> {
     if (!name) return this.listModules(projectId);
     const scope = buildCodeScopeFilter(projectId, 'modules');
-    const stmt = this.db.prepare(
-      `SELECT ${MODULE_COLUMNS} FROM modules WHERE ${scope.clause} AND name LIKE ? ORDER BY name`
+    return this.adapter.allAsync<ModuleInfo>(
+      `SELECT ${MODULE_COLUMNS} FROM modules WHERE ${scope.clause} AND name LIKE ? ORDER BY name`,
+      [...[...scope.params], `${name}%`],
     );
-    return stmt.all(...scope.params, `${name}%`) as ModuleInfo[];
   }
 
   /** Get index status and statistics, scoped to one tenant. */
-  getIndexStatus(projectId: string | undefined): IndexStatus {
+  async getIndexStatus(projectId: string | undefined): Promise<IndexStatus> {
     const f = buildCodeScopeFilter(projectId, 'files');
     const s = buildCodeScopeFilter(projectId, 'symbols');
     const m = buildCodeScopeFilter(projectId, 'modules');
-    const files = this.db.prepare(`SELECT COUNT(*) as c FROM files WHERE ${f.clause}`).get(...f.params) as { c: number };
-    const symbols = this.db.prepare(`SELECT COUNT(*) as c FROM symbols WHERE ${s.clause}`).get(...s.params) as { c: number };
-    const modules = this.db.prepare(`SELECT COUNT(*) as c FROM modules WHERE ${m.clause}`).get(...m.params) as { c: number };
-    const lastRow = this.db.prepare(`SELECT MAX(last_indexed) as t FROM files WHERE ${f.clause}`).get(...f.params) as { t: string | null };
-    const langRows = this.db.prepare(
-      `SELECT language, COUNT(*) as c FROM files WHERE ${f.clause} GROUP BY language`
-    ).all(...f.params) as { language: string; c: number }[];
+
+    const [filesRow, symbolsRow, modulesRow, lastRow, langRows] = await Promise.all([
+      this.adapter.getAsync<{ c: number }>(`SELECT COUNT(*) as c FROM files WHERE ${f.clause}`, [...f.params]),
+      this.adapter.getAsync<{ c: number }>(`SELECT COUNT(*) as c FROM symbols WHERE ${s.clause}`, [...s.params]),
+      this.adapter.getAsync<{ c: number }>(`SELECT COUNT(*) as c FROM modules WHERE ${m.clause}`, [...m.params]),
+      this.adapter.getAsync<{ t: string | null }>(`SELECT MAX(last_indexed) as t FROM files WHERE ${f.clause}`, [...f.params]),
+      this.adapter.allAsync<{ language: string; c: number }>(
+        `SELECT language, COUNT(*) as c FROM files WHERE ${f.clause} GROUP BY language`, [...f.params],
+      ),
+    ]);
 
     const languages: Record<string, number> = {};
     for (const row of langRows) languages[row.language] = row.c;
 
     return {
-      totalFiles: files.c,
-      totalSymbols: symbols.c,
-      totalModules: modules.c,
+      totalFiles: filesRow?.c ?? 0,
+      totalSymbols: symbolsRow?.c ?? 0,
+      totalModules: modulesRow?.c ?? 0,
       languages,
-      lastIndexed: lastRow.t,
+      lastIndexed: lastRow?.t ?? null,
     };
   }
 }

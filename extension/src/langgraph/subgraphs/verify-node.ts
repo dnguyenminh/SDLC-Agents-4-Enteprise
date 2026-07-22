@@ -116,7 +116,8 @@ export function createVerifyResponseNode(
         lastUpdatedAt: new Date().toISOString(),
       } as Partial<PipelineState>;
     } catch (err) {
-      debugLog(`[verify] Error: ${(err as Error).message} — skipping verify`);
+      debugLog(`[verify] Error — skipping verify: ${(err as Error).message}`);
+      console.warn(`[verify_response] Verification skipped due to error:`, (err as Error).message);
       return { lastUpdatedAt: new Date().toISOString() };
     }
   };
@@ -133,7 +134,11 @@ function parseVerdict(raw: string): VerifyResult {
     if (spaceIdx > 0) {
       const toolName = rest.slice(0, spaceIdx);
       let toolArgs: Record<string, unknown> = {};
-      try { toolArgs = JSON.parse(rest.slice(spaceIdx + 1)); } catch { /* empty */ }
+      try { toolArgs = JSON.parse(rest.slice(spaceIdx + 1)); }
+      catch (err) {
+        console.debug(`[verify-node] toolArgs JSON parse failed (non-fatal): ${(err as Error).message}`);
+        /* empty */
+      }
       return { verdict: "tool_needed", toolName, toolArgs };
     }
     return { verdict: "tool_needed", toolName: rest || "list_directory", toolArgs: { path: "src", recursive: true } };

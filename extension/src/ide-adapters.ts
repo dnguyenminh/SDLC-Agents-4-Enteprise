@@ -4,6 +4,9 @@
  * Pre-converted files live in resources/conversions/{ide}/.
  * Each adapter copies the correct pre-built files to the target workspace.
  * NO runtime conversion — files are crafted offline with proper format per IDE.
+ *
+ * OCP: Use registerAdapter() to add new IDE adapters without editing this file.
+ * Built-in adapters are registered at module load time below.
  */
 
 import * as fs from "fs";
@@ -60,17 +63,42 @@ class PreConvertedAdapter implements IdeAdapter {
   }
 }
 
-// --- Factory ---
+// --- OCP Registry ---
 
-const ADAPTER_MAP: Record<IdeTarget, () => IdeAdapter> = {
-  kiro: () => new KiroAdapter(),
-  vscode: () => new PreConvertedAdapter("vscode", "github-copilot"),
-  claude: () => new PreConvertedAdapter("claude", "claude-code"),
-  codex: () => new PreConvertedAdapter("codex", "codex-openai"),
-  opencode: () => new PreConvertedAdapter("opencode", "opencode"),
-  antigravity: () => new PreConvertedAdapter("antigravity", "antigravity"),
-};
+/** Internal registry — keyed by IDE target id. */
+const _adapterRegistry = new Map<string, () => IdeAdapter>();
 
-export function createAdapter(target: IdeTarget): IdeAdapter {
-  return ADAPTER_MAP[target]();
+/**
+ * Register a factory for a given IDE target id.
+ * Call this to add new IDE adapters without modifying this file (OCP).
+ * @param id   Unique IDE identifier (e.g. "cursor", "windsurf")
+ * @param factory  Factory function that creates the adapter instance
+ */
+export function registerAdapter(id: string, factory: () => IdeAdapter): void {
+  _adapterRegistry.set(id, factory);
 }
+
+/**
+ * Create an adapter for the given target id.
+ * @throws Error if no adapter is registered for the id.
+ */
+export function createAdapter(id: string): IdeAdapter {
+  const factory = _adapterRegistry.get(id);
+  if (!factory) {
+    throw new Error(`No IDE adapter registered for '${id}'. Available: ${[..._adapterRegistry.keys()].join(", ")}`);
+  }
+  return factory();
+}
+
+/** Return all registered adapter ids. */
+export function getRegisteredAdapterIds(): string[] {
+  return [..._adapterRegistry.keys()];
+}
+
+// --- Register built-in adapters ---
+registerAdapter("kiro", () => new KiroAdapter());
+registerAdapter("vscode", () => new PreConvertedAdapter("vscode", "github-copilot"));
+registerAdapter("claude", () => new PreConvertedAdapter("claude", "claude-code"));
+registerAdapter("codex", () => new PreConvertedAdapter("codex", "codex-openai"));
+registerAdapter("opencode", () => new PreConvertedAdapter("opencode", "opencode"));
+registerAdapter("antigravity", () => new PreConvertedAdapter("antigravity", "antigravity"));

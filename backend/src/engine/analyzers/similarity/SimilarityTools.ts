@@ -16,9 +16,9 @@ export const SIMILARITY_TOOL_DEFINITIONS = [
 ];
 
 /** Dispatch a similarity/mining tool call (SA4E-41: tenant-scoped, fail-closed). */
-export function handleSimilarityTool(
+export async function handleSimilarityTool(
   name: string, args: Record<string, unknown>, adapter: DatabaseAdapter, workspacePath: string, projectId?: string
-): string | null {
+): Promise<string | null> {
   switch (name) {
     case 'find_duplicates': return handleFindDuplicates(args, adapter, projectId);
     case 'find_dead_code': return handleFindDeadCode(args, adapter, projectId);
@@ -28,10 +28,10 @@ export function handleSimilarityTool(
   }
 }
 
-function handleFindDuplicates(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+async function handleFindDuplicates(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string> {
   const minSimilarity = (args.min_similarity as number) ?? 0.85;
   const detector = new DuplicateDetector(adapter, minSimilarity, 5, projectId);
-  const report = detector.detect({ filePath: args.file_path as string | undefined, module: args.module as string | undefined, limit: args.limit as number | undefined });
+  const report = await detector.detect({ filePath: args.file_path as string | undefined, module: args.module as string | undefined, limit: args.limit as number | undefined });
   if (report.clusters.length === 0) return `No duplicate code found (scanned ${report.totalPairsScanned} pairs in ${report.scanDurationMs}ms).`;
   const lines = [`Found ${report.clusters.length} duplicate clusters (${report.totalDuplicates} functions) in ${report.scanDurationMs}ms:\n`];
   for (const cluster of report.clusters) {
@@ -43,10 +43,10 @@ function handleFindDuplicates(args: Record<string, unknown>, adapter: DatabaseAd
   return lines.join('\n');
 }
 
-function handleFindDeadCode(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): string {
+async function handleFindDeadCode(args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string> {
   const minConfidence = (args.min_confidence as number) ?? 60;
   const detector = new DeadCodeDetector(adapter, minConfidence, projectId);
-  const report = detector.detect({ filePath: args.file_path as string | undefined, module: args.module as string | undefined, limit: args.limit as number | undefined });
+  const report = await detector.detect({ filePath: args.file_path as string | undefined, module: args.module as string | undefined, limit: args.limit as number | undefined });
   if (report.candidates.length === 0) return `No dead code found (${report.totalFunctions} functions, ${report.reachableCount} reachable).`;
   const lines = [`Found ${report.candidates.length} potentially dead functions (${report.unreachableCount}/${report.totalFunctions} unreachable, ${report.scanDurationMs}ms):\n`];
   for (const candidate of report.candidates) {
@@ -58,11 +58,11 @@ function handleFindDeadCode(args: Record<string, unknown>, adapter: DatabaseAdap
   return lines.join('\n');
 }
 
-function handleGitSearch(args: Record<string, unknown>, adapter: DatabaseAdapter, workspacePath: string, projectId?: string): string {
+async function handleGitSearch(args: Record<string, unknown>, adapter: DatabaseAdapter, workspacePath: string, projectId?: string): Promise<string> {
   const query = args.query as string;
   if (!query) return 'Parameter "query" is required.';
   const miner = new GitMiner(adapter, workspacePath, 10000, projectId);
-  const results = miner.search(query, { author: args.author as string | undefined, file: args.file as string | undefined, since: args.since as string | undefined, limit: args.limit as number | undefined });
+  const results = await miner.search(query, { author: args.author as string | undefined, file: args.file as string | undefined, since: args.since as string | undefined, limit: args.limit as number | undefined });
   if (results.length === 0) return `No commits found matching "${query}".`;
   const lines = [`Found ${results.length} commits matching "${query}":\n`];
   for (const commit of results) {
@@ -75,11 +75,11 @@ function handleGitSearch(args: Record<string, unknown>, adapter: DatabaseAdapter
   return lines.join('\n');
 }
 
-function handleGitIndex(args: Record<string, unknown>, adapter: DatabaseAdapter, workspacePath: string, projectId?: string): string {
+async function handleGitIndex(args: Record<string, unknown>, adapter: DatabaseAdapter, workspacePath: string, projectId?: string): Promise<string> {
   const force = (args.force as boolean) ?? false;
   const miner = new GitMiner(adapter, workspacePath, 10000, projectId);
   try {
-    const summary = miner.indexHistory(force);
+    const summary = await miner.indexHistory(force);
     return [`Git history indexed:`, `  Total commits: ${summary.totalCommits}`, `  Last hash: ${summary.lastHash?.slice(0, 8) ?? 'none'}`, `  Last indexed: ${summary.lastIndexedAt ?? 'never'}`].join('\n');
   } catch (err: any) {
     if (String(err?.message).startsWith('PROJECT_REQUIRED')) return JSON.stringify({ error: 'X-Project-Id required to index git history' });

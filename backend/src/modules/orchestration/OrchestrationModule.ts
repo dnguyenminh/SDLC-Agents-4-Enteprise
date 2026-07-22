@@ -1,18 +1,19 @@
 /**
- * Orchestration Module — manages child MCP servers.
- * Handles spawning, monitoring, and communication with child servers.
+ * Orchestration Module — manages child MCP servers and tool discovery.
+ * DIP fix: find_tools handler depends on ToolSearchService interface,
+ * not on MemoryModule internals (getEngine().getDb()). Service is injected
+ * after modules are initialized via setToolSearchService().
  */
 
 import type { IModule, ModuleStatus } from '../../types/module.js';
 import type { ToolHandler, ToolDefinition } from '../../types/tool.js';
-import { EmbeddingService } from '../../engine/parsers/embedding/EmbeddingService.js';
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from '../ModuleRegistry.js';
-import type { MemoryModule } from '../memory/MemoryModule.js';
 import { McpClientManager } from './McpClientManager.js';
 import { trackToolUsage } from '../../server/toolUsageTracker.js';
 import { createReindexSubscriber } from './reindex/ReindexSubscriberFactory.js';
 import type { ReindexSubscriber } from './reindex/ReindexSubscriber.js';
+import type { ToolSearchService } from './ToolSearchService.js';
 
 export class OrchestrationModule implements IModule {
   readonly name = 'orchestration';
@@ -21,6 +22,8 @@ export class OrchestrationModule implements IModule {
   private registry?: ModuleRegistry;
   private clientManager: McpClientManager;
   private reindexSubscriber?: ReindexSubscriber;
+  /** Injected after module init — depends on abstraction, not MemoryModule concrete. */
+  private toolSearchService?: ToolSearchService;
 
   constructor(logger: Logger, registry?: ModuleRegistry) {
     this.logger = logger.child({ module: this.name });
@@ -28,25 +31,27 @@ export class OrchestrationModule implements IModule {
     this.clientManager = new McpClientManager(logger);
   }
 
-  getClientManager(): McpClientManager {
-    return this.clientManager;
-  }
-
+  getClientManager(): McpClientManager { return this.clientManager; }
   get status(): ModuleStatus { return this._status; }
+
+  /**
+   * DIP: called from index.ts after MemoryModule is ready.
+   * Injects a ToolSearchService backed by the memory DB without coupling this module to MemoryModule.
+   */
+  setToolSearchService(svc: ToolSearchService): void {
+    this.toolSearchService = svc;
+  }
 
   async initialize(): Promise<void> {
     this.logger.info('Initializing orchestration module');
     await this.clientManager.initializeAll();
     this.clientManager.startHealthMonitor();
-    // SA4E-42: subscribe AFTER the startup connect-burst so index.ts owns the
-    // one-shot ingest and the subscriber handles only runtime transitions (IR-1).
     this.reindexSubscriber = createReindexSubscriber(this.clientManager, this.logger, this.registry);
     this.reindexSubscriber.start();
     this._status = 'ready';
   }
 
   async shutdown(): Promise<void> {
-    // SA4E-42: release the state-change subscription before tearing down (IR-1).
     this.reindexSubscriber?.stop();
     this.reindexSubscriber = undefined;
     this.clientManager.stopHealthMonitor();
@@ -69,132 +74,66 @@ export class OrchestrationModule implements IModule {
     handlers.set('find_tools', async (args: any) => {
       const query = args.query as string;
       const limit = (args.top_k as number) || 5;
-      
-      let tools: any[] = [];
-      if (this.registry) {
-        const memoryModule = this.registry.getModule('memory') as MemoryModule | undefined;
-        if (memoryModule && memoryModule.status === 'ready') {
-          const db = memoryModule.getEngine().getDb() as any;
-          
-          try {
-            const queryVector = await EmbeddingService.getInstance().generateEmbedding(query);
-            
-            const rows = db.prepare(`SELECT * FROM mcp_tools`).all() as any[];
-            
-            const scoredTools = rows.map(r => {
-              let score = 0;
-              if (r.vector) {
-                // Convert buffer back to number[]
-                const floatArray = new Float32Array(r.vector.buffer, r.vector.byteOffset, r.vector.byteLength / 4);
-                const vector = Array.from(floatArray);
-                score = EmbeddingService.getInstance().cosineSimilarity(queryVector, vector);
-              }
-              return {
-                name: r.name,
-                description: r.description,
-                schema: JSON.parse(r.schema_json),
-                score
-              };
-            });
-            
-            // Sort by score descending and take top N
-            scoredTools.sort((a, b) => b.score - a.score);
-            tools = scoredTools.slice(0, limit);
-            
-          } catch (err) {
-            this.logger.error({ err, query }, 'Failed to search tools via vectors');
-          }
-        }
+
+      if (!this.toolSearchService) {
+        this.logger.warn('find_tools called but ToolSearchService not yet injected');
+        return { content: [{ type: 'text', text: JSON.stringify({ tools: [], query }) }], isError: false };
       }
 
-      return {
-        content: [{ type: 'text', text: JSON.stringify({ tools, query }) }],
-        isError: false,
-      };
+      const tools = await this.toolSearchService.search(query, limit);
+      return { content: [{ type: 'text', text: JSON.stringify({ tools, query }) }], isError: false };
     });
 
     handlers.set('execute_dynamic_tool', async (args: any) => {
-
       const toolName = args.toolName || args.tool_name;
       const toolArgs = args.arguments || {};
-      
-      // If a child MCP server owns this tool, proxy the request
-      if (this.clientManager.ownsTool(toolName)) {
 
+      // Proxy to child MCP server if it owns this tool
+      if (this.clientManager.ownsTool(toolName)) {
         try {
           const result = await this.clientManager.executeTool(toolName, toolArgs);
           if (this.registry && !result.isError) {
-            trackToolUsage(this.registry, this.logger, toolName); // BR-07 (OI-4: proxied inner tool)
+            trackToolUsage(this.registry, this.logger, toolName);
           }
-
           return result;
         } catch (err: any) {
-
-          return {
-            content: [{ type: 'text', text: `Error proxying tool ${toolName}: ${err.message || err}` }],
-            isError: true,
-          };
+          return { content: [{ type: 'text', text: `Error proxying tool ${toolName}: ${err.message || err}` }], isError: true };
         }
       }
-
 
       if (!this.registry) {
-        return {
-          content: [{ type: 'text', text: 'Registry not available' }],
-          isError: true,
-        };
+        return { content: [{ type: 'text', text: 'Registry not available' }], isError: true };
       }
-      
-      const allHandlers = this.registry.getToolHandlers();
-      const handler = allHandlers.get(toolName);
-      
+
+      const handler = this.registry.getToolHandlers().get(toolName);
       if (!handler) {
-
-        return {
-          content: [{ type: 'text', text: `Tool ${toolName} not found` }],
-          isError: true,
-        };
+        return { content: [{ type: 'text', text: `Tool ${toolName} not found` }], isError: true };
       }
-      
+
       try {
-
         const result = await handler(toolArgs);
-
-        if (this.registry && !result.isError) {
-          trackToolUsage(this.registry, this.logger, toolName); // BR-07: resolved inner tool
-        }
+        if (!result.isError) trackToolUsage(this.registry, this.logger, toolName);
         return result;
       } catch (err: any) {
-
-        this.logger.error({ err, toolName, toolArgs }, 'Failed to execute dynamic tool');
-        return {
-          content: [{ type: 'text', text: `Error executing tool ${toolName}: ${err.message || err}` }],
-          isError: true,
-        };
+        this.logger.error({ err, toolName }, 'Failed to execute dynamic tool');
+        return { content: [{ type: 'text', text: `Error executing tool ${toolName}: ${err.message || err}` }], isError: true };
       }
     });
 
-    handlers.set('toggle_tool', async (args: any) => {
-      return {
-        content: [{ type: 'text', text: `Tool ${args.toolName} enabled=${args.enabled}` }],
-        isError: false,
-      };
-    });
+    handlers.set('toggle_tool', async (args: any) => ({
+      content: [{ type: 'text', text: `Tool ${args.toolName} enabled=${args.enabled}` }],
+      isError: false,
+    }));
 
     return handlers;
   }
 
   getToolDefinitions(): ToolDefinition[] {
-    const defaultTools: ToolDefinition[] = [
+    return [
       { name: 'orchestration_status', description: 'Get status of all child MCP servers', inputSchema: { type: 'object', properties: {} }, category: 'orchestration' },
       { name: 'find_tools', description: 'Search available tools by semantic query', inputSchema: { type: 'object', properties: { query: { type: 'string' }, threshold: { type: 'number' }, top_k: { type: 'number' } }, required: ['query'] }, category: 'orchestration' },
       { name: 'execute_dynamic_tool', description: 'Execute a dynamically discovered tool', inputSchema: { type: 'object', properties: { toolName: { type: 'string' }, arguments: { type: 'object' } }, required: ['toolName', 'arguments'] }, category: 'orchestration' },
       { name: 'toggle_tool', description: 'Enable or disable a tool', inputSchema: { type: 'object', properties: { tool_name: { type: 'string' }, enabled: { type: 'boolean' } }, required: ['tool_name'] }, category: 'orchestration' },
     ];
-    
-    // We intentionally DO NOT combine with proxied tools here.
-    // As per design, child MCP server tools are discovered dynamically via find_tools,
-    // not exposed flatly at the root level to prevent tool explosion.
-    return defaultTools;
   }
 }

@@ -7,6 +7,7 @@ import Database from 'better-sqlite3';
 import pino from 'pino';
 import { ScopePromotionService } from '../promotion/index.js';
 import { MEMORY_SCHEMA } from '../schema/index.js';
+import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 
 function createTestDb(): Database.Database {
   const db = new Database(':memory:');
@@ -43,30 +44,30 @@ describe('ScopePromotionService', () => {
 
   beforeEach(() => {
     db = createTestDb();
-    svc = new ScopePromotionService(db, logger);
+    svc = new ScopePromotionService(new SqliteDbAdapter(db), logger);
   });
 
   describe('scanForPromotionCandidates', () => {
-    it('detects entry meeting 2+ criteria', () => {
+    it('detects entry meeting 2+ criteria', async () => {
       const id = seedEntry(db, { access_count: 8, quality_score: 80 });
       addCitation(db, id, 'agent-ba');
       addCitation(db, id, 'agent-sa');
       addCitation(db, id, 'agent-dev');
 
-      const candidates = svc.scanForPromotionCandidates();
+      const candidates = await svc.scanForPromotionCandidates();
       expect(candidates.length).toBe(1);
       expect(candidates[0].entryId).toBe(id);
       expect(candidates[0].targetScope).toBe('PROJECT');
       expect(candidates[0].score).toBeGreaterThan(0);
     });
 
-    it('skips entry meeting only 1 criterion', () => {
+    it('skips entry meeting only 1 criterion', async () => {
       seedEntry(db, { access_count: 10 });
-      const candidates = svc.scanForPromotionCandidates();
+      const candidates = await svc.scanForPromotionCandidates();
       expect(candidates.length).toBe(0);
     });
 
-    it('skips entries younger than 24h', () => {
+    it('skips entries younger than 24h', async () => {
       const id = seedEntry(db, {
         access_count: 20, quality_score: 90,
         created_at: new Date().toISOString(),
@@ -74,26 +75,26 @@ describe('ScopePromotionService', () => {
       addCitation(db, id, 'a1');
       addCitation(db, id, 'a2');
       addCitation(db, id, 'a3');
-      const candidates = svc.scanForPromotionCandidates();
+      const candidates = await svc.scanForPromotionCandidates();
       expect(candidates.length).toBe(0);
     });
 
-    it('skips already-queued entries', () => {
+    it('skips already-queued entries', async () => {
       const id = seedEntry(db, { access_count: 8, quality_score: 80 });
       addCitation(db, id, 'a1');
       addCitation(db, id, 'a2');
-      svc.queueCandidates(svc.scanForPromotionCandidates());
-      const c2 = svc.scanForPromotionCandidates();
+      await svc.queueCandidates(await svc.scanForPromotionCandidates());
+      const c2 = await svc.scanForPromotionCandidates();
       expect(c2.length).toBe(0);
     });
   });
 
   describe('approve', () => {
-    it('changes entry scope USER to PROJECT', () => {
+    it('changes entry scope USER to PROJECT', async () => {
       const id = seedEntry(db, { access_count: 8, quality_score: 80 });
       addCitation(db, id, 'a1');
       addCitation(db, id, 'a2');
-      svc.queueCandidates(svc.scanForPromotionCandidates());
+      await svc.queueCandidates(await svc.scanForPromotionCandidates());
       expect(svc.approve(id, 'admin-001', 'Good')).toBe(true);
       const e = db.prepare('SELECT scope FROM knowledge_entries WHERE id = ?').get(id) as any;
       expect(e.scope).toBe('PROJECT');
@@ -105,11 +106,11 @@ describe('ScopePromotionService', () => {
   });
 
   describe('reject', () => {
-    it('no cooldown — entry re-scannable', () => {
+    it('no cooldown — entry re-scannable', async () => {
       const id = seedEntry(db, { access_count: 8, quality_score: 80 });
       addCitation(db, id, 'a1');
       addCitation(db, id, 'a2');
-      svc.queueCandidates(svc.scanForPromotionCandidates());
+      await svc.queueCandidates(await svc.scanForPromotionCandidates());
       expect(svc.reject(id, 'admin', 'Not ready')).toBe(true);
       const e = db.prepare('SELECT scope FROM knowledge_entries WHERE id = ?').get(id) as any;
       expect(e.scope).toBe('USER');
@@ -119,19 +120,19 @@ describe('ScopePromotionService', () => {
   });
 
   describe('promoteOnMerge', () => {
-    it('promotes matching USER entries', () => {
+    it('promotes matching USER entries', async () => {
       const id1 = seedEntry(db, { tags: 'KSA-295,arch' });
       const id2 = seedEntry(db, { summary: 'KSA-295 req' });
       seedEntry(db, { tags: 'KSA-100' });
-      const { promoted } = svc.promoteOnMerge('KSA-295');
+      const { promoted } = await svc.promoteOnMerge('KSA-295');
       expect(promoted).toBe(2);
       expect((db.prepare('SELECT scope FROM knowledge_entries WHERE id=?').get(id1) as any).scope).toBe('PROJECT');
       expect((db.prepare('SELECT scope FROM knowledge_entries WHERE id=?').get(id2) as any).scope).toBe('PROJECT');
     });
 
-    it('skips non-USER entries (not matched by query)', () => {
+    it('skips non-USER entries (not matched by query)', async () => {
       seedEntry(db, { tags: 'KSA-295', scope: 'PROJECT' });
-      const { promoted, skipped } = svc.promoteOnMerge('KSA-295');
+      const { promoted, skipped } = await svc.promoteOnMerge('KSA-295');
       expect(promoted).toBe(0);
       expect(skipped).toBe(0); // PROJECT entries not in WHERE scope='USER' query
     });

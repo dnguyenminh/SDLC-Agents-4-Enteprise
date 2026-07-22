@@ -1,8 +1,10 @@
 /**
- * KSA-161: SQLite CRUD for complexity results.
+ * KSA-161: Complexity Store — CRUD for complexity analysis results.
+ * SA4E-53: async API for PostgreSQL compatibility, uses DialectHelper for upserts.
  */
 
-import type { DatabaseAdapter, PreparedStatement } from '../../../database/adapters/DatabaseAdapter.js';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
 import type { ComplexityResult, ComplexityFilters, ComplexityQueryResult, Grade } from './types.js';
 import { buildCodeScopeFilter } from '../../query/code-intel-isolation.js';
 
@@ -29,52 +31,53 @@ CREATE INDEX IF NOT EXISTS idx_complexity_symbol ON complexity(symbol_id);
 
 export class ComplexityStore {
   private adapter: DatabaseAdapter;
+  private dialect: DialectHelper;
   private projectId: string | undefined;
-  private stmts!: {
-    upsert: PreparedStatement;
-    getBySymbol: PreparedStatement;
-    deleteBySymbol: PreparedStatement;
-  };
 
   /**
-   * @param projectId  SA4E-41 read scope. Undefined ⇒ query() is fail-closed.
+   * @param projectId  SA4E-41 read scope. Undefined => query() is fail-closed.
    *   Write paths (upsert) are keyed by symbol_id and don't require a scope.
    */
   constructor(adapter: DatabaseAdapter, projectId?: string) {
     this.adapter = adapter;
+    this.dialect = new DialectHelper(adapter.getEngine());
     this.projectId = projectId;
-    this.ensureTable();
-    this.prepareStatements();
+    // SA4E-53: fire-and-forget async table creation (safe — CREATE IF NOT EXISTS)
+    this.ensureTable().catch(() => {});
   }
 
   /** Store or update complexity result for a symbol. */
-  upsert(result: ComplexityResult): void {
-    this.stmts.upsert.run(
-      result.symbol_id,
-      result.cyclomatic_complexity,
-      result.branches,
-      result.loops,
-      result.logical_ops,
-      result.nesting_depth,
-      result.early_returns,
-      result.exception_handlers,
-      result.grade
-    );
+  async upsert(result: ComplexityResult): Promise<void> {
+    const sql = this.buildUpsertSql();
+    await this.adapter.runAsync(sql, [
+      result.symbol_id, result.cyclomatic_complexity, result.branches,
+      result.loops, result.logical_ops, result.nesting_depth,
+      result.early_returns, result.exception_handlers, result.grade,
+    ]);
   }
 
   /** Batch upsert complexity results. */
-  upsertBatch(results: ComplexityResult[]): void {
-    this.adapter.transaction(() => { for (const r of results) this.upsert(r); });
+  async upsertBatch(results: ComplexityResult[]): Promise<void> {
+    await this.adapter.transactionAsync(async () => {
+      for (const r of results) await this.upsert(r);
+    });
   }
 
   /** Get complexity for a specific symbol. */
-  getBySymbol(symbolId: number): ComplexityResult | null {
-    return (this.stmts.getBySymbol.get(symbolId) as ComplexityResult) ?? null;
+  async getBySymbol(symbolId: number): Promise<ComplexityResult | null> {
+    const sql = `
+      SELECT c.*, s.name as symbol_name, f.relative_path as file_path,
+             s.start_line, s.end_line
+      FROM complexity c
+      JOIN symbols s ON s.id = c.symbol_id
+      JOIN files f ON f.id = s.file_id
+      WHERE c.symbol_id = ?`;
+    const row = await this.adapter.getAsync<ComplexityResult>(sql, [symbolId]);
+    return row ?? null;
   }
 
   /** Query complexity results with filters (tenant-scoped, fail-closed). */
-  query(filters: ComplexityFilters): ComplexityQueryResult {
-    // complexity has no project_id column — scope via the joined symbols table.
+  async query(filters: ComplexityFilters): Promise<ComplexityQueryResult> {
     const scope = buildCodeScopeFilter(this.projectId, 's');
     let sql = `
       SELECT c.*, s.name as symbol_name, f.relative_path as file_path,
@@ -108,81 +111,76 @@ export class ComplexityStore {
       params.push(filters.module);
     }
 
-    // Count total before limit
-    const countSql = sql.replace(/SELECT c\.\*.*?FROM/, 'SELECT COUNT(*) as total FROM');
-    const totalRow = this.adapter.prepare(countSql).get(...params) as { total: number } | undefined;
-    const total = totalRow?.total ?? 0;
-
-    // Sort and limit
-    switch (filters.sortBy) {
-      case 'name': sql += ' ORDER BY s.name ASC'; break;
-      case 'file': sql += ' ORDER BY f.relative_path ASC, s.start_line ASC'; break;
-      default: sql += ' ORDER BY c.cyclomatic_complexity DESC'; break;
-    }
+    const total = await this.countResults(sql, params);
+    sql = this.appendSorting(sql, filters);
     sql += ' LIMIT ?';
     params.push(filters.limit);
 
-    const results = this.adapter.prepare(sql).all(...params) as ComplexityResult[];
+    const results = await this.adapter.allAsync<ComplexityResult>(sql, params);
+    const gradeDistribution = await this.getGradeDistribution(scope, filters.module);
+    const average = await this.getAverage(scope);
 
-    // Grade distribution (tenant-scoped)
+    return { results, total, summary: { average, gradeDistribution } };
+  }
+
+  /** Delete complexity data for a symbol. */
+  async deleteBySymbol(symbolId: number): Promise<void> {
+    await this.adapter.runAsync('DELETE FROM complexity WHERE symbol_id = ?', [symbolId]);
+  }
+
+  private buildUpsertSql(): string {
+    const columns = [
+      'symbol_id', 'cyclomatic_complexity', 'branches', 'loops', 'logical_ops',
+      'nesting_depth', 'early_returns', 'exception_handlers', 'grade', 'computed_at',
+    ];
+    const updateCols = columns.filter(c => c !== 'symbol_id');
+    return this.adapter.getEngine() === 'sqlite'
+      ? `INSERT OR REPLACE INTO complexity (${columns.join(', ')}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+      : `INSERT INTO complexity (${columns.join(', ')}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()) ON CONFLICT (symbol_id) DO UPDATE SET ${updateCols.map(c => `${c} = EXCLUDED.${c}`).join(', ')}`;
+  }
+
+  private async countResults(sql: string, params: unknown[]): Promise<number> {
+    const countSql = sql.replace(/SELECT c\.\*.*?FROM/, 'SELECT COUNT(*) as total FROM');
+    const row = await this.adapter.getAsync<{ total: number }>(countSql, params);
+    return row?.total ?? 0;
+  }
+
+  private appendSorting(sql: string, filters: ComplexityFilters): string {
+    switch (filters.sortBy) {
+      case 'name': return sql + ' ORDER BY s.name ASC';
+      case 'file': return sql + ' ORDER BY f.relative_path ASC, s.start_line ASC';
+      default: return sql + ' ORDER BY c.cyclomatic_complexity DESC';
+    }
+  }
+
+  private async getGradeDistribution(
+    scope: { clause: string; params: readonly unknown[] }, module?: string,
+  ): Promise<Record<Grade, number>> {
     const distSql = `
       SELECT c.grade, COUNT(*) as count
       FROM complexity c
       JOIN symbols s ON s.id = c.symbol_id
       JOIN files f ON f.id = s.file_id
-      WHERE ${scope.clause} ${filters.module ? 'AND f.module = ?' : ''}
-      GROUP BY c.grade
-    `;
-    const distParams = filters.module ? [...scope.params, filters.module] : [...scope.params];
-    const distRows = this.adapter.prepare(distSql).all(...distParams) as { grade: Grade; count: number }[];
-    const gradeDistribution: Record<Grade, number> = { A: 0, B: 0, C: 0, D: 0, F: 0 };
-    for (const row of distRows) gradeDistribution[row.grade] = row.count;
+      WHERE ${scope.clause} ${module ? 'AND f.module = ?' : ''}
+      GROUP BY c.grade`;
+    const distParams = module ? [...scope.params, module] : [...scope.params];
+    const rows = await this.adapter.allAsync<{ grade: Grade; count: number }>(distSql, distParams);
+    const dist: Record<Grade, number> = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+    for (const row of rows) dist[row.grade] = row.count;
+    return dist;
+  }
 
-    // Average (tenant-scoped via joined symbols)
+  private async getAverage(scope: { clause: string; params: readonly unknown[] }): Promise<number> {
     const avgSql = `
       SELECT AVG(c.cyclomatic_complexity) as avg
       FROM complexity c
       JOIN symbols s ON s.id = c.symbol_id
-      WHERE ${scope.clause}
-    `;
-    const avgRow = this.adapter.prepare(avgSql).get(...scope.params) as { avg: number | null };
-
-    return {
-      results,
-      total,
-      summary: {
-        average: avgRow?.avg ?? 0,
-        gradeDistribution,
-      },
-    };
+      WHERE ${scope.clause}`;
+    const row = await this.adapter.getAsync<{ avg: number | null }>(avgSql, [...scope.params]);
+    return row?.avg ?? 0;
   }
 
-  /** Delete complexity data for a symbol. */
-  deleteBySymbol(symbolId: number): void {
-    this.stmts.deleteBySymbol.run(symbolId);
-  }
-
-  private ensureTable(): void {
-    this.adapter.exec(CREATE_TABLE);
-  }
-
-  private prepareStatements(): void {
-    this.stmts = {
-      upsert: this.adapter.prepare(`
-        INSERT OR REPLACE INTO complexity
-          (symbol_id, cyclomatic_complexity, branches, loops, logical_ops,
-           nesting_depth, early_returns, exception_handlers, grade, computed_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-      `),
-      getBySymbol: this.adapter.prepare(`
-        SELECT c.*, s.name as symbol_name, f.relative_path as file_path,
-               s.start_line, s.end_line
-        FROM complexity c
-        JOIN symbols s ON s.id = c.symbol_id
-        JOIN files f ON f.id = s.file_id
-        WHERE c.symbol_id = ?
-      `),
-      deleteBySymbol: this.adapter.prepare('DELETE FROM complexity WHERE symbol_id = ?'),
-    };
+  private async ensureTable(): Promise<void> {
+    await this.adapter.runAsync(CREATE_TABLE);
   }
 }

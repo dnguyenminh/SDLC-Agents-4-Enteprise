@@ -12,7 +12,7 @@ describe('IT-05: tool_usage schema idempotency', () => {
   beforeEach(() => { ctx = makeTempDb(); });
   afterEach(() => ctx.close());
 
-  it('creates tool_usage with expected columns and preserves data on re-apply', () => {
+  it('creates tool_usage with expected columns and preserves data on re-apply', async () => {
     const db = ctx.dbManager.getDb();
     const cols = db.pragma('table_info(tool_usage)') as any[];
     const byName = Object.fromEntries(cols.map(c => [c.name, c]));
@@ -23,9 +23,9 @@ describe('IT-05: tool_usage schema idempotency', () => {
     expect(byName['last_called_at']).toBeDefined();
 
     // Seed a row, then re-apply SCHEMA_V1 (simulate restart) — must not error or wipe.
-    ctx.engine.incrementToolUsage('mem_search');
+    await ctx.engine.incrementToolUsage('mem_search');
     expect(() => db.exec(SCHEMA_V1)).not.toThrow();
-    const rows = ctx.engine.getToolUsage('mem_search');
+    const rows = await ctx.engine.getToolUsage('mem_search');
     expect(rows).toHaveLength(1);
     expect(rows[0].call_count).toBe(1);
   });

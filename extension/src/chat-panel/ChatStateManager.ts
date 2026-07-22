@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ChatStateManager — handles chat state persistence, restoration,
  * and steering info loading.
  */
@@ -83,7 +83,8 @@ export class ChatStateManager {
       const inclusionMatch = fmMatch[1].match(/^inclusion\s*:\s*["']?(\w+)["']?\s*$/m);
       if (!inclusionMatch) { return false; }
       return validInclusions.has(inclusionMatch[1].toLowerCase());
-    } catch {
+    } catch (err) {
+      console.debug("[ChatStateManager] shouldIncludeSteeringFile failed: " + (err as Error).message);
       return false;
     }
   }
@@ -123,7 +124,11 @@ export class ChatStateManager {
           results.push(path.relative(baseDir, fullPath).replace(/\\/g, "/"));
         }
       }
-    } catch { /* ignore */ }
+    } catch (err) {
+      console.debug(`[ChatStateManager] getSteeringFilesRecursive failed (non-fatal): ${(err as Error).message}`);
+    }
     return results;
   }
 }
+
+

@@ -37,7 +37,7 @@ export class AIContextService {
     const startTime = Date.now();
     const { symbol, intent = 'explain', token_budget = 4000, caller_depth = 1 } = params;
 
-    const resolved = this.resolver.resolve(symbol);
+    const resolved = await this.resolver.resolve(symbol);
     if (resolved.length === 0) {
       return notFoundResponse(symbol, intent, token_budget, startTime, this.resolver);
     }

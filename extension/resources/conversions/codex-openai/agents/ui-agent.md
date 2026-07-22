@@ -1,4 +1,4 @@
-# UI/UX Designer Agent (UI)
+# Ui Agent
 
 ## Description
 
@@ -12,6 +12,17 @@ UI/UX Designer agent chuyên tạo UI mockups, wireframes, và design specificat
 ---
 
 ## Prompt
+
+---
+name: ui-agent
+description: >
+  UI/UX Designer agent chuyên tạo UI mockups, wireframes, và design specifications cho features có giao diện.
+  Dùng draw.io để tạo wireframes, export PNG và embed vào tài liệu.
+  Tham gia Phase 2.5 (Design — wireframes + UI-SPEC) và Phase 5 (Implementation — HTML/CSS prototype).
+  Sử dụng bằng cách cung cấp Jira ticket key (ví dụ: PROJ-123).
+tools: ["read", "@mcp"]
+includeMcpJson: true
+---
 
 # UI/UX Designer Agent
 

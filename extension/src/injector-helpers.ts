@@ -8,6 +8,7 @@ import * as path from "path";
 import { Component, CORE_COMPONENTS } from "./config";
 import { buildManifestAfterInject, getFileStatuses, FileStatus } from "./checksum";
 import { copyDirRecursive, copyDirFiltered, copySelectedItems } from "./file-utils";
+import { showUserError } from "./utils/panel-utils";
 
 export function forceUpdate(root: string, extensionPath: string): string[] {
   const injected: string[] = [];
@@ -49,7 +50,7 @@ export function injectComponent(component: Component, root: string, extensionPat
     if (component.filter) { copySelectedItems(source, target, component.filter); }
     else { copyDirRecursive(source, target); }
     return true;
-  } catch (err) { vscode.window.showErrorMessage(`Failed to inject ${component.id}: ${err}`); return false; }
+  } catch (err) { showUserError("Inject " + component.id, err); return false; }
 }
 
 export function injectComponentFiltered(component: Component, root: string, extensionPath: string, skipPaths: Set<string>): boolean {
@@ -70,3 +71,4 @@ export async function promptUpdateWithDetails(outdated: FileStatus[], userModifi
   if (action === "Backup & Overwrite") return "backup";
   return "cancel";
 }
+

@@ -34,7 +34,9 @@ export class FilePicker {
     let files: FileTreeNode[];
     try {
       files = await this.bridge.getFileTree();
-    } catch {
+    } catch (err) {
+      console.debug(`[FilePicker] getFileTree failed (non-fatal): ${(err as Error).message}`);
+      // Bridge unavailable (webview not connected) — degrade gracefully with empty list
       files = [];
     }
 
@@ -98,3 +100,4 @@ export class FilePicker {
     return this.panel?.isVisible() ?? false;
   }
 }
+

@@ -65,7 +65,7 @@ export function createUsersRoutes(ctx: AdminContext): Hono {
     if (user instanceof Response) return user;
     const { email } = await c.req.json();
     if (email !== undefined) {
-      ctx.db.user.updateEmail(user.userId, email);
+      await ctx.db.user.updateEmail(user.userId, email);
       await recordAudit(user.userId, user.username, 'UPDATE_PROFILE', 'users', user.userId, JSON.stringify({ email }));
     }
     const dbUser = await getUserById(user.userId);

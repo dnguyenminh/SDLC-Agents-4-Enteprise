@@ -12,8 +12,28 @@ export interface IServerManager {
   spawn(): Promise<void>;
   kill(): Promise<void>;
   restart(): Promise<void>;
+  reconnect(): Promise<void>;
   invokeTool(name: string, args: Record<string, unknown>): Promise<string>;
   onStatusChange: vscode.Event<ServerStatus>;
+}
+
+/**
+ * Minimal auth interface for DIP — inject this instead of concrete AuthManager.
+ * Allows testable, swappable auth implementations.
+ */
+export interface IAuthManager {
+  readonly isAuthenticated: boolean;
+  getAccessToken(): Promise<string | null>;
+  getTokenSync(): string;
+  refreshToken(): Promise<void>;
+}
+
+/**
+ * Minimal notification subscriber interface for DIP.
+ * KbEventBus should depend on this, not on concrete RemoteBackendClient.
+ */
+export interface INotificationSubscriber {
+  onNotification: vscode.Event<{ method: string; params?: unknown }>;
 }
 
 export interface McpRequest {
@@ -71,11 +91,13 @@ export async function checkLlmAvailability(
   const providerType = config.get<string>("llmProvider", "anthropic");
   switch (providerType) {
     case "ollama":
+      // health probe — intentional: any error = service unavailable
       try { await fetch("http://localhost:11434/api/tags", { signal: AbortSignal.timeout(2000) }); return true; }
       catch { return false; }
     case "openai": {
       const key = secrets ? (await secrets.get("kiroSdlc.openaiApiKey")) : undefined;
       if (!key) return false;
+      // health probe — intentional: any error = service unavailable
       try { await fetch("https://api.openai.com/v1/models", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(2000) }); return true; }
       catch { return false; }
     }
@@ -83,6 +105,7 @@ export async function checkLlmAvailability(
     default: {
       const key = secrets ? (await secrets.get("kiroSdlc.anthropicApiKey")) : undefined;
       if (!key) return false;
+      // health probe — intentional: any error = service unavailable
       try { await fetch("https://api.anthropic.com/v1/models", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(2000) }); return true; }
       catch { return false; }
     }

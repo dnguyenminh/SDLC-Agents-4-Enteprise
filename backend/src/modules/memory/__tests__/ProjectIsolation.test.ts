@@ -61,20 +61,20 @@ describe('SA4E-26 PBT — Scope Clause Properties', () => {
     ), { numRuns: 100 });
   });
 
-  it('PBT-04: Insert always stores project_id from context', () => {
-    fc.assert(fc.property(
+  it('PBT-04: Insert always stores project_id from context', async () => {
+    await fc.assert(fc.asyncProperty(
       fc.record({
         content: fc.string({ minLength: 1, maxLength: 200 }),
         project_id: fc.option(fc.string({ minLength: 1, maxLength: 100 }), { nil: null }),
       }),
-      (entry) => {
-        const id = engine.insert({
+      async (entry) => {
+        const id = await engine.insert({
           content: entry.content,
           summary: entry.content.slice(0, 50),
           type: 'CONTEXT',
           project_id: entry.project_id,
         });
-        const row = engine.findById(id);
+        const row = await engine.findById(id);
         expect(row?.project_id).toBe(entry.project_id);
       },
     ), { numRuns: 100 });
@@ -129,20 +129,20 @@ describe('SA4E-26 UT — buildScopeClause & buildScopeParams', () => {
     expect(params).toEqual([]);
   });
 
-  it('UT-07: insert with project_id stores value in DB', () => {
-    const id = engine.insert({
+  it('UT-07: insert with project_id stores value in DB', async () => {
+    const id = await engine.insert({
       content: 'test content', summary: 'test', type: 'CONTEXT',
       project_id: 'app-A',
     });
-    const row = engine.findById(id);
+    const row = await engine.findById(id);
     expect(row?.project_id).toBe('app-A');
   });
 
-  it('UT-08: insert without project_id stores NULL', () => {
-    const id = engine.insert({
+  it('UT-08: insert without project_id stores NULL', async () => {
+    const id = await engine.insert({
       content: 'test content', summary: 'test', type: 'CONTEXT',
     });
-    const row = engine.findById(id);
+    const row = await engine.findById(id);
     expect(row?.project_id).toBeNull();
   });
 });
@@ -226,8 +226,8 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
   });
   afterEach(() => ctx.close());
 
-  it('IT-01: Search with projectId filters PROJECT entries (SA4E-31: NULL no longer leaks)', () => {
-    const results = engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
+  it('IT-01: Search with projectId filters PROJECT entries (SA4E-31: NULL no longer leaks)', async () => {
+    const results = await engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
     const summaries = results.map(r => r.entry.summary);
     expect(summaries).toContain('seed-1');
     expect(summaries).toContain('seed-7');
@@ -236,57 +236,57 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
     expect(summaries).not.toContain('seed-4');
   });
 
-  it('IT-02: Search without projectId fails closed — no entries (SA4E-31)', () => {
-    const results = engine.search('pattern', 20, undefined, undefined, { userId: 'user-1' });
+  it('IT-02: Search without projectId fails closed — no entries (SA4E-31)', async () => {
+    const results = await engine.search('pattern', 20, undefined, undefined, { userId: 'user-1' });
     expect(results.length).toBe(0);
   });
 
-  it('IT-03: SHARED entries visible only to granted projects (SA4E-31)', () => {
+  it('IT-03: SHARED entries visible only to granted projects (SA4E-31)', async () => {
     const db = ctx.dbManager.getDb();
     db.prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
-    const resultsA = engine.search('Shared knowledge', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
-    const resultsB = engine.search('Shared knowledge', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
+    const resultsA = await engine.search('Shared knowledge', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
+    const resultsB = await engine.search('Shared knowledge', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
     expect(resultsA.some(r => r.entry.summary === 'seed-3')).toBe(true);
     // app-B not granted → SHARED hidden
     expect(resultsB.some(r => r.entry.summary === 'seed-3')).toBe(false);
   });
 
-  it('IT-04: Legacy entries (NULL project_id) no longer leak (SA4E-31)', () => {
-    const resultsA = engine.search('Legacy entry', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
-    const resultsB = engine.search('Legacy entry', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
+  it('IT-04: Legacy entries (NULL project_id) no longer leak (SA4E-31)', async () => {
+    const resultsA = await engine.search('Legacy entry', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
+    const resultsB = await engine.search('Legacy entry', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
     expect(resultsA.some(r => r.entry.summary === 'seed-4')).toBe(false);
     expect(resultsB.some(r => r.entry.summary === 'seed-4')).toBe(false);
   });
 
-  it('IT-05: USER entries filtered by user_id only (unchanged behavior)', () => {
-    const results = engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
+  it('IT-05: USER entries filtered by user_id only (unchanged behavior)', async () => {
+    const results = await engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
     const summaries = results.map(r => r.entry.summary);
     expect(summaries).toContain('seed-5');
     expect(summaries).not.toContain('seed-6');
   });
 
-  it('IT-06: Cross-project isolation — project-A entries invisible from project-B', () => {
-    const results = engine.search('Project A', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
+  it('IT-06: Cross-project isolation — project-A entries invisible from project-B', async () => {
+    const results = await engine.search('Project A', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-B' });
     const summaries = results.map(r => r.entry.summary);
     expect(summaries).not.toContain('seed-1');
     expect(summaries).not.toContain('seed-7');
   });
 
-  it('IT-07: Ingest stores project_id from ScopeContext', () => {
-    const id = engine.insert({
+  it('IT-07: Ingest stores project_id from ScopeContext', async () => {
+    const id = await engine.insert({
       content: 'new entry for test', summary: 'new', type: 'CONTEXT',
       scope: 'PROJECT', project_id: 'app-A',
     });
-    const row = engine.findById(id);
+    const row = await engine.findById(id);
     expect(row?.project_id).toBe('app-A');
   });
 
-  it('IT-08: Ingest without projectId stores NULL', () => {
-    const id = engine.insert({
+  it('IT-08: Ingest without projectId stores NULL', async () => {
+    const id = await engine.insert({
       content: 'legacy entry for test', summary: 'legacy', type: 'CONTEXT',
       scope: 'PROJECT',
     });
-    const row = engine.findById(id);
+    const row = await engine.findById(id);
     expect(row?.project_id).toBeNull();
   });
 
@@ -312,10 +312,10 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
     expect(names).toContain('idx_ke_scope_project');
   });
 
-  it('IT-12: Mixed scope query returns correct entries for user-1 from app-A (SA4E-31)', () => {
+  it('IT-12: Mixed scope query returns correct entries for user-1 from app-A (SA4E-31)', async () => {
     const db = ctx.dbManager.getDb();
     db.prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
-    const results = engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
+    const results = await engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
     const summaries = results.map(r => r.entry.summary);
     expect(summaries).toContain('seed-1'); // PROJECT app-A
     expect(summaries).toContain('seed-3'); // SHARED (granted)

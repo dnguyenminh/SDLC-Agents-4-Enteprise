@@ -1,7 +1,6 @@
 /**
  * SA4E-50 — GraphRepository: encapsulates graph_nodes and graph_edges queries.
- * Centralizes duplicated count logic from analytics.ts + kb-graph-spatial.ts.
- * Implements: UC-03, UC-06, BR-04
+ * SA4E-53: refactored to async DatabaseAdapter API for PostgreSQL compatibility.
  */
 
 import type { DatabaseAdapter } from '../adapters/DatabaseAdapter.js';
@@ -10,31 +9,17 @@ import type { GraphNodeCounts, UpsertNodeParams } from './types.js';
 import { CODE_TYPES_SQL } from '../constants.js';
 import { translateError } from '../errors/index.js';
 
-/**
- * Repository for graph_nodes and graph_edges tables.
- * Uses parameterized queries for all user-supplied values.
- */
 export class GraphRepository implements IGraphRepository {
   constructor(private readonly adapter: DatabaseAdapter) {}
 
-  /**
-   * Get node counts with NULL project_id fallback.
-   * If scoped count is 0, falls back to include NULL project_id nodes.
-   * @param projectId - The project scope identifier
-   * @returns Breakdown of total, code, and kb node counts
-   * @throws RepositoryError on database failure
-   */
-  getNodeCounts(projectId: string): GraphNodeCounts {
+  async getNodeCounts(projectId: string): Promise<GraphNodeCounts> {
     try {
-      let total = this.countByWhere('project_id = ?', [projectId]);
-      let code = this.countCodeByWhere('project_id = ?', [projectId]);
+      let total = await this.countByWhere('project_id = $1', [projectId]);
+      let code = await this.countCodeByWhere('project_id = $1', [projectId]);
 
-      // BR-04: NULL fallback for legacy/unscoped nodes
       if (total === 0) {
-        total = this.countByWhere('project_id = ? OR project_id IS NULL', [projectId]);
-        code = this.countCodeByWhere(
-          '(project_id = ? OR project_id IS NULL)', [projectId],
-        );
+        total = await this.countByWhere('project_id = $1 OR project_id IS NULL', [projectId]);
+        code = await this.countCodeByWhere('(project_id = $1 OR project_id IS NULL)', [projectId]);
       }
 
       return { total, code, kb: total - code };
@@ -43,75 +28,80 @@ export class GraphRepository implements IGraphRepository {
     }
   }
 
-  /**
-   * Delete all graph nodes and edges in a single transaction.
-   * @throws RepositoryError on database failure
-   */
-  resetGraph(): void {
+  async resetGraph(): Promise<void> {
     try {
-      this.adapter.transaction(() => {
-        this.adapter.exec('DELETE FROM graph_nodes');
-        this.adapter.exec('DELETE FROM graph_edges');
+      await this.adapter.transactionAsync(async () => {
+        await this.adapter.execAsync('DELETE FROM graph_nodes');
+        await this.adapter.execAsync('DELETE FROM graph_edges');
       });
     } catch (err) {
       throw translateError(err);
     }
   }
 
-  /**
-   * Insert or replace a graph node.
-   * @param params - Node data to upsert
-   * @throws RepositoryError on database failure
-   */
-  upsertNode(params: UpsertNodeParams): void {
+  async upsertNode(params: UpsertNodeParams): Promise<void> {
     try {
-      this.adapter.run(
-        `INSERT OR REPLACE INTO graph_nodes
-         (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          params.entryId, params.label, params.type, params.tier,
-          params.projectId, params.x ?? null, params.y ?? null,
-          params.z ?? null, params.level ?? null, params.clusterId ?? null,
-        ],
-      );
+      const engine = this.adapter.getEngine();
+      if (engine === 'sqlite') {
+        await this.adapter.runAsync(
+          `INSERT OR REPLACE INTO graph_nodes
+           (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [params.entryId, params.label, params.type, params.tier,
+           params.projectId, params.x ?? null, params.y ?? null,
+           params.z ?? null, params.level ?? null, params.clusterId ?? null],
+        );
+      } else {
+        await this.adapter.runAsync(
+          `INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level, cluster_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           ON CONFLICT (entry_id) DO UPDATE SET
+             label = EXCLUDED.label, type = EXCLUDED.type, tier = EXCLUDED.tier,
+             project_id = EXCLUDED.project_id, x = EXCLUDED.x, y = EXCLUDED.y,
+             z = EXCLUDED.z, level = EXCLUDED.level, cluster_id = EXCLUDED.cluster_id`,
+          [params.entryId, params.label, params.type, params.tier,
+           params.projectId, params.x ?? null, params.y ?? null,
+           params.z ?? null, params.level ?? null, params.clusterId ?? null],
+        );
+      }
     } catch (err) {
       throw translateError(err);
     }
   }
 
-  /**
-   * Register or update a project in project_registry (non-fatal upsert).
-   * @param projectId - The project identifier
-   * @param displayName - Human-readable project name
-   * @param workspacePath - Filesystem path to the workspace
-   * @throws RepositoryError on database failure
-   */
-  registerProject(projectId: string, displayName: string, workspacePath: string): void {
+  async registerProject(projectId: string, displayName: string, workspacePath: string): Promise<void> {
     try {
-      this.adapter.run(
-        `INSERT INTO project_registry (project_id, display_name, workspace_path, last_seen)
-         VALUES (?, ?, ?, datetime('now'))
-         ON CONFLICT(project_id) DO UPDATE SET
-           workspace_path = excluded.workspace_path, last_seen = datetime('now')`,
-        [projectId, displayName, workspacePath],
-      );
+      const engine = this.adapter.getEngine();
+      const ts = engine === 'sqlite' ? `datetime('now')` : 'current_timestamp';
+      if (engine === 'sqlite') {
+        await this.adapter.runAsync(
+          `INSERT INTO project_registry (project_id, display_name, workspace_path, last_seen)
+           VALUES (?, ?, ?, ${ts})
+           ON CONFLICT(project_id) DO UPDATE SET workspace_path = excluded.workspace_path, last_seen = ${ts}`,
+          [projectId, displayName, workspacePath],
+        );
+      } else {
+        await this.adapter.runAsync(
+          `INSERT INTO project_registry (project_id, display_name, workspace_path, last_seen)
+           VALUES ($1, $2, $3, ${ts})
+           ON CONFLICT(project_id) DO UPDATE SET workspace_path = EXCLUDED.workspace_path, last_seen = ${ts}`,
+          [projectId, displayName, workspacePath],
+        );
+      }
     } catch (err) {
       throw translateError(err);
     }
   }
 
-  /** Count graph_nodes matching a WHERE clause. */
-  private countByWhere(where: string, params: unknown[]): number {
-    const row = this.adapter.get<{ cnt: number }>(
+  private async countByWhere(where: string, params: unknown[]): Promise<number> {
+    const row = await this.adapter.getAsync<{ cnt: number }>(
       `SELECT COUNT(*) as cnt FROM graph_nodes WHERE ${where}`, params,
     );
     return row?.cnt ?? 0;
   }
 
-  /** Count code-type graph_nodes matching a WHERE clause. */
-  private countCodeByWhere(where: string, params: unknown[]): number {
-    const row = this.adapter.get<{ cnt: number }>(
+  private async countCodeByWhere(where: string, params: unknown[]): Promise<number> {
+    const row = await this.adapter.getAsync<{ cnt: number }>(
       `SELECT COUNT(*) as cnt FROM graph_nodes WHERE ${where} AND type IN (${CODE_TYPES_SQL})`,
       params,
     );

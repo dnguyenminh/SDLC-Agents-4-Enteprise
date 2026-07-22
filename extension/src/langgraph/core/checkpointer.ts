@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WorkspaceCheckpointer — KSA-210
  * Persists LangGraph checkpoint state to workspace JSON files.
  * Cleanup/sanitization logic in checkpointer-helpers.ts.
@@ -9,6 +9,7 @@ import { BaseCheckpointSaver, Checkpoint, CheckpointMetadata } from "@langchain/
 import type { RunnableConfig } from "@langchain/core/runnables";
 import { PersistedPipelineInfo } from "./state";
 import { sanitizeMetadata, listPersistedPipelines, cleanupPipelines } from "./checkpointer-helpers";
+import { readJsonFile, writeJsonFile } from "../../utils/mcp-config-file";
 
 interface CheckpointTuple { config: RunnableConfig; checkpoint: Checkpoint; metadata?: CheckpointMetadata; parentConfig?: RunnableConfig; }
 type ChannelVersions = Record<string, number | string>;
@@ -23,8 +24,14 @@ export class WorkspaceCheckpointer extends BaseCheckpointSaver {
     if (!threadId) { return undefined; }
     const filePath = path.join(this.stateDir, `${threadId}.json`);
     if (!fs.existsSync(filePath)) { return undefined; }
-    try { const data = JSON.parse(fs.readFileSync(filePath, "utf-8")); return { config, checkpoint: data.graphCheckpoint, metadata: data.state || {} }; }
-    catch { return undefined; }
+    try {
+      const data = readJsonFile<any>(filePath);
+      if (!data) { return undefined; }
+      return { config, checkpoint: data.graphCheckpoint, metadata: data.state || {} };
+    } catch (err) {
+      console.warn("[WorkspaceCheckpointer] getTuple failed for " + threadId + ": " + (err as Error).message);
+      return undefined;
+    }
   }
 
   async put(config: RunnableConfig, checkpoint: Checkpoint, metadata: CheckpointMetadata, _newVersions: ChannelVersions): Promise<RunnableConfig> {
@@ -34,9 +41,16 @@ export class WorkspaceCheckpointer extends BaseCheckpointSaver {
     const filePath = path.join(this.stateDir, `${threadId}.json`);
     const tmpPath = filePath + ".tmp";
     let createdAt = new Date().toISOString();
-    if (fs.existsSync(filePath)) { try { createdAt = JSON.parse(fs.readFileSync(filePath, "utf-8")).createdAt || createdAt; } catch { } }
+    if (fs.existsSync(filePath)) {
+      try {
+        const existing = readJsonFile<any>(filePath);
+        createdAt = existing?.createdAt || createdAt;
+      } catch (err) {
+        console.debug("[WorkspaceCheckpointer] Could not read existing createdAt: " + (err as Error).message);
+      }
+    }
     const data = { version: 1, schemaVersion: "1.0.0", graphCheckpoint: checkpoint, state: sanitizeMetadata(metadata), createdAt, lastModified: new Date().toISOString() };
-    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf-8");
+    writeJsonFile(tmpPath, data);
     fs.renameSync(tmpPath, filePath);
     return config;
   }
@@ -47,22 +61,31 @@ export class WorkspaceCheckpointer extends BaseCheckpointSaver {
     const filePath = path.join(this.stateDir, `${threadId}.json`);
     if (!fs.existsSync(filePath)) { return; }
     try {
-      const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      const data = readJsonFile<any>(filePath);
+      if (!data) { return; }
       if (!data.pendingWrites) { data.pendingWrites = []; }
       data.pendingWrites.push(...writes);
       data.lastModified = new Date().toISOString();
       const tmpPath = filePath + ".tmp";
-      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), "utf-8");
+      writeJsonFile(tmpPath, data);
       fs.renameSync(tmpPath, filePath);
-    } catch { /* non-critical */ }
+    } catch (err) {
+      console.warn("[WorkspaceCheckpointer] putWrites failed for thread " + threadId + ": " + (err as Error).message);
+    }
   }
 
   async *list(config: RunnableConfig, _options?: { limit?: number; before?: RunnableConfig; filter?: Record<string, unknown> }): AsyncGenerator<CheckpointTuple> {
     if (!fs.existsSync(this.stateDir)) { return; }
     const files = fs.readdirSync(this.stateDir).filter(f => f.endsWith(".json") && !f.endsWith(".tmp"));
     for (const file of files) {
-      try { const data = JSON.parse(fs.readFileSync(path.join(this.stateDir, file), "utf-8")); yield { config: { configurable: { thread_id: file.replace(".json", "") } }, checkpoint: data.graphCheckpoint, metadata: data.state || {} }; }
-      catch { /* skip */ }
+      try {
+        const data = readJsonFile<any>(path.join(this.stateDir, file));
+        if (data) {
+          yield { config: { configurable: { thread_id: file.replace(".json", "") } }, checkpoint: data.graphCheckpoint, metadata: data.state || {} };
+        }
+      } catch (err) {
+        console.debug("[WorkspaceCheckpointer] list: skipping corrupt checkpoint file " + file + ": " + (err as Error).message);
+      }
     }
   }
 

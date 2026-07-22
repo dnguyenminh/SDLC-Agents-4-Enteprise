@@ -29,10 +29,10 @@ describe('IT-02: CallTool usage counting', () => {
   it('success increments counter (BR-07); error result not counted (BR-12)', async () => {
     const ok = await harness.client.callTool({ name: 'mem_search', arguments: {} });
     expect(ok.isError).toBeFalsy();
-    expect(ctx.engine.getToolUsage('mem_search')[0].call_count).toBe(1);
+    expect((await ctx.engine.getToolUsage('mem_search'))[0].call_count).toBe(1);
 
     const bad = await harness.client.callTool({ name: 'failing_tool', arguments: {} });
     expect(bad.isError).toBe(true);
-    expect(ctx.engine.getToolUsage('failing_tool')).toEqual([]);
+    expect(await ctx.engine.getToolUsage('failing_tool')).toEqual([]);
   });
 });

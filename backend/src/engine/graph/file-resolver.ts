@@ -1,7 +1,7 @@
 /**
  * KSA-155: File Resolver - resolves import paths to indexed file paths.
  * Handles relative imports, bare specifiers, and extension resolution.
- * SA4E-45: Refactored to use DatabaseAdapter abstraction.
+ * SA4E-45: Refactored to use DatabaseAdapter async abstraction.
  */
 
 import * as path from 'path';
@@ -9,9 +9,10 @@ import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js
 import { buildCodeScopeFilter } from '../query/code-intel-isolation.js';
 
 export class FileResolver {
-  private indexedFiles: Set<string>;
+  private indexedFiles: Set<string> = new Set();
   private workspaceRoot: string;
   private projectId: string | undefined;
+  private initialized: Promise<void>;
 
   private static readonly EXTENSIONS = ['.ts', '.js', '.tsx', '.jsx', '.kt', '.py', '/index.ts', '/index.js'];
   private static readonly STDLIB_MODULES = new Set([
@@ -31,14 +32,20 @@ export class FileResolver {
   constructor(adapter: DatabaseAdapter, workspaceRoot: string, projectId?: string) {
     this.workspaceRoot = workspaceRoot;
     this.projectId = projectId;
-    this.indexedFiles = this.loadIndexedFiles(adapter);
+    this.initialized = this.loadIndexedFiles(adapter);
   }
 
-  private loadIndexedFiles(adapter: DatabaseAdapter): Set<string> {
+  /** Ensure schema is loaded before use. Call from async consumers. */
+  async ready(): Promise<void> {
+    await this.initialized;
+  }
+
+  private async loadIndexedFiles(adapter: DatabaseAdapter): Promise<void> {
     const scope = buildCodeScopeFilter(this.projectId, 'files');
-    const rows = adapter.all<{ relative_path: string }>(
-      `SELECT relative_path FROM files WHERE ${scope.clause}`, [...scope.params]);
-    return new Set(rows.map(r => r.relative_path));
+    const rows = await adapter.allAsync<{ relative_path: string }>(
+      `SELECT relative_path FROM files WHERE ${scope.clause}`, [...scope.params],
+    );
+    this.indexedFiles = new Set(rows.map(r => r.relative_path));
   }
 
   /** Resolve an input file path to a canonical indexed path. */
@@ -80,8 +87,8 @@ export class FileResolver {
   }
 
   /** Refresh the indexed files set (call after re-indexing). */
-  refresh(adapter: DatabaseAdapter): void {
-    this.indexedFiles = this.loadIndexedFiles(adapter);
+  async refresh(adapter: DatabaseAdapter): Promise<void> {
+    await this.loadIndexedFiles(adapter);
   }
 
   private findWithExtensions(basePath: string): string | null {

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { RemoteBackendClient } from "./remote-backend-client";
+import { INotificationSubscriber } from "./types/server-types";
 
 export type KbEventType =
   | "kb_entry_added"
@@ -47,7 +47,7 @@ export class KbEventBus implements vscode.Disposable {
 
   constructor(
     private readonly outputChannel: vscode.OutputChannel,
-    private readonly remoteClient: RemoteBackendClient
+    private readonly remoteClient: INotificationSubscriber
   ) {}
 
   connect(): void {
@@ -93,8 +93,9 @@ export class KbEventBus implements vscode.Disposable {
         data: notification.params || {}
       };
       this.dispatchEvent(event);
-    } catch {
-      // Ignore
+    } catch (err) {
+      // Event dispatch failed — non-fatal, log for debugging only
+      console.debug(`[KbEventBus] dispatchEvent failed (non-fatal): ${(err as Error).message}`);
     }
   }
 
@@ -123,3 +124,4 @@ export class KbEventBus implements vscode.Disposable {
     this.debounceTimers.set(panel, timer);
   }
 }
+

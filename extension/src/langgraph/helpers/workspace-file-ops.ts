@@ -22,11 +22,12 @@ export async function readWorkspaceFile(relativePath: string): Promise<string | 
     const uri = vscode.Uri.file(fullPath);
     const bytes = await vscode.workspace.fs.readFile(uri);
     return Buffer.from(bytes).toString("utf-8");
-  } catch {
+  } catch (err) {
+    console.debug(`[WorkspaceFileOps] readWorkspaceFile failed (non-fatal): ${(err as Error).message}`);
     return null;
   }
-}
 
+}
 export async function writeWorkspaceFile(
   relativePath: string,
   content: string,
@@ -52,7 +53,8 @@ export async function writeWorkspaceFile(
     }, TOOL_CALL_TIMEOUT_MS);
     if (fileHookFn) await fileHookFn(relativePath);
     return !result.includes("error");
-  } catch {
+  } catch (err) {
+    console.debug(`[WorkspaceFileOps] stream_write_file failed, falling back to VS Code API: ${(err as Error).message}`);
     return await writeViaVscodeApi(relativePath, content);
   }
 }
@@ -67,11 +69,12 @@ async function writeViaVscodeApi(relativePath: string, content: string): Promise
     const uri = vscode.Uri.file(fullPath);
     await vscode.workspace.fs.writeFile(uri, Buffer.from(content, "utf-8"));
     return true;
-  } catch {
+  } catch (err) {
+    console.debug(`[WorkspaceFileOps] writeViaVscodeApi failed (non-fatal): ${(err as Error).message}`);
     return false;
   }
-}
 
+}
 export async function appendWorkspaceFile(
   relativePath: string, content: string, mcpBridge: McpBridge
 ): Promise<boolean> {
@@ -80,11 +83,12 @@ export async function appendWorkspaceFile(
       file_path: relativePath, content, mode: "append",
     }, TOOL_CALL_TIMEOUT_MS);
     return !result.includes("error");
-  } catch {
+  } catch (err) {
+    console.debug(`[WorkspaceFileOps] appendWorkspaceFile failed (non-fatal): ${(err as Error).message}`);
     return false;
   }
-}
 
+}
 export async function exportDocx(
   mdRelativePath: string, docxFileName: string, mcpBridge: McpBridge
 ): Promise<string | null> {
@@ -131,11 +135,12 @@ export function getWorkspaceRoot(): string | null {
   try {
     const vscode = require("vscode");
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? null;
-  } catch {
+  } catch (err) {
+    console.debug(`[WorkspaceFileOps] getWorkspaceRoot failed (non-fatal): ${(err as Error).message}`);
     return null;
   }
-}
 
+}
 export async function readCodeIntelligence(moduleName?: string): Promise<string | null> {
   const projectStructure = await readWorkspaceFile(
     ".analysis/code-intelligence/project-structure.md"
@@ -151,5 +156,8 @@ async function cleanupEmbeddedFile(embeddedPath: string): Promise<void> {
   try {
     const vscode = require("vscode");
     await vscode.workspace.fs.delete(vscode.Uri.file(embeddedPath));
-  } catch { /* ignore cleanup failure */ }
+  } catch (err) {
+    console.debug(`[workspace-file-ops] cleanupEmbeddedFile failed (non-fatal): ${(err as Error).message}`);
+  }
 }
+

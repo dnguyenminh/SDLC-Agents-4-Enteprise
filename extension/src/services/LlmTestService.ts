@@ -88,9 +88,10 @@ export class LlmTestService {
       }
       vscode.commands.executeCommand("kiroSdlc.notifyLlmDisconnected");
       return { success: false, error: "LLM provider is not reachable." };
-    } catch {
+    } catch (err) {
       vscode.commands.executeCommand("kiroSdlc.notifyLlmDisconnected");
-      return { success: false, error: "Connection test failed." };
+      return { success: false, error: `Connection test failed: ${"$"}{(err as Error).message}` };
     }
   }
 }
+

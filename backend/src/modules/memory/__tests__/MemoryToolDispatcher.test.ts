@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+﻿import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -24,7 +24,7 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
     dbManager.initialize();
 
     engine = new MemoryEngine(new SqliteDbAdapter(dbManager.getDb()));
-    queryLayer = new QueryLayer(dbManager);
+    queryLayer = new QueryLayer(new SqliteDbAdapter(dbManager.getDb()));
     dispatcher = new MemoryToolDispatcher(engine, tmpDir, queryLayer);
   });
 
@@ -79,7 +79,7 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
     expect(statusRes).toBe('Entries: 2 | Edges: 1');
 
     // 5. Verify the code entity was inserted with type CODE_ENTITY
-    const entries = engine.findFiltered(undefined, 'CODE_ENTITY');
+    const entries = await engine.findFiltered(undefined, 'CODE_ENTITY');
     expect(entries).toHaveLength(1);
     expect(entries[0].summary).toBe('class: MyClass (src/index.ts)');
     expect(entries[0].content).toContain('class MyClass');

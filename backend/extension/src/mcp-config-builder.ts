@@ -8,6 +8,7 @@ import * as os from "os";
 import * as vscode from "vscode";
 import { MCP_SERVERS_DIR, GITHUB_RELEASE_REPO, McpVariant } from "./config";
 import { debugError } from "./debug-logger";
+import { writeJsonFile, readJsonFile } from "./utils/mcp-config-file";
 
 export function resolveConfig(variant: McpVariant, root: string): Record<string, unknown> {
   const serversDir = getMcpServersDir(root);
@@ -35,27 +36,21 @@ export function writeDefaultOrchestrationConfig(root: string): void {
       discoveryTimeoutMs: 10000, kbSearchTimeoutMs: 2000
     }
   };
-  fs.mkdirSync(path.dirname(orchPath), { recursive: true });
-  fs.writeFileSync(orchPath, JSON.stringify(defaultConfig, null, 2));
+  writeJsonFile(orchPath, defaultConfig);
 }
 
 export function writeMcpConfig(root: string, serverConfig: Record<string, unknown>): void {
   const mcpConfigPath = path.join(root, ".kiro", "settings", "mcp.json");
   let config: Record<string, unknown> = { mcpServers: {} };
-  if (fs.existsSync(mcpConfigPath)) {
-    try {
-      config = JSON.parse(fs.readFileSync(mcpConfigPath, "utf-8"));
-      config.mcpServers = config.mcpServers || {};
-    } catch (err) {
-      debugError("[McpInjector] Failed to parse existing mcp.json, resetting", err as Error);
-      config = { mcpServers: {} };
-    }
+  const existing = readJsonFile<Record<string, unknown>>(mcpConfigPath);
+  if (existing) {
+    config = existing;
+    config.mcpServers = config.mcpServers || {};
   }
   const servers = config.mcpServers as Record<string, unknown>;
-  const existing = (servers["code-intelligence"] as Record<string, unknown>) || {};
-  servers["code-intelligence"] = { ...existing, ...serverConfig };
-  fs.mkdirSync(path.dirname(mcpConfigPath), { recursive: true });
-  fs.writeFileSync(mcpConfigPath, JSON.stringify(config, null, 2));
+  const existingServer = (servers["code-intelligence"] as Record<string, unknown>) || {};
+  servers["code-intelligence"] = { ...existingServer, ...serverConfig };
+  writeJsonFile(mcpConfigPath, config);
 }
 
 export async function downloadVariant(variant: McpVariant, root: string): Promise<boolean> {
@@ -110,9 +105,10 @@ async function extractZip(zipPath: string, destDir: string): Promise<void> {
     try {
       const { execFileSync } = await import("child_process");
       execFileSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath], { stdio: "ignore" });
-    } finally { try { fs.unlinkSync(scriptPath); } catch { } }
+    } finally { try { fs.unlinkSync(scriptPath); } catch (cleanupErr) { console.debug("[mcp-config-builder] Failed to remove temp script: " + (cleanupErr as Error).message); } }
   } else {
     const { execFileSync } = await import("child_process");
     execFileSync("unzip", ["-o", resolvedZip, "-d", resolvedDest], { stdio: "ignore" });
   }
 }
+

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Symbol Search QuickPick — KSA-179
  * Provides a debounced symbol search via MCP code_search/code_symbols tools.
  * User types → debounced search → shows results with file:line → navigate on select.
@@ -6,6 +6,8 @@
 
 import * as vscode from "vscode";
 import { McpServerManager } from "./mcp-server-manager";
+import { IServerManager } from "./types/server-types";
+import { openFileAndReveal, normalizeResponse } from "./utils/panel-utils";
 
 interface SymbolResult {
   name: string;
@@ -25,7 +27,7 @@ const DEBOUNCE_MS = 300;
  */
 export function registerSymbolSearch(
   context: vscode.ExtensionContext,
-  mcpManager: McpServerManager
+  mcpManager: IServerManager
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("kiroSdlc.symbolSearch", () =>
@@ -34,7 +36,7 @@ export function registerSymbolSearch(
   );
 }
 
-async function showSymbolSearchPick(mcpManager: McpServerManager): Promise<void> {
+async function showSymbolSearchPick(mcpManager: IServerManager): Promise<void> {
   const quickPick = vscode.window.createQuickPick<SymbolQuickPickItem>();
   quickPick.placeholder = "Search symbols (classes, functions, interfaces)...";
   quickPick.matchOnDescription = true;
@@ -68,14 +70,15 @@ async function showSymbolSearchPick(mcpManager: McpServerManager): Promise<void>
 
 async function performSearch(
   quickPick: vscode.QuickPick<SymbolQuickPickItem>,
-  mcpManager: McpServerManager,
+  mcpManager: IServerManager,
   query: string
 ): Promise<void> {
   try {
     const raw = await mcpManager.invokeTool("code_search", { query, limit: 20 });
     const results = parseResults(raw);
     quickPick.items = results.map(toQuickPickItem);
-  } catch {
+  } catch (err) {
+    console.warn("[symbol-search] performSearch failed: " + (err as Error).message);
     quickPick.items = [{ label: "$(error) Search failed", description: "MCP server may be unavailable", result: undefined }];
   } finally {
     quickPick.busy = false;
@@ -83,18 +86,13 @@ async function performSearch(
 }
 
 function parseResults(raw: string): SymbolResult[] {
-  try {
-    const parsed = JSON.parse(raw);
-    const items = Array.isArray(parsed) ? parsed : (parsed.results || parsed.symbols || []);
-    return items.map((item: any) => ({
-      name: item.name || item.symbol || "unknown",
-      kind: item.kind || item.type || "symbol",
-      file: item.file || item.path || "",
-      line: item.line || item.startLine || 1,
-    }));
-  } catch {
-    return [];
-  }
+  const items = normalizeResponse<Record<string, unknown>>(raw, "symbols");
+  return items.map((item) => ({
+    name: item["name"] as string || item["symbol"] as string || "unknown",
+    kind: item["kind"] as string || item["type"] as string || "symbol",
+    file: item["file"] as string || item["path"] as string || "",
+    line: item["line"] as number || item["startLine"] as number || 1,
+  }));
 }
 
 function toQuickPickItem(result: SymbolResult): SymbolQuickPickItem {
@@ -123,13 +121,10 @@ async function navigateToSymbol(item: SymbolQuickPickItem): Promise<void> {
   if (!item.result) { return; }
   const { file, line } = item.result;
   try {
-    const uri = vscode.Uri.file(file);
-    const doc = await vscode.workspace.openTextDocument(uri);
-    const editor = await vscode.window.showTextDocument(doc);
-    const pos = new vscode.Position(Math.max(0, line - 1), 0);
-    editor.selection = new vscode.Selection(pos, pos);
-    editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
-  } catch {
+    await openFileAndReveal(file, line);
+  } catch (err) {
+    console.warn("[symbol-search] Failed to navigate to symbol: " + (err as Error).message);
     vscode.window.showErrorMessage(`Cannot open file: ${file}`);
   }
 }
+

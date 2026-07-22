@@ -1,10 +1,12 @@
 /**
  * SA4E-42 — per-event re-index orchestration (Facade over embed + repository).
+ * SA4E-53: converted to async DatabaseAdapter for PostgreSQL compatibility.
  * Applies the latest-state guard (IR-7), embeds tools (skip-on-fail), and persists
  * scoped changes fail-soft (BR-06). Never throws to the caller.
  */
 import type { Logger } from 'pino';
 import type { ToolDefinition } from '../../../types/tool.js';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { DbProvider, IEmbedder, IToolSource } from './models/ports.js';
 import type { PreparedTool } from './models/PreparedTool.js';
 import type { ReindexResult } from './models/ReindexResult.js';
@@ -24,8 +26,8 @@ export class ReindexService {
 
   async reindexConnected(server: string): Promise<ReindexResult> {
     const start = Date.now();
-    const db = this.resolveDb(server);
-    if (!db) return this.empty(server, start);
+    const adapter = this.resolveDb(server);
+    if (!adapter) return this.empty(server, start);
     if (!this.toolSource.isServerConnected(server)) {
       this.logger.warn({ server }, 're-index skipped: server not connected (stale event)');
       return this.empty(server, start);
@@ -36,16 +38,16 @@ export class ReindexService {
       return this.empty(server, start);
     }
     const prepared = await this.prepareTools(tools, server);
-    return this.persistConnected(db, prepared, server, start);
+    return this.persistConnected(adapter, prepared, server, start);
   }
 
   async reindexRemoved(server: string): Promise<ReindexResult> {
     const start = Date.now();
-    const db = this.resolveDb(server);
-    if (!db) return this.empty(server, start);
-    const repo = new McpToolsRepository(db, this.logger);
+    const adapter = this.resolveDb(server);
+    if (!adapter) return this.empty(server, start);
+    const repo = new McpToolsRepository(adapter, this.logger);
     try {
-      const removed = repo.deleteByServer(server);
+      const removed = await repo.deleteByServer(server);
       this.logger.info({ server, removed }, 're-index remove done');
       return { server, upserted: 0, removed, elapsedMs: Date.now() - start };
     } catch (e) {
@@ -57,10 +59,10 @@ export class ReindexService {
     }
   }
 
-  private resolveDb(server: string) {
-    const db = this.dbProvider();
-    if (!db) this.logger.warn({ server }, 'memory not ready; skip, will retry next event');
-    return db;
+  private resolveDb(server: string): DatabaseAdapter | null {
+    const adapter = this.dbProvider();
+    if (!adapter) this.logger.warn({ server }, 'memory not ready; skip, will retry next event');
+    return adapter;
   }
 
   private scopedTools(server: string): ToolDefinition[] {
@@ -97,15 +99,15 @@ export class ReindexService {
     }
   }
 
-  private persistConnected(
-    db: NonNullable<ReturnType<DbProvider>>,
+  private async persistConnected(
+    adapter: DatabaseAdapter,
     prepared: PreparedTool[],
     server: string,
     start: number,
-  ): ReindexResult {
-    const repo = new McpToolsRepository(db, this.logger);
+  ): Promise<ReindexResult> {
+    const repo = new McpToolsRepository(adapter, this.logger);
     try {
-      const counts = repo.applyConnected(prepared, server);
+      const counts = await repo.applyConnected(prepared, server);
       const elapsedMs = Date.now() - start;
       this.warnIfSlow(server, elapsedMs);
       this.logger.info({ server, ...counts, elapsedMs }, 're-index add/update done');

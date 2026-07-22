@@ -5,13 +5,13 @@
 
 import * as vscode from "vscode";
 import { WebviewToExtMessage, SERVER_CONSTANTS } from "../types";
-import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
 import { BasePanel } from "./base-panel";
 
 export class DashboardPanel extends BasePanel {
   private refreshTimer: NodeJS.Timeout | undefined;
 
-  constructor(mcpManager: McpServerManager, extensionUri: vscode.Uri) {
+  constructor(mcpManager: IServerManager, extensionUri: vscode.Uri) {
     super("dashboard", mcpManager, extensionUri);
   }
 

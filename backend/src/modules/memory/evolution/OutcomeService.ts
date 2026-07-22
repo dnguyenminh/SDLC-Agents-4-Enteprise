@@ -1,6 +1,7 @@
 /**
  * OutcomeService — CRUD for entry outcomes + Bayesian factor calculation.
  * Formula: (successes + 1) / (total + 2) — Laplace smoothing.
+ * SA4E-53: converted to async API for PostgreSQL compatibility.
  */
 
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
@@ -33,28 +34,28 @@ export class OutcomeService {
     this.dialect = new DialectHelper(adapter.getEngine());
   }
 
-  record(
+  async record(
     entryId: number,
     outcome: string,
     agentName?: string,
     context?: string,
-  ): RecordResult {
-    this.validateEntry(entryId);
+  ): Promise<RecordResult> {
+    await this.validateEntry(entryId);
     this.validateOutcome(outcome);
 
-    this.insertOutcome(entryId, outcome as Outcome, agentName, context);
+    await this.insertOutcome(entryId, outcome as Outcome, agentName, context);
 
     if (outcome === 'success') {
-      this.boostConfidence(entryId);
+      await this.boostConfidence(entryId);
     }
 
-    const factor = this.getFactorForEntry(entryId);
-    const stats = this.getStats(entryId);
+    const factor = await this.getFactorForEntry(entryId);
+    const stats = await this.getStats(entryId);
     return { recorded: true, new_outcome_factor: factor, total_outcomes: stats.total };
   }
 
-  getStats(entryId: number): OutcomeStats {
-    const rows = this.adapter.all<{ outcome: string; cnt: number }>(
+  async getStats(entryId: number): Promise<OutcomeStats> {
+    const rows = await this.adapter.allAsync<{ outcome: string; cnt: number }>(
       `SELECT outcome, COUNT(*) as cnt FROM entry_outcomes WHERE entry_id = ? GROUP BY outcome`,
       [entryId],
     );
@@ -73,14 +74,14 @@ export class OutcomeService {
     return { successes, failures, total };
   }
 
-  getFactorForEntry(entryId: number): number {
-    const stats = this.getStats(entryId);
+  async getFactorForEntry(entryId: number): Promise<number> {
+    const stats = await this.getStats(entryId);
     if (stats.total === 0) return 0.5;
     return (stats.successes + 1) / (stats.total + 2);
   }
 
-  private validateEntry(entryId: number): void {
-    const row = this.adapter.get<{ id: number }>(
+  private async validateEntry(entryId: number): Promise<void> {
+    const row = await this.adapter.getAsync<{ id: number }>(
       'SELECT id FROM knowledge_entries WHERE id = ?',
       [entryId],
     );
@@ -93,20 +94,20 @@ export class OutcomeService {
     }
   }
 
-  private insertOutcome(
+  private async insertOutcome(
     entryId: number,
     outcome: Outcome,
     agentName?: string,
     context?: string,
-  ): void {
-    this.adapter.run(
+  ): Promise<void> {
+    await this.adapter.runAsync(
       `INSERT INTO entry_outcomes (entry_id, outcome, agent_name, context) VALUES (?, ?, ?, ?)`,
       [entryId, outcome, agentName ?? null, context ?? null],
     );
   }
 
-  private boostConfidence(entryId: number): void {
-    this.adapter.run(
+  private async boostConfidence(entryId: number): Promise<void> {
+    await this.adapter.runAsync(
       `UPDATE knowledge_entries SET confidence = MIN(confidence * 1.1, 1.0), updated_at = ${this.dialect.now()} WHERE id = ?`,
       [entryId],
     );

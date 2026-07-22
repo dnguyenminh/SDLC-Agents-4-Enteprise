@@ -5,16 +5,17 @@
  */
 
 import { getIndexAdapter, getActiveEngine } from './core.js';
+import type { DatabaseEngine } from '../../database/adapters/DatabaseAdapter.js';
+import { DialectHelper } from '../../database/dialect/DialectHelper.js';
 
-/** Check if a table exists (SQLite only guard). */
+/** Check if a table exists using cross-engine DialectHelper query. */
 async function hasTable(tableName: string): Promise<boolean> {
-  if (getActiveEngine() !== 'sqlite') return true;
   const adapter = getIndexAdapter();
-  const row = await adapter.getAsync<{ cnt: number }>(
-    "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name=?",
-    [tableName],
+  const dialect = new DialectHelper(getActiveEngine() as DatabaseEngine);
+  const row = await adapter.getAsync<Record<string, string>>(
+    dialect.tableExistsQuery(tableName),
   );
-  return (row?.cnt ?? 0) > 0;
+  return !!row;
 }
 
 /** Deterministic hash-based 2D position from content string. */

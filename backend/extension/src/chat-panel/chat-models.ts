@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Chat Panel Model Catalog — KSA-237
  * Single source of truth for the per-provider model list shown in the Chat
  * Panel model dropdown. Mirrors the catalog used by the Settings panel so the
@@ -161,7 +161,9 @@ export async function fetchGatewayModels(baseUrl: string): Promise<ChatModelEntr
       });
 
     return models.length > 0 ? models : null;
-  } catch {
+  } catch (err) {
+      console.debug("[chat-models] fetchGatewayModels failed: " + (err as Error).message);
     return null;
   }
 }
+
