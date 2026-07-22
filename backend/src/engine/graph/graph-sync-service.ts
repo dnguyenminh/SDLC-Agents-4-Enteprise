@@ -1,5 +1,6 @@
-/**
+﻿/**
  * SA4E-41 — GraphSyncService (Facade).
+ * SA4E-53: converted to async API for PostgreSQL compatibility.
  *
  * Projects a tenant's code symbols into graph_nodes table in the unified DB so the
  * KB Graph visualization shows per-project code nodes. Scoped + idempotent:
@@ -8,6 +9,7 @@
 
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { DialectHelper } from '../../database/dialect/DialectHelper.js';
+import { KIND_TO_TYPE } from '../../modules/kb-graph/service/constants.js';
 import type { Logger } from 'pino';
 
 interface CodeSymbolRow {
@@ -21,6 +23,7 @@ const CODE_KINDS = ['class', 'interface', 'function', 'method', 'enum', 'type', 
 
 export class GraphSyncService {
   private readonly adminDialect: DialectHelper;
+  private readonly indexDialect: DialectHelper;
 
   constructor(
     private readonly indexAdapter: DatabaseAdapter,
@@ -28,17 +31,18 @@ export class GraphSyncService {
     private readonly log: Logger,
   ) {
     this.adminDialect = new DialectHelper(adminAdapter.getEngine());
+    this.indexDialect = new DialectHelper(indexAdapter.getEngine());
     if (indexAdapter.getEngine() !== adminAdapter.getEngine()) {
       this.log.warn('[graph-sync] Index and admin adapters use different engines');
     }
   }
 
-  /** Re-project a tenant's code symbols into graph_nodes (bounded). */
-  syncProjectSymbols(projectId: string, limit = 2000): void {
+  /** Re-project a tenant's code symbols into graph_nodes. SA4E-53: async. */
+  async syncProjectSymbols(projectId: string): Promise<void> {
     if (!projectId) return; // fail-closed
     try {
-      const symbols = this.readTopSymbols(projectId, limit);
-      this.replaceCodeNodes(projectId, symbols);
+      const symbols = await this.readTopSymbols(projectId);
+      await this.replaceCodeNodes(projectId, symbols);
       this.log.info(`[graph-sync] Synced ${symbols.length} code nodes for project ${projectId}`);
     } catch (err) {
       // Non-fatal: visualization projection must never fail the index run.
@@ -46,32 +50,35 @@ export class GraphSyncService {
     }
   }
 
-  private readTopSymbols(projectId: string, limit: number): CodeSymbolRow[] {
+  private async readTopSymbols(projectId: string): Promise<CodeSymbolRow[]> {
     const placeholders = CODE_KINDS.map(() => '?').join(',');
-    return this.indexAdapter.all<CodeSymbolRow>(
+    return this.indexAdapter.allAsync<CodeSymbolRow>(
       `SELECT s.id, s.name, s.kind, f.relative_path
        FROM symbols s JOIN files f ON s.file_id = f.id
        WHERE s.project_id = ? AND s.kind IN (${placeholders})
-       ORDER BY (s.is_exported = 1) DESC, s.complexity DESC
-       LIMIT ?`,
-      [projectId, ...CODE_KINDS, limit],
+       ORDER BY (s.is_exported = 1) DESC, s.complexity DESC`,
+      [projectId, ...CODE_KINDS],
     );
   }
 
-  private replaceCodeNodes(projectId: string, symbols: CodeSymbolRow[]): void {
+  private async replaceCodeNodes(projectId: string, symbols: CodeSymbolRow[]): Promise<void> {
     const total = Math.max(symbols.length, 1);
-    this.adminAdapter.transaction(() => {
-      this.adminAdapter.run(
-        "DELETE FROM graph_nodes WHERE project_id = ? AND entry_id LIKE 'code:%'", [projectId]);
-      const sql = this.adminDialect.insertIgnore('graph_nodes',
-        ['entry_id','label','type','tier','project_id','x','y','z','level','cluster_id'], 'entry_id');
-      const ins = this.adminAdapter.prepare(sql);
-      symbols.forEach((s, i) => {
-        const pos = fibonacciSphere(i, total);
-        ins.run(`code:${s.id}`, this.toLabel(s), 'CODE_ENTITY', 'CODE',
-          projectId, pos.x, pos.y, pos.z, 'micro', `code-${projectId}`);
-      });
-    });
+    // Delete old code nodes — avoid transactionAsync which can cause pool issues with nested awaits
+    await this.adminAdapter.runAsync(
+      "DELETE FROM graph_nodes WHERE project_id = ? AND entry_id LIKE 'code:%'",
+      [projectId],
+    );
+    const sql = this.adminDialect.insertIgnore('graph_nodes',
+      ['entry_id','label','type','tier','project_id','x','y','z','level','cluster_id'], 'entry_id');
+    for (let i = 0; i < symbols.length; i++) {
+      const s = symbols[i];
+      const pos = fibonacciSphere(i, total);
+      const nodeType = KIND_TO_TYPE[s.kind] || 'CODE_ENTITY';
+      await this.adminAdapter.runAsync(sql, [
+        `code:${s.id}`, this.toLabel(s), nodeType, 'CODE',
+        projectId, pos.x, pos.y, pos.z, 'micro', `code-${projectId}`,
+      ]);
+    }
   }
 
   private toLabel(s: CodeSymbolRow): string {

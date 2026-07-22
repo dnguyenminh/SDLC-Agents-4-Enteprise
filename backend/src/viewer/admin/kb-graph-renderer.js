@@ -108,7 +108,10 @@
       this.controls.maxDistance = 50000;
       this.controls.target.set(0, 0, 0);
       this.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+      this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
       this.controls.addEventListener('end', function() { self._updateMode(false); });
+      // Prevent page scroll from hijacking wheel zoom on the canvas
+      this.renderer.domElement.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
       this._clock = new THREE.Clock();
 
       // Custom input: node selection (click), focus (dblclick), node drag.
