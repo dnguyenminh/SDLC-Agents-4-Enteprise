@@ -22,6 +22,8 @@ import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js
 import { ScopePromotionService } from './promotion/index.js';
 import { MemoryModuleBuilder } from './MemoryModuleBuilder.js';
 import { withErrorHandling, withScopeContext, withResultFormat } from '../../tool-router/ToolHandlerDecorators.js';
+import { bus, Events } from '../../shared/EventBus.js';
+import { initLLMInBackground } from './llm/LLMInitializer.js';
 
 /**
  * Injectable dependencies for MemoryModule.
@@ -87,10 +89,39 @@ export class MemoryModule implements IModule {
       builder.withPromotion();
       builder.withBackgroundLLM();
       builder.build();
+
+      // Subscribe to LLM config changes — re-init services immediately without restart
+      bus.on(Events.LLM_CONFIG_CHANGED, () => {
+        this.logger.info('[MemoryModule] LLM config changed — re-initializing LLM services');
+        this.reinitLLM();
+      });
+
+      // Subscribe to TaskWorker config changes — apply concurrency/intervals without restart
+      bus.on(Events.TASK_WORKER_CONFIG_CHANGED, (payload: any) => {
+        if (!this.taskWorker) return;
+        const key = payload?.key as string;
+        const raw = payload?.value;
+        if (key === 'concurrency') this.taskWorker.updateConfig({ concurrency: parseInt(String(raw), 10) });
+        else if (key === 'baseInterval') this.taskWorker.updateConfig({ baseInterval: parseInt(String(raw), 10) });
+        else if (key === 'maxInterval') this.taskWorker.updateConfig({ maxInterval: parseInt(String(raw), 10) });
+      });
     } catch (error) {
       this.logger.error({ err: error }, 'Failed to initialize memory module');
       this._status = 'error';
     }
+  }
+
+  /**
+   * Re-initialize LLM services (TagAnalyzer + ClassifyService) using latest config from DB.
+   * Called automatically when admin saves LLM config via UI — no restart needed.
+   * Safe to call while running — fire-and-forget, replaces existing service references.
+   */
+  reinitLLM(): void {
+    if (!this.dispatcher || !this.taskWorker) {
+      this.logger.warn('[MemoryModule] Cannot reinit LLM — dispatcher or taskWorker not ready');
+      return;
+    }
+    initLLMInBackground(this.dispatcher, this.taskWorker, this.logger);
   }
 
   async shutdown(): Promise<void> {

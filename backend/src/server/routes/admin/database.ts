@@ -34,7 +34,17 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
   // SA4E-45: registry for hot-swap after engine switch
   const registry = ctx.registry;
 
-  app.get('/api/admin/database/status', (c) => {
+  // SEC: Auth helper — all database endpoints require CONFIG_EDIT permission
+  async function authGuard(c: any): Promise<Response | null> {
+    const user = await ctx.requireAuth(c);
+    if (user instanceof Response) return user;
+    const perm = await ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
+    if (perm instanceof Response) return perm;
+    return null;
+  }
+
+  app.get('/api/admin/database/status', async (c) => {
+    const deny = await authGuard(c); if (deny) return deny;
     try {
       const config = configService.load();
       const engine = config.activeEngine;
@@ -48,6 +58,7 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
   });
 
   app.post('/api/admin/database/test-connection', async (c) => {
+    const deny = await authGuard(c); if (deny) return deny;
     const body = await c.req.json();
     const parsed = connectionSchema.safeParse(body);
     if (!parsed.success) return c.json({ success: false, error: { code: 'VALIDATION', message: parsed.error.message } }, 400);
@@ -75,6 +86,7 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
    * Returns which required tables exist and whether schema is fully compatible.
    */
   app.post('/api/admin/database/validate-schema', async (c) => {
+    const deny = await authGuard(c); if (deny) return deny;
     const body = await c.req.json();
     const parsed = connectionSchema.safeParse(body);
     if (!parsed.success) return c.json({ success: false, error: { code: 'VALIDATION', message: parsed.error.message } }, 400);
@@ -117,6 +129,7 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
   });
 
   app.post('/api/admin/database/migrate', async (c) => {
+    const deny = await authGuard(c); if (deny) return deny;
     const body = await c.req.json();
     const parsed = connectionSchema.safeParse(body);
     if (!parsed.success) return c.json({ success: false, error: { code: 'VALIDATION', message: parsed.error.message } }, 400);
@@ -154,18 +167,21 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
     });
   });
 
-  app.post('/api/admin/database/migrate/cancel', (c) => {
+  app.post('/api/admin/database/migrate/cancel', async (c) => {
+    const deny = await authGuard(c); if (deny) return deny;
     if (!activeMigration) return c.json({ success: false, error: { code: 'NO_MIGRATION', message: 'No active migration' } }, 400);
     activeMigration.cancel();
     return c.json({ success: true, data: { message: 'Cancel requested' } });
   });
 
-  app.post('/api/admin/database/switch-to-sqlite', (c) => {
+  app.post('/api/admin/database/switch-to-sqlite', async (c) => {
+    const deny = await authGuard(c); if (deny) return deny;
     try { configService.setActiveEngine('sqlite'); return c.json({ success: true, data: { message: 'Switched to SQLite' } }); }
     catch (err) { return c.json({ success: false, error: { code: 'CONFIG_WRITE_FAIL', message: (err as Error).message } }, 500); }
   });
 
   app.post('/api/admin/database/switch', async (c) => {
+    const deny = await authGuard(c); if (deny) return deny;
     const body = await c.req.json();
     const { engine, host, port, username, password, database, ssl } = body;
     if (!engine || engine === 'sqlite') {

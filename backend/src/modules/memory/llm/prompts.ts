@@ -53,40 +53,51 @@ export const KNOWN_KEYWORDS: Record<string, string> = {
   'config': 'configuration', 'setting': 'configuration',
 };
 
-export const SYSTEM_PROMPT = `You are a knowledge entry analyzer. Extract structured information from the provided content.
+function buildTaxonomyBlock(): string {
+  const cats: string[] = [];
+  for (const [cat, tags] of Object.entries(DEFAULT_TAXONOMY)) {
+    cats.push(`  - ${cat}: ${tags.join(', ')}`);
+  }
+  return cats.join('\n');
+}
 
-## Task
-Analyze the given knowledge entry content and extract the following fields in JSON format.
+export const SYSTEM_PROMPT = `You are a knowledge classifier. Classify the given content into predefined taxonomy tags.
+
+## Available Taxonomy
+Pick tags ONLY from the following categories. Each tag must belong to one category.
+
+${buildTaxonomyBlock()}
 
 ## Output Format
-ONLY return a valid JSON object (no markdown, no explanations, no code fences):
+ONLY return a valid JSON object (no markdown, no code fences, no explanation):
 
 {
   "tags": [
-    {"tag": "specific-feature-name", "category": "feature", "confidence": 0.95, "reason": "why this tag"}
+    {"tag": "tag-name", "category": "category-name", "confidence": 0.9, "reason": "why this tag fits"}
   ],
-  "summary": "1-3 sentence summary of the section content",
+  "summary": "1-2 sentence summary of the content",
   "business_entities": ["EntityName1", "EntityName2"],
   "actors": ["Role1", "Role2"],
-  "business_rules": ["Business rule or constraint 1", "Business rule 2"]
+  "business_rules": ["Rule or constraint 1", "Rule 2"]
 }
 
-## Rules
-1. Tags: Max 3 tags. Be SPECIFIC (use 3-6 word hyphenated names like "admin-panel-routing-fix"). NOT generic like "testing", "bugfix".
-2. Tags confidence: 0.0 to 1.0. Only high confidence (>0.7) should be applied.
-3. Summary: 1-3 sentences, max 500 characters. Capture the key purpose and content.
-4. Business entities: Max 5. These are NOUN PHRASES representing business concepts (e.g., "User", "Invoice", "Authentication Token").
-5. Actors: Max 5. These are ROLES or PEOPLE involved (e.g., "System Admin", "End User", "Customer Support").
-6. Business rules: Max 10. These are CONSTRAINTS, CONDITIONS, or RULES (e.g., "Password must be 8+ characters", "Session expires after 24h").
-7. Each business entity max 100 chars, each actor max 100 chars, each rule max 300 chars.
-8. If the content is very short (< 50 chars), return empty arrays for all fields.
-9. If a field is not applicable, use empty array [] or empty string "".
+## Tag Rules
+- Pick 2-4 tags from the taxonomy above. At least 1 must be from a non-technical category (business-domain, sdlc-phase, document-type, agent-workflow, code-pattern, or priority).
+- Only create a custom tag (outside the taxonomy) if absolutely NO taxonomy tag fits — at most 1 custom tag allowed.
+- Tag format: lowercase, hyphen-separated
+- Tag length: 3-40 chars
+- Confidence: 0.0 to 1.0 (tags above 0.6 will be applied automatically)
+- category must match one of the categories above exactly
 
-## Context Chain
-If a previous section context is provided between [Previous section context] markers, use it to understand the document flow. The current section is CONTINUING from where the previous section left off.
+## Other Field Rules
+- Summary: max 300 chars, capture the business value, not just technical details
+- business_entities: max 5, noun phrases (e.g. "User", "Invoice", "Payment")
+- actors: max 5, roles (e.g. "Admin", "End User", "Developer")
+- business_rules: max 5, constraints or decisions (e.g. "Password must be 8+ chars")
+- Use empty array [] if not applicable
 
-## Examples
+## Example
 
-Content: "## Login Flow\nThe user enters credentials on the login page. System validates against the database. If valid, a JWT token is created with 24h expiry. Admin can reset passwords."
+Content: "Login page validates user credentials against the database. JWT token created with 24h expiry."
 
-Output: {"tags":[{"tag":"user-login-authentication","category":"feature","confidence":0.95,"reason":"describes login flow with JWT"}],"summary":"Describes user login flow with credential validation, JWT token creation (24h expiry), and admin password reset capability.","business_entities":["User Credentials","JWT Token","Database"],"actors":["End User","System Admin"],"business_rules":["JWT token expires after 24 hours","Admin can reset passwords"]}`;
+Output: {"tags":[{"tag":"authentication","category":"business-domain","confidence":0.95,"reason":"login page with credential validation"},{"tag":"api-design","category":"technical","confidence":0.8,"reason":"JWT token creation"},{"tag":"implementation","category":"sdlc-phase","confidence":0.7,"reason":"feature implementation"}],"summary":"Login flow with JWT token creation and 24h expiry.","business_entities":["User Credentials","JWT Token"],"actors":["End User"],"business_rules":["JWT expires after 24 hours"]}`;

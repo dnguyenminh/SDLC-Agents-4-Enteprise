@@ -1,501 +1,501 @@
 {
   "version": "1.14.0",
-  "generatedAt": "2026-07-19T17:42:38.683Z",
+  "generatedAt": "2026-07-23T02:54:35.968Z",
   "files": {
     ".kiro/agents/ba-agent.json": {
       "hash": "7d3bec7cb68dca092edc0b7f909d30602a9a792e005550c67ba50da2d71fa177",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/ba-agent.md": {
       "hash": "b7495215420b6bbf86bd654d848591a3d5b1c61da17553985d7d69e58e54517c",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/dev-agent.json": {
       "hash": "058691c8766506a37ef97b28cef646de6aad23daba2abb0c180b321647b3953b",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/dev-agent.md": {
-      "hash": "11e388133a34c26ff97306925b87bbc4eaf2224df1a65bd12a4536027cf53050",
+      "hash": "378d62637c075743ae6a1d518753d4fb0a50f5b9a5de92897a588a7e6402b4ba",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/devops-agent.json": {
       "hash": "d864e61cc710a911abd095d764793eb22ce999ab1786718124b3802df6a0469d",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/devops-agent.md": {
       "hash": "7b05ddbd48b7e4dc0391e05e0c31b76335fd9ae1b9a0b35b48bb5f17804c8824",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/ba-agent.md": {
       "hash": "c4521ee0a2aad71cdf05ca1e5e490a1dbe385af72e8f1f8d1a29df9f05e0f3fd",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/dev-agent.md": {
       "hash": "132555d196ec84c0928be2721c36c4ee757a176c2bf7228ada15f2e50c97a6fc",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/devops-agent.md": {
       "hash": "6c3527f9ec5d285f9baf83aaf14cb40b258fa1cc0342e6b1aa6c6a938a279841",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/qa-agent.md": {
       "hash": "f6db3ced3549d4b893a4a3e6734cbd6d13783f1e117896a4ac4b1a7b3e9016c1",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/sa-agent.md": {
       "hash": "d89fe3b764afd34c7f72147097246a200b4a61e9443fc009e4245a3996bee5c5",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/scrum-master-agent.md": {
       "hash": "fcaf8d4bce21089bf42529109e205d5c4b7f951701497dabe5f5bb6d1a34c48c",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/security-agent.md": {
       "hash": "2d76614bf48a073ec8cf943613d8c4a87c95fbabc49aeedd4e0a95fbaef30274",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/sm-agent.md": {
       "hash": "8c2aeb3c40dffce6ba50e91aacd57bf36f59559a405d1b50699053ce0e5b9ee9",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/ta-agent.md": {
       "hash": "a91a545c2372622bb256fa0e7cc48990825d8a7b363aa61f67bed53a501b3d13",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/prompts/ui-agent.md": {
       "hash": "4376929c95ee91ccb048f227aea92560b8a589c0c2762046c63b667028d6e3d7",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/qa-agent.json": {
       "hash": "9d68af205d3da87560ab7a8e24bce7f58364af8ddb29c309033eeca4d1887c4b",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/qa-agent.md": {
       "hash": "2c954af76c692b4983393a8286c05632c34baf17eaef7834745c6686309bc096",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/sa-agent.json": {
       "hash": "941163c15d469f76a016daa240a401dab4e448523769117407ad87ba73cc8986",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/sa-agent.md": {
       "hash": "2f3c02a620154445d60bafa46f736b39345853e33cc91b8290617d886568303d",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/security-agent.json": {
       "hash": "2fd6bea77cf7899b99c905839810f0a4ab2c5a3f33fe33f084e9673179da3923",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/security-agent.md": {
       "hash": "e827809d9fd6ccbedd4883d15c3580aaf8ea41af4ff6dd7a43cd1cc76bc8f076",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/sm-agent.json": {
       "hash": "6995977db940d7eadfd881b7809d4dc56c4cc3410603350d5bb1b87187a1f817",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/sm-agent.md": {
       "hash": "e3e9a1897d062cdf1e5f077fad3b47012ea26915f1357c0999c92892a23d5da5",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/ta-agent.json": {
       "hash": "6c739375358eabe0c036efb33eccde22e3856d284be443eb561546aab7f3bf42",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/ta-agent.md": {
       "hash": "c58521b81802c94c7a8c0c020eed982d4f333cbde3737bbac4ee7555d12c2edb",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/ui-agent.json": {
       "hash": "8ddb189b31c16078a74524a11d8de974c38e2de47f65b98d8681d2cf24386d33",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/agents/ui-agent.md": {
       "hash": "58b7fd887569d81d258d807e776dc20f1d8613c34bd2e1323e7c76bd98c1ef60",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/check-drawio-layout.kiro.hook": {
       "hash": "0707fb9494d97a5172c9c6538f7132ec1c81b53a333f86994aaf41dc4c8ae13d",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/code-index-create.json": {
       "hash": "445ee2271b1cb651735b03d58bcfafb6af8b337ca1acc4c518642034a9020962",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/code-index-delete.json": {
       "hash": "5331228be509f2f55c83b34b8944c01d54905fc3359ef5df31bd5f32da5d06ce",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/code-index-edit.json": {
       "hash": "c399d77124da517ac0b47a429346318bd4741f70b2da22e6c2da5c2c5277c44d",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/code-index-full.json": {
       "hash": "12bb0fecb6966c12383320c700535fbac01a6893ea6074f159100a50e2597ca8",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/drawio-kb-lookup.kiro.hook": {
       "hash": "6cbe0f7b22874990f9c9b5ec06620277857838f7c86905e15765cb381aba59a1",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/file-watcher.sh": {
       "hash": "c40cb92c6bb0bd0c4f341a0078180f73ede1680b8b4803bff2b0f7a794e6e5e1",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/kb-search-first.kiro.hook": {
       "hash": "5c569b0f31464d02d4318c909baf5072d164adec89c2e8e031ef76f8ae6e7550",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/mem-sync-code-edit.json": {
       "hash": "8399ff59f4eec7a04ec11c761a75ab30a61fd6e13783a455df841347f5735fd0",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/run-log-reminder.kiro.hook": {
       "hash": "7cc63d70f89c9430d0bc01effa16b66df38096cb4d7b158ce7a614d755943df2",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/stream-agent-response.kiro.hook": {
       "hash": "5e4aaa0b30a5a3c4be81addb3cfd71626ce54983c2410707e3c5ed5bd8284ac8",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/stream-user-prompt.kiro.hook": {
       "hash": "3b411b6d40cb308b02fc2b9b152159bd01ff974c97ed5c9af43398f0fbb4f1ff",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/validate-drawio-docs.kiro.hook": {
       "hash": "89393e6cbd333873db44b0e98027eb21e00b8488d8050677f79291bc7901b8fa",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/validate-drawio-edit.kiro.hook": {
       "hash": "e3c7375b289df33f7c606de45e5d7f7156bb2b10ac2f61d5b0e87c1195752055",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/validate-drawio-xml.kiro.hook": {
       "hash": "afc9ce430049c1ae86c843b6fb9ba2d5d009e26e28755fa4b810645c591e9438",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/validate-drawio.sh": {
       "hash": "dab6c0f071f6ad0486b9e113fff3135d05a720c0bfd8bef1664634d34ac4f30c",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/hooks/version-sync-check.kiro.hook": {
       "hash": "34246b2f91dfaea5518381d53d28956d415e2b994e76b71751fa3f397ca3ace9",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/agent-self-learning.md": {
       "hash": "be2d5f21202b56549359d130f4343acea45992e8d736d30d81320aaf11fc9d1b",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/backend-structure.md": {
       "hash": "51fec235065e55899e92338461ac648d9a7bb57be1699d74ec465f0a72bba34a",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/code-intelligence.md": {
       "hash": "f3a91ca4dc140f83b5e78d5c58b084235bdcef4540a4656023ec617f93b9d948",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/code-standards.md": {
       "hash": "9cd24b49b08171516491bd9f7f7b657516ef2b44702c568959d8c4c483ad477c",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/concise-responses.md": {
       "hash": "f10fc1bddec5411cd86fb1becb3cfe3fdb5d553dba48029639b5d0ea423496e0",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/dev-bug-diagnosis.md": {
       "hash": "8b1f43388c1aad0fbe5f9c2de7ca3f4fca89685a7505b01a9b7d097407de7f1b",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/drawio.md": {
       "hash": "0f07672c5147fd23cce83f71b4193dcdbe231ba4685001b4c0e3ce91c5bb134e",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/file-writing.md": {
       "hash": "e3de4c532868f0c4db71018650eed4aa571ab9baa7f6c204f9824d0be98f4462",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/frontend-structure.md": {
       "hash": "c808f473a848f89b624ad5d7584b284453a2180fdef1349e78ee22d90992160d",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/indexing-guide.md": {
       "hash": "e71a976f33d47ad6c9326de8fb879d6b53feb441bed28e83d2bb10595a12eae1",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/jira-rules.md": {
       "hash": "00bdcc1484d6091f1ace76667eb5acdd6d7cfa73964740a56de8621596710caf",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/jira-workflow.md": {
       "hash": "1cc3b2fe1c404323e92d3ffaa6b9bd81c8a5ab11958c33b84ce136d572b5014c",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/kotlin-code-standards.md": {
       "hash": "cf42423b702811ae5057c87e0dd1bd31ff251c4801dd48e48aafb1aae1b4193b",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/loop-constraints.md": {
       "hash": "7777d9e2e612325305703b24c2ac3ae5e07c88c25dd0d504ab1af753a7c7c1d0",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/manual-web-test.md": {
       "hash": "9b2f6d962b2e8eea53b9e84b7e697d7534a407c9f0d48b28bba76d64e7a37205",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/mcp-fallback-http.md": {
       "hash": "7206d5c4d3aa9a7b2aafc950ae82bddf5842185ded0d2c7426fe1fa4a8a31434",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/no-workaround-rule.md": {
       "hash": "2a752884e5c4192a2da49aae0f11b2ee204d803b0b257f09c6384cb64f6bc1e4",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/orchestration.md": {
       "hash": "6863f577b4efac84b408e254c3e2d7ddae546cf116d066c541a56cae80529f79",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/patterns/ai-agent.md": {
       "hash": "95e27baabc19b8e9dc4761d790b87718d60856b179a46bf16010375989726a84",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/patterns/catalog.md": {
       "hash": "be3a79978439c63801fd316676b3f003b48ef084139c8c1d0b2ba643b8463f92",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/patterns/cli-tool.md": {
       "hash": "2d69694af25ffb83af6dbb8c193bb0c715e115e1181e361dc77923cd2c2a86b9",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/patterns/data-pipeline.md": {
       "hash": "bda7fd70897b853a9e00aef1c53f54f4708dfe79dd77bb64fb3b5ec571fa42a7",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/patterns/library.md": {
       "hash": "39b6c2a6defc145b326c4a1285cb142eecec4295ada52b83619fb39bff81cfb0",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/patterns/microservice.md": {
       "hash": "82fbefba0a02cc331487cdab945a66a7de2b622ec92d38eda0781314b01a26f2",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/patterns/monolith.md": {
       "hash": "16515577f8879f660f5501883c987542761967d3ae7d9505ad148f078167dd58",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/patterns/plugin.md": {
       "hash": "9eb0a91d8918b38969270d17c24a7a7c089f2dc555c88024f8e04a1df08315dd",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/phase-1-requirements.md": {
       "hash": "80400f47a166878b319666b7c549cdbe40fb911557497922eacc9f31fbc3a343",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/phase-2-specification.md": {
       "hash": "fe59adce897ce4bfe2c4c59a32d481159efdce95eafefaea4b7268b2b585101e",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/phase-3-design.md": {
       "hash": "5d37cde264b06249cd0c763fad2fbe60f281ae3ea51b9d82028779bc674ccf62",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/phase-4-test-planning.md": {
       "hash": "844568d4d5526e56a462567006781f7b0b36ec4a7068d822081d42793782783f",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/phase-5-implementation.md": {
       "hash": "88a03dabdfe70b9330bce67b53d79a3b12d8983720770ccaa8cdee5d10781b9c",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/phase-6-testing.md": {
       "hash": "a25a9cd29dc42ca6399eb0d2df04880089d6c4513c92df75e7fb0229a30536ea",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/phase-7-deployment.md": {
       "hash": "62319c95857f60a717b981592f1f74f44243f7a84dc7066996410faee6f19eab",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/release-versioning.md": {
       "hash": "d9ea949f62d2a6809914b6824dd5fb8f5f4a07546f18be97fc21d25c8313003b",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/role-boundaries.md": {
       "hash": "597c793d403e97feb6185a0aca37852fcb69404afab3966e3c2ce9f3f3351cb7",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/shared-diagrams.md": {
       "hash": "61a8a4b2afb12d0ce5a46174b675dbf2ba046210cac5ca1c034ea3a709dcfd41",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/shared-jira.md": {
       "hash": "384ea84fb6b595484d13b7d555915caae5ee27db60b226e9f7cc20552a9b3201",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/shared-quality-gates.md": {
       "hash": "672fbc9d798d56c02e99974dec32421cff7c8a9039a532319f503c24ae96be7e",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/sm-core.md": {
       "hash": "a97fc4512e1d64bf1a4caf25c051b3ffac72835fa680e0dd1e2647b0a749526a",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/sm-default-agent.md": {
       "hash": "f183180d12888760f675e7a6df98391740d706ce564e59d27d4a1f7702f4d688",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/tool-usage-dynamic.md": {
       "hash": "c0fbce332a75cb7a7fb17a575af91a27e85a46fd08a090fac7be430561405cc9",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     ".kiro/steering/ui-relative-paths.md": {
       "hash": "3c96b1c6c96b321df0f48ec4c0427334449165e9754e9989b37e6c208077a9ef",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/BRD-TEMPLATE.md": {
       "hash": "107dad0e2067bd99b7e6700223725fa1a6f577fe2f04aca35b5c1e29c303c2da",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/DESIGN-SYSTEM.md": {
       "hash": "ea86e44eb6a0a3d75c3b6cd4e0a31ceba20ba6cfa8faf2a263c83e793f9a1160",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/DPG-TEMPLATE.md": {
       "hash": "661039fc5e6a9d62b586736a85e5aeb9817d058ab6398391a04abe07192b0e40",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/FSD-TEMPLATE.md": {
       "hash": "4d90dc2d38e0fccf3b938cb9b60e5f3529b2b91a7098cb17032f3c49098b096a",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/RLN-TEMPLATE.md": {
       "hash": "172cbbd84ba8158bd67fd9bc7930ca730e8a4fb592ebd172fc598e15e1897878",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/SECURITY-REPORT-TEMPLATE.md": {
       "hash": "d21c55795af49d4a7e55373ed01aec412eb76d733e0caf8bf3441e63a0cf1b91",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/STC-TEMPLATE.md": {
       "hash": "381a047071c638a0c439319a748d1eaa1e1e05cdd7395200d8decaca990938bf",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/STP-TEMPLATE.md": {
       "hash": "3776d641e0d4b392ae594289cb3729dd7ee6738ee88848a54fdd1c926b80ad0d",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/TDD-TEMPLATE.md": {
       "hash": "5e501bef133feb186b1a50d29eb69fc0b9cc87d16ce113575e38063eb3af7836",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/TEST-REPORT-TEMPLATE.md": {
       "hash": "25c30c53b7f05ed241abee4a2a5c53c7378c4ffbfbe71aa5cb0af8db32800dcc",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/UG-TEMPLATE.md": {
       "hash": "1802e577abe4176f5158b41c7c0a2b4352f9514bf9c5f4908f6d2f0fefa9464c",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     },
     "documents/templates/UI-SPEC-TEMPLATE.md": {
       "hash": "639bef72c63c15641c7c05da52d6b79e865610c96202f9fd8f526d4b3930fa73",
       "version": "1.14.0",
-      "injectedAt": "2026-07-19T17:42:38.683Z"
+      "injectedAt": "2026-07-23T02:54:35.968Z"
     }
   }
 }

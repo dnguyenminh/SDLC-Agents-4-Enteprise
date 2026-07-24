@@ -1,0 +1,72 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;System Context — SA4E-55: Auth/Authorization Architecture&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="120" y="10" width="660" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary" value="Code Intelligence MCP Server (Backend :48721)" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;fontStyle=1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="100" width="560" height="480" as="geometry"/>
+    </mxCell>
+    <mxCell id="ide_ext" value="&lt;b&gt;IDE Extension&lt;/b&gt;&#10;(Kiro / VS Code)&#10;Thin Client :9181" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="20" y="160" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="browser" value="&lt;b&gt;Admin User&lt;/b&gt;&#10;Browser&#10;Admin Portal" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#e1f5fe;strokeColor=#0288d1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="350" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="auth_mw" value="&lt;b&gt;Auth Middleware&lt;/b&gt;&#10;requireAuth()&#10;requireDatabaseAuth()&#10;resolveCallerIdentity()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="240" y="140" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="api_routes" value="&lt;b&gt;API Route Handlers&lt;/b&gt;&#10;POST /api/index/* (3 endpoints)&#10;GET+POST /api/admin/database/* (8)&#10;GET+POST /api/admin/llm/* (2)&#10;GET /api/admin/projects&#10;POST /api/admin/kb/graph/sync&#10;GET+POST /mcp/tools/* (2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="130" width="240" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="sessions_db" value="&lt;b&gt;sessions table&lt;/b&gt;&#10;validateSession()&#10;token, userId, expiresAt" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;boundedLbl=1;backgroundOutline=1;size=10;" vertex="1" parent="1">
+      <mxGeometry x="240" y="290" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="rbac" value="&lt;b&gt;RBAC Module&lt;/b&gt;&#10;getUserPermissions()&#10;group_permissions table&#10;CONFIG_EDIT | RBAC_MANAGE&#10;MCP_ACCESS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="290" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="jwt_mw" value="&lt;b&gt;JWT Middleware&lt;/b&gt;&#10;verifyJwtToken()&#10;HS256 + KB_TOKEN_SECRET&#10;Claims: sub, pid, pids" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="240" y="430" width="180" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="xss_filter" value="&lt;b&gt;XSS Sanitizer&lt;/b&gt;&#10;/[^A-Za-z0-9\\-_.]/g&#10;GET /admin?token= handoff" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="470" y="440" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="project_reg" value="&lt;b&gt;project_registry&lt;/b&gt;&#10;+ created_by column&#10;data isolation (BR-26)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;boundedLbl=1;backgroundOutline=1;size=10;" vertex="1" parent="1">
+      <mxGeometry x="240" y="540" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_llm" value="&lt;b&gt;External LLM Server&lt;/b&gt;&#10;OpenAI / Ollama&#10;SSRF-protected&#10;validateExternalUrl()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="130" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext_db" value="&lt;b&gt;External Database&lt;/b&gt;&#10;PostgreSQL / MySQL&#10;SSRF-protected&#10;connectionSchema (Zod)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="250" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="Bearer / API-Key&#10;/api/* + /mcp/*" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="ide_ext" target="auth_mw" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="GET /admin?token=" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="browser" target="xss_filter" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="validateSession()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="auth_mw" target="sessions_db" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="getUserPermissions()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="auth_mw" target="rbac" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="authorized → route" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="auth_mw" target="api_routes" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="fallback JWT verify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="auth_mw" target="jwt_mw" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="outbound (SSRF check)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="api_routes" target="ext_llm" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="outbound (SSRF check)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="api_routes" target="ext_db" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="created_by filter" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="api_routes" target="project_reg" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

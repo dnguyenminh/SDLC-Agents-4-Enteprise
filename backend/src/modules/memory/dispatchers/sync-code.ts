@@ -17,6 +17,8 @@ export async function handleSyncCode(engine: MemoryEngine, queryLayer: QueryLaye
   const kind = a.kind as string | undefined;
   // SA4E-41: scope symbol reads to the request tenant (fail-closed if absent).
   const projectId = a.__projectId as string | undefined;
+  const projectCtx = a._projectContext as { userId?: string; projectId?: string } | undefined;
+  const userId = (a.__userId as string) ?? projectCtx?.userId ?? null;
 
   let symbols: any[] = [];
   if (kind) {
@@ -54,6 +56,9 @@ export async function handleSyncCode(engine: MemoryEngine, queryLayer: QueryLaye
       summary,
       type: 'CODE_ENTITY',
       tier: 'SEMANTIC',
+      scope: 'PROJECT',
+      user_id: userId,
+      project_id: projectId ?? null,
       source: sym.filePath,
       tags: `${sym.kind},${sym.name},code`,
     });

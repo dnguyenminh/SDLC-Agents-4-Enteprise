@@ -76,7 +76,8 @@ export class TagAnalyzerService {
           this.workerConfig?.llmChunkOverlap ?? 200);
       }
       const llmResult = await this.analyzeWithLLM(content, options, context ?? null);
-      return this.applyThresholdWithExtended(llmResult.suggestions, threshold, autoApply, llmResult);
+      const normalized = this.normalizeTags(llmResult.suggestions);
+      return this.applyThresholdWithExtended(normalized, threshold, autoApply, llmResult);
     } catch (err) {
       this.logger?.warn({ err, component: 'TagAnalyzerService' }, 'LLM analysis failed, using fallback');
       return this.fallbackWithExtended(content, threshold);
@@ -167,6 +168,25 @@ export class TagAnalyzerService {
     })) };
   }
 
+  // ── Tag Normalization (map LLM tags to taxonomy) ──
+
+  private normalizeTags(suggestions: TagSuggestion[]): TagSuggestion[] {
+    return suggestions.map(s => {
+      if (this.allValidTags.has(s.tag)) return s;
+      const keywordMatch = KNOWN_KEYWORDS[s.tag] ?? KNOWN_KEYWORDS[s.tag.replace(/-/g, ' ')];
+      if (keywordMatch) return { ...s, tag: keywordMatch };
+      for (const validTag of this.allValidTags) {
+        if (s.tag.includes(validTag) || validTag.includes(s.tag)) {
+          return { ...s, tag: validTag, confidence: Math.min(s.confidence, 0.7) };
+        }
+      }
+      return { ...s, confidence: Math.min(s.confidence, 0.3) };
+    }).filter(s => {
+      if (this.allValidTags.has(s.tag)) return true;
+      return s.confidence >= 0.6;
+    });
+  }
+
   // ── Threshold & Fallback ──
 
   private applyThresholdWithExtended(
@@ -232,7 +252,8 @@ export class TagAnalyzerService {
       try {
         const ctx = results.length === 0 ? context : null;
         const llmResult = await this.analyzeWithLLM(chunk, undefined, ctx);
-        results.push(this.applyThresholdWithExtended(llmResult.suggestions, 0.7, true, llmResult));
+        const normalized = this.normalizeTags(llmResult.suggestions);
+        results.push(this.applyThresholdWithExtended(normalized, 0.7, true, llmResult));
       } catch (err) {
         this.logger?.warn({ err, chunkIdx: results.length, component: 'TagAnalyzerService' }, 'Chunk LLM failed, using fallback');
         results.push({ ...this.fallbackKeywordExtraction(chunk, 0.7), summary: '', business_entities: [], actors: [], business_rules: [] });

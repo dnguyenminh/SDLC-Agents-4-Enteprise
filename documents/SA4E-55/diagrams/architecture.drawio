@@ -1,0 +1,87 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;SA4E-55 — Authentication/Authorization Middleware Pipeline&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="200" y="10" width="580" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="client1" value="IDE Extension&#10;(Kiro/VS Code)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="80" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="client2" value="Admin Browser" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="220" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="hono" value="Hono HTTP Server&#10;(port 48721)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="90" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="auth_layer" value="Auth Layer (in-route)" style="rounded=1;dashed=1;fillColor=none;strokeColor=#0288d1;verticalAlign=top;fontSize=12;arcSize=8;html=1;" vertex="1" parent="1">
+      <mxGeometry x="430" y="60" width="380" height="280" as="geometry"/>
+    </mxCell>
+    <mxCell id="requireAuth" value="requireAuth()&#10;api-index.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="450" y="90" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="requireDBAuth" value="requireDatabaseAuth()&#10;database.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="450" y="160" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="authGuard" value="authGuard()&#10;admin/* routes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="450" y="230" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="resolveIdentity" value="resolveCallerIdentity()&#10;tools.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="450" y="300" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="validateSession" value="validateSession(token)&#10;SQLite sessions table" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;boundedLbl=1;backgroundOutline=1;size=10;" vertex="1" parent="1">
+      <mxGeometry x="650" y="90" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="verifyJwt" value="verifyJwtToken(token)&#10;HMAC-SHA256" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="650" y="170" width="140" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="getRbac" value="getUserPermissions(userId)&#10;group_permissions" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;boundedLbl=1;backgroundOutline=1;size=10;" vertex="1" parent="1">
+      <mxGeometry x="650" y="240" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="businessLogic" value="Route Handler&#10;(Business Logic)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="380" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="denied" value="401 / 403&#10;Denied" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="380" width="120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;" edge="1" source="client1" target="hono" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;" edge="1" source="client2" target="hono" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="HTTP Request" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;" edge="1" source="hono" target="requireAuth" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;" edge="1" source="requireAuth" target="validateSession" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;" edge="1" source="requireDBAuth" target="validateSession" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;" edge="1" source="authGuard" target="getRbac" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;" edge="1" source="resolveIdentity" target="verifyJwt" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="✅ Auth Pass" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;strokeColor=#388e3c;" edge="1" source="hono" target="businessLogic" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="❌ Auth Fail" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endSize=6;strokeColor=#c62828;dashed=1;" edge="1" source="hono" target="denied" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="legend_title" value="Auth Modes" style="text;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="340" width="120" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg1" value="Session Token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="365" width="120" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg2" value="JWT (HMAC-SHA256)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="398" width="120" height="25" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg3" value="API Key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="431" width="120" height="25" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

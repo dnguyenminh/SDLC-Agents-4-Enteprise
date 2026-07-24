@@ -14,7 +14,7 @@ export function createErrorHandler(logger: Logger): ErrorHandler {
       {
         error: {
           code: 'INTERNAL_ERROR',
-          message: `Internal server error: ${err.message}`,
+          message: 'An unexpected error occurred. Please try again later.',
         },
       },
       500

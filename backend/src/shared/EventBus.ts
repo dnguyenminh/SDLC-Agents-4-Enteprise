@@ -68,4 +68,8 @@ export const Events = {
   ALL_MODULES_READY: 'all:modules:ready',
   TOOLS_INGESTED: 'tools:ingested',
   TOOL_EXECUTED: 'tool:executed',
+  /** Emitted when admin saves an LLM config change — payload: { section, key, value } */
+  LLM_CONFIG_CHANGED: 'llm:config:changed',
+  /** Emitted when admin saves a TaskWorker config change — payload: { section, key, value } */
+  TASK_WORKER_CONFIG_CHANGED: 'taskworker:config:changed',
 } as const;

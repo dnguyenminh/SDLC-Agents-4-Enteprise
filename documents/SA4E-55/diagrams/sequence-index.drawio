@@ -1,0 +1,104 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Sequence — Secure File Indexing: POST /api/index/source with Auth&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="60" y="10" width="800" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lf_ide" value="&lt;b&gt;IDE Extension&lt;/b&gt;&#10;Caller" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="120" height="620" as="geometry"/>
+    </mxCell>
+    <mxCell id="lf_route" value="&lt;b&gt;index.ts Route&lt;/b&gt;&#10;requireAuth()" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="220" y="60" width="130" height="620" as="geometry"/>
+    </mxCell>
+    <mxCell id="lf_sess" value="&lt;b&gt;sessions table&lt;/b&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="410" y="60" width="130" height="620" as="geometry"/>
+    </mxCell>
+    <mxCell id="lf_ws" value="&lt;b&gt;Workspace Guard&lt;/b&gt;&#10;resolveWithinWorkspace()" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="60" width="150" height="620" as="geometry"/>
+    </mxCell>
+    <mxCell id="lf_proj" value="&lt;b&gt;project_registry&lt;/b&gt;&#10;registerProjectPhase()" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="810" y="60" width="140" height="620" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" value="1. POST /api/index/source&#10;   Authorization: Bearer {token}&#10;   body: { path, force }" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="100" y="160" as="sourcePoint"/>
+        <mxPoint x="285" y="160" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s2" value="2. validateSession(token)" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="285" y="200" as="sourcePoint"/>
+        <mxPoint x="475" y="200" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s3_fail" value="3a. token missing/expired → 401 Unauthorized" style="html=1;endSize=6;fontSize=10;dashed=1;strokeColor=#c62828;fontColor=#c62828;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="475" y="225" as="sourcePoint"/>
+        <mxPoint x="100" y="225" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s3_ok" value="3b. session valid — userId extracted" style="html=1;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="475" y="250" as="sourcePoint"/>
+        <mxPoint x="285" y="250" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s4" value="4. resolveWithinWorkspace(path)" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="285" y="285" as="sourcePoint"/>
+        <mxPoint x="675" y="285" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s4_fail" value="5a. path traversal detected → add to rejected list" style="html=1;endSize=6;fontSize=10;dashed=1;strokeColor=#c62828;fontColor=#c62828;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="675" y="310" as="sourcePoint"/>
+        <mxPoint x="285" y="310" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s4_ok" value="5b. path safe — return resolved path" style="html=1;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="675" y="335" as="sourcePoint"/>
+        <mxPoint x="285" y="335" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s5" value="6. registerProjectPhase(path, { createdBy: userId })" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="285" y="370" as="sourcePoint"/>
+        <mxPoint x="880" y="370" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s6" value="7. INSERT/UPDATE project_registry (created_by = userId)" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="880" y="395" as="sourcePoint"/>
+        <mxPoint x="880" y="420" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="920" y="395"/>
+          <mxPoint x="920" y="420"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s7" value="8. projectId returned" style="html=1;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="880" y="445" as="sourcePoint"/>
+        <mxPoint x="285" y="445" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s8" value="9. write files to disk, trigger reindex" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="285" y="480" as="sourcePoint"/>
+        <mxPoint x="285" y="510" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="335" y="480"/>
+          <mxPoint x="335" y="510"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s9" value="10. 200 OK { written, rejected, reindexTriggered, projectId }" style="html=1;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="285" y="545" as="sourcePoint"/>
+        <mxPoint x="100" y="545" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

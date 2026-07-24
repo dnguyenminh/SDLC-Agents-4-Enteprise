@@ -123,6 +123,11 @@ export function initSchema(db: Database.Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_project_registry_seen ON project_registry(last_seen);
   `);
+
+  // Idempotent migration: add created_by to project_registry for ownership-based visibility
+  try {
+    db.exec(`ALTER TABLE project_registry ADD COLUMN created_by TEXT NOT NULL DEFAULT ''`);
+  } catch { /* column already exists */ }
 }
 
 export function seedDefaults(db: Database.Database): void {

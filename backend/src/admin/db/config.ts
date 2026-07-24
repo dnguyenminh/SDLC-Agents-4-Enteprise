@@ -66,3 +66,57 @@ export async function getConfigChanges(limit = 10): Promise<ConfigChange[]> {
   );
   return rows.map(rowToConfigChange);
 }
+
+/**
+ * Load the latest persisted value for a specific section.key from config_changes.
+ * Returns undefined if no override has been saved yet.
+ * Used by LLMInitializer to read Admin UI config instead of relying solely on env vars.
+ */
+export async function getLatestConfigValue(section: string, key: string): Promise<string | undefined> {
+  try {
+    const adapter = getAdminAdapter();
+    const row = await adapter.getAsync<any>(
+      `SELECT new_value FROM config_changes WHERE section = ? AND key = ? ORDER BY changed_at DESC LIMIT 1`,
+      [section, key],
+    );
+    return row?.new_value ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Load all LLM config overrides saved via Admin UI.
+ * Returns partial config — only keys explicitly saved by user.
+ * Callers should merge with env var defaults for missing keys.
+ */
+export async function loadPersistedLLMConfig(): Promise<Partial<{
+  provider: string;
+  model: string;
+  baseUrl: string;
+  apiKey: string;
+  temperature: number;
+  maxTokens: number;
+  tagAnalysisEnabled: boolean;
+  tagConfidenceThreshold: number;
+}>> {
+  const keys = ['provider', 'model', 'baseUrl', 'apiKey', 'temperature', 'maxTokens', 'tagAnalysisEnabled', 'tagConfidenceThreshold'];
+  const result: Record<string, any> = {};
+  for (const key of keys) {
+    const val = await getLatestConfigValue('llm', key);
+    if (val !== undefined) {
+      if (key === 'temperature' || key === 'tagConfidenceThreshold') {
+        const n = parseFloat(val);
+        if (!isNaN(n)) result[key] = n;
+      } else if (key === 'maxTokens') {
+        const n = parseInt(val, 10);
+        if (!isNaN(n)) result[key] = n;
+      } else if (key === 'tagAnalysisEnabled') {
+        result[key] = val !== 'false';
+      } else {
+        result[key] = val;
+      }
+    }
+  }
+  return result;
+}

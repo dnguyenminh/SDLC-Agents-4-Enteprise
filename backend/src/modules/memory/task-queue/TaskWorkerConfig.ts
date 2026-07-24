@@ -26,6 +26,20 @@ export interface TaskWorkerConfig {
   llmTimeout: number;
   /** Max structured_map size in bytes (default: 102400 = 100KB). */
   structuredMapMaxSize: number;
+
+  /**
+   * Number of tasks processed in parallel per poll cycle (default: 2).
+   * Set to 2-3 for local LLM (LM Studio/Ollama) to keep GPU busy between token batches.
+   * Set to 1 for slow/remote LLMs or when strict context chain ordering is required.
+   */
+  concurrency: number;
+
+  /**
+   * Confidence threshold for applying tags (default: 0.6).
+   * Tags returned by LLM with confidence >= this value will be saved.
+   * Configurable via Admin UI → Configuration → llm → tagConfidenceThreshold.
+   */
+  tagConfidenceThreshold: number;
 }
 
 export const DEFAULT_TASK_WORKER_CONFIG: TaskWorkerConfig = {
@@ -39,4 +53,6 @@ export const DEFAULT_TASK_WORKER_CONFIG: TaskWorkerConfig = {
   llmChunkOverlap: 200,
   llmTimeout: 30000,
   structuredMapMaxSize: 102400,
+  concurrency: 2,
+  tagConfidenceThreshold: 0.6,
 };

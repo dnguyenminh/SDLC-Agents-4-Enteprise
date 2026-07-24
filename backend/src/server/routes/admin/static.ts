@@ -21,11 +21,19 @@ export function createStaticRoutes(ctx: AdminContext): Hono {
         html = html.replace('</head>', '<style>.sidebar{display:none!important}.main{padding:0!important;height:100vh!important;width:100%!important}</style></head>');
       }
       if (token) {
-        const injectScript = '<script>localStorage.setItem("admin_token","' + token + '");</script>';
-        html = html.replace('</head>', injectScript + '</head>');
+        // SEC: sanitize token — only allow alphanumeric, dash, dot, underscore to prevent XSS
+        const safeToken = token.replace(/[^A-Za-z0-9\-_.]/g, '');
+        if (safeToken.length > 0) {
+          const injectScript = '<script>localStorage.setItem("admin_token","' + safeToken + '");</script>';
+          html = html.replace('</head>', injectScript + '</head>');
+        }
       }
       if (page) {
-        html = html.replace("useState('dashboard')", "useState('" + page + "')");
+        // SEC SR-07: sanitize page param — prevents reflected XSS via crafted URL
+        const safePage = page.replace(/[^A-Za-z0-9\-_]/g, '');
+        if (safePage) {
+          html = html.replace("useState('dashboard')", "useState('" + safePage + "')");
+        }
       }
       return new Response(html, { headers: { 'Content-Type': 'text/html', 'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache' } });
     }

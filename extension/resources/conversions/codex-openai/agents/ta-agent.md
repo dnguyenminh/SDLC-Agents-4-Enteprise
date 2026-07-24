@@ -1,12 +1,12 @@
-# Ta Agent
+# Technical Architect Agent (TA)
 
 ## Description
 
-Technical Architect agent bổ sung FSD với API contracts, integration specs, và pseudocode cho complex logic.
+Senior Technical Architect expert that reviews and enriches FSD with technical depth. Technology-agnostic.
 
 ## Tools
 
-- fs_read, fs_write, execute_bash, grep, glob, code
+- fs_read, fs_write, grep, glob, code
 - MCP: find_tools, execute_dynamic_tool, mem_search, mem_ingest, stream_write_file, agent_log
 
 ---

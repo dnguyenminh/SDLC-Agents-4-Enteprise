@@ -28,9 +28,17 @@ function createProjectsRoutes(ctx: AdminContext): Hono {
     if (user instanceof Response) return user;
     try {
       const adapter = getAdminAdapter();
-      const rows = await adapter.allAsync<{ project_id: string; display_name: string; workspace_path: string; last_seen: string }>(
-        'SELECT project_id, display_name, workspace_path, last_seen FROM project_registry ORDER BY last_seen DESC LIMIT 100'
-      );
+      // RBAC_MANAGE (admins) see all workspaces; others only see their own
+      const rbacCheck = await ctx.requirePermission(c, user.userId, 'RBAC_MANAGE');
+      const isAdmin = !(rbacCheck instanceof Response);
+      const rows = isAdmin
+        ? await adapter.allAsync<{ project_id: string; display_name: string; workspace_path: string; last_seen: string }>(
+            'SELECT project_id, display_name, workspace_path, last_seen FROM project_registry ORDER BY last_seen DESC LIMIT 100'
+          )
+        : await adapter.allAsync<{ project_id: string; display_name: string; workspace_path: string; last_seen: string }>(
+            'SELECT project_id, display_name, workspace_path, last_seen FROM project_registry WHERE created_by = ? OR created_by = ? ORDER BY last_seen DESC LIMIT 100',
+            [user.userId, user.username ?? '']
+          );
       return c.json({ projects: rows });
     } catch {
       return c.json({ projects: [] });

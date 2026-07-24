@@ -69,23 +69,23 @@ export class GraphRepository implements IGraphRepository {
     }
   }
 
-  async registerProject(projectId: string, displayName: string, workspacePath: string): Promise<void> {
+  async registerProject(projectId: string, displayName: string, workspacePath: string, createdBy = ''): Promise<void> {
     try {
       const engine = this.adapter.getEngine();
       const ts = engine === 'sqlite' ? `datetime('now')` : 'current_timestamp';
       if (engine === 'sqlite') {
         await this.adapter.runAsync(
-          `INSERT INTO project_registry (project_id, display_name, workspace_path, last_seen)
-           VALUES (?, ?, ?, ${ts})
-           ON CONFLICT(project_id) DO UPDATE SET workspace_path = excluded.workspace_path, last_seen = ${ts}`,
-          [projectId, displayName, workspacePath],
+          `INSERT INTO project_registry (project_id, display_name, workspace_path, created_by, last_seen)
+           VALUES (?, ?, ?, ?, ${ts})
+           ON CONFLICT(project_id) DO UPDATE SET display_name = excluded.display_name, workspace_path = excluded.workspace_path, last_seen = ${ts}`,
+          [projectId, displayName, workspacePath, createdBy],
         );
       } else {
         await this.adapter.runAsync(
-          `INSERT INTO project_registry (project_id, display_name, workspace_path, last_seen)
-           VALUES ($1, $2, $3, ${ts})
-           ON CONFLICT(project_id) DO UPDATE SET workspace_path = EXCLUDED.workspace_path, last_seen = ${ts}`,
-          [projectId, displayName, workspacePath],
+          `INSERT INTO project_registry (project_id, display_name, workspace_path, created_by, last_seen)
+           VALUES ($1, $2, $3, $4, ${ts})
+           ON CONFLICT(project_id) DO UPDATE SET display_name = EXCLUDED.display_name, workspace_path = EXCLUDED.workspace_path, last_seen = ${ts}`,
+          [projectId, displayName, workspacePath, createdBy],
         );
       }
     } catch (err) {

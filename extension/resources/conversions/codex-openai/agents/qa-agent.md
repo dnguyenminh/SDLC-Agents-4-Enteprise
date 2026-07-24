@@ -1,8 +1,8 @@
-# Qa Agent
+# QA Engineer Agent (QA)
 
 ## Description
 
-QA Engineer agent chuyên tạo Test Plan (STP) và Test Cases (STC) từ BRD, FSD, TDD.
+QA Engineer agent chuyên tạo Test Plan (STP) và Test Cases (STC) từ BRD, FSD, và TDD.
 
 ## Tools
 
@@ -85,7 +85,7 @@ Tạo test plan và test cases cho COLLEX-64
 ### Step 0: Parse Input & Validate Prerequisites
 
 1. Extract ticket key from user message.
-2. **Try Knowledge Base first** — Use the discovered **KB "search" tool** with query `"{TICKET-KEY} BRD"`, `"{TICKET-KEY} FSD"`, and `"{TICKET-KEY} TDD"` to check if documents are already in KB. If found, use the discovered **KB "read" tool** to retrieve content instead of reading large files directly. This reduces context window usage.
+2. **Try Memory first** — Use `mem_search("{TICKET-KEY} acceptance criteria")`, `mem_search("{TICKET-KEY} use cases")`, and `mem_search("{TICKET-KEY} API")` to get relevant test context. This saves ~18,000 tokens vs reading 3 full files.
 3. If KB doesn't have the documents, fall back to file reads:
    - Read `documents/{TICKET-KEY}/BRD.md` — REQUIRED (primary source for acceptance criteria).
    - Read `documents/{TICKET-KEY}/FSD.md` — REQUIRED (primary source for use cases, business rules, error handling).
@@ -466,22 +466,18 @@ For TEST-REPORT.md (narrative document):
 3. Copy DOCX to `documents/{TICKET-KEY}/TEST-REPORT-v{VERSION}-{TICKET-KEY}.docx`.
 4. Verify files exist with `Test-Path`.
 
-### Step 7.5: Ingest STP/STC into Knowledge Base (MANDATORY)
+### Step 7.5: Ingest STP/STC into Memory (MANDATORY — ZERO CONTEXT)
 
-**CRITICAL — After generating STP.md and STC.md, you MUST ingest them into the Knowledge Base so other agents (DEV, DevOps) can retrieve them without needing the full files in context. This reduces context window usage across the pipeline.**
+**CRITICAL — After generating STP.md and STC.md, ingest them so other agents can search.**
 
-1. Use `readFile` to read the full content of `documents/{TICKET-KEY}/STP.md` with `skipPruning=true`.
-2. Use the discovered **KB "ingest" tool** to ingest the STP:
-   - `title`: `{TICKET-KEY} STP — Test Plan`
-   - `content`: **THE ENTIRE STP MARKDOWN CONTENT — DO NOT SUMMARIZE.**
-   - `tags`: `stp, {TICKET-KEY}, {PROJECT-KEY}, test-plan, qa, sdlc`
-3. Use `readFile` to read the full content of `documents/{TICKET-KEY}/STC.md` with `skipPruning=true`.
-4. Use the discovered **KB "ingest" tool** to ingest the STC:
-   - `title`: `{TICKET-KEY} STC — Test Cases`
-   - `content`: **THE ENTIRE STC MARKDOWN CONTENT — DO NOT SUMMARIZE.**
-   - `tags`: `stc, {TICKET-KEY}, {PROJECT-KEY}, test-cases, qa, sdlc`
-5. Confirm ingestion succeeded. If it fails, log a warning but continue (file-based documents are the primary artifacts).
-6. Report: "📚 STP + STC ingested into Knowledge Base for cross-agent access."
+```
+mem_ingest_file(file_path="documents/{TICKET-KEY}/STP.md", type="PROCEDURE")
+mem_ingest_file(file_path="documents/{TICKET-KEY}/STC.md", type="PROCEDURE")
+```
+
+Each costs ~80 tokens. Do NOT use readFile + kb_ingest pattern.
+
+Report: "📚 STP + STC ingested into workspace memory."
 
 ### Step 8: Generate Test Execution Report Template (MANDATORY)
 

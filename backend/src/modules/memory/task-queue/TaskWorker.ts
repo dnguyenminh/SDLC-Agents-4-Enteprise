@@ -58,11 +58,34 @@ export class TaskWorker {
   setEmbeddingService(service: EmbeddingService): void { this.embeddingService = service; }
   setLlmService(service: { getConfig(): { model: string } }): void { this.llmService = service; }
 
+  /**
+   * Update mutable config fields at runtime — no restart needed.
+   * Called when admin changes taskWorker config via Admin UI.
+   * Supported keys: concurrency (1-8), baseInterval, maxInterval.
+   */
+  updateConfig(patch: Partial<Pick<TaskWorkerConfig, 'concurrency' | 'baseInterval' | 'maxInterval'>>): void {
+    if (patch.concurrency !== undefined) {
+      (this.config as any).concurrency = Math.max(1, Math.min(patch.concurrency, 8));
+    }
+    if (patch.baseInterval !== undefined) (this.config as any).baseInterval = patch.baseInterval;
+    if (patch.maxInterval !== undefined) (this.config as any).maxInterval = patch.maxInterval;
+    this.logger.info(
+      { concurrency: this.config.concurrency, baseInterval: this.config.baseInterval },
+      '[TaskWorker] Config updated live',
+    );
+  }
+
   start(): void {
     if (this.running) return;
     this.running = true;
     this.logger.info('TaskWorker started');
-    this.schedulePoll(0);
+    // On startup: reset any PROCESSING tasks from previous run (crash/restart recovery)
+    this.resetProcessingOnStartup().catch(err =>
+      this.logger.warn({ err }, 'TaskWorker: startup reset failed (non-fatal)'),
+    );
+    // Delay first poll by 6s to allow LLM health check + tagAnalyzer init to complete.
+    // LLMInitializer is fire-and-forget async (5s timeout) — 6s ensures it's ready.
+    this.schedulePoll(6000);
   }
 
   stop(): Promise<void> {
@@ -71,6 +94,17 @@ export class TaskWorker {
     if (this.pollTimer) { clearTimeout(this.pollTimer); this.pollTimer = null; }
     if (!this.processing) { this.logger.info('TaskWorker stopped'); return Promise.resolve(); }
     return new Promise<void>(resolve => { this.shutdownResolve = resolve; });
+  }
+
+  /**
+   * Reset ALL tasks stuck in PROCESSING to PENDING on startup.
+   * Called once at start() — handles server restart/crash recovery immediately,
+   * no need to wait for staleThreshold timeout.
+   */
+  async resetProcessingOnStartup(): Promise<number> {
+    const result = await this.repo.resetAllProcessing();
+    if (result > 0) this.logger.info({ reset: result }, 'TaskWorker: reset stuck PROCESSING tasks on startup');
+    return result;
   }
 
   async recoverStaleTasks(): Promise<number> {
@@ -97,8 +131,9 @@ export class TaskWorker {
     if (!this.running) { this.finishShutdown(); return; }
     this.lastPollAt = new Date().toISOString();
     try {
-      const task = await this.repo.claimNext();
-      if (!task) {
+      const concurrency = this.config.concurrency ?? 1;
+      const tasks = await this.repo.claimBatch(concurrency);
+      if (tasks.length === 0) {
         this.consecutiveEmpty++;
         const delay = Math.min(
           this.config.baseInterval * Math.pow(2, this.consecutiveEmpty),
@@ -108,7 +143,8 @@ export class TaskWorker {
       }
       this.consecutiveEmpty = 0;
       this.processing = true;
-      await this.processTask(task);
+      // Run all claimed tasks concurrently — keeps GPU busy between token batches
+      await Promise.allSettled(tasks.map(task => this.processTask(task)));
       this.processing = false;
       if (!this.running) { this.finishShutdown(); return; }
       this.schedulePoll(this.config.baseInterval);

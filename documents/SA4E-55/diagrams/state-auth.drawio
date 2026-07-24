@@ -1,0 +1,113 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;State Diagram — Token Validation States (SA4E-55)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="160" y="10" width="520" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;shape=doubleCircle;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="390" y="60" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="unchecked" value="&lt;b&gt;UNCHECKED&lt;/b&gt;&#10;Token received,&#10;not yet validated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="120" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="checking" value="&lt;b&gt;CHECKING&lt;/b&gt;&#10;validateSession() /&#10;verifyJwtToken() /&#10;API key compare" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="240" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="valid" value="&lt;b&gt;VALID&lt;/b&gt;&#10;Session found,&#10;not expired,&#10;userId extracted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="130" y="390" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="invalid" value="&lt;b&gt;INVALID&lt;/b&gt;&#10;Token not found&#10;in sessions table&#10;or malformed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="390" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="expired" value="&lt;b&gt;EXPIRED&lt;/b&gt;&#10;Token found but&#10;expiresAt &lt; now()&#10;→ 401" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="260" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="apikey" value="&lt;b&gt;API_KEY&lt;/b&gt;&#10;CODE_INTEL_API_KEY&#10;matches header&#10;userId = api-key-user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="260" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="fallback" value="&lt;b&gt;FALLBACK&lt;/b&gt;&#10;X-User-Id accepted&#10;dev mode only&#10;WARNING logged" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="130" y="520" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="authorized" value="&lt;b&gt;AUTHORIZED&lt;/b&gt;&#10;userId confirmed +&#10;permission granted&#10;→ execute handler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="520" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="denied_401" value="&lt;b&gt;401 Unauthorized&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="520" width="140" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="denied_403" value="&lt;b&gt;403 Forbidden&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="590" width="140" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="end_ok" value="" style="ellipse;shape=doubleCircle;fillColor=#388e3c;strokeColor=#388e3c;" vertex="1" parent="1">
+      <mxGeometry x="393" y="625" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="te1" value="HTTP request arrives" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="start" target="unchecked" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te2" value="extract token" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="unchecked" target="checking" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te3" value="session lookup OK&#10;not expired" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="checking" target="valid" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="280" y="280"/>
+          <mxPoint x="210" y="280"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="te4" value="token not found /&#10;malformed" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="checking" target="invalid" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="540" y="280"/>
+          <mxPoint x="620" y="280"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="te5" value="session found but&#10;expiresAt expired" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="checking" target="expired" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te6" value="API key header&#10;matches env var" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="unchecked" target="apikey" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="330" y="145"/>
+          <mxPoint x="140" y="145"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="te7" value="no token + dev mode +&#10;X-User-Id present" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="unchecked" target="fallback" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="330" y="155"/>
+          <mxPoint x="210" y="155"/>
+          <mxPoint x="210" y="560"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="te8" value="permission check PASS" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="valid" target="authorized" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te8b" value="permission check PASS" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="apikey" target="authorized" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te8c" value="" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="fallback" target="authorized" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te9" value="execute" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" source="authorized" target="end_ok" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te10" value="" style="html=1;endSize=6;fontSize=10;strokeColor=#c62828;labelBackgroundColor=#ffffff;" edge="1" source="invalid" target="denied_401" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te11" value="" style="html=1;endSize=6;fontSize=10;strokeColor=#c62828;labelBackgroundColor=#ffffff;" edge="1" source="expired" target="denied_401" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="te12" value="permission DENY" style="html=1;endSize=6;fontSize=10;strokeColor=#c62828;fontColor=#c62828;labelBackgroundColor=#ffffff;" edge="1" source="valid" target="denied_403" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="290" y="470"/>
+          <mxPoint x="620" y="470"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

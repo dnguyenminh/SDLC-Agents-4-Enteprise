@@ -28,7 +28,7 @@ export {
 export { recordAudit, getAuditLogs, getRecentActivity } from './db/audit.js';
 
 export type { ConfigChange } from './db/config.js';
-export { recordConfigChange, getConfigChanges } from './db/config.js';
+export { recordConfigChange, getConfigChanges, getLatestConfigValue, loadPersistedLLMConfig } from './db/config.js';
 
 export { recordQueryLog, getQueryLogs, getQueryLogStats } from './db/query-logs.js';
 

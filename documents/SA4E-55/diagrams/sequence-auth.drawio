@@ -1,0 +1,118 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="&lt;b&gt;Sequence — Authentication Flow (validateSession + getUserPermissions)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="80" y="10" width="760" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_client" value="&lt;b&gt;Client&lt;/b&gt;&#10;(IDE Extension)" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="120" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_mw" value="&lt;b&gt;Auth Middleware&lt;/b&gt;&#10;requireAuth()" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="240" y="60" width="140" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_sess" value="&lt;b&gt;sessions table&lt;/b&gt;&#10;(SQLite)" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="60" width="130" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_rbac" value="&lt;b&gt;RBAC Module&lt;/b&gt;&#10;getUserPermissions()" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="630" y="60" width="150" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_handler" value="&lt;b&gt;Route Handler&lt;/b&gt;&#10;(Business Logic)" style="shape=umlLifeline;perimeter=lifelinePerimeter;size=16;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="840" y="60" width="130" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="m1" value="1. HTTP request + Authorization: Bearer {token}" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="160" as="sourcePoint"/>
+        <mxPoint x="310" y="160" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. extract Bearer token from header" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="310" y="185" as="sourcePoint"/>
+        <mxPoint x="310" y="215" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="360" y="185"/>
+          <mxPoint x="360" y="215"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. validateSession(token)" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="310" y="240" as="sourcePoint"/>
+        <mxPoint x="505" y="240" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. SELECT * FROM sessions WHERE token=? AND expiresAt &gt; now()" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="505" y="265" as="sourcePoint"/>
+        <mxPoint x="505" y="295" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="555" y="265"/>
+          <mxPoint x="555" y="295"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5_ok" value="5a. session record found — return { userId, username }" style="html=1;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="505" y="320" as="sourcePoint"/>
+        <mxPoint x="310" y="320" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5_fail" value="5b. not found / expired — return null → 401 Unauthorized" style="html=1;endSize=6;fontSize=10;dashed=1;strokeColor=#c62828;fontColor=#c62828;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="505" y="345" as="sourcePoint"/>
+        <mxPoint x="120" y="345" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6. getUserPermissions(userId)" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="310" y="380" as="sourcePoint"/>
+        <mxPoint x="705" y="380" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7. SELECT permissions FROM group_permissions WHERE groupId = user.groupId" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="705" y="405" as="sourcePoint"/>
+        <mxPoint x="705" y="430" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="760" y="405"/>
+          <mxPoint x="760" y="430"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8. [CONFIG_EDIT, MCP_ACCESS, ...]" style="html=1;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="705" y="455" as="sourcePoint"/>
+        <mxPoint x="310" y="455" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9_ok" value="9a. permission GRANTED — forward request" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="310" y="490" as="sourcePoint"/>
+        <mxPoint x="905" y="490" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9_fail" value="9b. permission DENIED — 403 Forbidden" style="html=1;endSize=6;fontSize=10;dashed=1;strokeColor=#c62828;fontColor=#c62828;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="310" y="515" as="sourcePoint"/>
+        <mxPoint x="120" y="515" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10. execute business logic" style="html=1;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="905" y="540" as="sourcePoint"/>
+        <mxPoint x="905" y="570" as="targetPoint"/>
+        <Array as="points">
+          <mxPoint x="955" y="540"/>
+          <mxPoint x="955" y="570"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11. 200 OK + response body" style="html=1;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="905" y="595" as="sourcePoint"/>
+        <mxPoint x="120" y="595" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

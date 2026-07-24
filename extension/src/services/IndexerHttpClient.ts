@@ -223,6 +223,11 @@ export class IndexerHttpClient {
         const { getProjectId } = await import("../extension");
         const pid = getProjectId();
         if (pid && pid !== "default") { headers["X-Project-Id"] = pid; }
+        // Send workspace root so server registers correct display_name
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+            headers["X-Workspace-Root"] = workspaceFolders[0].uri.fsPath;
+        }
         return headers;
     }
 }

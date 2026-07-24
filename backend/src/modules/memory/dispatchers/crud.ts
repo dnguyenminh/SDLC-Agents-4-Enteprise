@@ -65,7 +65,7 @@ export async function handleIngest(
   const tags = Array.isArray(a.tags) ? (a.tags as string[]).join(',') : ((a.tags as string) ?? '');
   const summary = (a.summary as string) ?? (a.title as string) ?? content.slice(0, 120);
   const agentName = a.agent_name as string | undefined;
-  const scope = ((a.scope as string) ?? 'USER').toUpperCase() as KBScope;
+  const scope = ((a.scope as string) ?? 'PROJECT').toUpperCase() as KBScope;
   const userId = (a.user_id as string) ?? scopeCtx?.userId ?? null;
 
   let id!: number;
@@ -81,7 +81,7 @@ export async function handleIngest(
       });
       const taskRepo = new PendingTaskRepository(dbAdapter);
       if (tagAnalyzer) {
-        await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content, existing_tags: tags, options: { threshold: 0.7, autoApply: true } } });
+        await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content, existing_tags: tags, options: { threshold: 0.6, autoApply: true } } });
       }
       if (embeddingAvailable) {
         await taskRepo.create({ task_type: TaskType.VECTOR_EMBEDDING, entry_id: id, payload: { entry_id: id, text: `${summary} ${content}`.slice(0, 4000) } });
@@ -143,7 +143,7 @@ export async function handleIngestFile(
   const filePath = a.file_path as string;
   if (!filePath) return 'Error: file_path required';
   const type = (a.type as string) ?? 'CONTEXT';
-  const scope = ((a.scope as string) ?? 'USER').toUpperCase() as KBScope;
+  const scope = ((a.scope as string) ?? 'PROJECT').toUpperCase() as KBScope;
   const userId = (a.user_id as string) ?? scopeCtx?.userId ?? null;
 
   const format = classifyFormat({ filePath });
@@ -219,7 +219,7 @@ export async function handleIngestFile(
       await engine.updateStructuredMap(id, structuredMap);
     }
     if (taskRepo) {
-      await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content: sec.trim(), existing_tags: '', options: { threshold: 0.7, autoApply: true } } });
+      await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content: sec.trim(), existing_tags: '', options: { threshold: 0.6, autoApply: true } } });
       if (embeddingAvailable) {
         await taskRepo.create({ task_type: TaskType.VECTOR_EMBEDDING, entry_id: id, payload: { entry_id: id, text: `${summary} ${sec.trim()}`.slice(0, 4000) } });
       }

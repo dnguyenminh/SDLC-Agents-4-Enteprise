@@ -1,8 +1,8 @@
-# Devops Agent
+# DevOps Engineer Agent (DevOps)
 
 ## Description
 
-DevOps agent chuyên tạo deployment docs, CI/CD configs, và release management artifacts.
+DevOps Engineer agent chuyên tạo Deployment Guide, CI/CD pipeline, Docker configuration, và Release Notes.
 
 ## Tools
 
@@ -85,7 +85,7 @@ Tạo release notes cho COLLEX-64
 ### Step 0: Parse Input & Validate Prerequisites
 
 1. Extract ticket key from user message.
-2. **Try Knowledge Base first** — Use the discovered **KB "search" tool** with query `"{TICKET-KEY} TDD"`, `"{TICKET-KEY} FSD"`, and `"{TICKET-KEY} BRD"` to check if documents are already in KB. If found, use the discovered **KB "read" tool** to retrieve content instead of reading large files directly. This reduces context window usage.
+2. **Try Memory first** — Use `mem_search("{TICKET-KEY} deployment architecture")` and `mem_search("{TICKET-KEY} environment config")` to get relevant deployment context. This saves ~6,000 tokens vs reading full TDD.
 3. If KB doesn't have the documents, fall back to file reads:
    - Read `documents/{TICKET-KEY}/TDD.md` — REQUIRED (for deployment architecture, DB migrations, environment config).
    - Read `documents/{TICKET-KEY}/FSD.md` — OPTIONAL (for feature scope understanding).
@@ -291,22 +291,18 @@ For each document (DPG.md, RLN.md):
 4. Copy DOCX to `documents/{TICKET-KEY}/DPG-v{VERSION}-{TICKET-KEY}.docx` and `documents/{TICKET-KEY}/RLN-v{VERSION}-{TICKET-KEY}.docx`. VERSION from document's Revision History.
 5. Verify files exist with `Test-Path`.
 
-### Step 7.5: Ingest DPG/RLN into Knowledge Base (MANDATORY)
+### Step 7.5: Ingest DPG/RLN into Memory (MANDATORY — ZERO CONTEXT)
 
-**CRITICAL — After generating DPG.md and RLN.md, you MUST ingest them into the Knowledge Base for cross-agent access and future reference.**
+**CRITICAL — After generating DPG.md and RLN.md, ingest them for future reference.**
 
-1. Use `readFile` to read the full content of `documents/{TICKET-KEY}/DPG.md` with `skipPruning=true`.
-2. Use the discovered **KB "ingest" tool** to ingest the DPG:
-   - `title`: `{TICKET-KEY} DPG — Deployment Guide`
-   - `content`: **THE ENTIRE DPG MARKDOWN CONTENT — DO NOT SUMMARIZE.**
-   - `tags`: `dpg, {TICKET-KEY}, {PROJECT-KEY}, deployment, devops, sdlc`
-3. Use `readFile` to read the full content of `documents/{TICKET-KEY}/RLN.md` with `skipPruning=true`.
-4. Use the discovered **KB "ingest" tool** to ingest the RLN:
-   - `title`: `{TICKET-KEY} RLN — Release Notes`
-   - `content`: **THE ENTIRE RLN MARKDOWN CONTENT — DO NOT SUMMARIZE.**
-   - `tags`: `rln, {TICKET-KEY}, {PROJECT-KEY}, release-notes, devops, sdlc`
-5. Confirm ingestion succeeded. If it fails, log a warning but continue.
-6. Report: "📚 DPG + RLN ingested into Knowledge Base."
+```
+mem_ingest_file(file_path="documents/{TICKET-KEY}/DPG.md", type="PROCEDURE")
+mem_ingest_file(file_path="documents/{TICKET-KEY}/RLN.md", type="CONTEXT")
+```
+
+Each costs ~80 tokens. Do NOT use readFile + kb_ingest pattern.
+
+Report: "📚 DPG + RLN ingested into workspace memory."
 
 ## Important Rules
 
@@ -322,79 +318,6 @@ For each document (DPG.md, RLN.md):
 - Docker images must use specific version tags — never `latest` in production.
 - Include health check verification for every deployment step.
 - Rollback scripts must be tested and verified before deployment.
-
-## ⛔ Git Release Process (MANDATORY after successful deployment)
-
-**Khi deploy thành công + sanity pass, DevOps agent PHẢI thực hiện merge và tag:**
-
-### Quy tắc
-
-- **Mỗi ticket implement = 1 branch riêng** (branch name = `{TICKET}`)
-- **Mỗi khi merge vào master = 1 version mới + git tag**
-- KHÔNG merge nếu sanity test chưa pass
-- KHÔNG tạo tag trên branch — chỉ tag trên master sau merge
-
-### Merge & Tag Steps
-
-1. **Merge branch vào master:**
-   ```
-   git checkout master
-   git pull origin master
-   git merge {TICKET} --no-ff -m "Merge {TICKET}: {summary}"
-   git push origin master
-   ```
-2. **Tạo version tag (Bump version):**
-   - Lấy latest tag: `git describe --tags --abbrev=0` (ví dụ: `v1.1.0`)
-   - Bump version theo quy tắc:
-     - MAJOR: Breaking changes
-     - MINOR: New feature (default cho mỗi ticket implement)
-     - PATCH: Bug fix, hotfix
-   - Tạo annotated tag:
-   ```
-   git tag -a v{VERSION} -m "{TICKET}: {summary}"
-   git push origin v{VERSION}
-   ```
-3. **Cập nhật README.md (MANDATORY):**
-   - Mở `README.md` ở root project
-   - Thêm entry mới vào section `## Changelog` (hoặc tạo section nếu chưa có):
-     ```markdown
-     ## Changelog
-     
-     ### v{VERSION} — {YYYY-MM-DD}
-     - **{TICKET}**: {summary of changes}
-     ```
-   - Nếu README có section "Version" hoặc badge → cập nhật version number
-   - Commit README change:
-   ```
-   git add README.md
-   git commit -m "docs: update README changelog for v{VERSION} ({TICKET})"
-   git push origin master
-   ```
-4. **Cleanup branch:**
-   ```
-   git branch -d {TICKET}
-   git push origin --delete {TICKET}
-   ```
-5. **Cập nhật Release Notes** — ghi version tag vào RLN.md header
-6. **Báo cáo:**
-   ```
-   ✅ Release:
-   - Merged: {TICKET} → master
-   - Tag: v{VERSION}
-   - README.md updated (changelog + version)
-   - Branch {TICKET} deleted
-   ```
-
-### Version trong Deployment Report
-
-Thêm vào Deployment Report:
-```markdown
-### Release Info
-- **Version:** v{VERSION}
-- **Git Tag:** v{VERSION}
-- **Branch:** {TICKET} (merged & deleted)
-- **Commit:** {merge commit hash}
-```
 
 ## ⛔ Deployment Execution Process (MANDATORY)
 
@@ -469,4 +392,77 @@ Sau khi deploy (thành công hoặc rollback), tạo báo cáo:
 - Trigger: {what caused rollback}
 - Steps: {what was rolled back}
 - Verification: {rollback confirmed successful}
+```
+
+## ⛔ Git Release Process (MANDATORY after successful deployment)
+
+**Khi deploy thành công + sanity pass, DevOps agent PHẢI thực hiện merge và tag:**
+
+### Quy tắc
+
+- **Mỗi ticket implement = 1 branch riêng** (branch name = `{TICKET}`)
+- **Mỗi khi merge vào master = 1 version mới + git tag**
+- KHÔNG merge nếu sanity test chưa pass
+- KHÔNG tạo tag trên branch — chỉ tag trên master sau merge
+
+### Merge & Tag Steps
+
+1. **Merge branch vào master:**
+   ```
+   git checkout master
+   git pull origin master
+   git merge {TICKET} --no-ff -m "Merge {TICKET}: {summary}"
+   git push origin master
+   ```
+2. **Tạo version tag (Bump version):**
+   - Lấy latest tag: `git describe --tags --abbrev=0` (ví dụ: `v1.1.0`)
+   - Bump version theo quy tắc:
+     - MAJOR: Breaking changes
+     - MINOR: New feature (default cho mỗi ticket implement)
+     - PATCH: Bug fix, hotfix
+   - Tạo annotated tag:
+   ```
+   git tag -a v{VERSION} -m "{TICKET}: {summary}"
+   git push origin v{VERSION}
+   ```
+3. **Cập nhật README.md (MANDATORY):**
+   - Mở `README.md` ở root project
+   - Thêm entry mới vào section `## Changelog` (hoặc tạo section nếu chưa có):
+     ```markdown
+     ## Changelog
+     
+     ### v{VERSION} — {YYYY-MM-DD}
+     - **{TICKET}**: {summary of changes}
+     ```
+   - Nếu README có section "Version" hoặc badge → cập nhật version number
+   - Commit README change:
+   ```
+   git add README.md
+   git commit -m "docs: update README changelog for v{VERSION} ({TICKET})"
+   git push origin master
+   ```
+4. **Cleanup branch:**
+   ```
+   git branch -d {TICKET}
+   git push origin --delete {TICKET}
+   ```
+5. **Cập nhật Release Notes** — ghi version tag vào RLN.md header
+6. **Báo cáo:**
+   ```
+   ✅ Release:
+   - Merged: {TICKET} → master
+   - Tag: v{VERSION}
+   - README.md updated (changelog + version)
+   - Branch {TICKET} deleted
+   ```
+
+### Version trong Deployment Report
+
+Thêm vào Deployment Report:
+```markdown
+### Release Info
+- **Version:** v{VERSION}
+- **Git Tag:** v{VERSION}
+- **Branch:** {TICKET} (merged & deleted)
+- **Commit:** {merge commit hash}
 ```

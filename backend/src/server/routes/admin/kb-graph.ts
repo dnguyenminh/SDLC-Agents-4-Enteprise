@@ -83,7 +83,8 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
   app.post('/api/admin/kb/graph/sync', async (c) => {
     const user = await ctx.requireAuth(c);
     if (user instanceof Response) return user;
-    const permCheck = await ctx.requirePermission(c, user.userId, 'GRAPH_VIEW');
+    // SEC: graph sync resets the entire graph — requires RBAC_MANAGE (admin-only), not user KB_WRITE
+    const permCheck = await ctx.requirePermission(c, user.userId, 'RBAC_MANAGE');
     if (permCheck instanceof Response) return permCheck;
     const graphService = (globalThis as any).__sqliteGraphService;
     if (!graphService) return c.json({ error: 'Graph service not initialized' }, 503);

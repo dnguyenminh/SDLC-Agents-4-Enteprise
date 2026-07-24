@@ -9,7 +9,7 @@ export { createSession, validateSession, invalidateSession, invalidateUserSessio
 export { recordAudit, getAuditLogs, getRecentActivity } from './audit.js';
 
 export type { ConfigChange } from './config.js';
-export { recordConfigChange, getConfigChanges } from './config.js';
+export { recordConfigChange, getConfigChanges, getLatestConfigValue, loadPersistedLLMConfig } from './config.js';
 
 export { recordQueryLog, getQueryLogs, getQueryLogStats } from './query-logs.js';
 

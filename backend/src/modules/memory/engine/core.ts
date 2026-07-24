@@ -275,7 +275,7 @@ export class MemoryEngine extends MemoryEngineCrud {
       INSERT INTO tool_usage (tool_name, call_count, last_called_at)
       VALUES (?, 1, ${this.dialect.now()})
       ON CONFLICT(tool_name) DO UPDATE SET
-        call_count = call_count + 1,
+        call_count = tool_usage.call_count + 1,
         last_called_at = ${this.dialect.now()}
     `, [toolName]);
   }

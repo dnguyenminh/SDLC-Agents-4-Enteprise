@@ -18,7 +18,7 @@ export interface IGraphRepository {
   /** INSERT OR REPLACE a graph node. */
   upsertNode(params: UpsertNodeParams): Promise<void>;
   /** Register/update a project in project_registry. [Source: api-index.ts] */
-  registerProject(projectId: string, displayName: string, workspacePath: string): Promise<void>;
+  registerProject(projectId: string, displayName: string, workspacePath: string, createdBy?: string): Promise<void>;
 }
 
 /**

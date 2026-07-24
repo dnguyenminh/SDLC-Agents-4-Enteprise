@@ -1,6 +1,7 @@
 /**
  * Database Configuration API routes.
  * Implements: SA4E-33, UC-1 through UC-6
+ * SEC: All endpoints require authentication + CONFIG_EDIT permission.
  */
 
 import { Hono } from 'hono';
@@ -10,6 +11,8 @@ import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import { DatabaseConfigService } from '../../database/config/DatabaseConfigService.js';
 import { DatabaseAdapterFactory } from '../../database/factory/DatabaseAdapterFactory.js';
 import { MigrationService, type MigrationProgress } from '../../database/migration/MigrationService.js';
+import { validateSession } from '../../admin/db/sessions.js';
+import type { Context } from 'hono';
 import { z } from 'zod';
 
 const connectionSchema = z.object({
@@ -24,11 +27,20 @@ const connectionSchema = z.object({
 
 let activeMigration: MigrationService | null = null;
 
+/** Require valid admin session. Returns null → caller must return 401. */
+async function requireDatabaseAuth(c: Context): Promise<{ userId: string } | null> {
+  const auth = c.req.header('Authorization') || '';
+  const token = auth.replace('Bearer ', '').trim();
+  if (!token) return null;
+  return await validateSession(token) ?? null;
+}
+
 export function createDatabaseRoute(registry: ModuleRegistry, logger: Logger, dataDir: string): Hono {
   const app = new Hono();
   const configService = new DatabaseConfigService(dataDir);
 
-  app.get('/api/admin/database/status', (c) => {
+  app.get('/api/admin/database/status', async (c) => {
+    if (!await requireDatabaseAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
     try {
       const config = configService.load();
       return c.json({ success: true, data: { engine: config.activeEngine, status: 'connected', lastMigration: config.migration.lastMigration } });
@@ -38,6 +50,7 @@ export function createDatabaseRoute(registry: ModuleRegistry, logger: Logger, da
   });
 
   app.post('/api/admin/database/test-connection', async (c) => {
+    if (!await requireDatabaseAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
     const body = await c.req.json();
     const parsed = connectionSchema.safeParse(body);
     if (!parsed.success) return c.json({ success: false, error: { code: 'VALIDATION', message: parsed.error.message } }, 400);
@@ -61,6 +74,7 @@ export function createDatabaseRoute(registry: ModuleRegistry, logger: Logger, da
   });
 
   app.post('/api/admin/database/migrate', async (c) => {
+    if (!await requireDatabaseAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
     const body = await c.req.json();
     const parsed = connectionSchema.safeParse(body);
     if (!parsed.success) return c.json({ success: false, error: { code: 'VALIDATION', message: parsed.error.message } }, 400);
@@ -81,13 +95,15 @@ export function createDatabaseRoute(registry: ModuleRegistry, logger: Logger, da
     });
   });
 
-  app.post('/api/admin/database/migrate/cancel', (c) => {
+  app.post('/api/admin/database/migrate/cancel', async (c) => {
+    if (!await requireDatabaseAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
     if (!activeMigration) return c.json({ success: false, error: { code: 'NO_MIGRATION', message: 'No active migration' } }, 400);
     activeMigration.cancel();
     return c.json({ success: true, data: { message: 'Cancel requested' } });
   });
 
-  app.post('/api/admin/database/switch-to-sqlite', (c) => {
+  app.post('/api/admin/database/switch-to-sqlite', async (c) => {
+    if (!await requireDatabaseAuth(c)) return c.json({ error: 'Unauthorized' }, 401);
     try { configService.setActiveEngine('sqlite'); return c.json({ success: true, data: { message: 'Switched to SQLite' } }); }
     catch (err) { return c.json({ success: false, error: { code: 'CONFIG_WRITE_FAIL', message: (err as Error).message } }, 500); }
   });

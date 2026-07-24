@@ -41,6 +41,28 @@ export class PendingTaskRepository {
     return { ...task, status: TaskStatus.PROCESSING };
   }
 
+  /**
+   * Claim up to `count` PENDING tasks atomically.
+   * Each task is claimed individually (optimistic lock on status) to avoid
+   * concurrent workers racing on the same row.
+   */
+  async claimBatch(count: number): Promise<PendingTask[]> {
+    const candidates = await this.db.allAsync<PendingTask>(
+      `SELECT * FROM pending_tasks WHERE status = ? ORDER BY created_at ASC LIMIT ?`,
+      [TaskStatus.PENDING, count],
+    );
+    const claimed: PendingTask[] = [];
+    for (const task of candidates) {
+      const updated = await this.db.runAsync(
+        `UPDATE pending_tasks SET status = ?, started_at = ${this.dialect.now()}
+         WHERE id = ? AND status = ?`,
+        [TaskStatus.PROCESSING, task.id, TaskStatus.PENDING],
+      );
+      if (updated.changes > 0) claimed.push({ ...task, status: TaskStatus.PROCESSING });
+    }
+    return claimed;
+  }
+
   async markCompleted(id: number): Promise<void> {
     await this.db.runAsync(
       `UPDATE pending_tasks SET status = ?, completed_at = ${this.dialect.now()} WHERE id = ?`,
@@ -74,6 +96,19 @@ export class PendingTaskRepository {
       `UPDATE pending_tasks SET status = ?, started_at = NULL
        WHERE status = ? AND ${staleCondition}`,
       [TaskStatus.PENDING, TaskStatus.PROCESSING, thresholdSec],
+    );
+    return result.changes;
+  }
+
+  /**
+   * Reset ALL PROCESSING tasks to PENDING unconditionally.
+   * Called once at server startup to recover from previous crash/restart.
+   * No time threshold — any PROCESSING task after restart is by definition stale.
+   */
+  async resetAllProcessing(): Promise<number> {
+    const result = await this.db.runAsync(
+      `UPDATE pending_tasks SET status = ?, started_at = NULL WHERE status = ?`,
+      [TaskStatus.PENDING, TaskStatus.PROCESSING],
     );
     return result.changes;
   }

@@ -15,6 +15,7 @@ import { getAdminAdapter } from '../../admin/db/core.js';
 import { GraphRepository } from '../../database/repositories/GraphRepository.js';
 import { requireProjectId } from '../../engine/query/code-intel-isolation.js';
 import { resolveWithinWorkspace } from '../../shared/path-safety.js';
+import { validateSession } from '../../admin/db/sessions.js';
 
 interface SourceFile { path: string; content: string }
 interface IndexScope { projectId: string; workspace: string }
@@ -26,6 +27,9 @@ function resolveRequestScope(c: Context): IndexScope {
   const workspace = c.req.header('X-Workspace-Root') || config.workspace;
   return { projectId, workspace };
 }
+
+/** Extract userId from Bearer token (non-fatal — returns '' if unauthenticated). */
+// NOTE: resolveUserId kept for backward compatibility but auth is now enforced at route level
 
 /** Phase: write files to disk under the workspace, rejecting unsafe paths. */
 function writeFilesPhase(workspace: string, files: SourceFile[]): { written: number; rejected: string[] } {
@@ -42,10 +46,10 @@ function writeFilesPhase(workspace: string, files: SourceFile[]): { written: num
 }
 
 /** Phase: register/update the project in the admin registry (non-fatal). */
-async function registerProjectPhase(projectId: string, workspace: string, logger: Logger): Promise<void> {
+async function registerProjectPhase(projectId: string, workspace: string, logger: Logger, createdBy = ''): Promise<void> {
   try {
     const graphRepo = new GraphRepository(getAdminAdapter());
-    await graphRepo.registerProject(projectId, path.basename(workspace), workspace);
+    await graphRepo.registerProject(projectId, path.basename(workspace), workspace, createdBy);
   } catch (err) {
     logger.warn({ err, projectId }, '[index] project registry upsert skipped (non-fatal)');
   }
@@ -95,19 +99,40 @@ async function upsertProjectGraphNode(entryId: string, displayName: string, proj
   }
 }
 
-/** Register the /api/index/* routes on the given app. */
-export function registerIndexRoutes(app: Hono, registry: ModuleRegistry, logger: Logger): void {
-  app.post('/api/index/source', (c) => handleIndexSource(c, registry, logger));
-  app.post('/api/index/document', (c) => handleIndexDocument(c, logger));
-  app.post('/api/index/documents', (c) => handleIndexDocuments(c, logger));
+/** Require valid session — returns 401 if not authenticated. */
+async function requireAuth(c: Context): Promise<{ userId: string } | null> {
+  const auth = c.req.header('Authorization') || '';
+  const token = auth.replace('Bearer ', '').trim();
+  if (!token) return null;
+  const session = await validateSession(token);
+  return session ?? null;
 }
 
-async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: Logger) {
+/** Register the /api/index/* routes on the given app. */
+export function registerIndexRoutes(app: Hono, registry: ModuleRegistry, logger: Logger): void {
+  app.post('/api/index/source', async (c) => {
+    const session = await requireAuth(c);
+    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    return handleIndexSource(c, registry, logger, session.userId);
+  });
+  app.post('/api/index/document', async (c) => {
+    const session = await requireAuth(c);
+    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    return handleIndexDocument(c, logger);
+  });
+  app.post('/api/index/documents', async (c) => {
+    const session = await requireAuth(c);
+    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    return handleIndexDocuments(c, logger);
+  });
+}
+
+async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: Logger, userId = '') {
   try {
     const { files } = await c.req.json<{ files: SourceFile[] }>();
     if (!files || !Array.isArray(files)) return c.json({ error: 'files array required' }, 400);
     const scope = resolveRequestScope(c);
-    await registerProjectPhase(scope.projectId, scope.workspace, logger);
+    await registerProjectPhase(scope.projectId, scope.workspace, logger, userId);
     const { written, rejected } = writeFilesPhase(scope.workspace, files);
     if (rejected.length > 0) logger.warn({ rejected, projectId: scope.projectId }, '[index] rejected unsafe paths');
     const reindexTriggered = triggerIndexPhase(registry, scope, logger);

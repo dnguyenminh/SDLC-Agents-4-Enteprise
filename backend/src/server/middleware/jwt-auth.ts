@@ -146,14 +146,16 @@ export interface JwtVerification {
 /**
  * Verify a bearer credential as a JWT.
  * SA4E-41 SEC-03: shared by the tools route to bind X-Project-Id to identity.
+ * SA4E-55 SR-01: If KB_TOKEN_SECRET is not configured, JWT is rejected — never
+ *   accept an unverified JWT payload as trusted identity.
  */
 export async function verifyJwtToken(token: string): Promise<JwtVerification> {
   const looksLikeJwt = token.split('.').length === 3;
   if (!looksLikeJwt) return { valid: false, payload: null };
-  if (TOKEN_SECRET) {
-    const ok = await verifyHs256(token, TOKEN_SECRET);
-    if (!ok) return { valid: false, payload: null };
-  }
+  // SR-01 fix: reject JWT when secret not configured — prevents forged identity
+  if (!TOKEN_SECRET) return { valid: false, payload: null };
+  const ok = await verifyHs256(token, TOKEN_SECRET);
+  if (!ok) return { valid: false, payload: null };
   const payload = decodeJwtPayload(token);
   if (!payload || isExpired(payload)) return { valid: false, payload: null };
   return { valid: true, payload };

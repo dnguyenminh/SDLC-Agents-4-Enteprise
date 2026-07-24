@@ -18,11 +18,11 @@ export function createRbacRoutes(ctx: AdminContext): Hono {
     const permCheck = await ctx.requirePermission(c, user.userId, 'RBAC_MANAGE');
     if (permCheck instanceof Response) return permCheck;
     const groups = await getGroups();
-    const result = groups.map(g => ({
+    const result = await Promise.all(groups.map(async g => ({
       ...g, id: g.accessGroupId, name: g.accessGroupName, isSystem: g.isSystemGroup,
-      userCount: ctx.db.user.getUserCountByGroup(g.accessGroupId),
+      userCount: await ctx.db.user.getUserCountByGroup(g.accessGroupId),
       permissions: g.permissions.map(p => ({ name: p.permissionId, roleData: p.roleData })),
-    }));
+    })));
     return c.json({ groups: result });
   });
 
