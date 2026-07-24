@@ -72,10 +72,10 @@ describe('SA4E-41 SEC-01 graph tool isolation (two tenants)', () => {
 
   afterEach(() => db.close());
 
-  it('SymbolResolver only resolves the caller of its own tenant', () => {
-    expect(new SymbolResolver(new SqliteDbAdapter(db), PID_A).resolve('callerAlpha').length).toBe(1);
-    expect(new SymbolResolver(new SqliteDbAdapter(db), PID_B).resolve('callerAlpha').length).toBe(0);
-    expect(new SymbolResolver(new SqliteDbAdapter(db), PID_B).resolve('callerBravo').length).toBe(1);
+  it('SymbolResolver only resolves the caller of its own tenant', async () => {
+    expect((await new SymbolResolver(new SqliteDbAdapter(db), PID_A).resolve('callerAlpha')).length).toBe(1);
+    expect((await new SymbolResolver(new SqliteDbAdapter(db), PID_B).resolve('callerAlpha')).length).toBe(0);
+    expect((await new SymbolResolver(new SqliteDbAdapter(db), PID_B).resolve('callerBravo')).length).toBe(1);
   });
 
   it('GraphRepository.findCallers of a shared symbol is tenant-scoped', async () => {
@@ -119,7 +119,7 @@ describe('SA4E-41 SEC-01 graph tool isolation (two tenants)', () => {
   });
 
   it('fail-closed: undefined projectId yields no graph data', async () => {
-    expect(new SymbolResolver(new SqliteDbAdapter(db), undefined).resolve('sharedFn').length).toBe(0);
+    expect((await new SymbolResolver(new SqliteDbAdapter(db), undefined).resolve('sharedFn')).length).toBe(0);
     expect((await new GraphRepository(new SqliteDbAdapter(db), undefined).findCallers('sharedFn')).length).toBe(0);
     expect([...new GraphLoader(new SqliteDbAdapter(db), undefined).loadCallGraph().values()].length).toBe(0);
   });

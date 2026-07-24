@@ -194,7 +194,7 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     const overridesExisted = !!ctx.configOverrides[section] && Object.keys(ctx.configOverrides[section]).length > 0;
     delete ctx.configOverrides[section];
     await recordAudit(user.userId, user.username, 'CONFIG_RESET', 'config', section, JSON.stringify({ section, overridesCleared: overridesExisted }));
-    return c.json({ success: true, section, config: await getEffectiveConfig(ctx)[section] });
+    return c.json({ success: true, section, config: (await getEffectiveConfig(ctx))[section] });
   });
 
   app.post('/api/admin/config/reset-all', async (c) => {

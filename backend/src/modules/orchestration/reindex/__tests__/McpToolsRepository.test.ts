@@ -8,6 +8,7 @@ import pino from 'pino';
 import type Database from 'better-sqlite3';
 import { makeTempDb, type TempDb } from '../../../../__tests__/sa4e-testkit.js';
 import { McpToolsRepository } from '../McpToolsRepository.js';
+import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
 import type { PreparedTool } from '../models/PreparedTool.js';
 
 const silent = pino({ level: 'silent' });
@@ -36,7 +37,7 @@ describe('McpToolsRepository', () => {
   beforeEach(() => {
     tmp = makeTempDb();
     db = tmp.dbManager.getDb();
-    repo = new McpToolsRepository(db, silent);
+    repo = new McpToolsRepository(new SqliteDbAdapter(db), silent);
   });
   afterEach(() => tmp.close());
 
@@ -66,7 +67,7 @@ describe('McpToolsRepository', () => {
 
   it('UT-14: pruneRemoved with empty set is skipped (no wipe) + warns', () => {
     const warn = vi.fn();
-    const r = new McpToolsRepository(db, { warn } as any);
+    const r = new McpToolsRepository(new SqliteDbAdapter(db), { warn } as any);
     r.upsertScoped([prepared('t1', 'S'), prepared('t2', 'S')], 'S');
     const removed = r.pruneRemoved('S', []);
     expect(removed).toBe(0);
@@ -101,7 +102,7 @@ describe('McpToolsRepository', () => {
 
   it('UT-18: scope-aware upsert does not hijack another server row (F-01)', () => {
     const warn = vi.fn();
-    const r = new McpToolsRepository(db, { warn } as any);
+    const r = new McpToolsRepository(new SqliteDbAdapter(db), { warn } as any);
     r.upsertScoped([prepared('common', 'A')], 'A');
     const upserted = r.upsertScoped([prepared('common', 'B')], 'B');
     expect(upserted).toBe(0);

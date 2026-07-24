@@ -10,6 +10,7 @@ import { ReindexActionMapper } from '../ReindexActionMapper.js';
 import { PerServerTaskQueue } from '../PerServerTaskQueue.js';
 import { ReindexService } from '../ReindexService.js';
 import { ReindexSubscriber } from '../ReindexSubscriber.js';
+import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
 import { FakeEmbedder, FakeEventSource, FakeToolSource } from './reindex-fakes.js';
 
 const silent = pino({ level: 'silent' });
@@ -101,7 +102,7 @@ describe('ReindexSubscriber — service-integrated (UT-24/25/26)', () => {
     const src = new FakeToolSource();
     src.setTools('S', ['t1']);
     src.setConnected('S', false); // client manager says NOT connected
-    const service = new ReindexService(() => db, new FakeEmbedder(), src, silent);
+    const service = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
     const source = new FakeEventSource();
     const sub = new ReindexSubscriber(source, service, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
     sub.start();
@@ -118,7 +119,7 @@ describe('ReindexSubscriber — service-integrated (UT-24/25/26)', () => {
     src.setConnected('S', true);
     const now = vi.spyOn(Date, 'now');
     now.mockReturnValueOnce(0).mockReturnValue(6000); // start=0, end=6000ms
-    const service = new ReindexService(() => db, new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
+    const service = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
     await service.reindexConnected('S');
     now.mockRestore();
     const count = (db.prepare('SELECT COUNT(*) c FROM mcp_tools WHERE server = ?').get('S') as any).c;

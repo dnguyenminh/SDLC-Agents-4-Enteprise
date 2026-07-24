@@ -8,13 +8,14 @@ import pino from 'pino';
 import type Database from 'better-sqlite3';
 import { makeTempDb } from '../../../../__tests__/sa4e-testkit.js';
 import { ReindexService } from '../ReindexService.js';
+import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
 import { FakeEmbedder, FakeToolSource } from './reindex-fakes.js';
 
 const silent = pino({ level: 'silent' });
 const RUNS = 15;
 
 function serviceFor(db: Database.Database, src: FakeToolSource): ReindexService {
-  return new ReindexService(() => db, new FakeEmbedder(), src, silent);
+  return new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
 }
 
 function namesOf(db: Database.Database, server: string): string[] {

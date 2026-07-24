@@ -148,30 +148,30 @@ describe('SymbolResolver', () => {
   before(() => { db = setupTestDb(); });
   after(() => { db.close(); });
 
-  it('resolves exact symbol name', () => {
+  it('resolves exact symbol name', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
-    const results = resolver.resolve('getUser');
+    const results = await resolver.resolve('getUser');
     assert.ok(results.length >= 1);
     assert.equal(results[0].name, 'getUser');
   });
 
-  it('resolves qualified name (Class.method)', () => {
+  it('resolves qualified name (Class.method)', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
-    const results = resolver.resolve('UserService.getUser');
+    const results = await resolver.resolve('UserService.getUser');
     assert.equal(results.length, 1);
     assert.equal(results[0].name, 'getUser');
     assert.equal(results[0].filePath, 'src/service.ts');
   });
 
-  it('returns empty for non-existent symbol', () => {
+  it('returns empty for non-existent symbol', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
-    const results = resolver.resolve('nonExistentSymbol');
+    const results = await resolver.resolve('nonExistentSymbol');
     assert.equal(results.length, 0);
   });
 
-  it('suggests similar symbols', () => {
+  it('suggests similar symbols', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
-    const suggestions = resolver.suggest('User');
+    const suggestions = await resolver.suggest('User');
     assert.ok(suggestions.length > 0);
     assert.ok(suggestions.some(s => s.includes('User')));
   });
@@ -320,10 +320,10 @@ describe('TestDetector', () => {
     assert.equal(detector.isTestFile('test_foo.py'), true);
   });
 
-  it('finds related tests for a symbol', () => {
+  it('finds related tests for a symbol', async () => {
     const detector = new TestDetector(new SqliteDbAdapter(db), 'test_proj');
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
-    const symbols = resolver.resolve('getUser');
+    const symbols = await resolver.resolve('getUser');
     const tests = detector.findRelatedTests(symbols, []);
     assert.ok(tests.length >= 0); // May find tests/service.test.ts
   });
@@ -387,24 +387,24 @@ describe('GraphTraverser', () => {
   before(() => { db = setupTestDb(); });
   after(() => { db.close(); });
 
-  it('resolves a start node', () => {
+  it('resolves a start node', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const traverser = new GraphTraverser(new SqliteDbAdapter(db), resolver, '/project', 'test_proj');
 
-    const node = traverser.resolveNode('UserService');
+    const node = await traverser.resolveNode('UserService');
     assert.ok(node !== null);
     assert.equal(node!.name, 'UserService');
     assert.equal(node!.kind, 'class');
   });
 
-  it('traverses outgoing edges from a node', () => {
+  it('traverses outgoing edges from a node', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const traverser = new GraphTraverser(new SqliteDbAdapter(db), resolver, '/project', 'test_proj');
 
-    const node = traverser.resolveNode('handleGetUser');
+    const node = await traverser.resolveNode('handleGetUser');
     assert.ok(node !== null);
 
-    const results = traverser.traverse(node!, {
+    const results = await traverser.traverse(node!, {
       edgeTypes: ['calls'],
       nodeTypes: [],
       direction: 'outgoing',
@@ -415,14 +415,14 @@ describe('GraphTraverser', () => {
     assert.ok(results.length >= 0);
   });
 
-  it('traverses incoming edges', () => {
+  it('traverses incoming edges', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const traverser = new GraphTraverser(new SqliteDbAdapter(db), resolver, '/project', 'test_proj');
 
-    const node = traverser.resolveNode('getUser');
+    const node = await traverser.resolveNode('getUser');
     assert.ok(node !== null);
 
-    const results = traverser.traverse(node!, {
+    const results = await traverser.traverse(node!, {
       edgeTypes: ['calls'],
       nodeTypes: [],
       direction: 'incoming',
@@ -432,22 +432,22 @@ describe('GraphTraverser', () => {
     assert.ok(results.length >= 0);
   });
 
-  it('returns null for unknown symbol', () => {
+  it('returns null for unknown symbol', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const traverser = new GraphTraverser(new SqliteDbAdapter(db), resolver, '/project', 'test_proj');
 
-    const node = traverser.resolveNode('nonExistentSymbol');
+    const node = await traverser.resolveNode('nonExistentSymbol');
     assert.equal(node, null);
   });
 
-  it('respects maxResults limit', () => {
+  it('respects maxResults limit', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const traverser = new GraphTraverser(new SqliteDbAdapter(db), resolver, '/project', 'test_proj');
 
-    const node = traverser.resolveNode('UserService');
+    const node = await traverser.resolveNode('UserService');
     assert.ok(node !== null);
 
-    const results = traverser.traverse(node!, {
+    const results = await traverser.traverse(node!, {
       edgeTypes: [],
       nodeTypes: [],
       direction: 'outgoing',
@@ -457,14 +457,14 @@ describe('GraphTraverser', () => {
     assert.ok(results.length <= 1);
   });
 
-  it('formats response correctly', () => {
+  it('formats response correctly', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
     const traverser = new GraphTraverser(new SqliteDbAdapter(db), resolver, '/project', 'test_proj');
 
-    const node = traverser.resolveNode('UserService');
+    const node = await traverser.resolveNode('UserService');
     assert.ok(node !== null);
 
-    const results = traverser.traverse(node!, {
+    const results = await traverser.traverse(node!, {
       edgeTypes: [],
       nodeTypes: [],
       direction: 'outgoing',

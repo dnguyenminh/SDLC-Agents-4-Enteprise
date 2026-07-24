@@ -7,6 +7,7 @@ import pino from 'pino';
 import type Database from 'better-sqlite3';
 import { makeTempDb, type TempDb } from '../../../../__tests__/sa4e-testkit.js';
 import { ReindexService } from '../ReindexService.js';
+import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
 import { FakeEmbedder, FakeToolSource } from './reindex-fakes.js';
 
 const silent = pino({ level: 'silent' });
@@ -27,7 +28,7 @@ describe('ReindexService', () => {
     src.setTools('S', ['a', 'b']);
     src.setTools('T', ['c']);
     src.setConnected('S', true);
-    const svc = new ReindexService(() => db, new FakeEmbedder(), src, silent);
+    const svc = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(2);
     expect(countFor(db, 'S')).toBe(2);
@@ -38,7 +39,7 @@ describe('ReindexService', () => {
     const warn = vi.fn();
     const src = new FakeToolSource();
     src.setConnected('S', true);
-    const svc = new ReindexService(() => db, new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
+    const svc = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(0);
     expect(warn).toHaveBeenCalled();
@@ -50,7 +51,7 @@ describe('ReindexService', () => {
     src.setConnected('S', true);
     const embedder = new FakeEmbedder();
     embedder.failFor('t2');
-    const svc = new ReindexService(() => db, embedder, src, silent);
+    const svc = new ReindexService(() => new SqliteDbAdapter(db), embedder, src, silent);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(2);
     const rows = (db.prepare('SELECT name FROM mcp_tools WHERE server = ?').all('S') as any[]).map((r) => r.name);
@@ -61,7 +62,7 @@ describe('ReindexService', () => {
     const src = new FakeToolSource();
     src.setTools('S', ['t1']);
     src.setConnected('S', false);
-    const svc = new ReindexService(() => db, new FakeEmbedder(), src, silent);
+    const svc = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(0);
     expect(countFor(db, 'S')).toBe(0);
