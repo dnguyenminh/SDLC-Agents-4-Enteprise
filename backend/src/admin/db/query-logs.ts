@@ -5,12 +5,21 @@
 
 import { getAdminAdapter } from './core.js';
 
-/** Ensure the query_logs table and required columns exist (lazy-init). */
+/**
+ * Ensure the query_logs table and required columns exist (lazy-init).
+ * The `id` column DDL is engine-specific: SQLite uses `INTEGER PRIMARY KEY
+ * AUTOINCREMENT` while PostgreSQL uses `SERIAL PRIMARY KEY`. Emitting the
+ * SQLite variant on PostgreSQL fails with `syntax error at or near "AUTOINCREMENT"`
+ * (SQLSTATE 42601), which broke every `/api/admin/search` request.
+ */
 async function ensureTable(): Promise<void> {
   const adapter = getAdminAdapter();
+  const idColumn = adapter.getEngine() === 'postgresql'
+    ? 'id SERIAL PRIMARY KEY'
+    : 'id INTEGER PRIMARY KEY AUTOINCREMENT';
   await adapter.execAsync(`
     CREATE TABLE IF NOT EXISTS query_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      ${idColumn},
       query TEXT NOT NULL,
       timestamp TEXT NOT NULL,
       response_time_ms INTEGER NOT NULL,

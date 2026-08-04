@@ -37,7 +37,8 @@ async function upsertGraphNode(entryId: number, summary: string, type: string, p
       entryId: `doc-${entryId}`, label: summary.substring(0, 60),
       type: type.toUpperCase(), tier: 'SHARED',
       projectId: projectId || '', x: pos.x, y: pos.y, z: pos.z,
-      level: String(pos.level), clusterId: pos.clusterId,
+      // pos.level is numeric (from LEVEL_MAP); do NOT stringify — schema is INTEGER.
+      level: pos.level, clusterId: pos.clusterId,
     });
     logger.info({ entryId, type }, '[graph] Upserted graph node for KB entry');
   } catch (err: any) {

@@ -1,6 +1,9 @@
 import { pipeline, env, FeatureExtractionPipeline } from '@xenova/transformers';
 
-// Suppress local file warnings, force downloading from HF Hub if not available locally
+// Point cache to pre-baked model directory (set via TRANSFORMERS_CACHE in Dockerfile)
+if (process.env.TRANSFORMERS_CACHE) {
+  (env as any).cacheDir = process.env.TRANSFORMERS_CACHE;
+}
 (env as any).allowLocalModels = false;
 
 export class EmbeddingService {

@@ -2,7 +2,7 @@
  * LLM Provider types — multi-provider support.
  */
 
-export type LLMProvider = 'ollama' | 'openai' | 'anthropic' | 'gemini' | 'lmstudio' | 'copilot' | 'opencode' | 'opencode-zen';
+export type LLMProvider = 'ollama' | 'openai' | 'anthropic' | 'gemini' | 'lmstudio' | 'copilot' | 'opencode' | 'opencode-zen' | 'dify';
 
 export interface LLMConfig {
   provider: LLMProvider;

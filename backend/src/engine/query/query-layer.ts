@@ -67,20 +67,58 @@ const SYMBOL_COLUMNS = `s.name, s.kind, s.signature, f.relative_path as filePath
 export class QueryLayer {
   constructor(private readonly adapter: DatabaseAdapter) {}
 
-  /** Full-text search across symbols using FTS5, scoped to one tenant. */
+  /**
+   * Full-text search across symbols, scoped to one tenant.
+   *
+   * SQLite path uses FTS5 (`symbols_fts` virtual table + `MATCH`).
+   * PostgreSQL has no `symbols_fts` set up yet, so we fall back to an
+   * `ILIKE` scan across `name`, `signature`, `doc_comment` with a
+   * priority-based rank (exact name = 0, prefix = 1, contains = 2, other = 3).
+   * Slower than a tsvector index for very large symbol sets, but functional
+   * and index-friendly for the small tenant workspaces this MCP typically
+   * serves. Upgrade path: add a tsvector column on `symbols` via
+   * fts-recreation.ts and switch to `@@ plainto_tsquery`.
+   */
   async searchCode(projectId: string | undefined, query: string, limit = 20): Promise<SearchResult[]> {
-    const ftsQuery = sanitizeFtsQuery(query);
     const scope = buildCodeScopeFilter(projectId, 's');
+    const engine = this.adapter.getEngine();
+
+    if (engine === 'sqlite') {
+      const ftsQuery = sanitizeFtsQuery(query);
+      return this.adapter.allAsync<SearchResult>(
+        `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
+                s.start_line as startLine, s.end_line as endLine,
+                s.doc_comment as docComment, rank
+         FROM symbols_fts
+         JOIN symbols s ON symbols_fts.rowid = s.id
+         JOIN files f ON s.file_id = f.id
+         WHERE symbols_fts MATCH ? AND ${scope.clause}
+         ORDER BY rank LIMIT ?`,
+        [ftsQuery, ...scope.params, limit],
+      );
+    }
+
+    // Escape LIKE meta-characters so caller-provided text is treated as literal.
+    const escaped = query.replace(/([\\%_])/g, '\\$1');
+    const like = `%${escaped}%`;
+    const prefix = `${escaped}%`;
     return this.adapter.allAsync<SearchResult>(
       `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
               s.start_line as startLine, s.end_line as endLine,
-              s.doc_comment as docComment, rank
-       FROM symbols_fts
-       JOIN symbols s ON symbols_fts.rowid = s.id
+              s.doc_comment as docComment,
+              CASE
+                WHEN s.name = ? THEN 0
+                WHEN s.name ILIKE ? THEN 1
+                WHEN s.name ILIKE ? THEN 2
+                ELSE 3
+              END AS rank
+       FROM symbols s
        JOIN files f ON s.file_id = f.id
-       WHERE symbols_fts MATCH ? AND ${scope.clause}
-       ORDER BY rank LIMIT ?`,
-      [ftsQuery, ...[...scope.params], limit],
+       WHERE (s.name ILIKE ? OR s.signature ILIKE ? OR s.doc_comment ILIKE ?)
+         AND ${scope.clause}
+       ORDER BY rank ASC, s.name ASC
+       LIMIT ?`,
+      [query, prefix, like, like, like, like, ...scope.params, limit],
     );
   }
 

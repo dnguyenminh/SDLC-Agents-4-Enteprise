@@ -108,9 +108,9 @@ export class MemoryEngine extends MemoryEngineCrud {
     }
   }
 
-  private applyCompositeScoring(rows: any[]): SearchResult[] {
+  private async applyCompositeScoring(rows: any[]): Promise<SearchResult[]> {
     try {
-      const options = this.readScoringOptionsSync();
+      const options = await this.readScoringOptions();
       const scored = rows.map(row => {
         const { rank, ...entry } = row;
         const ftsRank = -rank;
@@ -138,12 +138,12 @@ export class MemoryEngine extends MemoryEngineCrud {
   }
 
   /**
-   * Sync scoring options read — only called after allAsync returns rows.
-   * SA4E-53: scoring config is read via sync path since it's called from applyCompositeScoring
-   * which is a synchronous post-processing step on already-fetched rows.
-   * TODO: convert to fully async in future if needed.
+   * Read composite scoring options from `decay_config`.
+   * Uses the async adapter API so it works on every engine — PostgresAdapter
+   * has no sync fallback (its sync `get()` throws "Use getAsync"), so the
+   * previous sync variant crashed every PG search after FTS returned rows.
    */
-  private readScoringOptionsSync(): CompositeScoreOptions {
+  private async readScoringOptions(): Promise<CompositeScoreOptions> {
     try {
       // PostgreSQL only supports async — return defaults (non-fatal)
       if (this.adapter.getEngine() === 'postgresql') {

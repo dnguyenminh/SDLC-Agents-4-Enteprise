@@ -74,9 +74,12 @@ export class GraphSyncService {
       const s = symbols[i];
       const pos = fibonacciSphere(i, total);
       const nodeType = KIND_TO_TYPE[s.kind] || 'CODE_ENTITY';
+      // level=1 → micro tier for code entities (classes, functions, methods).
+      // Schema column `graph_nodes.level` is INTEGER in both engines; passing a
+      // string here fails on PostgreSQL ("invalid input syntax for type integer").
       await this.adminAdapter.runAsync(sql, [
         `code:${s.id}`, this.toLabel(s), nodeType, 'CODE',
-        projectId, pos.x, pos.y, pos.z, 'micro', `code-${projectId}`,
+        projectId, pos.x, pos.y, pos.z, 1, `code-${projectId}`,
       ]);
     }
   }

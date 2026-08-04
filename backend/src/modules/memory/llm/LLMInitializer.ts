@@ -65,18 +65,11 @@ export function initLLMInBackground(
       const llmConfig = await buildLLMConfig();
       logger.info({ provider: llmConfig.provider, model: llmConfig.model }, '[LLMInitializer] Resolved LLM config');
 
-      const healthUrl = llmConfig.baseUrl.replace(/\/v1\/?$/, '') + '/v1/models';
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const healthResp = await fetch(healthUrl, { signal: controller.signal });
-      clearTimeout(timeout);
-
-      if (!healthResp.ok) {
+      const llmService = new LLMService(llmConfig);
+      if (!await llmService.isAvailable()) {
         logger.info({ provider: llmConfig.provider }, 'TagAnalyzer LLM not reachable — keyword fallback only');
         return;
       }
-
-      const llmService = new LLMService(llmConfig);
 
       taskWorker?.setLlmService(llmService);
 

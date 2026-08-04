@@ -28,6 +28,9 @@ import { migrate001AddScopeColumns } from './migrations/001-add-scope-columns.js
 import { migrate002AddEvolutionColumns } from './migrations/002-add-evolution-columns.js';
 import { migrate003PendingTasks } from './migrations/003-pending-tasks.js';
 import { migrate004ResetSequences } from './migrations/004-reset-sequences.js';
+import { migrate005FixPendingTasksSerial } from './migrations/005-fix-pending-tasks-serial.js';
+import { migrate006FixFilesSchema } from './migrations/006-fix-files-schema.js';
+import { recreateFtsInfrastructure } from '../../database/migration/fts-recreation.js';
 import { ScopePromotionService } from './promotion/index.js';
 import { TierConsolidationService } from './consolidation/service.js';
 import { startScheduler, stopScheduler } from './evolution/Scheduler.js';
@@ -95,6 +98,12 @@ export class MemoryModuleBuilder {
     await migrate002AddEvolutionColumns(this.memAdapter);
     await migrate003PendingTasks(this.memAdapter);
     await migrate004ResetSequences(this.memAdapter);
+    await migrate005FixPendingTasksSerial(this.memAdapter);
+    await migrate006FixFilesSchema(this.memAdapter);
+    // Ensure full-text-search infrastructure exists (SQLite FTS5 / PG tsvector).
+    // MemoryEngine.search relies on `ke.tsvector_content` on PostgreSQL — the
+    // helper is idempotent (`IF NOT EXISTS` / `CREATE OR REPLACE`), safe on repeat.
+    await recreateFtsInfrastructure(this.memAdapter);
 
     // SA4E-79: Add enrichment_status tracking columns
     const { migrate007Up } = await import('./schema/migrations/007_enrichment_status.js');

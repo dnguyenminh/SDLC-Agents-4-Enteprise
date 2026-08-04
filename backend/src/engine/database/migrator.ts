@@ -3,6 +3,7 @@
  * SA4E-53: async + cross-engine (PostgreSQL + SQLite) compatible.
  */
 
+import type Database from 'better-sqlite3';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import pino from 'pino';
 
@@ -182,6 +183,52 @@ async function getExistingColumns(adapter: DatabaseAdapter, table: string): Prom
     );
     return new Set(sqlite.map(r => r.name));
   } catch { return new Set(); }
+}
+
+/**
+ * Synchronous variant for SQLite — avoids the unawaited-async bug in runMigrations.
+ * runGraphMigrations is async but runMigrations is sync, so the await never fires
+ * and V5 runs before relationships table exists.
+ */
+export function runGraphMigrationsSync(db: Database.Database): void {
+  const existingCols = new Set(
+    (db.pragma('table_info(symbols)') as { name: string }[]).map(r => r.name)
+  );
+  let added = 0;
+  for (const col of ENHANCED_SYMBOL_COLUMNS) {
+    if (!existingCols.has(col.name)) {
+      try { db.exec(`ALTER TABLE symbols ADD COLUMN ${col.name} ${col.type}`); added++; } catch { /* exists */ }
+    }
+  }
+  if (added > 0) {
+    try {
+      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id)');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_exported ON symbols(is_exported)');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_file_kind ON symbols(file_id, kind)');
+    } catch { /* exists */ }
+    logger.error(`[graph-migrator] Added ${added} enhanced symbol columns`);
+  }
+
+  function execSync(sql: string): void {
+    for (const stmt of sql.split(';').map(s => s.trim()).filter(Boolean)) {
+      try { db.exec(stmt); } catch (err: unknown) {
+        const msg = (err as Error).message ?? '';
+        if (msg.includes('already exists') || msg.includes('duplicate column')) continue;
+        throw err;
+      }
+    }
+  }
+
+  execSync(buildGraphSchema('sqlite'));
+  logger.error('[graph-migrator] Relationships table ready');
+  execSync(buildFileIndexSchema('sqlite'));
+  logger.error('[graph-migrator] File index table ready');
+  execSync(buildGraphMetaSchema('sqlite'));
+  logger.error('[graph-migrator] Graph metadata table ready');
+  execSync(buildBodyEmbeddingsSchema('sqlite'));
+  logger.error('[graph-migrator] Body embeddings table ready');
+  db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)').run(3);
+  logger.error('[graph-migrator] Schema version set to 3');
 }
 
 /** Check if graph migrations have been applied. */
