@@ -85,6 +85,10 @@ export class JiraApiClient extends BaseAtlassianClient {
     return this.request({ method: 'DELETE', path: `/rest/api/2/attachment/${id}` });
   }
 
+  async getAttachment(id: string): Promise<HttpResponse> {
+    return this.request({ method: 'GET', path: `/rest/api/2/attachment/${id}` });
+  }
+
   async getFilter(id: string): Promise<HttpResponse> {
     return this.request({ method: 'GET', path: `/rest/api/2/filter/${id}` });
   }
@@ -195,5 +199,35 @@ export class JiraApiClient extends BaseAtlassianClient {
 
   async getEpicIssues(boardId: number, epicId: number, startAt = 0, maxResults = 50): Promise<HttpResponse> {
     return this.request({ method: 'GET', path: `/rest/agile/1.0/board/${boardId}/epic/${epicId}/issue?startAt=${startAt}&maxResults=${maxResults}` });
+  }
+
+  /**
+   * Download attachment binary using authenticated session.
+   * Supports absolute URLs.
+   */
+  async downloadAttachment(url: string): Promise<{ buffer: Buffer; mimeType: string; size: number; filename: string }> {
+    await this.config.rateLimiter.acquire();
+    const headers = await this.config.authHeaders();
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new Error(`Download failed: HTTP ${response.status} ${text}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const mimeType = response.headers.get('content-type') || 'application/octet-stream';
+    const contentDisposition = response.headers.get('content-disposition') || '';
+    let filename = 'attachment';
+    const filenameMatch = contentDisposition.match(/filename\*?="([^"]+)"/i) || contentDisposition.match(/filename=([^;]+)/i);
+    if (filenameMatch) {
+      filename = decodeURIComponent(filenameMatch[1].trim().replace(/"/g, ''));
+    } else {
+      try {
+        const urlObj = new URL(url);
+        const lastSegment = urlObj.pathname.split('/').pop() || 'attachment';
+        filename = decodeURIComponent(lastSegment);
+      } catch {}
+    }
+    return { buffer, mimeType, size: buffer.length, filename };
   }
 }

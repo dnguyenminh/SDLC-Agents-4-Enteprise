@@ -1,0 +1,33 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="2" value="Client / SM Agent" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="80" y="120" width="160" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="3" value="jira_download_attachment Tool" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="320" y="120" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="4" value="Auth Session Manager" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="560" y="120" width="160" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="5" value="Jira API / Attachment Storage" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="320" y="320" width="220" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="6" edge="1" parent="1" source="2" target="3">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="7" edge="1" parent="1" source="3" target="4">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="8" edge="1" parent="1" source="4" target="5">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="9" edge="1" parent="1" source="5" target="3">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="10" edge="1" parent="1" source="3" target="2">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

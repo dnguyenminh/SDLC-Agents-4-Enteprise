@@ -126,6 +126,13 @@ export const DeleteAttachmentSchema = z.object({
   attachment_id: z.string().min(1),
 });
 
+export const DownloadAttachmentSchema = z.object({
+  attachment_id: z.string().min(1).optional(),
+  attachment_url: z.string().url().optional(),
+}).refine(data => data.attachment_id || data.attachment_url, {
+  message: 'Either attachment_id or attachment_url is required',
+});
+
 export const ProjectKeySchema = z.object({
   project_key: z.string().min(1),
 });
