@@ -7,7 +7,7 @@ import { readFile, realpath } from 'node:fs/promises';
 import { basename, extname, resolve } from 'node:path';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { JiraApiClient } from '../clients/jira-client.js';
-import { AttachFileSchema, GetAttachmentsSchema, DeleteAttachmentSchema, DownloadAttachmentSchema } from '../models/jira-schemas.js';
+import { AttachFileSchema, GetAttachmentsSchema, DeleteAttachmentSchema } from '../models/jira-schemas.js';
 import { createSuccessResult, createErrorResult } from '../models/error-schemas.js';
 import { AtlassianErrorCode } from '../models/types.js';
 import { AtlassianApiError } from '../clients/base-client.js';
@@ -59,44 +59,6 @@ export function registerJiraAttachmentTools(server: McpServer, client: JiraApiCl
   server.tool('jira_attachment_meta', 'Get attachment upload metadata/limits', async () => {
     try { return createSuccessResult((await client.getAttachmentMeta()).data); }
     catch (e) { return handleError(e); }
-  });
-
-  server.registerTool('jira_download_attachment', {
-    description: 'Download Jira attachment content using authenticated session (by ID or URL). Returns base64 content and metadata.',
-    inputSchema: DownloadAttachmentSchema,
-  }, async (args, _extra) => {
-    const parsed = DownloadAttachmentSchema.safeParse(args);
-    if (!parsed.success) return createErrorResult(AtlassianErrorCode.VALIDATION_ERROR, parsed.error.message);
-
-    try {
-      let downloadUrl: string;
-
-      if (parsed.data.attachment_url) {
-        downloadUrl = parsed.data.attachment_url;
-      } else if (parsed.data.attachment_id) {
-        // Resolve ID to content URL via attachment metadata
-        const meta = await client.getAttachment(parsed.data.attachment_id);
-        const contentUrl = (meta.data as { content?: string } | undefined)?.content as string | undefined;
-        if (!contentUrl) {
-          return createErrorResult(AtlassianErrorCode.NOT_FOUND, 'Attachment content URL not found');
-        }
-        downloadUrl = contentUrl;
-      } else {
-        return createErrorResult(AtlassianErrorCode.VALIDATION_ERROR, 'Either attachment_id or attachment_url is required');
-      }
-
-      const result = await client.downloadAttachment(downloadUrl);
-      const contentBase64 = result.buffer.toString('base64');
-
-      return createSuccessResult({
-        content_base64: contentBase64,
-        mime_type: result.mimeType,
-        size_bytes: result.size,
-        filename: result.filename,
-      });
-    } catch (e) {
-      return handleError(e);
-    }
   });
 }
 

@@ -1,9 +1,0 @@
-test_case_id,attachment_id,attachment_url,expected_http_code,expected_error_message,description
-TC-001,ATT-001,,200,,Valid ID download happy path
-TC-002,,https://jira.example.com/secure/attachment/123/file.pdf,200,,Valid URL download happy path
-TC-200,INVALID-ID,,400,Attachment ID not found,Invalid ID error handling
-TC-201,ATT-404,,404,Attachment not found,404 not found handling
-TC-202,ATT-001,,200,,403 fix verification - must not return 403
-TC-203,,not-a-url,400,Invalid URL format,Invalid URL format handling
-TC-300,ATT-001,,200,,Authenticated session used
-TC-600,ATT-003,,200,,Performance <5s for 10MB file

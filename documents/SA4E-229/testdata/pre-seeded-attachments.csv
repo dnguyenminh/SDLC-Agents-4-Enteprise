@@ -1,5 +1,0 @@
-attachment_id,attachment_url,filename,mime_type,size_bytes,status,description
-ATT-001,https://jira.example.com/secure/attachment/123/file.pdf,file.pdf,application/pdf,102400,ACTIVE,Valid PDF attachment for TC-001
-ATT-002,https://jira.example.com/secure/attachment/124/image.png,image.png,image/png,51200,ACTIVE,Valid PNG attachment for TC-002
-ATT-003,https://jira.example.com/secure/attachment/125/large.bin,large.bin,application/octet-stream,10485760,ACTIVE,10MB file for performance test
-ATT-404,https://jira.example.com/secure/attachment/999/missing.doc,missing.doc,application/msword,0,INACTIVE,Non-existent attachment
