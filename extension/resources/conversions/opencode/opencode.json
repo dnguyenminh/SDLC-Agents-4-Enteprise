@@ -1,147 +1,31 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "agent": {
-    "sm-agent": {
-      "description": "Scrum Master — coordinates multi-agent SDLC pipeline (BA→SA→DEV→QA→DevOps)",
-      "mode": "subagent",
-      "permission": {
-        "edit": "ask",
-        "bash": "ask",
-        "task": "allow"
-      }
-    },
-    "ba-agent": {
-      "description": "Business Analyst — reads Jira tickets, creates BRD/FSD documents",
-      "mode": "subagent",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow"
-      }
-    },
-    "ta-agent": {
-      "description": "Technical Architect — enriches FSD with API contracts, integration specs, pseudocode",
-      "mode": "subagent",
-      "permission": {
-        "edit": "allow",
-        "bash": "ask"
-      }
-    },
-    "sa-agent": {
-      "description": "Solution Architect — reads BRD/FSD, analyzes codebase, creates TDD",
-      "mode": "subagent",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow"
-      }
-    },
-    "dev-agent": {
-      "description": "Developer — implements code from TDD, creates tests, writes User Guide",
-      "mode": "subagent",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "task": "allow"
-      }
-    },
-    "qa-agent": {
-      "description": "QA Engineer — creates test plans (STP), test cases (STC), executes manual tests",
-      "mode": "subagent",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "task": "allow"
-      }
-    },
-    "devops-agent": {
-      "description": "DevOps Engineer — deployment guides, release notes, CI/CD, git release",
-      "mode": "subagent",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "task": "allow"
-      }
-    },
-    "security-agent": {
-      "description": "Security Expert — OWASP-based security audits with remediation code",
-      "mode": "subagent",
-      "permission": {
-        "edit": "allow",
-        "bash": "ask"
-      }
-    },
-    "ui-agent": {
-      "description": "UI/UX Designer — creates wireframes, mockups, HTML/CSS prototypes",
-      "mode": "subagent",
-      "permission": {
-        "edit": "allow",
-        "bash": "ask",
-        "task": "allow"
+  "instructions": [
+    ".opencode/rules/code-intel-dynamic-tools.md",
+    ".opencode/rules/sdlc/role-boundaries.md",
+    ".opencode/rules/sdlc/tool-usage-dynamic.md",
+    ".opencode/rules/sdlc/agent-self-learning.md",
+    ".opencode/rules/sdlc/pega-kb-search.md",
+    ".opencode/rules/sdlc/guardrails.md"
+  ],
+  "subagent_depth": 5,
+  "provider": {
+    "llm7": {
+      "name": "LLM7",
+      "base_url": "https://api.llm7.io/v1",
+      "api_key": "inTjTPh+nThUFDX+v7Fj/VvFIRTvLxKH1vvig6FOKiS/a5R9N9GBPbiVfGn1ZLWIwMIBWgIXSKDKy1ZjlswZmwcoG8HmhrIPTAVG+K05XBELb+bx29KoK1CmsIaH/cCXCO1HGce0qbYKhR797Ow=",
+      "models": {
+        "claude-3-7-sonnet": {
+          "name": "Claude 3.7 Sonnet"
+        }
       }
     }
   },
   "mcp": {
-    "code-intelligence": {
-      "type": "httpStream",
-      "url": "http://127.0.0.1:9181/mcp",
-      "transportType": "httpStream",
-      "disabled": false,
-      "autoApprove": [
-        "mem_ingest",
-        "execute_dynamic_tool",
-        "find_tools",
-        "toggle_tool",
-        "mem_search",
-        "drawio_auto_layout",
-        "orchestration_status",
-        "code_search",
-        "code_symbols",
-        "code_context",
-        "code_modules",
-        "code_index_status",
-        "stream_write_file",
-        "mem_ingest_file",
-        "mem_get",
-        "mem_delete",
-        "mem_list",
-        "mem_graph",
-        "mem_status",
-        "mem_consolidate",
-        "mem_audit",
-        "mem_sessions",
-        "mem_admin",
-        "mem_tags",
-        "mem_templates",
-        "mem_lifecycle",
-        "mem_scoring",
-        "mem_crud",
-        "mem_discover",
-        "agent_log",
-        "drawio_export_png"
-      ],
-      "disabledTools": [],
-      "command": "npx",
-      "args": ["tsx", "backend/src/index.ts"],
-      "cwd": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
-      "env": {
-        "CODE_INTEL_PORT": "9181",
-        "CODE_INTEL_WORKSPACE": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
-        "CODE_INTEL_VIEWER_PORT": "3200"
-      }
-    },
-    "atlassian": {
-      "url": "http://localhost:3062/mcp",
-      "type": "httpStream",
-      "transportType": "httpStream",
-      "disabled": false,
-      "autoApprove": [
-        "jira_get_issue",
-        "jira_search",
-        "jira_get_transitions",
-        "jira_get_all_projects",
-        "jira_get_agile_boards",
-        "confluence_search",
-        "confluence_get_page"
-      ]
+    "code-intel": {
+      "type": "remote",
+      "url": "http://localhost:9181/mcp",
+      "enabled": true
     }
   }
 }
