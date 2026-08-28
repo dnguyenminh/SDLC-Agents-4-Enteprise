@@ -1,0 +1,17 @@
+{
+  "ticket": "SA4E-229",
+  "jiraKey": "SA4E-229",
+  "autonomyLevel": "L3",
+  "currentPhase": "deployment",
+  "status": "in_progress",
+  "phases": {
+    "requirements": {"status": "done", "file": "BRD.md", "version": 1, "startedAt": "2026-08-28T12:00:00Z", "completedAt": "2026-08-28T12:10:00Z"},
+    "specification": {"status": "done", "file": "FSD.md", "version": 1, "startedAt": "2026-08-28T12:15:00Z", "completedAt": "2026-08-28T12:20:00Z"},
+    "design": {"status": "done", "file": "TDD.md", "version": 1, "startedAt": "2026-08-28T12:20:00Z", "completedAt": "2026-08-28T12:25:00Z"},
+    "test_planning": {"status": "done", "startedAt": "2026-08-28T12:25:00Z", "completedAt": "2026-08-28T12:30:00Z"},
+    "implementation": {"status": "done", "startedAt": "2026-08-28T13:00:00Z", "completedAt": "2026-08-28T13:30:00Z", "correctedAt": "2026-08-28T17:30:00Z", "location": "extension/src/mcp/atlassian/jira-attachment-tools.ts", "note": "Backend-only implementation reverted (PR #8); re-implemented in extension using AtlassianCredentialService authenticated session (PR #9)."},
+    "testing": {"status": "done", "startedAt": "2026-08-28T14:00:00Z", "completedAt": "2026-08-28T15:30:00Z", "verifiedBy": "QA Agent", "report": "TEST-REPORT.md", "result": "QA executed handler IT suite (jira-download-attachment-tool.it.test.ts): 8/8 pass (100%). Verified vs STC.md — 11 STC cases covered (TC-001,002,003,100,200,201,202,203,300,400,800). TEST-REPORT.md produced. Non-functional (TC-600/601) + live TC-700 deferred (need live Jira/perf harness). 0 defects."},
+    "deployment": {"status": "done", "file": "DPG.md", "version": 1.1, "startedAt": "2026-08-28T15:40:00Z", "completedAt": "2026-08-28T17:40:00Z", "documents": ["DPG.md", "RLN.md", "FSD.md", "TDD.md", "diagrams/deployment-flow.drawio", "diagrams/rollback-flow.drawio", "diagrams/deployment-flow.png", "diagrams/rollback-flow.png", ".github/workflows/ci-sa4e-229.yml"], "releaseVersion": "extension-1.39.0", "note": "Corrected: tool deployed IN EXTENSION (in-process local MCP tool), not backend MCP server. DPG/RLN v1.1 updated to reflect extension build (.vsix) + reload. Backend attempt reverted (PR #8), extension fix merged (PR #9)."}
+  },
+  "lastUpdated": "2026-08-28T17:40:00Z"
+}
