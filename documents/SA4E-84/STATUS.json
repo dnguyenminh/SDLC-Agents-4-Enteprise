@@ -1,19 +1,22 @@
 {
   "ticket": "SA4E-84",
-  "currentPhase": "deployment",
-  "jiraStatus": "In Progress",
+  "currentPhase": "done",
+  "jiraStatus": "Done",
+  "status": "done",
+  "verifiedBy": "devops-agent (docs+status 2026-08-30)",
+  "closedAt": "2026-08-30",
   "summary": "[drawio] Upgrade drawio_auto_layout to FIX mode - auto-layout reduce edge crossings with elkjs",
   "phases": {
     "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-08-01T04:30:00Z", "kbIngestId": "589586" },
     "specification": { "status": "done", "file": "FSD.md", "version": 3, "completedAt": "2026-08-01T04:45:00Z", "kbIngestId": "589587", "taEnriched": true, "discrepanciesResolved": ["DISC-1", "DISC-2"] },
-    "ui_design": { "status": "not_started" },
-    "design": { "status": "done", "file": "TDD.md", "version": "1.1", "completedAt": "2026-08-01T06:10:00Z", "kbIngestId": "589588" },
+    "ui_design": { "status": "not_started", "note": "N/A — backend tool, no UI" },
+    "design": { "status": "done", "file": "TDD.md", "version": "1.2", "completedAt": "2026-08-01T06:10:00Z", "kbIngestId": "589588" },
     "feedback_loop": { "status": "done", "iterations": 1, "maxIterations": 5, "completedAt": "2026-08-01T06:10:00Z", "discrepancies": 2, "resolved": 2 },
     "test_planning": { "status": "done", "file": "STP.md", "stcFile": "STC.md", "version": 1, "completedAt": "2026-08-01T07:00:00Z", "review": "approved_with_conditions", "testCases": 52 },
     "implementation": { "status": "done", "completedAt": "2026-08-01T08:30:00Z", "commit": "2f100fa", "branch": "SA4E-84" },
-    "user_guide": { "status": "not_started" },
+    "user_guide": { "status": "not_started", "note": "N/A — backend tool, no user guide" },
     "testing": { "status": "done", "completedAt": "2026-08-01T10:00:00Z", "testsPass": 20, "testsFail": 0, "preExistingFailures": 17 },
-    "deployment": { "status": "not_started" }
+    "deployment": { "status": "done", "note": "N/A — bundled into server build (VSIX v1.20.0, git tag v1.20.0)", "file": "DPG.md", "completedAt": "2026-08-30T01:00:00Z" }
   },
-  "lastUpdated": "2026-08-01T06:10:00Z"
+  "lastUpdated": "2026-08-30T01:00:00Z"
 }
