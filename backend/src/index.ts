@@ -46,6 +46,30 @@ async function main() {
     logger.error({ err }, 'Failed to ensure SA4E-215 tables; continuing startup');
   }
 
+  // --- SA4E-192 (Tier-2 slash commands) ---
+  // Wire the 8 commands (copy/debug/help/init/sessions/skills/status/thinking)
+  // into the runtime so they are registered in the shared `slashMenu` singleton and
+  // discoverable via /help. The module lives at repo-root `source/slash` (outside
+  // this package's `src` rootDir). We load it via a dynamic import with a
+  // non-literal specifier so tsc does not pull it into the build boundary while
+  // tsx still executes it in the running server. The single public entry point
+  // (`source/slash/index`) re-exports `slashMenu` + `registerAll` from one place,
+  // guaranteeing every consumer shares the same singleton instance (no duplicate
+  // SlashMenuController). This is the ONLY import site for the module in the
+  // product runtime.
+  try {
+    const slashTier2Path = "../../source/slash/index";
+    const slashTier2 = await import(slashTier2Path);
+    slashTier2.registerAll();
+    const registered = slashTier2.slashMenu.list().length;
+    logger.info(
+      { count: registered },
+      "SA4E-192 Tier-2 slash commands registered into runtime (discoverable via /help)",
+    );
+  } catch (err) {
+    logger.warn({ err }, "SA4E-192 Tier-2 slash registration skipped (non-fatal)");
+  }
+
   // --- Registry + Factory ---
   const registry = new ModuleRegistry(logger, bus);
   const factory = new ModuleFactory(registry, logger, {
