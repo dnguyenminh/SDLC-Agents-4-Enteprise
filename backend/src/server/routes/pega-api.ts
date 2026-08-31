@@ -114,6 +114,44 @@ export function createPegaApiRoutes(registry: ModuleRegistry, logger: Logger): H
     }
   });
 
+  /**
+   * SA4E-230: Discover a Pega app's service surface via the custom
+   * CodeIntelligence data-page API (Access Groups -> Service Packages ->
+   * Service Methods -> linked Activities) and index discovered rules.
+   * The extension "Index Source Code" command calls this for Pega workspaces.
+   */
+  app.post('/pega/discover', async (c) => {
+    const service = getPegaService();
+    if (!service) return c.json({ error: { code: 'NOT_READY', message: 'Memory module not ready' } }, 503);
+    try {
+      const body = await c.req.json<{
+        projectId?: string; appName?: string; appVersion?: string;
+        codeIntelBase?: string; authHeader?: string; index?: boolean; accessGroup?: string;
+      }>();
+      const endpoint = process.env.PEGA_ENDPOINT || 'https://cjpge4gy.pegacea.net/prweb';
+      const codeIntelBase = body.codeIntelBase
+        || process.env.PEGA_CODEINTEL_URL
+        || `${endpoint}/api/CodeIntelligence/v1`;
+      const authHeader = body.authHeader || process.env.PEGA_AUTH;
+      if (!authHeader) {
+        return c.json({ data: null, error: { code: 'MISSING_AUTH', message: 'authHeader or PEGA_AUTH required' } }, 400);
+      }
+      const report = await service.discoverServices({
+        codeIntelBase,
+        authHeader,
+        appName: body.appName || process.env.PEGA_APP_NAME || 'HRAppsV2',
+        appVersion: body.appVersion || process.env.PEGA_APP_VERSION || '01.01',
+        projectId: body.projectId || 'PegaCollProj',
+        index: body.index ?? true,
+        accessGroup: body.accessGroup,
+      });
+      return c.json({ data: report, error: null });
+    } catch (err: any) {
+      logger.error({ err }, 'pega/discover failed');
+      return c.json({ data: null, error: { code: 'INTERNAL_ERROR', message: err.message } }, 500);
+    }
+  });
+
   app.post('/pega/browser-plan', async (c) => {
     try {
       const body = await c.req.json<{ ruleJson: Record<string, unknown> }>();

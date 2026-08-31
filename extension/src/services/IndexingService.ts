@@ -105,6 +105,9 @@ export class IndexingService {
                         this.showProgress("Indexing Pega project rules...");
                         const pegaSummary = await this.runPegaProjectIndexer(root, report, secrets);
                         if (pegaSummary) { results.push(pegaSummary); }
+                        // SA4E-230: Also surface the service surface via CodeIntelligence discovery
+                        const discoverySummary = await this.runPegaCodeIntelDiscovery(root, report, secrets);
+                        if (discoverySummary) { results.push(discoverySummary); }
                         // Auto-sync to symbols table after Pega indexing (Phase 2)
                         if (!options.sync) {
                             this.showProgress("Auto-syncing Pega rules to symbols...");
@@ -232,6 +235,25 @@ export class IndexingService {
         } catch (err: any) {
             this.log(`[Pega Indexer] ❌ Fatal error: ${err.message}`);
             return `❌ Pega Project Indexing Failed: ${err.message}`;
+        }
+    }
+
+    /** SA4E-230: Discover Pega service surface via CodeIntelligence API (best-effort). */
+    private async runPegaCodeIntelDiscovery(
+        root: string, report: ProgressReporter, secrets?: vscode.SecretStorage,
+    ): Promise<string | null> {
+        try {
+            if (!secrets) return null;
+            const { PegaHttpClient } = await import("./PegaHttpClient");
+            const pegaClient = new PegaHttpClient(secrets, this.outputChannel);
+            const { PegaCodeIntelDiscovery } = await import("./PegaCodeIntelDiscovery");
+            const disc = new PegaCodeIntelDiscovery(pegaClient, this.outputChannel, this.log.bind(this));
+            const { getProjectId } = await import("../extension");
+            const projectId = getProjectId() || "PegaCollProj";
+            return await disc.run({ root, report, projectId });
+        } catch (err: any) {
+            this.log(`[Pega Discovery] ⚠️ skipped: ${err.message}`);
+            return `⚠️ Pega CodeIntelligence discovery skipped: ${err.message}`;
         }
     }
 

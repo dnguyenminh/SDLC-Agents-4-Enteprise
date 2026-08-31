@@ -53,4 +53,25 @@ describe('ChecksumService', () => {
     expect(removed).toBe(3);
     expect(repo.deleteNotIn).toHaveBeenCalledWith('u1', 'p1', ['a.ts']);
   });
+
+  it('preloadChecksums degrades to empty map on repo error (EF-04)', async () => {
+    const repo = { loadAll: vi.fn().mockRejectedValue(new Error('db down')), upsert: vi.fn(), deleteNotIn: vi.fn() } as any;
+    const svc = new ChecksumService(repo);
+    const result = await svc.preloadChecksums('u1', 'p1');
+    expect(result).toBeInstanceOf(Map);
+    expect(result.size).toBe(0);
+  });
+
+  it('upsert degrades silently on repo error (non-fatal)', async () => {
+    const repo = { loadAll: vi.fn(), upsert: vi.fn().mockRejectedValue(new Error('db down')), deleteNotIn: vi.fn() } as any;
+    const svc = new ChecksumService(repo);
+    await expect(svc.upsert('u1', 'p1', 'a.ts', 'chk')).resolves.toBeUndefined();
+  });
+
+  it('cleanupDeleted returns 0 on repo error (non-fatal)', async () => {
+    const repo = { loadAll: vi.fn(), upsert: vi.fn(), deleteNotIn: vi.fn().mockRejectedValue(new Error('db down')) } as any;
+    const svc = new ChecksumService(repo);
+    const removed = await svc.cleanupDeleted('u1', 'p1', ['a.ts']);
+    expect(removed).toBe(0);
+  });
 });
