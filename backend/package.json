@@ -21,6 +21,7 @@
     "lint": "npx eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix",
     "lint:lines": "bash ../scripts/check-line-count.sh",
+    "pega:generate": "node scripts/pega-generate-parser.mjs",
     "check:ci": "npm run lint && npm run lint:lines && npm run build && npm run test:unit",
     "prepare": "node -e \"process.exit(0)\""
   },
@@ -50,6 +51,7 @@
     "@types/pg": "^8.20.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "antlr4": "^4.13.2",
     "bcrypt": "^6.0.0",
     "chokidar": "^5.0.0",
     "dockerode": "^5.0.1",
