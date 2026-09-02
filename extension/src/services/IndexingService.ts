@@ -224,10 +224,31 @@ export class IndexingService {
         }
     }
 
-    /** Delegate to PegaProjectIndexer — crawl and ingest Pega project rules. */
+    /**
+     * Delegate to Pega indexing. Fast path: Rule Catalog Export API (authoritative
+     * rule list via CSV). Falls back to BFS crawl when catalog is disabled or fails.
+     */
     private async runPegaProjectIndexer(
         root: string, report: ProgressReporter, secrets?: vscode.SecretStorage,
     ): Promise<string | null> {
+        // Fast path: Rule Catalog Export (enabled by default; opt-out via setting).
+        const useCatalog = vscode.workspace.getConfiguration("kiroSdlc")
+            .get<boolean>("pega.useCatalogExport", true);
+        if (useCatalog && secrets) {
+            try {
+                const { PegaCatalogIndexer } = await import("./PegaCatalogIndexer");
+                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this));
+                const result = await catalogIndexer.run(root, report, secrets);
+                if (result) {
+                    return `🏛️ Pega (catalog): "${result.appName}" — ${result.catalogRules} rules in catalog, ingested ${result.totalIngested}`;
+                }
+                this.log("[Pega Indexer] ℹ️ Catalog export unavailable — falling back to BFS crawl.");
+            } catch (err: any) {
+                this.log(`[Pega Indexer] ⚠️ Catalog export failed (${err.message}) — falling back to BFS crawl.`);
+            }
+        }
+
+        // Fallback path: BFS crawl (enumeration + relative discovery).
         try {
             const { PegaProjectIndexer } = await import("./PegaProjectIndexer");
             const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this));
