@@ -28,12 +28,16 @@ const RULE_TYPES_TO_CRAWL = [
 
 type LogFn = (msg: string) => void;
 
-/** Item shape from crawlPlan response */
+/** Item shape from crawlPlan response.
+ *  SA4E-241: `checksum` carries the catalog-resolved checksum (computePegaChecksum)
+ *  so it can flow through fetch → ingest and be stored as content_hash (INV-1).
+ *  Kept structurally in sync with models/PegaCrawlModels.CrawlPlanItem. */
 interface CrawlPlanItem {
     insKey: string;
     pxObjClass: string;
     pyClassName: string;
     pyRuleName: string;
+    checksum?: string;
 }
 
 /** Result of a successful rule fetch */
