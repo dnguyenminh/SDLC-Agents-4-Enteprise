@@ -91,7 +91,8 @@ export async function indexRule(
   let result;
   try {
     result = await syncRuleToSymbols(
-      memoryEngine.getAdapter(), req.ruleJson, req.projectId, promptCtx,
+      // SA4E-241: pass the client checksum so content_hash == bulk-check value (INV-1).
+      memoryEngine.getAdapter(), req.ruleJson, req.projectId, promptCtx, req.checksum,
     );
   } catch (err) {
     logger.warn({ err, fqn: symbol.fqn }, 'Failed to sync rule to symbols — skipped');

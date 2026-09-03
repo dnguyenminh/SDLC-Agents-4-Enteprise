@@ -153,5 +153,41 @@ describe('PegaSymbolSync', () => {
         expect(docParam.length).toBeLessThanOrEqual(500);
       }
     });
+
+    // ── SA4E-241: content_hash provenance (INV-1 — Phase-6 fresh-review Critical) ──
+    // The files INSERT (SQLite path) params are:
+    // [projectId, virtualPath, virtualPath, module, contentHash, sizeBytes]
+    const filesInsertParams = (adapter: any): any[] | undefined => {
+      const call = adapter.runAsync.mock.calls.find(
+        (c: any[]) => typeof c[0] === 'string' && c[0].includes('INTO files'),
+      );
+      return call ? (call[1] as any[]) : undefined;
+    };
+
+    it('SA4E-241: stores the CLIENT checksum as content_hash (NT-4/INV-1), not full-JSON', async () => {
+      const rule = {
+        pxObjClass: 'Rule-Obj-Activity', pyClassName: 'Work-HR', pyRuleName: 'ApproveLeave',
+        pyActivity: 'body that WOULD change a full-JSON hash',
+      };
+      // computePegaChecksum value the extension already computed + sent down.
+      const clientChecksum = 'a'.repeat(64);
+      await syncRuleToSymbols(mockAdapter, rule, 'proj1', 'ctx', clientChecksum);
+
+      const params = filesInsertParams(mockAdapter);
+      expect(params).toBeDefined();
+      expect(params![4]).toBe(clientChecksum); // content_hash column
+      // MUST NOT be the legacy full-JSON sha256.
+      const fullJson = require('crypto').createHash('sha256').update(JSON.stringify(rule)).digest('hex');
+      expect(params![4]).not.toBe(fullJson);
+    });
+
+    it('SA4E-241: falls back to full-JSON sha256 only when no checksum supplied (legacy)', async () => {
+      const rule = { pxObjClass: 'Rule-Obj-Activity', pyClassName: 'Work', pyRuleName: 'NoChk' };
+      await syncRuleToSymbols(mockAdapter, rule, 'proj1', 'ctx'); // no precomputedChecksum
+
+      const params = filesInsertParams(mockAdapter);
+      const fullJson = require('crypto').createHash('sha256').update(JSON.stringify(rule)).digest('hex');
+      expect(params![4]).toBe(fullJson);
+    });
   });
 });

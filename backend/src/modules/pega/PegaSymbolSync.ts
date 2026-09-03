@@ -42,6 +42,10 @@ export interface SymbolSyncResult {
  * @param ruleJson - Raw Pega rule JSON content
  * @param projectId - Tenant project identifier (SEC-04)
  * @param promptContext - Prompt context for doc_comment
+ * @param precomputedChecksum - SA4E-241: client-computed checksum (computePegaChecksum,
+ *   3 save-time fields). When provided it is stored AS-IS as content_hash so the
+ *   write-path value equals what bulk-check compares against (INV-1). Backend does
+ *   NOT recompute (NT-4). Absent → legacy sha256(full JSON) for backward compat.
  * @returns symbolId and fileId, or null if validation fails
  */
 export async function syncRuleToSymbols(
@@ -49,6 +53,7 @@ export async function syncRuleToSymbols(
   ruleJson: Record<string, unknown>,
   projectId: string,
   promptContext: string,
+  precomputedChecksum?: string,
 ): Promise<SymbolSyncResult | null> {
   const fields = extractRequiredFields(ruleJson);
   if (!fields) return null;
@@ -67,7 +72,11 @@ export async function syncRuleToSymbols(
     return null;
   }
 
-  const contentHash = createHash('sha256').update(ruleJsonStr).digest('hex');
+  // SA4E-241 (NT-4/INV-1): prefer the client-supplied checksum so content_hash
+  // equals the bulk-check compare value. Only fall back to full-JSON sha256 when
+  // no checksum was provided (legacy callers). Backend never recomputes the Pega
+  // formula — the extension is the single computation authority.
+  const contentHash = precomputedChecksum || createHash('sha256').update(ruleJsonStr).digest('hex');
   const docComment = (promptContext || `${kind}: ${fqn}`).slice(0, 500);
 
   const fileId = await upsertVirtualFile(adapter, projectId, virtualPath, pyClassName, contentHash, ruleJsonStr.length);
