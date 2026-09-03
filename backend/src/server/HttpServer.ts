@@ -86,6 +86,12 @@ export class HttpServer {
     app.use('/api/index/*', jwtAuth);
     app.use('/api/tags/*', apiKeyAuth);
     app.use('/mcp/*', apiKeyAuth);
+    // SA4E-241 SEC-01: bind identity to the whole Pega route group (mounted at
+    // /api/v1/pega/*). projectId is derived from the authenticated identity
+    // (X-Project-Id / JWT pid), never from the request body (fail-closed).
+    app.use('/api/v1/pega/*', jwtAuth);
+    // SA4E-241 SEC-08: per-identity rate limit on the Pega group (defense-in-depth).
+    app.use('/api/v1/pega/*', rateLimiter);
     app.onError(createErrorHandler(this.logger));
 
     app.route('/', createHealthRoute(this.options.registry, this.options.version));

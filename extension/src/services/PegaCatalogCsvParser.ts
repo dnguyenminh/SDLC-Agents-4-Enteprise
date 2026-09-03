@@ -1,71 +1,104 @@
 /**
  * PegaCatalogCsvParser — Parse rulecatalog.csv into crawl items.
- * The catalog is a 16-column CSV (one rule per row, metadata only). Rows are
- * converted to RuleSetRuleSummary → CrawlPlanItem so they feed the existing
- * fetch+ingest pipeline (PegaCrawlHelper / PegaBfsIndexer).
+ * SA4E-241 (IC-A1): HEADER-NAME-BASED parsing (not fixed index) so appended
+ * columns (pxUpdateDateTime, pxSaveDateTime, checksum) are read by name and a
+ * changed column order/count never breaks parsing. Each row's checksum is
+ * resolved via Cách B (extension computes; column only verifies — IC-A2/A3).
+ * Rows are converted to RuleSetRuleSummary → CrawlPlanItem carrying the checksum,
+ * feeding the existing fetch+ingest pipeline (PegaCrawlHelper / PegaBfsIndexer).
  */
 import * as fs from "fs";
 import * as readline from "readline";
-import { CATALOG_COLUMNS, catalogRowToSummary, summaryToCrawlItem } from "../models";
+import { catalogRowToSummary, summaryToCrawlItem } from "../models";
 import type { RuleCatalogRow, CrawlPlanItem } from "../models";
+import { resolveRowChecksum } from "./PegaCatalogChecksumResolver";
 
 type LogFn = (msg: string) => void;
 
-/** Parse result with counts for reporting. */
+/** Parse result with counts for reporting (incl. checksum verify telemetry). */
 export interface CatalogParseResult {
   items: CrawlPlanItem[];
   totalRows: number;
   skippedRows: number;
+  /** SA4E-241: checksum verify counters (IC-A2/A3). */
+  checksumVerified: number;
+  checksumMismatch: number;
+  checksumComputed: number;
 }
 
 /**
  * Stream-parse the catalog CSV into crawl items (memory-safe for large files).
- * Skips the header row and any row missing pzInsKey/pxObjClass.
+ * The first line is the header; column positions are resolved by NAME.
  * @param csvPath - Absolute path to rulecatalog.csv
  * @param log - Logger
  */
 export async function parseCatalogCsv(csvPath: string, log: LogFn): Promise<CatalogParseResult> {
   if (!fs.existsSync(csvPath)) { throw new Error(`Catalog CSV not found: ${csvPath}`); }
 
-  const items: CrawlPlanItem[] = [];
-  let totalRows = 0;
-  let skippedRows = 0;
-  let isHeader = true;
-
   const rl = readline.createInterface({
     input: fs.createReadStream(csvPath, { encoding: "utf-8" }),
     crlfDelay: Infinity,
   });
 
+  const acc: CatalogParseResult = {
+    items: [], totalRows: 0, skippedRows: 0,
+    checksumVerified: 0, checksumMismatch: 0, checksumComputed: 0,
+  };
+  let header: Map<string, number> | null = null;
+
   for await (const line of rl) {
-    if (isHeader) { isHeader = false; continue; } // skip 16-column header
+    if (header === null) { header = indexHeader(line); continue; }
     if (!line.trim()) { continue; }
-    totalRows++;
-    const row = rowFromLine(line);
-    if (!row) { skippedRows++; continue; }
-    items.push(summaryToCrawlItem(catalogRowToSummary(row)));
+    acc.totalRows++;
+    ingestLine(line, header, acc, log);
   }
 
-  log(`[Catalog] 🧾 Parsed ${items.length} rules from catalog (${skippedRows} skipped of ${totalRows})`);
-  return { items, totalRows, skippedRows };
+  log(`[Catalog] 🧾 Parsed ${acc.items.length} rules (${acc.skippedRows} skipped of ${acc.totalRows}); ` +
+    `checksum: ${acc.checksumVerified} verified, ${acc.checksumMismatch} mismatch(E-03), ${acc.checksumComputed} computed(E-02)`);
+  return acc;
+}
+
+/** Build a case-insensitive header-name → column-index map (IC-A1). */
+function indexHeader(line: string): Map<string, number> {
+  const map = new Map<string, number>();
+  splitCsvLine(line).forEach((name, i) => map.set(name.trim().toLowerCase(), i));
+  return map;
+}
+
+/** Parse one data line, resolve its checksum, and push a crawl item (or skip). */
+function ingestLine(line: string, header: Map<string, number>, acc: CatalogParseResult, log: LogFn): void {
+  const row = rowFromLine(line, header);
+  if (!row) { acc.skippedRows++; return; }
+  const res = resolveRowChecksum(row, log);
+  if (res.outcome === "verified") { acc.checksumVerified++; }
+  else if (res.outcome === "recomputed-mismatch") { acc.checksumMismatch++; }
+  else { acc.checksumComputed++; }
+  const summary = catalogRowToSummary({ ...row, checksum: res.checksum });
+  acc.items.push(summaryToCrawlItem(summary));
 }
 
 /**
- * Build a RuleCatalogRow from a single CSV line.
+ * Build a RuleCatalogRow from a CSV line using the header map.
  * Returns null when required fields (pzInsKey, pxObjClass) are absent.
  */
-function rowFromLine(line: string): RuleCatalogRow | null {
+function rowFromLine(line: string, header: Map<string, number>): RuleCatalogRow | null {
   const cols = splitCsvLine(line);
-  const pzInsKey = (cols[CATALOG_COLUMNS.pzInsKey] || "").trim();
-  const pxObjClass = (cols[CATALOG_COLUMNS.pxObjClass] || "").trim();
+  const at = (name: string): string => {
+    const i = header.get(name);
+    return i === undefined ? "" : (cols[i] ?? "").trim();
+  };
+  const pzInsKey = at("pzinskey");
+  const pxObjClass = at("pxobjclass");
   if (!pzInsKey || !pxObjClass) { return null; }
   return {
-    pzInsKey,
-    pxObjClass,
-    pyClassName: (cols[CATALOG_COLUMNS.pyClassName] || "").trim(),
-    pyRuleSet: (cols[CATALOG_COLUMNS.pyRuleSet] || "").trim(),
-    pyRuleSetVersion: (cols[CATALOG_COLUMNS.pyRuleSetVersion] || "").trim(),
-    pyLabel: (cols[CATALOG_COLUMNS.pyLabel] || "").trim() || undefined,
+    pzInsKey, pxObjClass,
+    pyClassName: at("pyclassname"),
+    pyRuleSet: at("pyruleset"),
+    pyRuleSetVersion: at("pyrulesetversion"),
+    pyLabel: at("pylabel") || undefined,
+    pxUpdateDateTime: at("pxupdatedatetime") || undefined,
+    pxSaveDateTime: at("pxsavedatetime") || undefined,
+    checksum: at("checksum") || undefined,
   };
 }
 

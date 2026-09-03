@@ -16,6 +16,11 @@ import { parseCatalogCsv } from "./PegaCatalogCsvParser";
 import { PegaBfsIndexer } from "./PegaBfsIndexer";
 import { createPegaDedupSet } from "./DiskBackedSet";
 import { setProjectId } from "../extension";
+import type { CrawlPlanItem } from "../models";
+import { StateComparer } from "../code-intel/delta/StateComparer";
+import { BulkCheckClient } from "../code-intel/delta/BulkCheckClient";
+import { BackendHttpPoster } from "../code-intel/delta/BackendHttpPoster";
+import type { IndexCandidate } from "../code-intel/delta/models/DeltaModels";
 
 type ProgressReporter = vscode.Progress<{ message?: string }>;
 type LogFn = (msg: string) => void;
@@ -76,16 +81,50 @@ export class PegaCatalogIndexer {
     setProjectId(projectId);
     this.log(`[Catalog] 📌 Project "${appName}" → projectId=${projectId}, ${parsed.items.length} rules to fetch`);
 
-    // 6: reuse BFS indexer to fetch content + ingest (+ discover relatives)
+    // 5b (SA4E-241): incremental delta — ask the backend which checksums it already
+    // has and skip them BEFORE fetching (NT-3/NT-4). Fail-safe: on bulk-check error
+    // the comparer returns a full run (no false-negative, BR-15).
     const backendUrl = pegaClient.getBackendUrlPublic();
-    const bfs = new PegaBfsIndexer(pegaClient, backendUrl, this.outputChannel, this.log);
+    report.report({ message: "Rule Catalog: checking which rules changed (incremental)..." });
+    const toFetch = await this.applyIncrementalSkip(backendUrl, projectId, parsed.items);
+    const skipped = parsed.items.length - toFetch.length;
+    this.log(`[Catalog] ⚡ Incremental: ${skipped} unchanged skipped, ${toFetch.length} to fetch`);
+
+    if (toFetch.length === 0) {
+      this.log("[Catalog] ✅ Nothing changed — index is up to date.");
+      return { appName, catalogRules: parsed.items.length, totalIngested: 0 };
+    }
+
+    // 6: reuse BFS indexer to fetch content + ingest (+ discover relatives)
+    // resilient=true: a lone 5xx on one rule must not discard the full catalog list.
+    const bfs = new PegaBfsIndexer(pegaClient, backendUrl, this.outputChannel, this.log, undefined, true);
     const dedupSet = createPegaDedupSet(root, "catalog-indexer");
     try {
-      const bfsResult = await bfs.run(projectId, parsed.items, dedupSet, report, root);
+      const bfsResult = await bfs.run(projectId, toFetch, dedupSet, report, root);
       return { appName, catalogRules: parsed.items.length, totalIngested: bfsResult.totalIngested };
     } finally {
       dedupSet.dispose();
     }
+  }
+
+  /**
+   * Partition catalog items into skip/fetch via the backend bulk-check (NT-3/NT-4).
+   * Items without a checksum are always fetched (cannot prove unchanged).
+   * @returns the subset of items that must be fetched (new/changed + no-checksum)
+   */
+  private async applyIncrementalSkip(backendUrl: string, projectId: string, items: CrawlPlanItem[]): Promise<CrawlPlanItem[]> {
+    const withChecksum = items.filter((it) => Boolean(it.checksum));
+    const withoutChecksum = items.filter((it) => !it.checksum);
+    if (withChecksum.length === 0) { return items; }
+
+    const comparer = new StateComparer(new BulkCheckClient(new BackendHttpPoster(backendUrl)));
+    const candidates: IndexCandidate[] = withChecksum.map((it) => ({ checksum: it.checksum as string, ref: it }));
+    const { result, warning } = await comparer.compare(projectId, candidates);
+    if (warning) { this.log(`[Catalog] ⚠️ ${warning}`); }
+
+    // fetch = changed/new (from delta) + any item that had no checksum to compare.
+    const changed = result.fetch.map((c) => c.ref as CrawlPlanItem);
+    return [...changed, ...withoutChecksum];
   }
 
   /** Resolve application name from pega-project.json, falling back to folder name. */

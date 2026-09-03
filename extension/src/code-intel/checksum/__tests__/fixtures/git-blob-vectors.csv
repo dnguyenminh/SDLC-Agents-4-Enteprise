@@ -1,0 +1,5 @@
+id,relativePath,content_escaped,expected_git_sha1
+G1,src/a.ts,export const x = 1;\n,ad1d380d6cc4dfe69119852d461b7ccd89a19228
+G2,src/empty.ts,,e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+G3,src/utf8.ts,// chào ✅\n,38d18b4adb72b8b174cf6bbecaa6b7a7f3c9f48c
+G4,docs/big.md,__REPEAT_x_10240__,686aaf419bce3cc178ab39b73ffe5aa32fd48293

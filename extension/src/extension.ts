@@ -53,6 +53,24 @@ let _projectId = "";
 export function getProjectId(): string { return _projectId; }
 export function setProjectId(id: string): void { _projectId = id; }
 
+/**
+ * SA4E-241 SEC-01: Require a resolved project identity — fail-closed.
+ * The projectId is derived from the authenticated Pega application context
+ * (setProjectId). We MUST NOT fall back to a shared default like 'PegaCollProj'
+ * (cross-tenant leak). Callers that need a scope must have run context resolution
+ * first (fetchAndSavePegaContext / catalog indexer).
+ * @throws Error when no project identity has been resolved yet.
+ */
+export function requireProjectId(): string {
+  if (!_projectId) {
+    throw new Error(
+      "No project identity resolved. Run 'Fetch Pega App Context' (or index) first — " +
+      "SA4E-241 forbids a hard-coded default project (SEC-01).",
+    );
+  }
+  return _projectId;
+}
+
 /** SA4E-99: Enrichment service accessor for IndexingService cross-module call. */
 export function getEnrichmentService(): { pollNow(): void } | null { return null; }
 

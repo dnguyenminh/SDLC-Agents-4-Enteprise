@@ -112,8 +112,8 @@ export class IndexingService {
                         if (!options.sync) {
                             this.showProgress("Auto-syncing Pega rules to symbols...");
                             report.report({ message: "Auto-syncing indexed Pega rules to symbols + enrichment..." });
-                            const { getProjectId } = await import("../extension");
-                            const projectId = getProjectId() || "PegaCollProj";
+                            const { requireProjectId } = await import("../extension");
+                            const projectId = requireProjectId();
                             const syncResult = await this.httpClient.syncPegaRulesToKb(projectId, token);
                             results.push(syncResult.message);
                         }
@@ -142,8 +142,8 @@ export class IndexingService {
                         // SA4E-158: Pega sync now calls Phase 2 endpoint to sync indexed rules to KB
                         this.showProgress("Syncing Pega rules to KB...");
                         report.report({ message: "Syncing indexed Pega rules to KB + graph..." });
-                        const { getProjectId } = await import("../extension");
-                        const projectId = getProjectId() || "PegaCollProj";
+                        const { requireProjectId } = await import("../extension");
+                        const projectId = requireProjectId();
                         const syncResult = await this.httpClient.syncPegaRulesToKb(projectId, token);
                         results.push(syncResult.message);
                     } else {
@@ -270,7 +270,11 @@ export class IndexingService {
             const { PegaCodeIntelDiscovery } = await import("./PegaCodeIntelDiscovery");
             const disc = new PegaCodeIntelDiscovery(pegaClient, this.outputChannel, this.log.bind(this));
             const { getProjectId } = await import("../extension");
-            const projectId = getProjectId() || "PegaCollProj";
+            const projectId = getProjectId();
+            if (!projectId) {
+                // SA4E-241 SEC-01: no shared-default project — skip if unresolved.
+                return "⚠️ Pega CodeIntelligence discovery skipped: no project identity resolved yet.";
+            }
             return await disc.run({ root, report, projectId });
         } catch (err: any) {
             this.log(`[Pega Discovery] ⚠️ skipped: ${err.message}`);

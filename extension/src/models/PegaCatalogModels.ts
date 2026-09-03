@@ -37,6 +37,12 @@ export interface RuleCatalogRow {
   pyRuleSet: string;
   pyRuleSetVersion: string;
   pyLabel?: string;
+  /** SA4E-241: rule change timestamps (for checksum). Absent in legacy catalogs. */
+  pxUpdateDateTime?: string;
+  pxSaveDateTime?: string;
+  /** SA4E-241: checksum column from the Pega service (Cách A). Verified/recomputed
+   *  by the extension (Cách B). Absent → extension computes from the 3 fields. */
+  checksum?: string;
 }
 
 /**
@@ -49,11 +55,16 @@ export function catalogRowToSummary(row: RuleCatalogRow): RuleSetRuleSummary {
     pzInsKey: row.pzInsKey,
     pxObjClass: row.pxObjClass,
     pyClassName: row.pyClassName,
-    // pyRuleName is not a catalog column — derive from label (best-effort).
-    // The crawl fetches by insKey when pyRuleName is empty (PegaCrawlHelper).
-    pyRuleName: row.pyLabel || "",
+    // pyRuleName MUST stay empty: the catalog gives an authoritative pzInsKey, and
+    // fetchRulesInParallel fetches by insKey ONLY when pyRuleName is empty. Deriving
+    // a name from pyLabel makes the crawler re-build a wrong insKey (class+name) and
+    // 404/500. The exact pzInsKey from the catalog is the single source of truth.
+    pyRuleName: "",
     pyRuleSet: row.pyRuleSet,
     pyRuleSetVersion: row.pyRuleSetVersion,
     pyLabel: row.pyLabel,
+    pxUpdateDateTime: row.pxUpdateDateTime,
+    pxSaveDateTime: row.pxSaveDateTime,
+    checksum: row.checksum,
   };
 }

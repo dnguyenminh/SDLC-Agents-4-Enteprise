@@ -68,8 +68,11 @@ describe("PegaCatalogCsvParser", () => {
 });
 
 describe("catalog models adapter", () => {
-  // TC-UT-03 — row → summary → CrawlPlanItem
-  it("TC-UT-03: maps catalog row to CrawlPlanItem, pyRuleName from label", () => {
+  // TC-UT-03 — row → summary → CrawlPlanItem.
+  // pyRuleName is ALWAYS empty (even when pyLabel is present): the catalog's
+  // pzInsKey is the single source of truth and fetch happens by insKey only.
+  // Deriving a name from pyLabel would rebuild a wrong insKey (class+name) → 404.
+  it("TC-UT-03: maps catalog row to CrawlPlanItem, pyRuleName empty (fetch-by-insKey)", () => {
     const item = summaryToCrawlItem(
       catalogRowToSummary({
         pzInsKey: "RULE-X A!B",
@@ -82,7 +85,7 @@ describe("catalog models adapter", () => {
     );
     expect(item.insKey).toBe("RULE-X A!B");
     expect(item.pxObjClass).toBe("Rule-Obj-Activity");
-    expect(item.pyRuleName).toBe("MyRule");
+    expect(item.pyRuleName).toBe("");
   });
 
   it("TC-UT-03b: empty pyRuleName when label missing (fetch-by-insKey path)", () => {

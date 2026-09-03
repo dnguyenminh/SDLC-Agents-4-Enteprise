@@ -1,4 +1,4 @@
-import { PegaExpressionParser } from './PegaExpressionParser.js';
+import { parseExpression } from './pega-expr/parser.js';
 import { PegaClipboardContext } from './PegaClipboardContext.js';
 import { PegaExpressionEvaluator } from './PegaExpressionEvaluator.js';
 
@@ -23,7 +23,6 @@ export interface ConstraintRule {
 
 export class PegaConstraintEvaluator {
   private evaluator = new PegaExpressionEvaluator();
-  private parser = new PegaExpressionParser();
 
   evaluateConstraints(
     constraints: ConstraintRule[],
@@ -35,7 +34,7 @@ export class PegaConstraintEvaluator {
       if (constraint.enabled === false) continue;
 
       try {
-        const ast = this.parser.parse(constraint.expression);
+        const ast = parseExpression(constraint.expression);
         const result = this.evaluator.evaluateWithAst(ast, clipboard, false);
         const passed = result.value.boolean;
 
@@ -74,7 +73,7 @@ export class PegaConstraintEvaluator {
         .filter(Boolean);
       if (parts.length === 0) return 'undefined';
 
-      const ast = this.parser.parse(`.${parts.join('.')}`);
+      const ast = parseExpression(`.${parts.join('.')}`);
       const result = this.evaluator.evaluateWithAst(ast, clipboard, false);
       return result.value.text;
     } catch {
