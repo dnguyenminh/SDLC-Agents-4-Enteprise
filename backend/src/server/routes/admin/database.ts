@@ -57,8 +57,11 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
      try {
        const config = configService.load();
        const engine = resolveActiveEngineName(config);
-      const connParams = engine !== 'sqlite' && config.engines[engine]
-        ? { host: config.engines[engine]!.host, port: config.engines[engine]!.port, username: config.engines[engine]!.username, database: config.engines[engine]!.database, ssl: config.engines[engine]!.ssl }
+      // Non-sqlite engines expose connection params; sqlite does not.
+      const engineKey = engine as Exclude<keyof typeof config.engines, 'sqlite'>;
+      const engineCfg = engine !== 'sqlite' ? config.engines[engineKey] : undefined;
+      const connParams = engineCfg
+        ? { host: engineCfg.host, port: engineCfg.port, username: engineCfg.username, database: engineCfg.database, ssl: engineCfg.ssl }
         : undefined;
       return c.json({ success: true, data: { engine, status: 'connected', details: config.engines.sqlite, connection: connParams, lastMigration: config.migration.lastMigration } });
     } catch (err) {

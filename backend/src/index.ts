@@ -14,6 +14,7 @@ import { OrchestrationModule } from './modules/orchestration/OrchestrationModule
 import { EmbeddingService } from './engine/parsers/embedding/EmbeddingService.js';
 import { initAdapters } from './admin/db/core.js';
 import { ensureSa4e215Tables } from './database/schema-registry/ensure-sa4e-215.js';
+import { ensureSa4e237Tables } from './database/schema-registry/ensure-sa4e-237.js';
 import { Container } from './di/Container.js';
 import { bus, Events } from './shared/EventBus.js';
 
@@ -44,6 +45,13 @@ async function main() {
     await ensureSa4e215Tables();
   } catch (err) {
     logger.error({ err }, 'Failed to ensure SA4E-215 tables; continuing startup');
+  }
+
+  // --- SA4E-237 (GD5): ensure pega_reference_resolution table exists ---
+  try {
+    await ensureSa4e237Tables();
+  } catch (err) {
+    logger.error({ err }, 'Failed to ensure SA4E-237 tables; continuing startup');
   }
 
   // --- SA4E-192 (Tier-2 slash commands) ---

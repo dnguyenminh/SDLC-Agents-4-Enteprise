@@ -56,6 +56,17 @@ describe('pega-expr parser — legacy @@ direct functions', () => {
   });
 });
 
+describe('pega-expr parser — library-instance call @Lib().method', () => {
+  it('parses @Lib().method(args) as a library FunctionCall', () => {
+    const a = asFunc(parseExpression("@CIFSvcsLib().GetMaskedString(.PHONE_3,'X',3)"));
+    expect(a.kind).toBe('FunctionCall');
+    expect(a.library).toBe('CIFSvcsLib');
+    expect(a.name).toBe('GetMaskedString');
+    expect(a.args.length).toBe(3);
+    expect(a.deprecated).toBe(false);
+  });
+});
+
 describe('pega-expr parser — bare nested calls', () => {
   it('bare call inside another call parses', () => {
     const outer = asFunc(parseExpression('@startsWith(toUpperCase(.Name), "X")'));

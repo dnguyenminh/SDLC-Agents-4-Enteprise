@@ -84,6 +84,10 @@ export class AstBuilder extends PegaExprVisitor {
     const name: string = ctx.fname.text;
     return FunctionCall(ruleset, library, name, this._args(ctx), false);
   }
+  visitLibraryInstanceFunc(ctx: Ctx): ExprNode {
+    // @Lib().method(args) — library-instance call; treat like a library-qualified function.
+    return FunctionCall(null, ctx.library.text, ctx.fname.text, this._args(ctx), false);
+  }
   visitLibraryFunc(ctx: Ctx): ExprNode {
     return FunctionCall(null, ctx.library.text, ctx.fname.text, this._args(ctx), false);
   }

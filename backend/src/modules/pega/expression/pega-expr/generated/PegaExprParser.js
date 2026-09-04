@@ -4,75 +4,79 @@ import antlr4 from 'antlr4';
 import PegaExprListener from './PegaExprListener.js';
 import PegaExprVisitor from './PegaExprVisitor.js';
 
-const serializedATN = [4,1,38,211,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,
+const serializedATN = [4,1,38,222,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,
 4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,1,0,1,0,1,0,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,37,8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,5,
 1,63,8,1,10,1,12,1,66,9,1,1,2,1,2,1,2,5,2,71,8,2,10,2,12,2,74,9,2,1,3,1,
 3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,3,3,86,8,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,
-1,3,3,3,96,8,3,1,3,1,3,1,3,1,3,1,3,3,3,103,8,3,1,3,1,3,1,3,1,3,1,3,1,3,1,
-3,1,3,3,3,113,8,3,1,3,1,3,1,3,1,3,1,3,1,3,3,3,121,8,3,1,3,1,3,1,3,1,3,3,
-3,127,8,3,1,3,3,3,130,8,3,1,4,1,4,1,4,5,4,135,8,4,10,4,12,4,138,9,4,1,5,
-1,5,4,5,142,8,5,11,5,12,5,143,1,5,1,5,5,5,148,8,5,10,5,12,5,151,9,5,1,5,
-1,5,4,5,155,8,5,11,5,12,5,156,1,5,4,5,160,8,5,11,5,12,5,161,1,5,3,5,165,
-8,5,1,6,1,6,1,6,1,6,1,6,5,6,172,8,6,10,6,12,6,175,9,6,1,6,1,6,1,7,1,7,1,
-7,1,7,1,8,1,8,1,8,1,8,1,8,1,8,3,8,189,8,8,1,9,1,9,1,9,1,9,3,9,195,8,9,1,
-9,1,9,3,9,199,8,9,1,10,1,10,1,10,1,10,1,10,1,10,1,10,1,10,3,10,209,8,10,
-1,10,0,1,2,11,0,2,4,6,8,10,12,14,16,18,20,0,5,2,0,22,23,25,26,1,0,27,29,
-1,0,25,26,2,0,3,4,20,21,2,0,5,9,22,22,246,0,22,1,0,0,0,2,36,1,0,0,0,4,67,
-1,0,0,0,6,129,1,0,0,0,8,131,1,0,0,0,10,164,1,0,0,0,12,166,1,0,0,0,14,178,
-1,0,0,0,16,182,1,0,0,0,18,198,1,0,0,0,20,208,1,0,0,0,22,23,3,2,1,0,23,24,
-5,0,0,1,24,1,1,0,0,0,25,26,6,1,-1,0,26,37,3,6,3,0,27,37,3,10,5,0,28,37,3,
-20,10,0,29,30,5,12,0,0,30,31,3,2,1,0,31,32,5,13,0,0,32,37,1,0,0,0,33,37,
-5,31,0,0,34,35,7,0,0,0,35,37,3,2,1,8,36,25,1,0,0,0,36,27,1,0,0,0,36,28,1,
-0,0,0,36,29,1,0,0,0,36,33,1,0,0,0,36,34,1,0,0,0,37,64,1,0,0,0,38,39,10,7,
-0,0,39,40,7,1,0,0,40,63,3,2,1,8,41,42,10,6,0,0,42,43,7,2,0,0,43,63,3,2,1,
-7,44,45,10,5,0,0,45,46,7,3,0,0,46,63,3,2,1,6,47,48,10,4,0,0,48,49,7,4,0,
-0,49,63,3,2,1,5,50,51,10,3,0,0,51,52,5,10,0,0,52,63,3,2,1,4,53,54,10,2,0,
-0,54,55,5,11,0,0,55,63,3,2,1,3,56,57,10,1,0,0,57,58,5,24,0,0,58,59,3,2,1,
-0,59,60,5,19,0,0,60,61,3,2,1,1,61,63,1,0,0,0,62,38,1,0,0,0,62,41,1,0,0,0,
-62,44,1,0,0,0,62,47,1,0,0,0,62,50,1,0,0,0,62,53,1,0,0,0,62,56,1,0,0,0,63,
-66,1,0,0,0,64,62,1,0,0,0,64,65,1,0,0,0,65,3,1,0,0,0,66,64,1,0,0,0,67,72,
-3,2,1,0,68,69,5,17,0,0,69,71,3,2,1,0,70,68,1,0,0,0,71,74,1,0,0,0,72,70,1,
-0,0,0,72,73,1,0,0,0,73,5,1,0,0,0,74,72,1,0,0,0,75,76,5,18,0,0,76,77,5,12,
-0,0,77,78,3,8,4,0,78,79,5,19,0,0,79,80,5,34,0,0,80,81,5,13,0,0,81,82,5,16,
-0,0,82,83,5,34,0,0,83,85,5,12,0,0,84,86,3,4,2,0,85,84,1,0,0,0,85,86,1,0,
-0,0,86,87,1,0,0,0,87,88,5,13,0,0,88,130,1,0,0,0,89,90,5,18,0,0,90,91,5,34,
-0,0,91,92,5,16,0,0,92,93,5,34,0,0,93,95,5,12,0,0,94,96,3,4,2,0,95,94,1,0,
-0,0,95,96,1,0,0,0,96,97,1,0,0,0,97,130,5,13,0,0,98,99,5,18,0,0,99,100,5,
-34,0,0,100,102,5,12,0,0,101,103,3,4,2,0,102,101,1,0,0,0,102,103,1,0,0,0,
-103,104,1,0,0,0,104,130,5,13,0,0,105,106,5,18,0,0,106,107,5,18,0,0,107,108,
-5,34,0,0,108,109,5,16,0,0,109,110,5,34,0,0,110,112,5,12,0,0,111,113,3,4,
-2,0,112,111,1,0,0,0,112,113,1,0,0,0,113,114,1,0,0,0,114,130,5,13,0,0,115,
-116,5,18,0,0,116,117,5,18,0,0,117,118,5,34,0,0,118,120,5,12,0,0,119,121,
-3,4,2,0,120,119,1,0,0,0,120,121,1,0,0,0,121,122,1,0,0,0,122,130,5,13,0,0,
-123,124,5,34,0,0,124,126,5,12,0,0,125,127,3,4,2,0,126,125,1,0,0,0,126,127,
-1,0,0,0,127,128,1,0,0,0,128,130,5,13,0,0,129,75,1,0,0,0,129,89,1,0,0,0,129,
-98,1,0,0,0,129,105,1,0,0,0,129,115,1,0,0,0,129,123,1,0,0,0,130,7,1,0,0,0,
-131,136,5,34,0,0,132,133,5,26,0,0,133,135,5,34,0,0,134,132,1,0,0,0,135,138,
-1,0,0,0,136,134,1,0,0,0,136,137,1,0,0,0,137,9,1,0,0,0,138,136,1,0,0,0,139,
-141,5,30,0,0,140,142,3,16,8,0,141,140,1,0,0,0,142,143,1,0,0,0,143,141,1,
-0,0,0,143,144,1,0,0,0,144,165,1,0,0,0,145,149,3,12,6,0,146,148,3,16,8,0,
-147,146,1,0,0,0,148,151,1,0,0,0,149,147,1,0,0,0,149,150,1,0,0,0,150,165,
-1,0,0,0,151,149,1,0,0,0,152,154,5,34,0,0,153,155,3,16,8,0,154,153,1,0,0,
-0,155,156,1,0,0,0,156,154,1,0,0,0,156,157,1,0,0,0,157,165,1,0,0,0,158,160,
-3,16,8,0,159,158,1,0,0,0,160,161,1,0,0,0,161,159,1,0,0,0,161,162,1,0,0,0,
-162,165,1,0,0,0,163,165,5,34,0,0,164,139,1,0,0,0,164,145,1,0,0,0,164,152,
-1,0,0,0,164,159,1,0,0,0,164,163,1,0,0,0,165,11,1,0,0,0,166,167,5,34,0,0,
-167,168,5,14,0,0,168,173,3,14,7,0,169,170,5,17,0,0,170,172,3,14,7,0,171,
-169,1,0,0,0,172,175,1,0,0,0,173,171,1,0,0,0,173,174,1,0,0,0,174,176,1,0,
-0,0,175,173,1,0,0,0,176,177,5,15,0,0,177,13,1,0,0,0,178,179,5,34,0,0,179,
-180,5,19,0,0,180,181,3,2,1,0,181,15,1,0,0,0,182,183,5,16,0,0,183,188,5,34,
-0,0,184,185,5,12,0,0,185,186,3,18,9,0,186,187,5,13,0,0,187,189,1,0,0,0,188,
-184,1,0,0,0,188,189,1,0,0,0,189,17,1,0,0,0,190,199,5,37,0,0,191,199,5,34,
-0,0,192,194,5,30,0,0,193,195,3,2,1,0,194,193,1,0,0,0,194,195,1,0,0,0,195,
-199,1,0,0,0,196,199,3,2,1,0,197,199,1,0,0,0,198,190,1,0,0,0,198,191,1,0,
-0,0,198,192,1,0,0,0,198,196,1,0,0,0,198,197,1,0,0,0,199,19,1,0,0,0,200,209,
-5,37,0,0,201,209,5,36,0,0,202,209,5,35,0,0,203,209,5,32,0,0,204,209,5,33,
-0,0,205,209,5,1,0,0,206,209,5,2,0,0,207,209,5,30,0,0,208,200,1,0,0,0,208,
-201,1,0,0,0,208,202,1,0,0,0,208,203,1,0,0,0,208,204,1,0,0,0,208,205,1,0,
-0,0,208,206,1,0,0,0,208,207,1,0,0,0,209,21,1,0,0,0,22,36,62,64,72,85,95,
-102,112,120,126,129,136,143,149,156,161,164,173,188,194,198,208];
+1,3,1,3,1,3,3,3,98,8,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,3,3,107,8,3,1,3,1,3,1,
+3,1,3,1,3,3,3,114,8,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,3,3,124,8,3,1,3,1,
+3,1,3,1,3,1,3,1,3,3,3,132,8,3,1,3,1,3,1,3,1,3,3,3,138,8,3,1,3,3,3,141,8,
+3,1,4,1,4,1,4,5,4,146,8,4,10,4,12,4,149,9,4,1,5,1,5,4,5,153,8,5,11,5,12,
+5,154,1,5,1,5,5,5,159,8,5,10,5,12,5,162,9,5,1,5,1,5,4,5,166,8,5,11,5,12,
+5,167,1,5,4,5,171,8,5,11,5,12,5,172,1,5,3,5,176,8,5,1,6,1,6,1,6,1,6,1,6,
+5,6,183,8,6,10,6,12,6,186,9,6,1,6,1,6,1,7,1,7,1,7,1,7,1,8,1,8,1,8,1,8,1,
+8,1,8,3,8,200,8,8,1,9,1,9,1,9,1,9,3,9,206,8,9,1,9,1,9,3,9,210,8,9,1,10,1,
+10,1,10,1,10,1,10,1,10,1,10,1,10,3,10,220,8,10,1,10,0,1,2,11,0,2,4,6,8,10,
+12,14,16,18,20,0,5,2,0,22,23,25,26,1,0,27,29,1,0,25,26,2,0,3,4,20,21,2,0,
+5,9,22,22,259,0,22,1,0,0,0,2,36,1,0,0,0,4,67,1,0,0,0,6,140,1,0,0,0,8,142,
+1,0,0,0,10,175,1,0,0,0,12,177,1,0,0,0,14,189,1,0,0,0,16,193,1,0,0,0,18,209,
+1,0,0,0,20,219,1,0,0,0,22,23,3,2,1,0,23,24,5,0,0,1,24,1,1,0,0,0,25,26,6,
+1,-1,0,26,37,3,6,3,0,27,37,3,10,5,0,28,37,3,20,10,0,29,30,5,12,0,0,30,31,
+3,2,1,0,31,32,5,13,0,0,32,37,1,0,0,0,33,37,5,31,0,0,34,35,7,0,0,0,35,37,
+3,2,1,8,36,25,1,0,0,0,36,27,1,0,0,0,36,28,1,0,0,0,36,29,1,0,0,0,36,33,1,
+0,0,0,36,34,1,0,0,0,37,64,1,0,0,0,38,39,10,7,0,0,39,40,7,1,0,0,40,63,3,2,
+1,8,41,42,10,6,0,0,42,43,7,2,0,0,43,63,3,2,1,7,44,45,10,5,0,0,45,46,7,3,
+0,0,46,63,3,2,1,6,47,48,10,4,0,0,48,49,7,4,0,0,49,63,3,2,1,5,50,51,10,3,
+0,0,51,52,5,10,0,0,52,63,3,2,1,4,53,54,10,2,0,0,54,55,5,11,0,0,55,63,3,2,
+1,3,56,57,10,1,0,0,57,58,5,24,0,0,58,59,3,2,1,0,59,60,5,19,0,0,60,61,3,2,
+1,1,61,63,1,0,0,0,62,38,1,0,0,0,62,41,1,0,0,0,62,44,1,0,0,0,62,47,1,0,0,
+0,62,50,1,0,0,0,62,53,1,0,0,0,62,56,1,0,0,0,63,66,1,0,0,0,64,62,1,0,0,0,
+64,65,1,0,0,0,65,3,1,0,0,0,66,64,1,0,0,0,67,72,3,2,1,0,68,69,5,17,0,0,69,
+71,3,2,1,0,70,68,1,0,0,0,71,74,1,0,0,0,72,70,1,0,0,0,72,73,1,0,0,0,73,5,
+1,0,0,0,74,72,1,0,0,0,75,76,5,18,0,0,76,77,5,12,0,0,77,78,3,8,4,0,78,79,
+5,19,0,0,79,80,5,34,0,0,80,81,5,13,0,0,81,82,5,16,0,0,82,83,5,34,0,0,83,
+85,5,12,0,0,84,86,3,4,2,0,85,84,1,0,0,0,85,86,1,0,0,0,86,87,1,0,0,0,87,88,
+5,13,0,0,88,141,1,0,0,0,89,90,5,18,0,0,90,91,5,34,0,0,91,92,5,12,0,0,92,
+93,5,13,0,0,93,94,5,16,0,0,94,95,5,34,0,0,95,97,5,12,0,0,96,98,3,4,2,0,97,
+96,1,0,0,0,97,98,1,0,0,0,98,99,1,0,0,0,99,141,5,13,0,0,100,101,5,18,0,0,
+101,102,5,34,0,0,102,103,5,16,0,0,103,104,5,34,0,0,104,106,5,12,0,0,105,
+107,3,4,2,0,106,105,1,0,0,0,106,107,1,0,0,0,107,108,1,0,0,0,108,141,5,13,
+0,0,109,110,5,18,0,0,110,111,5,34,0,0,111,113,5,12,0,0,112,114,3,4,2,0,113,
+112,1,0,0,0,113,114,1,0,0,0,114,115,1,0,0,0,115,141,5,13,0,0,116,117,5,18,
+0,0,117,118,5,18,0,0,118,119,5,34,0,0,119,120,5,16,0,0,120,121,5,34,0,0,
+121,123,5,12,0,0,122,124,3,4,2,0,123,122,1,0,0,0,123,124,1,0,0,0,124,125,
+1,0,0,0,125,141,5,13,0,0,126,127,5,18,0,0,127,128,5,18,0,0,128,129,5,34,
+0,0,129,131,5,12,0,0,130,132,3,4,2,0,131,130,1,0,0,0,131,132,1,0,0,0,132,
+133,1,0,0,0,133,141,5,13,0,0,134,135,5,34,0,0,135,137,5,12,0,0,136,138,3,
+4,2,0,137,136,1,0,0,0,137,138,1,0,0,0,138,139,1,0,0,0,139,141,5,13,0,0,140,
+75,1,0,0,0,140,89,1,0,0,0,140,100,1,0,0,0,140,109,1,0,0,0,140,116,1,0,0,
+0,140,126,1,0,0,0,140,134,1,0,0,0,141,7,1,0,0,0,142,147,5,34,0,0,143,144,
+5,26,0,0,144,146,5,34,0,0,145,143,1,0,0,0,146,149,1,0,0,0,147,145,1,0,0,
+0,147,148,1,0,0,0,148,9,1,0,0,0,149,147,1,0,0,0,150,152,5,30,0,0,151,153,
+3,16,8,0,152,151,1,0,0,0,153,154,1,0,0,0,154,152,1,0,0,0,154,155,1,0,0,0,
+155,176,1,0,0,0,156,160,3,12,6,0,157,159,3,16,8,0,158,157,1,0,0,0,159,162,
+1,0,0,0,160,158,1,0,0,0,160,161,1,0,0,0,161,176,1,0,0,0,162,160,1,0,0,0,
+163,165,5,34,0,0,164,166,3,16,8,0,165,164,1,0,0,0,166,167,1,0,0,0,167,165,
+1,0,0,0,167,168,1,0,0,0,168,176,1,0,0,0,169,171,3,16,8,0,170,169,1,0,0,0,
+171,172,1,0,0,0,172,170,1,0,0,0,172,173,1,0,0,0,173,176,1,0,0,0,174,176,
+5,34,0,0,175,150,1,0,0,0,175,156,1,0,0,0,175,163,1,0,0,0,175,170,1,0,0,0,
+175,174,1,0,0,0,176,11,1,0,0,0,177,178,5,34,0,0,178,179,5,14,0,0,179,184,
+3,14,7,0,180,181,5,17,0,0,181,183,3,14,7,0,182,180,1,0,0,0,183,186,1,0,0,
+0,184,182,1,0,0,0,184,185,1,0,0,0,185,187,1,0,0,0,186,184,1,0,0,0,187,188,
+5,15,0,0,188,13,1,0,0,0,189,190,5,34,0,0,190,191,5,19,0,0,191,192,3,2,1,
+0,192,15,1,0,0,0,193,194,5,16,0,0,194,199,5,34,0,0,195,196,5,12,0,0,196,
+197,3,18,9,0,197,198,5,13,0,0,198,200,1,0,0,0,199,195,1,0,0,0,199,200,1,
+0,0,0,200,17,1,0,0,0,201,210,5,37,0,0,202,210,5,34,0,0,203,205,5,30,0,0,
+204,206,3,2,1,0,205,204,1,0,0,0,205,206,1,0,0,0,206,210,1,0,0,0,207,210,
+3,2,1,0,208,210,1,0,0,0,209,201,1,0,0,0,209,202,1,0,0,0,209,203,1,0,0,0,
+209,207,1,0,0,0,209,208,1,0,0,0,210,19,1,0,0,0,211,220,5,37,0,0,212,220,
+5,36,0,0,213,220,5,35,0,0,214,220,5,32,0,0,215,220,5,33,0,0,216,220,5,1,
+0,0,217,220,5,2,0,0,218,220,5,30,0,0,219,211,1,0,0,0,219,212,1,0,0,0,219,
+213,1,0,0,0,219,214,1,0,0,0,219,215,1,0,0,0,219,216,1,0,0,0,219,217,1,0,
+0,0,219,218,1,0,0,0,220,21,1,0,0,0,23,36,62,64,72,85,97,106,113,123,131,
+137,140,147,154,160,167,172,175,184,199,205,209,219];
 
 
 const atn = new antlr4.atn.ATNDeserializer().deserialize(serializedATN);
@@ -451,9 +455,9 @@ export default class PegaExprParser extends antlr4.Parser {
 	    this.enterRule(localctx, 6, PegaExprParser.RULE_function);
 	    var _la = 0;
 	    try {
-	        this.state = 129;
+	        this.state = 140;
 	        this._errHandler.sync(this);
-	        var la_ = this._interp.adaptivePredict(this._input,10,this._ctx);
+	        var la_ = this._interp.adaptivePredict(this._input,11,this._ctx);
 	        switch(la_) {
 	        case 1:
 	            localctx = new QualifiedFuncContext(this, localctx);
@@ -489,117 +493,146 @@ export default class PegaExprParser extends antlr4.Parser {
 	            break;
 
 	        case 2:
-	            localctx = new LibraryFuncContext(this, localctx);
+	            localctx = new LibraryInstanceFuncContext(this, localctx);
 	            this.enterOuterAlt(localctx, 2);
 	            this.state = 89;
 	            this.match(PegaExprParser.AT);
 	            this.state = 90;
 	            localctx.library = this.match(PegaExprParser.ID);
 	            this.state = 91;
-	            this.match(PegaExprParser.DOT);
-	            this.state = 92;
-	            localctx.fname = this.match(PegaExprParser.ID);
-	            this.state = 93;
 	            this.match(PegaExprParser.LPAREN);
+	            this.state = 92;
+	            this.match(PegaExprParser.RPAREN);
+	            this.state = 93;
+	            this.match(PegaExprParser.DOT);
+	            this.state = 94;
+	            localctx.fname = this.match(PegaExprParser.ID);
 	            this.state = 95;
+	            this.match(PegaExprParser.LPAREN);
+	            this.state = 97;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	            if((((_la) & ~0x1f) === 0 && ((1 << _la) & 3334803462) !== 0) || ((((_la - 32)) & ~0x1f) === 0 && ((1 << (_la - 32)) & 63) !== 0)) {
-	                this.state = 94;
+	                this.state = 96;
 	                this.exprList();
 	            }
 
-	            this.state = 97;
+	            this.state = 99;
 	            this.match(PegaExprParser.RPAREN);
 	            break;
 
 	        case 3:
-	            localctx = new SimpleFuncContext(this, localctx);
+	            localctx = new LibraryFuncContext(this, localctx);
 	            this.enterOuterAlt(localctx, 3);
-	            this.state = 98;
-	            this.match(PegaExprParser.AT);
-	            this.state = 99;
-	            localctx.fname = this.match(PegaExprParser.ID);
 	            this.state = 100;
-	            this.match(PegaExprParser.LPAREN);
+	            this.match(PegaExprParser.AT);
+	            this.state = 101;
+	            localctx.library = this.match(PegaExprParser.ID);
 	            this.state = 102;
+	            this.match(PegaExprParser.DOT);
+	            this.state = 103;
+	            localctx.fname = this.match(PegaExprParser.ID);
+	            this.state = 104;
+	            this.match(PegaExprParser.LPAREN);
+	            this.state = 106;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	            if((((_la) & ~0x1f) === 0 && ((1 << _la) & 3334803462) !== 0) || ((((_la - 32)) & ~0x1f) === 0 && ((1 << (_la - 32)) & 63) !== 0)) {
-	                this.state = 101;
+	                this.state = 105;
 	                this.exprList();
 	            }
 
-	            this.state = 104;
+	            this.state = 108;
 	            this.match(PegaExprParser.RPAREN);
 	            break;
 
 	        case 4:
-	            localctx = new LegacyLibraryFuncContext(this, localctx);
+	            localctx = new SimpleFuncContext(this, localctx);
 	            this.enterOuterAlt(localctx, 4);
-	            this.state = 105;
-	            this.match(PegaExprParser.AT);
-	            this.state = 106;
-	            this.match(PegaExprParser.AT);
-	            this.state = 107;
-	            localctx.library = this.match(PegaExprParser.ID);
-	            this.state = 108;
-	            this.match(PegaExprParser.DOT);
 	            this.state = 109;
-	            localctx.fname = this.match(PegaExprParser.ID);
+	            this.match(PegaExprParser.AT);
 	            this.state = 110;
+	            localctx.fname = this.match(PegaExprParser.ID);
+	            this.state = 111;
 	            this.match(PegaExprParser.LPAREN);
-	            this.state = 112;
+	            this.state = 113;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	            if((((_la) & ~0x1f) === 0 && ((1 << _la) & 3334803462) !== 0) || ((((_la - 32)) & ~0x1f) === 0 && ((1 << (_la - 32)) & 63) !== 0)) {
-	                this.state = 111;
+	                this.state = 112;
 	                this.exprList();
 	            }
 
-	            this.state = 114;
+	            this.state = 115;
 	            this.match(PegaExprParser.RPAREN);
 	            break;
 
 	        case 5:
-	            localctx = new LegacySimpleFuncContext(this, localctx);
+	            localctx = new LegacyLibraryFuncContext(this, localctx);
 	            this.enterOuterAlt(localctx, 5);
-	            this.state = 115;
-	            this.match(PegaExprParser.AT);
 	            this.state = 116;
 	            this.match(PegaExprParser.AT);
 	            this.state = 117;
-	            localctx.fname = this.match(PegaExprParser.ID);
+	            this.match(PegaExprParser.AT);
 	            this.state = 118;
-	            this.match(PegaExprParser.LPAREN);
+	            localctx.library = this.match(PegaExprParser.ID);
+	            this.state = 119;
+	            this.match(PegaExprParser.DOT);
 	            this.state = 120;
+	            localctx.fname = this.match(PegaExprParser.ID);
+	            this.state = 121;
+	            this.match(PegaExprParser.LPAREN);
+	            this.state = 123;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	            if((((_la) & ~0x1f) === 0 && ((1 << _la) & 3334803462) !== 0) || ((((_la - 32)) & ~0x1f) === 0 && ((1 << (_la - 32)) & 63) !== 0)) {
-	                this.state = 119;
+	                this.state = 122;
 	                this.exprList();
 	            }
 
-	            this.state = 122;
+	            this.state = 125;
 	            this.match(PegaExprParser.RPAREN);
 	            break;
 
 	        case 6:
-	            localctx = new BareFuncContext(this, localctx);
+	            localctx = new LegacySimpleFuncContext(this, localctx);
 	            this.enterOuterAlt(localctx, 6);
-	            this.state = 123;
-	            localctx.fname = this.match(PegaExprParser.ID);
-	            this.state = 124;
-	            this.match(PegaExprParser.LPAREN);
 	            this.state = 126;
+	            this.match(PegaExprParser.AT);
+	            this.state = 127;
+	            this.match(PegaExprParser.AT);
+	            this.state = 128;
+	            localctx.fname = this.match(PegaExprParser.ID);
+	            this.state = 129;
+	            this.match(PegaExprParser.LPAREN);
+	            this.state = 131;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	            if((((_la) & ~0x1f) === 0 && ((1 << _la) & 3334803462) !== 0) || ((((_la - 32)) & ~0x1f) === 0 && ((1 << (_la - 32)) & 63) !== 0)) {
-	                this.state = 125;
+	                this.state = 130;
 	                this.exprList();
 	            }
 
-	            this.state = 128;
+	            this.state = 133;
+	            this.match(PegaExprParser.RPAREN);
+	            break;
+
+	        case 7:
+	            localctx = new BareFuncContext(this, localctx);
+	            this.enterOuterAlt(localctx, 7);
+	            this.state = 134;
+	            localctx.fname = this.match(PegaExprParser.ID);
+	            this.state = 135;
+	            this.match(PegaExprParser.LPAREN);
+	            this.state = 137;
+	            this._errHandler.sync(this);
+	            _la = this._input.LA(1);
+	            if((((_la) & ~0x1f) === 0 && ((1 << _la) & 3334803462) !== 0) || ((((_la - 32)) & ~0x1f) === 0 && ((1 << (_la - 32)) & 63) !== 0)) {
+	                this.state = 136;
+	                this.exprList();
+	            }
+
+	            this.state = 139;
 	            this.match(PegaExprParser.RPAREN);
 	            break;
 
@@ -626,17 +659,17 @@ export default class PegaExprParser extends antlr4.Parser {
 	    var _la = 0;
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 131;
+	        this.state = 142;
 	        this.match(PegaExprParser.ID);
-	        this.state = 136;
+	        this.state = 147;
 	        this._errHandler.sync(this);
 	        _la = this._input.LA(1);
 	        while(_la===26) {
-	            this.state = 132;
+	            this.state = 143;
 	            this.match(PegaExprParser.MINUS);
-	            this.state = 133;
+	            this.state = 144;
 	            this.match(PegaExprParser.ID);
-	            this.state = 138;
+	            this.state = 149;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	        }
@@ -660,49 +693,49 @@ export default class PegaExprParser extends antlr4.Parser {
 	    let localctx = new ReferenceContext(this, this._ctx, this.state);
 	    this.enterRule(localctx, 10, PegaExprParser.RULE_reference);
 	    try {
-	        this.state = 164;
+	        this.state = 175;
 	        this._errHandler.sync(this);
-	        var la_ = this._interp.adaptivePredict(this._input,16,this._ctx);
+	        var la_ = this._interp.adaptivePredict(this._input,17,this._ctx);
 	        switch(la_) {
 	        case 1:
 	            localctx = new CurrentRefContext(this, localctx);
 	            this.enterOuterAlt(localctx, 1);
-	            this.state = 139;
+	            this.state = 150;
 	            this.match(PegaExprParser.ANGLE);
-	            this.state = 141; 
+	            this.state = 152; 
 	            this._errHandler.sync(this);
 	            var _alt = 1;
 	            do {
 	            	switch (_alt) {
 	            	case 1:
-	            		this.state = 140;
+	            		this.state = 151;
 	            		this.segment();
 	            		break;
 	            	default:
 	            		throw new antlr4.error.NoViableAltException(this);
 	            	}
-	            	this.state = 143; 
+	            	this.state = 154; 
 	            	this._errHandler.sync(this);
-	            	_alt = this._interp.adaptivePredict(this._input,12, this._ctx);
+	            	_alt = this._interp.adaptivePredict(this._input,13, this._ctx);
 	            } while ( _alt!=2 && _alt!=antlr4.atn.ATN.INVALID_ALT_NUMBER );
 	            break;
 
 	        case 2:
 	            localctx = new ParamPageRefContext(this, localctx);
 	            this.enterOuterAlt(localctx, 2);
-	            this.state = 145;
+	            this.state = 156;
 	            this.paramPage();
-	            this.state = 149;
+	            this.state = 160;
 	            this._errHandler.sync(this);
-	            var _alt = this._interp.adaptivePredict(this._input,13,this._ctx)
+	            var _alt = this._interp.adaptivePredict(this._input,14,this._ctx)
 	            while(_alt!=2 && _alt!=antlr4.atn.ATN.INVALID_ALT_NUMBER) {
 	                if(_alt===1) {
-	                    this.state = 146;
+	                    this.state = 157;
 	                    this.segment(); 
 	                }
-	                this.state = 151;
+	                this.state = 162;
 	                this._errHandler.sync(this);
-	                _alt = this._interp.adaptivePredict(this._input,13,this._ctx);
+	                _alt = this._interp.adaptivePredict(this._input,14,this._ctx);
 	            }
 
 	            break;
@@ -710,51 +743,51 @@ export default class PegaExprParser extends antlr4.Parser {
 	        case 3:
 	            localctx = new PageRefContext(this, localctx);
 	            this.enterOuterAlt(localctx, 3);
-	            this.state = 152;
+	            this.state = 163;
 	            this.match(PegaExprParser.ID);
-	            this.state = 154; 
+	            this.state = 165; 
 	            this._errHandler.sync(this);
 	            var _alt = 1;
 	            do {
 	            	switch (_alt) {
 	            	case 1:
-	            		this.state = 153;
+	            		this.state = 164;
 	            		this.segment();
 	            		break;
 	            	default:
 	            		throw new antlr4.error.NoViableAltException(this);
 	            	}
-	            	this.state = 156; 
+	            	this.state = 167; 
 	            	this._errHandler.sync(this);
-	            	_alt = this._interp.adaptivePredict(this._input,14, this._ctx);
+	            	_alt = this._interp.adaptivePredict(this._input,15, this._ctx);
 	            } while ( _alt!=2 && _alt!=antlr4.atn.ATN.INVALID_ALT_NUMBER );
 	            break;
 
 	        case 4:
 	            localctx = new RelativeRefContext(this, localctx);
 	            this.enterOuterAlt(localctx, 4);
-	            this.state = 159; 
+	            this.state = 170; 
 	            this._errHandler.sync(this);
 	            var _alt = 1;
 	            do {
 	            	switch (_alt) {
 	            	case 1:
-	            		this.state = 158;
+	            		this.state = 169;
 	            		this.segment();
 	            		break;
 	            	default:
 	            		throw new antlr4.error.NoViableAltException(this);
 	            	}
-	            	this.state = 161; 
+	            	this.state = 172; 
 	            	this._errHandler.sync(this);
-	            	_alt = this._interp.adaptivePredict(this._input,15, this._ctx);
+	            	_alt = this._interp.adaptivePredict(this._input,16, this._ctx);
 	            } while ( _alt!=2 && _alt!=antlr4.atn.ATN.INVALID_ALT_NUMBER );
 	            break;
 
 	        case 5:
 	            localctx = new BareRefContext(this, localctx);
 	            this.enterOuterAlt(localctx, 5);
-	            this.state = 163;
+	            this.state = 174;
 	            this.match(PegaExprParser.ID);
 	            break;
 
@@ -781,25 +814,25 @@ export default class PegaExprParser extends antlr4.Parser {
 	    var _la = 0;
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 166;
+	        this.state = 177;
 	        this.match(PegaExprParser.ID);
-	        this.state = 167;
+	        this.state = 178;
 	        this.match(PegaExprParser.LBRACK);
-	        this.state = 168;
+	        this.state = 179;
 	        this.keyedParam();
-	        this.state = 173;
+	        this.state = 184;
 	        this._errHandler.sync(this);
 	        _la = this._input.LA(1);
 	        while(_la===17) {
-	            this.state = 169;
+	            this.state = 180;
 	            this.match(PegaExprParser.COMMA);
-	            this.state = 170;
+	            this.state = 181;
 	            this.keyedParam();
-	            this.state = 175;
+	            this.state = 186;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	        }
-	        this.state = 176;
+	        this.state = 187;
 	        this.match(PegaExprParser.RBRACK);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
@@ -822,11 +855,11 @@ export default class PegaExprParser extends antlr4.Parser {
 	    this.enterRule(localctx, 14, PegaExprParser.RULE_keyedParam);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 178;
+	        this.state = 189;
 	        this.match(PegaExprParser.ID);
-	        this.state = 179;
+	        this.state = 190;
 	        this.match(PegaExprParser.COLON);
-	        this.state = 180;
+	        this.state = 191;
 	        this.expr(0);
 	    } catch (re) {
 	    	if(re instanceof antlr4.error.RecognitionException) {
@@ -849,19 +882,19 @@ export default class PegaExprParser extends antlr4.Parser {
 	    this.enterRule(localctx, 16, PegaExprParser.RULE_segment);
 	    try {
 	        this.enterOuterAlt(localctx, 1);
-	        this.state = 182;
+	        this.state = 193;
 	        this.match(PegaExprParser.DOT);
-	        this.state = 183;
+	        this.state = 194;
 	        this.match(PegaExprParser.ID);
-	        this.state = 188;
+	        this.state = 199;
 	        this._errHandler.sync(this);
-	        var la_ = this._interp.adaptivePredict(this._input,18,this._ctx);
+	        var la_ = this._interp.adaptivePredict(this._input,19,this._ctx);
 	        if(la_===1) {
-	            this.state = 184;
+	            this.state = 195;
 	            this.match(PegaExprParser.LPAREN);
-	            this.state = 185;
+	            this.state = 196;
 	            this.selector();
-	            this.state = 186;
+	            this.state = 197;
 	            this.match(PegaExprParser.RPAREN);
 
 	        }
@@ -886,34 +919,34 @@ export default class PegaExprParser extends antlr4.Parser {
 	    this.enterRule(localctx, 18, PegaExprParser.RULE_selector);
 	    var _la = 0;
 	    try {
-	        this.state = 198;
+	        this.state = 209;
 	        this._errHandler.sync(this);
-	        var la_ = this._interp.adaptivePredict(this._input,20,this._ctx);
+	        var la_ = this._interp.adaptivePredict(this._input,21,this._ctx);
 	        switch(la_) {
 	        case 1:
 	            localctx = new IndexSelContext(this, localctx);
 	            this.enterOuterAlt(localctx, 1);
-	            this.state = 190;
+	            this.state = 201;
 	            this.match(PegaExprParser.INT);
 	            break;
 
 	        case 2:
 	            localctx = new KeySelContext(this, localctx);
 	            this.enterOuterAlt(localctx, 2);
-	            this.state = 191;
+	            this.state = 202;
 	            this.match(PegaExprParser.ID);
 	            break;
 
 	        case 3:
 	            localctx = new SymbolicSelContext(this, localctx);
 	            this.enterOuterAlt(localctx, 3);
-	            this.state = 192;
+	            this.state = 203;
 	            this.match(PegaExprParser.ANGLE);
-	            this.state = 194;
+	            this.state = 205;
 	            this._errHandler.sync(this);
 	            _la = this._input.LA(1);
 	            if((((_la) & ~0x1f) === 0 && ((1 << _la) & 3334803462) !== 0) || ((((_la - 32)) & ~0x1f) === 0 && ((1 << (_la - 32)) & 63) !== 0)) {
-	                this.state = 193;
+	                this.state = 204;
 	                this.expr(0);
 	            }
 
@@ -922,7 +955,7 @@ export default class PegaExprParser extends antlr4.Parser {
 	        case 4:
 	            localctx = new ExprSelContext(this, localctx);
 	            this.enterOuterAlt(localctx, 4);
-	            this.state = 196;
+	            this.state = 207;
 	            this.expr(0);
 	            break;
 
@@ -953,55 +986,55 @@ export default class PegaExprParser extends antlr4.Parser {
 	    let localctx = new ConstantContext(this, this._ctx, this.state);
 	    this.enterRule(localctx, 20, PegaExprParser.RULE_constant);
 	    try {
-	        this.state = 208;
+	        this.state = 219;
 	        this._errHandler.sync(this);
 	        switch(this._input.LA(1)) {
 	        case 37:
 	            localctx = new IntConstContext(this, localctx);
 	            this.enterOuterAlt(localctx, 1);
-	            this.state = 200;
+	            this.state = 211;
 	            this.match(PegaExprParser.INT);
 	            break;
 	        case 36:
 	            localctx = new LongConstContext(this, localctx);
 	            this.enterOuterAlt(localctx, 2);
-	            this.state = 201;
+	            this.state = 212;
 	            this.match(PegaExprParser.LONG);
 	            break;
 	        case 35:
 	            localctx = new DoubleConstContext(this, localctx);
 	            this.enterOuterAlt(localctx, 3);
-	            this.state = 202;
+	            this.state = 213;
 	            this.match(PegaExprParser.DOUBLE);
 	            break;
 	        case 32:
 	            localctx = new StringConstContext(this, localctx);
 	            this.enterOuterAlt(localctx, 4);
-	            this.state = 203;
+	            this.state = 214;
 	            this.match(PegaExprParser.STRING);
 	            break;
 	        case 33:
 	            localctx = new CharConstContext(this, localctx);
 	            this.enterOuterAlt(localctx, 5);
-	            this.state = 204;
+	            this.state = 215;
 	            this.match(PegaExprParser.CHAR);
 	            break;
 	        case 1:
 	            localctx = new TrueConstContext(this, localctx);
 	            this.enterOuterAlt(localctx, 6);
-	            this.state = 205;
+	            this.state = 216;
 	            this.match(PegaExprParser.TRUE);
 	            break;
 	        case 2:
 	            localctx = new FalseConstContext(this, localctx);
 	            this.enterOuterAlt(localctx, 7);
-	            this.state = 206;
+	            this.state = 217;
 	            this.match(PegaExprParser.FALSE);
 	            break;
 	        case 30:
 	            localctx = new AngleConstContext(this, localctx);
 	            this.enterOuterAlt(localctx, 8);
-	            this.state = 207;
+	            this.state = 218;
 	            this.match(PegaExprParser.ANGLE);
 	            break;
 	        default:
@@ -2020,6 +2053,88 @@ class BareFuncContext extends FunctionContext {
 }
 
 PegaExprParser.BareFuncContext = BareFuncContext;
+
+class LibraryInstanceFuncContext extends FunctionContext {
+
+    constructor(parser, ctx) {
+        super(parser);
+        this.library = null;;
+        this.fname = null;;
+        super.copyFrom(ctx);
+    }
+
+	AT() {
+	    return this.getToken(PegaExprParser.AT, 0);
+	};
+
+	LPAREN = function(i) {
+		if(i===undefined) {
+			i = null;
+		}
+	    if(i===null) {
+	        return this.getTokens(PegaExprParser.LPAREN);
+	    } else {
+	        return this.getToken(PegaExprParser.LPAREN, i);
+	    }
+	};
+
+
+	RPAREN = function(i) {
+		if(i===undefined) {
+			i = null;
+		}
+	    if(i===null) {
+	        return this.getTokens(PegaExprParser.RPAREN);
+	    } else {
+	        return this.getToken(PegaExprParser.RPAREN, i);
+	    }
+	};
+
+
+	DOT() {
+	    return this.getToken(PegaExprParser.DOT, 0);
+	};
+
+	ID = function(i) {
+		if(i===undefined) {
+			i = null;
+		}
+	    if(i===null) {
+	        return this.getTokens(PegaExprParser.ID);
+	    } else {
+	        return this.getToken(PegaExprParser.ID, i);
+	    }
+	};
+
+
+	exprList() {
+	    return this.getTypedRuleContext(ExprListContext,0);
+	};
+
+	enterRule(listener) {
+	    if(listener instanceof PegaExprListener ) {
+	        listener.enterLibraryInstanceFunc(this);
+		}
+	}
+
+	exitRule(listener) {
+	    if(listener instanceof PegaExprListener ) {
+	        listener.exitLibraryInstanceFunc(this);
+		}
+	}
+
+	accept(visitor) {
+	    if ( visitor instanceof PegaExprVisitor ) {
+	        return visitor.visitLibraryInstanceFunc(this);
+	    } else {
+	        return visitor.visitChildren(this);
+	    }
+	}
+
+
+}
+
+PegaExprParser.LibraryInstanceFuncContext = LibraryInstanceFuncContext;
 
 class LegacyLibraryFuncContext extends FunctionContext {
 

@@ -102,6 +102,12 @@ export default class PegaExprVisitor extends antlr4.tree.ParseTreeVisitor {
 	}
 
 
+	// Visit a parse tree produced by PegaExprParser#LibraryInstanceFunc.
+	visitLibraryInstanceFunc(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
 	// Visit a parse tree produced by PegaExprParser#LibraryFunc.
 	visitLibraryFunc(ctx) {
 	  return this.visitChildren(ctx);

@@ -149,6 +149,15 @@ export default class PegaExprListener extends antlr4.tree.ParseTreeListener {
 	}
 
 
+	// Enter a parse tree produced by PegaExprParser#LibraryInstanceFunc.
+	enterLibraryInstanceFunc(ctx) {
+	}
+
+	// Exit a parse tree produced by PegaExprParser#LibraryInstanceFunc.
+	exitLibraryInstanceFunc(ctx) {
+	}
+
+
 	// Enter a parse tree produced by PegaExprParser#LibraryFunc.
 	enterLibraryFunc(ctx) {
 	}

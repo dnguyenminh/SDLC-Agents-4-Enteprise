@@ -16,6 +16,7 @@ import {
 } from './pega-mapping.js';
 import { TaskType, TaskStatus } from '../memory/task-queue/models.js';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import { PegaResolutionStore } from './storage/PegaResolutionStore.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'pega-indexer' });
@@ -108,8 +109,34 @@ export async function indexRule(
       isRule: symbol.isRule, reason: 'symbol_skip', dependencies: deps };
   }
 
+  // SA4E-237 (GD5): stage this rule's references for the Phase-2 resolution pass.
+  // Non-fatal — a staging failure must never block indexing.
+  try {
+    await stageRuleReferences(memoryEngine.getAdapter(), req.projectId, result.symbolId, canonicalFqn, deps);
+  } catch (err) {
+    logger.warn({ err, fqn: symbol.fqn }, 'Failed to stage rule references (non-fatal)');
+  }
+
   return { status: 'success', ruleId: result.symbolId, fqn: symbol.fqn,
     isRule: symbol.isRule, dependencies: deps };
+}
+
+/** Stage rule-to-rule references into pega_reference_resolution (Phase 1 of GD5). */
+async function stageRuleReferences(
+  adapter: DatabaseAdapter,
+  projectId: string,
+  sourceSymbolId: number,
+  sourceFqn: string,
+  deps: UnresolvedDependency[],
+): Promise<void> {
+  const store = new PegaResolutionStore(adapter);
+  const refs = deps.map((d) => ({
+    refKind: d.ruleType,
+    refPath: `${d.className}.${d.ruleName}`,
+    // Target FQN uses '-' for unknown ruleset/version; resolver matches on type+name+class.
+    targetFqn: buildFqn(d.ruleType, d.className, d.ruleName, '-', '-'),
+  }));
+  await store.stageReferences(projectId, sourceSymbolId, sourceFqn, refs);
 }
 
 /** Check if rule exists in symbols with matching content hash + enrichment status. */
