@@ -30,8 +30,11 @@ function getSchemaMap(): Map<string, PegaRuleKbSchema> {
  * @param registry - Module registry for accessing memory/PegaService
  * @param logger - Pino logger instance
  */
-export function createIngestRuleRoute(registry: ModuleRegistry, logger: Logger): Hono {
-  const app = new Hono();
+/** Hono env — SA4E-241: jwtAuth injects the authenticated project identity here. */
+type PegaEnv = { Variables: { projectContext?: { projectId?: string; userId?: string } } };
+
+export function createIngestRuleRoute(registry: ModuleRegistry, logger: Logger): Hono<PegaEnv> {
+  const app = new Hono<PegaEnv>();
 
   // 10MB body limit per rule JSON
   app.use('*', bodyLimit({ maxSize: 10 * 1024 * 1024 }));
@@ -44,6 +47,15 @@ export function createIngestRuleRoute(registry: ModuleRegistry, logger: Logger):
         data: null,
         error: { code: 'NOT_READY', message: 'Memory module not ready' },
       }, 503);
+    }
+
+    // SA4E-241 SEC-01: projectId derives from the authenticated identity, never
+    // from the body. This is a WRITE path — fail-closed (401) with no identity;
+    // body.projectId may only cross-check (403 on mismatch).
+    const identityProjectId = c.get('projectContext')?.projectId ?? '';
+    if (!identityProjectId) {
+      return c.json({ data: null, error: { code: 'MISSING_PROJECT_IDENTITY',
+        message: 'X-Project-Id header or JWT pid claim is required.' } }, 401);
     }
 
     // 2. Parse and validate request body
@@ -64,9 +76,15 @@ export function createIngestRuleRoute(registry: ModuleRegistry, logger: Logger):
       }, 400);
     }
 
-    // 3. Ingest rule via PegaService
-    const { projectId, ruleJson, checksum, version } = parsed.data;
-    const ingestResult = await ingestSafely(service, projectId, ruleJson, checksum, version, logger);
+    // SA4E-241 SEC-01: body.projectId (if sent) must match identity → 403.
+    if (parsed.data.projectId && parsed.data.projectId !== identityProjectId) {
+      return c.json({ data: null, error: { code: 'PROJECT_MISMATCH',
+        message: 'body.projectId does not match the authenticated identity.' } }, 403);
+    }
+
+    // 3. Ingest rule via PegaService — scope strictly by authenticated identity.
+    const { ruleJson, checksum, version } = parsed.data;
+    const ingestResult = await ingestSafely(service, identityProjectId, ruleJson, checksum, version, logger);
     if (ingestResult.error) {
       return c.json({
         data: null,

@@ -36,6 +36,7 @@ import type { PegaDecisionTableRow, DecisionTreeNode } from '../../modules/pega/
 import type { PegaSection } from '../../modules/pega/ui/PegaUITypes.js';
 import { ChecksumStore } from '../../modules/pega/ChecksumStore.js';
 import { BulkCheckRequestSchema } from '../../modules/pega/pegaBulkCheckSchema.js';
+import { MissingChecksumError } from '../../modules/pega/PegaSymbolSync.js';
 
 /** Hono env — SA4E-241: jwtAuth injects the authenticated project identity here. */
 type PegaEnv = { Variables: { projectContext?: { projectId?: string; userId?: string } } };
@@ -67,13 +68,31 @@ export function createPegaApiRoutes(registry: ModuleRegistry, logger: Logger): H
     }
   });
 
+  // SA4E-241 SEC-01: identity-bound ingest-rule (WRITE path). projectId derives
+  // from the authenticated identity, never from the body (fail-closed 401; 403 on
+  // mismatch). The required client checksum is validated inside service.ingestRule
+  // → syncRuleToSymbols (NT-4 — backend never computes it).
   app.post('/pega/ingest-rule', async (c) => {
     const service = getPegaService();
-    if (!service) return c.json({ error: { code: 'NOT_READY', message: 'Memory module not ready' } }, 503);
+    if (!service) return c.json({ data: null, error: { code: 'NOT_READY', message: 'Memory module not ready' } }, 503);
+    const identityProjectId = c.get('projectContext')?.projectId ?? '';
+    if (!identityProjectId) {
+      return c.json({ data: null, error: { code: 'MISSING_PROJECT_IDENTITY',
+        message: 'X-Project-Id header or JWT pid claim is required.' } }, 401);
+    }
     try {
       const body = await c.req.json<PegaIngestRuleRequest>();
-      return c.json({ data: await service.ingestRule(body), error: null }, 201);
+      if (body.projectId && body.projectId !== identityProjectId) {
+        return c.json({ data: null, error: { code: 'PROJECT_MISMATCH',
+          message: 'body.projectId does not match the authenticated identity.' } }, 403);
+      }
+      // Scope strictly by identity (override any body.projectId).
+      const result = await service.ingestRule({ ...body, projectId: identityProjectId });
+      return c.json({ data: result, error: null }, 201);
     } catch (err: any) {
+      if (err instanceof MissingChecksumError) {
+        return c.json({ data: null, error: { code: err.code, message: err.message } }, 400);
+      }
       logger.error({ err }, 'pega/ingest-rule failed');
       return c.json({ data: null, error: { code: 'INTERNAL_ERROR', message: err.message } }, 500);
     }

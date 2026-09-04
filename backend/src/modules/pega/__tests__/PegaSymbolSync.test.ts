@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { syncRuleToSymbols, PEGA_DUAL_WRITE } from '../PegaSymbolSync.js';
+import { syncRuleToSymbols, PEGA_DUAL_WRITE, MissingChecksumError } from '../PegaSymbolSync.js';
 
 describe('PegaSymbolSync', () => {
   describe('PEGA_DUAL_WRITE feature flag', () => {
@@ -51,6 +51,9 @@ describe('PegaSymbolSync', () => {
       expect(result).toBeNull();
     });
 
+    // SA4E-241: valid client checksum (computePegaChecksum output shape — 64-hex).
+    const CHK = 'b'.repeat(64);
+
     it('should skip rules exceeding 5MB (SEC-06)', async () => {
       const bigContent = 'x'.repeat(6 * 1024 * 1024);
       const rule = {
@@ -59,7 +62,7 @@ describe('PegaSymbolSync', () => {
         pyRuleName: 'BigRule',
         data: bigContent,
       };
-      const result = await syncRuleToSymbols(mockAdapter, rule, 'proj1', '');
+      const result = await syncRuleToSymbols(mockAdapter, rule, 'proj1', '', CHK);
       expect(result).toBeNull();
     });
 
@@ -69,7 +72,7 @@ describe('PegaSymbolSync', () => {
         pyClassName: 'Work-HR',
         pyRuleName: 'ApproveLeave',
       };
-      const result = await syncRuleToSymbols(mockAdapter, rule, 'proj1', 'context');
+      const result = await syncRuleToSymbols(mockAdapter, rule, 'proj1', 'context', CHK);
       expect(result).not.toBeNull();
       // Verify DB operations were called
       expect(mockAdapter.runAsync).toHaveBeenCalled();
@@ -82,7 +85,7 @@ describe('PegaSymbolSync', () => {
         pyRuleName: 'ApproveLeave',
         steps: [{ pyStepNum: '1', pyMethod: 'Call', pyMethodParameters: 'Work-HR.Validate' }],
       };
-      await syncRuleToSymbols(mockAdapter, rule, 'proj1', '');
+      await syncRuleToSymbols(mockAdapter, rule, 'proj1', '', CHK);
 
       const bodyInsert = mockAdapter.runAsync.mock.calls.find(
         (c: any[]) => typeof c[0] === 'string' && c[0].includes('body_embeddings'),
@@ -106,7 +109,7 @@ describe('PegaSymbolSync', () => {
         pyClassName: 'Work',
         pyRuleName: 'Done',
       };
-      const result = await syncRuleToSymbols(mockAdapter, rule, 'proj1', '');
+      const result = await syncRuleToSymbols(mockAdapter, rule, 'proj1', '', CHK);
       expect(result).not.toBeNull();
       // Should NOT have called INSERT INTO pending_tasks
       const taskInsert = mockAdapter.runAsync.mock.calls.find(
@@ -126,7 +129,7 @@ describe('PegaSymbolSync', () => {
         pyClassName: 'Work',
         pyRuleName: 'LegacyRule',
       };
-      const result = await syncRuleToSymbols(mockAdapter, rule, 'proj1', '');
+      const result = await syncRuleToSymbols(mockAdapter, rule, 'proj1', '', CHK);
       expect(result).not.toBeNull();
       // SHOULD create enrichment task (legacy TAG_ENRICHMENT had no summary)
       const taskInsert = mockAdapter.runAsync.mock.calls.find(
@@ -142,7 +145,7 @@ describe('PegaSymbolSync', () => {
         pyClassName: 'Work',
         pyRuleName: 'LongDoc',
       };
-      await syncRuleToSymbols(mockAdapter, rule, 'proj1', longContext);
+      await syncRuleToSymbols(mockAdapter, rule, 'proj1', longContext, CHK);
       // The INSERT for symbols should contain truncated doc_comment
       const symbolInsert = mockAdapter.runAsync.mock.calls.find(
         (c: any[]) => typeof c[0] === 'string' && c[0].includes('INTO symbols'),
@@ -181,13 +184,12 @@ describe('PegaSymbolSync', () => {
       expect(params![4]).not.toBe(fullJson);
     });
 
-    it('SA4E-241: falls back to full-JSON sha256 only when no checksum supplied (legacy)', async () => {
+    it('SA4E-241 (NT-4): throws MissingChecksumError when no checksum supplied — NO full-JSON fallback', async () => {
       const rule = { pxObjClass: 'Rule-Obj-Activity', pyClassName: 'Work', pyRuleName: 'NoChk' };
-      await syncRuleToSymbols(mockAdapter, rule, 'proj1', 'ctx'); // no precomputedChecksum
-
-      const params = filesInsertParams(mockAdapter);
-      const fullJson = require('crypto').createHash('sha256').update(JSON.stringify(rule)).digest('hex');
-      expect(params![4]).toBe(fullJson);
+      // Backend must NEVER compute a checksum: an absent one is a hard failure.
+      await expect(syncRuleToSymbols(mockAdapter, rule, 'proj1', 'ctx', '')).rejects.toThrow(MissingChecksumError);
+      // And nothing was written to the files table.
+      expect(filesInsertParams(mockAdapter)).toBeUndefined();
     });
   });
 });

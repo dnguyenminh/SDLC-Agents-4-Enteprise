@@ -115,7 +115,9 @@ export class PegaStreamIngester {
 
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-ndjson' },
+      // SA4E-241 SEC-01: send project identity so the backend scopes the write by
+      // the authenticated project (not body.projectId).
+      headers: { 'Content-Type': 'application/x-ndjson', 'X-Project-Id': projectId },
       body: readable,
       // @ts-expect-error — Node.js fetch supports duplex for streaming uploads
       duplex: 'half',
@@ -194,7 +196,9 @@ export class PegaStreamIngester {
     const body = JSON.stringify({ projectId, ruleJson, checksum, version });
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // SA4E-241 SEC-01: send project identity for the write path (backend scopes
+      // by identity, not body.projectId).
+      headers: { 'Content-Type': 'application/json', 'X-Project-Id': projectId },
       body,
     });
 
