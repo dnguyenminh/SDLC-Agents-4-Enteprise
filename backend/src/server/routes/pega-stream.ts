@@ -22,8 +22,11 @@ const BATCH_SIZE = 50;
  * @param registry - Module registry for accessing memory/PegaService
  * @param logger - Pino logger instance
  */
-export function createPegaStreamRoutes(registry: ModuleRegistry, logger: Logger): Hono {
-  const app = new Hono();
+/** Hono env — SA4E-241: jwtAuth injects the authenticated project identity here. */
+type PegaEnv = { Variables: { projectContext?: { projectId?: string; userId?: string } } };
+
+export function createPegaStreamRoutes(registry: ModuleRegistry, logger: Logger): Hono<PegaEnv> {
+  const app = new Hono<PegaEnv>();
 
   /** Lazily resolve PegaService from memory module */
   const resolvePegaService = (): PegaService | null => {
@@ -37,6 +40,14 @@ export function createPegaStreamRoutes(registry: ModuleRegistry, logger: Logger)
     const service = resolvePegaService();
     if (!service) {
       return c.json({ data: null, error: { code: 'NOT_READY', message: 'Memory module not ready' } }, 503);
+    }
+
+    // SA4E-241 SEC-01: this is a WRITE path — scope by authenticated identity.
+    // Processing runs in the background (after 202), so authz MUST be enforced here.
+    const identityProjectId = (c.get('projectContext') as { projectId?: string } | undefined)?.projectId ?? '';
+    if (!identityProjectId) {
+      return c.json({ data: null, error: { code: 'MISSING_PROJECT_IDENTITY',
+        message: 'X-Project-Id header or JWT pid claim is required.' } }, 401);
     }
 
     // Stream body line-by-line to avoid OOM on large payloads (39K+ rules)
@@ -66,7 +77,9 @@ export function createPegaStreamRoutes(registry: ModuleRegistry, logger: Logger)
     const jobId = pegaJobStore.createJob(lines.length);
 
     logger.info({ jobId, lineCount: lines.length }, '[pega-stream] Job created, processing in background');
-    processInBackground(jobId, lines, service, logger);
+    // Pass the authenticated identity so background processing scopes by it,
+    // never by the (client-controlled) projectId in the NDJSON metadata (SEC-01).
+    processInBackground(jobId, lines, service, logger, identityProjectId);
 
     return c.json({ data: { jobId }, error: null }, 202);
   });
@@ -93,7 +106,9 @@ export function createPegaStreamRoutes(registry: ModuleRegistry, logger: Logger)
  * Process NDJSON lines in background using setImmediate batches.
  * Processes BATCH_SIZE rules per tick to avoid blocking the event loop.
  */
-function processInBackground(jobId: string, lines: string[], service: PegaService, logger: Logger): void {
+function processInBackground(
+  jobId: string, lines: string[], service: PegaService, logger: Logger, identityProjectId: string,
+): void {
   let meta: StreamMetadata | null = null;
   let stored = 0;
   let index = 0;
@@ -105,7 +120,9 @@ function processInBackground(jobId: string, lines: string[], service: PegaServic
     const promises: Promise<void>[] = [];
     for (let i = index; i < end; i++) {
       promises.push(processOneLine(lines[i], meta, service, logger).then((result) => {
-        if (result.isMeta) meta = result.meta!;
+        // SEC-01: force the metadata's projectId to the authenticated identity so
+        // no rule is ever written under a client-supplied project.
+        if (result.isMeta) { meta = { ...result.meta!, projectId: identityProjectId }; }
         if (result.stored) { stored++; ingestedRules.push(result.rule!); }
       }));
     }

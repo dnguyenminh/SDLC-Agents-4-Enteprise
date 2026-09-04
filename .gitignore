@@ -58,3 +58,11 @@ coverage/
 /backend/dev-server.log
 /backend/*.log
 /backend/.code-intel/database.json
+
+# Secrets / env (SA4E-241 — never commit real credentials)
+.env
+.env.*
+!.env.example
+
+# MCP request scratch file (SA4E-241 HTTP JSON-RPC body-from-file)
+documents/**/.mcp-req.json

@@ -49,6 +49,12 @@ export class PegaHttpClient {
     return config.get<string>("pegaEndpoint", "http://localhost:8080/prweb").replace(/\/$/, "");
   }
 
+  /** SA4E-241 SEC-03: configured Pega operator id (no hardcoded default). */
+  public getConfiguredUsername(): string {
+    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    return config.get<string>("pegaUsername", "").trim();
+  }
+
   private getBackendUrl(): string {
     const config = vscode.workspace.getConfiguration("kiroSdlc");
     return config.get<string>("backendUrl", "http://localhost:48721").replace(/\/$/, "");
@@ -122,7 +128,12 @@ export class PegaHttpClient {
    */
   public async resolveDeterministicPegaHierarchy(operatorIdHint?: string): Promise<HierarchyResult> {
     const config = vscode.workspace.getConfiguration("kiroSdlc");
-    const opId = (operatorIdHint || config.get<string>("pegaUsername", "") || "SSA@TGB").trim();
+    // SA4E-241 SEC-03: no hardcoded operator-id fallback. Operator id must come
+    // from the caller hint or the configured `pegaUsername` (fail-closed).
+    const opId = (operatorIdHint || config.get<string>("pegaUsername", "")).trim();
+    if (!opId) {
+      throw new Error("Pega Operator ID is not configured (kiroSdlc.pegaUsername). Set it before indexing.");
+    }
     const root = this.getWorkspaceRoot();
     return resolvePegaHierarchy(this, opId, root, this.log.bind(this));
   }
@@ -219,6 +230,14 @@ export class PegaHttpClient {
    * or server errors (5xx). A 404 or body-level error means "try next prefix".
    */
   public async getRuleByInsKey(insKey: string): Promise<Record<string, unknown>> {
+    // Encoded-slash workaround: insKeys containing "/" become "%2F" in the path,
+    // which Tomcat/Pega reject with HTTP 400 (ALLOW_ENCODED_SLASH is off by default).
+    // Route these through the query API, which passes the name via body/query-string
+    // instead of the URL path. See getRuleViaQueryFallback().
+    if (insKey.includes("/")) {
+      return this.getRuleViaQueryFallback(insKey);
+    }
+
     const authHeader = await this.getAuthHeader();
     const logs: string[] = [];
 
@@ -280,6 +299,29 @@ export class PegaHttpClient {
 
     // All prefixes exhausted without finding the rule
     throw new Error(`Rule not found: ${insKey}\n  ${logs.join("\n  ")}`);
+  }
+
+  /**
+   * Fetch a rule whose insKey contains "/" via the query API (Service 2).
+   * The path endpoint 400s on encoded slashes, so we split the insKey into its
+   * triple (pxObjClass / appliesTo / ruleName) and query by properties instead.
+   *
+   * pzInsKey format: "<RULE-TYPE> <APPLIESTO?> <RULENAME>". The rule type is the
+   * first space-delimited token; the remainder is the name (which may itself
+   * contain "/" and "!"). appliesTo is left empty — the query API resolves the
+   * rule by type + name, which is sufficient for the DATA-* settings that hit this.
+   * @param insKey - Full pzInsKey containing a slash
+   * @returns Full rule JSON
+   */
+  private async getRuleViaQueryFallback(insKey: string): Promise<Record<string, unknown>> {
+    const firstSpace = insKey.indexOf(" ");
+    if (firstSpace < 0) {
+      throw new Error(`Rule not found: ${insKey} (cannot split insKey for query fallback)`);
+    }
+    const pxObjClass = insKey.substring(0, firstSpace);
+    const ruleName = insKey.substring(firstSpace + 1).trim();
+    this.log(`[PegaHttpClient] 🔀 insKey contains "/" — using query fallback: class="${pxObjClass}" name="${ruleName}"`);
+    return this.queryRuleByTriple(pxObjClass, "", ruleName);
   }
 
   /**

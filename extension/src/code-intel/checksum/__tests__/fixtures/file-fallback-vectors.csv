@@ -1,0 +1,4 @@
+id,relativePath,content_escaped,expected_sha256
+F1,src/a.ts,export const x = 1;\n,b3a6b6e61293fc369fd37c105d0b7ba59ab7ca64061ff18a2fce86e74ce800d8
+F2,src/empty.ts,,5f8488e7f1d57cfd473cce869f0d485636754c26d24ab03a7069165f3bcadac8
+F3,docs/chào.md,// chào ✅\n,48fa740c754970bb5f4e5db92c8e580723c72f3e476d47bdab3ec3eb80d7531f

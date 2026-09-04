@@ -304,6 +304,11 @@
           "default": "http://localhost:8080/prweb",
           "description": "Pega Platform REST API Endpoint URL"
         },
+        "kiroSdlc.pega.useCatalogExport": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use the Pega Rule Catalog Export API (fast, authoritative rule list) when indexing Pega source code. Disable to force the legacy BFS crawl."
+        },
         "kiroSdlc.pegaUsername": {
           "type": "string",
           "default": "",

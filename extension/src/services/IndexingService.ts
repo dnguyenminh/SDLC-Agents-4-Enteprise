@@ -112,8 +112,8 @@ export class IndexingService {
                         if (!options.sync) {
                             this.showProgress("Auto-syncing Pega rules to symbols...");
                             report.report({ message: "Auto-syncing indexed Pega rules to symbols + enrichment..." });
-                            const { getProjectId } = await import("../extension");
-                            const projectId = getProjectId() || "PegaCollProj";
+                            const { requireProjectId } = await import("../extension");
+                            const projectId = requireProjectId();
                             const syncResult = await this.httpClient.syncPegaRulesToKb(projectId, token);
                             results.push(syncResult.message);
                         }
@@ -142,8 +142,8 @@ export class IndexingService {
                         // SA4E-158: Pega sync now calls Phase 2 endpoint to sync indexed rules to KB
                         this.showProgress("Syncing Pega rules to KB...");
                         report.report({ message: "Syncing indexed Pega rules to KB + graph..." });
-                        const { getProjectId } = await import("../extension");
-                        const projectId = getProjectId() || "PegaCollProj";
+                        const { requireProjectId } = await import("../extension");
+                        const projectId = requireProjectId();
                         const syncResult = await this.httpClient.syncPegaRulesToKb(projectId, token);
                         results.push(syncResult.message);
                     } else {
@@ -224,10 +224,31 @@ export class IndexingService {
         }
     }
 
-    /** Delegate to PegaProjectIndexer — crawl and ingest Pega project rules. */
+    /**
+     * Delegate to Pega indexing. Fast path: Rule Catalog Export API (authoritative
+     * rule list via CSV). Falls back to BFS crawl when catalog is disabled or fails.
+     */
     private async runPegaProjectIndexer(
         root: string, report: ProgressReporter, secrets?: vscode.SecretStorage,
     ): Promise<string | null> {
+        // Fast path: Rule Catalog Export (enabled by default; opt-out via setting).
+        const useCatalog = vscode.workspace.getConfiguration("kiroSdlc")
+            .get<boolean>("pega.useCatalogExport", true);
+        if (useCatalog && secrets) {
+            try {
+                const { PegaCatalogIndexer } = await import("./PegaCatalogIndexer");
+                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this));
+                const result = await catalogIndexer.run(root, report, secrets);
+                if (result) {
+                    return `🏛️ Pega (catalog): "${result.appName}" — ${result.catalogRules} rules in catalog, ingested ${result.totalIngested}`;
+                }
+                this.log("[Pega Indexer] ℹ️ Catalog export unavailable — falling back to BFS crawl.");
+            } catch (err: any) {
+                this.log(`[Pega Indexer] ⚠️ Catalog export failed (${err.message}) — falling back to BFS crawl.`);
+            }
+        }
+
+        // Fallback path: BFS crawl (enumeration + relative discovery).
         try {
             const { PegaProjectIndexer } = await import("./PegaProjectIndexer");
             const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this));
@@ -249,7 +270,11 @@ export class IndexingService {
             const { PegaCodeIntelDiscovery } = await import("./PegaCodeIntelDiscovery");
             const disc = new PegaCodeIntelDiscovery(pegaClient, this.outputChannel, this.log.bind(this));
             const { getProjectId } = await import("../extension");
-            const projectId = getProjectId() || "PegaCollProj";
+            const projectId = getProjectId();
+            if (!projectId) {
+                // SA4E-241 SEC-01: no shared-default project — skip if unresolved.
+                return "⚠️ Pega CodeIntelligence discovery skipped: no project identity resolved yet.";
+            }
             return await disc.run({ root, report, projectId });
         } catch (err: any) {
             this.log(`[Pega Discovery] ⚠️ skipped: ${err.message}`);

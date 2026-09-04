@@ -50,6 +50,7 @@
     "@types/pg": "^8.20.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "antlr4": "^4.13.2",
     "bcrypt": "^6.0.0",
     "chokidar": "^5.0.0",
     "dockerode": "^5.0.1",

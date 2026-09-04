@@ -6,6 +6,7 @@
  */
 import type { MemoryEngine } from '../memory/engine/core.js';
 import type { PegaIngestRuleRequest, UnresolvedDependency } from './models.js';
+import { MissingChecksumError } from './PegaSymbolSync.js';
 import { PegaParser, type ExtractedPegaSymbol } from './PegaParser.js';
 import { PegaRuleAstParser } from './PegaRuleAstParser.js';
 import { syncRuleToSymbols } from './PegaSymbolSync.js';
@@ -91,9 +92,13 @@ export async function indexRule(
   let result;
   try {
     result = await syncRuleToSymbols(
-      memoryEngine.getAdapter(), req.ruleJson, req.projectId, promptCtx,
+      // SA4E-241: pass the client checksum so content_hash == bulk-check value (INV-1).
+      memoryEngine.getAdapter(), req.ruleJson, req.projectId, promptCtx, req.checksum ?? '',
     );
   } catch (err) {
+    // SA4E-241 (NT-4): a missing checksum is a hard, caller-facing failure — do NOT
+    // swallow it as a generic "skip". Re-throw so the route returns 400 (upgrade ext).
+    if (err instanceof MissingChecksumError) { throw err; }
     logger.warn({ err, fqn: symbol.fqn }, 'Failed to sync rule to symbols — skipped');
     return { status: 'skipped', ruleId: -1, fqn: symbol.fqn,
       isRule: symbol.isRule, reason: 'symbol_sync_error', dependencies: deps };

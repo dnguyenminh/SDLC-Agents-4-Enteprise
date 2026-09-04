@@ -68,10 +68,20 @@ describe("HashCache", () => {
     expect(cache.hasChanged("a.ts", "new")).toBe(true);
   });
 
-  it("updateHash stores the computed hash and returns it", () => {
+  it("updateHash stores the computed delta checksum and returns it", () => {
+    // SA4E-241: the delta checksum now uses the git-blob strategy (default),
+    // NOT the legacy static sha256(content). It is a valid sha1 hex (40 chars)
+    // and the dedup contract holds.
     const hash = cache.updateHash("a.ts", "content");
-    expect(hash).toBe(HashCache.computeHash("content"));
+    expect(hash).toMatch(/^[0-9a-f]{40}$/);
     expect(cache.get("a.ts")).toBe(hash);
     expect(cache.hasChanged("a.ts", "content")).toBe(false);
+  });
+
+  it("SA4E-241: delta checksum is git-blob (matches git hash-object), not plain sha256", () => {
+    // Empty content → git empty-blob sha1 (independent sanity vector).
+    const hash = cache.updateHash("empty.ts", "");
+    expect(hash).toBe("e69de29bb2d1d6434b8b29ae775ad8c2e48c5391");
+    expect(hash).not.toBe(HashCache.computeHash(""));
   });
 });

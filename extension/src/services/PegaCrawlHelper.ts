@@ -28,12 +28,16 @@ const RULE_TYPES_TO_CRAWL = [
 
 type LogFn = (msg: string) => void;
 
-/** Item shape from crawlPlan response */
+/** Item shape from crawlPlan response.
+ *  SA4E-241: `checksum` carries the catalog-resolved checksum (computePegaChecksum)
+ *  so it can flow through fetch → ingest and be stored as content_hash (INV-1).
+ *  Kept structurally in sync with models/PegaCrawlModels.CrawlPlanItem. */
 interface CrawlPlanItem {
     insKey: string;
     pxObjClass: string;
     pyClassName: string;
     pyRuleName: string;
+    checksum?: string;
 }
 
 /** Result of a successful rule fetch */
@@ -64,12 +68,15 @@ export async function fetchRulesInParallel(
     chunk: CrawlPlanItem[],
     pegaClient: PegaHttpClient,
     log: LogFn,
+    abortOnServerError = true,
 ): Promise<ParallelFetchResult> {
     const fetched: FetchedRule[] = [];
     let serverError: string | null = null;
 
     await parallelBatch(chunk, FETCH_CONCURRENCY, async (item) => {
-        // Early exit: if a previous item detected a server error, skip
+        // Early exit: if a previous item detected a server error, skip.
+        // Catalog-sourced runs pass abortOnServerError=false so a single 5xx on one
+        // rule does not discard the whole authoritative rule list.
         if (serverError) { return null; }
 
         // Purpose: fetch full rule JSON by insKey to index into KB
@@ -95,9 +102,12 @@ export async function fetchRulesInParallel(
             const errMsg = String(err.message || err);
             const errorCategory = classifyFetchError(errMsg);
 
-            if (errorCategory === "server") {
+            if (errorCategory === "server" && abortOnServerError) {
                 log(`[Pega Indexer] ⛔ Server Error — ${errMsg.substring(0, 150)}. Aborting crawl.`);
                 serverError = `Pega Server Connection Failed: ${errMsg.split("\n")[0]}`;
+            } else if (errorCategory === "server") {
+                // Resilient mode (catalog): log and skip this rule, keep processing the rest.
+                log(`[Pega Indexer] ⚠️ Server error on "${item.insKey}" — skipping (catalog resilient mode): ${errMsg.substring(0, 120)}`);
             } else {
                 const hasSpaceInName = item.pyRuleName.includes(" ") || (item.insKey.split(" ").length > 2 && !item.insKey.includes("-Work-"));
                 const hint = hasSpaceInName
@@ -234,8 +244,16 @@ export async function calibrateFetchConcurrency(
     log: LogFn,
 ): Promise<number> {
     try {
+        // SA4E-241 SEC-03: probe uses the configured operator id (no hardcoded
+        // default). If none is configured, skip the operator-record probe and use
+        // the default concurrency (fail-safe, not fail-open).
+        const probeOperatorId = pegaClient.getConfiguredUsername();
+        if (!probeOperatorId) {
+            log(`[Pega Indexer] ⚠️ No pegaUsername configured — skipping latency probe, using default FETCH_CONCURRENCY=${FETCH_CONCURRENCY}`);
+            return FETCH_CONCURRENCY;
+        }
         const latency = await measureLatency(
-            () => pegaClient.getObject("DATA-ADMIN-OPERATOR-ID", "SSA@TGB", "@baseclass").catch(() => null),
+            () => pegaClient.getObject("DATA-ADMIN-OPERATOR-ID", probeOperatorId, "@baseclass").catch(() => null),
             2,
         );
         FETCH_CONCURRENCY = computeOptimalConcurrency({
