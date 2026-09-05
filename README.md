@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.41.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.41.1.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.41.1 (2026-09-06)
+
+- **SA4E-242: KB Scope Auto-Detection based on VCS** — KB Scope Auto-Detection based on VCS, detectKbScope async refactor, 100% UAT pass.
 
 ### v1.41.0 (2026-08-29)
 
