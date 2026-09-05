@@ -52,7 +52,7 @@
     "ajv-formats": "^3.0.1",
     "bcrypt": "^6.0.0",
     "chokidar": "^5.0.0",
-    "dockerode": "^4.0.12",
+    "dockerode": "^5.0.1",
     "elkjs": "^0.9.3",
     "hono": "^4.0.0",
     "jimp": "^1.6.1",
