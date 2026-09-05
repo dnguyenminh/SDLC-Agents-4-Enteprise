@@ -6,15 +6,17 @@
  */
 import type { MemoryEngine } from '../memory/engine/core.js';
 import type { PegaIngestRuleRequest, UnresolvedDependency } from './models.js';
+import { MissingChecksumError } from './PegaSymbolSync.js';
 import { PegaParser, type ExtractedPegaSymbol } from './PegaParser.js';
 import { PegaRuleAstParser } from './PegaRuleAstParser.js';
 import { syncRuleToSymbols } from './PegaSymbolSync.js';
 import {
-  buildFqn, resolveRuleNameField, resolveSymbolKind, buildVirtualPath,
+  buildFqn, resolveRuleNameField, resolveClassNameField, resolveSymbolKind, buildVirtualPath,
   resolveRuleSetName, resolveRuleSetVersion,
 } from './pega-mapping.js';
 import { TaskType, TaskStatus } from '../memory/task-queue/models.js';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import { PegaResolutionStore } from './storage/PegaResolutionStore.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'pega-indexer' });
@@ -59,7 +61,9 @@ export async function indexRule(
   // FQN uses the canonical rule-name fallback (matches PegaSymbolSync signature).
   const canonicalFqn = buildFqn(
     String((req.ruleJson as any)?.pxObjClass || ''),
-    String((req.ruleJson as any)?.pyClassName || ''),
+    // Same class fallback as PegaSymbolSync so instance-level Data-Admin rules
+    // (no pyClassName) resolve to the SAME FQN at dedup and at write (INV-1).
+    resolveClassNameField(req.ruleJson),
     resolveRuleNameField(req.ruleJson),
     resolveRuleSetName(req.ruleJson),
     resolveRuleSetVersion(req.ruleJson),
@@ -73,7 +77,7 @@ export async function indexRule(
       if (needsEnrichment && symbolId > 0) {
         const kind = resolveSymbolKind(String((req.ruleJson as any)?.pxObjClass || ''));
         const virtualPath = buildVirtualPath(
-          String((req.ruleJson as any)?.pyClassName || ''), kind, resolveRuleNameField(req.ruleJson),
+          resolveClassNameField(req.ruleJson), kind, resolveRuleNameField(req.ruleJson),
           resolveRuleSetName(req.ruleJson), resolveRuleSetVersion(req.ruleJson),
         );
         await ensureEnrichmentTask(memoryEngine.getAdapter(), symbolId, resolveRuleNameField(req.ruleJson),
@@ -91,10 +95,15 @@ export async function indexRule(
   let result;
   try {
     result = await syncRuleToSymbols(
-      memoryEngine.getAdapter(), req.ruleJson, req.projectId, promptCtx,
+      // SA4E-241: pass the client checksum so content_hash == bulk-check value (INV-1).
+      memoryEngine.getAdapter(), req.ruleJson, req.projectId, promptCtx, req.checksum ?? '',
     );
   } catch (err) {
-    logger.warn({ err, fqn: symbol.fqn }, 'Failed to sync rule to symbols — skipped');
+    // SA4E-241 (NT-4): a missing checksum is a hard, caller-facing failure — do NOT
+    // swallow it as a generic "skip". Re-throw so the route returns 400 (upgrade ext).
+    if (err instanceof MissingChecksumError) { throw err; }
+    const message = err instanceof Error ? err.message : String(err);
+    logger.warn({ err: message, fqn: symbol.fqn }, 'Failed to sync rule to symbols — skipped');
     return { status: 'skipped', ruleId: -1, fqn: symbol.fqn,
       isRule: symbol.isRule, reason: 'symbol_sync_error', dependencies: deps };
   }
@@ -103,8 +112,34 @@ export async function indexRule(
       isRule: symbol.isRule, reason: 'symbol_skip', dependencies: deps };
   }
 
+  // SA4E-237 (GD5): stage this rule's references for the Phase-2 resolution pass.
+  // Non-fatal — a staging failure must never block indexing.
+  try {
+    await stageRuleReferences(memoryEngine.getAdapter(), req.projectId, result.symbolId, canonicalFqn, deps);
+  } catch (err) {
+    logger.warn({ err, fqn: symbol.fqn }, 'Failed to stage rule references (non-fatal)');
+  }
+
   return { status: 'success', ruleId: result.symbolId, fqn: symbol.fqn,
     isRule: symbol.isRule, dependencies: deps };
+}
+
+/** Stage rule-to-rule references into pega_reference_resolution (Phase 1 of GD5). */
+async function stageRuleReferences(
+  adapter: DatabaseAdapter,
+  projectId: string,
+  sourceSymbolId: number,
+  sourceFqn: string,
+  deps: UnresolvedDependency[],
+): Promise<void> {
+  const store = new PegaResolutionStore(adapter);
+  const refs = deps.map((d) => ({
+    refKind: d.ruleType,
+    refPath: `${d.className}.${d.ruleName}`,
+    // Target FQN uses '-' for unknown ruleset/version; resolver matches on type+name+class.
+    targetFqn: buildFqn(d.ruleType, d.className, d.ruleName, '-', '-'),
+  }));
+  await store.stageReferences(projectId, sourceSymbolId, sourceFqn, refs);
 }
 
 /** Check if rule exists in symbols with matching content hash + enrichment status. */

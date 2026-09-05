@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.39.0",
+  "version": "1.40.2",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -225,6 +225,27 @@
           "minimum": 1,
           "description": "Max Pega rule dedup keys kept in memory during indexing. When exceeded, keys spill to a temporary disk file (deleted after the run) so RAM stays bounded on large rulebases. Lower this on memory-constrained machines."
         },
+        "kiroSdlc.pega.fetchBatchSize": {
+          "type": "number",
+          "default": 50,
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Pega indexing: number of rules the supplier pulls off the queue and fetches per batch. Larger batches reduce per-batch overhead but hold more rules in flight. Takes effect on the next indexing run."
+        },
+        "kiroSdlc.pega.ingestConcurrency": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 64,
+          "description": "Pega indexing: max concurrent ingest requests to the backend. Higher values speed up indexing when the network is the bottleneck, but increase load on the shared backend. Takes effect on the next indexing run."
+        },
+        "kiroSdlc.pega.ingestChannelCapacity": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 512,
+          "description": "Pega indexing: buffer size between the fetch supplier and ingest consumers (backpressure). 0 = auto (2× ingest concurrency). Raise to let the supplier run further ahead at the cost of more buffered rules in RAM. Takes effect on the next indexing run."
+        },
         "kiroSdlc.mcpServerPort": {
           "type": "number",
           "default": 9181,
@@ -303,6 +324,11 @@
           "type": "string",
           "default": "http://localhost:8080/prweb",
           "description": "Pega Platform REST API Endpoint URL"
+        },
+        "kiroSdlc.pega.useCatalogExport": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use the Pega Rule Catalog Export API (fast, authoritative rule list) when indexing Pega source code. Disable to force the legacy BFS crawl."
         },
         "kiroSdlc.pegaUsername": {
           "type": "string",

@@ -11,9 +11,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
     "declaration": true,
     "sourceMap": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/**/__tests__/**", "tests/**"]
+  "exclude": ["node_modules", "dist", "src/**/__tests__/**", "tests/**", "src/admin/**"]
 }

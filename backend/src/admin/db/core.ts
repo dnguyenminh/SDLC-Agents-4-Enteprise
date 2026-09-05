@@ -37,6 +37,11 @@ export function getActiveEngine(): string {
     const configPath = path.join(DATA_DIR, 'database.json');
     if (!fs.existsSync(configPath)) return 'sqlite';
     const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    // Source of truth: per-engine `active` flag. Fallback to legacy activeEngine.
+    const engines = raw.engines || {};
+    for (const e of ['postgresql', 'mysql', 'sqlite']) {
+      if (engines[e] && engines[e].active === true) return e;
+    }
     return raw.activeEngine || 'sqlite';
   } catch { return 'sqlite'; }
 }
@@ -47,10 +52,15 @@ export function getActiveDbConfig() {
     const configPath = path.join(DATA_DIR, 'database.json');
     if (!fs.existsSync(configPath)) return { engine: 'sqlite' as const, dbPath: DB_PATH };
     const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    if (raw.activeEngine === 'sqlite' || !raw.activeEngine) {
+    const engines = raw.engines || {};
+    let engine = raw.activeEngine;
+    for (const e of ['postgresql', 'mysql', 'sqlite']) {
+      if (engines[e] && engines[e].active === true) { engine = e; break; }
+    }
+    if (engine === 'sqlite' || !engine) {
       return { engine: 'sqlite' as const, dbPath: DB_PATH };
     }
-    return { engine: raw.activeEngine, ...raw.engines[raw.activeEngine] };
+    return { engine, ...engines[engine] };
   } catch { return { engine: 'sqlite' as const, dbPath: DB_PATH }; }
 }
 

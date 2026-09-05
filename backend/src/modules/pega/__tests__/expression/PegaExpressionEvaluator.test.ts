@@ -38,12 +38,12 @@ describe('PegaExpressionEvaluator', () => {
   });
 
   it('evaluates compound AND true', () => {
-    const r = evaluator.evaluate('.Status = "Open" .AND. .Amount > 100', context);
+    const r = evaluator.evaluate('.Status = "Open" && .Amount > 100', context);
     expect(r.value.boolean).toBe(true);
   });
 
   it('evaluates compound AND false', () => {
-    const r = evaluator.evaluate('.Status = "Open" .AND. .Amount > 200', context);
+    const r = evaluator.evaluate('.Status = "Open" && .Amount > 200', context);
     expect(r.value.boolean).toBe(false);
   });
 
@@ -67,13 +67,13 @@ describe('PegaExpressionEvaluator', () => {
     expect(r.value.boolean).toBe(false);
   });
 
-  it('evaluates .ISNULL on existing property', () => {
-    const r = evaluator.evaluate('.ISNULL .Amount', context);
+  it('evaluates @IsNull(false) via function form', () => {
+    const r = evaluator.evaluate('@IsNull(.Amount)', context);
     expect(r.value.boolean).toBe(false);
   });
 
-  it('evaluates .NOT. operator', () => {
-    const r = evaluator.evaluate('.NOT. .Count = 5', context);
+  it('evaluates NOT operator (!) on a comparison', () => {
+    const r = evaluator.evaluate('!(.Count = 5)', context);
     expect(r.value.boolean).toBe(true);
   });
 

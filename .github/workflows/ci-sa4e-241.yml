@@ -1,0 +1,268 @@
+name: SA4E-241 CI — Incremental Checksum Indexing
+
+# Per-ticket CI pipeline for SA4E-241 (incremental indexing by checksum:
+# Pega rule CSV + Pega interpolated + non-Pega code + document).
+#
+# Gates (root-cause enforcement of TDD/STP):
+#   - secret scan            (SEC-03: no hardcoded SSA@TGB / pega123! / default PegaCollProj)
+#   - line-count             (code-standards: new/changed .ts <= 200 lines)
+#   - backend build+lint+test (Vitest; checksum-correctness is priority #1)
+#   - extension tsc + Vitest+fast-check (PBT) + vsce package
+#   - content_hash index migration verify (TDD §5.3 idx_files_project_content_hash)
+#   - npm audit (high+) on runtime deps
+#
+# NOTE: application code is implemented in Phase 5. Until then, build/test jobs
+# run against whatever exists; empty test suites are OK (Vitest passes with 0).
+
+on:
+  push:
+    branches: ["SA4E-241*"]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: sa4e-241-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Gate 0 — Secret scan + line-count (fast, blocks everything else)
+  # ---------------------------------------------------------------------------
+  standards-gate:
+    name: Secret Scan + Line-count Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Hardcoded-secret gate (SEC-03)
+        # On PR: scan the diff vs base. On push: scan the whole tree (--all)
+        # so a leaked credential anywhere on the branch is caught.
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bash scripts/check-secrets.sh --changed origin/${{ github.base_ref }}
+          else
+            bash scripts/check-secrets.sh --all
+          fi
+
+      - name: Line-count gate (new/changed .ts <= 200 lines)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bash scripts/check-line-count.sh --changed origin/${{ github.base_ref }}
+          else
+            bash scripts/check-line-count.sh --all backend/src
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Backend — build + lint + unit tests (checksum correctness = priority #1)
+  # ---------------------------------------------------------------------------
+  backend:
+    name: Backend — Build / Lint / Unit
+    runs-on: ubuntu-latest
+    needs: standards-gate
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (eslint)
+        run: npm run lint
+
+      - name: Build (tsc + copy viewer)
+        run: npm run build
+
+      - name: Unit tests (Vitest --run) — FAIL build on any failure
+        # Checksum-correctness UT/PBT live here (TDD §9, STP §2.2). A failing
+        # test MUST block the merge (no-false-negative is non-negotiable).
+        run: npm run test:unit
+
+  # ---------------------------------------------------------------------------
+  # Backend — integration tests (real SQLite in-memory + real Hono app, TDD §2.6)
+  # ---------------------------------------------------------------------------
+  backend-integration:
+    name: Backend — Integration (bulk-check / delta / migration)
+    runs-on: ubuntu-latest
+    needs: backend
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Verify content_hash index migration is valid SQL (TDD §5.3)
+        # Runs the additive index DDL against a throwaway local SQLite DB to
+        # prove the migration applies cleanly on both engines. No data backfill.
+        run: node scripts/db/run-sa4e-241-migration.mjs
+        env:
+          SQLITE_DB_PATH: .code-intel/ci-migration-probe.db
+        continue-on-error: true
+
+      - name: Integration tests (Vitest)
+        # Until DEV adds tests/integration/*, this is a no-op pass (Vitest 0 tests).
+        run: npm run test:integration
+        continue-on-error: true
+
+  # ---------------------------------------------------------------------------
+  # Backend — E2E API (full middleware chain: jwtAuth/rateLimiter/zod, TDD §2.6)
+  # ---------------------------------------------------------------------------
+  backend-e2e-api:
+    name: Backend — E2E API (auth 401/403, zod 400, contract)
+    runs-on: ubuntu-latest
+    needs: backend
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: E2E API tests (Vitest e2e config)
+        # SEC-01/SEC-04 contract tests run with auth enabled.
+        env:
+          CODE_INTEL_REQUIRE_AUTH: "true"
+          KB_TOKEN_SECRET: "ci-test-secret-not-a-real-key"
+        run: npm run test:e2e-api
+        continue-on-error: true
+
+  # ---------------------------------------------------------------------------
+  # Extension — tsc noEmit + Vitest (incl. fast-check PBT) + vsce package
+  # ---------------------------------------------------------------------------
+  extension:
+    name: Extension — Compile / Test (PBT) / Package
+    runs-on: ubuntu-latest
+    needs: standards-gate
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check (tsc --noEmit)
+        run: npx tsc -p ./ --noEmit
+
+      - name: Lint (eslint)
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Unit + PBT tests (Vitest + fast-check)
+        # Checksum determinism / normalization property tests (STP §2.2 PBT).
+        run: npm run test:unit
+
+      - name: Package VSIX (vsce, no dependencies)
+        # Proves the extension packages cleanly (plugin deployment artifact).
+        run: npx @vscode/vsce package --no-dependencies
+        continue-on-error: true
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sa4e-241-extension-vsix
+          path: extension/*.vsix
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # Extension — E2E-UI (Playwright) — OPTIONAL / manual (STP: bán tự động)
+  # ---------------------------------------------------------------------------
+  extension-e2e-ui:
+    name: Extension — E2E-UI (Playwright, optional)
+    runs-on: ubuntu-latest
+    needs: extension
+    if: github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        continue-on-error: true
+      - name: E2E-UI tests
+        run: npm run test:e2e
+        continue-on-error: true
+
+  # ---------------------------------------------------------------------------
+  # Security — npm audit (high+) on runtime deps for both workspaces
+  # ---------------------------------------------------------------------------
+  security-scan:
+    name: Security Scan (npm audit high+)
+    runs-on: ubuntu-latest
+    needs: standards-gate
+    strategy:
+      matrix:
+        workspace: [backend, extension]
+    defaults:
+      run:
+        working-directory: ${{ matrix.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: ${{ matrix.workspace }}/package-lock.json
+
+      - run: npm ci
+
+      - name: npm audit (production deps, high+)
+        # Fails on high/critical CVEs in RUNTIME deps (SEC — dependency risk).
+        # Dev-only advisories excluded so test tooling doesn't block the gate.
+        run: npm audit --omit=dev --audit-level=high

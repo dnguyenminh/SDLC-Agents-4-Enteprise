@@ -1,5 +1,13 @@
-import { Request, Response } from 'express';
 import { convertResponseToSSEEvents, extractToolUseIds, validateToolUseId } from './converter';
+
+type Request = { body: any };
+type Response = {
+  status: (code: number) => Response;
+  json: (obj: any) => void;
+  setHeader: (k: string, v: string) => void;
+  write: (s: string) => void;
+  end: () => void;
+};
 import { ConversationHistory } from '../history/conversation';
 import { KiroQResponse, ContinuationRequest } from './types';
 import { logger } from '../logger';

@@ -1,4 +1,5 @@
 import type { PegaClassDefinition } from '../metamodel/PegaClassDefinition.js';
+import { hasRuleReferences, extractDependenciesFromReferences } from './PxRuleReferences.js';
 
 export interface ResolvedDependency {
   type: string;
@@ -116,8 +117,35 @@ export class PegaReferenceExtractor {
     this.metaModelClasses = classes;
   }
 
+  /**
+   * Extract dependencies for a single rule.
+   *
+   * SA4E-235 (GD3): when the engine-authoritative `pxRuleReferences` aggregate is present it
+   * is the PRIMARY source; the per-type heuristics below run only as a FALLBACK for rules
+   * without the aggregate.
+   */
   public extractFromRule(json: Record<string, unknown>): ResolvedDependency[] {
     if (!json || typeof json !== 'object') return [];
+
+    if (hasRuleReferences(json)) {
+      return this.extractFromRuleReferences(json);
+    }
+    return this.extractByHeuristics(json);
+  }
+
+  /** Map the engine `pxRuleReferences` aggregate to ResolvedDependency edges (noise-filtered). */
+  private extractFromRuleReferences(json: Record<string, unknown>): ResolvedDependency[] {
+    return extractDependenciesFromReferences(json).map((d) => ({
+      type: d.ruleType,
+      name: d.ruleName,
+      relation: 'references' as const,
+      fieldName: 'pxRuleReferences',
+      optional: true,
+    }));
+  }
+
+  /** Per-type heuristic extraction (fallback when no engine aggregate exists). */
+  private extractByHeuristics(json: Record<string, unknown>): ResolvedDependency[] {
     const deps: ResolvedDependency[] = [];
     const visited = new Set<string>();
     const pxObjClass = (json.pxObjClass as string) || 'Rule-Obj-Activity';

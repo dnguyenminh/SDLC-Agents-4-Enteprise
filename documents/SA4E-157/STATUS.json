@@ -4,19 +4,22 @@
   "jiraStatus": "Done",
   "autonomyLevel": "L3",
   "architecturePattern": "plugin",
+  "status": "done",
+  "verifiedBy": "dev-agent (test+docs 2026-08-30)",
+  "closedAt": "2026-08-30",
   "phases": {
-    "requirements": { "status": "in_progress", "file": "BRD.md", "version": null, "startedAt": "2025-07-27T10:00:00Z" },
-    "specification": { "status": "not_started" },
-    "design": { "status": "not_started" },
-    "feedback_loop": { "status": "not_started", "iterations": 0, "maxIterations": 5 },
-    "security_design_review": { "status": "not_started" },
-    "test_planning": { "status": "not_started" },
-    "devops_pipeline_setup": { "status": "not_started" },
+    "requirements": { "status": "done", "file": "BRD.md", "version": "1.0", "startedAt": "2025-07-27T10:00:00Z", "completedAt": "2026-08-30T00:00:00Z" },
+    "specification": { "status": "done", "file": "FSD.md", "version": "1.0" },
+    "design": { "status": "done", "file": "TDD.md", "version": "1.0" },
+    "feedback_loop": { "status": "done", "iterations": 0, "maxIterations": 5 },
+    "security_design_review": { "status": "skipped", "reason": "Read-only status endpoint; no write path or extra RBAC surface (TDD §7). Low risk — skipped per SA4E-157." },
+    "test_planning": { "status": "done", "file": "STP.md", "note": "STP.md + STC.md created 2026-08-30", "completedAt": "2026-08-30T00:00:00Z" },
+    "devops_pipeline_setup": { "status": "done", "note": "No DB migration; route mount is backward compatible, zero-downtime rollback." },
     "implementation": { "status": "done", "note": "Enrichment status endpoint + extension polling deployed (verified 2026-08-27)" },
-    "security_code_review": { "status": "not_started" },
-    "testing": { "status": "not_started" },
-    "pentest": { "status": "not_started" },
-    "deployment": { "status": "not_started" }
+    "security_code_review": { "status": "skipped", "reason": "No security-sensitive code added; reuses existing JWT middleware + adds Zod validation at protocol boundary." },
+    "testing": { "status": "done", "note": "38 automated tests (0 failed) 2026-08-30: route, schema, repo.getEarliestActiveTimestamp, extension service." },
+    "pentest": { "status": "skipped", "reason": "Internal read-only GET endpoint with no user input; no external attack surface." },
+    "deployment": { "status": "done", "note": "Shipped in backend + extension; StatusBarItem polling live." }
   },
   "tokenBudget": {
     "dailyCap": 500000,
@@ -26,5 +29,5 @@
     "mode": "normal"
   },
   "circuitBreaker": {},
-  "lastUpdated": "2026-08-27T22:40:00Z"
+  "lastUpdated": "2026-08-30T00:00:00Z"
 }

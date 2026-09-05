@@ -35,6 +35,7 @@ import { ensureSa4e101Tables } from '../database/schema-registry/ensure-sa4e-101
 import { runStartupInterruptDetection } from '../engine/indexer/startup-interrupt-detector.js';
 import { CleanupScheduler } from '../engine/indexer/cleanup-scheduler.js';
 import { createPegaSyncToKbRoutes } from './routes/pega-sync-to-kb.js';
+import { createPegaReferenceRoutes } from './routes/pega-references.js';
 import { createKnowledgeApiRoutes } from '../knowledge/routes.js';
 import { bodyLimit } from 'hono/body-limit';
 import { getMcpServer, registerTransport } from './mcpServer.js';
@@ -86,6 +87,12 @@ export class HttpServer {
     app.use('/api/index/*', jwtAuth);
     app.use('/api/tags/*', apiKeyAuth);
     app.use('/mcp/*', apiKeyAuth);
+    // SA4E-241 SEC-01: bind identity to the whole Pega route group (mounted at
+    // /api/v1/pega/*). projectId is derived from the authenticated identity
+    // (X-Project-Id / JWT pid), never from the request body (fail-closed).
+    app.use('/api/v1/pega/*', jwtAuth);
+    // SA4E-241 SEC-08: per-identity rate limit on the Pega group (defense-in-depth).
+    app.use('/api/v1/pega/*', rateLimiter);
     app.onError(createErrorHandler(this.logger));
 
     app.route('/', createHealthRoute(this.options.registry, this.options.version));
@@ -112,6 +119,10 @@ export class HttpServer {
     // SA4E-158: Sync indexed Pega rules to KB (Phase 2)
     const pegaSyncRoutes = createPegaSyncToKbRoutes(this.options.registry, this.logger);
     app.route('/api/v1', pegaSyncRoutes);
+
+    // SA4E-237 (GD5): query Pega reference-resolution results
+    const pegaRefRoutes = createPegaReferenceRoutes(this.options.registry, this.logger);
+    app.route('/api/v1', pegaRefRoutes);
 
     // SA4E-156: Per-rule ingestion with relative extraction (BFS-compatible)
     const ingestRuleRoute = createIngestRuleRoute(this.options.registry, this.logger);

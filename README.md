@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.40.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.41.0.vsix
 ```
 
 ### 3. Use
@@ -66,7 +66,7 @@ MIT
 
 ## Changelog
 
-### v1.40.0 (2026-08-29)
+### v1.41.0 (2026-08-29)
 
 - **SA4E-6: Sandbox Execution (MCP Server Bridge)** — New `SandboxModule` exposing 5 MCP tools (`sandbox_session`, `sandbox_exec`, `sandbox_run`, `sandbox_install`, `sandbox_test`) so DEV/QA agents run bash, install packages, compile, and run test suites in isolated environments. Local + Docker executors (via `dockerode`), session TTL + background `Reaper`, orphan recovery, resource limits (memory/cpu/disk/pids), mount exclusion of sensitive files, and BR-01..BR-12 hardening (network=none, non-privileged, cap-drop, reuse of `SecurityModule`). Environment-aware default mode (docker on Linux, local on non-Linux; `SANDBOX_FULL_ISOLATION=true` opts into full isolation). Fixed `pending_tasks` schema drift (`priority` column). Tests 4 passed / 3 skipped.
 

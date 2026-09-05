@@ -1,0 +1,93 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-241 — Test Coverage: 6 Levels × 5 Risk Groups" style="text;html=1;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="440" y="20" width="720" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="lv-pbt" value="PBT — fast-check&#10;(determinism, normalization)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="90" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="lv-ut" value="UT — Vitest&#10;(strategy, classifier, parser, guards)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="170" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="lv-it" value="IT — Hono app.request()&#10;+ SQLite in-memory (DB thật)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="250" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="lv-api" value="E2E-API — Hono full chain&#10;(jwtAuth, rateLimiter, zod)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="330" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="lv-ui" value="E2E-UI — Playwright&#10;(command flow, notifications)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="410" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="lv-sit" value="SIT — thủ công&#10;(visual/UX/performance)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="490" width="180" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="g-a" value="A — CHECKSUM CORRECTNESS&#10;PBT-01..06, UT-01..19&#10;INV-1, BR-04, git-blob vector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="90" width="230" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="g-b" value="B — INCREMENTAL LOGIC&#10;IT-03..13, UT-20..26, PBT-06, API-01&#10;skip~100%, delta, bulk-check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="600" y="90" width="230" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="g-c" value="C — MIGRATION / REGRESSION&#10;IT-14..17, UT-27, SIT-02&#10;full re-index 1 lần, no convert" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="880" y="90" width="230" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="g-d" value="D — SECURITY&#10;API-02..08, IT-18..21, UT-28..32&#10;401/403/400, isolation, zip-slip" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="90" width="230" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="g-e" value="E — EDGE / RELIABILITY&#10;IT-22..27, UT-33..35&#10;fail-safe, isolate, resumable dl" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="200" width="230" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cov" value="RTM Coverage = 100%&#10;52 Req → 81 test cases&#10;(PBT×6, UT×35, IT×27, API×8, UI×2, SIT×3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="600" y="470" width="360" height="100" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-pbt-a" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;" edge="1" parent="1" source="lv-pbt" target="g-a">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-pbt-b" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-pbt" target="g-b">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-ut-a" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;" edge="1" parent="1" source="lv-ut" target="g-a">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-ut-b" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-ut" target="g-b">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-ut-d" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-ut" target="g-d">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="280" y="150"/><mxPoint x="280" y="70"/><mxPoint x="1275" y="70"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e-ut-e" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-ut" target="g-e">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-it-b" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-it" target="g-b">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-it-c" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-it" target="g-c">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-it-d" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-it" target="g-d">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-it-e" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-it" target="g-e">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-api-d" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-api" target="g-d">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-api-b" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-api" target="g-b">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-ui-b" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-ui" target="cov">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-sit-c" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="lv-sit" target="cov">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

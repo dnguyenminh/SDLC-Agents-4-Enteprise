@@ -1,0 +1,58 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="n1" value="Developer chạy lệnh Index Pega" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="48.7" y="12" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n2" value="useCatalogExport = true?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="78.7" y="222" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n3" value="Fast-path: Rule Catalog Export&#10;(export → poll → result → download)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="332" y="462" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n4" value="Decode base64 → ZIP → giải nén&#10;rulecatalog.csv (~17,979 rule)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="332" y="682" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n5" value="Parse CSV → CrawlPlanItem[]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="332" y="902" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n6" value="Fallback: BFS crawl&#10;(RuleSet enumeration + discovery)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="12" y="682" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n7" value="Pipeline hiện có: PegaBfsIndexer&#10;→ PegaStreamIngester → backend ingest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="52" y="1112" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n8" value="Knowledge Base (KB)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="92" y="1332" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n1" target="n2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n2" target="n3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="No / lỗi / 0 rule" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;fontSize=9;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="n2" target="n6">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint as="offset" y="-10"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n3" target="n4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n4" target="n5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n5" target="n7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="reuse pipeline" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="n6" target="n7">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint as="offset" y="-10"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n7" target="n8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

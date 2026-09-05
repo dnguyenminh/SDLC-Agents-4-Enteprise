@@ -1,0 +1,44 @@
+# SA4E-241 — Integration-test override (Testcontainers-style Postgres for IT)
+# -----------------------------------------------------------------------------
+# Layers ON TOP of the base compose. Provides a throwaway Postgres (tmpfs, no
+# persistent volume) with the SA4E-241 content_hash index pre-applied, so
+# integration tests exercise bulk-check `content_hash = ANY($2)` against a real
+# indexed DB (TDD §5.3 / §2.6 "DB thật").
+#
+# Usage (IT against real Postgres):
+#   docker compose -f docker-compose.yml -f docker-compose.sa4e-241.yml up -d postgres
+#   DATABASE_URL=postgresql://sa4e_user:sa4e_it_password@localhost:5434/sa4e_it \
+#     DATABASE_ADAPTER=postgresql node scripts/db/run-sa4e-241-migration.mjs
+#   npm run test:integration
+#
+# For the default local dev/test path (SQLite), no compose is needed — the
+# backend defaults to the SQLite unified DB (better-sqlite3 / sql.js).
+version: "3.9"
+
+services:
+  postgres:
+    container_name: sa4e-postgres-it
+    environment:
+      POSTGRES_DB: sa4e_it
+      POSTGRES_USER: sa4e_user
+      # Local-only throwaway password (NOT a secret; ephemeral tmpfs DB).
+      POSTGRES_PASSWORD: sa4e_it_password
+    ports:
+      - "5434:5432"
+    # Ephemeral: data lives in RAM, wiped on container stop (clean IT runs).
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      # Apply the SA4E-241 content_hash index at DB init (after tables exist,
+      # the index is IF NOT EXISTS so re-runs are safe).
+      - ./scripts/db/sa4e-241-content-hash-index.sql:/docker-entrypoint-initdb.d/99-sa4e-241-index.sql
+
+  # Disable the full backend + onnx for the lean IT profile — IT drives the
+  # Hono app in-process via Vitest, only the DB needs to be real.
+  backend:
+    profiles:
+      - full
+  onnx-runtime:
+    profiles:
+      - embeddings

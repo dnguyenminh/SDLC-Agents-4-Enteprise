@@ -18,7 +18,7 @@ export const BUILTIN_HARDENING: SandboxHardening = {
   CapAdd: ['CHOWN', 'SETGID', 'SETUID', 'NET_BIND_SERVICE'],
   SecurityOpt: ['no-new-privileges:true'],
   Privileged: false,
-  ReadonlyRootfs: false,
+  ReadonlyRootfs: true,
   Tmpfs: {
     '/tmp': 'rw,noexec,nosuid,size=64m',
     '/var/tmp': 'rw,noexec,nosuid,size=64m',

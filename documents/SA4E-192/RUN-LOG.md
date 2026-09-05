@@ -13,3 +13,4 @@
 | 9 | 2026-08-22 14:55 | devops-agent | deployment | Create DPG.md v1 (build/register/verify) | ✅ success | ~5k | 15s |
 | 10 | 2026-08-22 15:10 | qa-agent | testing (real) | Implement + run unit (9) & e2e (8) tests via vitest — 17/17 pass | ✅ success | ~8k | 25s |
 | 11 | 2026-08-22 15:11 | sm-agent | reporting | Update TEST-REPORT.md with real results | ✅ success | ~2k | 5s |
+| 12 | 2026-08-30 02:50 | dev-agent | integration | Wire registerAll() into runtime via single entry source/slash/index.ts + backend/src/index.ts; module no longer dead code, 8 commands discoverable via /help | ✅ success | ~1k | 10s |
