@@ -19,7 +19,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - run: npm ci --workspace backend
+      - run: npm ci --workspace backend --include=optional
 
       - run: npm run build --workspace backend
 
@@ -37,7 +37,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - run: npm ci --workspace extension
+      - run: npm ci --workspace extension --include=optional
 
       - run: npm run compile --workspace extension
 
@@ -57,7 +57,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - run: npm ci --workspace backend
+      - run: npm ci --workspace backend --include=optional
 
       - run: npm run build --workspace backend
 
@@ -77,7 +77,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
-      - run: npm ci --workspace backend
+      - run: npm ci --workspace backend --include=optional
 
       - run: npm run build --workspace backend
 
