@@ -6,6 +6,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { httpPostJson } from "./utils/http-client-utils";
+import { getEffectiveScope } from "./utils/scope-detector";
 
 function getBackendUrl(): string | undefined {
   return vscode.workspace.getConfiguration("kiroSdlc").get<string>("backend.url");
@@ -46,7 +47,7 @@ export async function ingestDocumentsViaHttp(
       if (fileContent) await uploadDocumentFile(d.path, fileContent, token);
       const payload = {
         tool_name: "mem_ingest_file",
-        arguments: { file_path: d.path, type: d.type, format: "markdown", ...(fileContent ? { content: fileContent } : {}) },
+        arguments: { file_path: d.path, type: d.type, format: "markdown", scope: getEffectiveScope(), ...(fileContent ? { content: fileContent } : {}) },
       };
       const success = await httpPostJson<unknown>(url, payload, { headers: authHeaders, timeoutMs: 30000 })
         .then(() => true)

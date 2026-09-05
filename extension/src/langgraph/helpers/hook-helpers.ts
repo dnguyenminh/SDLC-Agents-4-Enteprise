@@ -86,7 +86,7 @@ async function executeHookAction(
           content: summary, type: "CONTEXT",
           source: `hook-${hook.name.toLowerCase().replace(/\s+/g, "-")}`,
           tags: ["hook", nodeId, state.ticketKey],
-          scope: "USER",
+          scope: "WORKSPACE",
         }, TOOL_CALL_TIMEOUT_MS);
       } else if (hook.then.prompt.includes("mem_search") && hook.then.prompt.includes("drawio")) {
         await mcpBridge.callTool("mem_search", {

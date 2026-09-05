@@ -40,6 +40,10 @@ export function buildReadFilter(ctx: ProjectContext, tableAlias?: string): Scope
   conditions.push(`(${p}scope = 'PROJECT' AND ${p}project_id = ?)`);
   params.push(ctx.projectId);
 
+  // WORKSPACE: personal workspace items, isolated by project (workspace root)
+  conditions.push(`(${p}scope = 'WORKSPACE' AND ${p}project_id = ?)`);
+  params.push(ctx.projectId);
+
   // SHARED: company-wide, visible only if this project is granted access
   conditions.push(`(${p}scope = 'SHARED' AND EXISTS (SELECT 1 FROM kb_shared_grants g WHERE g.project_id = ?))`);
   params.push(ctx.projectId);
@@ -63,6 +67,9 @@ export function validateReadAccess(
     return entry.user_id === ctx.userId && entry.project_id === ctx.projectId ? entry : undefined;
   }
   if (entry.scope === 'PROJECT') {
+    return entry.project_id === ctx.projectId ? entry : undefined;
+  }
+  if (entry.scope === 'WORKSPACE') {
     return entry.project_id === ctx.projectId ? entry : undefined;
   }
   return undefined;
@@ -115,6 +122,11 @@ export function validateMutationOwnership(
     }
   }
   if (entry.scope === 'PROJECT') {
+    if (entry.project_id !== ctx.projectId) {
+      return { allowed: false, reason: `Access denied: entry belongs to a different scope` };
+    }
+  }
+  if (entry.scope === 'WORKSPACE') {
     if (entry.project_id !== ctx.projectId) {
       return { allowed: false, reason: `Access denied: entry belongs to a different scope` };
     }

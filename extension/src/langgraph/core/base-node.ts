@@ -17,6 +17,7 @@ import {
   readWorkspaceFile, writeWorkspaceFile, appendWorkspaceFile,
   exportDocx, exportDrawioPng, getWorkspaceRoot, readCodeIntelligence,
 } from "../helpers/workspace-file-ops";
+import { getEffectiveScope } from "../../utils/scope-detector";
 import {
   fireAgentStopHooks, firePreToolUseHooks, fireFileHooks,
   execShell, execGit,
@@ -203,12 +204,12 @@ export abstract class BaseNode {
     }
     return this.enrichmentObserver;
   }
-  protected async kbIngest(content: string, type: string, source: string, tags: string[], scope: string = 'USER') {
+  protected async kbIngest(content: string, type: string, source: string, tags: string[], scope: string = getEffectiveScope()) {
     try { await this.callMcp("mem_ingest", { content, type, source, tags, scope }); } catch (err) {
       console.warn(`[BaseNode:${this.nodeId}] kbIngest failed (non-fatal): ${(err as Error).message}`);
     }
   }
-  protected async kbIngestFile(filePath: string, type = "DOCUMENT", scope: string = 'USER') {
+  protected async kbIngestFile(filePath: string, type = "DOCUMENT", scope: string = getEffectiveScope()) {
     try { await this.callMcp("mem_ingest_file", { file_path: filePath, type, scope }); } catch (err) {
       console.warn(`[BaseNode:${this.nodeId}] kbIngestFile failed (non-fatal): ${(err as Error).message}`);
     }
