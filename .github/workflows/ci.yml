@@ -17,16 +17,13 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - run: npm ci
-        working-directory: backend
+      - run: npm ci --workspace backend
 
-      - run: npm run build
-        working-directory: backend
+      - run: npm run build --workspace backend
 
-      - run: npm run test:unit
-        working-directory: backend
+      - run: npm run test:unit --workspace backend
 
   extension:
     name: Extension — Compile & Test
@@ -38,16 +35,13 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: extension/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - run: npm ci
-        working-directory: extension
+      - run: npm ci --workspace extension
 
-      - run: npm run compile
-        working-directory: extension
+      - run: npm run compile --workspace extension
 
-      - run: npm run test
-        working-directory: extension
+      - run: npm run test --workspace extension
         continue-on-error: true
 
   integration:
@@ -61,16 +55,13 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - run: npm ci
-        working-directory: backend
+      - run: npm ci --workspace backend
 
-      - run: npm run build
-        working-directory: backend
+      - run: npm run build --workspace backend
 
-      - run: npm run test:integration
-        working-directory: backend
+      - run: npm run test:integration --workspace backend
         continue-on-error: true
 
   e2e-api:
@@ -84,14 +75,11 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - run: npm ci
-        working-directory: backend
+      - run: npm ci --workspace backend
 
-      - run: npm run build
-        working-directory: backend
+      - run: npm run build --workspace backend
 
-      - run: npm run test:e2e-api
-        working-directory: backend
+      - run: npm run test:e2e-api --workspace backend
         continue-on-error: true
