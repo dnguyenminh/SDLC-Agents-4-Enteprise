@@ -34,8 +34,7 @@ coverage/
 /GEMINI.md
 
 # OpenCode
-/!conversions/opencode/.opencode/\n!extension/resources/conversions/opencode/.opencode/\n.opencode/
-/AGENTS.md
+/.opencode
 /opencode.json
 
 # Claude
@@ -66,3 +65,5 @@ coverage/
 
 # MCP request scratch file (SA4E-241 HTTP JSON-RPC body-from-file)
 documents/**/.mcp-req.json
+
+/.roo/

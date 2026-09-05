@@ -7,7 +7,7 @@
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import {
   resolveSymbolKind, buildVirtualPath, buildFqn, resolveRuleNameField,
-  resolveRuleSetName, resolveRuleSetVersion,
+  resolveClassNameField, resolveRuleSetName, resolveRuleSetVersion,
 } from './pega-mapping.js';
 import { extractRuleContent } from './PegaContentExtractor.js';
 import { SchemaStorageService, type IDatabaseAdapter } from './schema/SchemaStorageService.js';
@@ -70,7 +70,11 @@ export async function syncRuleToSymbols(
   checksum: string,
 ): Promise<SymbolSyncResult | null> {
   const fields = extractRequiredFields(ruleJson);
-  if (!fields) return null;
+  if (!fields) {
+    logger.warn({ ruleJson }, 'extractRequiredFields returned null');
+    return null;
+  }
+  logger.info({ pxObjClass: fields.pxObjClass, pyClassName: fields.pyClassName, pyRuleName: fields.pyRuleName, projectId }, 'syncRuleToSymbols start');
 
   // SA4E-241 (NT-4): fail-closed if the extension did not send a checksum. The
   // backend must NEVER compute one (no full-JSON fallback) — an old extension that
@@ -85,6 +89,7 @@ export async function syncRuleToSymbols(
   const version = resolveRuleSetVersion(ruleJson);
   const fqn = buildFqn(pxObjClass, pyClassName, pyRuleName, ruleSet, version);
   const virtualPath = buildVirtualPath(pyClassName, kind, pyRuleName, ruleSet, version);
+  logger.info({ fqn, virtualPath, kind, pyClassName, pyRuleName }, 'syncRuleToSymbols built identity');
   const ruleJsonStr = JSON.stringify(ruleJson);
 
   // SEC-06: skip oversized rules
@@ -179,7 +184,10 @@ async function resolveNestedLogicPaths(
 /** Extract and validate required fields from rule JSON. */
 function extractRequiredFields(ruleJson: Record<string, unknown>) {
   const pxObjClass = String((ruleJson as any)?.pxObjClass || '');
-  const pyClassName = String((ruleJson as any)?.pyClassName || '');
+  // Class via shared fallback (pyClassName → pxObjClass) so instance-level Data-Admin
+  // rules with no pyClassName still index. MUST match the FQN built in PegaIndexer's
+  // checksum dedup so a rule resolves to the SAME identity at write and at dedup.
+  const pyClassName = resolveClassNameField(ruleJson);
   // Name via canonical fallback (pyRuleName → pyActivityName → pyModelName → pyFlowName → pyLabel)
   const pyRuleName = resolveRuleNameField(ruleJson);
 

@@ -57,6 +57,27 @@ function mockFetchOnce(zipBuf: Buffer, opts?: { fileSize?: number; status?: numb
   })));
 }
 
+/**
+ * Mock fetch that mimics the REAL server: the `Range` header is measured against
+ * the DECODED bytes; the body is the base64 of that decoded window. This is the
+ * regression guard for the offset-unit bug (base64 length vs decoded length).
+ * @param zipBuf - The full decoded ZIP the server holds
+ * @param window - Decoded bytes returned per request (server may exceed the ask)
+ */
+function mockFetchRanged(zipBuf: Buffer, window: number): void {
+  vi.stubGlobal("fetch", vi.fn(async (_url: string, init: { headers: Record<string, string> }) => {
+    const range = init.headers.Range ?? "bytes=0-";
+    const start = Number(/bytes=(\d+)-/.exec(range)?.[1] ?? "0");
+    const slice = zipBuf.subarray(start, Math.min(start + window, zipBuf.length));
+    return {
+      status: 206,
+      ok: true,
+      headers: { get: (h: string) => (h.toLowerCase() === "x-file-size" ? String(zipBuf.length) : null) },
+      text: async () => slice.toString("base64"),
+    };
+  }));
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   for (const d of tmpDirs.splice(0)) { try { fs.rmSync(d, { recursive: true, force: true }); } catch { /* ignore */ } }
@@ -101,6 +122,42 @@ describe("PegaCatalogDownloader", () => {
     expect(path.dirname(path.resolve(res.csvPath))).toBe(path.resolve(dir));
     expect(path.basename(res.csvPath)).toBe("evil.csv");
     expect(fs.existsSync(path.join(dir, "evil.csv"))).toBe(true);
+  });
+
+  // Fallback path: no x-file-size header. The loop must stop when a returned
+  // window is smaller than the requested CHUNK_BYTES (= final remaining bytes).
+  it("stops on a short final window when x-file-size is absent", async () => {
+    const csvContent = "pzInsKey,pxObjClass\nRULE-X A!B,Rule-Obj-Activity\n";
+    const zip = buildZip("rulecatalog.csv", csvContent);
+    // No x-file-size; single response smaller than the 1 MiB request window.
+    vi.stubGlobal("fetch", vi.fn(async () => ({
+      status: 206,
+      ok: true,
+      headers: { get: () => null }, // no x-file-size
+      text: async () => zip.toString("base64"),
+    })));
+    const dir = tmpDir();
+    const res = await downloadCatalogCsv("http://mock/dl", "Basic x", dir, noop);
+    expect(res.zipBytes).toBe(zip.length);
+    expect(fs.readFileSync(res.csvPath, "utf-8")).toBe(csvContent);
+    // Exactly one request: the short window ends the loop without an extra probe.
+    expect((globalThis.fetch as unknown as { mock: { calls: unknown[] } }).mock.calls.length).toBe(1);
+  });
+
+  // Regression: multi-chunk Range download where offset MUST advance by decoded
+  // bytes, not base64 string length. A large CSV forces several windows.
+  it("reassembles a multi-chunk ranged download without truncation", async () => {
+    // Build a CSV large enough to span multiple decoded windows.
+    const rows = Array.from({ length: 5000 }, (_, i) =>
+      `RULE-OBJ-ACTIVITY TGB-HRAPPS-WORK-CANDIDATE RULE${i} #20250101T000000.000 GMT,Rule-Obj-Activity`);
+    const csvContent = "pzInsKey,pxObjClass\n" + rows.join("\n") + "\n";
+    const zip = buildZip("rulecatalog.csv", csvContent);
+    // Window smaller than the ZIP so at least 3 chunks are needed.
+    mockFetchRanged(zip, Math.ceil(zip.length / 3));
+    const dir = tmpDir();
+    const res = await downloadCatalogCsv("http://mock/dl", "Basic x", dir, noop);
+    expect(res.zipBytes).toBe(zip.length);
+    expect(fs.readFileSync(res.csvPath, "utf-8")).toBe(csvContent);
   });
 
   // Non-2xx/206 status → throw

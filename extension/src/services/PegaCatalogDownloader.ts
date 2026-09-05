@@ -41,9 +41,8 @@ export async function downloadCatalogCsv(
   log: LogFn,
 ): Promise<CatalogDownloadResult> {
   fs.mkdirSync(destDir, { recursive: true });
-  const { base64, totalBytes } = await fetchAllChunks(downloadUrl, authHeader, log);
+  const { zipBuf, totalBytes } = await fetchAllChunks(downloadUrl, authHeader, log);
 
-  const zipBuf = Buffer.from(base64, "base64");
   // Verify integrity: decoded size MUST equal the server-declared x-file-size.
   if (totalBytes > 0 && zipBuf.length !== totalBytes) {
     throw new Error(
@@ -62,16 +61,27 @@ export async function downloadCatalogCsv(
 }
 
 /**
- * Fetch all Range chunks sequentially, concatenating the base64 text.
+ * Fetch all Range chunks sequentially and concatenate the DECODED bytes.
+ *
+ * The server measures the `Range` header against the DECODED file (the ZIP),
+ * takes that byte window, then base64-encodes it in the response body. So a
+ * request for `bytes=0-1048575` yields the base64 of the first 1 MiB of ZIP
+ * (≈1.4M base64 chars), NOT the first 1 MiB of base64 text.
+ *
+ * Therefore the read offset MUST advance by the number of DECODED bytes
+ * received (bounded by CHUNK_BYTES), never by the base64 string length.
+ * Each chunk is decoded independently and the Buffers are concatenated, so we
+ * never rely on base64 padding lining up across chunk boundaries.
+ *
  * Reads `x-file-size` on the first response to bound the loop precisely.
- * Offsets are tracked against the BASE64 stream length so chunks join exactly.
+ * @returns The fully-decoded ZIP buffer and the server-declared size.
  */
 async function fetchAllChunks(
   url: string, authHeader: string, log: LogFn,
-): Promise<{ base64: string; totalBytes: number }> {
-  let offset = 0;
-  let totalBytes = 0; // real ZIP size (x-file-size)
-  let base64 = "";
+): Promise<{ zipBuf: Buffer; totalBytes: number }> {
+  let offset = 0;              // byte offset into the DECODED file
+  let totalBytes = 0;         // real ZIP size (x-file-size)
+  const parts: Buffer[] = [];
   let iter = 0;
 
   while (iter < MAX_CHUNKS) {
@@ -90,17 +100,28 @@ async function fetchAllChunks(
     }
     const chunkB64 = await res.text();
     if (chunkB64.length === 0) { break; }
-    base64 += chunkB64;
-    // Advance by the base64 length actually received so chunks join contiguously.
-    offset += chunkB64.length;
-    log(`[Catalog] ⬇️ chunk ${iter}: +${chunkB64.length} b64 bytes (offset=${offset}, zipSize=${totalBytes || "?"})`);
 
-    // Stop when the decoded length reaches the real ZIP size.
-    // base64 length ≈ ceil(bytes/3)*4, so decoded ≈ base64Len * 3/4.
-    if (totalBytes > 0 && Math.floor((base64.length * 3) / 4) >= totalBytes) { break; }
-    if (chunkB64.length < CHUNK_BYTES) { break; } // last partial chunk
+    // Decode this window's base64 to raw bytes and advance by the DECODED length.
+    const chunkBuf = Buffer.from(chunkB64, "base64");
+    if (chunkBuf.length === 0) { break; }
+    parts.push(chunkBuf);
+    offset += chunkBuf.length;
+    log(`[Catalog] ⬇️ chunk ${iter}: +${chunkBuf.length} decoded bytes (offset=${offset}/${totalBytes || "?"})`);
+
+    // Primary stop condition: x-file-size is the authoritative total, so stop as
+    // soon as we've decoded that many bytes. This does NOT depend on the server
+    // honoring CHUNK_BYTES exactly (this server returns ≈, not exactly, the ask),
+    // which is why we never compare against CHUNK_BYTES when the size is known.
+    if (totalBytes > 0) {
+      if (offset >= totalBytes) { break; }
+      continue;
+    }
+    // Fallback (no x-file-size header): a window smaller than the requested
+    // CHUNK_BYTES means the server returned the final remaining bytes → done.
+    // Saves one extra empty-body round-trip when the total is unknown.
+    if (chunkBuf.length < CHUNK_BYTES) { break; }
   }
-  return { base64, totalBytes };
+  return { zipBuf: Buffer.concat(parts), totalBytes };
 }
 
 /**

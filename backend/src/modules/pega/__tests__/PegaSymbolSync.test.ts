@@ -30,29 +30,29 @@ describe('PegaSymbolSync', () => {
       };
     });
 
+    const CHK = 'b'.repeat(64);
+
     it('should return null when pxObjClass is missing', async () => {
       const result = await syncRuleToSymbols(
-        mockAdapter, { pyClassName: 'Work', pyRuleName: 'Test' }, 'proj1', '',
+        mockAdapter, { pyClassName: 'Work', pyRuleName: 'Test' }, 'proj1', '', CHK,
       );
       expect(result).toBeNull();
     });
 
-    it('should return null when pyClassName is missing', async () => {
+    it('should use pxObjClass fallback when pyClassName is missing', async () => {
       const result = await syncRuleToSymbols(
-        mockAdapter, { pxObjClass: 'Rule-Obj-Activity', pyRuleName: 'Test' }, 'proj1', '',
+        mockAdapter, { pxObjClass: 'Rule-Obj-Activity', pyRuleName: 'Test' }, 'proj1', '', CHK,
       );
-      expect(result).toBeNull();
+      expect(result).not.toBeNull();
+      expect(result?.symbolId).toBe(1);
     });
 
     it('should return null when pyRuleName is missing', async () => {
       const result = await syncRuleToSymbols(
-        mockAdapter, { pxObjClass: 'Rule-Obj-Activity', pyClassName: 'Work' }, 'proj1', '',
+        mockAdapter, { pxObjClass: 'Rule-Obj-Activity', pyClassName: 'Work' }, 'proj1', '', CHK,
       );
       expect(result).toBeNull();
     });
-
-    // SA4E-241: valid client checksum (computePegaChecksum output shape — 64-hex).
-    const CHK = 'b'.repeat(64);
 
     it('should skip rules exceeding 5MB (SEC-06)', async () => {
       const bigContent = 'x'.repeat(6 * 1024 * 1024);

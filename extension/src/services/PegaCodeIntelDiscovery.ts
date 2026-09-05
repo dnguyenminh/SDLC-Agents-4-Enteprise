@@ -68,12 +68,12 @@ export class PegaCodeIntelDiscovery {
     return { appName: "HRAppsV2", appVersion: "01.01" };
   }
 
-  private async callBackendDiscovery(payload: Record<string, unknown>): Promise<PegaCodeIntelDiscoveryResult> {
+  private async callBackendDiscovery(payload: Record<string, unknown>, projectId: string): Promise<PegaCodeIntelDiscoveryResult> {
     const backendUrl = this.httpClient.getBackendUrlPublic().replace(/\/$/, "");
     const url = `${backendUrl}/api/v1/pega/discover`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Project-Id": projectId },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(120000),
     });
@@ -109,7 +109,7 @@ export class PegaCodeIntelDiscovery {
       codeIntelBase,
       authHeader,
       index: true,
-    });
+    }, projectId);
 
     // Backend may return counts as numbers or arrays; coerce to a count so the
     // summary never renders "[object Object]" (arrays stringify to their elements).

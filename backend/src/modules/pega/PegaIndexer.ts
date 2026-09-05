@@ -11,7 +11,7 @@ import { PegaParser, type ExtractedPegaSymbol } from './PegaParser.js';
 import { PegaRuleAstParser } from './PegaRuleAstParser.js';
 import { syncRuleToSymbols } from './PegaSymbolSync.js';
 import {
-  buildFqn, resolveRuleNameField, resolveSymbolKind, buildVirtualPath,
+  buildFqn, resolveRuleNameField, resolveClassNameField, resolveSymbolKind, buildVirtualPath,
   resolveRuleSetName, resolveRuleSetVersion,
 } from './pega-mapping.js';
 import { TaskType, TaskStatus } from '../memory/task-queue/models.js';
@@ -61,7 +61,9 @@ export async function indexRule(
   // FQN uses the canonical rule-name fallback (matches PegaSymbolSync signature).
   const canonicalFqn = buildFqn(
     String((req.ruleJson as any)?.pxObjClass || ''),
-    String((req.ruleJson as any)?.pyClassName || ''),
+    // Same class fallback as PegaSymbolSync so instance-level Data-Admin rules
+    // (no pyClassName) resolve to the SAME FQN at dedup and at write (INV-1).
+    resolveClassNameField(req.ruleJson),
     resolveRuleNameField(req.ruleJson),
     resolveRuleSetName(req.ruleJson),
     resolveRuleSetVersion(req.ruleJson),
@@ -75,7 +77,7 @@ export async function indexRule(
       if (needsEnrichment && symbolId > 0) {
         const kind = resolveSymbolKind(String((req.ruleJson as any)?.pxObjClass || ''));
         const virtualPath = buildVirtualPath(
-          String((req.ruleJson as any)?.pyClassName || ''), kind, resolveRuleNameField(req.ruleJson),
+          resolveClassNameField(req.ruleJson), kind, resolveRuleNameField(req.ruleJson),
           resolveRuleSetName(req.ruleJson), resolveRuleSetVersion(req.ruleJson),
         );
         await ensureEnrichmentTask(memoryEngine.getAdapter(), symbolId, resolveRuleNameField(req.ruleJson),
@@ -100,7 +102,8 @@ export async function indexRule(
     // SA4E-241 (NT-4): a missing checksum is a hard, caller-facing failure — do NOT
     // swallow it as a generic "skip". Re-throw so the route returns 400 (upgrade ext).
     if (err instanceof MissingChecksumError) { throw err; }
-    logger.warn({ err, fqn: symbol.fqn }, 'Failed to sync rule to symbols — skipped');
+    const message = err instanceof Error ? err.message : String(err);
+    logger.warn({ err: message, fqn: symbol.fqn }, 'Failed to sync rule to symbols — skipped');
     return { status: 'skipped', ruleId: -1, fqn: symbol.fqn,
       isRule: symbol.isRule, reason: 'symbol_sync_error', dependencies: deps };
   }
