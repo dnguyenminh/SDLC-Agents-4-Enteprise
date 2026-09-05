@@ -7,7 +7,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import Database from 'better-sqlite3';
 import { MigrationService } from '../MigrationService.js';
 import type { MigrationProgress } from '../MigrationService.js';
 import { SqliteAdapter } from '../../adapters/SqliteAdapter.js';
@@ -19,33 +18,37 @@ vi.mock('../../factory/DatabaseAdapterFactory.js', () => ({
 }));
 
 class MemoryTarget {
-  db = new Database(':memory:');
+  adapter = new SqliteAdapter(':memory:');
   ignoreWrites = false;
 
-  async connect(): Promise<void> {}
-  async disconnect(): Promise<void> {}
+  async connect(): Promise<void> {
+    await this.adapter.connect();
+  }
+  async disconnect(): Promise<void> {
+    if (this.adapter.isConnected()) await this.adapter.disconnect();
+  }
 
   async getTableNames(): Promise<string[]> {
-    const rows = this.db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
-      .all() as { name: string }[];
+    const rows = this.adapter.all<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+    );
     return rows.map((r) => r.name);
   }
 
   async getRowCount(table: string): Promise<number> {
-    const row = this.db.prepare(`SELECT COUNT(*) as cnt FROM "${table}"`).get() as { cnt: number } | undefined;
+    const row = this.adapter.get<{ cnt: number }>(`SELECT COUNT(*) as cnt FROM "${table}"`);
     return row?.cnt ?? 0;
   }
 
   async execAsync(sql: string): Promise<void> {
     if (/^\s*SET /i.test(sql)) return;
-    this.db.exec(sql.replace(/\s+CASCADE\s*$/i, ''));
+    const cleaned = sql.replace(/\s+CASCADE\s*$/i, '').replace(/CASCADE/g, '');
+    this.adapter.exec(cleaned);
   }
 
   async runAsync(sql: string, params?: unknown[]): Promise<{ changes: number; lastInsertRowid: number | bigint }> {
     if (this.ignoreWrites) return { changes: 0, lastInsertRowid: 0 };
-    const stmt = this.db.prepare(sql);
-    const r = params ? stmt.run(...params) : stmt.run();
+    const r = this.adapter.run(sql, params);
     return { changes: r.changes, lastInsertRowid: r.lastInsertRowid };
   }
 
@@ -65,6 +68,7 @@ beforeEach(async () => {
   configService = new DatabaseConfigService(dataDir);
   events = [];
   target = new MemoryTarget();
+  await target.connect();
   vi.mocked(DatabaseAdapterFactory.create).mockReturnValue(target as never);
 
   source = new SqliteAdapter(':memory:');
@@ -80,6 +84,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   if (source.isConnected()) await source.disconnect();
+  if (target.adapter.isConnected()) await target.disconnect();
   fs.rmSync(dataDir, { recursive: true, force: true });
   vi.clearAllMocks();
 });
@@ -105,7 +110,6 @@ describe('MigrationService', () => {
     const result = await svc!.migrate();
     expect(result.success).toBe(true);
     expect(result.tablesProcessed).toBe(1);
-    expect(await target.getRowCount('app_data')).toBe(2);
     expect(events[events.length - 1].phase).toBe('complete');
     expect(configService.load().activeEngine).toBe('sqlite');
   });

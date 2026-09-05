@@ -7,7 +7,7 @@
 import * as path from 'path';
 import { MEMORY_SCHEMA } from './schema/index.js';
 import { MigrationRunner } from './MigrationRunner.js';
-import { loadConfig, getWorkspacePath } from '../../config/BackendConfig.js';
+import { loadConfig, getWorkspacePath } from '../../config/index.js';
 import { SqliteAdapter } from '../../database/adapters/SqliteAdapter.js';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 

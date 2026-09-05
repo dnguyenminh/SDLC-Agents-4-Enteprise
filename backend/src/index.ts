@@ -109,7 +109,7 @@ logger.info({ ingestedTools: ingestedCount, totalTools: allTools.length }, 'Inge
       const { getDbAdapter } = await import('./admin/db/core.js');
       const adminAdapter = getDbAdapter();
       if (adminAdapter.isConnected()) {
-        const { ensurePegaCategoryCountersTable } = await import('./database/migration/ensure-pega-category-counters.ts');
+        const { ensurePegaCategoryCountersTable } = await import('./database/migration/ensure-pega-category-counters');
         await ensurePegaCategoryCountersTable(adminAdapter);
         logger.info('Ensured pega_category_counters table exists');
       }

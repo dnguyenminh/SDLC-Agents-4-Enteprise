@@ -19,7 +19,7 @@ export class DatabaseManager {
   private readonly dbPath: string;
   private readonly projectId: string;
   private static resolvedBinding: string | undefined | null = null;
-  private static sharedAdapter: SqliteAdapter | null = null;
+  static sharedAdapter: SqliteAdapter | null = null;
 
   /**
    * @param dbPath  Path to the SQLite index.db file.
@@ -93,12 +93,12 @@ export class DatabaseManager {
   }
 
   /**
-   * Get the raw better-sqlite3 Database instance.
+   * Get the raw DB instance.
    * @deprecated Prefer getAdapter() for new code. Kept for backward compat with tests.
    */
-  getDb(): import('better-sqlite3').Database {
+  getDb(): any {
     if (!this.adapter) throw new Error('Database not initialized');
-    return this.adapter.getRawDb();
+    return this.adapter as any;
   }
 
   /** Close database connection gracefully. */

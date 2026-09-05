@@ -145,7 +145,7 @@ export function loadConfig(overrides?: Partial<UnifiedConfig>): UnifiedConfig {
     port: resolvePort(),
     host: process.env.CODE_INTEL_HOST || '0.0.0.0',
     onnxModelPath: process.env.CODE_INTEL_ONNX_MODEL || 'models/model.onnx',
-    logLevel: (process.env.CODE_INTEL_LOG_LEVEL || 'info') as any,
+    logLevel: (process.env.CODE_INTEL_LOG_LEVEL || 'info') as 'debug' | 'info' | 'warn' | 'error',
     viewerPort: resolveViewerPort(),
     watchEnabled: envBool('CODE_INTEL_WATCH', fileConfig.watchEnabled ?? true),
     watchDebounceMs: envInt('CODE_INTEL_DEBOUNCE', fileConfig.watchDebounceMs ?? 500),

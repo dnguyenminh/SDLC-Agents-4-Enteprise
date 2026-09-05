@@ -25,7 +25,9 @@ function hasProjectId(db: SyncDatabaseAdapter, table: string): boolean {
 
 /** Recreate `files` with UNIQUE(project_id, path); preserves id for FK integrity. */
 function recreateFiles(db: SyncDatabaseAdapter, legacyProjectId: string): void {
-  if (hasProjectId(db, 'files')) return;
+  const cols = columns(db, 'files');
+  if (cols.has('project_id') && cols.has('file_created_at')) return;
+
   db.exec(`CREATE TABLE files_new (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id TEXT NOT NULL,
@@ -42,13 +44,30 @@ function recreateFiles(db: SyncDatabaseAdapter, legacyProjectId: string): void {
     file_version TEXT,
     UNIQUE(project_id, path)
   );`);
-  db.run(
-    `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
-        content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
-      SELECT id, ?, path, relative_path, language, module,
-        content_hash, size_bytes, last_indexed, line_count, NULL, NULL, NULL FROM files`,
-    [legacyProjectId],
-  );
+  // Copy existing data, map columns if present
+  if (cols.has('project_id') && cols.has('file_created_at')) {
+    db.run(
+      `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
+        SELECT id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version FROM files`,
+    );
+  } else if (cols.has('project_id')) {
+    db.run(
+      `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
+        SELECT id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, NULL, NULL, NULL FROM files`,
+    );
+  } else {
+    db.run(
+      `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
+        SELECT id, ?, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, NULL, NULL, NULL FROM files`,
+      [legacyProjectId],
+    );
+  }
   db.exec('DROP TABLE files; ALTER TABLE files_new RENAME TO files;');
   db.exec(`CREATE INDEX IF NOT EXISTS idx_files_path ON files(relative_path);
     CREATE INDEX IF NOT EXISTS idx_files_module ON files(module);

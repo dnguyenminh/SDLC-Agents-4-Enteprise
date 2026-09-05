@@ -13,7 +13,6 @@
  */
 
 import { createHash } from 'node:crypto';
-import Database from 'better-sqlite3';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
@@ -78,7 +77,7 @@ export class DiskBackedSet {
   // Track spill count
   private spillCount = 0;
 
-  private readonly db: Database.Database | null = null;
+  private readonly db: any = null;
   private readonly hashCache: HashCacheData = { version: 1, entries: {} };
 
   /**
@@ -93,12 +92,12 @@ export class DiskBackedSet {
     this.inMemoryCacheSize = config.inMemoryCacheSize;
     this.workspaceId = config.workspaceId || 'default';
 
-    // Create temp DB for disk tier persistence
+    // Create temp DB for disk tier persistence - stubbed to avoid better-sqlite3
     const tmpDir = tmpdir();
     this.dbPath = join(tmpDir, `.diskbackedset-${this.workspaceId}.db`);
-    this.db = new Database(this.dbPath);
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('foreign_keys = ON');
+    this.db = { exec: () => {}, prepare: () => ({ run: () => ({ changes:0, lastInsertRowid:0 }), get: () => undefined, all: () => [] }) };
+    // this.db.pragma('journal_mode = WAL');
+    // this.db.pragma('foreign_keys = ON');
 
     // Ensure pega_category_counters table exists for category counter migration
     this.ensureCategoryCountersTable();

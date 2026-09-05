@@ -11,15 +11,15 @@ import type { DenyPattern } from '../models.js';
 let adapter: SqliteAdapter;
 let repo: GateGuardRepository;
 
-beforeEach(() => {
+beforeEach(async () => {
   adapter = new SqliteAdapter(':memory:');
-  void adapter.connect();
+  await adapter.connect();
   repo = new GateGuardRepository(adapter);
-  repo.ensureSchema();
+  await repo.ensureSchema();
 });
 
-afterAll(() => {
-  adapter?.disconnect();
+afterAll(async () => {
+  await adapter?.disconnect();
 });
 
 describe('GateGuardRepository — audit log (BR-1204)', () => {

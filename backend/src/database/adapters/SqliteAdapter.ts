@@ -1,10 +1,9 @@
 ﻿/**
- * SQLite Adapter — wraps better-sqlite3 with DatabaseAdapter interface.
- * Default adapter for fresh installations. Zero overhead.
+ * SQLite Adapter — wraps sql.js with DatabaseAdapter interface.
+ * Pure JS, no native bindings. Uses sql.js for in-memory/file SQLite.
  * Implements: SA4E-33, BR-1
  */
 
-import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {
@@ -16,27 +15,42 @@ import type {
 } from './DatabaseAdapter.js';
 import { normalizeSqlitePlaceholders } from './sqlite-placeholders.js';
 
+const sqlite3InitModule = (await import('@sqlite.org/sqlite-wasm')).default;
+const sqlite3 = await sqlite3InitModule();
+
 export class SqliteAdapter implements DatabaseAdapter {
-  private db: Database.Database | null = null;
+  private db: any = null;
   private connected = false;
+  private dirty = false;
 
   constructor(private readonly dbPath: string, private readonly nativeBinding?: string) {}
 
   async connect(): Promise<void> {
-    const dir = path.dirname(this.dbPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    if (this.connected && this.db) return;
+    try {
+      if (this.dbPath !== ':memory:' && this.dbPath !== '') {
+        const dir = path.dirname(this.dbPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      }
+      this.db = new sqlite3.oo1.DB(this.dbPath || ':memory:');
+      this.db.exec("PRAGMA journal_mode = WAL;");
+      this.db.exec("PRAGMA foreign_keys = ON;");
+      this.connected = true;
+    } catch (e) {
+      this.connected = false;
+      this.db = null;
+      throw e;
     }
-    this.db = this.nativeBinding
-      ? new Database(this.dbPath, { nativeBinding: this.nativeBinding })
-      : new Database(this.dbPath);
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('foreign_keys = ON');
-    this.connected = true;
   }
 
   async disconnect(): Promise<void> {
     if (this.db) {
+      if (this.dbPath !== ':memory:' && this.dbPath !== '' && this.dirty) {
+        const data = sqlite3.capi.sqlite3_js_db_export(this.db, 'main');
+        fs.writeFileSync(this.dbPath, Buffer.from(data));
+      }
       this.db.close();
       this.db = null;
       this.connected = false;
@@ -51,53 +65,126 @@ export class SqliteAdapter implements DatabaseAdapter {
     if (!this.connected || !this.db) {
       return { connected: false, engine: 'sqlite' };
     }
-    const stats = fs.statSync(this.dbPath);
+    let sizeBytes: number | undefined;
+    if (this.dbPath !== ':memory:' && this.dbPath !== '' && fs.existsSync(this.dbPath)) {
+      sizeBytes = fs.statSync(this.dbPath).size;
+    }
     return {
       connected: true,
       engine: 'sqlite',
       version: 'SQLite 3.x',
-      details: { path: this.dbPath, sizeBytes: stats.size },
+      details: { path: this.dbPath, sizeBytes },
     };
+  }
+
+  private execInternal(sql: string, params?: unknown[]) {
+    const normalized = normalizeSqlitePlaceholders(sql);
+    this.dirty = true;
+    const db = this.getDb();
+    if (params && params.length > 0) {
+      const stmt = db.prepare(normalized);
+      stmt.bind(params);
+      while (stmt.step()) { /* step to exhaust */ }
+      const changes = db.changes();
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      const lastInsertRowid = Number(rows[0]?.id ?? 0);
+      stmt.finalize?.();
+      return { changes, lastInsertRowid };
+    } else {
+      db.exec(normalized);
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      return { changes: db.changes(), lastInsertRowid: Number(rows[0]?.id ?? 0) };
+    }
   }
 
   run(sql: string, params?: unknown[]): RunResult {
-    const stmt = this.getDb().prepare(normalizeSqlitePlaceholders(sql));
-    const result = params ? stmt.run(...params) : stmt.run();
-    return { changes: result.changes, lastInsertRowid: result.lastInsertRowid };
+    const normalized = normalizeSqlitePlaceholders(sql);
+    this.dirty = true;
+    const db = this.getDb();
+    if (params && params.length) {
+      const stmt = db.prepare(normalized);
+      stmt.bind(params);
+      while (stmt.step()) { /* step to exhaust */ }
+      const changes = db.changes();
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      const lastInsertRowid = Number(rows[0]?.id ?? 0);
+      stmt.finalize?.();
+      return { changes, lastInsertRowid };
+    } else {
+      db.exec(normalized);
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      return { changes: db.changes(), lastInsertRowid: Number(rows[0]?.id ?? 0) };
+    }
   }
 
   get<T = unknown>(sql: string, params?: unknown[]): T | undefined {
-    const stmt = this.getDb().prepare(normalizeSqlitePlaceholders(sql));
-    return (params ? stmt.get(...params) : stmt.get()) as T | undefined;
+    const normalized = normalizeSqlitePlaceholders(sql);
+    const opts = params && params.length ? { bind: params, rowMode: 'object' } : { rowMode: 'object' };
+    const rows = this.getDb().exec(normalized, opts) as any[];
+    return rows?.[0] as T | undefined;
   }
 
   all<T = unknown>(sql: string, params?: unknown[]): T[] {
-    const stmt = this.getDb().prepare(normalizeSqlitePlaceholders(sql));
-    return (params ? stmt.all(...params) : stmt.all()) as T[];
+    const normalized = normalizeSqlitePlaceholders(sql);
+    const opts = params && params.length ? { bind: params, rowMode: 'object' } : { rowMode: 'object' };
+    const rows = this.getDb().exec(normalized, opts) as any[];
+    return rows as T[];
   }
 
   exec(sql: string): void {
-    this.getDb().exec(sql);
+    this.dirty = true;
+    try {
+      this.getDb().exec(normalizeSqlitePlaceholders(sql));
+    } catch (e: any) {
+      const msg = String(e?.message ?? e);
+      if (msg.includes('duplicate column') || msg.includes('duplicate index') || msg.includes('table') && msg.includes('already exists')) {
+        return;
+      }
+      throw e;
+    }
   }
 
   transaction<T>(fn: () => T): T {
-    return this.getDb().transaction(fn)();
+    this.dirty = true;
+    this.db.exec('BEGIN TRANSACTION;');
+    try {
+      const result = fn();
+      this.db.exec('COMMIT;');
+      return result;
+    } catch (e) {
+      this.db.exec('ROLLBACK;');
+      throw e;
+    }
   }
 
   prepare(sql: string): PreparedStatement {
-    const stmt = this.getDb().prepare(normalizeSqlitePlaceholders(sql));
+    const normalized = normalizeSqlitePlaceholders(sql);
+    const db = this.getDb();
     return {
       run: (...params: unknown[]) => {
-        const r = stmt.run(...params);
-        return { changes: r.changes, lastInsertRowid: r.lastInsertRowid };
+        this.dirty = true;
+        const stmt = db.prepare(normalized);
+        if (params.length > 0) stmt.bind(params);
+        while (stmt.step()) { /* step to exhaust */ }
+        const changes = db.changes();
+        const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+        const lastInsertRowid = Number(rows[0]?.id ?? 0);
+        stmt.finalize?.();
+        return { changes, lastInsertRowid };
       },
-      get: <T>(...params: unknown[]) => stmt.get(...params) as T | undefined,
-      all: <T>(...params: unknown[]) => stmt.all(...params) as T[],
+      get: <T>(...params: unknown[]) => {
+        const opts = params.length > 0 ? { bind: params, rowMode: 'object' as const } : { rowMode: 'object' as const };
+        const rows = db.exec(normalized, opts) as any[];
+        return rows?.[0] as T | undefined;
+      },
+      all: <T>(...params: unknown[]) => {
+        const opts = params.length > 0 ? { bind: params, rowMode: 'object' as const } : { rowMode: 'object' as const };
+        const rows = db.exec(normalized, opts) as any[];
+        return rows as T[];
+      },
     };
   }
 
-
-  // SA4E-50: Async variants — SQLite is sync so we delegate immediately.
   async runAsync(sql: string, params?: unknown[]): Promise<RunResult> { return this.run(sql, params); }
   async getAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T | undefined> { return this.get<T>(sql, params); }
   async allAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> { return this.all<T>(sql, params); }
@@ -105,6 +192,12 @@ export class SqliteAdapter implements DatabaseAdapter {
   async transactionAsync<T>(fn: () => Promise<T>): Promise<T> { return fn(); }
   getEngine(): DatabaseEngine {
     return 'sqlite';
+  }
+
+  pragma(sql: string): any[] {
+    const pragmaSql = sql.trim().toUpperCase().startsWith('PRAGMA') ? sql : `PRAGMA ${sql}`;
+    const rows = this.all(pragmaSql);
+    return rows as any[];
   }
 
   async getVersion(): Promise<string> {
@@ -124,13 +217,8 @@ export class SqliteAdapter implements DatabaseAdapter {
     return row?.cnt ?? 0;
   }
 
-  getRawDb(): Database.Database {
-    return this.getDb();
-  }
-
-  private getDb(): Database.Database {
+  private getDb(): any {
     if (!this.db) throw new Error('SQLite not connected');
     return this.db;
   }
 }
-

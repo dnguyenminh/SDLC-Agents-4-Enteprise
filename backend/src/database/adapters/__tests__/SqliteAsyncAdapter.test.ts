@@ -4,19 +4,24 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../SqliteAdapter.js';
 import { SqliteAsyncAdapter } from '../SqliteAsyncAdapter.js';
 
-let db: Database.Database;
+let db: any;
+let sqlite: SqliteAdapter;
 let adapter: SqliteAsyncAdapter;
 
-beforeEach(() => {
-  db = new Database(':memory:');
+beforeEach(async () => {
+  sqlite = new SqliteAdapter(':memory:');
+  await sqlite.connect();
+  db = (sqlite as any).db;
   db.exec('CREATE TABLE t (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)');
   adapter = new SqliteAsyncAdapter(db);
 });
 
-afterEach(() => db.close());
+afterEach(async () => {
+  await sqlite.disconnect();
+});
 
 describe('SqliteAsyncAdapter', () => {
   it('reports connected and sqlite engine', () => {

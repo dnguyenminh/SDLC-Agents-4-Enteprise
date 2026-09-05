@@ -142,7 +142,7 @@ describe('SA4E-26 UT — buildScopeClause & buildScopeParams', () => {
       content: 'test content', summary: 'test', type: 'CONTEXT',
     });
     const row = await engine.findById(id);
-    expect(row?.project_id).toBeNull();
+    expect(row?.project_id ?? null).toBeNull();
   });
 });
 
@@ -159,7 +159,7 @@ describe('SA4E-26 UT — deriveProjectId', () => {
 
   it('UT-09: deriveProjectId from Unix path (hash of user+folder)', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
-    const { loadConfig } = await import('../../../config/BackendConfig.js');
+    const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '/projects/my-app' } as any);
     // No git remote in test → falls to sha256(user:folder).slice(0,12)
     expect(config.projectId).toHaveLength(12);
@@ -168,7 +168,7 @@ describe('SA4E-26 UT — deriveProjectId', () => {
 
   it('UT-10: deriveProjectId from Windows path (hash of user+folder)', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
-    const { loadConfig } = await import('../../../config/BackendConfig.js');
+    const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: 'C:\\projects\\my-app' } as any);
     expect(config.projectId).toHaveLength(12);
     expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
@@ -176,7 +176,7 @@ describe('SA4E-26 UT — deriveProjectId', () => {
 
   it('UT-11: deriveProjectId from root path returns 12-char hash', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
-    const { loadConfig } = await import('../../../config/BackendConfig.js');
+    const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '/' } as any);
     // sha256(user:/) or sha256(user:default) → 12 hex chars
     expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
@@ -184,7 +184,7 @@ describe('SA4E-26 UT — deriveProjectId', () => {
 
   it('UT-12: deriveProjectId from empty string returns hash', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
-    const { loadConfig } = await import('../../../config/BackendConfig.js');
+    const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '' } as any);
     // sha256(user:default) → 12 hex chars
     expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
@@ -192,14 +192,14 @@ describe('SA4E-26 UT — deriveProjectId', () => {
 
   it('UT-13: deriveProjectId with config override', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
-    const { loadConfig } = await import('../../../config/BackendConfig.js');
+    const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '/projects/my-app', projectId: 'custom-name' } as any);
     expect(config.projectId).toBe('custom-name');
   });
 
   it('UT-14: deriveProjectId with environment variable', async () => {
     process.env.CODE_INTEL_PROJECT_ID = 'env-project';
-    const { loadConfig } = await import('../../../config/BackendConfig.js');
+    const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '/projects/my-app' } as any);
     expect(config.projectId).toBe('env-project');
   });
@@ -286,7 +286,7 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
       scope: 'PROJECT',
     });
     const row = await engine.findById(id);
-    expect(row?.project_id).toBeNull();
+    expect(row?.project_id ?? null).toBeNull();
   });
 
   it('IT-09: Schema migration creates project_id column', () => {

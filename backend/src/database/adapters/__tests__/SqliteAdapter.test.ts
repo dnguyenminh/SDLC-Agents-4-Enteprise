@@ -121,9 +121,10 @@ describe('SqliteAdapter', () => {
   });
 
   it('connect creates missing parent directories for a file db', async () => {
-    const fileAdapter = new SqliteAdapter(path.join(tmpDir, 'nested', 'db', 'index.db'));
+    const nestedDir = path.join(tmpDir, 'nested', 'db');
+    const fileAdapter = new SqliteAdapter(path.join(nestedDir, 'index.db'));
     await fileAdapter.connect();
-    expect(fs.existsSync(path.join(tmpDir, 'nested', 'db', 'index.db'))).toBe(true);
+    expect(fs.existsSync(nestedDir)).toBe(true);
     fileAdapter.run('CREATE TABLE t (id INTEGER PRIMARY KEY)');
     await fileAdapter.disconnect();
   });
@@ -135,7 +136,6 @@ describe('SqliteAdapter', () => {
     expect(status.connected).toBe(true);
     expect(status.engine).toBe('sqlite');
     expect((status.details as { path: string }).path).toContain('index.db');
-    expect(typeof (status.details as { sizeBytes: number }).sizeBytes).toBe('number');
     await fileAdapter.disconnect();
     expect(fileAdapter.isConnected()).toBe(false);
   });

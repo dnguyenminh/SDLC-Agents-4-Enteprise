@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 import {
   TicketRefStrategy,
@@ -28,18 +28,19 @@ CREATE TABLE graph_edges (id INTEGER PRIMARY KEY AUTOINCREMENT,
 `;
 
 describe('SA4E-91 Edge-on-Ingest', () => {
-  let db: Database.Database;
+  let adapter: SqliteAdapter;
 
-  beforeEach(() => {
-    db = new Database(':memory:');
-    db.exec(SCHEMA);
+  beforeEach(async () => {
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    await adapter.exec(SCHEMA);
     // Seed some existing nodes for matching
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type) VALUES (?, ?, ?)`).run('kb-entry:1', 'SA4E-50 Feature BRD', 'DOCUMENT');
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type) VALUES (?, ?, ?)`).run('code:42', 'GraphService (graph-service.ts)', 'CODE_ENTITY');
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type) VALUES (?, ?, ?)`).run('kb-entry:5', 'crud.ts analysis', 'KNOWLEDGE_ENTRY');
+    await adapter.run(`INSERT INTO graph_nodes (entry_id, label, type) VALUES (?, ?, ?)`, ['kb-entry:1', 'SA4E-50 Feature BRD', 'DOCUMENT']);
+    await adapter.run(`INSERT INTO graph_nodes (entry_id, label, type) VALUES (?, ?, ?)`, ['code:42', 'GraphService (graph-service.ts)', 'CODE_ENTITY']);
+    await adapter.run(`INSERT INTO graph_nodes (entry_id, label, type) VALUES (?, ?, ?)`, ['kb-entry:5', 'crud.ts analysis', 'KNOWLEDGE_ENTRY']);
   });
 
-  afterEach(() => { db.close(); });
+  afterEach(async () => { await adapter.disconnect(); });
 
   const nodes: NodeLabel[] = [
     { entry_id: 'kb-entry:1', label: 'SA4E-50 Feature BRD' },
@@ -128,39 +129,40 @@ describe('SA4E-91 Edge-on-Ingest', () => {
   describe('extractAndInsertIngestEdges (integration)', () => {
     it('inserts edges into graph_edges table', async () => {
       const count = await extractAndInsertIngestEdges(
-        new SqliteDbAdapter(db),
+        new SqliteDbAdapter(adapter),
         { entryId: 'kb-entry:99', content: 'SA4E-50 uses GraphService in crud.ts', source: null },
       );
 
       expect(count).toBeGreaterThanOrEqual(1);
-      const edges = db.prepare('SELECT * FROM graph_edges').all() as any[];
+      const edges = await adapter.all('SELECT * FROM graph_edges') as any[];
       expect(edges.length).toBeGreaterThanOrEqual(1);
     });
 
     it('is idempotent — no duplicate edges', async () => {
-      const adapter = new SqliteDbAdapter(db);
+      const dbAdapter = new SqliteDbAdapter(adapter);
       const ctx = { entryId: 'kb-entry:99', content: 'SA4E-50 feature', source: null };
 
-      await extractAndInsertIngestEdges(adapter, ctx);
-      await extractAndInsertIngestEdges(adapter, ctx);
+      await extractAndInsertIngestEdges(dbAdapter, ctx);
+      await extractAndInsertIngestEdges(dbAdapter, ctx);
 
-      const edges = db.prepare('SELECT * FROM graph_edges').all() as any[];
+      const edges = await adapter.all('SELECT * FROM graph_edges') as any[];
       // UNIQUE constraint prevents duplicates
       const unique = new Set(edges.map((e: any) => `${e.source}-${e.target}`));
       expect(unique.size).toBe(edges.length);
     });
 
     it('returns 0 when no graph_nodes exist', async () => {
-      const emptyDb = new Database(':memory:');
-      emptyDb.exec(SCHEMA);
+      const emptyAdapter = new SqliteAdapter(':memory:');
+      await emptyAdapter.connect();
+      await emptyAdapter.exec(SCHEMA);
 
       const count = await extractAndInsertIngestEdges(
-        new SqliteDbAdapter(emptyDb),
+        new SqliteDbAdapter(emptyAdapter),
         { entryId: 'kb-entry:1', content: 'SA4E-50 test' },
       );
 
       expect(count).toBe(0);
-      emptyDb.close();
+      await emptyAdapter.disconnect();
     });
   });
 });

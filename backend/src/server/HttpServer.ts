@@ -123,9 +123,10 @@ export class HttpServer {
     app.route('/api/v1', pegaSchemaRoutes);
 
     // SA4E-85 Phase 0: Backend-Driven Knowledge REST API (threads/messages/checkpoint/events/artifacts/agents)
-    const knowledgeModule = this.options.registry.getModule('knowledge') as any;
-    if (knowledgeModule?.getService) {
-      const knowledgeRoutes = createKnowledgeApiRoutes(knowledgeModule.getService(), this.logger);
+    const knowledgeModule = this.options.registry.getModule('knowledge');
+    if (knowledgeModule && 'getService' in knowledgeModule) {
+      const svc = (knowledgeModule as { getService: () => import('../knowledge/KnowledgeService.js').KnowledgeService }).getService();
+      const knowledgeRoutes = createKnowledgeApiRoutes(svc, this.logger);
       app.route('/api/v1', knowledgeRoutes);
     }
 
@@ -200,12 +201,12 @@ export class HttpServer {
   get honoApp(): Hono { return this.app; }
 
   private registerMcpConfigRoutes(app: Hono): void {
-    const orchestration = this.options.registry.getModule('orchestration') as any;
-    if (!orchestration) {
+    const orchestration = this.options.registry.getModule('orchestration');
+    if (!orchestration || !('getClientManager' in orchestration)) {
       this.logger.warn('OrchestrationModule not found, skipping MCP config routes');
       return;
     }
-    const clientManager = orchestration.getClientManager?.();
+    const clientManager = (orchestration as { getClientManager: () => import('../modules/orchestration/McpClientManager.js').McpClientManager }).getClientManager?.();
     if (!clientManager) {
       this.logger.warn('McpClientManager not available, skipping MCP config routes');
       return;

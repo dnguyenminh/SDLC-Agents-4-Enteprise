@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-export const silentLogger = () => pino({ level: 'silent' }) as any;
+export const silentLogger = () => pino({ level: 'silent' });
 
 export interface TempDb {
   dbManager: DatabaseManager;
@@ -24,7 +24,7 @@ export interface TempDb {
 
 /** Create a fresh temp file-backed SQLite DB with full SCHEMA_V1 applied. */
 export function makeTempDb(): TempDb {
-  (DatabaseManager as any).sharedAdapter = null;
+  DatabaseManager.sharedAdapter = null;
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e18-'));
   const dbPath = path.join(tmpDir, 'index.db');
   const dbManager = new DatabaseManager(dbPath);
@@ -36,7 +36,7 @@ export function makeTempDb(): TempDb {
     tmpDir,
     close() {
       dbManager.close();
-      (DatabaseManager as any).sharedAdapter = null;
+      DatabaseManager.sharedAdapter = null;
       fs.rmSync(tmpDir, { recursive: true, force: true });
     },
   };

@@ -3,19 +3,18 @@
  * Covers: handleSmartIngest, handleSmartIngestCleanup.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 import { MemoryEngine } from '../engine/index.js';
 import { MEMORY_SCHEMA } from '../schema/index.js';
 import { handleSmartIngest, handleSmartIngestCleanup } from '../dispatchers/smart-ingest.js';
 import type { ClassifyService } from '../llm/classify-service.js';
 
-function createTestDb(): Database.Database {
-  const db = new Database(':memory:');
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  db.exec(MEMORY_SCHEMA);
-  return db;
+async function createTestDb(): Promise<SqliteAdapter> {
+  const adapter = new SqliteAdapter(':memory:');
+  await adapter.connect();
+  await adapter.exec(MEMORY_SCHEMA);
+  return adapter;
 }
 
 function createMockClassify(verdict: 'ingest' | 'skip', summary?: string, available = true) {
@@ -37,11 +36,11 @@ function createUnavailableClassify() {
 }
 
 describe('handleSmartIngest', () => {
-  let db: Database.Database;
+  let db: SqliteAdapter;
   let engine: MemoryEngine;
 
-  beforeEach(() => {
-    db = createTestDb();
+  beforeEach(async () => {
+    db = await createTestDb();
     engine = new MemoryEngine(new SqliteDbAdapter(db));
     engine.startSession('test');
   });
@@ -137,7 +136,7 @@ describe('handleSmartIngest', () => {
     const svc = createMockClassify('ingest', 'Important knowledge');
     await handleSmartIngest(engine, { userId: 'user-1' }, svc, { message: 'test' });
 
-    const entries = db.prepare("SELECT * FROM knowledge_entries WHERE tags LIKE '%smart-ingest%'").all() as any[];
+    const entries = await db.all<any>("SELECT * FROM knowledge_entries WHERE tags LIKE '%smart-ingest%'");
     expect(entries.length).toBe(1);
     expect(entries[0].tags).toContain('smart-ingest');
     expect(entries[0].source).toBe('/chat-prompt');
@@ -148,7 +147,7 @@ describe('handleSmartIngest', () => {
     const svc = createUnavailableClassify();
     await handleSmartIngest(engine, { userId: 'user-1' }, svc, { message: 'some content' });
 
-    const entries = db.prepare("SELECT * FROM knowledge_entries WHERE tags LIKE '%unfiltered%'").all() as any[];
+    const entries = await db.all<any>("SELECT * FROM knowledge_entries WHERE tags LIKE '%unfiltered%'");
     expect(entries.length).toBe(1);
     expect(entries[0].tags).toContain('unfiltered');
   });
@@ -166,11 +165,11 @@ describe('handleSmartIngest', () => {
 });
 
 describe('handleSmartIngestCleanup', () => {
-  let db: Database.Database;
+  let db: SqliteAdapter;
   let engine: MemoryEngine;
 
-  beforeEach(() => {
-    db = createTestDb();
+  beforeEach(async () => {
+    db = await createTestDb();
     engine = new MemoryEngine(new SqliteDbAdapter(db));
     engine.startSession('test');
   });

@@ -4,8 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { IMPACT_TOOL_DEFINITIONS, handleCodeImpact } from '../impact-tools.js';
 
 const PID = 'proj_impact';
@@ -34,17 +33,17 @@ describe('IMPACT_TOOL_DEFINITIONS', () => {
 });
 
 describe('handleCodeImpact — validation and not-found', () => {
-  let db: Database.Database;
-  beforeEach(() => { db = seedDb(); });
-  afterEach(() => { db.close(); });
+  let adapter: SqliteAdapter;
+  beforeEach(async () => { adapter = await seedDb(); });
+  afterEach(async () => { if (adapter.isConnected()) await adapter.disconnect(); });
 
   it('returns an error JSON when symbol is missing', async () => {
-    const out = await handleCodeImpact({}, new SqliteDbAdapter(db), WS, PID);
+    const out = await handleCodeImpact({}, adapter, WS, PID);
     expect(JSON.parse(out).error).toContain('"symbol" is required');
   });
 
   it('reports when the symbol is not found in the index', async () => {
-    const out = await handleCodeImpact({ symbol: 'zzz_ghost' }, new SqliteDbAdapter(db), WS, PID);
+    const out = await handleCodeImpact({ symbol: 'zzz_ghost' }, adapter, WS, PID);
     expect(out).toContain('Impact Analysis: "zzz_ghost" (modify)');
     expect(out).toContain('Symbol "zzz_ghost" not found in index');
     expect(out).toContain('Total affected: 0 (0 files)');
@@ -52,12 +51,12 @@ describe('handleCodeImpact — validation and not-found', () => {
 });
 
 describe('handleCodeImpact — blast radius with a direct caller', () => {
-  let db: Database.Database;
-  beforeEach(() => { db = seedDb(); });
-  afterEach(() => { db.close(); });
+  let adapter: SqliteAdapter;
+  beforeEach(async () => { adapter = await seedDb(); });
+  afterEach(async () => { if (adapter.isConnected()) await adapter.disconnect(); });
 
   it('reports a critical direct caller for modify', async () => {
-    const out = await handleCodeImpact({ symbol: 'processData' }, new SqliteDbAdapter(db), WS, PID);
+    const out = await handleCodeImpact({ symbol: 'processData' }, adapter, WS, PID);
     expect(out).toContain('Impact Analysis: "processData" (modify)');
     expect(out).toContain('Critical: 1');
     expect(out).toContain('Total affected: 1 (1 files)');
@@ -67,27 +66,28 @@ describe('handleCodeImpact — blast radius with a direct caller', () => {
   });
 
   it('parses action defaults and passes through a rename action', async () => {
-    const out = await handleCodeImpact({ symbol: 'processData', action: 'rename' }, new SqliteDbAdapter(db), WS, PID);
+    const out = await handleCodeImpact({ symbol: 'processData', action: 'rename' }, adapter, WS, PID);
     expect(out).toContain('Impact Analysis: "processData" (rename)');
     expect(out).toContain('High: 1');
     expect(out).toContain('* Update references in 1 files with new name');
   });
 
   it('respects the depth clamp range', async () => {
-    const out = await handleCodeImpact({ symbol: 'processData', depth: 99 }, new SqliteDbAdapter(db), WS, PID);
+    const out = await handleCodeImpact({ symbol: 'processData', depth: 99 }, adapter, WS, PID);
     expect(out).toContain('--- ');
     expect(out).toContain('depth 5');
   });
 });
 
-function seedDb(): Database.Database {
-  const db = new Database(':memory:');
-  db.exec(SCHEMA);
-  db.prepare("INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'files/a.ts')").run(PID);
-  db.prepare("INSERT INTO files (project_id, path, relative_path) VALUES (?, '/b.ts', 'files/b.ts')").run(PID);
-  db.prepare("INSERT INTO symbols (project_id, file_id, name, kind, start_line) VALUES (?, 1, 'processData', 'function', 3)").run(PID);
-  db.prepare("INSERT INTO symbols (project_id, file_id, name, kind, start_line) VALUES (?, 2, 'helper', 'function', 10)").run(PID);
-  db.prepare(`INSERT INTO relationships (project_id, source_symbol_id, target_symbol, target_symbol_id, kind, file_path, line)
-              VALUES (?, 2, 'processData', 1, 'calls', 'files/b.ts', 5)`).run(PID);
-  return db;
+async function seedDb(): Promise<SqliteAdapter> {
+  const adapter = new SqliteAdapter(':memory:');
+  await adapter.connect();
+  adapter.exec(SCHEMA);
+  adapter.run("INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'files/a.ts')", [PID]);
+  adapter.run("INSERT INTO files (project_id, path, relative_path) VALUES (?, '/b.ts', 'files/b.ts')", [PID]);
+  adapter.run("INSERT INTO symbols (project_id, file_id, name, kind, start_line) VALUES (?, 1, 'processData', 'function', 3)", [PID]);
+  adapter.run("INSERT INTO symbols (project_id, file_id, name, kind, start_line) VALUES (?, 2, 'helper', 'function', 10)", [PID]);
+  adapter.run(`INSERT INTO relationships (project_id, source_symbol_id, target_symbol, target_symbol_id, kind, file_path, line)
+              VALUES (?, 2, 'processData', 1, 'calls', 'files/b.ts', 5)`, [PID]);
+  return adapter;
 }

@@ -132,10 +132,11 @@ export function resetAdminDb(): void {
 }
 
 /**
- * Get the raw better-sqlite3 Database instance.
+ * Get the raw DB instance.
  * @deprecated Use getDbAdapter() for new code. Kept for backward compat with tests.
  */
-export function getAdminDb(): import('better-sqlite3').Database {
+export function getAdminDb(): any {
   const adapter = getUnifiedSqliteAdapter();
-  return adapter.getRawDb();
+  // getRawDb removed; return adapter directly for compat
+  return adapter as any;
 }

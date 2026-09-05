@@ -72,7 +72,7 @@ export class Container {
   }
 
   private autoWire<T>(ctor: { new (...args: any[]): T }): T {
-    const paramTypes: any[] = (Reflect as any)?.getMetadata?.('design:paramtypes', ctor) || [];
+    const paramTypes: any[] = (Reflect as any).getMetadata?.('design:paramtypes', ctor) || [];
     const params = paramTypes.map((p: any) => {
       if (!this.registry.has(p) && !this.resolving.has(p)) {
         if (typeof p === 'function' && p.name && p.name !== 'Object') return this.autoWire(p);

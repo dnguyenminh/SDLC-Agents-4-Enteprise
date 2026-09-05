@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import pino from 'pino';
 import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 import {
@@ -43,23 +43,25 @@ CREATE TABLE graph_edges (id INTEGER PRIMARY KEY AUTOINCREMENT,
 `;
 
 describe('SA4E-91 CodeEdgeExtractor', () => {
-  let indexDb: Database.Database;
-  let adminDb: Database.Database;
+  let indexDb: SqliteAdapter;
+  let adminDb: SqliteAdapter;
 
-  beforeEach(() => {
-    indexDb = new Database(':memory:');
-    indexDb.exec(INDEX_SCHEMA);
-    adminDb = new Database(':memory:');
-    adminDb.exec(ADMIN_SCHEMA);
+  beforeEach(async () => {
+    indexDb = new SqliteAdapter(':memory:');
+    await indexDb.connect();
+    await indexDb.exec(INDEX_SCHEMA);
+    adminDb = new SqliteAdapter(':memory:');
+    await adminDb.connect();
+    await adminDb.exec(ADMIN_SCHEMA);
   });
 
-  afterEach(() => { indexDb.close(); adminDb.close(); });
+  afterEach(async () => { await indexDb.disconnect(); await adminDb.disconnect(); });
 
   describe('ImportsEdgeStrategy', () => {
     it('extracts IMPORTS edges from code_dependencies', async () => {
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'a.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/b.ts', 'b.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO code_dependencies (source_file_id, target_file_id, target_path) VALUES (1, 2, './b')`).run();
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'a.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/b.ts', 'b.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO code_dependencies (source_file_id, target_file_id, target_path) VALUES (1, 2, './b')`);
 
       const strategy = new ImportsEdgeStrategy();
       const edges = await strategy.extract(new SqliteDbAdapter(indexDb), PID);
@@ -69,8 +71,8 @@ describe('SA4E-91 CodeEdgeExtractor', () => {
     });
 
     it('skips dependencies with null target_file_id', async () => {
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'a.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO code_dependencies (source_file_id, target_file_id, target_path) VALUES (1, NULL, 'lodash')`).run();
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'a.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO code_dependencies (source_file_id, target_file_id, target_path) VALUES (1, NULL, 'lodash')`);
 
       const strategy = new ImportsEdgeStrategy();
       const edges = await strategy.extract(new SqliteDbAdapter(indexDb), PID);
@@ -81,10 +83,10 @@ describe('SA4E-91 CodeEdgeExtractor', () => {
 
   describe('CallsEdgeStrategy', () => {
     it('extracts CALLS edges from code_call_graph', async () => {
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/x.ts', 'x.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 1, 'foo', 'function')`).run(PID);
-      indexDb.prepare(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 1, 'bar', 'function')`).run(PID);
-      indexDb.prepare(`INSERT INTO code_call_graph (caller_symbol_id, callee_symbol_id, call_site_line) VALUES (1, 2, 10)`).run();
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/x.ts', 'x.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 1, 'foo', 'function')`, [PID]);
+      await indexDb.run(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 1, 'bar', 'function')`, [PID]);
+      await indexDb.run(`INSERT INTO code_call_graph (caller_symbol_id, callee_symbol_id, call_site_line) VALUES (1, 2, 10)`);
 
       const strategy = new CallsEdgeStrategy();
       const edges = await strategy.extract(new SqliteDbAdapter(indexDb), PID);
@@ -96,9 +98,9 @@ describe('SA4E-91 CodeEdgeExtractor', () => {
 
   describe('ExtendsEdgeStrategy', () => {
     it('extracts EXTENDS edges from parent_symbol_id', async () => {
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/c.ts', 'c.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO symbols (project_id, file_id, name, kind, parent_symbol_id) VALUES (?, 1, 'Base', 'class', NULL)`).run(PID);
-      indexDb.prepare(`INSERT INTO symbols (project_id, file_id, name, kind, parent_symbol_id) VALUES (?, 1, 'Child', 'class', 1)`).run(PID);
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/c.ts', 'c.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO symbols (project_id, file_id, name, kind, parent_symbol_id) VALUES (?, 1, 'Base', 'class', NULL)`, [PID]);
+      await indexDb.run(`INSERT INTO symbols (project_id, file_id, name, kind, parent_symbol_id) VALUES (?, 1, 'Child', 'class', 1)`, [PID]);
 
       const strategy = new ExtendsEdgeStrategy();
       const edges = await strategy.extract(new SqliteDbAdapter(indexDb), PID);
@@ -111,36 +113,36 @@ describe('SA4E-91 CodeEdgeExtractor', () => {
   describe('extractAndInsertCodeEdges (integration)', () => {
     it('inserts all edge types into graph_edges', async () => {
       // File A=1 imports File B=2, but Symbol X=3 (in file A) calls Symbol Y=4 (in file B)
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'a.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/b.ts', 'b.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 1, 'fn1', 'function')`).run(PID);
-      indexDb.prepare(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 1, 'fn2', 'function')`).run(PID);
-      indexDb.prepare(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 2, 'fn3', 'function')`).run(PID);
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'a.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/b.ts', 'b.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 1, 'fn1', 'function')`, [PID]);
+      await indexDb.run(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 1, 'fn2', 'function')`, [PID]);
+      await indexDb.run(`INSERT INTO symbols (project_id, file_id, name, kind) VALUES (?, 2, 'fn3', 'function')`, [PID]);
       // File 1 → File 2 (IMPORTS edge: code:1 → code:2)
-      indexDb.prepare(`INSERT INTO code_dependencies (source_file_id, target_file_id, target_path) VALUES (1, 2, './b')`).run();
+      await indexDb.run(`INSERT INTO code_dependencies (source_file_id, target_file_id, target_path) VALUES (1, 2, './b')`);
       // Symbol 2 → Symbol 3 (CALLS edge: code:2 → code:3)
-      indexDb.prepare(`INSERT INTO code_call_graph (caller_symbol_id, callee_symbol_id, call_site_line) VALUES (2, 3, 10)`).run();
+      await indexDb.run(`INSERT INTO code_call_graph (caller_symbol_id, callee_symbol_id, call_site_line) VALUES (2, 3, 10)`);
 
       const count = await extractAndInsertCodeEdges(
         new SqliteDbAdapter(indexDb), new SqliteDbAdapter(adminDb), PID, log,
       );
 
       expect(count).toBe(2);
-      const edges = adminDb.prepare('SELECT * FROM graph_edges ORDER BY rel_type').all() as any[];
+      const edges = await adminDb.all('SELECT * FROM graph_edges ORDER BY rel_type') as any[];
       expect(edges).toHaveLength(2);
       expect(edges.some((e: any) => e.rel_type === 'IMPORTS')).toBe(true);
       expect(edges.some((e: any) => e.rel_type === 'CALLS')).toBe(true);
     });
 
     it('is idempotent — duplicate inserts ignored', async () => {
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'a.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/b.ts', 'b.ts')`).run(PID);
-      indexDb.prepare(`INSERT INTO code_dependencies (source_file_id, target_file_id, target_path) VALUES (1, 2, './b')`).run();
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/a.ts', 'a.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO files (project_id, path, relative_path) VALUES (?, '/b.ts', 'b.ts')`, [PID]);
+      await indexDb.run(`INSERT INTO code_dependencies (source_file_id, target_file_id, target_path) VALUES (1, 2, './b')`);
 
       await extractAndInsertCodeEdges(new SqliteDbAdapter(indexDb), new SqliteDbAdapter(adminDb), PID, log);
       await extractAndInsertCodeEdges(new SqliteDbAdapter(indexDb), new SqliteDbAdapter(adminDb), PID, log);
 
-      const edges = adminDb.prepare('SELECT * FROM graph_edges').all() as any[];
+      const edges = await adminDb.all('SELECT * FROM graph_edges') as any[];
       expect(edges.length).toBe(1);
     });
   });

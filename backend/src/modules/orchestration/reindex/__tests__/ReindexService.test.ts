@@ -4,42 +4,46 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import pino from 'pino';
-import type Database from 'better-sqlite3';
-import { makeTempDb, type TempDb } from '../../../../__tests__/sa4e-testkit.js';
+import { SqliteAdapter } from '../../../../database/adapters/SqliteAdapter.js';
+import { SCHEMA_V1 } from '../../../../engine/db/schema.js';
 import { ReindexService } from '../ReindexService.js';
-import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
 import { FakeEmbedder, FakeToolSource } from './reindex-fakes.js';
 
 const silent = pino({ level: 'silent' });
 
-function countFor(db: Database.Database, server: string): number {
-  return (db.prepare('SELECT COUNT(*) c FROM mcp_tools WHERE server = ?').get(server) as any).c;
+function countFor(adapter: SqliteAdapter, server: string): Promise<number> {
+  return Promise.resolve(adapter.get<{ c: number }>('SELECT COUNT(*) c FROM mcp_tools WHERE server = ?', [server])?.c ?? 0);
 }
 
 describe('ReindexService', () => {
-  let tmp: TempDb;
-  let db: Database.Database;
+  let adapter: SqliteAdapter;
 
-  beforeEach(() => { tmp = makeTempDb(); db = tmp.dbManager.getDb(); });
-  afterEach(() => tmp.close());
+  beforeEach(async () => {
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    await adapter.exec(SCHEMA_V1);
+  });
+  afterEach(async () => {
+    await adapter.disconnect();
+  });
 
   it('UT-28: only tools with category === server are upserted', async () => {
     const src = new FakeToolSource();
     src.setTools('S', ['a', 'b']);
     src.setTools('T', ['c']);
     src.setConnected('S', true);
-    const svc = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
+    const svc = new ReindexService(() => adapter, new FakeEmbedder(), src, silent);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(2);
-    expect(countFor(db, 'S')).toBe(2);
-    expect(countFor(db, 'T')).toBe(0);
+    expect(await countFor(adapter, 'S')).toBe(2);
+    expect(await countFor(adapter, 'T')).toBe(0);
   });
 
   it('UT-29: empty proxied set is a no-op (no delete/prune) + warns', async () => {
     const warn = vi.fn();
     const src = new FakeToolSource();
     src.setConnected('S', true);
-    const svc = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
+    const svc = new ReindexService(() => adapter, new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(0);
     expect(warn).toHaveBeenCalled();
@@ -51,10 +55,10 @@ describe('ReindexService', () => {
     src.setConnected('S', true);
     const embedder = new FakeEmbedder();
     embedder.failFor('t2');
-    const svc = new ReindexService(() => new SqliteDbAdapter(db), embedder, src, silent);
+    const svc = new ReindexService(() => adapter, embedder, src, silent);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(2);
-    const rows = (db.prepare('SELECT name FROM mcp_tools WHERE server = ?').all('S') as any[]).map((r) => r.name);
+    const rows = (await adapter.all<{ name: string }>('SELECT name FROM mcp_tools WHERE server = ?', ['S'])).map((r) => r.name);
     expect(rows.sort()).toEqual(['t1', 't3']);
   });
 
@@ -62,10 +66,10 @@ describe('ReindexService', () => {
     const src = new FakeToolSource();
     src.setTools('S', ['t1']);
     src.setConnected('S', false);
-    const svc = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
+    const svc = new ReindexService(() => adapter, new FakeEmbedder(), src, silent);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(0);
-    expect(countFor(db, 'S')).toBe(0);
+    expect(await countFor(adapter, 'S')).toBe(0);
   });
 
   it('UT-32: repository write failure is caught + logged; prior rows intact', async () => {
@@ -74,13 +78,18 @@ describe('ReindexService', () => {
     src.setTools('S', ['t1']);
     src.setConnected('S', true);
     // Pre-seed a prior row for S.
-    db.prepare('INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?,?,?,?,?,?)')
-      .run('prior', 'p', '{}', 'S', 'S', null);
-    const brokenDb = { transaction: () => { throw new Error('disk full'); }, prepare: db.prepare.bind(db) } as any;
-    const svc = new ReindexService(() => brokenDb, new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
+    await adapter.run('INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?,?,?,?,?,?)', ['prior', 'p', '{}', 'S', 'S', null]);
+    const brokenAdapter = {
+      getEngine: () => 'sqlite',
+      runAsync: async () => { throw new Error('disk full'); },
+      getAsync: async () => undefined,
+      allAsync: async () => [],
+      execAsync: async () => {},
+    } as any;
+    const svc = new ReindexService(() => brokenAdapter, new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
     const res = await svc.reindexConnected('S');
     expect(res.upserted).toBe(0);
     expect(warn).toHaveBeenCalled();
-    expect(countFor(db, 'S')).toBe(1); // prior row preserved
+    expect(await countFor(adapter, 'S')).toBe(1); // prior row preserved
   });
 });
