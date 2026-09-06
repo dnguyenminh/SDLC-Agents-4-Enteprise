@@ -1,0 +1,15 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="+ LegendWindow.svelte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+      <mxGeometry x="120" y="200" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="+ MinimapController.svelte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+      <mxGeometry x="360" y="200" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="+ FilterPanel.svelte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+      <mxGeometry x="600" y="200" width="160" height="80" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

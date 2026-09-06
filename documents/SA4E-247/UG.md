@@ -14,7 +14,7 @@
 | Reviewer | BA Agent |
 | Version | 1.0 |
 | Date | 2026-09-06 |
-| Status | Draft |
+| Status | Final |
 | Related BRD | documents/SA4E-247/BRD.md |
 | Related FSD | documents/SA4E-247/FSD.md |
 | Related TDD | documents/SA4E-247/TDD.md |
@@ -25,7 +25,8 @@
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2026-09-06 | DEV Agent | Initial document |
+| 1.0-draft | 2026-09-06 | DEV Agent | Initial document |
+| 1.0 | 2026-09-06 | BA Agent | Review theo BRD/FSD, bổ sung hướng dẫn chi tiết Legend Window, Minimap Enhanced, Filter Panel với wildcard, cập nhật troubleshooting và examples. Phê duyệt Final |
 
 ---
 
@@ -71,6 +72,7 @@ User Guide mô tả cách sử dụng các component UI mới trong KB Graph Vie
 
 ### 2.3 Configuration Methods
 UI state persisted in browser localStorage. Không cần cấu hình thủ công.
+Key localStorage: `kb-graph.legend.window` lưu vị trí, kích thước, trạng thái maximize/minimize.
 
 ---
 
@@ -80,38 +82,61 @@ UI state persisted in browser localStorage. Không cần cấu hình thủ công
 Không có file config. State được lưu localStorage với key:
 - `kb-graph.legend.window`
 
+Reset state: đóng mở VS Code hoặc xóa localStorage key trong DevTools.
+
 ---
 
 ## 4. Usage
 
 ### 4.1 Legend Window
-**Description:** Cửa sổ legend độc lập có thể drag, resize, maximize/minimize.
+**Description:** Cửa sổ legend độc lập có thể drag, resize, maximize/minimize, scrollable.
 
 **How to use:**
-- Kéo titlebar để di chuyển
-- Kéo góc để resize
-- Nhấn Max để phóng to
-- Cuộn để xem danh sách
+- Kéo titlebar để di chuyển vị trí trên workspace
+- Kéo góc cửa sổ để resize theo chiều ngang/dọc
+- Nhấn nút **Minimize** để thu nhỏ chỉ còn titlebar
+- Nhấn nút **Maximize** để phóng to toàn màn hình; nhấn lại để khôi phục
+- Cuộn trong LegendList để xem danh sách node types dài
+- Legend tự động lưu vị trí/kích thước sau khi thay đổi; khôi phục sau reload
 
-**Expected Output:** Vị trí/size được lưu sau reload.
+**Ví dụ thực tế:**
+- Khi danh sách >100 types, bật scroll để duyệt nhanh
+- Sử dụng Maximize khi cần xem chi tiết màu sắc và count
+
+**Expected Output:** Vị trí/size được lưu sau reload. Nếu localStorage bị chặn, cửa sổ quay về vị trí mặc định góc trái dưới.
 
 ### 4.2 Minimap Controller
-**Description:** Minimap với rotate 90°, span mode, click-to-zoom.
+**Description:** Minimap với rotate 90°, span mode, click-to-zoom to main graph.
 
 **How to use:**
-- Nhấn Rotate để xoay 90°
-- Bật Span để hiển thị viewport
-- Click vào minimap để zoom
+- **Rotate:** Nhấn nút Rotate để xoay thumbnail 90° theo chiều kim đồng hồ. Nhấn 4 lần quay về gốc.
+- **Span Toggle:** Bật Span để hiển thị khung màu vàng bao quanh vùng viewport hiện tại trong minimap.
+- **Click-to-zoom:** Click vào vị trí bất kỳ trên minimap để zoom main graph tới vị trí đó.
+- Minimap luôn phản ánh camera hiện tại của graph chính.
+
+**Ví dụ thực tế:**
+- Đang xem graph lớn, bật Span để định hướng vị trí đang xem
+- Dùng Rotate khi layout graph bị lệch hướng
+- Click nhanh vào vùng minimap để di chuyển tới khu vực quan tâm
+
+**Expected Output:** Minimap phản hồi <200ms, rotate không làm sai lệch coordinate mapping.
 
 ### 4.3 Filter Panel with Wildcard Search
 **Description:** Lọc node types realtime với wildcard * và ?.
 
 **How to use:**
-- Gõ `ACT*` để lọc ACTIVITY, ACTION
-- Gõ `*?ION` để khớp các type kết thúc
-- Tích checkbox để áp dụng filter
+- Nhập text vào FilterSearchInput ở đầu Filter Panel
+- Hỗ trợ wildcard: `*` khớp nhiều ký tự, `?` khớp 1 ký tự, không phân biệt hoa thường
+- Danh sách checkbox được lọc ngay khi gõ, debounce 150ms
+- Tích/bỏ tích checkbox để áp dụng filter lên graph
+- Xóa text search để hiện lại toàn bộ danh sách
 
-**Expected Output:** Graph cập nhật <200ms.
+**Ví dụ:**
+- Gõ `ACT*` → lọc ACTIVITY, ACTION, ACTOR...
+- Gõ `*?ION` → khớp các type kết thúc bằng ...ION có ít nhất 1 ký tự trước
+- Gõ `CLASS` → chỉ hiện checkbox CLASS
+
+**Expected Output:** Graph cập nhật <200ms, filter realtime, checkbox vẫn hoạt động sau khi lọc.
 
 ---
 
@@ -119,27 +144,30 @@ Không có file config. State được lưu localStorage với key:
 
 ### 5.1 Legend Window
 - Titlebar draggable
-- LegendList scrollable
-- Minimize/Maximize button
+- LegendList scrollable, virtualized cho >500 items
+- Minimize/Maximize button trên titlebar
+- State persisted in localStorage
 
 ### 5.2 Minimap Controller
-- Canvas minimap
-- Rotate button
-- Span toggle
+- Canvas minimap scaled 1/10
+- Rotate button 90°
+- Span toggle hiển thị ZoomViewport rectangle
+- Click event map to graph camera
 
 ### 5.3 Filter Panel
 - FilterSearchInput với debounce 150ms
-- Checkbox list filtered realtime
+- Checkbox list filtered realtime theo wildcard
+- Wildcard matcher chuyển pattern sang RegExp case-insensitive
 
 ---
 
 ## 6. Administration
 
 ### 6.1 Monitoring Health
-Kiểm tra console webview cho lỗi localStorage quota.
+Kiểm tra console webview cho lỗi localStorage quota hoặc canvas render.
 
 ### 6.2 Hot-Reload Configuration
-Đóng mở VS Code để reset state.
+Đóng mở VS Code để reset state. Để xóa state cục bộ, mở DevTools → Application → Local Storage → xóa key `kb-graph.legend.window`.
 
 ---
 
@@ -148,14 +176,17 @@ Kiểm tra console webview cho lỗi localStorage quota.
 ### 7.1 Common Issues
 | Symptom | Cause | Solution |
 |---------|-------|----------|
-| Legend không nhớ vị trí | localStorage disabled | Bật localStorage |
-| Minimap không rotate | Graph chưa load | Đợi graph render |
-| Filter chậm | Quá nhiều types | Giảm debounce |
+| Legend không nhớ vị trí | localStorage disabled hoặc full | Bật localStorage, xóa key cũ |
+| Minimap không rotate | Graph chưa load hoặc canvas lỗi | Đợi graph render xong, reload panel |
+| Filter chậm | Quá nhiều types >10k | Hạn chế wildcard phức tạp, chờ debounce |
+| Legend rỗng | Không có node types | Đợi API /api/v1/admin/kb-graph/nodes/summary trả dữ liệu |
 
 ### 7.2 Error Codes
 | Code | Message | Action |
 |------|---------|--------|
-| LS-01 | localStorage full | Xóa state cũ |
+| LS-01 | localStorage full | Xóa state cũ trong DevTools |
+| LS-02 | localStorage unavailable | Sử dụng default position, báo người dùng bật storage |
+| MAP-01 | Minimap init fail | Hide minimap UI, kiểm tra graph renderer |
 
 ---
 
@@ -164,10 +195,15 @@ Kiểm tra console webview cho lỗi localStorage quota.
 ### 8.1 GET /api/v1/admin/kb-graph/nodes/summary
 Lấy danh sách node types cho legend.
 
+**Query Param:**
+- `workspaceId` string required
+
 **Response:**
 ```json
 { "types": [{"type":"ACTIVITY","count":1349,"color":"#3b82f6"}] }
 ```
+
+**Error:** Empty dataset → hiển thị "No types".
 
 ---
 
