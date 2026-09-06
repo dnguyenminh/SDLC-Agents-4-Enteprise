@@ -19,6 +19,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
+      - run: rm -rf backend/node_modules backend/package-lock.json
+        working-directory: .
+
       - run: npm ci
         working-directory: backend
 
@@ -64,6 +67,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
+      - run: rm -rf backend/node_modules backend/package-lock.json
+        working-directory: .
+
       - run: npm ci
         working-directory: backend
 
@@ -86,6 +92,9 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
+
+      - run: rm -rf backend/node_modules backend/package-lock.json
+        working-directory: .
 
       - run: npm ci
         working-directory: backend
