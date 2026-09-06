@@ -17,14 +17,14 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
 
       - run: |
           rm -rf node_modules
           npm cache clean --force
+          npm install --force
         working-directory: .
 
-      - run: npm install --force
+      - run: npm run build
         working-directory: backend
 
       - run: npm run build
@@ -44,14 +44,14 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: extension/package-lock.json
 
       - run: |
           rm -rf node_modules
           npm cache clean --force
+          npm install --force
         working-directory: .
 
-      - run: npm install --force
+      - run: npm run compile
         working-directory: extension
 
       - run: npm run compile
@@ -72,14 +72,14 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
 
       - run: |
           rm -rf node_modules
           npm cache clean --force
+          npm install --force
         working-directory: .
 
-      - run: npm install --force
+      - run: npm run test:integration
         working-directory: backend
 
       - run: npm run build
@@ -100,14 +100,14 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
 
       - run: |
           rm -rf node_modules
           npm cache clean --force
+          npm install --force
         working-directory: .
 
-      - run: npm install --force
+      - run: npm run test:e2e
         working-directory: backend
 
       - run: npm run build
