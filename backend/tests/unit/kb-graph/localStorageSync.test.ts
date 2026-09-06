@@ -1,8 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { saveState, loadState, removeState } from '../../src/viewer/admin/utils/localStorageSync.js';
+import { saveState, loadState, removeState } from '../../../src/viewer/admin/utils/localStorageSync.js';
+
+const localStorageMock = (() => {
+  let store = {};
+  return {
+    getItem(key) { return store[key] || null; },
+    setItem(key, value) { store[key] = value.toString(); },
+    removeItem(key) { delete store[key]; },
+    clear() { store = {}; },
+  };
+})();
 
 describe('localStorageSync', () => {
   beforeEach(() => {
+    // @ts-ignore
+    global.localStorage = localStorageMock;
     localStorage.clear();
   });
 

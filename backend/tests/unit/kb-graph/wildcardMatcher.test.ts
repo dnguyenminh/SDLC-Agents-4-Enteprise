@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { matchesWildcard, filterByWildcard } from '../../src/viewer/admin/utils/wildcardMatcher.js';
+import { matchesWildcard, filterByWildcard } from '../../../src/viewer/admin/utils/wildcardMatcher.js';
 
 describe('wildcardMatcher', () => {
   it('matches exact string', () => {
