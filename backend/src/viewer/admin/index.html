@@ -142,10 +142,17 @@ function KBGraphPage({activeTab}){
     return()=>window.removeEventListener('rbac-changed',onRbacChanged);
   },[]);
 
+  const matchesWildcard=(str,pattern)=>{
+    if(!str||!pattern)return false;
+    const esc=pattern.replace(/[.+?^${}()|[\\]\\\\]/g,'\\$&').replace(/\*/g,'.*').replace(/\?/g,'.');
+    try{return new RegExp('^'+esc+'$','i').test(str);}
+    catch(e){return str.toLowerCase().includes(pattern.toLowerCase());}
+  };
   const doSearch=(term)=>{
     setSearchTerm(term);
     if(!term||!rendererRef.current)return;
-    var found=allNodesRef.current.find(n=>n.label&&n.label.toLowerCase().includes(term.toLowerCase()));
+    const candidates=allNodesRef.current.filter(n=>n.label&&matchesWildcard(n.label,term));
+    var found=candidates.length>0?candidates[0]:allNodesRef.current.find(n=>n.label&&n.label.toLowerCase().includes(term.toLowerCase()));
     if(found){rendererRef.current.focusNode(found.id);setSelectedNode(found);setNodeDetail(null);api('/kb/entries/'+found.id).then(d=>{if(d&&!d.__error)setNodeDetail(d);else setNodeDetail({id:found.id,title:found.label,type:found.type,tier:found.tier,content:'No detail'});});}
   };
 
