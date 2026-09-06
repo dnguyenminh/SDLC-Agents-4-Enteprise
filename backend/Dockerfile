@@ -1,6 +1,6 @@
 # SA4E-44 Backend Dockerfile
-# Node.js 20 + Hono backend for Code Intelligence MCP Server
-FROM node:20-alpine AS base
+# Node.js 22 + Hono backend for Code Intelligence MCP Server
+FROM node:22-alpine AS base
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ COPY src/ ./src/
 RUN npm run build
 
 # --- Production stage ---
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 
 WORKDIR /app
 
