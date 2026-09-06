@@ -22,7 +22,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.PAT || github.token }}
           fetch-depth: 0
@@ -89,7 +89,7 @@ jobs:
 
       - name: Setup Node.js for npm publish
         if: steps.bump.outputs.version != ''
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
