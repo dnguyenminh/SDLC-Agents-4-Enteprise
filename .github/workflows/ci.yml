@@ -19,10 +19,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - run: rm -rf node_modules
+      - run: |
+          rm -rf node_modules
+          npm cache clean --force
         working-directory: .
 
-      - run: npm ci
+      - run: npm install --force
         working-directory: backend
 
       - run: npm run build
@@ -44,10 +46,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: extension/package-lock.json
 
-      - run: rm -rf node_modules
+      - run: |
+          rm -rf node_modules
+          npm cache clean --force
         working-directory: .
 
-      - run: npm ci
+      - run: npm install --force
         working-directory: extension
 
       - run: npm run compile
@@ -70,10 +74,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - run: rm -rf node_modules
+      - run: |
+          rm -rf node_modules
+          npm cache clean --force
         working-directory: .
 
-      - run: npm ci
+      - run: npm install --force
         working-directory: backend
 
       - run: npm run build
@@ -96,10 +102,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - run: rm -rf node_modules
+      - run: |
+          rm -rf node_modules
+          npm cache clean --force
         working-directory: .
 
-      - run: npm ci
+      - run: npm install --force
         working-directory: backend
 
       - run: npm run build
