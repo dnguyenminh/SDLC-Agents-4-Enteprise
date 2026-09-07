@@ -676,11 +676,11 @@
         var dx = e.clientX - lastX, dy = e.clientY - lastY;
         lastX = e.clientX; lastY = e.clientY;
         if (dragging) {
-          // Drag minimap = pan main graph
-          self._minimapPanToGraph(dx, dy);
-        } else if (rightDrag) {
-          // Right-drag minimap = rotate main graph
+          // Left-drag = rotate (matches main graph LEFT=ROTATE)
           self._minimapRotateToGraph(dx);
+        } else if (rightDrag) {
+          // Right-drag = pan (matches main graph RIGHT=PAN)
+          self._minimapPanToGraph(dx, dy);
         }
       });
       var endDrag = function() { dragging = false; rightDrag = false; };
@@ -689,25 +689,21 @@
       canvas.addEventListener('wheel', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        // Wheel minimap = zoom main graph
         self._minimapZoomToGraph(e.deltaY > 0 ? 1 : -1);
       }, { passive: false });
       canvas.addEventListener('dblclick', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        // Double-click = toggle span mode
         self.minimapSpanMode = !self.minimapSpanMode;
       });
     }
 
     _minimapPanToGraph(dx, dy) {
       if (!this.camera || !this.controls) return;
-      // Convert minimap pixel delta to world-space pan
       var cw = this.minimapCanvas.width, ch = this.minimapCanvas.height;
       var factor = this._minimapWorldSize() / Math.min(cw, ch);
       var panX = -dx * factor;
       var panY = dy * factor;
-      // Apply pan to main graph camera + target
       this.camera.position.x += panX;
       this.camera.position.y += panY;
       this.controls.target.x += panX;
@@ -718,7 +714,6 @@
 
     _minimapRotateToGraph(dx) {
       if (!this.camera || !this.controls) return;
-      // Right-drag horizontal = orbit rotation around target
       var angle = dx * 0.005;
       var pos = this.camera.position;
       var tgt = this.controls.target;
