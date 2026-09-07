@@ -30,19 +30,14 @@ export function buildReadFilter(ctx: ProjectContext, tableAlias?: string): Scope
   const conditions: string[] = [];
   const params: unknown[] = [];
 
-  // USER: owner + same workspace only
+  // WORKSPACE: personal workspace items (also covers user context when userId present)
   if (ctx.userId && ctx.userId !== 'anonymous') {
-    conditions.push(`(${p}scope = 'USER' AND ${p}user_id = ? AND ${p}project_id = ?)`);
+    conditions.push(`(${p}scope = 'WORKSPACE' AND ${p}user_id = ? AND ${p}project_id = ?)`);
     params.push(ctx.userId, ctx.projectId);
+  } else {
+    conditions.push(`(${p}scope = 'WORKSPACE' AND ${p}project_id = ?)`);
+    params.push(ctx.projectId);
   }
-
-  // PROJECT: this workspace only (no project_id IS NULL escape)
-  conditions.push(`(${p}scope = 'PROJECT' AND ${p}project_id = ?)`);
-  params.push(ctx.projectId);
-
-  // WORKSPACE: personal workspace items, isolated by project (workspace root)
-  conditions.push(`(${p}scope = 'WORKSPACE' AND ${p}project_id = ?)`);
-  params.push(ctx.projectId);
 
   // SHARED: company-wide, visible only if this project is granted access
   conditions.push(`(${p}scope = 'SHARED' AND EXISTS (SELECT 1 FROM kb_shared_grants g WHERE g.project_id = ?))`);
@@ -63,7 +58,7 @@ export function validateReadAccess(
   // SA4E-31: strict per-workspace isolation, fail closed without project context
   if (!ctx.projectId) return undefined;
   if (entry.scope === 'SHARED') return entry; // query layer enforces grant
-  if (entry.scope === 'USER') {
+  if (entry.scope === 'WORKSPACE') {
     return entry.user_id === ctx.userId && entry.project_id === ctx.projectId ? entry : undefined;
   }
   if (entry.scope === 'PROJECT') {
@@ -116,7 +111,7 @@ export function validateMutationOwnership(
   entry: KnowledgeEntry,
 ): MutationValidation {
   // SA4E-31: strict per-workspace ownership for mutations
-  if (entry.scope === 'USER') {
+  if (entry.scope === 'WORKSPACE') {
     if (entry.user_id !== ctx.userId || entry.project_id !== ctx.projectId) {
       return { allowed: false, reason: `Access denied: entry belongs to a different scope` };
     }
