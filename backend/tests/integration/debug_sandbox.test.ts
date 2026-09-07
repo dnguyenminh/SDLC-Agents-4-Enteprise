@@ -1,5 +1,5 @@
 
-import { describe, it, expect, beforeAll from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import Docker from 'dockerode';
 import pino from 'pino';
 
