@@ -142,6 +142,9 @@
       this.minimapCanvas = options ? options.minimapCanvas : null;
       this.minimapRotation = 0;
       this.minimapSpanMode = false;
+      this.minimapZoom = 1.0;
+      this.minimapNodePositions = null;
+      this.minimapBBox = null;
     }
 
     init() {
@@ -179,6 +182,16 @@
       this.controls.addEventListener('end', function() { self._updateMode(false); });
       // Prevent page scroll from hijacking wheel zoom on the canvas
       this.renderer.domElement.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
+      // Minimap wheel zoom
+      if (this.minimapCanvas) {
+        this.minimapCanvas.addEventListener('wheel', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var delta = e.deltaY > 0 ? -0.25 : 0.25;
+          var z = self.zoomMinimap(delta);
+          if (typeof self._onMinimapZoomChange === 'function') self._onMinimapZoomChange(z);
+        }, { passive: false });
+      }
       this._clock = new THREE.Clock();
 
       // Custom input: node selection (click), focus (dblclick), node drag.
@@ -218,6 +231,7 @@
     loadPositions(nodes) {
       this.nodes = nodes; this.nodeMap.clear();
       for (var i = 0; i < nodes.length; i++) { this.nodeMap.set(nodes[i].id, i); }
+      this._computeMinimapBBox();
       this._buildPointsGeometry(); this._updateMode(true);
     }
 
@@ -662,22 +676,127 @@
       var src = this.renderer.domElement;
       ctx.save();
       ctx.clearRect(0,0,cw,ch);
-      if (this.minimapRotation) {
-        ctx.translate(cw/2,ch/2);
-        ctx.rotate(this.minimapRotation * Math.PI/180);
-        ctx.drawImage(src,0,0,src.width,src.height,-cw/2,-ch/2,cw,ch);
+      // Background
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0,0,cw,ch);
+      if (this.minimapSpanMode && this.minimapBBox && this.nodes.length) {
+        // Span mode: draw all nodes as colored dots with viewport indicator
+        this._renderMinimapSpan(ctx, cw, ch);
       } else {
-        ctx.drawImage(src,0,0,src.width,src.height,0,0,cw,ch);
+        // Normal mode: mirror of main viewport with zoom
+        var zoom = this.minimapZoom || 1.0;
+        var sw = src.width / zoom, sh = src.height / zoom;
+        var sx = (src.width - sw) / 2, sy = (src.height - sh) / 2;
+        if (this.minimapRotation) {
+          ctx.translate(cw/2,ch/2);
+          ctx.rotate(this.minimapRotation * Math.PI/180);
+          ctx.drawImage(src, sx, sy, sw, sh, -cw/2, -ch/2, cw, ch);
+        } else {
+          ctx.drawImage(src, sx, sy, sw, sh, 0, 0, cw, ch);
+        }
       }
       ctx.restore();
     }
 
+    _computeMinimapBBox() {
+      if (!this.nodes.length) { this.minimapBBox = null; return; }
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (var i = 0; i < this.nodes.length; i++) {
+        var n = this.nodes[i];
+        if (n.x < minX) minX = n.x; if (n.x > maxX) maxX = n.x;
+        if (n.y < minY) minY = n.y; if (n.y > maxY) maxY = n.y;
+      }
+      var pad = 50;
+      this.minimapBBox = { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
+    }
+
+    _renderMinimapSpan(ctx, cw, ch) {
+      var bb = this.minimapBBox;
+      if (!bb) return;
+      var bw = bb.maxX - bb.minX, bh = bb.maxY - bb.minY;
+      if (bw < 1) bw = 1; if (bh < 1) bh = 1;
+      var scale = Math.min((cw - 8) / bw, (ch - 8) / bh);
+      var ox = (cw - bw * scale) / 2, oy = (ch - bh * scale) / 2;
+      // Draw nodes as dots
+      for (var i = 0; i < this.nodes.length; i++) {
+        var n = this.nodes[i];
+        var nx = ox + (n.x - bb.minX) * scale;
+        var ny = oy + (n.y - bb.minY) * scale;
+        var hex = this._getNodeTypeColor(n.type);
+        ctx.fillStyle = hex;
+        ctx.globalAlpha = 0.7;
+        ctx.fillRect(nx - 1, ny - 1, 2, 2);
+      }
+      ctx.globalAlpha = 1;
+      // Draw viewport indicator
+      this._drawViewportIndicator(ctx, cw, ch, ox, oy, scale, bb);
+    }
+
+    _getNodeTypeColor(type) {
+      var KNOWN = { FIELD_VALUE:'#22d3ee', REPORT:'#6366f1', DATA:'#2dd4bf', CLASS:'#e879f9', PROPERTY:'#a78bfa', ACTIVITY:'#fb923c', FLOW:'#60a5fa', MODEL:'#4ade80', RULE:'#f87171', PROCESS:'#3b82f6', DATA_MODEL:'#10b981', UI:'#f59e0b', TECHNICAL:'#ec4899', INT_CONNECTOR:'#ef4444', DECISION:'#06b6d4', INT_MAPPING:'#f97316', INT_SERVICE:'#dc2626', INT_RESOURCE:'#a855f7', SECURITY:'#818cf8', ORG:'#e879f9', APP_DEF:'#c084fc', GEN_AI:'#fb7185', SURVEY:'#f472b6', SYSADMIN:'#34d399', PEGA_SCHEMA:'#fbbf24', OTHER:'#94a3b8' };
+      if (KNOWN[type]) return KNOWN[type];
+      if (!type) return '#94a3b8';
+      var h = 0; for (var i = 0; i < type.length; i++) h = (h * 31 + type.charCodeAt(i)) >>> 0;
+      return 'hsl(' + (h % 360) + ',70%,65%)';
+    }
+
+    _drawViewportIndicator(ctx, cw, ch, ox, oy, scale, bb) {
+      if (!this.camera || !this.controls) return;
+      var THREE = this.THREE;
+      // Get camera frustum bounds in world space
+      var dist = this.camera.position.distanceTo(this.controls.target);
+      var fovRad = (this.camera.fov * Math.PI) / 180;
+      var halfH = Math.tan(fovRad / 2) * dist;
+      var halfW = halfH * this.camera.aspect;
+      var cx = this.controls.target.x, cy = this.controls.target.y;
+      var vw = halfW * 2, vh = halfH * 2;
+      // Convert to minimap coords
+      var rx = ox + (cx - halfW - bb.minX) * scale;
+      var ry = oy + (cy - halfH - bb.minY) * scale;
+      var rw = vw * scale, rh = vh * scale;
+      // Draw indicator rectangle
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.8;
+      ctx.strokeRect(rx, ry, rw, rh);
+      ctx.fillStyle = 'rgba(59,130,246,0.08)';
+      ctx.fillRect(rx, ry, rw, rh);
+      ctx.globalAlpha = 1;
+    }
+
     rotateMinimap() {
       this.minimapRotation = (this.minimapRotation + 90) % 360;
+      return this.minimapRotation;
     }
 
     toggleMinimapSpan() {
       this.minimapSpanMode = !this.minimapSpanMode;
+      return this.minimapSpanMode;
+    }
+
+    zoomMinimap(delta) {
+      this.minimapZoom = Math.max(0.5, Math.min(4.0, (this.minimapZoom || 1.0) + delta));
+      return this.minimapZoom;
+    }
+
+    handleMinimapClick(clientX, clientY) {
+      if (!this.minimapCanvas || !this.camera || !this.controls || !this.minimapSpanMode) return;
+      if (!this.minimapBBox || !this.nodes.length) return;
+      var rect = this.minimapCanvas.getBoundingClientRect();
+      var cw = this.minimapCanvas.width, ch = this.minimapCanvas.height;
+      var mx = (clientX - rect.left) / rect.width * cw;
+      var my = (clientY - rect.top) / rect.height * ch;
+      var bb = this.minimapBBox;
+      var bw = bb.maxX - bb.minX, bh = bb.maxY - bb.minY;
+      var scale = Math.min((cw - 8) / bw, (ch - 8) / bh);
+      var ox = (cw - bw * scale) / 2, oy = (ch - bh * scale) / 2;
+      var worldX = bb.minX + (mx - ox) / scale;
+      var worldY = bb.minY + (my - oy) / scale;
+      this.controls.target.set(worldX, worldY, 0);
+      this.camera.position.set(worldX, worldY, this.camera.position.z);
+      this.controls.update();
+      this.controls.dispatchEvent({ type: 'end' });
+      this._needRender = true;
     }
 
     _disposeSceneObjects() {
