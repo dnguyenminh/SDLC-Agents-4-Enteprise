@@ -99,15 +99,15 @@ describe('SA4E-27 UT — buildReadFilter', () => {
     const ctx = createProjectContext('app-A', 'user-1');
     const { clause, params } = buildReadFilter(ctx);
     expect(clause).toContain("scope = 'SHARED'");
-    expect(clause).toContain("scope = 'USER'");
+    expect(clause).not.toContain("scope = 'USER'");
     expect(clause).toContain("scope = 'WORKSPACE'");
     expect(clause).toContain('project_id = ?');
     expect(clause).not.toContain('project_id IS NULL');
     expect(clause).toContain("scope = 'WORKSPACE'");
     expect(clause).toContain('user_id = ?');
     expect(clause).toContain('kb_shared_grants');
-    # SA4E-31: params include userId + projectId for WORKSPACE, + userId for USER, + projectId for SHARED
-    expect(params).toEqual(['user-1', 'app-A', 'user-1', 'app-A']);
+    // SA4E-31: params include userId + projectId for WORKSPACE, + projectId for SHARED
+    expect(params).toEqual(['user-1', 'app-A', 'app-A']);
   });
 
   it('UT-02: without projectId (empty string) fails closed (SA4E-31)', () => {
@@ -138,9 +138,9 @@ describe('SA4E-27 UT — validateReadAccess', () => {
     expect(validateReadAccess(ctx, entry)).toBe(entry);
   });
 
-  it('UT-06: USER entry accessible if same userId', () => {
+  it('UT-06: USER entry not accessible — scope replaced by WORKSPACE (SA4E-31)', () => {
     const entry = makeEntry({ scope: 'USER', user_id: 'user-1' });
-    expect(validateReadAccess(ctx, entry)).toBe(entry);
+    expect(validateReadAccess(ctx, entry)).toBeUndefined();
   });
 
   it('UT-07: USER entry blocked if different userId', () => {
@@ -173,13 +173,13 @@ describe('SA4E-27 UT — validateReadAccess', () => {
 describe('SA4E-27 UT — validateMutationOwnership', () => {
   const ctx = createProjectContext('app-A', 'user-1');
 
-  it('UT-12: USER entry owned by same user — allowed', () => {
-    const entry = makeEntry({ scope: 'USER', user_id: 'user-1' });
+  it('UT-12: WORKSPACE entry owned by same user — allowed', () => {
+    const entry = makeEntry({ scope: 'WORKSPACE', user_id: 'user-1', project_id: 'app-A' });
     expect(validateMutationOwnership(ctx, entry)).toEqual({ allowed: true });
   });
 
-  it('UT-13: USER entry owned by different user — denied', () => {
-    const entry = makeEntry({ scope: 'USER', user_id: 'user-2' });
+  it('UT-13: WORKSPACE entry owned by different user — denied', () => {
+    const entry = makeEntry({ scope: 'WORKSPACE', user_id: 'user-2', project_id: 'app-A' });
     const result = validateMutationOwnership(ctx, entry);
     expect(result.allowed).toBe(false);
     expect(result.reason).toBeTruthy();
@@ -262,8 +262,8 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
   beforeEach(async () => {
     ctx = makeTempDb();
     // Seed data
-    await ctx.engine.insert({ content: 'A pattern', summary: 'proj-A', type: 'CONTEXT', scope: 'PROJECT', user_id: 'u1', project_id: 'app-A' });
-    await ctx.engine.insert({ content: 'B pattern', summary: 'proj-B', type: 'CONTEXT', scope: 'PROJECT', user_id: 'u1', project_id: 'app-B' });
+    await ctx.engine.insert({ content: 'A pattern', summary: 'proj-A', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'u1', project_id: 'app-A' });
+    await ctx.engine.insert({ content: 'B pattern', summary: 'proj-B', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'u1', project_id: 'app-B' });
     await ctx.engine.insert({ content: 'Shared pattern', summary: 'shared', type: 'CONTEXT', scope: 'SHARED', user_id: 'u1', project_id: 'app-A' });
     await ctx.engine.insert({ content: 'Legacy pattern', summary: 'legacy', type: 'CONTEXT', scope: 'PROJECT', user_id: 'u1', project_id: null });
     await ctx.engine.insert({ content: 'User1 pattern', summary: 'user1-priv', type: 'CONTEXT', scope: 'USER', user_id: 'u1', project_id: null });
@@ -278,12 +278,12 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
     const sql = `SELECT * FROM knowledge_entries WHERE archived = 0 AND ${clause}`;
     const rows = (ctx.engine.getDb() as any).prepare(sql).all(...params) as any[];
     const summaries = rows.map((r: any) => r.summary);
-    expect(summaries).toContain('proj-A');       // PROJECT app-A
+    expect(summaries).toContain('proj-A');       // WORKSPACE app-A + user u1
     expect(summaries).toContain('shared');        // SHARED granted for app-A
     expect(summaries).not.toContain('legacy');    // PROJECT NULL — no longer leaks
-    expect(summaries).not.toContain('user1-priv');// USER u1 but project_id NULL ≠ app-A
-    expect(summaries).not.toContain('proj-B');    // PROJECT app-B
-    expect(summaries).not.toContain('user2-priv');// USER u2
+    expect(summaries).not.toContain('user1-priv');// USER scope not included
+    expect(summaries).not.toContain('proj-B');    // WORKSPACE app-B different project
+    expect(summaries).not.toContain('user2-priv');// USER scope not included
   });
 
   it('IT-02: buildIngestFileDeleteClause scoped delete works correctly', async () => {
