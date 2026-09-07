@@ -140,6 +140,8 @@
       this.labelContainer = null;
       this.activeLabels = [];
       this.minimapCanvas = options ? options.minimapCanvas : null;
+      this.minimapRotation = 0;
+      this.minimapSpanMode = false;
     }
 
     init() {
@@ -658,7 +660,24 @@
       var ctx = this.minimapCanvas.getContext('2d');
       var cw = this.minimapCanvas.width, ch = this.minimapCanvas.height;
       var src = this.renderer.domElement;
-      ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, cw, ch);
+      ctx.save();
+      ctx.clearRect(0,0,cw,ch);
+      if (this.minimapRotation) {
+        ctx.translate(cw/2,ch/2);
+        ctx.rotate(this.minimapRotation * Math.PI/180);
+        ctx.drawImage(src,0,0,src.width,src.height,-cw/2,-ch/2,cw,ch);
+      } else {
+        ctx.drawImage(src,0,0,src.width,src.height,0,0,cw,ch);
+      }
+      ctx.restore();
+    }
+
+    rotateMinimap() {
+      this.minimapRotation = (this.minimapRotation + 90) % 360;
+    }
+
+    toggleMinimapSpan() {
+      this.minimapSpanMode = !this.minimapSpanMode;
     }
 
     _disposeSceneObjects() {

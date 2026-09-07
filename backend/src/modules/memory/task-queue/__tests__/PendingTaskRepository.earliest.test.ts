@@ -4,12 +4,18 @@
  *   - PROCESSING tasks with a started_at win (MIN)
  *   - falls back to now() when only PENDING tasks exist (freshly retried)
  *   - returns null when there is nothing active
+ *
+ * Uses SqliteAdapter (production SQLite adapter, in-memory) so tests exercise
+ * the same code path as production without depending on native better-sqlite3.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { SqliteDbAdapter } from '../SqliteDbAdapter.js';
+import { SqliteAdapter } from '../../../../database/adapters/SqliteAdapter.js';
 import { PendingTaskRepository } from '../PendingTaskRepository.js';
 import { TaskStatus, TaskType } from '../models.js';
+import {
+  makeSqliteTestDb,
+  type SqliteTestDb,
+} from '../../../../database/__tests__/sqlite-test-adapter.js';
 
 const SCHEMA = `
   CREATE TABLE pending_tasks (
@@ -28,7 +34,8 @@ const SCHEMA = `
   );
 `;
 
-let db: Database.Database;
+let db: SqliteTestDb;
+let adapter: SqliteAdapter;
 let repo: PendingTaskRepository;
 
 function insert(
@@ -37,16 +44,18 @@ function insert(
   startedAt: string | null,
   type = TaskType.CODE_ENRICHMENT,
 ): void {
-  db.prepare(
+  adapter.run(
     `INSERT INTO pending_tasks (task_type, entry_id, status, payload, started_at)
      VALUES (?, ?, ?, '{}', ?)`,
-  ).run(type, entryId, status, startedAt);
+    [type, entryId, status, startedAt],
+  );
 }
 
-beforeEach(() => {
-  db = new Database(':memory:');
-  db.exec(SCHEMA);
-  repo = new PendingTaskRepository(new SqliteDbAdapter(db) as never);
+beforeEach(async () => {
+  db = await makeSqliteTestDb();
+  adapter = db.adapter;
+  adapter.exec(SCHEMA);
+  repo = new PendingTaskRepository(adapter);
 });
 
 describe('getEarliestActiveTimestamp', () => {
