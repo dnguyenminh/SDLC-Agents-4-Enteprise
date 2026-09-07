@@ -1,0 +1,7 @@
+test_case_id,issue_key,description,expected_http_code,expected_error_message,description
+TC-101,SA4E-TEST-001,## Updated Heading
+Additional summary field,204,,Valid update with additional fields
+TC-102,SA4E-TEST-002,,,204,,Empty description allowed
+TC-401,SA4E-TEST-003,,204,,Empty description boundary
+TC-402,SA4E-TEST-004,## Heading with very long content repeated many times to exceed typical limits,204,,Long description boundary
+TC-403,SA4E-TEST-005,Heading with emojis 🚀 and unicode café,204,,Special characters

@@ -1,0 +1,3 @@
+test_case_id,issue_key,auth_token,expected_http_code,description
+TC-201,SA4E-TEST-001,,401,No auth token returns 401
+TC-201-INV,SA4E-TEST-001,invalid_token,403,Invalid token returns 403
