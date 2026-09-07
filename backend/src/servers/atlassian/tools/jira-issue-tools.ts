@@ -28,7 +28,10 @@ export function registerJiraIssueTools(server: McpServer, client: JiraApiClient)
       const fields: Record<string, unknown> = {
         project: { key: project_key }, summary, issuetype: { name: issue_type },
       };
-      if (description) fields.description = description.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      if (description) {
+        const normalized = description.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        fields.description = markdownToWiki(normalized);
+      }
       if (assignee) fields.assignee = { accountId: assignee };
       if (priority) fields.priority = { name: priority };
       if (labels) fields.labels = labels;
@@ -47,6 +50,7 @@ export function registerJiraIssueTools(server: McpServer, client: JiraApiClient)
       // Normalize line endings to LF to preserve markdown layout (headings, nested lists, smart links)
       if (typeof fields.description === 'string') {
         fields.description = fields.description.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        fields.description = markdownToWiki(fields.description);
       }
       await client.updateIssue(parsed.data.issue_key, fields);
       return createSuccessResult({ success: true, issue_key: parsed.data.issue_key });
@@ -81,6 +85,36 @@ export function registerJiraIssueTools(server: McpServer, client: JiraApiClient)
     try { return createSuccessResult((await client.getResolutions()).data); }
     catch (e) { return handleError(e); }
   });
+}
+
+function markdownToWiki(md: string): string {
+  // Simple markdown → Jira Wiki markup conversion
+  let out = md;
+  // Headings
+  out = out
+    .replace(/^######\s+(.*)$/gm, 'h6. $1')
+    .replace(/^#####\s+(.*)$/gm, 'h5. $1')
+    .replace(/^####\s+(.*)$/gm, 'h4. $1')
+    .replace(/^###\s+(.*)$/gm, 'h3. $1')
+    .replace(/^##\s+(.*)$/gm, 'h2. $1')
+    .replace(/^#\s+(.*)$/gm, 'h1. $1');
+  // Unordered lists
+  out = out
+    .replace(/^\s*-\s+(.*)$/gm, '* $1');
+  // Ordered lists
+  out = out
+    .replace(/^\s*\d+\.\s+(.*)$/gm, '# $1');
+  // Bold **text**
+  out = out.replace(/\*\*(.+?)\*\*/g, '*$1*');
+  // Italic *text* (avoid list markers: first char after * must not be space)
+  out = out.replace(/(^|\s)\*([^\s*][^*]*?)\*(?=\s|$)/g, '$1_$2_');
+  // Inline code `code`
+  out = out.replace(/`([^`]+)`/g, '{code}$1{code}');
+  // Code fences ```lang ... ``` → {code}...{code}
+  out = out.replace(/```[\s\S]*?\n([\s\S]*?)```/g, '{code}$1{code}');
+  // Links [text](url)
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '[$1|$2]');
+  return out;
 }
 
 function handleError(e: unknown) {

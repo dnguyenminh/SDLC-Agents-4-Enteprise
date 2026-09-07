@@ -41,7 +41,7 @@ describe('jira-issue-tools', () => {
     }, {});
 
     const calledFields = (mockClient.updateIssue as any).mock.calls[0][1];
-    expect(calledFields.description).toBe('## Heading\n- Parent\n  - Child\nReference SA4E-250\n');
+    expect(calledFields.description).toBe('h2. Heading\n* Parent\n* Child\nReference SA4E-250\n');
     // Verify LF only
     expect(calledFields.description).not.toContain('\r');
   });
@@ -64,7 +64,7 @@ describe('jira-issue-tools', () => {
     }, {});
 
     const calledFields = (mockClient.updateIssue as any).mock.calls[0][1];
-    expect(calledFields.description).toBe('# Title\n## Sub\n- Item');
+    expect(calledFields.description).toBe('h1. Title\nh2. Sub\n* Item');
   });
 
   it('normalizes CRLF in create issue description', async () => {
@@ -95,7 +95,7 @@ describe('jira-issue-tools', () => {
     }, {});
 
     const calledBody = (mockClient.createIssue as any).mock.calls[0][0];
-    expect(calledBody.fields.description).toBe('## Heading\n- Item\n');
+    expect(calledBody.fields.description).toBe('h2. Heading\n* Item\n');
     expect(calledBody.fields.description).not.toContain('\r');
   });
 });
