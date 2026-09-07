@@ -4,11 +4,14 @@
  * `getDbAdapter` so the REAL detector + REAL repository run against an isolated
  * in-memory SQLite DB pre-loaded with the SA4E-101 schema. This exercises the
  * actual detection→update flow plus graceful degradation on DB error (EF-04).
+ *
+ * Uses SqliteAdapter (production SQLite adapter, in-memory) so tests no longer
+ * depend on native better-sqlite3.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { makeTestAdapter } from '../../../database/__tests__/test-adapter.js';
+import { adapterFromSqlite, makeSqliteTestDb, type SqliteTestDb } from '../../../database/__tests__/sqlite-test-adapter.js';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 
 const SCHEMA = `
 CREATE TABLE index_operations (
@@ -28,34 +31,37 @@ CREATE UNIQUE INDEX idx_operations_active_tenant
   ON index_operations (user_id, project_id) WHERE status IN ('running','interrupted');
 `;
 
-let db: Database.Database;
+let db: SqliteTestDb;
+let adapter: DatabaseAdapter;
 let allAsyncSpy: ReturnType<typeof vi.fn>;
 
-const realAdapter = () => makeTestAdapter(db);
-
 vi.mock('../../../admin/db/core.js', () => ({
-  getDbAdapter: () => ({ ...realAdapter(), allAsync: allAsyncSpy, getEngine: () => 'sqlite' }),
+  getDbAdapter: () => ({ ...adapter, allAsync: allAsyncSpy, getEngine: () => 'sqlite' }),
   getActiveEngine: () => 'sqlite',
 }));
 
 import { runStartupInterruptDetection } from '../startup-interrupt-detector.js';
 
-beforeEach(() => {
-  db = new Database(':memory:');
-  db.exec(SCHEMA);
+beforeEach(async () => {
+  db = await makeSqliteTestDb();
+  adapter = adapterFromSqlite(db.adapter);
+  adapter.exec(SCHEMA);
   // Delegate to the real in-memory adapter by default.
-  allAsyncSpy = vi.fn((sql: string, params?: unknown[]) => (makeTestAdapter(db) as any).allAsync(sql, params));
+  allAsyncSpy = vi.fn((sql: string, params?: unknown[]) => adapter.allAsync(sql, params));
 });
 
-afterEach(() => db.close());
+afterEach(async () => {
+  await db.close();
+});
 
 describe('runStartupInterruptDetection', () => {
   it('does not touch a recently-updated running record (no stale)', async () => {
-    db.prepare(
+    adapter.run(
       'INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)',
-    ).run('op-1', 'u1', 'p1', 'running', new Date().toISOString());
+      ['op-1', 'u1', 'p1', 'running', new Date().toISOString()],
+    );
     await runStartupInterruptDetection();
-    const row = db.prepare('SELECT status FROM index_operations WHERE id=?').get('op-1') as Record<string, unknown>;
+    const row = adapter.get<{ status: string }>('SELECT status FROM index_operations WHERE id=?', ['op-1']);
     expect(row.status).toBe('running');
   });
 
@@ -63,20 +69,21 @@ describe('runStartupInterruptDetection', () => {
     const old = new Date(Date.now() - 120 * 1000).toISOString();
     const fresh = new Date().toISOString();
     // Distinct tenants (partial unique index allows only ONE running/interrupted per tenant).
-    db.prepare('INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)').run(
-      'op-1', 'u1', 'p1', 'running', old,
+    adapter.run(
+      'INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)',
+      ['op-1', 'u1', 'p1', 'running', old],
     );
-    db.prepare('INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)').run(
-      'op-2', 'u2', 'p2', 'running', old,
+    adapter.run(
+      'INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)',
+      ['op-2', 'u2', 'p2', 'running', old],
     );
     // A fresh running record must be left untouched.
-    db.prepare('INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)').run(
-      'op-3', 'u3', 'p3', 'running', fresh,
+    adapter.run(
+      'INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)',
+      ['op-3', 'u3', 'p3', 'running', fresh],
     );
     await runStartupInterruptDetection();
-    const statuses = db
-      .prepare('SELECT id, status FROM index_operations')
-      .all() as Record<string, unknown>[];
+    const statuses = adapter.all<{ id: string; status: string }>('SELECT id, status FROM index_operations');
     const byId = Object.fromEntries(statuses.map((r) => [r.id, r.status]));
     expect(byId['op-1']).toBe('interrupted');
     expect(byId['op-2']).toBe('interrupted');

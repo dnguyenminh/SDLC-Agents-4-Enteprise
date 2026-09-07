@@ -40,7 +40,7 @@
     "url": "git+https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise.git"
   },
   "engines": {
-    "node": ">=18.14.1"
+    "node": "22.x"
   },
   "dependencies": {
     "@hono/node-server": "^1.12.0",
@@ -69,7 +69,7 @@
     "@playwright/test": "^1.60.0",
     "@types/bcrypt": "^6.0.0",
     
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.0.0",
     "eslint": "^10.8.1",
     "fast-check": "^4.9.0",
     "globals": "^17.7.0",

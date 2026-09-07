@@ -28,13 +28,26 @@ export class SqliteAdapter implements DatabaseAdapter {
   async connect(): Promise<void> {
     if (this.connected && this.db) return;
     try {
-      if (this.dbPath !== ':memory:' && this.dbPath !== '') {
+      const useFile = this.dbPath !== ':memory:' && this.dbPath !== '';
+      if (useFile) {
         const dir = path.dirname(this.dbPath);
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true });
         }
       }
-      this.db = new sqlite3.oo1.DB(this.dbPath || ':memory:');
+      // Root cause of SQLITE_CANTOPEN on Linux CI: @sqlite.org/sqlite-wasm in
+      // Node.js only supports in-memory databases (see its README). Host file
+      // paths are NOT visible inside the WASM MEMFS virtual FS, so
+      // `new DB(hostPath)` throws CANTOPEN whenever the path contains
+      // directories missing from MEMFS (always on POSIX; on Windows the
+      // backslashes accidentally collapse into a single flat MEMFS name, so it
+      // "works" but the data never reaches the host disk). Open :memory: and
+      // import the persisted host file (written by disconnect() via
+      // sqlite3_js_db_export) with sqlite3_deserialize instead.
+      this.db = new sqlite3.oo1.DB(':memory:');
+      if (useFile && fs.existsSync(this.dbPath) && fs.statSync(this.dbPath).size > 0) {
+        this.importHostFile(this.dbPath);
+      }
       this.db.exec("PRAGMA journal_mode = WAL;");
       this.db.exec("PRAGMA foreign_keys = ON;");
       this.connected = true;
@@ -42,6 +55,38 @@ export class SqliteAdapter implements DatabaseAdapter {
       this.connected = false;
       this.db = null;
       throw e;
+    }
+  }
+
+  /**
+   * Load a previously exported host DB file into the live in-memory database.
+   * Uses sqlite3_deserialize with FREEONCLOSE so SQLite takes ownership of the
+   * WASM buffer (freed automatically on close). On failure the buffer is freed
+   * manually and a descriptive error is thrown (fail fast — never boot on a
+   * silently empty database).
+   */
+  private importHostFile(dbPath: string): void {
+    const data = new Uint8Array(fs.readFileSync(dbPath));
+    const capi = sqlite3.capi;
+    const pData = sqlite3.wasm.allocFromTypedArray(data);
+    let owned = false;
+    try {
+      const rc = capi.sqlite3_deserialize(
+        this.db.pointer,
+        'main',
+        pData,
+        data.length,
+        data.length,
+        capi.SQLITE_DESERIALIZE_FREEONCLOSE | capi.SQLITE_DESERIALIZE_RESIZEABLE,
+      );
+      if (rc !== 0) {
+        throw new Error(`sqlite3_deserialize failed for ${dbPath} (rc=${rc})`);
+      }
+      owned = true;
+    } finally {
+      if (!owned) {
+        sqlite3.wasm.dealloc(pData);
+      }
     }
   }
 

@@ -2,13 +2,20 @@
  * Unit tests for IndexOperationManager — operation lifecycle in the hot-path
  * Map + cold-path delegation to IndexOperationRepository. Engine is mocked so
  * progress events and background runs can be simulated deterministically.
+ *
+ * Uses SqliteAdapter (production SQLite adapter, in-memory) so tests no longer
+ * depend on native better-sqlite3.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import Database from 'better-sqlite3';
 import { IndexOperationManager } from '../index-operation-manager.js';
 import { IndexOperationRepository } from '../../../database/repositories/IndexOperationRepository.js';
-import { makeTestAdapter } from '../../../database/__tests__/test-adapter.js';
+import {
+  makeSqliteTestDb,
+  adapterFromSqlite,
+  type SqliteTestDb,
+} from '../../../database/__tests__/sqlite-test-adapter.js';
+import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 
 const SCHEMA = `
 CREATE TABLE index_operations (
@@ -37,19 +44,23 @@ function makeMockEngine() {
   };
 }
 
-let db: Database.Database;
+let db: SqliteTestDb;
+let adapter: DatabaseAdapter;
 let engine: ReturnType<typeof makeMockEngine>;
 let manager: IndexOperationManager;
 
-beforeEach(() => {
-  db = new Database(':memory:');
-  db.exec(SCHEMA);
+beforeEach(async () => {
+  db = await makeSqliteTestDb();
+  adapter = adapterFromSqlite(db.adapter);
+  adapter.exec(SCHEMA);
   engine = makeMockEngine();
-  const repo = new IndexOperationRepository(makeTestAdapter(db));
+  const repo = new IndexOperationRepository(adapter);
   manager = new IndexOperationManager(engine as any, repo);
 });
 
-afterEach(() => db.close());
+afterEach(async () => {
+  await db.close();
+});
 
 describe('IndexOperationManager', () => {
   it('startOrReplace registers a running op in hot-path and cold-path', async () => {
@@ -57,7 +68,10 @@ describe('IndexOperationManager', () => {
     expect(res.cancelledPrevious).toBe(false);
     expect(res.operation.status).toBe('running');
     expect(manager.getFromMemory('u1', 'p1')?.status).toBe('running');
-    const row = db.prepare('SELECT * FROM index_operations WHERE id=?').get(res.operation.operationId) as Record<string, unknown>;
+    const row = adapter.get<{ status: string }>(
+      'SELECT * FROM index_operations WHERE id=?',
+      [res.operation.operationId],
+    );
     expect(row.status).toBe('running');
   });
 
@@ -67,7 +81,10 @@ describe('IndexOperationManager', () => {
     expect(second.cancelledPrevious).toBe(true);
     expect(second.cancelledOperationId).toBe(first.operation.operationId);
     expect(manager.getFromMemory('u1', 'p1')?.operationId).toBe(second.operation.operationId);
-    const stale = db.prepare('SELECT status FROM index_operations WHERE id=?').get(first.operation.operationId) as Record<string, unknown>;
+    const stale = adapter.get<{ status: string }>(
+      'SELECT status FROM index_operations WHERE id=?',
+      [first.operation.operationId],
+    );
     expect(stale.status).toBe('superseded');
   });
 
@@ -77,7 +94,10 @@ describe('IndexOperationManager', () => {
     expect(cancelled).not.toBeNull();
     expect(cancelled!.status).toBe('cancelled');
     expect(cancelled!.operationId).toBe(res.operation.operationId);
-    const row = db.prepare('SELECT status FROM index_operations WHERE id=?').get(res.operation.operationId) as Record<string, unknown>;
+    const row = adapter.get<{ status: string }>(
+      'SELECT status FROM index_operations WHERE id=?',
+      [res.operation.operationId],
+    );
     expect(row.status).toBe('cancelled');
   });
 
@@ -96,7 +116,12 @@ describe('IndexOperationManager', () => {
     expect(op.checksumStats.files_skipped).toBe(2);
     expect(op.checksumStats.files_processed).toBe(5);
     expect(op.checksumStats.files_pending).toBe(3); // 10 - 5 - 2
-    const row = db.prepare('SELECT current, total, phase, current_file FROM index_operations').get() as Record<string, unknown>;
+    const row = adapter.get<{
+      current: number;
+      total: number;
+      phase: string;
+      current_file: string;
+    }>('SELECT current, total, phase, current_file FROM index_operations');
     expect(row.current).toBe(5);
     expect(row.total).toBe(10);
     expect(row.phase).toBe('indexing');
@@ -133,7 +158,7 @@ describe('IndexOperationManager', () => {
   it('hydrateFromDb loads interrupted records into memory', async () => {
     await manager.startOrReplace('u1', 'p1', {} as any);
     // Mark the persisted op as interrupted directly in DB, then clear memory.
-    db.prepare("UPDATE index_operations SET status='interrupted' WHERE user_id='u1' AND project_id='p1'").run();
+    adapter.run("UPDATE index_operations SET status='interrupted' WHERE user_id=? AND project_id=?", ['u1', 'p1']);
     (manager as any).operations.clear();
     await manager.hydrateFromDb();
     const op = manager.getFromMemory('u1', 'p1');
