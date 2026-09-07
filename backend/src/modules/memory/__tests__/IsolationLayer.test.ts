@@ -99,14 +99,15 @@ describe('SA4E-27 UT — buildReadFilter', () => {
     const ctx = createProjectContext('app-A', 'user-1');
     const { clause, params } = buildReadFilter(ctx);
     expect(clause).toContain("scope = 'SHARED'");
-    expect(clause).toContain("scope = 'PROJECT'");
+    expect(clause).toContain("scope = 'USER'");
     expect(clause).toContain("scope = 'WORKSPACE'");
     expect(clause).toContain('project_id = ?');
     expect(clause).not.toContain('project_id IS NULL');
     expect(clause).toContain("scope = 'WORKSPACE'");
     expect(clause).toContain('user_id = ?');
     expect(clause).toContain('kb_shared_grants');
-    expect(params).toEqual(['user-1', 'app-A']);
+    # SA4E-31: params include userId + projectId for WORKSPACE, + userId for USER, + projectId for SHARED
+    expect(params).toEqual(['user-1', 'app-A', 'user-1', 'app-A']);
   });
 
   it('UT-02: without projectId (empty string) fails closed (SA4E-31)', () => {
