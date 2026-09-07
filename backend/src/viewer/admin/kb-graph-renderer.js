@@ -140,11 +140,9 @@
       this.labelContainer = null;
       this.activeLabels = [];
       this.minimapCanvas = options ? options.minimapCanvas : null;
-      this.minimapRotation = 0;
       this.minimapSpanMode = false;
-      this.minimapZoom = 1.0;
-      this.minimapNodePositions = null;
       this.minimapBBox = null;
+      this.minimapDrag = null;
     }
 
     init() {
@@ -182,16 +180,8 @@
       this.controls.addEventListener('end', function() { self._updateMode(false); });
       // Prevent page scroll from hijacking wheel zoom on the canvas
       this.renderer.domElement.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
-      // Minimap wheel zoom
-      if (this.minimapCanvas) {
-        this.minimapCanvas.addEventListener('wheel', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          var delta = e.deltaY > 0 ? -0.25 : 0.25;
-          var z = self.zoomMinimap(delta);
-          if (typeof self._onMinimapZoomChange === 'function') self._onMinimapZoomChange(z);
-        }, { passive: false });
-      }
+      // Minimap: unified canvas interactions (drag=pan, wheel=zoom, right-drag=rotate, dblclick=span)
+      if (this.minimapCanvas) this._setupMinimapInput();
       this._clock = new THREE.Clock();
 
       // Custom input: node selection (click), focus (dblclick), node drag.
@@ -669,31 +659,126 @@
       this._renderMinimap();
     }
 
+    _setupMinimapInput() {
+      var self = this;
+      var canvas = this.minimapCanvas;
+      var dragging = false, rightDrag = false;
+      var lastX = 0, lastY = 0;
+      canvas.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.button === 2) { rightDrag = true; } else { dragging = true; }
+        lastX = e.clientX; lastY = e.clientY;
+      });
+      canvas.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+      canvas.addEventListener('mousemove', function(e) {
+        if (!dragging && !rightDrag) return;
+        var dx = e.clientX - lastX, dy = e.clientY - lastY;
+        lastX = e.clientX; lastY = e.clientY;
+        if (dragging) {
+          // Drag minimap = pan main graph
+          self._minimapPanToGraph(dx, dy);
+        } else if (rightDrag) {
+          // Right-drag minimap = rotate main graph
+          self._minimapRotateToGraph(dx);
+        }
+      });
+      var endDrag = function() { dragging = false; rightDrag = false; };
+      canvas.addEventListener('mouseup', endDrag);
+      canvas.addEventListener('mouseleave', endDrag);
+      canvas.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Wheel minimap = zoom main graph
+        self._minimapZoomToGraph(e.deltaY > 0 ? 1 : -1);
+      }, { passive: false });
+      canvas.addEventListener('dblclick', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Double-click = toggle span mode
+        self.minimapSpanMode = !self.minimapSpanMode;
+      });
+    }
+
+    _minimapPanToGraph(dx, dy) {
+      if (!this.camera || !this.controls) return;
+      // Convert minimap pixel delta to world-space pan
+      var cw = this.minimapCanvas.width, ch = this.minimapCanvas.height;
+      var factor = this._minimapWorldSize() / Math.min(cw, ch);
+      var panX = -dx * factor;
+      var panY = dy * factor;
+      // Apply pan to main graph camera + target
+      this.camera.position.x += panX;
+      this.camera.position.y += panY;
+      this.controls.target.x += panX;
+      this.controls.target.y += panY;
+      this.controls.update();
+      this._needRender = true;
+    }
+
+    _minimapRotateToGraph(dx) {
+      if (!this.camera || !this.controls) return;
+      // Right-drag horizontal = orbit rotation around target
+      var angle = dx * 0.005;
+      var pos = this.camera.position;
+      var tgt = this.controls.target;
+      var rx = pos.x - tgt.x, ry = pos.y - tgt.y;
+      var cos = Math.cos(angle), sin = Math.sin(angle);
+      this.camera.position.x = tgt.x + rx * cos - ry * sin;
+      this.camera.position.y = tgt.y + rx * sin + ry * cos;
+      this.camera.lookAt(tgt);
+      this.controls.update();
+      this._needRender = true;
+    }
+
+    _minimapZoomToGraph(direction) {
+      if (!this.camera || !this.controls) return;
+      // Zoom = move camera closer/further from target along view direction
+      var pos = this.camera.position;
+      var tgt = this.controls.target;
+      var dx = pos.x - tgt.x, dy = pos.y - tgt.y, dz = pos.z - tgt.z;
+      var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      var factor = direction > 0 ? 0.85 : 1.18;
+      var newDist = Math.max(10, Math.min(50000, dist * factor));
+      var scale = newDist / dist;
+      this.camera.position.x = tgt.x + dx * scale;
+      this.camera.position.y = tgt.y + dy * scale;
+      this.camera.position.z = tgt.z + dz * scale;
+      this.controls.update();
+      this._needRender = true;
+    }
+
+    _minimapWorldSize() {
+      if (!this.camera || !this.controls) return 5000;
+      return this.camera.position.distanceTo(this.controls.target) * 2;
+    }
+
+    _minimapScreenToWorld(mx, my) {
+      if (!this.nodes.length || !this.minimapBBox) return null;
+      var cw = this.minimapCanvas.width, ch = this.minimapCanvas.height;
+      var bb = this.minimapBBox;
+      var bw = bb.maxX - bb.minX, bh = bb.maxY - bb.minY;
+      if (bw < 1) bw = 1; if (bh < 1) bh = 1;
+      var scale = Math.min((cw - 8) / bw, (ch - 8) / bh);
+      var ox = (cw - bw * scale) / 2, oy = (ch - bh * scale) / 2;
+      return { x: bb.minX + (mx - ox) / scale, y: bb.minY + (my - oy) / scale };
+    }
+
     _renderMinimap() {
       if (!this.minimapCanvas || !this.renderer) return;
       var ctx = this.minimapCanvas.getContext('2d');
       var cw = this.minimapCanvas.width, ch = this.minimapCanvas.height;
-      var src = this.renderer.domElement;
       ctx.save();
-      ctx.clearRect(0,0,cw,ch);
-      // Background
+      ctx.clearRect(0, 0, cw, ch);
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(0,0,cw,ch);
+      ctx.fillRect(0, 0, cw, ch);
       if (this.minimapSpanMode && this.minimapBBox && this.nodes.length) {
-        // Span mode: draw all nodes as colored dots with viewport indicator
+        // Span mode: overview of all nodes + viewport indicator
         this._renderMinimapSpan(ctx, cw, ch);
       } else {
-        // Normal mode: mirror of main viewport with zoom
-        var zoom = this.minimapZoom || 1.0;
-        var sw = src.width / zoom, sh = src.height / zoom;
-        var sx = (src.width - sw) / 2, sy = (src.height - sh) / 2;
-        if (this.minimapRotation) {
-          ctx.translate(cw/2,ch/2);
-          ctx.rotate(this.minimapRotation * Math.PI/180);
-          ctx.drawImage(src, sx, sy, sw, sh, -cw/2, -ch/2, cw, ch);
-        } else {
-          ctx.drawImage(src, sx, sy, sw, sh, 0, 0, cw, ch);
-        }
+        // Normal mode: mirror main viewport
+        var src = this.renderer.domElement;
+        ctx.drawImage(src, 0, 0, src.width, src.height, 0, 0, cw, ch);
       }
       ctx.restore();
     }
@@ -717,18 +802,17 @@
       if (bw < 1) bw = 1; if (bh < 1) bh = 1;
       var scale = Math.min((cw - 8) / bw, (ch - 8) / bh);
       var ox = (cw - bw * scale) / 2, oy = (ch - bh * scale) / 2;
-      // Draw nodes as dots
+      // Draw nodes as colored dots
       for (var i = 0; i < this.nodes.length; i++) {
         var n = this.nodes[i];
         var nx = ox + (n.x - bb.minX) * scale;
         var ny = oy + (n.y - bb.minY) * scale;
-        var hex = this._getNodeTypeColor(n.type);
-        ctx.fillStyle = hex;
+        ctx.fillStyle = this._getNodeTypeColor(n.type);
         ctx.globalAlpha = 0.7;
         ctx.fillRect(nx - 1, ny - 1, 2, 2);
       }
       ctx.globalAlpha = 1;
-      // Draw viewport indicator
+      // Draw viewport indicator (blue rectangle)
       this._drawViewportIndicator(ctx, cw, ch, ox, oy, scale, bb);
     }
 
@@ -742,19 +826,15 @@
 
     _drawViewportIndicator(ctx, cw, ch, ox, oy, scale, bb) {
       if (!this.camera || !this.controls) return;
-      var THREE = this.THREE;
-      // Get camera frustum bounds in world space
       var dist = this.camera.position.distanceTo(this.controls.target);
       var fovRad = (this.camera.fov * Math.PI) / 180;
       var halfH = Math.tan(fovRad / 2) * dist;
       var halfW = halfH * this.camera.aspect;
       var cx = this.controls.target.x, cy = this.controls.target.y;
       var vw = halfW * 2, vh = halfH * 2;
-      // Convert to minimap coords
       var rx = ox + (cx - halfW - bb.minX) * scale;
       var ry = oy + (cy - halfH - bb.minY) * scale;
       var rw = vw * scale, rh = vh * scale;
-      // Draw indicator rectangle
       ctx.strokeStyle = '#3b82f6';
       ctx.lineWidth = 1.5;
       ctx.globalAlpha = 0.8;
@@ -762,41 +842,6 @@
       ctx.fillStyle = 'rgba(59,130,246,0.08)';
       ctx.fillRect(rx, ry, rw, rh);
       ctx.globalAlpha = 1;
-    }
-
-    rotateMinimap() {
-      this.minimapRotation = (this.minimapRotation + 90) % 360;
-      return this.minimapRotation;
-    }
-
-    toggleMinimapSpan() {
-      this.minimapSpanMode = !this.minimapSpanMode;
-      return this.minimapSpanMode;
-    }
-
-    zoomMinimap(delta) {
-      this.minimapZoom = Math.max(0.5, Math.min(4.0, (this.minimapZoom || 1.0) + delta));
-      return this.minimapZoom;
-    }
-
-    handleMinimapClick(clientX, clientY) {
-      if (!this.minimapCanvas || !this.camera || !this.controls || !this.minimapSpanMode) return;
-      if (!this.minimapBBox || !this.nodes.length) return;
-      var rect = this.minimapCanvas.getBoundingClientRect();
-      var cw = this.minimapCanvas.width, ch = this.minimapCanvas.height;
-      var mx = (clientX - rect.left) / rect.width * cw;
-      var my = (clientY - rect.top) / rect.height * ch;
-      var bb = this.minimapBBox;
-      var bw = bb.maxX - bb.minX, bh = bb.maxY - bb.minY;
-      var scale = Math.min((cw - 8) / bw, (ch - 8) / bh);
-      var ox = (cw - bw * scale) / 2, oy = (ch - bh * scale) / 2;
-      var worldX = bb.minX + (mx - ox) / scale;
-      var worldY = bb.minY + (my - oy) / scale;
-      this.controls.target.set(worldX, worldY, 0);
-      this.camera.position.set(worldX, worldY, this.camera.position.z);
-      this.controls.update();
-      this.controls.dispatchEvent({ type: 'end' });
-      this._needRender = true;
     }
 
     _disposeSceneObjects() {
