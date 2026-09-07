@@ -64,9 +64,6 @@ export function validateReadAccess(
   if (entry.scope === 'PROJECT') {
     return entry.project_id === ctx.projectId ? entry : undefined;
   }
-  if (entry.scope === 'WORKSPACE') {
-    return entry.project_id === ctx.projectId ? entry : undefined;
-  }
   return undefined;
 }
 
