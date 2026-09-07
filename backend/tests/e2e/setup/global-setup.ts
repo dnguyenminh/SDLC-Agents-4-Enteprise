@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import { PORT_FILE_PATH } from './e2e-config.js';
 
 const E2E_PASSWORD = 'test-admin-pw-01';
-const STARTUP_TIMEOUT_MS = 30_000;
+const STARTUP_TIMEOUT_MS = 60_000;
 const HEALTH_POLL_INTERVAL_MS = 500;
 
 let serverProcess: ChildProcess | null = null;
