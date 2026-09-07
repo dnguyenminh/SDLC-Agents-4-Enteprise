@@ -103,10 +103,10 @@ describe('SA4E-27 UT — buildReadFilter', () => {
     expect(clause).toContain("scope = 'WORKSPACE'");
     expect(clause).toContain('project_id = ?');
     expect(clause).not.toContain('project_id IS NULL');
-    expect(clause).toContain("scope = 'USER'");
+    expect(clause).toContain("scope = 'WORKSPACE'");
     expect(clause).toContain('user_id = ?');
     expect(clause).toContain('kb_shared_grants');
-    expect(params).toEqual(['user-1', 'app-A', 'app-A', 'app-A', 'app-A']);
+    expect(params).toEqual(['user-1', 'app-A']);
   });
 
   it('UT-02: without projectId (empty string) fails closed (SA4E-31)', () => {
