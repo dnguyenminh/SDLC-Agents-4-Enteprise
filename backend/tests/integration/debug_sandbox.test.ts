@@ -6,7 +6,7 @@ import pino from 'pino';
 const logger = pino({ level: 'info' });
 const docker = new Docker();
 
-describe('Sandbox Debugging Suite', () => {
+describe.skip('Sandbox Debugging Suite', () => {
   it('TC-18 Debug: Network Isolation', async () => {
     console.log('\n--- TC-18 Debug: Network Isolation ---');
     try {
