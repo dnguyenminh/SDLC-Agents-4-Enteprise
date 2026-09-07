@@ -32,7 +32,7 @@ beforeEach(async () => {
     (id, content, summary, type, scope, user_id, project_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 adapter.run(insertSQL, [1, 'c1', 'a', 'note', 'WORKSPACE', null, 'p1', '2024-01-01 00:00:00']);
   adapter.run(insertSQL, [2, 'c2', 'b', 'note', 'WORKSPACE', null, 'p1', '2024-01-02 00:00:00']);
-  adapter.run(insertSQL, [3, 'c3', 'c', 'note', 'USER', 'u1', 'p1', '2024-01-03 00:00:00']);
+  adapter.run(insertSQL, [3, 'c3', 'c', 'note', 'WORKSPACE', null, 'other', '2024-01-03 00:00:00']);
   adapter.run(insertSQL, [4, 'c4', 'd', 'note', 'WORKSPACE', null, 'other', '2024-01-04 00:00:00']);
   adapter.run(insertSQL, [5, 'c5', 'e', 'note', 'SHARED', null, null, '2024-01-05 00:00:00']);
   adapter.run("INSERT INTO kb_shared_grants (project_id, granted_by) VALUES (?, ?)", ['p1', 'u1']);

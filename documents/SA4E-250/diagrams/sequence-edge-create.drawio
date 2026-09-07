@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="p1" value="Ingestion Service" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="80" y="40" width="180" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="p2" value="Knowledge Graph Engine" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;" vertex="1" parent="1">
+<mxGeometry x="320" y="40" width="180" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="p3" value="Database" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+<mxGeometry x="560" y="40" width="180" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="life1" value="" style="shape=mdLine;strokeColor=#000000;strokeWidth=1;dashed=1;" edge="1" parent="1" source="p1" target="p1">
+<mxGeometry x="170" y="100" width="0" height="300" relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="life2" value="" style="shape=mdLine;strokeColor=#000000;strokeWidth=1;dashed=1;" edge="1" parent="1" source="p2" target="p2">
+<mxGeometry x="410" y="100" width="0" height="300" relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="life3" value="" style="shape=mdLine;strokeColor=#000000;strokeWidth=1;dashed=1;" edge="1" parent="1" source="p3" target="p3">
+<mxGeometry x="650" y="100" width="0" height="300" relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m1" value="upsert node" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="p1" target="p2">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m2" value="node id" style="edgeStyle=orthogonalEdgeStyle;html=1;startArrow=block;" edge="1" parent="1" source="p2" target="p1">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m3" value="query existing nodes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="p2" target="p3">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m4" value="create edge" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="p2" target="p3">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>
