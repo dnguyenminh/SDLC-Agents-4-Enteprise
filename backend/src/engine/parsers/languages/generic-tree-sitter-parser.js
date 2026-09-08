@@ -104,7 +104,7 @@ export class GenericTreeSitterParser {
           if (types.includes(node.type)) {
             let finalKind = kind;
             // Promote function to method if inside class/struct, skip namespace and scope nodes
-            if (kind === 'function' && node.type.includes('function')) {
+            if (kind === 'function' && (node.type.includes('function') || node.type.includes('method'))) {
               const anc = this.getAncestor(
                 node,
                 ['class_specifier','class_declaration','struct_specifier','struct_declaration'],
