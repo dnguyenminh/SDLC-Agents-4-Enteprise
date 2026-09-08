@@ -1,4 +1,15 @@
-export default class CParser {
-  constructor(parser, langId) { this.parser = parser; this.langId = langId; }
-  parse(source, filePath) { return { symbols: [], relationships: [] }; }
+import { GenericTreeSitterParser } from './generic-tree-sitter-parser.js';
+
+const C_NODE_MAP = {
+  function: ['function_definition', 'declaration'],
+  struct: ['struct_specifier'],
+  enum: ['enum_specifier'],
+  type: ['typedef'],
+  variable: ['init_declarator', 'declaration']
+};
+
+export default class CParser extends GenericTreeSitterParser {
+  constructor(parser, langId) {
+    super(parser, langId, C_NODE_MAP);
+  }
 }

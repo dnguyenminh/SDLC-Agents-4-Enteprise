@@ -1,4 +1,16 @@
-export default class RubyParser {
-  constructor(parser, langId) { this.parser = parser; this.langId = langId; }
-  parse(source, filePath) { return { symbols: [], relationships: [] }; }
+import { GenericTreeSitterParser } from './generic-tree-sitter-parser.js';
+
+const RUBY_NODE_MAP = {
+  function: ['method'],
+  class: ['class'],
+  module: ['module'],
+  enum: ['enum'],
+  type: ['type'],
+  variable: ['assignment']
+};
+
+export default class RubyParser extends GenericTreeSitterParser {
+  constructor(parser, langId) {
+    super(parser, langId, RUBY_NODE_MAP);
+  }
 }

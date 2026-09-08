@@ -1,4 +1,16 @@
-export default class PhpParser {
-  constructor(parser, langId) { this.parser = parser; this.langId = langId; }
-  parse(source, filePath) { return { symbols: [], relationships: [] }; }
+import { GenericTreeSitterParser } from './generic-tree-sitter-parser.js';
+
+const PHP_NODE_MAP = {
+  function: ['function_definition'],
+  class: ['class_declaration'],
+  interface: ['interface_declaration'],
+  enum: ['enum_declaration'],
+  type: ['type_alias_declaration'],
+  variable: ['variable_declaration']
+};
+
+export default class PhpParser extends GenericTreeSitterParser {
+  constructor(parser, langId) {
+    super(parser, langId, PHP_NODE_MAP);
+  }
 }
