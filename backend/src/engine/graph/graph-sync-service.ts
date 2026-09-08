@@ -20,7 +20,7 @@ interface CodeSymbolRow {
   relative_path: string | null;
 }
 
-const CODE_KINDS = ['class', 'interface', 'function', 'method', 'enum', 'type', 'constructor'];
+const CODE_KINDS = ['class', 'interface', 'function', 'method', 'enum', 'type', 'constructor', 'property', 'variable'];
 
 export class GraphSyncService {
   private readonly adminDialect: DialectHelper;
