@@ -114,6 +114,16 @@ export class GenericTreeSitterParser {
     } catch (e) {
       errors.push({ message: String(e), line: 0, column: 0 });
     }
-    return { symbols, relationships, errors };
+    // Deduplicate by name+kind+startLine
+    const seen = new Set();
+    const deduped = [];
+    for (const s of symbols) {
+      const key = `${s.name}|${s.kind}|${s.startLine}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        deduped.push(s);
+      }
+    }
+    return { symbols: deduped, relationships, errors };
   }
 }
