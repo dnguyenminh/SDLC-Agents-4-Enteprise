@@ -42,6 +42,8 @@ export function seedDefaults(db: SyncDatabaseAdapter): void {
   if (!groupExists) {
     seedAccessGroups(db);
   }
+  // Ensure admin group has all permissions even after code changes
+  ensureAdminPermissions(db);
 
   const userExists = db.get<Record<string, unknown>>(
     'SELECT 1 FROM users WHERE username = ?', ['admin'],
@@ -66,10 +68,25 @@ function seedAccessGroups(db: SyncDatabaseAdapter): void {
   ];
   for (const perm of allPerms) {
     db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
+      'INSERT OR IGNORE INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
       ['grp-admin', perm, '{}'],
     );
   }
+}
+
+function ensureAdminPermissions(db: SyncDatabaseAdapter): void {
+  const allPerms = [
+    'DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'KB_PROMOTE', 'KB_IMPORT_EXPORT',
+    'MCP_ACCESS', 'MCP_MANAGE', 'USER_MANAGE', 'RBAC_MANAGE', 'CONFIG_EDIT',
+    'SEARCH_EXPLORE', 'AUDIT_VIEW', 'GRAPH_VIEW', 'ANALYTICS_VIEW', 'GRAPH_MAINTAIN',
+  ];
+  for (const perm of allPerms) {
+    db.run(
+      'INSERT OR IGNORE INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
+      ['grp-admin', perm, '{}'],
+    );
+  }
+}
 
   db.run(
     `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
