@@ -1,14 +1,14 @@
 import { GenericTreeSitterParser } from './generic-tree-sitter-parser.js';
 
 const SCALA_NODE_MAP = {
-  function: ['def'],
-  class: ['class_declaration', 'class'],
-  trait: ['trait_declaration', 'trait'],
-  object: ['object_declaration', 'object'],
-  enum: ['enum_declaration', 'enum'],
+  function: ['function_definition'],
+  class: ['class_definition', 'class'],
+  trait: ['trait_definition', 'trait'],
+  object: ['object_definition', 'object'],
+  enum: ['enum_definition', 'enum'],
   type: ['type_definition', 'type'],
-  variable: ['val_declaration', 'var_declaration'],
-  property: ['val_declaration', 'var_declaration']
+  variable: ['val_definition', 'var_definition'],
+  property: ['val_definition', 'var_definition']
 };
 
 export default class ScalaParser extends GenericTreeSitterParser {

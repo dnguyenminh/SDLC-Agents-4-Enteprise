@@ -32,7 +32,7 @@ export class GenericTreeSitterParser {
   }
 
   getNodeName(node, source) {
-    const NAME_TYPES = new Set(['identifier','field_identifier','name','type_identifier']);
+    const NAME_TYPES = new Set(['identifier','field_identifier','name','type_identifier','constant']);
     // Prefer shallow name to avoid picking up identifiers from body
     const findShallowName = (n) => {
       for (let i = 0; i < n.namedChildCount; i++) {
