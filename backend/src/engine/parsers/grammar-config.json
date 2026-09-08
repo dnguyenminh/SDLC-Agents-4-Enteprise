@@ -38,13 +38,15 @@
       "id": "go",
       "extensions": [".go"],
       "wasmPath": "grammars/tree-sitter-go.wasm",
-      "parserModule": "./languages/go-parser.js"
+      "parserModule": "./languages/go-parser.js",
+      "skipScopeNodes": ["package_clause","declaration_list","source_file"]
     },
     {
       "id": "rust",
       "extensions": [".rs"],
       "wasmPath": "grammars/tree-sitter-rust.wasm",
-      "parserModule": "./languages/rust-parser.js"
+      "parserModule": "./languages/rust-parser.js",
+      "skipScopeNodes": ["use_declaration","mod_item","declaration_list","source_file"]
     },
     {
       "id": "apex",
