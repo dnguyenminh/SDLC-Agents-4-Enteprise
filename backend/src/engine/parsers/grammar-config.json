@@ -86,44 +86,45 @@
     {
       "id": "c",
       "extensions": [".c", ".h"],
-      "wasmPath": null,
+      "wasmPath": "grammars/tree-sitter-c.wasm",
       "parserModule": "./languages/c-parser.js"
     },
     {
       "id": "cpp",
       "extensions": [".cpp", ".hpp", ".cc", ".cxx"],
-      "wasmPath": null,
+      "wasmPath": "grammars/tree-sitter-cpp.wasm",
       "parserModule": "./languages/cpp-parser.js"
     },
     {
       "id": "csharp",
       "extensions": [".cs"],
-      "wasmPath": null,
+      "wasmPath": "grammars/tree-sitter-c-sharp.wasm",
       "parserModule": "./languages/csharp-parser.js"
     },
     {
       "id": "php",
       "extensions": [".php"],
-      "wasmPath": null,
+      "wasmPath": "grammars/tree-sitter-php.wasm",
       "parserModule": "./languages/php-parser.js"
     },
     {
       "id": "ruby",
       "extensions": [".rb"],
-      "wasmPath": null,
+      "wasmPath": "grammars/tree-sitter-ruby.wasm",
       "parserModule": "./languages/ruby-parser.js"
     },
     {
       "id": "scala",
       "extensions": [".scala"],
-      "wasmPath": null,
+      "wasmPath": "grammars/tree-sitter-scala.wasm",
       "parserModule": "./languages/scala-parser.js"
     },
     {
       "id": "swift",
       "extensions": [".swift"],
-      "wasmPath": null,
+      "wasmPath": "grammars/tree-sitter-swift.wasm",
       "parserModule": "./languages/swift-parser.js"
     }
   ]
 }
+
