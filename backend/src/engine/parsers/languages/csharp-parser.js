@@ -1,12 +1,14 @@
 import { GenericTreeSitterParser } from './generic-tree-sitter-parser.js';
 
 const CSHARP_NODE_MAP = {
-  function: ['method_declaration', 'function_declaration'],
+  function: ['method_declaration'],
   class: ['class_declaration'],
   interface: ['interface_declaration'],
   enum: ['enum_declaration'],
   type: ['type_declaration'],
-  variable: ['variable_declaration']
+  variable: ['local_declaration'],
+  property: ['property_declaration'],
+  field: ['field_declaration']
 };
 
 export default class CsharpParser extends GenericTreeSitterParser {

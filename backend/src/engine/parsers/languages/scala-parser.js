@@ -7,7 +7,8 @@ const SCALA_NODE_MAP = {
   object: ['object_declaration', 'object'],
   enum: ['enum_declaration', 'enum'],
   type: ['type_definition', 'type'],
-  variable: ['val_declaration', 'var_declaration']
+  variable: ['val_declaration', 'var_declaration'],
+  property: ['val_declaration', 'var_declaration']
 };
 
 export default class ScalaParser extends GenericTreeSitterParser {

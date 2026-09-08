@@ -5,7 +5,8 @@ const C_NODE_MAP = {
   struct: ['struct_specifier'],
   enum: ['enum_specifier'],
   type: ['typedef'],
-  variable: ['init_declarator', 'field_declaration']
+  variable: ['init_declarator'],
+  property: ['field_declaration']
 };
 
 export default class CParser extends GenericTreeSitterParser {
