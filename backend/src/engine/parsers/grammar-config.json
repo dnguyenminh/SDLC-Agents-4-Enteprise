@@ -2,140 +2,273 @@
   "languages": [
     {
       "id": "typescript",
-      "extensions": [".ts", ".tsx"],
+      "extensions": [
+        ".ts",
+        ".tsx"
+      ],
       "wasmPath": "grammars/tree-sitter-typescript.wasm",
       "parserModule": "./languages/typescript-parser.js",
-      "skipScopeNodes": ["module","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "module",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "javascript",
-      "extensions": [".js", ".jsx", ".mjs", ".cjs"],
+      "extensions": [
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs"
+      ],
       "wasmPath": "grammars/tree-sitter-javascript.wasm",
       "parserModule": "./languages/typescript-parser.js",
-      "skipScopeNodes": ["module","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "module",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "python",
-      "extensions": [".py", ".pyi"],
+      "extensions": [
+        ".py",
+        ".pyi"
+      ],
       "wasmPath": "grammars/tree-sitter-python.wasm",
-      "parserModule": "./languages/python-parser.js"
+      "parserModule": "./languages/python-parser.js",
+      "skipScopeNodes": [
+        "module",
+        "declaration_list",
+        "source_file"
+      ]
     },
     {
       "id": "kotlin",
-      "extensions": [".kt", ".kts"],
+      "extensions": [
+        ".kt",
+        ".kts"
+      ],
       "wasmPath": "grammars/tree-sitter-kotlin.wasm",
       "parserModule": "./languages/kotlin-parser.js",
-      "skipScopeNodes": ["package","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "package",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "java",
-      "extensions": [".java"],
+      "extensions": [
+        ".java"
+      ],
       "wasmPath": "grammars/tree-sitter-java.wasm",
       "parserModule": "./languages/java-parser.js",
-      "skipScopeNodes": ["package_declaration","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "package_declaration",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "go",
-      "extensions": [".go"],
+      "extensions": [
+        ".go"
+      ],
       "wasmPath": "grammars/tree-sitter-go.wasm",
       "parserModule": "./languages/go-parser.js",
-      "skipScopeNodes": ["package_clause","declaration_list","source_file"]
+      "skipScopeNodes": [
+        "package_clause",
+        "declaration_list",
+        "source_file"
+      ]
     },
     {
       "id": "rust",
-      "extensions": [".rs"],
+      "extensions": [
+        ".rs"
+      ],
       "wasmPath": "grammars/tree-sitter-rust.wasm",
       "parserModule": "./languages/rust-parser.js",
-      "skipScopeNodes": ["use_declaration","mod_item","declaration_list","source_file"]
+      "skipScopeNodes": [
+        "use_declaration",
+        "mod_item",
+        "declaration_list",
+        "source_file"
+      ]
     },
     {
       "id": "apex",
-      "extensions": [".cls", ".trigger", ".apex", ".soql"],
+      "extensions": [
+        ".cls",
+        ".trigger",
+        ".apex",
+        ".soql"
+      ],
       "wasmPath": "grammars/tree-sitter-apex.wasm",
-      "parserModule": "./languages/apex-parser.js"
+      "parserModule": "./languages/apex-parser.js",
+      "skipScopeNodes": []
     },
     {
       "id": "salesforce-meta",
       "extensions": [
-        ".flow-meta.xml", ".object-meta.xml", ".field-meta.xml", ".js-meta.xml", ".component-meta.xml",
-        ".flexipage-meta.xml", ".permissionset-meta.xml", ".profile-meta.xml", ".labels-meta.xml",
-        ".tab-meta.xml", ".layout-meta.xml", ".report-meta.xml", ".dashboard-meta.xml",
-        ".site-meta.xml", ".resource-meta.xml", ".email-meta.xml", ".testsuite-meta.xml"
+        ".flow-meta.xml",
+        ".object-meta.xml",
+        ".field-meta.xml",
+        ".js-meta.xml",
+        ".component-meta.xml",
+        ".flexipage-meta.xml",
+        ".permissionset-meta.xml",
+        ".profile-meta.xml",
+        ".labels-meta.xml",
+        ".tab-meta.xml",
+        ".layout-meta.xml",
+        ".report-meta.xml",
+        ".dashboard-meta.xml",
+        ".site-meta.xml",
+        ".resource-meta.xml",
+        ".email-meta.xml",
+        ".testsuite-meta.xml"
       ],
       "wasmPath": null,
-      "parserModule": "./languages/salesforce-meta-parser.js"
+      "parserModule": "./languages/salesforce-meta-parser.js",
+      "skipScopeNodes": []
     },
     {
       "id": "visualforce",
-      "extensions": [".page", ".component"],
+      "extensions": [
+        ".page",
+        ".component"
+      ],
       "wasmPath": null,
-      "parserModule": "./languages/visualforce-parser.js"
+      "parserModule": "./languages/visualforce-parser.js",
+      "skipScopeNodes": []
     },
     {
       "id": "aura",
-      "extensions": [".cmp", ".app", ".evt", ".intf", ".tokens"],
+      "extensions": [
+        ".cmp",
+        ".app",
+        ".evt",
+        ".intf",
+        ".tokens"
+      ],
       "wasmPath": null,
-      "parserModule": "./languages/aura-parser.js"
+      "parserModule": "./languages/aura-parser.js",
+      "skipScopeNodes": []
     },
     {
       "id": "pega",
-      "extensions": [".pega"],
+      "extensions": [
+        ".pega"
+      ],
       "wasmPath": null,
-      "parserModule": "./languages/pega-parser.js"
+      "parserModule": "./languages/pega-parser.js",
+      "skipScopeNodes": []
     },
     {
       "id": "lwc-html",
-      "extensions": [".html"],
+      "extensions": [
+        ".html"
+      ],
       "wasmPath": null,
-      "parserModule": "./languages/lwc-html-parser.js"
+      "parserModule": "./languages/lwc-html-parser.js",
+      "skipScopeNodes": []
     },
     {
       "id": "c",
-      "extensions": [".c", ".h"],
+      "extensions": [
+        ".c",
+        ".h"
+      ],
       "wasmPath": "grammars/tree-sitter-c.wasm",
       "parserModule": "./languages/c-parser.js",
-      "skipScopeNodes": ["namespace_definition","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "namespace_definition",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "cpp",
-      "extensions": [".cpp", ".hpp", ".cc", ".cxx"],
+      "extensions": [
+        ".cpp",
+        ".hpp",
+        ".cc",
+        ".cxx"
+      ],
       "wasmPath": "grammars/tree-sitter-cpp.wasm",
       "parserModule": "./languages/cpp-parser.js",
-      "skipScopeNodes": ["namespace_definition","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "namespace_definition",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "csharp",
-      "extensions": [".cs"],
+      "extensions": [
+        ".cs"
+      ],
       "wasmPath": "grammars/tree-sitter-c-sharp.wasm",
       "parserModule": "./languages/csharp-parser.js",
-      "skipScopeNodes": ["namespace_declaration","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "namespace_declaration",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "php",
-      "extensions": [".php"],
+      "extensions": [
+        ".php"
+      ],
       "wasmPath": "grammars/tree-sitter-php.wasm",
       "parserModule": "./languages/php-parser.js",
-      "skipScopeNodes": ["namespace_definition","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "namespace_definition",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "ruby",
-      "extensions": [".rb"],
+      "extensions": [
+        ".rb"
+      ],
       "wasmPath": "grammars/tree-sitter-ruby.wasm",
-      "parserModule": "./languages/ruby-parser.js"
+      "parserModule": "./languages/ruby-parser.js",
+      "skipScopeNodes": [
+        "program",
+        "declaration_list",
+        "source_file"
+      ]
     },
     {
       "id": "scala",
-      "extensions": [".scala"],
+      "extensions": [
+        ".scala"
+      ],
       "wasmPath": "grammars/tree-sitter-scala.wasm",
       "parserModule": "./languages/scala-parser.js",
-      "skipScopeNodes": ["package","declaration_list","translation_unit"]
+      "skipScopeNodes": [
+        "package",
+        "declaration_list",
+        "translation_unit"
+      ]
     },
     {
       "id": "swift",
-      "extensions": [".swift"],
+      "extensions": [
+        ".swift"
+      ],
       "wasmPath": "grammars/tree-sitter-swift.wasm",
-      "parserModule": "./languages/swift-parser.js"
+      "parserModule": "./languages/swift-parser.js",
+      "skipScopeNodes": [
+        "declaration_list",
+        "translation_unit"
+      ]
     }
   ]
 }
-
