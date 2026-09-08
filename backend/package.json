@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --ignore '.code-intel/**' --ignore 'documents/**' --ignore '../documents/**' --ignore '../extension/**' src/index.ts",
-    "build": "tsc && node -e \"const fs=require('fs');const path=require('path');function cp(s,d){if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});for(const f of fs.readdirSync(s)){const sp=path.join(s,f),dp=path.join(d,f);fs.statSync(sp).isDirectory()?cp(sp,dp):fs.copyFileSync(sp,dp);}}cp('src/viewer','dist/viewer');\"",
+    "build": "tsc && node -e \"const fs=require('fs');const path=require('path');function cp(s,d){if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});for(const f of fs.readdirSync(s)){const sp=path.join(s,f),dp=path.join(d,f);fs.statSync(sp).isDirectory()?cp(sp,dp):fs.copyFileSync(sp,dp);}}cp('src/viewer','dist/viewer');cp('src/engine/parsers/grammars','dist/engine/parsers/grammars');\"",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
