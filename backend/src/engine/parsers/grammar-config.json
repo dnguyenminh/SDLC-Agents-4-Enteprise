@@ -76,6 +76,12 @@
       "extensions": [".pega"],
       "wasmPath": null,
       "parserModule": "./languages/pega-parser.js"
+    },
+    {
+      "id": "lwc-html",
+      "extensions": [".html"],
+      "wasmPath": null,
+      "parserModule": "./languages/lwc-html-parser.js"
     }
   ]
 }

@@ -57,6 +57,8 @@ const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
   '.evt': 'aura',
   '.intf': 'aura',
   '.tokens': 'aura',
+  // ---- SA4E-... LWC HTML template support ----
+  '.html': 'lwc-html',
 };
 
 /**

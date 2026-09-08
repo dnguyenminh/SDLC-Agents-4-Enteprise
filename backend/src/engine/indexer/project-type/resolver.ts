@@ -21,6 +21,8 @@ export const FALLBACK_EXTENSIONS = [
   '.cls', '.trigger', '.apex', '.soql', '.page', '.component', '.cmp', '.app', '.evt', '.intf', '.tokens', '.pega',
   // ---- SA4E-225: un-skip PowerShell ----
   '.ps1',
+  // ---- LWC HTML template support ----
+  '.html',
 ];
 
 /**
