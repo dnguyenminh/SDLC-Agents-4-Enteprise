@@ -5,9 +5,13 @@ export class GenericTreeSitterParser {
     this.nodeMap = nodeMap || this.defaultNodeMap();
   }
 
-  getAncestor(node, types) {
+  getAncestor(node, types, skipTypes = []) {
     let cur = node.parent;
     while (cur) {
+      if (skipTypes.includes(cur.type)) {
+        cur = cur.parent;
+        continue;
+      }
       if (types.includes(cur.type)) return cur;
       cur = cur.parent;
     }
@@ -87,9 +91,13 @@ export class GenericTreeSitterParser {
         for (const [kind, types] of Object.entries(this.nodeMap)) {
           if (types.includes(node.type)) {
             let finalKind = kind;
-            // Promote function to method if inside class/struct
+            // Promote function to method if inside class/struct, skip namespace and scope nodes
             if (kind === 'function' && node.type.includes('function')) {
-              const anc = this.getAncestor(node, ['class_specifier','class_declaration','struct_specifier','struct_declaration']);
+              const anc = this.getAncestor(
+                node,
+                ['class_specifier','class_declaration','struct_specifier','struct_declaration'],
+                ['namespace_definition','declaration_list','translation_unit']
+              );
               if (anc) finalKind = 'method';
             }
             const name = this.getNodeName(node, source);
