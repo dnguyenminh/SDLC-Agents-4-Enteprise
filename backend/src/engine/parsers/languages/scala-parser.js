@@ -12,7 +12,7 @@ const SCALA_NODE_MAP = {
 };
 
 export default class ScalaParser extends GenericTreeSitterParser {
-  constructor(parser, langId) {
-    super(parser, langId, SCALA_NODE_MAP);
+  constructor(parser, langId, nodeMap, skipScopeNodes) {
+    super(parser, langId, SCALA_NODE_MAP, skipScopeNodes);
   }
 }

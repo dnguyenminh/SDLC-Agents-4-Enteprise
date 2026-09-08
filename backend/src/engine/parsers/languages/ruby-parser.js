@@ -10,7 +10,7 @@ const RUBY_NODE_MAP = {
 };
 
 export default class RubyParser extends GenericTreeSitterParser {
-  constructor(parser, langId) {
-    super(parser, langId, RUBY_NODE_MAP);
+  constructor(parser, langId, nodeMap, skipScopeNodes) {
+    super(parser, langId, RUBY_NODE_MAP, skipScopeNodes);
   }
 }

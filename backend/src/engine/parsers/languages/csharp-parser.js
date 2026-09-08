@@ -12,7 +12,7 @@ const CSHARP_NODE_MAP = {
 };
 
 export default class CsharpParser extends GenericTreeSitterParser {
-  constructor(parser, langId) {
-    super(parser, langId, CSHARP_NODE_MAP);
+  constructor(parser, langId, nodeMap, skipScopeNodes) {
+    super(parser, langId, CSHARP_NODE_MAP, skipScopeNodes);
   }
 }

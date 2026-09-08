@@ -11,7 +11,7 @@ const PHP_NODE_MAP = {
 };
 
 export default class PhpParser extends GenericTreeSitterParser {
-  constructor(parser, langId) {
-    super(parser, langId, PHP_NODE_MAP);
+  constructor(parser, langId, nodeMap, skipScopeNodes) {
+    super(parser, langId, PHP_NODE_MAP, skipScopeNodes);
   }
 }

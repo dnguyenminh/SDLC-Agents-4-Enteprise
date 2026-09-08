@@ -10,7 +10,7 @@ const C_NODE_MAP = {
 };
 
 export default class CParser extends GenericTreeSitterParser {
-  constructor(parser, langId) {
-    super(parser, langId, C_NODE_MAP);
+  constructor(parser, langId, nodeMap, skipScopeNodes) {
+    super(parser, langId, C_NODE_MAP, skipScopeNodes);
   }
 }

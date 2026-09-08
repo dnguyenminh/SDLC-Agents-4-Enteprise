@@ -10,7 +10,7 @@ const SWIFT_NODE_MAP = {
 };
 
 export default class SwiftParser extends GenericTreeSitterParser {
-  constructor(parser, langId) {
-    super(parser, langId, SWIFT_NODE_MAP);
+  constructor(parser, langId, nodeMap, skipScopeNodes) {
+    super(parser, langId, SWIFT_NODE_MAP, skipScopeNodes);
   }
 }

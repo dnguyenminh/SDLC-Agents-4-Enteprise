@@ -11,7 +11,7 @@ const CPP_NODE_MAP = {
 };
 
 export default class CppParser extends GenericTreeSitterParser {
-  constructor(parser, langId) {
-    super(parser, langId, CPP_NODE_MAP);
+  constructor(parser, langId, nodeMap, skipScopeNodes) {
+    super(parser, langId, CPP_NODE_MAP, skipScopeNodes);
   }
 }

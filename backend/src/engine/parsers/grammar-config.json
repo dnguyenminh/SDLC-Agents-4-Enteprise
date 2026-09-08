@@ -4,13 +4,15 @@
       "id": "typescript",
       "extensions": [".ts", ".tsx"],
       "wasmPath": "grammars/tree-sitter-typescript.wasm",
-      "parserModule": "./languages/typescript-parser.js"
+      "parserModule": "./languages/typescript-parser.js",
+      "skipScopeNodes": ["module","declaration_list","translation_unit"]
     },
     {
       "id": "javascript",
       "extensions": [".js", ".jsx", ".mjs", ".cjs"],
       "wasmPath": "grammars/tree-sitter-javascript.wasm",
-      "parserModule": "./languages/typescript-parser.js"
+      "parserModule": "./languages/typescript-parser.js",
+      "skipScopeNodes": ["module","declaration_list","translation_unit"]
     },
     {
       "id": "python",
@@ -22,13 +24,15 @@
       "id": "kotlin",
       "extensions": [".kt", ".kts"],
       "wasmPath": "grammars/tree-sitter-kotlin.wasm",
-      "parserModule": "./languages/kotlin-parser.js"
+      "parserModule": "./languages/kotlin-parser.js",
+      "skipScopeNodes": ["package","declaration_list","translation_unit"]
     },
     {
       "id": "java",
       "extensions": [".java"],
       "wasmPath": "grammars/tree-sitter-java.wasm",
-      "parserModule": "./languages/java-parser.js"
+      "parserModule": "./languages/java-parser.js",
+      "skipScopeNodes": ["package_declaration","declaration_list","translation_unit"]
     },
     {
       "id": "go",
@@ -87,25 +91,29 @@
       "id": "c",
       "extensions": [".c", ".h"],
       "wasmPath": "grammars/tree-sitter-c.wasm",
-      "parserModule": "./languages/c-parser.js"
+      "parserModule": "./languages/c-parser.js",
+      "skipScopeNodes": ["namespace_definition","declaration_list","translation_unit"]
     },
     {
       "id": "cpp",
       "extensions": [".cpp", ".hpp", ".cc", ".cxx"],
       "wasmPath": "grammars/tree-sitter-cpp.wasm",
-      "parserModule": "./languages/cpp-parser.js"
+      "parserModule": "./languages/cpp-parser.js",
+      "skipScopeNodes": ["namespace_definition","declaration_list","translation_unit"]
     },
     {
       "id": "csharp",
       "extensions": [".cs"],
       "wasmPath": "grammars/tree-sitter-c-sharp.wasm",
-      "parserModule": "./languages/csharp-parser.js"
+      "parserModule": "./languages/csharp-parser.js",
+      "skipScopeNodes": ["namespace_declaration","declaration_list","translation_unit"]
     },
     {
       "id": "php",
       "extensions": [".php"],
       "wasmPath": "grammars/tree-sitter-php.wasm",
-      "parserModule": "./languages/php-parser.js"
+      "parserModule": "./languages/php-parser.js",
+      "skipScopeNodes": ["namespace_definition","declaration_list","translation_unit"]
     },
     {
       "id": "ruby",
@@ -117,7 +125,8 @@
       "id": "scala",
       "extensions": [".scala"],
       "wasmPath": "grammars/tree-sitter-scala.wasm",
-      "parserModule": "./languages/scala-parser.js"
+      "parserModule": "./languages/scala-parser.js",
+      "skipScopeNodes": ["package","declaration_list","translation_unit"]
     },
     {
       "id": "swift",
