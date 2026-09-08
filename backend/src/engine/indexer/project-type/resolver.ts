@@ -19,8 +19,6 @@ export const FALLBACK_EXTENSIONS = [
   '.go', '.rs', '.c', '.cpp', '.h', '.hpp', '.cs',
   // ---- SA4E-223: ensure known Salesforce extensions pass Gate 2 (DISC-1) ----
   '.cls', '.trigger', '.apex', '.soql', '.page', '.component', '.cmp', '.app', '.evt', '.intf', '.tokens', '.pega',
-  // ---- SA4E-225: un-skip PowerShell ----
-  '.ps1',
   // ---- LWC HTML template support ----
   '.html',
 ];
