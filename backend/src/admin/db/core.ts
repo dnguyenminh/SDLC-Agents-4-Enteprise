@@ -129,6 +129,14 @@ export async function initAdapters(): Promise<void> {
   await adapter.connect();
   dbAdapter = adapter;
 
+  // Initialize schema and seed defaults for PostgreSQL/MySQL
+  try {
+    initSchema(adapter);
+    seedDefaults(adapter);
+  } catch (err) {
+    logger.error({ err }, '[admin] Failed to init schema/seed defaults');
+  }
+
   logger.info({ engine }, '[admin] DB adapter connected and ready');
 }
 
