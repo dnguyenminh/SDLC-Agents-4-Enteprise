@@ -95,5 +95,31 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     return c.json({ status: 'sync_started', message: 'Graph sync triggered in background.' });
   });
 
+  app.post('/api/admin/kb/graph/populate-edges', async (c) => {
+    const user = await ctx.requireAuth(c);
+    if (user instanceof Response) return user;
+    const permCheck = await ctx.requirePermission(c, user.userId, 'GRAPH_MAINTAIN');
+    if (permCheck instanceof Response) return permCheck;
+    const projectId = ctx.getRequestProjectId(c);
+    const { EdgeOnIngestStrategy } = await import('../../../modules/memory/engine/edge-on-ingest.js');
+    const adapter = ctx.db.admin;
+    const entries = await adapter.allAsync<any>('SELECT id, content, source, project_id FROM knowledge_entries WHERE archived = 0' + (projectId ? ' AND (project_id = ? OR project_id IS NULL)' : ''), projectId ? [projectId] : []);
+    const nodes = new Map<number, any>();
+    for (const e of entries) nodes.set(e.id, e);
+    const strategy = new EdgeOnIngestStrategy();
+    let totalEdges = 0;
+    for (const entry of entries) {
+      const edges = strategy.extract({ entryId: entry.id, content: entry.content || '', projectId: entry.project_id }, nodes);
+      for (const edge of edges) {
+        await adapter.runAsync(
+          `INSERT OR IGNORE INTO knowledge_graph_edges (source_id, target_id, label, weight) VALUES (?, ?, ?, ?)`,
+          [edge.sourceId, edge.targetId, edge.label, edge.weight ?? 1]
+        );
+        totalEdges++;
+      }
+    }
+    return c.json({ status: 'ok', nodesProcessed: entries.length, edgesCreated: totalEdges });
+  });
+
   return app;
 }

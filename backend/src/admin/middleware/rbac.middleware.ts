@@ -16,6 +16,7 @@ const ROUTE_PERMISSIONS: Record<string, PermissionId> = {
   'POST:/api/admin/kb/import': 'KB_IMPORT_EXPORT',
   'GET:/api/admin/kb/export': 'KB_IMPORT_EXPORT',
   'GET:/api/admin/kb/graph': 'GRAPH_VIEW',
+  'POST:/api/admin/kb/graph/populate-edges': 'GRAPH_MAINTAIN',
   'GET:/api/admin/mcp/servers': 'MCP_ACCESS',
   'POST:/api/admin/mcp/servers/*/restart': 'MCP_MANAGE',
   'PATCH:/api/admin/mcp/servers/*/tools/*': 'MCP_MANAGE',
