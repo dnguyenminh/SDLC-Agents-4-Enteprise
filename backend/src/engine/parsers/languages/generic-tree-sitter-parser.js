@@ -95,8 +95,8 @@ export class GenericTreeSitterParser {
             if (kind === 'function' && node.type.includes('function')) {
               const anc = this.getAncestor(
                 node,
-                ['class_specifier','class_declaration','struct_specifier','struct_declaration'],
-                ['namespace_definition','declaration_list','translation_unit']
+                ['class_specifier','class_declaration','struct_specifier','struct_declaration','class_declaration','namespace_declaration'],
+                ['namespace_definition','namespace_declaration','declaration_list','translation_unit']
               );
               if (anc) finalKind = 'method';
             }
