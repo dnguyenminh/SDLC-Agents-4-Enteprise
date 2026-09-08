@@ -18,20 +18,23 @@ export class GenericTreeSitterParser {
   }
 
   getNodeName(node, source) {
-    // Try named child 'name' or 'identifier'
-    const nameChild = node.namedChild ? (() => {
-      for (let i = 0; i < node.namedChildCount; i++) {
-        const child = node.namedChild(i);
-        if (child && (child.type === 'name' || child.type === 'identifier')) {
-          return child;
-        }
+    const findIdentifier = (n) => {
+      if (!n) return null;
+      if (n.type === 'identifier' || n.type === 'field_identifier' || n.type === 'name') {
+        return n;
+      }
+      for (let i = 0; i < n.namedChildCount; i++) {
+        const child = n.namedChild(i);
+        const found = findIdentifier(child);
+        if (found) return found;
       }
       return null;
-    })() : null;
-    if (nameChild) {
-      return source.substring(nameChild.startIndex, nameChild.endIndex);
+    };
+    const nameNode = findIdentifier(node);
+    if (nameNode) {
+      return source.substring(nameNode.startIndex, nameNode.endIndex);
     }
-    // fallback to first named child
+    // fallback to first named child text to avoid null
     if (node.namedChildCount > 0) {
       const child = node.namedChild(0);
       return source.substring(child.startIndex, child.endIndex);
