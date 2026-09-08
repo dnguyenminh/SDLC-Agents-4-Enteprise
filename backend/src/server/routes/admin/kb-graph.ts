@@ -108,7 +108,10 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     for (const e of entries) nodes.set(e.id, e);
     const strategy = new EdgeOnIngestStrategy();
     let totalEdges = 0;
+    let skippedEntries = 0;
     for (const entry of entries) {
+      const existing = await adapter.getAsync<any>('SELECT 1 FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1', [entry.id]);
+      if (existing) { skippedEntries++; continue; }
       const edges = strategy.extract({ entryId: entry.id, content: entry.content || '', projectId: entry.project_id }, nodes);
       for (const edge of edges) {
         await adapter.runAsync(
@@ -118,7 +121,7 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
         totalEdges++;
       }
     }
-    return c.json({ status: 'ok', nodesProcessed: entries.length, edgesCreated: totalEdges });
+    return c.json({ status: 'ok', nodesProcessed: entries.length, skippedEntries, edgesCreated: totalEdges });
   });
 
   return app;
