@@ -82,6 +82,48 @@
       "extensions": [".html"],
       "wasmPath": null,
       "parserModule": "./languages/lwc-html-parser.js"
+    },
+    {
+      "id": "c",
+      "extensions": [".c", ".h"],
+      "wasmPath": null,
+      "parserModule": "./languages/c-parser.js"
+    },
+    {
+      "id": "cpp",
+      "extensions": [".cpp", ".hpp", ".cc", ".cxx"],
+      "wasmPath": null,
+      "parserModule": "./languages/cpp-parser.js"
+    },
+    {
+      "id": "csharp",
+      "extensions": [".cs"],
+      "wasmPath": null,
+      "parserModule": "./languages/csharp-parser.js"
+    },
+    {
+      "id": "php",
+      "extensions": [".php"],
+      "wasmPath": null,
+      "parserModule": "./languages/php-parser.js"
+    },
+    {
+      "id": "ruby",
+      "extensions": [".rb"],
+      "wasmPath": null,
+      "parserModule": "./languages/ruby-parser.js"
+    },
+    {
+      "id": "scala",
+      "extensions": [".scala"],
+      "wasmPath": null,
+      "parserModule": "./languages/scala-parser.js"
+    },
+    {
+      "id": "swift",
+      "extensions": [".swift"],
+      "wasmPath": null,
+      "parserModule": "./languages/swift-parser.js"
     }
   ]
 }
