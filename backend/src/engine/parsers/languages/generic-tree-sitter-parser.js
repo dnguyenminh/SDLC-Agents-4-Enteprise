@@ -32,19 +32,30 @@ export class GenericTreeSitterParser {
   }
 
   getNodeName(node, source) {
-    const findIdentifier = (n) => {
-      if (!n) return null;
-      if (n.type === 'identifier' || n.type === 'field_identifier' || n.type === 'name') {
-        return n;
-      }
+    const NAME_TYPES = new Set(['identifier','field_identifier','name','type_identifier']);
+    // Prefer shallow name to avoid picking up identifiers from body
+    const findShallowName = (n) => {
       for (let i = 0; i < n.namedChildCount; i++) {
         const child = n.namedChild(i);
-        const found = findIdentifier(child);
-        if (found) return found;
+        if (NAME_TYPES.has(child.type)) return child;
       }
       return null;
     };
-    const nameNode = findIdentifier(node);
+    let nameNode = findShallowName(node);
+    if (!nameNode) {
+      // Fallback recursive search
+      const findIdentifier = (n) => {
+        if (!n) return null;
+        if (NAME_TYPES.has(n.type)) return n;
+        for (let i = 0; i < n.namedChildCount; i++) {
+          const child = n.namedChild(i);
+          const found = findIdentifier(child);
+          if (found) return found;
+        }
+        return null;
+      };
+      nameNode = findIdentifier(node);
+    }
     if (nameNode) {
       return source.substring(nameNode.startIndex, nameNode.endIndex);
     }
