@@ -47,7 +47,11 @@ export function findDrawioCli(): string | null {
 
 export async function exportWithCli(inputPath: string, outputPath: string): Promise<void> {
   if (!_cachedDrawioCliPath) throw new Error('draw.io CLI path not cached');
-  const cmd = `"${_cachedDrawioCliPath}" --export --format png --border 10 --output "${outputPath}" "${inputPath}"`;
+  // Electron requires a display — use xvfb-run + --no-sandbox when running headless on Linux (Docker)
+  const onLinux = process.platform === 'linux';
+  const prefix = onLinux ? 'xvfb-run --auto-servernum ' : '';
+  const noSandbox = onLinux ? ' --no-sandbox' : '';
+  const cmd = `${prefix}"${_cachedDrawioCliPath}"${noSandbox} --export --format png --border 10 --output "${outputPath}" "${inputPath}"`;
   execSync(cmd, { timeout: 30000, stdio: 'pipe' });
 }
 

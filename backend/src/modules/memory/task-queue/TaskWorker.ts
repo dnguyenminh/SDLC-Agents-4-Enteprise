@@ -68,10 +68,10 @@ export class TaskWorker {
   private shutdownResolve: (() => void) | null = null;
 
   constructor(
-    db: DatabaseAdapter,
-    engine: MemoryEngine,
-    logger: Logger,
-    config?: Partial<TaskWorkerConfig>,
+      db: DatabaseAdapter,
+      engine: MemoryEngine,
+      logger: Logger,
+      config?: Partial<TaskWorkerConfig>,
   ) {
     this.repo = new PendingTaskRepository(db);
     this.engine = engine;
@@ -111,8 +111,8 @@ export class TaskWorker {
     if (patch.baseInterval !== undefined) (this.config as any).baseInterval = patch.baseInterval;
     if (patch.maxInterval !== undefined) (this.config as any).maxInterval = patch.maxInterval;
     this.logger.info(
-      { concurrency: this.config.concurrency, baseInterval: this.config.baseInterval },
-      '[TaskWorker] Config updated live',
+        { concurrency: this.config.concurrency, baseInterval: this.config.baseInterval },
+        '[TaskWorker] Config updated live',
     );
   }
 
@@ -122,7 +122,12 @@ export class TaskWorker {
     this.logger.info('TaskWorker started');
     // On startup: reset any PROCESSING tasks from previous run (crash/restart recovery)
     this.resetProcessingOnStartup().catch(err =>
-      this.logger.warn({ err }, 'TaskWorker: startup reset failed (non-fatal)'),
+        this.logger.warn({ err }, 'TaskWorker: startup reset failed (non-fatal)'),
+    );
+    // On startup: bound table growth by purging superseded COMPLETED tasks
+    // (keeps only the latest completed task per entry+type).
+    this.purgeSupersededOnStartup().catch(err =>
+      this.logger.warn({ err }, 'TaskWorker: startup purge failed (non-fatal)'),
     );
     // On startup: bound table growth by purging superseded COMPLETED tasks
     // (keeps only the latest completed task per entry+type).
@@ -193,8 +198,8 @@ export class TaskWorker {
           await this.scanForUnenrichedSymbols();
         }
         const delay = Math.min(
-          this.config.baseInterval * Math.pow(2, this.consecutiveEmpty),
-          this.config.maxInterval);
+            this.config.baseInterval * Math.pow(2, this.consecutiveEmpty),
+            this.config.maxInterval);
         this.schedulePoll(delay);
         return;
       }
@@ -301,8 +306,8 @@ export class TaskWorker {
     }
 
     const context = this.config.enableContextChain
-      ? await this.loadPreviousContext(task.entry_id, payload.source)
-      : null;
+        ? await this.loadPreviousContext(task.entry_id, payload.source)
+        : null;
 
     if (context) {
       this.logger.debug({ entry_id: task.entry_id, prev_section_id: context.previous_section_id,
@@ -321,13 +326,13 @@ export class TaskWorker {
 
     if (result.appliedTags.length > 0) {
       const existing = payload.existing_tags
-        ? payload.existing_tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-        : [];
+          ? payload.existing_tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+          : [];
       const merged = [...new Set([...existing, ...result.appliedTags])];
       // NEW-03: Conditional update — only apply if still pending (race guard)
       await this.engine.getAdapter().runAsync(
-        `UPDATE knowledge_entries SET tags = ? WHERE id = ? AND enrichment_status = 'pending'`,
-        [merged.join(','), task.entry_id],
+          `UPDATE knowledge_entries SET tags = ? WHERE id = ? AND enrichment_status = 'pending'`,
+          [merged.join(','), task.entry_id],
       );
     }
 
@@ -342,10 +347,10 @@ export class TaskWorker {
     // SA4E-79: Mark entry as enriched by backend LLM (atomic — changes=0 if client won)
     const now = new Date().toISOString();
     const updateResult = await this.engine.getAdapter().runAsync(
-      `UPDATE knowledge_entries
-       SET enrichment_status = 'done', enriched_by = 'backend_llm', enriched_at = ?
-       WHERE id = ? AND enrichment_status = 'pending'`,
-      [now, task.entry_id],
+        `UPDATE knowledge_entries
+         SET enrichment_status = 'done', enriched_by = 'backend_llm', enriched_at = ?
+         WHERE id = ? AND enrichment_status = 'pending'`,
+        [now, task.entry_id],
     );
 
     if (updateResult.changes === 0) {
@@ -356,24 +361,24 @@ export class TaskWorker {
   }
 
   private async loadPreviousContext(
-    entryId: number,
-    source: string | null,
+      entryId: number,
+      source: string | null,
   ): Promise<ContextChainInput | null> {
     if (!source) return null;
     try {
       const prevEntry = await this.engine.getAdapter().getAsync<{ id: number; structured_map: string | null }>(
-        'SELECT id, structured_map FROM knowledge_entries WHERE source = ? AND id < ? ORDER BY id DESC LIMIT 1',
-        [source, entryId],
+          'SELECT id, structured_map FROM knowledge_entries WHERE source = ? AND id < ? ORDER BY id DESC LIMIT 1',
+          [source, entryId],
       );
       if (!prevEntry) {
         this.logger.debug({ entry_id: entryId, component: 'TaskWorker' },
-          'No previous section found');
+            'No previous section found');
         return null;
       }
       const map = safeParseStructuredMap(prevEntry.structured_map);
       if (!map.summary && (!map.business_entities || map.business_entities.length === 0)) {
         this.logger.debug({ entry_id: entryId, component: 'TaskWorker' },
-          'Previous section has no extractable data');
+            'Previous section has no extractable data');
         return null;
       }
       return {
@@ -385,15 +390,15 @@ export class TaskWorker {
       };
     } catch (err) {
       this.logger.warn({ entry_id: entryId, err, component: 'TaskWorker' },
-        'Failed to load previous context');
+          'Failed to load previous context');
       return null;
     }
   }
 
   private async updateEntryStructuredMap(
-    entryId: number,
-    result: TagAnalysisResult,
-    context?: ContextChainInput | null,
+      entryId: number,
+      result: TagAnalysisResult,
+      context?: ContextChainInput | null,
   ): Promise<void> {
     try {
       const entry = await this.engine.findById(entryId);
@@ -424,21 +429,21 @@ export class TaskWorker {
         structuredMap.business_rules = (structuredMap.business_rules || []).slice(0, 5);
         structuredMap.actors = (structuredMap.actors || []).slice(0, 3);
         this.logger.warn({ entry_id: entryId, size: jsonStr.length, component: 'TaskWorker' },
-          'structured_map truncated due to size limit');
+            'structured_map truncated due to size limit');
         jsonStr = JSON.stringify(structuredMap);
       }
       await this.engine.updateStructuredMap(entryId, jsonStr);
     } catch (err) {
       this.logger.warn({ entry_id: entryId, err, component: 'TaskWorker' },
-        'structured_map update failed');
+          'structured_map update failed');
     }
   }
 
   /** NEW-03: Conditional structured_map update — only applies if entry still pending. */
   private async updateEntryStructuredMapConditional(
-    entryId: number,
-    result: TagAnalysisResult,
-    context?: ContextChainInput | null,
+      entryId: number,
+      result: TagAnalysisResult,
+      context?: ContextChainInput | null,
   ): Promise<void> {
     try {
       const entry = await this.engine.findById(entryId);
@@ -472,12 +477,12 @@ export class TaskWorker {
         jsonStr = JSON.stringify(structuredMap);
       }
       await this.engine.getAdapter().runAsync(
-        `UPDATE knowledge_entries SET structured_map = ? WHERE id = ? AND enrichment_status = 'pending'`,
-        [jsonStr, entryId],
+          `UPDATE knowledge_entries SET structured_map = ? WHERE id = ? AND enrichment_status = 'pending'`,
+          [jsonStr, entryId],
       );
     } catch (err) {
       this.logger.warn({ entry_id: entryId, err, component: 'TaskWorker' },
-        'structured_map conditional update failed');
+          'structured_map conditional update failed');
     }
   }
 
@@ -489,50 +494,11 @@ export class TaskWorker {
    * Runs async in background queue — does not block code indexing.
    */
   private async processCodeSummary(task: PendingTask, payload: any): Promise<void> {
-    if (!this.llmService) { this.repo.resetForRetry(task.id); return; }
-
-    const { symbol_id, name, kind, signature, body, file_path } = payload;
-    if (!body || body.length < 20) {
-      await this.repo.markCompleted(task.id);
-      return;
-    }
-
-    const prompt = this.buildCodeSummaryPrompt(name, kind, signature, body, file_path);
-    try {
-      const timeoutMs = this.config.llmTimeout ?? 30000;
-      const response = await Promise.race([
-        this.llmService.complete([
-          { role: 'system', content: CODE_ENRICHMENT_SYSTEM_PROMPT },
-          { role: 'user', content: prompt },
-        ]),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs)),
-      ]);
-
-      const parsed = this.parseCodeSummaryResponse(response.content, name, kind);
-
-      // Update graph_nodes.label with the short summary
-      const entryId = `code:${symbol_id}`;
-      const label = parsed.summary.slice(0, 60);
-      await this.engine.getAdapter().runAsync(
-        `UPDATE graph_nodes SET label = ? WHERE entry_id = ?`,
-        [label, entryId],
-      );
-
-      // Store full summary + pseudo code in graph node metadata (JSON in cluster_id or separate)
-      // For now, store in body_embeddings metadata or a simple update to level field
-      // TODO: Consider a dedicated column for code_enrichment in graph_nodes
-      this.logger.debug({ symbol_id, name, component: 'TaskWorker' },
-        'Code summary generated and propagated');
-    } catch (err) {
-      this.logger.warn({ symbol_id, name, err, component: 'TaskWorker' },
-        'Code summary LLM failed (non-fatal)');
-    }
-    await this.repo.markCompleted(task.id);
   }
 
   /** Build prompt for code symbol summary generation. */
   private buildCodeSummaryPrompt(
-    name: string, kind: string, signature: string | null, body: string, filePath: string,
+      name: string, kind: string, signature: string | null, body: string, filePath: string,
   ): string {
     const sig = signature ? `\nSignature: ${signature}` : '';
     return `/no_think\n\nSymbol: ${name}\nKind: ${kind}\nFile: ${filePath}${sig}\n\nBody:\n\`\`\`\n${body.slice(0, 4000)}\n\`\`\``;
@@ -540,7 +506,7 @@ export class TaskWorker {
 
   /** Parse LLM response for code summary. Falls back to name if parse fails. */
   private parseCodeSummaryResponse(
-    llmOutput: string, name: string, kind: string,
+      llmOutput: string, name: string, kind: string,
   ): { summary: string; pseudoCode: string } {
     const defaults = { summary: `${kind}: ${name}`, pseudoCode: '' };
     if (!llmOutput || llmOutput.trim().length === 0) return defaults;
@@ -568,18 +534,18 @@ export class TaskWorker {
     const graphLabel = llmSummary.slice(0, 60);
     try {
       await this.engine.getAdapter().runAsync(
-        `UPDATE knowledge_entries SET summary = ? WHERE id = ? AND enrichment_status = 'pending'`,
-        [truncatedSummary, entryId],
+          `UPDATE knowledge_entries SET summary = ? WHERE id = ? AND enrichment_status = 'pending'`,
+          [truncatedSummary, entryId],
       );
       await this.engine.getAdapter().runAsync(
-        `UPDATE graph_nodes SET label = ? WHERE entry_id = ?`,
-        [graphLabel, `doc-${entryId}`],
+          `UPDATE graph_nodes SET label = ? WHERE entry_id = ?`,
+          [graphLabel, `doc-${entryId}`],
       );
       this.logger.debug({ entry_id: entryId, component: 'TaskWorker' },
-        'LLM summary propagated to KB entry + graph node');
+          'LLM summary propagated to KB entry + graph node');
     } catch (err) {
       this.logger.warn({ entry_id: entryId, err, component: 'TaskWorker' },
-        'Summary propagation failed (non-fatal)');
+          'Summary propagation failed (non-fatal)');
     }
   }
 
@@ -588,17 +554,17 @@ export class TaskWorker {
     const vector = await this.embeddingService.generateEmbedding(payload.text);
     const buf = Buffer.from(new Float32Array(vector).buffer);
     await this.engine.getAdapter().runAsync(
-      'UPDATE knowledge_entries SET vector = ? WHERE id = ?',
-      [buf, task.entry_id],
+        'UPDATE knowledge_entries SET vector = ? WHERE id = ?',
+        [buf, task.entry_id],
     );
     await this.repo.markCompleted(task.id);
   }
 
   private async handleTaskError(task: PendingTask, err: Error): Promise<void> {
     const nonRetryable = err.message.includes('invalid_json')
-      || err.message.includes('invalid_payload')
-      || err.message.includes('entry_not_found')
-      || err.message.includes('symbol_not_found');
+        || err.message.includes('invalid_payload')
+        || err.message.includes('entry_not_found')
+        || err.message.includes('symbol_not_found');
     if (nonRetryable || task.retry_count + 1 >= task.max_retries) {
       await this.repo.markFailed(task.id, err.message);
     } else {
@@ -607,4 +573,3 @@ export class TaskWorker {
     }
   }
 }
-

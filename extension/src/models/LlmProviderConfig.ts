@@ -18,6 +18,7 @@ export const SECRET_KEYS: Record<string, string> = {
 export const PROVIDER_BASE_URL_DEFAULTS: Record<string, string> = {
   lmstudio: "http://localhost:1234/v1",
   openrouter: "https://openrouter.ai/api/v1",
+  "llm-server": "http://localhost:11434/v1",
 };
 
 /** Config keys for per-provider base URLs */
@@ -26,4 +27,5 @@ export const PROVIDER_BASE_URL_KEYS: Record<string, string> = {
   openai: "openaiBaseUrl",
   lmstudio: "lmstudioBaseUrl",
   openrouter: "openrouterBaseUrl",
+  "llm-server": "llmServerBaseUrl",
 };

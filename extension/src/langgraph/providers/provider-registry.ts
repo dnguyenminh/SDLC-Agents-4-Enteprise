@@ -156,6 +156,7 @@ export const PROVIDER_REGISTRY: ProviderDef[] = [
   { id: "lmstudio", label: "LMStudio", category: "local", apiType: "openai-compatible", baseUrl: "http://localhost:1234/v1", requiresApiKey: false },
   { id: "llamacpp", label: "llama.cpp", category: "local", apiType: "openai-compatible", baseUrl: "http://localhost:8080/v1", requiresApiKey: false },
   { id: "vllm", label: "vLLM", category: "local", apiType: "openai-compatible", baseUrl: "http://localhost:8000/v1", requiresApiKey: false },
+  { id: "llm-server", label: "LLM Server (Custom)", category: "local", apiType: "openai-compatible", baseUrl: "http://localhost:11434/v1", requiresApiKey: false },
   { id: "onnx", label: "ONNX Runtime", category: "local", apiType: "onnx", baseUrl: "", requiresApiKey: false },
   // === Internal ===
   { id: "kiro", label: "Kiro Gateway", category: "gateway", apiType: "anthropic", baseUrl: "http://127.0.0.1:8990/anthropic", requiresApiKey: false },

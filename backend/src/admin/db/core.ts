@@ -129,10 +129,18 @@ export async function initAdapters(): Promise<void> {
   await adapter.connect();
   dbAdapter = adapter;
 
-  // Initialize schema and seed defaults for PostgreSQL/MySQL
+  // Initialize schema and seed defaults.
+  // PostgreSQL/MySQL require async + engine-specific DDL (SERIAL, NOW()::TEXT,
+  // ON CONFLICT) — the sync initSchema/seedDefaults path is SQLite-only.
   try {
-    initSchema(adapter);
-    seedDefaults(adapter);
+    if (engine === 'postgresql') {
+      const { ensurePostgresAdminSchema, seedDefaultsPg } = await import('./schema-pg.js');
+      await ensurePostgresAdminSchema(adapter);
+      await seedDefaultsPg(adapter);
+    } else {
+      initSchema(adapter);
+      seedDefaults(adapter);
+    }
   } catch (err) {
     logger.error({ err }, '[admin] Failed to init schema/seed defaults');
   }

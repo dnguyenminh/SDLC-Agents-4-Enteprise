@@ -36,14 +36,14 @@ export async function storeResults(
       'DELETE FROM relationships WHERE file_path = ? AND project_id = ?',
       [filePath, projectId],
     );
-    const insertSymSql = 'INSERT INTO symbols (project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const insertSymSql = 'INSERT INTO symbols (project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id';
     for (const sym of result.symbols) {
-      const info = await adapter.runAsync(insertSymSql, [
+      const info = await adapter.getAsync<{ id: number }>(insertSymSql, [
         projectId, fileId, sym.name, sym.kind, sym.signature,
         sym.startLine, sym.endLine, sym.parentName ?? null,
         sym.isExported ? 'export' : null, sym.docComment ?? null,
       ]);
-      symbolIds.set(sym.name, info.lastInsertRowid as number);
+      symbolIds.set(sym.name, info?.id ?? 0);
     }
     // SA4E-104: Store relationships without try/catch — let errors propagate.
     // If a relationship INSERT fails, entire tx rolls back (symbols re-inserted next cycle).

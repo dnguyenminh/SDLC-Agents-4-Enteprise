@@ -142,7 +142,7 @@
   }
 
   // Providers that DON'T need API key (local servers)
-  var localProviders = ["ollama", "lmstudio", "onnx"];
+  var localProviders = ["ollama", "lmstudio", "onnx", "llm-server"];
 
   function updateSections(provider) {
     if (provider === "ollama") {
@@ -180,6 +180,8 @@
           baseUrlInput.placeholder = "http://localhost:1234/v1";
         } else if (provider === "openrouter") {
           baseUrlInput.placeholder = "https://openrouter.ai/api/v1";
+        } else if (provider === "llm-server") {
+          baseUrlInput.placeholder = "http://localhost:11434/v1";
         } else {
           baseUrlInput.placeholder = "Leave empty for official API";
         }
@@ -318,7 +320,8 @@
     lmstudio: "http://localhost:1234/v1",
     openrouter: "https://openrouter.ai/api/v1",
     ollama: "http://localhost:11434",
-    onnx: ""
+    onnx: "",
+    "llm-server": "http://localhost:11434/v1"
   };
 
   // Use default URL checkbox

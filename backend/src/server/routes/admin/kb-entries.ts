@@ -87,7 +87,87 @@ export function createKbEntriesRoutes(ctx: AdminContext): Hono {
       return c.json({ error: 'Code symbol not found' }, 404);
     }
 
-    const lookupId = entryId.startsWith('doc-') ? entryId.replace('doc-', '') : entryId;
+    // Pega graph nodes: entry_id = "pega:FQN" → lookup KB entry by source = FQN
+    if (entryId.startsWith('pega:')) {
+      const fqn = entryId.replace('pega:', '');
+      const { getDbAdapter } = await import('../../../admin/db/core.js');
+      const adapter = getDbAdapter();
+      const entry = await adapter.getAsync<any>(
+        "SELECT * FROM knowledge_entries WHERE source = ? AND (type = 'PEGA_RULE' OR type = 'PEGA_DATA') LIMIT 1",
+        [fqn],
+      );
+      if (!entry) return c.json({ error: 'Pega rule not found' }, 404);
+      let ruleInfo = '';
+      try {
+        const ruleJson = JSON.parse(entry.content);
+        const label = ruleJson.pyLabel || ruleJson.pyDescription || '';
+        const description = ruleJson.pyDescription || ruleJson.pyDeleteMemo || ruleJson.pyMemo || '';
+        const className = ruleJson.pyClassName || '';
+        const ruleType = ruleJson.pxObjClass || '';
+        const parts: string[] = [];
+        if (label) parts.push(`**${label}**`);
+        if (description) parts.push(`> ${description}`);
+        parts.push(`| Field | Value |\n|---|---|\n| Class | ${className} |\n| Rule Type | ${ruleType} |`);
+        const steps = ruleJson.steps || ruleJson.pySteps || [];
+        if (Array.isArray(steps) && steps.length > 0) {
+          parts.push('\n**Steps:**');
+          steps.forEach((step: any, i: number) => {
+            const method = step.pyStepsActivityName || step.pyMethod || step.pyStepType || '';
+            const desc = step.pyStepsDescription || step.pxStepDefaultDescription || step.pyLabel || step.pyStepDescription || '';
+            const params = step.pyMethodParameters || '';
+            const when = step.pyWhenCondition || step.pyWhenRule || '';
+            const num = step.pyStepNum || step.pyStepNumber || String(i + 1);
+            const methodStr = method ? `**${method}**` : '';
+            const paramStr = params ? ` → \`${params}\`` : '';
+            const descStr = desc ? ` — ${desc}` : '';
+            const whenStr = when ? ` [WHEN: ${when}]` : '';
+            let callParams = '';
+            if (step.pyStepsCallParams && typeof step.pyStepsCallParams === 'object') {
+              const cp = Object.entries(step.pyStepsCallParams).filter(([k]) => k !== 'pyTempPlaceHolder');
+              if (cp.length > 0) callParams = ` (${cp.map(([k, v]) => `${k}=${v}`).join(', ')})`;
+            }
+            if (method || desc) parts.push(`${num}. ${methodStr}${paramStr}${callParams}${descStr}${whenStr}`);
+          });
+        }
+        const whens = ruleJson.pyConditions || ruleJson.pyDecisionExpressions || [];
+        if (Array.isArray(whens) && whens.length > 0) {
+          parts.push('\n**Conditions:**');
+          whens.forEach((w: any) => {
+            const expr = w.pyExpression || w.pyCondition || JSON.stringify(w);
+            parts.push(`- ${expr}`);
+          });
+        }
+        const props = ruleJson.pyPropertyModes || ruleJson.pyProperties || [];
+        if (Array.isArray(props) && props.length > 0) {
+          parts.push(`\n**Properties:** ${props.length} defined`);
+          props.slice(0, 10).forEach((p: any) => {
+            const name = p.pyPropertyName || p.pyName || p.pyPropertyMode || '';
+            const type = p.pyPropertyType || p.pyType || '';
+            if (name) parts.push(`- \`${name}\` (${type || 'Text'})`);
+          });
+          if (props.length > 10) parts.push(`- ... and ${props.length - 10} more`);
+        }
+        ruleInfo = parts.join('\n');
+      } catch (err) { ruleInfo = entry.summary || fqn; }
+      return c.json({
+        id: entryId,
+        title: fqn.split(':').pop() || fqn,
+        content: ruleInfo,
+        tier: entry.tier || 'SEMANTIC',
+        type: entry.type || 'PEGA_RULE',
+        source: fqn,
+        tags: entry.tags ? entry.tags.split(',').map((t: string) => t.trim()) : [],
+        links: [],
+        createdAt: entry.created_at,
+        updatedAt: entry.updated_at,
+      });
+    }
+
+    const lookupId = entryId.startsWith('doc-')
+      ? entryId.replace('doc-', '')
+      : entryId.startsWith('kb-entry:')
+      ? entryId.replace('kb-entry:', '')
+      : entryId;
     const entry = await getKbEntryById(lookupId);
     if (!entry) return c.json({ error: 'Entry not found' }, 404);
     const allowedTiers = (permCheck.roleData as any)?.allowedTiers;

@@ -14,6 +14,7 @@ import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import type { CodeIntelModule } from '../../modules/code-intel/CodeIntelModule.js';
 import { IndexOperationManager } from '../../engine/indexer/index-operation-manager.js';
 import { loadConfig } from '../../config/index.js';
+import { resolveIndexTempDir } from './index-temp-dir.js';
 import { requireProjectId } from '../../engine/query/code-intel-isolation.js';
 import { resolveWithinWorkspace } from '../../shared/path-safety.js';
 import type { FileEvent, FileEventsResult } from '../../engine/indexer/types.js';
@@ -45,21 +46,17 @@ export function getManager(registry: ModuleRegistry): IndexOperationManager | nu
   return manager;
 }
 
-/**
- * Resolve project scope from request headers (multi-tenant via JWT + X-Project-Id).
- * SINGLE SOURCE OF TRUTH for the index temp directory: both the source-upload
- * route (`/api/index/source`) and the index/progress routes MUST resolve the
- * same `{indexTempDir}/{userId}/{projectId}` so files are written to exactly the
- * directory that gets scanned, and progress is keyed by the same userId:projectId.
- * Exported for reuse by api-index.ts.
- */
-export function resolveScope(c: Context): { userId: string; projectId: string; workspace: string; displayName?: string } {
+/** Resolve project scope from request headers (multi-tenant via JWT + X-Project-Id). */
+async function resolveScope(c: Context, sessionUserId?: string): Promise<{ userId: string; projectId: string; workspace: string; displayName?: string }> {
   const config = loadConfig();
   const projectId = requireProjectId(c.req.header('X-Project-Id') || config.projectId);
+  // Prefer explicit session user, then JWT projectContext (multi-tenant), then default.
   const ctx = c.get('projectContext') as { userId?: string; projectId?: string } | undefined;
-  const userId = ctx?.userId || 'default';
-  // indexTempDir/{userId}/{projectId} — same dir for source file writes + scan.
-  const workspace = path.join(config.indexTempDir, userId, projectId);
+  const userId = sessionUserId || ctx?.userId || 'default';
+  // Use the resolved indexTempDir (single source of truth) instead of a
+  // hardcoded KIRO_TEMP_DIR/kiro default.
+  const indexTempDir = await resolveIndexTempDir();
+  const workspace = path.join(indexTempDir, userId, projectId);
   if (!fs.existsSync(workspace)) fs.mkdirSync(workspace, { recursive: true });
   // The scan `workspace` above is a synthetic temp dir named after the projectId,
   // so its basename is NOT a usable display name. The client sends its REAL
@@ -73,9 +70,9 @@ export function resolveScope(c: Context): { userId: string; projectId: string; w
  * POST /api/index/full — Trigger async full index.
  * @returns 202 with operationId, or 409 if already running.
  */
-export async function handleFullIndex(c: Context, registry: ModuleRegistry, logger: Logger) {
+export async function handleFullIndex(c: Context, registry: ModuleRegistry, logger: Logger, userId?: string) {
   try {
-    const scope = resolveScope(c);
+    const scope = await resolveScope(c, userId);
     const manager = getManager(registry);
     if (!manager) return c.json({ error: 'Code intelligence not ready' }, 503);
 
@@ -107,7 +104,7 @@ export async function handleFullIndex(c: Context, registry: ModuleRegistry, logg
  */
 export async function handleFileEvents(c: Context, registry: ModuleRegistry, logger: Logger) {
   try {
-    const scope = resolveScope(c);
+    const scope = await resolveScope(c);
     const body = await c.req.json() as { events: FileEvent[] };
     const { events } = body;
 
@@ -182,7 +179,7 @@ async function processFileEvent(
  */
 export async function handleCancel(c: Context, registry: ModuleRegistry, logger: Logger) {
   try {
-    const scope = resolveScope(c);
+    const scope = await resolveScope(c);
     const manager = getManager(registry);
     if (!manager) return c.json({ error: 'Code intelligence not ready' }, 503);
 
@@ -207,7 +204,7 @@ export async function handleCancel(c: Context, registry: ModuleRegistry, logger:
  * @returns Current progress snapshot (idle if no operation).
  */
 export async function handleProgress(c: Context, registry: ModuleRegistry, _logger: Logger) {
-  const scope = resolveScope(c);
+  const scope = await resolveScope(c);
   const manager = getManager(registry);
   if (!manager) return c.json({ error: 'Code intelligence not ready' }, 503);
 

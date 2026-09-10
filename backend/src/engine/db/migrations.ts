@@ -7,6 +7,7 @@
 import pino from 'pino';
 import type { SyncDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SCHEMA_V1 } from './schema.js';
+
 import { applyMigrationV5 } from './migration-v5.js';
 
 const logger = pino({ name: 'migrations' });

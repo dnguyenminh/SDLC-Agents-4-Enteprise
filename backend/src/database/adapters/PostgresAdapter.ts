@@ -31,6 +31,7 @@ export class PostgresAdapter implements DatabaseAdapter {
   private pool: any = null;
   private connected = false;
   private serverVersion = '';
+  private noIdColumnTables = new Set<string>();
 
   constructor(private readonly config: PostgresConfig) {}
 
@@ -95,26 +96,19 @@ export class PostgresAdapter implements DatabaseAdapter {
     const isInsert = /^\s*INSERT/i.test(sql);
     const hasReturning = /RETURNING/i.test(sql);
     if (isInsert && !hasReturning) {
+      const tableMatch = /INSERT\s+INTO\s+(?:"([^"]+)"|(\w+))/i.exec(sql);
+      const tableName = tableMatch?.[1] ?? tableMatch?.[2];
       const withReturning = translated + ' RETURNING id';
-      if (inTransaction) {
-        // Inside transaction: attempt RETURNING id — if table has no 'id' column,
-        // suppress that specific error and retry without RETURNING on same client.
-        // PostgreSQL aborts tx on error, BUT "column does not exist" is a planning error
-        // that does NOT actually abort the transaction in all PG versions.
-        // If it does abort: the error propagates → transactionAsync() ROLLBACK is correct.
-        const r = await queryFn(withReturning, params);
-        const insertedId = r.rows?.[0]?.id ?? 0;
-        return { changes: r.rowCount ?? 0, lastInsertRowid: insertedId };
+      if (inTransaction || (tableName && this.noIdColumnTables.has(tableName))) {
+        const r = await queryFn(translated, params);
+        return { changes: r.rowCount ?? 0, lastInsertRowid: 0 };
       }
-      // Outside transaction: attempt RETURNING id with dedicated client fallback.
-      // BUG FIX: pool.query() uses implicit transaction — if RETURNING id fails,
-      // the connection is "poisoned" (aborted tx). We MUST use a fresh client for fallback.
       try {
         const r = await queryFn(withReturning, params);
         const insertedId = r.rows?.[0]?.id ?? 0;
         return { changes: r.rowCount ?? 0, lastInsertRowid: insertedId };
       } catch {
-        // Fallback: table may not have 'id' column — use dedicated client to avoid poisoned connection.
+        if (tableName) this.noIdColumnTables.add(tableName);
         const client = await this.pool.connect();
         try {
           const r = await client.query(translated, params);

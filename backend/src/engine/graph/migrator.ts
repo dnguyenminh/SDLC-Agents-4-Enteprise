@@ -3,6 +3,7 @@
  * SA4E-53: async + cross-engine (PostgreSQL + SQLite) compatible.
  */
 
+import type Database from 'better-sqlite3';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import pino from 'pino';
 
@@ -82,6 +83,34 @@ ${conflict} INTO graph_meta (key, value) VALUES ('total_edges', '0')${onConflict
 `;
 }
 
+function buildCodeDependenciesSchema(engine: string): string {
+  const serial = engine === 'sqlite' ? 'INTEGER PRIMARY KEY AUTOINCREMENT' : 'SERIAL PRIMARY KEY';
+  return `
+CREATE TABLE IF NOT EXISTS code_dependencies (
+    id ${serial},
+    source_file_id INTEGER NOT NULL,
+    target_file_id INTEGER,
+    target_path TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_code_dep_source ON code_dependencies(source_file_id);
+CREATE INDEX IF NOT EXISTS idx_code_dep_target ON code_dependencies(target_file_id);
+`;
+}
+
+function buildCodeCallGraphSchema(engine: string): string {
+  const serial = engine === 'sqlite' ? 'INTEGER PRIMARY KEY AUTOINCREMENT' : 'SERIAL PRIMARY KEY';
+  return `
+CREATE TABLE IF NOT EXISTS code_call_graph (
+    id ${serial},
+    caller_symbol_id INTEGER NOT NULL,
+    callee_symbol_id INTEGER NOT NULL,
+    call_site_line INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_ccg_caller ON code_call_graph(caller_symbol_id);
+CREATE INDEX IF NOT EXISTS idx_ccg_callee ON code_call_graph(callee_symbol_id);
+`;
+}
+
 function buildBodyEmbeddingsSchema(engine: string): string {
   const serial = engine === 'sqlite' ? 'INTEGER PRIMARY KEY AUTOINCREMENT' : 'SERIAL PRIMARY KEY';
   const ts = engine === 'sqlite' ? `(datetime('now'))` : 'current_timestamp';
@@ -124,6 +153,12 @@ export async function runGraphMigrations(adapter: DatabaseAdapter): Promise<void
 
   await execIdempotent(adapter, buildBodyEmbeddingsSchema(engine));
   logger.error('[graph-migrator] Body embeddings table ready');
+
+  await execIdempotent(adapter, buildCodeDependenciesSchema(engine));
+  logger.error('[graph-migrator] Code dependencies table ready');
+
+  await execIdempotent(adapter, buildCodeCallGraphSchema(engine));
+  logger.error('[graph-migrator] Code call graph table ready');
 
   // Update schema version
   if (engine === 'sqlite') {
@@ -223,6 +258,70 @@ async function getExistingColumns(adapter: DatabaseAdapter, table: string): Prom
     );
     return new Set(sqlite.map(r => r.name));
   } catch (err) { logger.debug({ err, table }, '[migrator] SQLite column introspection failed'); return new Set(); }
+}
+
+/**
+ * Synchronous variant for SQLite — avoids the unawaited-async bug in runMigrations.
+ * runGraphMigrations is async but runMigrations is sync, so the await never fires
+ * and V5 runs before relationships table exists.
+ */
+export function runGraphMigrationsSync(db: Database.Database): void {
+  const existingCols = new Set(
+    (db.pragma('table_info(symbols)') as { name: string }[]).map(r => r.name)
+  );
+  let added = 0;
+  for (const col of ENHANCED_SYMBOL_COLUMNS) {
+    if (!existingCols.has(col.name)) {
+      try { db.exec(`ALTER TABLE symbols ADD COLUMN ${col.name} ${col.type}`); added++; } catch { /* exists */ }
+    }
+  }
+  if (added > 0) {
+    try {
+      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id)');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_exported ON symbols(is_exported)');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_file_kind ON symbols(file_id, kind)');
+    } catch { /* exists */ }
+    logger.error(`[graph-migrator] Added ${added} enhanced symbol columns`);
+  }
+
+  let enrichAdded = 0;
+  for (const col of ENRICHMENT_COLUMNS) {
+    if (!existingCols.has(col.name)) {
+      try { db.exec(`ALTER TABLE symbols ADD COLUMN ${col.name} ${col.type}`); enrichAdded++; } catch { /* exists */ }
+    }
+  }
+  if (enrichAdded > 0) {
+    try {
+      db.exec('CREATE INDEX IF NOT EXISTS idx_symbols_enrichment_status ON symbols(enrichment_status)');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_symbols_project_enrichment ON symbols(project_id, enrichment_status)');
+    } catch { /* exists */ }
+    logger.error(`[graph-migrator] Added ${enrichAdded} enrichment columns`);
+  }
+
+  function execSync(sql: string): void {
+    for (const stmt of sql.split(';').map(s => s.trim()).filter(Boolean)) {
+      try { db.exec(stmt); } catch (err: unknown) {
+        const msg = (err as Error).message ?? '';
+        if (msg.includes('already exists') || msg.includes('duplicate column')) continue;
+        throw err;
+      }
+    }
+  }
+
+  execSync(buildGraphSchema('sqlite'));
+  logger.error('[graph-migrator] Relationships table ready');
+  execSync(buildFileIndexSchema('sqlite'));
+  logger.error('[graph-migrator] File index table ready');
+  execSync(buildGraphMetaSchema('sqlite'));
+  logger.error('[graph-migrator] Graph metadata table ready');
+  execSync(buildBodyEmbeddingsSchema('sqlite'));
+  logger.error('[graph-migrator] Body embeddings table ready');
+  execSync(buildCodeDependenciesSchema('sqlite'));
+  logger.error('[graph-migrator] Code dependencies table ready');
+  execSync(buildCodeCallGraphSchema('sqlite'));
+  logger.error('[graph-migrator] Code call graph table ready');
+  db.prepare('INSERT OR REPLACE INTO schema_version (version) VALUES (?)').run(3);
+  logger.error('[graph-migrator] Schema version set to 3');
 }
 
 /** Check if graph migrations have been applied. */
