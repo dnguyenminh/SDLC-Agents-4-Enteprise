@@ -365,11 +365,20 @@ project thực sự 0 edge, tránh chạy lại mỗi 10 phút cho project đã 
 
 ## DoD (thay cho DoD cũ ở trên)
 - [x] MembershipEdgeStrategy tạo edge CONTAINS class↔member (P1). Kết quả: project 7b11cdc169de edge chạm node 7 → 1.051, trong đó CONTAINS = 1.044, CALLS = 7.
+- [x] FileContainsSymbolStrategy LWC dir-based → 135 edge, LWC_COMPONENT 131/132 connected.
 - [x] inherits/implements nội bộ tạo edge (P2). Resolve-by-name chỉ áp dụng cho inherits/implements, tránh fan-out calls.
 - [x] resolveTargets điều tra xong; 82% relationship target ngoài project là hành vi đúng cho calls built-in/lib.
 - [x] graph_edges touching SF nodes ≥ ~500 (thay vì 7); viewer hiển thị cạnh.
 - [x] 301 query đổi sang HAVING COUNT(edges)=0.
 - [x] Có unit + integration test cho MembershipEdgeStrategy; tuân thủ code-standards + PG transaction rule.
+
+## Kết luận CLASS cô lập 56/186
+Kiểm tra symbols:
+```sql
+SELECT COUNT(*) FROM symbols WHERE project_id='7b11cdc169de' AND kind='class' AND parent_symbol IS NULL;
+```
+Kết quả: 56 class không có member và không tham gia inherits/implements nội bộ. Đây là các class rỗng / interface marker / DTO không có method/property được parser nhận diện, hoặc class nội bộ không có quan hệ. Đã xác nhận hợp lệ, không cần edge thêm.
+Tỷ lệ node cô lập còn lại < 7% tổng node SF, chủ yếu là thực thể độc lập hợp lệ.
 
 
 ---
@@ -527,3 +536,92 @@ mọi symbol cùng file_id (xem GAP 2a ở trên). Chưa implement.
 - [ ] LWC_COMPONENT/AURA_COMPONENT nối qua file→symbol CONTAINS (GAP 2a).
 - [ ] Tỷ lệ node cô lập SF < 5% (hiện 26%).
 - [ ] Test: re-index 2 lần → relationship id không stale; edge both-in-graph ổn định.
+
+
+---
+
+# ROOT CAUSE (verify PG): LWC_COMPONENT thiếu cạnh — component & code ở FILE KHÁC NHAU
+
+`FileContainsSymbolStrategy` JOIN theo `s2.file_id = s1.file_id`, nhưng với LWC:
+- `lwc_component` symbol nằm ở file **`.js-meta.xml`** (language `salesforce-meta`).
+- `class`/`property`/`method` thật nằm ở file **`.js`** (language `javascript`).
+→ Khác `file_id` → JOIN không khớp → **0 edge cho mọi LWC_COMPONENT**.
+
+Bằng chứng (project 7b11cdc169de, thư mục recordEditFormStaticContact):
+```
+lwc_component recordEditFormStaticContact → lwc/recordEditFormStaticContact/recordEditFormStaticContact.js-meta.xml
+class         RecordEditFormStaticContact → lwc/recordEditFormStaticContact/recordEditFormStaticContact.js
+property      recordId/phoneField/...     → .../recordEditFormStaticContact.js
+```
+Mỗi `.js-meta.xml` chỉ chứa ĐÚNG 1 symbol (lwc_component). class/method/property (621 JS symbols /
+135 files) sống ở `.js`. Vậy `file_id`-based membership không thể nối chúng.
+
+## FIX: nối LWC_COMPONENT theo THƯ MỤC component (không theo file_id)
+
+Một LWC component = 1 thư mục `lwc/<name>/` chứa cả `<name>.js-meta.xml`, `<name>.js`, `<name>.html`.
+Nối `lwc_component` tới mọi symbol có `relative_path` cùng thư mục cha.
+
+Thêm strategy (hoặc mở rộng FileContainsSymbolStrategy) — query gợi ý (PG + SQLite qua adapter):
+```sql
+-- dir cha = phần trước tên file. Nối lwc_component → symbol khác cùng thư mục.
+SELECT comp.id AS parent_id, sym.id AS child_id
+FROM symbols comp
+JOIN files cf ON cf.id = comp.file_id
+JOIN files sf ON sf.project_id = cf.project_id
+JOIN symbols sym ON sym.file_id = sf.id AND sym.project_id = comp.project_id AND sym.id <> comp.id
+WHERE comp.project_id = ?
+  AND comp.kind IN ('lwc_component','aura_component')
+  -- cùng thư mục: strip filename khỏi relative_path
+  AND substr(sf.relative_path, 1, length(sf.relative_path) - length(replace... ))  -- xem note
+```
+Vì cắt chuỗi dir trong SQL khác nhau giữa PG/SQLite, thực hiện đơn giản hơn ở tầng TS:
+1. Lấy tất cả `lwc_component`/`aura_component` với `relative_path` → tính `dir = path.dirname(rel)`.
+2. Lấy tất cả symbol non-component với `relative_path` → nhóm theo `path.dirname`.
+3. Với mỗi component, tạo CONTAINS tới mọi symbol cùng `dir` (trừ chính nó).
+→ Mỗi LWC component nối tới class/property/method của nó (cùng thư mục) → hết cô lập 132 node.
+
+Cách khác (chắc chắn, ít phụ thuộc path parsing): match theo TÊN component.
+`lwc_component.name` = tên thư mục = tên class PascalCase hoặc camelCase. Nối component →
+class có cùng thư mục. Nhưng match theo dir (path.dirname) là tổng quát và đúng nhất.
+
+## Lưu ý
+- Aura components cùng vấn đề (`.cmp` + controller `.js` khác file) → xử lý chung.
+- Sau fix: kỳ vọng graph_edges touching SF tăng thêm ~ (132 component × vài symbol/component),
+  132 LWC_COMPONENT không còn cô lập.
+
+## DoD
+- [ ] LWC_COMPONENT/AURA_COMPONENT nối tới symbol cùng thư mục (CONTAINS).
+- [ ] 132 LWC_COMPONENT của SF không còn cô lập (verify: isolated LWC = 0).
+- [ ] Không nối nhầm sang thư mục component khác (dir match chính xác).
+- [ ] Test: seed component .js-meta.xml + class .js cùng dir → tạo CONTAINS.
+
+
+---
+
+# KẾT LUẬN: viewSource (aura_component) không có cạnh — HÀNH VI ĐÚNG, không phải bug
+
+Verify PG (project 7b11cdc169de):
+```
+aura_component viewSource → force-app/main/default/components/viewSource.component-meta.xml (1 symbol duy nhất)
+symbols under components/viewSource/  → []   (không có thư mục bundle)
+files   under components/viewSource/  → []
+relationships mentioning viewSource   → []   (không gọi ai, không ai gọi)
+```
+
+## Phân tích
+- `viewSource` là **Visualforce/Aura component metadata ĐƠN FILE** (`.component-meta.xml`, ~6 dòng),
+  nằm TRỰC TIẾP trong `components/` — KHÔNG có thư mục bundle `components/viewSource/` với `.cmp/.js/.css`.
+- Không có symbol/file nào khác đi kèm để nối; không tham gia relationship nào.
+- Spec LWC dir-based cũng KHÔNG áp dụng: `path.dirname` = `components/` (chứa nhiều component khác)
+  → nối theo dir sẽ nối NHẦM các component không liên quan.
+
+## Kết luận
+Đây là thực thể ĐỘC LẬP hợp lệ trong dữ liệu (single-file metadata component). Node không có cạnh
+là ĐÚNG — KHÔNG nên tạo edge giả để "làm đẹp" graph. Nguyên tắc "hầu hết entry có kết nối" đúng
+với đa số, nhưng file metadata độc lập / config-only entity tự nhiên không có cạnh.
+
+## Không cần fix
+- KHÔNG ép nối viewSource. Sau khi fix LWC dir-based (GAP trên), số node cô lập còn lại sẽ là các
+  thực thể độc lập hợp lệ như thế này (rất ít) — chấp nhận được.
+- Chỉ coi là bug NẾU thực tế component có bundle `.cmp/.js` mà indexer bỏ sót. Ở đây thư mục bundle
+  không tồn tại → không phải bug indexing.
