@@ -14,10 +14,15 @@ export async function ensureSa4e301GraphEdges(): Promise<void> {
   const adapter = getDbAdapter();
   try {
     // Find projects with nodes but no edges
-    const engine = getActiveEngine();
+    // graph_edges has no project_id column, so we check if any node of the project appears in edges
     const projects = await adapter.allAsync<{ project_id: string }>(
-      `SELECT DISTINCT project_id FROM graph_nodes
-       WHERE project_id NOT IN (SELECT DISTINCT project_id FROM graph_edges)
+      `SELECT DISTINCT gn.project_id
+       FROM graph_nodes gn
+       WHERE gn.entry_id LIKE 'code:%'
+         AND NOT EXISTS (
+           SELECT 1 FROM graph_edges ge
+           WHERE ge.source = gn.entry_id OR ge.target = gn.entry_id
+         )
        LIMIT 20`,
     );
     if (!projects.length) {
