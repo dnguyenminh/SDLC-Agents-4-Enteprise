@@ -1,0 +1,58 @@
+# CI/CD Pipeline Snippet for Extension Compile Test - SA4E-242
+# Supports GitHub Actions / GitLab CI
+
+name: Extension Compile Test
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  compile-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dependencies
+        working-directory: extension
+        run: npm ci
+
+      - name: TypeScript compile
+        working-directory: extension
+        run: npm run compile
+
+      - name: Lint check
+        working-directory: extension
+        run: npm run lint
+
+      - name: Unit tests
+        working-directory: extension
+        run: npm run test:unit
+
+      - name: Verify scope-detector build
+        working-directory: extension
+        run: |
+          test -f out/services/scope-detector.js || (echo "scope-detector not built" && exit 1)
+          echo "scope-detector build verified"
+
+      - name: Package VSIX
+        working-directory: extension
+        run: npm run esbuild-production && npm run copy-resources
+
+    # Optional deployment step for UAT/PROD
+    # deploy:
+    #   needs: compile-test
+    #   if: github.ref == 'refs/heads/main'
+    #   runs-on: ubuntu-latest
+    #   steps:
+    #     - ...
