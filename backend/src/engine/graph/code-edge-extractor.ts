@@ -49,6 +49,7 @@ export class MembershipEdgeStrategy implements CodeEdgeStrategy {
 export class RelationshipsEdgeStrategy implements CodeEdgeStrategy {
   async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
     // Join with symbols to resolve target_symbol_id on-the-fly when NULL
+    // Only resolve by name for inherits/implements to avoid fan-out on calls
     const rows = await indexAdapter.allAsync<{ source_symbol_id: number; target_symbol_id: number | null; resolved_id: number | null; kind: string }>(
       `SELECT r.source_symbol_id,
               r.target_symbol_id,
@@ -56,7 +57,11 @@ export class RelationshipsEdgeStrategy implements CodeEdgeStrategy {
               r.kind
        FROM relationships r
        LEFT JOIN symbols s ON s.name = r.target_symbol AND s.project_id = r.project_id
-       WHERE r.project_id = ? AND (r.target_symbol_id IS NOT NULL OR s.id IS NOT NULL)`,
+       WHERE r.project_id = ?
+         AND (
+           r.target_symbol_id IS NOT NULL
+           OR (r.target_symbol_id IS NULL AND r.kind IN ('inherits','implements') AND s.id IS NOT NULL)
+         )`,
       [projectId],
     );
     return rows.map(r => {
