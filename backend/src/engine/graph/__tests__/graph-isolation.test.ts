@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { SymbolResolver } from '../symbol-resolver.js';
 import { GraphRepository } from '../graph-repository.js';
@@ -38,39 +38,49 @@ CREATE TABLE relationships (
 `;
 
 /** Seed one tenant: a caller symbol that `calls` a shared callee, plus an import edge. */
-function seed(db: Database.Database, pid: string, caller: string): void {
-  const file = db.prepare(
+async function seed(db: SqliteAdapter, pid: string, caller: string): Promise<void> {
+  const file = await db.run(
     `INSERT INTO files (project_id, path, relative_path, language, content_hash, size_bytes)
-     VALUES (?, ?, 'src/app.ts', 'typescript', ?, 100)`
-  ).run(pid, `/${pid}/src/app.ts`, `h_${pid}`);
-  const fileId = file.lastInsertRowid as number;
-  const ins = db.prepare(
-    `INSERT INTO symbols (project_id, file_id, name, kind, start_line, end_line, is_exported)
-     VALUES (?, ?, ?, ?, ?, ?, 1)`
+     VALUES (?, ?, 'src/app.ts', 'typescript', ?, 100)`,
+    [pid, `/${pid}/src/app.ts`, `h_${pid}`]
   );
-  const callerId = ins.run(pid, fileId, caller, 'function', 1, 5).lastInsertRowid as number;
-  const calleeId = ins.run(pid, fileId, 'sharedFn', 'function', 10, 20).lastInsertRowid as number;
-  db.prepare(
+  const fileId = file.lastInsertRowid as number;
+  const callerRes = await db.run(
+    `INSERT INTO symbols (project_id, file_id, name, kind, start_line, end_line, is_exported)
+     VALUES (?, ?, ?, ?, ?, ?, 1)`,
+    [pid, fileId, caller, 'function', 1, 5]
+  );
+  const callerId = callerRes.lastInsertRowid as number;
+  const calleeRes = await db.run(
+    `INSERT INTO symbols (project_id, file_id, name, kind, start_line, end_line, is_exported)
+     VALUES (?, ?, ?, ?, ?, ?, 1)`,
+    [pid, fileId, 'sharedFn', 'function', 10, 20]
+  );
+  const calleeId = calleeRes.lastInsertRowid as number;
+  await db.run(
     `INSERT INTO relationships (project_id, source_symbol_id, target_symbol, target_symbol_id, kind, file_path, line)
-     VALUES (?, ?, 'sharedFn', ?, 'calls', 'src/app.ts', 3)`
-  ).run(pid, callerId, calleeId);
-  db.prepare(
+     VALUES (?, ?, 'sharedFn', ?, 'calls', 'src/app.ts', 3)`,
+    [pid, callerId, calleeId]
+  );
+  await db.run(
     `INSERT INTO relationships (project_id, source_symbol_id, target_symbol, target_symbol_id, kind, file_path, line)
-     VALUES (?, ?, './dep', NULL, 'imports', 'src/app.ts', 1)`
-  ).run(pid, callerId);
+     VALUES (?, ?, './dep', NULL, 'imports', 'src/app.ts', 1)`,
+    [pid, callerId]
+  );
 }
 
 describe('SA4E-41 SEC-01 graph tool isolation (two tenants)', () => {
-  let db: Database.Database;
+  let db: SqliteAdapter;
 
-  beforeEach(() => {
-    db = new Database(':memory:');
-    db.exec(SCHEMA);
-    seed(db, PID_A, 'callerAlpha');
-    seed(db, PID_B, 'callerBravo');
+  beforeEach(async () => {
+    db = new SqliteAdapter(':memory:');
+    await db.connect();
+    await db.exec(SCHEMA);
+    await seed(db, PID_A, 'callerAlpha');
+    await seed(db, PID_B, 'callerBravo');
   });
 
-  afterEach(() => db.close());
+  afterEach(async () => await db.disconnect());
 
   it('SymbolResolver only resolves the caller of its own tenant', async () => {
     expect((await new SymbolResolver(new SqliteDbAdapter(db), PID_A).resolve('callerAlpha')).length).toBe(1);

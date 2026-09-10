@@ -3,6 +3,9 @@
   "currentPhase": "deployment",
   "architecturePattern": "",
   "autonomyLevel": "L3",
+  "status": "done",
+  "verifiedBy": "dev-agent (integration 2026-08-30)",
+  "closedAt": "2026-08-30",
   "phases": {
     "requirements": {
       "status": "done",
@@ -38,7 +41,8 @@
       "status": "done",
       "file": "source/slash/",
       "version": 1,
-      "completedAt": "2026-08-22T14:35:00Z"
+      "completedAt": "2026-08-22T14:35:00Z",
+      "note": "integrated into runtime (entry backend/src/index.ts): registerAll() wired via single public entry point source/slash/index.ts; 8 Tier-2 commands registered into the shared slashMenu singleton and discoverable via /help"
     },
     "security_code_review": {
       "status": "done",
@@ -67,5 +71,5 @@
     "mode": "normal"
   },
   "circuitBreaker": {},
-  "lastUpdated": "2026-08-22T14:55:00Z"
+  "lastUpdated": "2026-08-30"
 }

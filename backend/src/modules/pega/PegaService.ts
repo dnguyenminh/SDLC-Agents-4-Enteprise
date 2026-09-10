@@ -18,6 +18,10 @@ import { PegaDeclarativeEngine } from './PegaDeclarativeEngine.js';
 import { PegaRuleAstParser } from './PegaRuleAstParser.js';
 import { indexRule, type IndexRuleResult } from './PegaIndexer.js';
 import { syncAllIndexedRules, type SyncBatchResult } from './PegaKbSync.js';
+import {
+  PegaServiceDiscovery, PegaCodeIntelClient,
+  type ServiceDiscoveryOptions, type ServiceDiscoveryReport,
+} from './discovery/index.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'pega-service' });
@@ -158,6 +162,28 @@ export class PegaService {
 
   /** SA4E-158: Expose memoryEngine for route-level access. */
   public getMemoryEngine(): MemoryEngine { return this.memoryEngine; }
+
+  /**
+   * Discover a Pega application's service surface via the custom CodeIntelligence
+   * data-page API: Access Groups -> Service Packages -> Service Methods -> linked
+   * Activities. Discovered methods are indexed into symbols; links are reported.
+   */
+  public async discoverServices(opts: ServiceDiscoveryOptions): Promise<ServiceDiscoveryReport> {
+    const client = new PegaCodeIntelClient(opts.codeIntelBase, opts.authHeader);
+    const discovery = new PegaServiceDiscovery(
+      {
+        downloadRule: async (insKey: string) => {
+          const json = await client.getRule(insKey);
+          return json ? { ruleJson: json } : null;
+        },
+        indexRule: async (ruleJson: Record<string, unknown>) =>
+          this.indexRuleOnly({ projectId: opts.projectId, ruleJson }),
+      },
+      opts.codeIntelBase,
+      opts.authHeader,
+    );
+    return discovery.run(opts);
+  }
 
   /**
    * Legacy ingestRule — backward compatible single-rule ingest.

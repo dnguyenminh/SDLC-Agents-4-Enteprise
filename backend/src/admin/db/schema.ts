@@ -42,6 +42,8 @@ export function seedDefaults(db: SyncDatabaseAdapter): void {
   if (!groupExists) {
     seedAccessGroups(db);
   }
+  // Ensure admin group has all permissions even after code changes
+  ensureAdminPermissions(db);
 
   const userExists = db.get<Record<string, unknown>>(
     'SELECT 1 FROM users WHERE username = ?', ['admin'],
@@ -54,59 +56,72 @@ export function seedDefaults(db: SyncDatabaseAdapter): void {
 function seedAccessGroups(db: SyncDatabaseAdapter): void {
   const now = new Date().toISOString();
   db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
+    `INSERT OR IGNORE INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
      VALUES (?, ?, 1, ?, ?)`,
     ['grp-admin', 'Administrators', now, now],
   );
-
   const allPerms = [
     'DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'KB_PROMOTE', 'KB_IMPORT_EXPORT',
     'MCP_ACCESS', 'MCP_MANAGE', 'USER_MANAGE', 'RBAC_MANAGE', 'CONFIG_EDIT',
-    'SEARCH_EXPLORE', 'AUDIT_VIEW', 'GRAPH_VIEW', 'ANALYTICS_VIEW',
+    'SEARCH_EXPLORE', 'AUDIT_VIEW', 'GRAPH_VIEW', 'ANALYTICS_VIEW', 'GRAPH_MAINTAIN',
   ];
   for (const perm of allPerms) {
     db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
+      'INSERT OR IGNORE INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
       ['grp-admin', perm, '{}'],
     );
   }
 
   db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
+    `INSERT OR IGNORE INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
      VALUES (?, ?, 0, ?, ?)`,
     ['grp-dev', 'Developers', now, now],
   );
   const devPerms = ['DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'MCP_ACCESS', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW'];
   for (const perm of devPerms) {
     db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
+      'INSERT OR IGNORE INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
       ['grp-dev', perm, '{}'],
     );
   }
 
   db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
+    `INSERT OR IGNORE INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
      VALUES (?, ?, 0, ?, ?)`,
     ['grp-viewer', 'Viewers', now, now],
   );
   const viewerPerms = ['DASHBOARD_VIEW', 'KB_READ', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW'];
   for (const perm of viewerPerms) {
     db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
+      'INSERT OR IGNORE INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
       ['grp-viewer', perm, '{}'],
     );
   }
 
   db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
+    `INSERT OR IGNORE INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
      VALUES (?, ?, 0, ?, ?)`,
     ['grp-mcp-ops', 'MCP Operators', now, now],
   );
   const mcpPerms = ['DASHBOARD_VIEW', 'MCP_ACCESS', 'MCP_MANAGE'];
   for (const perm of mcpPerms) {
     db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
+      'INSERT OR IGNORE INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
       ['grp-mcp-ops', perm, '{}'],
+    );
+  }
+}
+
+function ensureAdminPermissions(db: SyncDatabaseAdapter): void {
+  const allPerms = [
+    'DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'KB_PROMOTE', 'KB_IMPORT_EXPORT',
+    'MCP_ACCESS', 'MCP_MANAGE', 'USER_MANAGE', 'RBAC_MANAGE', 'CONFIG_EDIT',
+    'SEARCH_EXPLORE', 'AUDIT_VIEW', 'GRAPH_VIEW', 'ANALYTICS_VIEW', 'GRAPH_MAINTAIN',
+  ];
+  for (const perm of allPerms) {
+    db.run(
+      'INSERT OR IGNORE INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
+      ['grp-admin', perm, '{}'],
     );
   }
 }

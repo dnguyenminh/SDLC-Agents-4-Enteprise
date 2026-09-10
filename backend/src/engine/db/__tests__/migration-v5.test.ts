@@ -6,9 +6,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { applyMigrationV5 } from '../migration-v5.js';
-import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 
 const LEGACY = 'legacy12345x';
 
@@ -49,67 +48,69 @@ CREATE TABLE body_embeddings (
 );
 `;
 
-function seedPreV5(db: Database.Database): void {
-  db.exec(PRE_V5_SCHEMA);
-  db.prepare('INSERT INTO schema_version (version) VALUES (4)').run();
-  db.prepare(`INSERT INTO files (id, path, relative_path, language, module, content_hash, size_bytes) VALUES
+function seedPreV5(adapter: SqliteAdapter): void {
+  adapter.exec(PRE_V5_SCHEMA);
+  adapter.exec('INSERT INTO schema_version (version) VALUES (4)');
+  adapter.exec(`INSERT INTO files (id, path, relative_path, language, module, content_hash, size_bytes) VALUES
     (1, '/w/src/a.ts', 'src/a.ts', 'typescript', 'src', 'h1', 100),
-    (2, '/w/src/b.ts', 'src/b.ts', 'typescript', 'src', 'h2', 200)`).run();
-  db.prepare(`INSERT INTO symbols (id, file_id, name, kind, signature, start_line, end_line, is_exported, complexity) VALUES
+    (2, '/w/src/b.ts', 'src/b.ts', 'typescript', 'src', 'h2', 200)`);
+  adapter.exec(`INSERT INTO symbols (id, file_id, name, kind, signature, start_line, end_line, is_exported, complexity) VALUES
     (1, 1, 'doAuth', 'function', 'sig', 1, 5, 1, 3),
-    (2, 2, 'doLogout', 'function', 'sig', 1, 5, 1, 2)`).run();
-  db.prepare(`INSERT INTO modules (name, root_path, language, file_count, symbol_count) VALUES ('src', 'src', 'typescript', 2, 2)`).run();
-  db.prepare(`INSERT INTO relationships (source_symbol_id, target_symbol, kind, file_path, line) VALUES (1, 'doLogout', 'calls', 'src/a.ts', 3)`).run();
-  db.prepare(`INSERT INTO body_embeddings (symbol_id, chunk_index, embedding, token_count) VALUES (1, 0, X'00', 5)`).run();
-  db.prepare(`INSERT INTO embeddings (symbol_id, file_id, vector, model) VALUES (1, 1, X'00', 'test')`).run();
+    (2, 2, 'doLogout', 'function', 'sig', 1, 5, 1, 2)`);
+  adapter.exec(`INSERT INTO modules (name, root_path, language, file_count, symbol_count) VALUES ('src', 'src', 'typescript', 2, 2)`);
+  adapter.exec(`INSERT INTO relationships (source_symbol_id, target_symbol, kind, file_path, line) VALUES (1, 'doLogout', 'calls', 'src/a.ts', 3)`);
+  adapter.exec(`INSERT INTO body_embeddings (symbol_id, chunk_index, embedding, token_count) VALUES (1, 0, X'00', 5)`);
+  adapter.exec(`INSERT INTO embeddings (symbol_id, file_id, vector, model) VALUES (1, 1, X'00', 'test')`);
 }
 
-function columnNames(db: Database.Database, table: string): string[] {
-  return (db.pragma(`table_info(${table})`) as { name: string }[]).map(r => r.name);
+function columnNames(adapter: SqliteAdapter, table: string): string[] {
+  return adapter.all<{ name: string }>(`PRAGMA table_info(${table})`).map(r => r.name);
 }
 
 describe('SA4E-41 Migration V5', () => {
-  let rawDb: Database.Database;
-  let adapter: SqliteDbAdapter;
-  beforeEach(() => { rawDb = new Database(':memory:'); seedPreV5(rawDb); adapter = new SqliteDbAdapter(rawDb); });
-  afterEach(() => rawDb.close());
+  let adapter: SqliteAdapter;
+  beforeEach(async () => { 
+    adapter = new SqliteAdapter(':memory:'); 
+    await adapter.connect(); 
+    seedPreV5(adapter); 
+  });
+  afterEach(async () => { 
+    if (adapter.isConnected()) await adapter.disconnect(); 
+  });
 
   it('adds project_id to all code-intel tables', () => {
-    applyMigrationV5(adapter, LEGACY);
+    applyMigrationV5(adapter as any, LEGACY);
     for (const t of ['files', 'symbols', 'modules', 'embeddings', 'relationships', 'body_embeddings']) {
-      expect(columnNames(rawDb, t)).toContain('project_id');
+      expect(columnNames(adapter, t)).toContain('project_id');
     }
   });
 
   it('backfills every row to the legacy project id', () => {
-    applyMigrationV5(adapter, LEGACY);
-    const distinct = (t: string) => rawDb.prepare(`SELECT DISTINCT project_id FROM ${t}`).all() as { project_id: string }[];
+    applyMigrationV5(adapter as any, LEGACY);
+    const distinct = (t: string) => adapter.all<{ project_id: string }>(`SELECT DISTINCT project_id FROM ${t}`);
     for (const t of ['files', 'symbols', 'modules', 'relationships', 'body_embeddings', 'embeddings']) {
       expect(distinct(t)).toEqual([{ project_id: LEGACY }]);
     }
   });
 
   it('preserves row counts and FTS still returns results', () => {
-    applyMigrationV5(adapter, LEGACY);
-    expect((rawDb.prepare('SELECT COUNT(*) c FROM files').get() as any).c).toBe(2);
-    expect((rawDb.prepare('SELECT COUNT(*) c FROM symbols').get() as any).c).toBe(2);
-    const fts = rawDb.prepare(`SELECT s.name FROM symbols_fts JOIN symbols s ON symbols_fts.rowid = s.id WHERE symbols_fts MATCH 'doAuth'`).all() as any[];
+    applyMigrationV5(adapter as any, LEGACY);
+    expect(adapter.get<{c:number}>('SELECT COUNT(*) as c FROM files')?.c).toBe(2);
+    expect(adapter.get<{c:number}>('SELECT COUNT(*) as c FROM symbols')?.c).toBe(2);
+    const fts = adapter.all<any>(`SELECT s.name FROM symbols_fts JOIN symbols s ON symbols_fts.rowid = s.id WHERE symbols_fts MATCH 'doAuth'`);
     expect(fts.map(r => r.name)).toContain('doAuth');
   });
 
   it('bumps schema_version to 5 and is idempotent', () => {
-    applyMigrationV5(adapter, LEGACY);
-    expect((rawDb.prepare('SELECT MAX(version) v FROM schema_version').get() as any).v).toBe(5);
-    // Re-run must not throw or change data.
-    expect(() => applyMigrationV5(adapter, LEGACY)).not.toThrow();
-    expect((rawDb.prepare('SELECT COUNT(*) c FROM symbols').get() as any).c).toBe(2);
+    applyMigrationV5(adapter as any, LEGACY);
+    expect(adapter.get<{v:number}>('SELECT MAX(version) as v FROM schema_version')?.v).toBe(5);
+    expect(() => applyMigrationV5(adapter as any, LEGACY)).not.toThrow();
+    expect(adapter.get<{c:number}>('SELECT COUNT(*) as c FROM symbols')?.c).toBe(2);
   });
 
   it('enforces composite UNIQUE(project_id, path) on files', () => {
-    applyMigrationV5(adapter, LEGACY);
-    // Same path under a different project is allowed.
-    expect(() => rawDb.prepare(`INSERT INTO files (project_id, path, relative_path, language, content_hash, size_bytes) VALUES ('other', '/w/src/a.ts', 'src/a.ts', 'typescript', 'h', 1)`).run()).not.toThrow();
-    // Duplicate (project_id, path) is rejected.
-    expect(() => rawDb.prepare(`INSERT INTO files (project_id, path, relative_path, language, content_hash, size_bytes) VALUES (?, '/w/src/a.ts', 'src/a.ts', 'typescript', 'h', 1)`).run(LEGACY)).toThrow();
+    applyMigrationV5(adapter as any, LEGACY);
+    expect(() => adapter.run(`INSERT INTO files (project_id, path, relative_path, language, content_hash, size_bytes) VALUES ('other', '/w/src/a.ts', 'src/a.ts', 'typescript', 'h', 1)`)).not.toThrow();
+    expect(() => adapter.run(`INSERT INTO files (project_id, path, relative_path, language, content_hash, size_bytes) VALUES (?, '/w/src/a.ts', 'src/a.ts', 'typescript', 'h', 1)`, [LEGACY])).toThrow();
   });
 });

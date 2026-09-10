@@ -4,6 +4,7 @@
  */
 import type { IndexerHttpClient } from "./IndexerHttpClient";
 import type { JsonSchema } from "../models";
+import { getEffectiveScope } from "../utils/scope-detector";
 
 type PegaHttpClientType = InstanceType<typeof import("./PegaHttpClient").PegaHttpClient>;
 type ProgressReporter = import("vscode").Progress<{ message?: string }>;
@@ -180,7 +181,7 @@ export class PegaSchemaIndexer {
                 type: "PEGA_SCHEMA",
                 source: `pega-schema/${ruleType}`,
                 tags: `pega,schema,${ruleType},${serverHost}`,
-                scope: "PROJECT",
+                scope: getEffectiveScope(),
             };
             // Use MCP endpoint via Node http (same pattern as syncCodeSymbols)
             const url = `${backendUrl}/mcp`;

@@ -28,13 +28,18 @@ export class DependencyMapper {
    * @param dep - Backend discovery result
    * @returns CrawlPlanItem ready for fetchRulesInParallel
    */
-  static toCrawlPlanItem(dep: UnresolvedDependency): CrawlPlanItem {
-    const insKey = dep.insKey || `${dep.ruleType} ${dep.className} ${dep.ruleName}`;
+  static toCrawlPlanItem(dep: UnresolvedDependency): CrawlPlanItem | null {
+    const ruleName = (dep.ruleName || '').trim();
+    if (!ruleName || ruleName.toLowerCase() === 'null' || ruleName.toLowerCase() === 'undefined') {
+      return null;
+    }
+    const syntheticInsKey = `${dep.ruleType} ${dep.className} ${ruleName.toUpperCase()}`;
+    const insKey = dep.insKey || syntheticInsKey;
     return {
       insKey,
       pxObjClass: dep.ruleType,
       pyClassName: dep.className,
-      pyRuleName: dep.ruleName,
+      pyRuleName: ruleName,
     };
   }
 

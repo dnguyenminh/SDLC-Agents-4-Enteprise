@@ -26,6 +26,15 @@ const connectionSchema = z.object({
 
 let activeMigration: MigrationService | null = null;
 
+/** Resolve active engine name from per-engine `active` flag (source of truth), falling back to `activeEngine`. */
+function resolveActiveEngineName(config: { activeEngine?: string; engines?: Record<string, { active?: boolean }> }): string {
+  const engines = config.engines || {};
+  for (const e of ['postgresql', 'mysql', 'sqlite']) {
+    if (engines[e] && engines[e].active === true) return e;
+  }
+  return config.activeEngine || 'sqlite';
+}
+
 export function createDatabaseRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
   const cfg = loadConfig();
@@ -45,11 +54,14 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
 
   app.get('/api/admin/database/status', async (c) => {
     const deny = await authGuard(c); if (deny) return deny;
-    try {
-      const config = configService.load();
-      const engine = config.activeEngine;
-      const connParams = engine !== 'sqlite' && config.engines[engine]
-        ? { host: config.engines[engine]!.host, port: config.engines[engine]!.port, username: config.engines[engine]!.username, database: config.engines[engine]!.database, ssl: config.engines[engine]!.ssl }
+     try {
+       const config = configService.load();
+       const engine = resolveActiveEngineName(config);
+      // Non-sqlite engines expose connection params; sqlite does not.
+      const engineKey = engine as Exclude<keyof typeof config.engines, 'sqlite'>;
+      const engineCfg = engine !== 'sqlite' ? config.engines[engineKey] : undefined;
+      const connParams = engineCfg
+        ? { host: engineCfg.host, port: engineCfg.port, username: engineCfg.username, database: engineCfg.database, ssl: engineCfg.ssl }
         : undefined;
       return c.json({ success: true, data: { engine, status: 'connected', details: config.engines.sqlite, connection: connParams, lastMigration: config.migration.lastMigration } });
     } catch (err) {

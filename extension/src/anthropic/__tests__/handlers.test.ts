@@ -1,18 +1,36 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import express from 'express';
-import request from 'supertest';
 import { createChatCompletionsHandler } from '../handlers';
 import { ConversationHistory } from '../../history/conversation';
 import { KiroQResponse, ContinuationRequest } from '../types';
 
-function createTestApp(
+function createMockRes() {
+  const headers: Record<string, string> = {};
+  let statusCode = 200;
+  let jsonBody: any = null;
+  let written = '';
+  const res: any = {
+    status(c: number) { statusCode = c; return res; },
+    json(obj: any) { jsonBody = obj; return res; },
+    setHeader(k: string, v: string) { headers[k] = v; },
+    write(s: string) { written += s; },
+    end() {},
+    getStatus: () => statusCode,
+    getJson: () => jsonBody,
+    getHeaders: () => headers,
+    getBody: () => written,
+  };
+  return res;
+}
+
+function invokeHandler(
   history: ConversationHistory,
   mockForward: (req: ContinuationRequest) => Promise<KiroQResponse>,
+  body: ContinuationRequest,
 ) {
-  const app = express();
-  app.use(express.json());
-  app.post('/chat/completions', createChatCompletionsHandler(history, mockForward));
-  return app;
+  const handler = createChatCompletionsHandler(history, mockForward);
+  const req: any = { body };
+  const res = createMockRes();
+  return handler(req, res).then(() => res);
 }
 
 describe('handleChatCompletions', () => {

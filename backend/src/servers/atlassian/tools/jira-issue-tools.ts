@@ -28,7 +28,7 @@ export function registerJiraIssueTools(server: McpServer, client: JiraApiClient)
       const fields: Record<string, unknown> = {
         project: { key: project_key }, summary, issuetype: { name: issue_type },
       };
-      if (description) fields.description = description;
+      if (description) fields.description = description.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
       if (assignee) fields.assignee = { accountId: assignee };
       if (priority) fields.priority = { name: priority };
       if (labels) fields.labels = labels;
@@ -43,7 +43,12 @@ export function registerJiraIssueTools(server: McpServer, client: JiraApiClient)
     const parsed = UpdateIssueSchema.safeParse(args);
     if (!parsed.success) return createErrorResult(AtlassianErrorCode.VALIDATION_ERROR, parsed.error.message);
     try {
-      await client.updateIssue(parsed.data.issue_key, parsed.data.fields);
+      const fields = parsed.data.fields;
+      // Normalize line endings to LF to preserve markdown layout (headings, nested lists, smart links)
+      if (typeof fields.description === 'string') {
+        fields.description = fields.description.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      }
+      await client.updateIssue(parsed.data.issue_key, fields);
       return createSuccessResult({ success: true, issue_key: parsed.data.issue_key });
     } catch (e) { return handleError(e); }
   });

@@ -3,23 +3,22 @@
  * Covers: scan criteria, queue, approve, reject (no cooldown), promoteOnMerge, requestShared.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import pino from 'pino';
 import { ScopePromotionService } from '../promotion/index.js';
 import { MEMORY_SCHEMA } from '../schema/index.js';
 import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 
-function createTestDb(): Database.Database {
-  const db = new Database(':memory:');
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  db.exec(MEMORY_SCHEMA);
-  return db;
+async function createTestDb(): Promise<SqliteAdapter> {
+  const adapter = new SqliteAdapter(':memory:');
+  await adapter.connect();
+  await adapter.exec(MEMORY_SCHEMA);
+  return adapter;
 }
 
 const logger = pino({ level: 'silent' });
 
-function seedEntry(db: Database.Database, overrides: Record<string, any> = {}): number {
+function seedEntry(db: SqliteAdapter, overrides: Record<string, any> = {}): number {
   const defaults = {
     content: 'test content', summary: 'test', type: 'CONTEXT',
     tier: 'WORKING', scope: 'USER', user_id: 'user-1',
@@ -34,16 +33,16 @@ function seedEntry(db: Database.Database, overrides: Record<string, any> = {}): 
   return r.lastInsertRowid as number;
 }
 
-function addCitation(db: Database.Database, entryId: number, citedBy: string): void {
+function addCitation(db: SqliteAdapter, entryId: number, citedBy: string): void {
   db.prepare('INSERT INTO citations (entry_id, cited_by) VALUES (?, ?)').run(entryId, citedBy);
 }
 
 describe('ScopePromotionService', () => {
-  let db: Database.Database;
+  let db: SqliteAdapter;
   let svc: ScopePromotionService;
 
   beforeEach(async () => {
-    db = createTestDb();
+    db = await createTestDb();
     svc = new ScopePromotionService(new SqliteDbAdapter(db), logger);
     await svc.ensurePromotionQueueTable();
   });
@@ -97,7 +96,7 @@ describe('ScopePromotionService', () => {
       addCitation(db, id, 'a2');
       await svc.queueCandidates(await svc.scanForPromotionCandidates());
       expect(await svc.approve(id, 'admin-001', 'Good')).toBe(true);
-      const e = db.prepare('SELECT scope FROM knowledge_entries WHERE id = ?').get(id) as any;
+      const e = await db.get<any>('SELECT scope FROM knowledge_entries WHERE id = ?', [id]);
       expect(e.scope).toBe('PROJECT');
     });
 
@@ -113,9 +112,9 @@ describe('ScopePromotionService', () => {
       addCitation(db, id, 'a2');
       await svc.queueCandidates(await svc.scanForPromotionCandidates());
       expect(await svc.reject(id, 'admin', 'Not ready')).toBe(true);
-      const e = db.prepare('SELECT scope FROM knowledge_entries WHERE id = ?').get(id) as any;
+      const e = await db.get<any>('SELECT scope FROM knowledge_entries WHERE id = ?', [id]);
       expect(e.scope).toBe('USER');
-      const q = db.prepare('SELECT cooldown_until FROM kb_promotion_queue WHERE entry_id = ?').get(id) as any;
+      const q = await db.get<any>('SELECT cooldown_until FROM kb_promotion_queue WHERE entry_id = ?', [id]);
       expect(q.cooldown_until).toBeNull();
     });
   });
@@ -127,8 +126,8 @@ describe('ScopePromotionService', () => {
       seedEntry(db, { tags: 'KSA-100' });
       const { promoted } = await svc.promoteOnMerge('KSA-295');
       expect(promoted).toBe(2);
-      expect((db.prepare('SELECT scope FROM knowledge_entries WHERE id=?').get(id1) as any).scope).toBe('PROJECT');
-      expect((db.prepare('SELECT scope FROM knowledge_entries WHERE id=?').get(id2) as any).scope).toBe('PROJECT');
+      expect((await db.get<any>('SELECT scope FROM knowledge_entries WHERE id=?', [id1])).scope).toBe('PROJECT');
+      expect((await db.get<any>('SELECT scope FROM knowledge_entries WHERE id=?', [id2])).scope).toBe('PROJECT');
     });
 
     it('skips non-USER entries (not matched by query)', async () => {
@@ -143,7 +142,7 @@ describe('ScopePromotionService', () => {
     it('creates PENDING for PROJECT entry', async () => {
       const id = seedEntry(db, { scope: 'PROJECT' });
       expect(await svc.requestSharedPromotion(id, 'Cross-project')).toBe(true);
-      const q = db.prepare('SELECT * FROM kb_promotion_queue WHERE entry_id=?').get(id) as any;
+      const q = await db.get<any>('SELECT * FROM kb_promotion_queue WHERE entry_id=?', [id]);
       expect(q.target_tier).toBe('SHARED');
       expect(q.status).toBe('PENDING');
     });

@@ -92,7 +92,7 @@ export class PegaDataPageEnumerator {
     if (!pxObjClass || (!insKey && !pyRuleName)) return null;
 
     return {
-      insKey: insKey || `${pxObjClass} ${pyClassName} ${pyRuleName}`,
+      insKey: insKey || `${pxObjClass} ${pyClassName} ${pyRuleName.toUpperCase()}`,
       pxObjClass,
       pyClassName,
       pyRuleName,

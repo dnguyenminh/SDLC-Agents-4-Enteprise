@@ -1,7 +1,7 @@
 # SA4E-44 Backend Dockerfile
-# Node.js 20 + Hono backend for Code Intelligence MCP Server
+# Node.js 22 + Hono backend for Code Intelligence MCP Server
 # Using Debian slim instead of Alpine for glibc compatibility (onnxruntime-node requires glibc)
-FROM node:20-slim AS base
+FROM node:22-slim AS base
 
 WORKDIR /app
 
@@ -35,7 +35,7 @@ ENV TRANSFORMERS_CACHE=/app/.hf-cache
 RUN node scripts/preload-models.mjs || echo "preload-models skipped. Models will load at runtime."
 
 # --- Production stage ---
-FROM node:20-slim AS production
+FROM node:22-slim AS production
 
 WORKDIR /app
 

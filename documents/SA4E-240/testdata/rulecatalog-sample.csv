@@ -1,0 +1,6 @@
+pzInsKey,pxObjClass,pyClassName,pyRuleSet,pyRuleSetVersion,pyRuleAvailable,pyBaseRule,pyCircumstanceType,pyCircumstanceProp,pyCircumstanceVal,pyCircumstanceDateProp,pyCircumstanceDate,pyRuleStarts,pyRuleEnds,pyLabel,pxCreateDateTime
+RULE-OBJ-ACTIVITY MYCO-FW-Data!ProcessOrder,Rule-Obj-Activity,MYCO-FW-Data,MYCOFW,01-01-01,Yes,,,,,,,,,Process Order,20240101T000000.000 GMT
+RULE-OBJ-PROPERTY MYCO-Data-Customer!Email,Rule-Obj-Property,MYCO-Data-Customer,MYCOINT,02-03-11,Yes,,,,,,,,,"Email, Primary",20240102T000000.000 GMT
+RULE-HTML-SECTION MYCO-UI!Header,Rule-HTML-Section,MYCO-UI,MYCOUI,01-01-05,Yes,,,,,,,,,Header Section,20240103T000000.000 GMT
+,Rule-Obj-Activity,MYCO-Missing,MYCOFW,01-01-01,Yes,,,,,,,,,Missing InsKey,20240104T000000.000 GMT
+RULE-OBJ-ACTIVITY MYCO-NoClass!X,,MYCO-NoClass,MYCOFW,01-01-01,Yes,,,,,,,,,Missing ObjClass,20240105T000000.000 GMT

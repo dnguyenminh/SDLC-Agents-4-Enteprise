@@ -1,0 +1,13 @@
+<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="2" value="PBT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="80" y="80" width="120" height="60" as="geometry"/></mxCell>
+<mxCell id="3" value="UT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="280" y="80" width="120" height="60" as="geometry"/></mxCell>
+<mxCell id="4" value="IT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="480" y="80" width="120" height="60" as="geometry"/></mxCell>
+<mxCell id="5" value="E2E-API" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="80" width="120" height="60" as="geometry"/></mxCell>
+<mxCell id="6" value="E2E-UI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="880" y="80" width="120" height="60" as="geometry"/></mxCell>
+<mxCell id="7" value="SIT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="1080" y="80" width="120" height="60" as="geometry"/></mxCell>
+<mxCell id="e1" edge="1" parent="1" source="2" target="3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e2" edge="1" parent="1" source="3" target="4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e3" edge="1" parent="1" source="4" target="5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e4" edge="1" parent="1" source="5" target="6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e5" edge="1" parent="1" source="6" target="7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root></mxGraphModel>

@@ -4,7 +4,9 @@
  */
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fs from "fs";
 import { httpPostJson as utilHttpPostJson } from "../utils/http-client-utils";
+import { detectSfdxProject } from "../sf-indexer";
 
 export interface DocEntry {
     path: string;
@@ -197,9 +199,34 @@ export class IndexerHttpClient {
     ): Promise<UploadResult> {
         // Priority 1: Project source code (exclude all library/vendor directories at ANY depth)
         const libraryExcludes = "**/{node_modules,dist,.git,build,out,.opencode,vendor,packages,bower_components,.kilo,scratch,.code-intel,.analysis,SDLC-Agents-4-Enterprise}/**";
-        const projectFiles = await vscode.workspace.findFiles(
-            "**/*.{ts,tsx,kt,java,py,go,rs}", libraryExcludes
-        );
+        
+        // Detect SFDX project to adjust glob patterns
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        let isSfdx = false;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+            const root = workspaceFolders[0].uri.fsPath;
+            const sfdxRoot = detectSfdxProject(root);
+            if (sfdxRoot) {
+                isSfdx = true;
+            }
+        }
+
+        let projectFiles: vscode.Uri[] = [];
+        if (isSfdx) {
+            // Salesforce DX project: include Apex, metadata, LWC
+            const [clsFiles, triggerFiles, metaFiles, lwcJsFiles, lwcHtmlFiles] = await Promise.all([
+                vscode.workspace.findFiles("**/*.cls", libraryExcludes),
+                vscode.workspace.findFiles("**/*.trigger", libraryExcludes),
+                vscode.workspace.findFiles("**/*-meta.xml", libraryExcludes),
+                vscode.workspace.findFiles("**/lwc/**/*.js", libraryExcludes),
+                vscode.workspace.findFiles("**/lwc/**/*.html", libraryExcludes),
+            ]);
+            projectFiles = [...clsFiles, ...triggerFiles, ...metaFiles, ...lwcJsFiles, ...lwcHtmlFiles];
+        } else {
+            projectFiles = await vscode.workspace.findFiles(
+                "**/*.{ts,tsx,kt,java,py,go,rs}", libraryExcludes
+            );
+        }
 
         if (projectFiles.length === 0) { return { uploaded: 0, errors: 0, summary: "ℹ️ No source files found" }; }
 

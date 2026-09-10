@@ -5,14 +5,15 @@
  */
 
 import * as crypto from 'crypto';
-import Database from 'better-sqlite3';
 import type { QueryDatabaseAdapter } from '../database/adapters/DatabaseAdapter.js';
+import { SqliteAdapter } from '../database/adapters/SqliteAdapter.js';
 import { KNOWLEDGE_SCHEMA } from './schema.js';
 import type {
   Thread, Message, Checkpoint, ToolExecution, Artifact,
   KnowledgeEvent, Agent, PendingWrite, SaveCheckpointInput, MessageInput,
 } from './models.js';
 
+import * as path from 'path';
 /** Parse JSON safely with fallback. */
 function parse<T>(raw: string | null | undefined, fallback: T): T {
   if (!raw) return fallback;
@@ -28,20 +29,13 @@ export class KnowledgeDb {
 
   /**
    * Create an in-memory KnowledgeDb for testing.
-   * Uses better-sqlite3 :memory: with sync-to-async wrapper.
+   * Uses SqliteAdapter in-memory.
    */
   static createInMemory(): KnowledgeDb {
-    const raw = new Database(':memory:');
-    raw.pragma('journal_mode = WAL');
-    const adapter: QueryDatabaseAdapter = {
-      async runAsync(sql, params?) { const s = raw.prepare(sql); const r = params ? s.run(...params) : s.run(); return { changes: r.changes, lastInsertRowid: r.lastInsertRowid }; },
-      async getAsync<T>(sql: string, params?: unknown[]) { const s = raw.prepare(sql); return (params ? s.get(...params) : s.get()) as T | undefined; },
-      async allAsync<T>(sql: string, params?: unknown[]) { const s = raw.prepare(sql); return (params ? s.all(...params) : s.all()) as T[]; },
-      async execAsync(sql) { raw.exec(sql); },
-      async transactionAsync<T>(fn: () => Promise<T>) { return fn(); },
-    };
-    raw.exec(KNOWLEDGE_SCHEMA);
-    return new KnowledgeDb(adapter);
+    const adapter = new SqliteAdapter(':memory:');
+    adapter.connect();
+    adapter.exec(KNOWLEDGE_SCHEMA);
+    return new KnowledgeDb(adapter as unknown as QueryDatabaseAdapter);
   }
 
   /** Detect PostgreSQL via runtime duck-typing (composed adapters expose getEngine). */

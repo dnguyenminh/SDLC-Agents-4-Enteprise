@@ -1,0 +1,63 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="start" value="Start" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="40" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="preDeploy" value="Pre-Deploy Checklist (gate)" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="120" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="decision1" value="Tests green &amp; merged?" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="210" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="build" value="Build &amp; Bundle VSIX (tsc + elkjs)" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="330" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="dbna" value="DB Migration: N/A" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="410" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="config" value="Config: optional env vars (defaults)" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="490" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="verify" value="Verify: MCP call + smoke tests" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="570" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="decision2" value="Healthy?" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="660" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="done" value="Deployed v1.20.0" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="780" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="rollback" value="Rollback: checkout prev tag + reinstall VSIX" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;html=1;" vertex="1" parent="1">
+      <mxGeometry x="540" y="660" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="start" target="preDeploy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="preDeploy" target="decision1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="decision1" target="build" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="build" target="dbna" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" edge="1" parent="1" source="dbna" target="config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" edge="1" parent="1" source="config" target="verify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" edge="1" parent="1" source="verify" target="decision2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" edge="1" parent="1" source="decision2" target="done" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" edge="1" parent="1" source="decision2" target="rollback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

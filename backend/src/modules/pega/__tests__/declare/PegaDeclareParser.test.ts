@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PegaDeclareParser } from '../../declare/PegaDeclareParser.js';
 import { PegaClipboardContext } from '../../expression/PegaClipboardContext.js';
+import { ExprNodeEvaluator } from '../../expression/ExprNodeEvaluator.js';
 
 describe('PegaDeclareParser', () => {
   const parser = new PegaDeclareParser();
@@ -33,26 +34,29 @@ describe('PegaDeclareParser', () => {
       expect(typed.declareType).toBe('Declare-Expression');
     });
 
-    it('parses expression string into actual ExpressionAstNode with PegaExpressionParser', () => {
+    it('parses expression string into a POC ExprNode and evaluates it', () => {
       const json = {
         pxObjClass: 'Rule-Declare-Expressions',
         pyClassName: 'Work-Cover-Jira',
-        pyRuleName: 'FullName',
-        pyProperty: 'pyFullName',
-        pyExpression: '.pyFirstName .AND. .pyLastName',
+        pyRuleName: 'HasBoth',
+        pyProperty: 'pyHasBoth',
+        // Grammar-native logical operator (&&); raw parser does not handle Pega '.AND.' text.
+        pyExpression: '.pyFirstName = "John" && .pyLastName = "Doe"',
       };
 
       const typed = parser.parseDeclareExpression(json);
       expect(typed.expressionAst).toBeDefined();
-      expect(typed.expressionAst!.nodeType).toBe('BinaryOp');
-      // Verify it evaluates correctly
+      // New model is a data AST discriminated by `kind` (not the old OOP `nodeType`).
+      expect(typed.expressionAst!.kind).toBe('BinaryOp');
+
+      // Evaluation is now done by ExprNodeEvaluator, not by a node method.
       const ctx = new PegaClipboardContext({
         pyWorkPage: {
           pyFirstName: { type: 'Text', value: 'John' },
           pyLastName: { type: 'Text', value: 'Doe' },
         },
       });
-      const result = typed.expressionAst!.evaluate(ctx);
+      const result = new ExprNodeEvaluator().eval(typed.expressionAst!, ctx);
       expect(result.boolean).toBe(true);
     });
 

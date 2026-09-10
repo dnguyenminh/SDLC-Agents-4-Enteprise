@@ -7,6 +7,7 @@
 import { AtlassianHttpClient } from "../../mcp/atlassian/atlassian-http-client";
 import type { AttachmentMeta } from "./LinkCrawler";
 import * as vscode from "vscode";
+import { getEffectiveScope } from "../../utils/scope-detector";
 
 /** Result of fetching an attachment */
 export interface FetchedAttachment {
@@ -112,7 +113,7 @@ export class AttachmentFetcher {
             const body = JSON.stringify({
                 jsonrpc: "2.0", id: Date.now(),
                 method: "tools/call",
-                params: { name: "mem_ingest_file", arguments: { file_path: tempPath, type: "CONTEXT", scope: "PROJECT" } },
+                params: { name: "mem_ingest_file", arguments: { file_path: tempPath, type: "CONTEXT", scope: getEffectiveScope() } },
             });
             const res = await this.postJson(url, body, token);
             // Cleanup temp file

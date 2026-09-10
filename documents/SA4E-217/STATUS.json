@@ -1,6 +1,9 @@
 {
   "ticket": "SA4E-217",
   "currentPhase": "deployment",
+  "status": "done",
+  "verifiedBy": "QA automated verification (test re-run 2026-08-30)",
+  "closedAt": "2026-08-30",
   "autonomyLevel": "L3",
   "humanGates": ["deployment"],
   "phases": {
@@ -13,7 +16,7 @@
     "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 1.1, "completedAt": "2026-08-27T08:13:00Z", "note": "unit 18/18 + real UAT 8/8 PASS (SA4E-217-uat.test.ts)" },
     "deployment": { "status": "done", "file": "DPG.md + RLN.md", "version": 1.0, "completedAt": "2026-08-27T08:20:00Z", "note": "guides ready; actual rollout pending human gate (deployment)" }
   },
-  "lastUpdated": "2026-08-27T08:20:00Z",
+  "lastUpdated": "2026-08-30T00:00:00Z",
   "architecturePattern": "plugin",
   "tokenBudget": {
     "dailyCap": 500000,

@@ -1,6 +1,6 @@
 /**
  * SA4E-42 IT-01..13 — integration tests for the event-driven re-index over a real
- * better-sqlite3 DB (makeTempDb) + fake event source + fake embedding.
+ * SqliteAdapter DB (makeTempDb) + fake event source + fake embedding.
  *
  * IT-01 is the BUG REPRODUCTION: before the ReindexSubscriber existed, a late
  * `connected` event never refreshed `mcp_tools`, so find_tools could not discover
@@ -8,8 +8,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import pino from 'pino';
-import Database from 'better-sqlite3';
-import type BetterSqlite3 from 'better-sqlite3';
+import { SqliteAdapter } from '../../src/database/adapters/SqliteAdapter.js';
 import { makeTempDb, type TempDb } from '../../src/__tests__/sa4e-testkit.js';
 import { migrateAddMcpToolsServerColumn } from '../../src/engine/db/migrations.js';
 import { ReindexActionMapper } from '../../src/modules/orchestration/reindex/ReindexActionMapper.js';
@@ -39,7 +38,7 @@ class SlowEmbedder implements IEmbedder {
 
 interface Harness {
   tmp: TempDb;
-  db: BetterSqlite3.Database;
+  db: any;
   src: FakeToolSource;
   source: FakeEventSource;
   sub: ReindexSubscriber;
@@ -56,12 +55,12 @@ function harness(): Harness {
   return { tmp, db, src, source, sub };
 }
 
-function names(db: BetterSqlite3.Database, server: string): string[] {
+function names(db: any, server: string): string[] {
   return (db.prepare('SELECT name FROM mcp_tools WHERE server = ? ORDER BY name').all(server) as { name: string }[])
     .map((r) => r.name);
 }
 
-function seed(db: BetterSqlite3.Database, server: string | null, name: string): void {
+function seed(db: any, server: string | null, name: string): void {
   db.prepare('INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?,?,?,?,?,?)')
     .run(name, `${name} d`, '{}', server ?? 'memory', server, null);
 }
@@ -202,22 +201,22 @@ describe('SA4E-42 re-index integration', () => {
     expect(names(h.db, 'atlassian')).toEqual(['t1', 't2', 't6']);
   });
 
-  it('IT-11: migration adds server column + idempotent index', () => {
-    const db = new Database(':memory:');
-    db.exec(`CREATE TABLE mcp_tools (
+  it('IT-11: migration adds server column + idempotent index', async () => {
+    const adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    adapter.exec(`CREATE TABLE mcp_tools (
       id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE,
       description TEXT NOT NULL, schema_json TEXT NOT NULL, category TEXT, vector BLOB)`);
-    db.prepare('INSERT INTO mcp_tools (name, description, schema_json) VALUES (?,?,?)').run('old', 'd', '{}');
-    const dbAdapter = new SqliteDbAdapter(db);
-    migrateAddMcpToolsServerColumn(dbAdapter);
-    migrateAddMcpToolsServerColumn(dbAdapter); // second run is a safe no-op
-    const cols = (db.pragma('table_info(mcp_tools)') as any[]).map((c) => c.name);
+    adapter.run('INSERT INTO mcp_tools (name, description, schema_json) VALUES (?,?,?)', ['old', 'd', '{}']);
+    migrateAddMcpToolsServerColumn(adapter);
+    migrateAddMcpToolsServerColumn(adapter); // second run is a safe no-op
+    const cols = adapter.all(`SELECT name FROM pragma_table_info('mcp_tools')`).map((c: any) => c.name);
     expect(cols).toContain('server');
-    const idx = db.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_mcp_tools_server'").get();
+    const idx = adapter.get("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_mcp_tools_server'");
     expect(idx).toBeDefined();
-    const existing = db.prepare('SELECT server FROM mcp_tools WHERE name = ?').get('old') as any;
+    const existing = adapter.get('SELECT server FROM mcp_tools WHERE name = ?', ['old']) as any;
     expect(existing.server).toBeNull();
-    db.close();
+    await adapter.disconnect();
   });
 
   it('IT-12: cross-server name collision is not silently hijacked (F-01)', async () => {

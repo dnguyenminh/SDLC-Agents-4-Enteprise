@@ -1,0 +1,57 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="issue" value="Issue Detected (PROD)" style="ellipse;fillColor=#f8cecc;strokeColor=#b85450;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="40" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sev" value="Severity?" style="rhombus;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="120" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="hotfix" value="Hotfix (minor, workaround)" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+      <mxGeometry x="540" y="130" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="stop" value="Stop broken version (uninstall VSIX)" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="240" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="revert" value="Revert code: git checkout prev tag" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="320" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="reinstall" value="Reinstall previous VSIX" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="400" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="restore" value="Restore modified .drawio from VCS" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="480" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="verify" value="Verify: tool call returns old behavior" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="560" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="ok" value="Rollback Successful" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="650" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" edge="1" parent="1" source="issue" target="sev" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2" edge="1" parent="1" source="sev" target="hotfix" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3" edge="1" parent="1" source="sev" target="stop" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4" edge="1" parent="1" source="stop" target="revert" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5" edge="1" parent="1" source="revert" target="reinstall" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6" edge="1" parent="1" source="reinstall" target="restore" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7" edge="1" parent="1" source="restore" target="verify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8" edge="1" parent="1" source="verify" target="ok" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

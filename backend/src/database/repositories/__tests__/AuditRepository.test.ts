@@ -4,9 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../adapters/SqliteAdapter.js';
 import { AuditRepository } from '../AuditRepository.js';
-import { makeTestAdapter } from '../../__tests__/test-adapter.js';
 
 const SCHEMA = `
 CREATE TABLE audit_logs (
@@ -16,21 +15,24 @@ CREATE TABLE audit_logs (
 );
 `;
 
-let db: Database.Database;
+let adapter: SqliteAdapter;
 let repo: AuditRepository;
 
-beforeEach(() => {
-  db = new Database(':memory:');
-  db.exec(SCHEMA);
-  repo = new AuditRepository(makeTestAdapter(db));
+beforeEach(async () => {
+  adapter = new SqliteAdapter(':memory:');
+  await adapter.connect();
+  await adapter.exec(SCHEMA);
+  repo = new AuditRepository(adapter);
 });
 
-afterEach(() => db.close());
+afterEach(async () => {
+  await adapter.disconnect();
+});
 
 describe('AuditRepository', () => {
   it('recordAudit inserts a log entry with nulls for missing fields', async () => {
     await repo.recordAudit('u1', 'alice', 'CREATE', 'kb');
-    const row = db.prepare('SELECT * FROM audit_logs').get() as Record<string, unknown>;
+    const row = await adapter.get('SELECT * FROM audit_logs') as Record<string, unknown>;
     expect(row.user_id).toBe('u1');
     expect(row.username).toBe('alice');
     expect(row.action).toBe('CREATE');
@@ -41,7 +43,7 @@ describe('AuditRepository', () => {
 
   it('recordAudit stores optional resourceId and details', async () => {
     await repo.recordAudit('u2', 'bob', 'DELETE', 'user', 'u99', 'removed inactive');
-    const row = db.prepare('SELECT * FROM audit_logs').get() as Record<string, unknown>;
+    const row = await adapter.get('SELECT * FROM audit_logs') as Record<string, unknown>;
     expect(row.resource_id).toBe('u99');
     expect(row.details).toBe('removed inactive');
   });

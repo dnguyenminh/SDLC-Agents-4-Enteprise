@@ -47,7 +47,7 @@ export class PegaRuleSetResolverService {
 
   /**
    * Developer short name: setting `kiroSdlc.pegaDeveloperShortName`,
-   * fallback phần trước `@` của `pegaUsername` (vd SSA@TGB => SSA).
+   * fallback phần trước `@` của `pegaUsername` (vd user@org => user).
    */
   public getDeveloperShortName(): string {
     const config = vscode.workspace.getConfiguration("kiroSdlc");

@@ -22,10 +22,16 @@ function extractNumbers(line: string): number[] {
 }
 
 function parseVitestJest(text: string): Parsed {
-  const failed = /(\d+)\s+failed/.exec(text);
-  const passed = /(\d+)\s+passed/.exec(text);
-  const total = /(\d+)\s+total/.exec(text);
-  const skipped = /(\d+)\s+skipped/.exec(text);
+  // Vitest/Jest print a summary line that starts with "Tests" (e.g.
+  // "Tests  1 failed | 4 passed | 5 total" for vitest, or "Tests: 3 passed, 3 total" for jest).
+  // We must target THAT line rather than the "Test Files" line, because a whole-text scan with
+  // "/(\d+)\s+total/" would otherwise match "Test Files ... 3 total" first and miscount the run.
+  const lines = text.split('\n');
+  const testsLine = lines.find((l) => /^\s*Tests\b/.test(l)) ?? text;
+  const failed = /(\d+)\s+failed/.exec(testsLine);
+  const passed = /(\d+)\s+passed/.exec(testsLine);
+  const total = /(\d+)\s+total/.exec(testsLine);
+  const skipped = /(\d+)\s+skipped/.exec(testsLine);
   const f = failed ? Number(failed[1]) : 0;
   const p = passed ? Number(passed[1]) : 0;
   const t = total ? Number(total[1]) : p + f + (skipped ? Number(skipped[1]) : 0);

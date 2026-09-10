@@ -1,0 +1,75 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="860" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="issue" value="Issue Detected" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="400" y="40" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="dec_sev" value="Severity?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="110" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="crit" value="Critical → Immediate rollback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="220" width="260" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="minor" value="Minor → Hotfix (no rollback)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="620" y="220" width="220" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="stop" value="Stop / Uninstall bad VSIX" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="290" width="240" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="rdb" value="Rollback DB: N/A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="350" width="240" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="rprev" value="Deploy Previous VSIX" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="410" width="240" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="rconfig" value="Restore Config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="470" width="240" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="rverify" value="Verify Rollback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="300" y="530" width="240" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="dec_verify" value="Success?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="340" y="600" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="success" value="Rollback SUCCESS ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="710" width="240" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="fail" value="Escalate / Manual fix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="620" y="710" width="220" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_issue_dec" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="issue" target="dec_sev">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_dec_crit" value="Critical" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;" edge="1" parent="1" source="dec_sev" target="crit">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_dec_minor" value="Minor" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="dec_sev" target="minor">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_crit_stop" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="crit" target="stop">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_stop_rdb" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="stop" target="rdb">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_rdb_rprev" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="rdb" target="rprev">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_rprev_rconfig" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="rprev" target="rconfig">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_rconfig_rverify" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="rconfig" target="rverify">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_rverify_dec" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="rverify" target="dec_verify">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_dec_yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="dec_verify" target="success">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_dec_no" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;" edge="1" parent="1" source="dec_verify" target="fail">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { PegaHtmlSanitizer } from '../../security/PegaHtmlSanitizer.js';
 import { PegaFunctionWhitelist } from '../../security/PegaFunctionWhitelist.js';
-import { PegaExpressionValidator } from '../../security/PegaExpressionValidator.js';
+import { ExprNodeValidator } from '../../expression/ExprNodeValidator.js';
+import { parseExpression } from '../../expression/pega-expr/parser.js';
 import { PegaEvaluationSandbox } from '../../security/PegaEvaluationSandbox.js';
 
 describe('PegaHtmlSanitizer', () => {
@@ -112,51 +113,32 @@ describe('PegaFunctionWhitelist', () => {
   });
 });
 
-describe('PegaExpressionValidator', () => {
-  const validator = new PegaExpressionValidator();
+describe('ExprNodeValidator', () => {
+  const validator = new ExprNodeValidator();
+  const validate = (expr: string) => validator.validate(parseExpression(expr));
 
-  it('validates simple expression returns valid=true', () => {
-    const result = validator.validate('@upper("hello")');
+  it('validates a whitelisted function expression as valid', () => {
+    const result = validate('@upper("hello")');
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
-  it('rejects empty expression', () => {
-    const result = validator.validate('');
-    expect(result.valid).toBe(false);
-    expect(result.errors[0].code).toBe('EMPTY_EXPRESSION');
-  });
-
-  it('rejects expression exceeding max length', () => {
-    const longExpr = 'x'.repeat(100_001);
-    const result = validator.validate(longExpr);
-    expect(result.valid).toBe(false);
-    expect(result.errors[0].code).toBe('EXPRESSION_TOO_LONG');
-  });
-
-  it('rejects parse error expression', () => {
-    const result = validator.validate('@upper(,');
-    expect(result.valid).toBe(false);
-    expect(result.errors[0].code).toBe('PARSE_ERROR');
-  });
-
-  it('rejects function not in whitelist', () => {
-    const result = validator.validate('@evilFunc(42)');
+  it('rejects a function not in the whitelist', () => {
+    const result = validate('@evilFunc(42)');
     expect(result.valid).toBe(false);
     expect(result.errors[0].code).toBe('FUNCTION_NOT_ALLOWED');
   });
 
-  it('validates nested binary+unary expressions', () => {
-    const expr = '.NOT. (true .AND. false) .OR. (.Status = "Open")';
-    const result = validator.validate(expr);
-    expect(result.valid).toBe(true);
-    expect(result.errors).toHaveLength(0);
+  it('rejects a nested non-whitelisted function inside a whitelisted one', () => {
+    const result = validate('@upper(@evilFunc("x"))');
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].code).toBe('FUNCTION_NOT_ALLOWED');
   });
 
-  it('rejects whitespace-only expression', () => {
-    const result = validator.validate('   ');
-    expect(result.valid).toBe(false);
-    expect(result.errors[0].code).toBe('EMPTY_EXPRESSION');
+  it('validates expressions with no function calls', () => {
+    const result = validate('.Status = "Open" && .Amount > 100');
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 });
 

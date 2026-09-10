@@ -1,13 +1,26 @@
-import type { PegaClipboardContext } from './PegaClipboardContext.js';
+/**
+ * PegaExpressionAst.ts — Runtime value model + builtin function registry for Pega
+ * expression evaluation.
+ *
+ * NOTE: The self-evaluating OOP AST node classes that formerly lived here (PropertyRefNode,
+ * FunctionCallNode, BinaryOpNode, ...) were removed. Parsing now produces the POC ExprNode
+ * data model (expression/pega-expr/nodes.ts) and evaluation is done by ExprNodeEvaluator.
+ * This file retains only the runtime primitives that both the evaluator and the decision
+ * layer depend on: PegValue (tagged runtime value), PegaBuiltinFunctions (whitelisted
+ * function implementations), and PegExpressionError.
+ */
 
+/** Runtime value tag for an evaluated expression result. */
 export type ValueType = 'Text' | 'Number' | 'Boolean' | 'Null' | 'Page' | 'PageList';
 
+/** A tagged runtime value produced by evaluating an expression. */
 export class PegValue {
   constructor(
     public readonly type: ValueType,
     public readonly value: unknown,
   ) {}
 
+  /** Coerce to display text. Null -> "", numbers/booleans stringified. */
   get text(): string {
     if (this.type === 'Null') return '';
     if (this.type === 'Number') return String(this.value);
@@ -15,6 +28,7 @@ export class PegValue {
     return String(this.value ?? '');
   }
 
+  /** Coerce to a number (text is parsed; non-numeric -> 0). */
   get number(): number {
     if (this.type === 'Number') return this.value as number;
     if (this.type === 'Text') {
@@ -24,6 +38,7 @@ export class PegValue {
     return 0;
   }
 
+  /** Coerce to boolean (Pega truthiness: non-empty/non-zero/non-null). */
   get boolean(): boolean {
     if (this.type === 'Boolean') return this.value as boolean;
     if (this.type === 'Null') return false;
@@ -35,126 +50,14 @@ export class PegValue {
   static number(v: number): PegValue { return new PegValue('Number', v); }
   static bool(v: boolean): PegValue { return new PegValue('Boolean', v); }
   static null(): PegValue { return new PegValue('Null', null); }
-  static page(name: string, ctx: PegaClipboardContext): PegValue { return new PegValue('Page', { name, ctx }); }
+  static page(name: string, ctx: unknown): PegValue { return new PegValue('Page', { name, ctx }); }
   static pageList(items: PegValue[]): PegValue { return new PegValue('PageList', items); }
 }
 
-export type ExpressionNodeType =
-  | 'PropertyRef'
-  | 'FunctionCall'
-  | 'StringLiteral'
-  | 'NumberLiteral'
-  | 'BooleanLiteral'
-  | 'NullLiteral'
-  | 'BinaryOp'
-  | 'UnaryOp';
-
-export type BinaryOperator = 'AND' | 'OR' | 'EQ' | 'NEQ' | 'GT' | 'LT' | 'GTE' | 'LTE';
-export type UnaryOperator = 'NOT' | 'ISNULL';
-
-export interface ExpressionAstNode {
-  nodeType: ExpressionNodeType;
-  evaluate(context: PegaClipboardContext): PegValue;
-}
-
-export class PropertyRefNode implements ExpressionAstNode {
-  readonly nodeType: ExpressionNodeType = 'PropertyRef';
-  constructor(public readonly parts: string[]) {}
-
-  evaluate(context: PegaClipboardContext): PegValue {
-    return context.resolve(this.parts);
-  }
-}
-
-export class FunctionCallNode implements ExpressionAstNode {
-  readonly nodeType: ExpressionNodeType = 'FunctionCall';
-  constructor(
-    public readonly name: string,
-    public readonly args: ExpressionAstNode[],
-  ) {}
-
-  evaluate(context: PegaClipboardContext): PegValue {
-    const evaledArgs = this.args.map(a => a.evaluate(context));
-    return PegaBuiltinFunctions.call(this.name, evaledArgs);
-  }
-}
-
-export class StringLiteralNode implements ExpressionAstNode {
-  readonly nodeType: ExpressionNodeType = 'StringLiteral';
-  constructor(public readonly value: string) {}
-
-  evaluate(_context: PegaClipboardContext): PegValue {
-    return PegValue.text(this.value);
-  }
-}
-
-export class NumberLiteralNode implements ExpressionAstNode {
-  readonly nodeType: ExpressionNodeType = 'NumberLiteral';
-  constructor(public readonly value: number) {}
-
-  evaluate(_context: PegaClipboardContext): PegValue {
-    return PegValue.number(this.value);
-  }
-}
-
-export class BooleanLiteralNode implements ExpressionAstNode {
-  readonly nodeType: ExpressionNodeType = 'BooleanLiteral';
-  constructor(public readonly value: boolean) {}
-
-  evaluate(_context: PegaClipboardContext): PegValue {
-    return PegValue.bool(this.value);
-  }
-}
-
-export class NullLiteralNode implements ExpressionAstNode {
-  readonly nodeType: ExpressionNodeType = 'NullLiteral';
-
-  evaluate(_context: PegaClipboardContext): PegValue {
-    return PegValue.null();
-  }
-}
-
-export class BinaryOpNode implements ExpressionAstNode {
-  readonly nodeType: ExpressionNodeType = 'BinaryOp';
-  constructor(
-    public readonly operator: BinaryOperator,
-    public readonly left: ExpressionAstNode,
-    public readonly right: ExpressionAstNode,
-  ) {}
-
-  evaluate(context: PegaClipboardContext): PegValue {
-    const l = this.left.evaluate(context);
-    const r = this.right.evaluate(context);
-
-    switch (this.operator) {
-      case 'AND': return PegValue.bool(l.boolean && r.boolean);
-      case 'OR': return PegValue.bool(l.boolean || r.boolean);
-      case 'EQ': return PegValue.bool(l.text === r.text);
-      case 'NEQ': return PegValue.bool(l.text !== r.text);
-      case 'GT': return PegValue.bool(l.number > r.number);
-      case 'LT': return PegValue.bool(l.number < r.number);
-      case 'GTE': return PegValue.bool(l.number >= r.number);
-      case 'LTE': return PegValue.bool(l.number <= r.number);
-    }
-  }
-}
-
-export class UnaryOpNode implements ExpressionAstNode {
-  readonly nodeType: ExpressionNodeType = 'UnaryOp';
-  constructor(
-    public readonly operator: UnaryOperator,
-    public readonly operand: ExpressionAstNode,
-  ) {}
-
-  evaluate(context: PegaClipboardContext): PegValue {
-    const v = this.operand.evaluate(context);
-    switch (this.operator) {
-      case 'NOT': return PegValue.bool(!v.boolean);
-      case 'ISNULL': return PegValue.bool(v.type === 'Null');
-    }
-  }
-}
-
+/**
+ * Whitelisted builtin Pega functions. Deny-by-default: `call` throws for any name not in
+ * the map. Keys include the leading '@' (e.g. '@upper'); callers rebuild that canonical key.
+ */
 export class PegaBuiltinFunctions {
   private static whitelist = new Map<string, (args: PegValue[]) => PegValue>([
     ['@round', (args) => {
@@ -179,10 +82,17 @@ export class PegaBuiltinFunctions {
     ['@Index', (args) => PegValue.number(args[0].text.indexOf(args[1].text))],
   ]);
 
+  /** True if a function name (with leading '@') is whitelisted. */
   static isWhitelisted(name: string): boolean {
     return this.whitelist.has(name);
   }
 
+  /**
+   * Invoke a whitelisted builtin.
+   * @param name Canonical function key (with leading '@')
+   * @param args Evaluated argument values
+   * @throws PegExpressionError if the function is not whitelisted
+   */
   static call(name: string, args: PegValue[]): PegValue {
     const fn = this.whitelist.get(name);
     if (!fn) {
@@ -192,6 +102,7 @@ export class PegaBuiltinFunctions {
   }
 }
 
+/** Error raised during expression evaluation, carrying a machine-readable code. */
 export class PegExpressionError extends Error {
   constructor(
     message: string,

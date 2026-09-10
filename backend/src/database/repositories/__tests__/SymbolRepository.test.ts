@@ -4,9 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../adapters/SqliteAdapter.js';
 import { SymbolRepository } from '../SymbolRepository.js';
-import { makeTestAdapter } from '../../__tests__/test-adapter.js';
 
 const SCHEMA = `
 CREATE TABLE files (
@@ -21,27 +20,27 @@ CREATE TABLE symbols (
 );
 `;
 
-let db: Database.Database;
+let adapter: SqliteAdapter;
 let repo: SymbolRepository;
 
-beforeEach(() => {
-  db = new Database(':memory:');
-  db.exec(SCHEMA);
-  db.prepare("INSERT INTO files (id, path, relative_path, language, module) VALUES (1, '/w/a.ts', 'a.ts', 'typescript', 'src')").run();
-  db.prepare("INSERT INTO files (id, path, relative_path, language, module) VALUES (2, '/w/b.ts', 'b.ts', 'typescript', 'src')").run();
-  db.prepare(`INSERT INTO symbols
-    (id, project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment)
-    VALUES (1, 'p1', 1, 'doAuth', 'function', 'sig', 1, 5, NULL, 'public', 'auth docs')`).run();
-  db.prepare(`INSERT INTO symbols
-    (id, project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment)
-    VALUES (2, 'p1', 2, 'MyClass', 'class', 'sig2', 1, 10, NULL, 'public', NULL)`).run();
-  db.prepare(`INSERT INTO symbols
-    (id, project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment)
-    VALUES (3, 'p2', 1, 'data', 'variable', 'v', 1, 2, NULL, NULL, NULL)`).run();
-  repo = new SymbolRepository(makeTestAdapter(db));
+beforeEach(async () => {
+  adapter = new SqliteAdapter(':memory:');
+  await adapter.connect();
+  adapter.exec(SCHEMA);
+  adapter.run("INSERT INTO files (id, path, relative_path, language, module) VALUES (?, ?, ?, ?, ?)", [1, '/w/a.ts', 'a.ts', 'typescript', 'src']);
+  adapter.run("INSERT INTO files (id, path, relative_path, language, module) VALUES (?, ?, ?, ?, ?)", [2, '/w/b.ts', 'b.ts', 'typescript', 'src']);
+  adapter.run(`INSERT INTO symbols (id, project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [1, 'p1', 1, 'doAuth', 'function', 'sig', 1, 5, null, 'public', 'auth docs']);
+  adapter.run(`INSERT INTO symbols (id, project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [2, 'p1', 2, 'MyClass', 'class', 'sig2', 1, 10, null, 'public', null]);
+  adapter.run(`INSERT INTO symbols (id, project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [3, 'p2', 1, 'data', 'variable', 'v', 1, 2, null, null, null]);
+  repo = new SymbolRepository(adapter);
 });
 
-afterEach(() => db.close());
+afterEach(async () => {
+  await adapter.disconnect();
+});
 
 describe('SymbolRepository', () => {
   it('getSymbolCount counts only code symbol kinds without scope', async () => {

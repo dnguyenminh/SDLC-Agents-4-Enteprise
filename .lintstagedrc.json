@@ -1,0 +1,8 @@
+{
+  "backend/src/**/*.ts": [
+    "eslint --fix"
+  ],
+  "extension/src/**/*.ts": [
+    "eslint --fix"
+  ]
+}

@@ -4,9 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../adapters/SqliteAdapter.js';
 import { UserRepository } from '../UserRepository.js';
-import { makeTestAdapter } from '../../__tests__/test-adapter.js';
 
 const SCHEMA = `
 CREATE TABLE users (
@@ -16,22 +15,25 @@ CREATE TABLE users (
 );
 `;
 
-let db: Database.Database;
+let adapter: SqliteAdapter;
 let repo: UserRepository;
 
-beforeEach(() => {
-  db = new Database(':memory:');
-  db.exec(SCHEMA);
-  const insert = db.prepare(`INSERT INTO users
+beforeEach(async () => {
+  adapter = new SqliteAdapter(':memory:');
+  await adapter.connect();
+  adapter.exec(SCHEMA);
+  const insertSQL = `INSERT INTO users
     (user_id, username, email, password_hash, status, access_group_id, created_at)
-    VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?)`);
-  insert.run('u1', 'alice', 'a@x.com', 'h1', 'grp-admin', '2024-01-01T00:00:00Z');
-  insert.run('u2', 'bob', 'b@x.com', 'h2', 'grp-dev', '2024-01-02T00:00:00Z');
-  insert.run('u3', 'carol', 'c@x.com', 'h3', 'grp-admin', '2024-01-03T00:00:00Z');
-  repo = new UserRepository(makeTestAdapter(db));
+    VALUES (?, ?, ?, ?, 'ACTIVE', ?, ?)`;
+  adapter.run(insertSQL, ['u1', 'alice', 'a@x.com', 'h1', 'grp-admin', '2024-01-01T00:00:00Z']);
+  adapter.run(insertSQL, ['u2', 'bob', 'b@x.com', 'h2', 'grp-dev', '2024-01-02T00:00:00Z']);
+  adapter.run(insertSQL, ['u3', 'carol', 'c@x.com', 'h3', 'grp-admin', '2024-01-03T00:00:00Z']);
+  repo = new UserRepository(adapter);
 });
 
-afterEach(() => db.close());
+afterEach(async () => {
+  await adapter.disconnect();
+});
 
 describe('UserRepository', () => {
   it('getUserCount returns the total number of users', async () => {
@@ -45,9 +47,9 @@ describe('UserRepository', () => {
 
   it('updateEmail changes the user email', async () => {
     await repo.updateEmail('u1', 'new@x.com');
-    const row = db.prepare('SELECT email FROM users WHERE user_id = ?').get('u1') as { email: string };
-    expect(row.email).toBe('new@x.com');
-    const other = db.prepare('SELECT email FROM users WHERE user_id = ?').get('u2') as { email: string };
-    expect(other.email).toBe('b@x.com');
+    const row = adapter.get<{ email: string }>('SELECT email FROM users WHERE user_id = ?', ['u1']);
+    expect(row?.email).toBe('new@x.com');
+    const other = adapter.get<{ email: string }>('SELECT email FROM users WHERE user_id = ?', ['u2']);
+    expect(other?.email).toBe('b@x.com');
   });
 });

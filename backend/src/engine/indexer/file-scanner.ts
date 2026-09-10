@@ -32,7 +32,7 @@ const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
   '.go': 'go',
   '.rs': 'rust',
   '.c': 'c', '.h': 'c',
-  '.cpp': 'cpp', '.hpp': 'cpp',
+  '.cpp': 'cpp', '.hpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
   '.cs': 'csharp',
   '.rb': 'ruby',
   '.php': 'php',
@@ -40,7 +40,6 @@ const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
   '.scala': 'scala',
   '.sql': 'sql',
   '.sh': 'bash',
-  '.ps1': 'powershell',
   '.yaml': 'yaml', '.yml': 'yaml',
   '.json': 'json',
   '.toml': 'toml',
@@ -57,6 +56,8 @@ const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
   '.evt': 'aura',
   '.intf': 'aura',
   '.tokens': 'aura',
+  // ---- SA4E-... LWC HTML template support ----
+  '.html': 'lwc-html',
 };
 
 /**

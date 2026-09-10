@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { DatabaseManager } from '../../db/database-manager.js';
 import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { IndexingEngine } from '../indexing-engine.js';
@@ -18,7 +18,7 @@ import { AppConfig } from '../../config.js';
 describe('KSA-145: Tree-sitter Pipeline Integration', () => {
   let tmpDir: string;
   let dbPath: string;
-  let db: Database.Database;
+  let db: SqliteAdapter;
   let dbManager: DatabaseManager;
   let config: AppConfig;
 
@@ -102,8 +102,8 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
     };
   });
 
-  after(() => {
-    if (db) db.close();
+  after(async () => {
+    if (dbManager) dbManager.close();
     if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -120,13 +120,13 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
     const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     await engine.runFullIndex();
 
-    const fileCount = db.prepare('SELECT COUNT(*) as c FROM files').get() as { c: number };
-    assert.ok(fileCount.c >= 2, `Expected at least 2 files, got ${fileCount.c}`);
+    const fileCount = await db.get<{ c: number }>('SELECT COUNT(*) as c FROM files');
+    assert.ok(fileCount?.c >= 2, `Expected at least 2 files, got ${fileCount?.c}`);
 
-    const symbolCount = db.prepare('SELECT COUNT(*) as c FROM symbols').get() as { c: number };
-    assert.ok(symbolCount.c > 0, `Expected symbols, got ${symbolCount.c}`);
+    const symbolCount = await db.get<{ c: number }>('SELECT COUNT(*) as c FROM symbols');
+    assert.ok(symbolCount?.c > 0, `Expected symbols, got ${symbolCount?.c}`);
 
-    console.error(`[test] Indexed ${fileCount.c} files, ${symbolCount.c} symbols`);
+    console.error(`[test] Indexed ${fileCount?.c} files, ${symbolCount?.c} symbols`);
     engine.stop();
   });
 
@@ -134,15 +134,11 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
     const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     await engine.runFullIndex();
 
-    const userService = db.prepare(
-      "SELECT * FROM symbols WHERE name = 'UserService'"
-    ).get() as any;
+    const userService = await db.get<any>("SELECT * FROM symbols WHERE name = 'UserService'");
     assert.ok(userService, 'UserService class should be indexed');
     assert.equal(userService.kind, 'class');
 
-    const validateEmail = db.prepare(
-      "SELECT * FROM symbols WHERE name = 'validateEmail'"
-    ).get() as any;
+    const validateEmail = await db.get<any>("SELECT * FROM symbols WHERE name = 'validateEmail'");
     assert.ok(validateEmail, 'validateEmail function should be indexed');
     assert.equal(validateEmail.kind, 'function');
 
@@ -155,9 +151,9 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
     await engine.runFullIndex();
 
     if (stats.ready) {
-      const relCount = db.prepare('SELECT COUNT(*) as c FROM relationships').get() as { c: number };
-      console.error(`[test] Relationships: ${relCount.c}`);
-      assert.ok(relCount.c >= 0, 'Relationships table should exist');
+      const relCount = await db.get<{ c: number }>('SELECT COUNT(*) as c FROM relationships');
+      console.error(`[test] Relationships: ${relCount?.c}`);
+      assert.ok(relCount?.c >= 0, 'Relationships table should exist');
     } else {
       console.error('[test] Tree-sitter not available — skipping relationship check');
     }
@@ -169,7 +165,7 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
     const engine = new IndexingEngine(new SqliteDbAdapter(dbManager.getDb()), config);
     await engine.runFullIndex();
 
-    const initialCount = (db.prepare('SELECT COUNT(*) as c FROM symbols').get() as { c: number }).c;
+    const initialCount = (await db.get<{ c: number }>('SELECT COUNT(*) as c FROM symbols'))?.c ?? 0;
 
     const newFile = path.join(tmpDir, 'src', 'example', 'new-module.ts');
     fs.writeFileSync(newFile, [
@@ -184,7 +180,7 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
 
     await engine.indexSingleFile(newFile);
 
-    const afterCount = (db.prepare('SELECT COUNT(*) as c FROM symbols').get() as { c: number }).c;
+    const afterCount = (await db.get<{ c: number }>('SELECT COUNT(*) as c FROM symbols'))?.c ?? 0;
     assert.ok(afterCount > initialCount, `Expected more symbols: ${afterCount} > ${initialCount}`);
 
     engine.stop();
@@ -198,17 +194,13 @@ describe('KSA-145: Tree-sitter Pipeline Integration', () => {
     fs.writeFileSync(testFile, 'export function toRemove(): void {}');
     await engine.indexSingleFile(testFile);
 
-    const before = db.prepare(
-      "SELECT COUNT(*) as c FROM files WHERE relative_path LIKE '%to-remove%'"
-    ).get() as { c: number };
-    assert.equal(before.c, 1);
+    const before = await db.get<{ c: number }>("SELECT COUNT(*) as c FROM files WHERE relative_path LIKE '%to-remove%'");
+    assert.equal(before?.c, 1);
 
     engine.removeFile('src/example/to-remove.ts');
 
-    const afterFiles = db.prepare(
-      "SELECT COUNT(*) as c FROM files WHERE relative_path LIKE '%to-remove%'"
-    ).get() as { c: number };
-    assert.equal(afterFiles.c, 0);
+    const afterFiles = await db.get<{ c: number }>("SELECT COUNT(*) as c FROM files WHERE relative_path LIKE '%to-remove%'");
+    assert.equal(afterFiles?.c, 0);
 
     engine.stop();
   });

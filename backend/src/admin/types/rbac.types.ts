@@ -51,7 +51,8 @@ export type PermissionId =
   | 'SEARCH_EXPLORE'
   | 'AUDIT_VIEW'
   | 'GRAPH_VIEW'
-  | 'ANALYTICS_VIEW';
+  | 'ANALYTICS_VIEW'
+  | 'GRAPH_MAINTAIN';
 
 export interface Session {
   sessionId: string;

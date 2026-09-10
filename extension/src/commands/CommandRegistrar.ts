@@ -143,7 +143,7 @@ async function handleInjectAll(context: vscode.ExtensionContext, mcpManager?: IS
   } catch (err) { showUserError("Inject", err); }
 }
 
-async function handleInjectSelective(context: vscode.ExtensionContext, mcpManager?: IManager): Promise<void> {
+async function handleInjectSelective(context: vscode.ExtensionContext, mcpManager?: IServerManager): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) { return; }
   const port = mcpManager?.port || 9181;

@@ -1,0 +1,40 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="start" value="npm test (Vitest)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut" value="UT + PBT&#10;(pure functions)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="170" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="it" value="IT&#10;(mock server + ZIP thật)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="280" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e" value="E2E-API&#10;(full fast-path)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="390" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="gate" value="Tất cả pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="385" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="fix" value="DEV fix + re-run" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="520" width="140" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit" value="SIT manual&#10;(Pega sandbox → verify KB)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="385" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="done" value="UAT gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="820" y="390" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="f1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="start" target="ut"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="f2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="ut" target="it"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="f3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="it" target="e2e"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="f4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="e2e" target="gate"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="f5" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="gate" target="fix"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="f6" value="re-run" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="fix" target="start">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="140" y="545"/></Array></mxGeometry>
+    </mxCell>
+    <mxCell id="f7" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="gate" target="sit"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="f8" value="pass" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="sit" target="done"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>

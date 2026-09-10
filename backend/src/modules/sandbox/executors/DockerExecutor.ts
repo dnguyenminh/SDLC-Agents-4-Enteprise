@@ -155,7 +155,6 @@ export class DockerExecutor implements IExecutor {
         Cmd: ['tail', '-f', '/dev/null'],
         WorkingDir: config.workdir || '/workspace',
         User: 'root',
-        ReadonlyRootfs: false,
         Labels: { 'sa4e-sandbox': 'true', 'sa4e-session': sessionId },
         HostConfig: hostConfig,
         Tty: false,

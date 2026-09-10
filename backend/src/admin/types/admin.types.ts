@@ -4,7 +4,7 @@ export type PermissionId =
   | 'DASHBOARD_VIEW' | 'KB_READ' | 'KB_WRITE' | 'KB_PROMOTE'
   | 'KB_IMPORT_EXPORT' | 'MCP_ACCESS' | 'MCP_MANAGE' | 'USER_MANAGE'
   | 'RBAC_MANAGE' | 'CONFIG_EDIT' | 'SEARCH_EXPLORE' | 'AUDIT_VIEW'
-  | 'GRAPH_VIEW' | 'ANALYTICS_VIEW';
+  | 'GRAPH_VIEW' | 'ANALYTICS_VIEW' | 'GRAPH_MAINTAIN';
 
 export type UserStatus = 'ACTIVE' | 'DISABLED' | 'PENDING';
 export type KBTier = 'USER' | 'PROJECT' | 'SHARED';

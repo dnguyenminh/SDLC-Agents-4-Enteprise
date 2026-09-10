@@ -47,6 +47,20 @@ export enum ViewColumn {
   Three = 3,
 }
 
+export enum StatusBarAlignment {
+  Left = 1,
+  Right = 2,
+}
+
+export class MarkdownString {
+  isTrusted = false;
+  constructor(public value: string = "") {}
+}
+
+export class ThemeColor {
+  constructor(public id: string) {}
+}
+
 export class Uri {
   readonly scheme: string;
   readonly path: string;
@@ -96,6 +110,21 @@ export interface OutputChannel {
   dispose: () => void;
 }
 
+/** Captured StatusBarItem instances so tests can assert on UI updates. */
+export const __statusBarItems: Array<{
+  text: string;
+  tooltip: unknown;
+  command: string | undefined;
+  color: unknown;
+  show: () => void;
+  hide: () => void;
+  dispose: () => void;
+}> = [];
+
+export function __resetStatusBarItems(): void {
+  __statusBarItems.length = 0;
+}
+
 export const window = {
   createWebviewPanel: (_viewType: string, _title: string, _column: ViewColumn, _options?: unknown): WebviewPanel => {
     const webview: Webview = {
@@ -116,14 +145,27 @@ export const window = {
     };
   },
   showErrorMessage: () => Promise.resolve(undefined),
-  showWarningMessage: () => Promise.resolve(undefined),
-  showInformationMessage: () => Promise.resolve(undefined),
+  showWarningMessage: (_msg: string, ..._items: string[]) => Promise.resolve(undefined),
+  showInformationMessage: (_msg: string, ..._items: string[]) => Promise.resolve(undefined),
   createOutputChannel: (): OutputChannel => ({
     appendLine: () => {},
     append: () => {},
     show: () => {},
     dispose: () => {},
   }),
+  createStatusBarItem: (_alignment?: StatusBarAlignment, _priority?: number) => {
+    const item = {
+      text: "",
+      tooltip: null as unknown,
+      command: undefined as string | undefined,
+      color: undefined as unknown,
+      show: () => {},
+      hide: () => {},
+      dispose: () => {},
+    };
+    __statusBarItems.push(item);
+    return item;
+  },
 };
 
 export const commands = {

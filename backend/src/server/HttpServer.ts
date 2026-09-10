@@ -32,9 +32,13 @@ import { createIngestRuleRoute } from './routes/pega-ingest-rule.js';
 import { createPegaSchemaRoutes } from './routes/pega-schema-routes.js';
 import { getDbAdapter } from '../admin/db/core.js';
 import { ensureSa4e101Tables } from '../database/schema-registry/ensure-sa4e-101.js';
+import { ensureSa4e300Cleanup } from '../database/schema-registry/ensure-sa4e-300.js';
+import { ensureSa4e302UniqueGraphEdges } from '../database/schema-registry/ensure-sa4e-302.js';
+import { ensureSa4e303DropUnusedTables } from '../database/schema-registry/ensure-sa4e-303.js';
 import { runStartupInterruptDetection } from '../engine/indexer/startup-interrupt-detector.js';
 import { CleanupScheduler } from '../engine/indexer/cleanup-scheduler.js';
 import { createPegaSyncToKbRoutes } from './routes/pega-sync-to-kb.js';
+import { createPegaReferenceRoutes } from './routes/pega-references.js';
 import { createKnowledgeApiRoutes } from '../knowledge/routes.js';
 import { bodyLimit } from 'hono/body-limit';
 import { getMcpServer, registerTransport } from './mcpServer.js';
@@ -86,6 +90,12 @@ export class HttpServer {
     app.use('/api/index/*', jwtAuth);
     app.use('/api/tags/*', apiKeyAuth);
     app.use('/mcp/*', apiKeyAuth);
+    // SA4E-241 SEC-01: bind identity to the whole Pega route group (mounted at
+    // /api/v1/pega/*). projectId is derived from the authenticated identity
+    // (X-Project-Id / JWT pid), never from the request body (fail-closed).
+    app.use('/api/v1/pega/*', jwtAuth);
+    // SA4E-241 SEC-08: per-identity rate limit on the Pega group (defense-in-depth).
+    app.use('/api/v1/pega/*', rateLimiter);
     app.onError(createErrorHandler(this.logger));
 
     app.route('/', createHealthRoute(this.options.registry, this.options.version));
@@ -113,6 +123,10 @@ export class HttpServer {
     const pegaSyncRoutes = createPegaSyncToKbRoutes(this.options.registry, this.logger);
     app.route('/api/v1', pegaSyncRoutes);
 
+    // SA4E-237 (GD5): query Pega reference-resolution results
+    const pegaRefRoutes = createPegaReferenceRoutes(this.options.registry, this.logger);
+    app.route('/api/v1', pegaRefRoutes);
+
     // SA4E-156: Per-rule ingestion with relative extraction (BFS-compatible)
     const ingestRuleRoute = createIngestRuleRoute(this.options.registry, this.logger);
     app.route('/api/v1/pega/ingest-rule', ingestRuleRoute);
@@ -123,9 +137,10 @@ export class HttpServer {
     app.route('/api/v1', pegaSchemaRoutes);
 
     // SA4E-85 Phase 0: Backend-Driven Knowledge REST API (threads/messages/checkpoint/events/artifacts/agents)
-    const knowledgeModule = this.options.registry.getModule('knowledge') as any;
-    if (knowledgeModule?.getService) {
-      const knowledgeRoutes = createKnowledgeApiRoutes(knowledgeModule.getService(), this.logger);
+    const knowledgeModule = this.options.registry.getModule('knowledge');
+    if (knowledgeModule && 'getService' in knowledgeModule) {
+      const svc = (knowledgeModule as { getService: () => import('../knowledge/KnowledgeService.js').KnowledgeService }).getService();
+      const knowledgeRoutes = createKnowledgeApiRoutes(svc, this.logger);
       app.route('/api/v1', knowledgeRoutes);
     }
 
@@ -172,6 +187,13 @@ export class HttpServer {
         // All non-blocking — failures degrade gracefully (EF-04).
         ensureSa4e101Tables()
           .then(() => runStartupInterruptDetection())
+          // SA4E-300: one-time idempotent cleanup of orphan CODE_ENRICHMENT tasks
+          // left by the removed graph-sync enrichment path (Path A).
+          .then(() => ensureSa4e300Cleanup())
+          // SA4E-302: ensure unique index for graph_edges ON CONFLICT
+          .then(() => ensureSa4e302UniqueGraphEdges())
+          // SA4E-303: drop unused edge tables
+          .then(() => ensureSa4e303DropUnusedTables())
           .then(() => {
             this.cleanupScheduler = new CleanupScheduler();
             this.cleanupScheduler.start();
@@ -200,12 +222,12 @@ export class HttpServer {
   get honoApp(): Hono { return this.app; }
 
   private registerMcpConfigRoutes(app: Hono): void {
-    const orchestration = this.options.registry.getModule('orchestration') as any;
-    if (!orchestration) {
+    const orchestration = this.options.registry.getModule('orchestration');
+    if (!orchestration || !('getClientManager' in orchestration)) {
       this.logger.warn('OrchestrationModule not found, skipping MCP config routes');
       return;
     }
-    const clientManager = orchestration.getClientManager?.();
+    const clientManager = (orchestration as { getClientManager: () => import('../modules/orchestration/McpClientManager.js').McpClientManager }).getClientManager?.();
     if (!clientManager) {
       this.logger.warn('McpClientManager not available, skipping MCP config routes');
       return;

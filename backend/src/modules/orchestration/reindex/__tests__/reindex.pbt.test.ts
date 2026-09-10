@@ -5,22 +5,28 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import pino from 'pino';
-import type Database from 'better-sqlite3';
-import { makeTempDb } from '../../../../__tests__/sa4e-testkit.js';
+import { SqliteAdapter } from '../../../../database/adapters/SqliteAdapter.js';
+import { SCHEMA_V1 } from '../../../../engine/db/schema.js';
 import { ReindexService } from '../ReindexService.js';
-import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
 import { FakeEmbedder, FakeToolSource } from './reindex-fakes.js';
 
 const silent = pino({ level: 'silent' });
 const RUNS = 15;
 
-function serviceFor(db: Database.Database, src: FakeToolSource): ReindexService {
-  return new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
+async function createAdapter(): Promise<SqliteAdapter> {
+  const adapter = new SqliteAdapter(':memory:');
+  await adapter.connect();
+  await adapter.exec(SCHEMA_V1);
+  return adapter;
 }
 
-function namesOf(db: Database.Database, server: string): string[] {
-  return (db.prepare('SELECT name FROM mcp_tools WHERE server = ? ORDER BY name').all(server) as { name: string }[])
-    .map((r) => r.name);
+function serviceFor(adapter: SqliteAdapter, src: FakeToolSource): ReindexService {
+  return new ReindexService(() => adapter, new FakeEmbedder(), src, silent);
+}
+
+async function namesOf(adapter: SqliteAdapter, server: string): Promise<string[]> {
+  const rows = await adapter.all<{ name: string }>('SELECT name FROM mcp_tools WHERE server = ? ORDER BY name', [server]);
+  return rows.map((r) => r.name);
 }
 
 const serverArb = fc.constantFrom('A', 'B', 'C');
@@ -50,21 +56,20 @@ describe('reindex — property-based', () => {
       fc.asyncProperty(
         fc.array(fc.tuple(serverArb, stateArb), { minLength: 1, maxLength: 12 }),
         async (events) => {
-          const tmp = makeTempDb();
+          const adapter = await createAdapter();
           try {
-            const db = tmp.dbManager.getDb();
-            const src = seedThreeServers(db);
-            const svc = serviceFor(db, src);
+            const src = await seedThreeServers(adapter);
+            const svc = serviceFor(adapter, src);
             for (const [server, state] of events) {
               src.setConnected(server, state === 'connected');
               if (state === 'connected') await svc.reindexConnected(server);
               else await svc.reindexRemoved(server);
-              assertNoLeak(db);
+              await assertNoLeak(adapter);
             }
-            const core = db.prepare('SELECT COUNT(*) c FROM mcp_tools WHERE server IS NULL').get() as any;
-            expect(core.c).toBe(1);
+            const core = await adapter.get<{ c: number }>('SELECT COUNT(*) c FROM mcp_tools WHERE server IS NULL');
+            expect(core?.c).toBe(1);
           } finally {
-            tmp.close();
+            await adapter.disconnect();
           }
         },
       ),
@@ -78,19 +83,18 @@ describe('reindex — property-based', () => {
         fc.uniqueArray(fc.string({ minLength: 1, maxLength: 8 }), { minLength: 1, maxLength: 8 }),
         fc.uniqueArray(fc.string({ minLength: 1, maxLength: 8 }), { minLength: 1, maxLength: 8 }),
         async (initial, next) => {
-          const tmp = makeTempDb();
+          const adapter = await createAdapter();
           try {
-            const db = tmp.dbManager.getDb();
             const src = new FakeToolSource();
             src.setConnected('S', true);
-            const svc = serviceFor(db, src);
+            const svc = serviceFor(adapter, src);
             src.setTools('S', initial);
             await svc.reindexConnected('S');
             src.setTools('S', next);
             await svc.reindexConnected('S');
-            expect(namesOf(db, 'S')).toEqual([...next].sort());
+            expect(await namesOf(adapter, 'S')).toEqual([...next].sort());
           } finally {
-            tmp.close();
+            await adapter.disconnect();
           }
         },
       ),
@@ -102,20 +106,19 @@ describe('reindex — property-based', () => {
     const adversarial = [`x'); DROP TABLE mcp_tools;--`, 'a" OR "1"="1', "n\nl%_"];
     await fc.assert(
       fc.asyncProperty(fc.uniqueArray(fc.string({ minLength: 1, maxLength: 16 }), { maxLength: 6 }), async (extra) => {
-        const tmp = makeTempDb();
+        const adapter = await createAdapter();
         try {
-          const db = tmp.dbManager.getDb();
           const src = new FakeToolSource();
           src.setConnected('S', true);
-          const svc = serviceFor(db, src);
+          const svc = serviceFor(adapter, src);
           const all = Array.from(new Set([...adversarial, ...extra]));
           src.setTools('S', all);
           await svc.reindexConnected('S');
-          expect(namesOf(db, 'S')).toEqual([...all].sort());
-          const tbl = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='mcp_tools'").get();
+          expect(await namesOf(adapter, 'S')).toEqual([...all].sort());
+          const tbl = await adapter.get('SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'mcp_tools\'');
           expect(tbl).toBeDefined();
         } finally {
-          tmp.close();
+          await adapter.disconnect();
         }
       }),
       { numRuns: RUNS },
@@ -124,33 +127,29 @@ describe('reindex — property-based', () => {
 });
 
 async function runConnects(tools: string[], n: number): Promise<string[]> {
-  const tmp = makeTempDb();
+  const adapter = await createAdapter();
   try {
-    const db = tmp.dbManager.getDb();
     const src = new FakeToolSource();
     src.setTools('S', tools);
     src.setConnected('S', true);
-    const svc = serviceFor(db, src);
+    const svc = serviceFor(adapter, src);
     for (let i = 0; i < n; i++) await svc.reindexConnected('S');
-    return namesOf(db, 'S');
+    return await namesOf(adapter, 'S');
   } finally {
-    tmp.close();
+    await adapter.disconnect();
   }
 }
 
-function seedThreeServers(db: Database.Database): FakeToolSource {
+async function seedThreeServers(adapter: SqliteAdapter): Promise<FakeToolSource> {
   const src = new FakeToolSource();
   src.setTools('A', ['a1', 'a2']);
   src.setTools('B', ['b1']);
   src.setTools('C', ['c1', 'c2', 'c3']);
-  db.prepare('INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?,?,?,?,?,?)')
-    .run('core_tool', 'core', '{}', 'memory', null, null);
+  await adapter.run('INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?,?,?,?,?,?)', ['core_tool', 'core', '{}', 'memory', null, null]);
   return src;
 }
 
-function assertNoLeak(db: Database.Database): void {
-  const bad = db.prepare(
-    "SELECT COUNT(*) c FROM mcp_tools WHERE server IS NOT NULL AND server NOT IN ('A','B','C')",
-  ).get() as any;
-  expect(bad.c).toBe(0);
+async function assertNoLeak(adapter: SqliteAdapter): Promise<void> {
+  const bad = await adapter.get<{ c: number }>("SELECT COUNT(*) c FROM mcp_tools WHERE server IS NOT NULL AND server NOT IN ('A','B','C')");
+  expect(bad?.c).toBe(0);
 }

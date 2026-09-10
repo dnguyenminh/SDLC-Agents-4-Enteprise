@@ -49,6 +49,12 @@ export class PegaHttpClient {
     return config.get<string>("pegaEndpoint", "http://localhost:8080/prweb").replace(/\/$/, "");
   }
 
+  /** SA4E-241 SEC-03: configured Pega operator id (no hardcoded default). */
+  public getConfiguredUsername(): string {
+    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    return config.get<string>("pegaUsername", "").trim();
+  }
+
   private getBackendUrl(): string {
     const config = vscode.workspace.getConfiguration("kiroSdlc");
     return config.get<string>("backendUrl", "http://localhost:48721").replace(/\/$/, "");
@@ -122,7 +128,12 @@ export class PegaHttpClient {
    */
   public async resolveDeterministicPegaHierarchy(operatorIdHint?: string): Promise<HierarchyResult> {
     const config = vscode.workspace.getConfiguration("kiroSdlc");
-    const opId = (operatorIdHint || config.get<string>("pegaUsername", "") || "SSA@TGB").trim();
+    // SA4E-241 SEC-03: no hardcoded operator-id fallback. Operator id must come
+    // from the caller hint or the configured `pegaUsername` (fail-closed).
+    const opId = (operatorIdHint || config.get<string>("pegaUsername", "")).trim();
+    if (!opId) {
+      throw new Error("Pega Operator ID is not configured (kiroSdlc.pegaUsername). Set it before indexing.");
+    }
     const root = this.getWorkspaceRoot();
     return resolvePegaHierarchy(this, opId, root, this.log.bind(this));
   }
@@ -136,14 +147,21 @@ export class PegaHttpClient {
   private activePrefix: string | null = null;
 
   public async getObject(className: string, key: string, appliesTo?: string): Promise<Record<string, unknown>> {
+    const isNoAppliesToRule = false;
+    const cleanAppliesTo = (appliesTo && appliesTo !== "@baseclass" && !isNoAppliesToRule) ? appliesTo : "";
     let insKey = key;
     if (!key.includes(" ")) {
-      const cleanAppliesTo = (appliesTo && appliesTo !== "@baseclass") ? appliesTo : "";
+      const keyUpper = key.toUpperCase();
       if (cleanAppliesTo) {
-        insKey = `${className.toUpperCase()} ${cleanAppliesTo} ${key}`;
+        insKey = `${className.toUpperCase()} ${cleanAppliesTo} ${keyUpper}`;
       } else {
-        insKey = `${className.toUpperCase()} ${key}`;
+        insKey = `${className.toUpperCase()} ${keyUpper}`;
       }
+    }
+
+    const hasVersion = insKey.includes("#") || key.includes("#");
+    if (!hasVersion) {
+      return await this.queryRuleByTriple(className, cleanAppliesTo, key);
     }
 
     try {
@@ -152,8 +170,8 @@ export class PegaHttpClient {
       if (err.message.includes("HTTP 504") || err.message.includes("HTTP 503") || err.message.includes("HTTP 502") || err.message.includes("HTTP 500") || err.message.includes("HTTP 401")) {
         throw err;
       }
-      // Fallback: try queryRuleByTriple
-      return await this.queryRuleByTriple(className, appliesTo || "", key);
+      // Fallback: try queryRuleByTriple with appliesTo stripped for no-applies-to rules
+      return await this.queryRuleByTriple(className, cleanAppliesTo, key);
     }
   }
 
@@ -162,10 +180,6 @@ export class PegaHttpClient {
     const prefixes = [
       `${base}/api/CodeIntelligence/v1`,
       `${base}/PRRestService/CodeIntelligence/v1`,
-      `${base}/api/HRAppsV2Service/V1`,
-      `${base}/PRRestService/HRAppsV2Service/V1`,
-      `${base}/api/HRAppsV2/V1`,
-      `${base}/PRRestService/HRAppsV2/V1`,
       `${base}/api/v1`,
       `${base}/PRRestService/v1`,
     ];
@@ -213,23 +227,32 @@ export class PegaHttpClient {
   }
 
   /**
-   * Service 1: GET /rules/{insKey}
-   * Tải 100% nội dung Rule XML/JSON gốc theo insKey duy nhất.
+   * Service 1: POST /rules/instance (GetRuleInstanceByHandle)
+   * Tải 100% nội dung Rule JSON gốc theo insKey (handle) duy nhất.
    * Iterates all prefixes — only throws immediately on auth errors (401/403)
    * or server errors (5xx). A 404 or body-level error means "try next prefix".
    */
   public async getRuleByInsKey(insKey: string): Promise<Record<string, unknown>> {
+    // Resolve by handle via POST /rules/instance (GetRuleInstanceByHandle). POST is
+    // used instead of the old GET /rules/{insKey} because insKeys containing "/"
+    // become "%2F" in the URL PATH, which Tomcat/Pega reject (ALLOW_ENCODED_SLASH
+    // off). Passing insKey as a query-string param (and body) sidesteps the path
+    // entirely — one code path resolves every insKey directly by its handle.
     const authHeader = await this.getAuthHeader();
     const logs: string[] = [];
 
     for (const prefix of this.getCustomRestPrefixes()) {
-      const url = `${prefix}/rules/${encodeURIComponent(insKey)}`;
+      const url = `${prefix}/rules/instance?insKey=${encodeURIComponent(insKey)}`;
       try {
         const res = await this.fetchWithRetry(url, {
-          headers: { Authorization: authHeader, Accept: "application/json" },
+          method: "POST",
+          headers: { Authorization: authHeader, "Content-Type": "application/json", Accept: "application/json" },
+          // Send insKey in the body too (mirrors checkout/test services) so the
+          // service can read it whether it maps from query-string or body.
+          body: JSON.stringify({ insKey, RequestPZInsKey: insKey }),
         });
         const text = await res.text();
-        this.log(`[PegaHttpClient] 📡 GET ${url} => HTTP ${res.status} (${text.length} bytes)`);
+        this.log(`[PegaHttpClient] 📡 POST ${url} => HTTP ${res.status} (${text.length} bytes)`);
 
         // Auth errors — fatal, throw immediately
         if (res.status === 401 || res.status === 403) {
@@ -252,7 +275,7 @@ export class PegaHttpClient {
           if (prefix === this.activePrefix) {
             throw new Error(`Rule not found: ${insKey}`);
           }
-          logs.push(`GET ${url} => 200 but body error: ${String(json.error || 'pyHTTPResponseCode=404')}`);
+          logs.push(`POST ${url} => 200 but body error: ${String(json.error || 'pyHTTPResponseCode=404')}`);
           continue; // try next prefix
         }
 
@@ -261,11 +284,11 @@ export class PegaHttpClient {
           if (prefix === this.activePrefix) {
             throw new Error(`Rule not found: ${insKey}`);
           }
-          logs.push(`GET ${url} => HTTP 404`);
+          logs.push(`POST ${url} => HTTP 404`);
           continue; // try next prefix
         }
 
-        logs.push(`GET ${url} => HTTP ${res.status}: ${text.substring(0, 150)}`);
+        logs.push(`POST ${url} => HTTP ${res.status}: ${text.substring(0, 150)}`);
       } catch (err: any) {
         // Re-throw auth/server/rule-not-found errors immediately
         if (err.message.includes("HTTP 401") || err.message.includes("HTTP 403") ||
@@ -274,7 +297,7 @@ export class PegaHttpClient {
             err.message.includes("Rule not found")) {
           throw err;
         }
-        logs.push(`GET ${url} => Network Error: ${err.message}`);
+        logs.push(`POST ${url} => Network Error: ${err.message}`);
       }
     }
 
@@ -340,9 +363,22 @@ export class PegaHttpClient {
             continue;
           }
           if (json && !json.error && json.pyHTTPResponseCode !== "404" && json.pyHTTPResponseCode !== 404) {
-            // Real success — lock prefix
-            this.activePrefix = prefix;
-            return json;
+            // The /rules/query endpoint returns a Pega LIST envelope
+            // (pxObjClass="Code-Pega-List") with the actual rule(s) under pxResults,
+            // NOT a single resolved rule like the GET path. Unwrap the first result so
+            // the query fallback returns the same shape the GET path does (consistent
+            // rule contract). An empty/absent pxResults means the rule genuinely doesn't
+            // exist → treat as not-found instead of ingesting an empty wrapper.
+            const unwrapped = this.unwrapQueryResult(json);
+            if (unwrapped) {
+              this.activePrefix = prefix; // real success — lock prefix
+              return unwrapped;
+            }
+            if (prefix === this.activePrefix) {
+              throw new Error(`Rule not found for triple: ${pxObjClass} | ${appliesTo} | ${pyRuleName}`);
+            }
+            logs.push(`POST ${url} => 200 but empty Code-Pega-List (no pxResults)`);
+            continue;
           }
           // Body-level 404 on active prefix → rule genuinely doesn't exist, stop immediately
           if (prefix === this.activePrefix) {
@@ -375,6 +411,32 @@ export class PegaHttpClient {
 
     // All prefixes exhausted without finding the rule
     throw new Error(`Rule not found for triple: ${pxObjClass} | ${appliesTo} | ${pyRuleName}\n  ${logs.join("\n  ")}`);
+  }
+
+  /**
+   * Unwrap a Pega /rules/query response into a single resolved rule.
+   *
+   * The query endpoint returns a list envelope (pxObjClass="Code-Pega-List") with
+   * matches under pxResults (falling back to `results`). The GET path returns the
+   * rule directly, so callers expect a single rule object — this normalizes the two.
+   *
+   * @param json Raw parsed /rules/query response.
+   * @returns The first result object, or null when it's an empty/absent list
+   *   (rule genuinely not found). A non-list body is passed through unchanged.
+   */
+  private unwrapQueryResult(json: Record<string, unknown>): Record<string, unknown> | null {
+    const isListEnvelope = json.pxObjClass === "Code-Pega-List"
+      || Array.isArray(json.pxResults)
+      || Array.isArray((json as { results?: unknown }).results);
+    if (!isListEnvelope) {
+      return json; // already a single rule (e.g. some prefixes resolve directly)
+    }
+    const results = (json.pxResults ?? (json as { results?: unknown[] }).results) as unknown[] | undefined;
+    if (!Array.isArray(results) || results.length === 0) {
+      return null; // empty list → not found
+    }
+    const first = results[0];
+    return (first && typeof first === "object") ? (first as Record<string, unknown>) : null;
   }
 
   /**

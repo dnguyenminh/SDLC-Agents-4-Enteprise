@@ -40,7 +40,10 @@ export function registerJiraIssueTools(client: AtlassianHttpClient): void {
     const fields: Record<string, unknown> = {
       project: { key: project_key }, summary, issuetype: { name: issue_type },
     };
-    if (description) fields.description = description;
+    if (description) {
+      const normalized = String(description).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      fields.description = markdownToWiki(normalized);
+    }
     if (assignee) fields.assignee = { accountId: assignee };
     if (priority) fields.priority = { name: priority };
     if (labels) fields.labels = labels;
@@ -57,7 +60,12 @@ export function registerJiraIssueTools(client: AtlassianHttpClient): void {
     required: ["issue_key", "fields"],
   }, async (args) => {
     const { issue_key, fields } = args as any;
-    await client.request("PUT", `/rest/api/2/issue/${issue_key}`, { fields });
+    const safeFields = { ...fields };
+    if (typeof safeFields.description === 'string') {
+      const normalized = safeFields.description.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      safeFields.description = markdownToWiki(normalized);
+    }
+    await client.request("PUT", `/rest/api/2/issue/${issue_key}`, { fields: safeFields });
     return toResult({ status: 204, data: { success: true, issue_key } });
   });
 
@@ -100,4 +108,23 @@ function registerSimpleGet(client: AtlassianHttpClient, name: string, desc: stri
     try { return toResult(await client.request("GET", path)); }
     catch (e) { return toErrorResult(e); }
   }, def);
+}
+
+function markdownToWiki(md: string): string {
+  let out = md;
+  out = out
+    .replace(/^######\s+(.*)$/gm, 'h6. $1')
+    .replace(/^#####\s+(.*)$/gm, 'h5. $1')
+    .replace(/^####\s+(.*)$/gm, 'h4. $1')
+    .replace(/^###\s+(.*)$/gm, 'h3. $1')
+    .replace(/^##\s+(.*)$/gm, 'h2. $1')
+    .replace(/^#\s+(.*)$/gm, 'h1. $1');
+  out = out.replace(/^\s*-\s+(.*)$/gm, '* $1');
+  out = out.replace(/^\s*\d+\.\s+(.*)$/gm, '# $1');
+  out = out.replace(/\*\*(.+?)\*\*/g, '*$1*');
+  out = out.replace(/(^|\s)\*([^\s*][^*]*?)\*(?=\s|$)/g, '$1_$2_');
+  out = out.replace(/`([^`]+)`/g, '{code}$1{code}');
+  out = out.replace(/```[\s\S]*?\n([\s\S]*?)```/g, '{code}$1{code}');
+  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '[$1|$2]');
+  return out;
 }

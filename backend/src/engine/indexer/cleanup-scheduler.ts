@@ -6,6 +6,7 @@
 
 import pino from 'pino';
 import { IndexOperationRepository } from '../../database/repositories/IndexOperationRepository.js';
+import { ensureSa4e301GraphEdges } from '../../database/schema-registry/ensure-sa4e-301.js';
 
 const logger = pino({ name: 'cleanup-scheduler' });
 
@@ -45,6 +46,12 @@ export class CleanupScheduler {
       }
     } catch (err) {
       logger.warn({ err }, '[cleanup-scheduler] cleanup pass failed (non-fatal)');
+    }
+    // SA4E-301: auto-heal KB Graph edges
+    try {
+      await ensureSa4e301GraphEdges();
+    } catch (err) {
+      logger.warn({ err }, '[cleanup-scheduler] graph edges heal failed (non-fatal)');
     }
   }
 }

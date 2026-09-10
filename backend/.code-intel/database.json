@@ -2,14 +2,13 @@
   "activeEngine": "postgresql",
   "engines": {
     "sqlite": {
-      "adminDbPath": "admin.db",
-      "indexDbPath": "index.db"
+      "dbPath": "index.db"
     },
     "postgresql": {
       "host": "localhost",
       "port": 5432,
       "username": "sa4e_user",
-      "password": "ENC:RgwBwYZD7M/vPLaFgkv2KM00NJ9XZAD5QOvsZoKB245rLDmD1nF1wQsEpk/Yg+/jsCG8",
+      "password": "sa4e_local_dev_password",
       "database": "sa4e_db",
       "ssl": false,
       "pool": {

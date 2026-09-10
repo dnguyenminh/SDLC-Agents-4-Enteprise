@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
+import { SqliteAdapter } from '../../../../database/adapters/SqliteAdapter.js';
 import { PegaSchemaInferrer, PegaSchemaKBService, PegaSchemaAutoLearner } from '../../inference/index.js';
 import { PegaMetaModelRegistry, PegaMetaModelCompiler } from '../../metamodel/index.js';
 import type { PegaClassDefinition } from '../../metamodel/PegaClassDefinition.js';
@@ -12,15 +11,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const schemasDir = path.resolve(__dirname, '../../schemas');
 
 describe('PegaSchemaKBService', () => {
-  let db: Database.Database;
-  let adapter: SqliteDbAdapter;
+  let adapter: SqliteAdapter;
   let inferrer: PegaSchemaInferrer;
   let registry: PegaMetaModelRegistry;
   let kbService: PegaSchemaKBService;
 
   beforeEach(async () => {
-    db = new Database(':memory:');
-    db.exec(`
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    await adapter.exec(`
       CREATE TABLE IF NOT EXISTS knowledge_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         content TEXT NOT NULL,
@@ -35,7 +34,6 @@ describe('PegaSchemaKBService', () => {
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
     `);
-    adapter = new SqliteDbAdapter(db);
     inferrer = new PegaSchemaInferrer();
     registry = PegaMetaModelRegistry.getInstance();
     if (!registry.isKnownClass('@baseclass')) {
@@ -44,8 +42,8 @@ describe('PegaSchemaKBService', () => {
     kbService = new PegaSchemaKBService(adapter, registry, inferrer);
   });
 
-  afterEach(() => {
-    db.close();
+  afterEach(async () => {
+    await adapter.disconnect();
   });
 
   // STC: KB-SVC-01 — toKbSchema converts PegaClassDefinition correctly
@@ -147,7 +145,7 @@ describe('PegaSchemaKBService', () => {
 
     await kbService.saveSchemaToKB(def);
 
-    const row = db.prepare("SELECT * FROM knowledge_entries WHERE type = 'PEGA_SCHEMA'").get() as any;
+    const row = adapter.prepare("SELECT * FROM knowledge_entries WHERE type = 'PEGA_SCHEMA'").get() as any;
     expect(row).toBeDefined();
     expect(row.source).toBe('pega-schema:Rule-Obj-SaveTest');
     expect(row.tier).toBe('SEMANTIC');
@@ -169,7 +167,7 @@ describe('PegaSchemaKBService', () => {
     await kbService.saveSchemaToKB(def);
     await kbService.saveSchemaToKB(def);
 
-    const rows = db.prepare("SELECT * FROM knowledge_entries WHERE type = 'PEGA_SCHEMA' AND source = 'pega-schema:Rule-Obj-Idempotent'").all();
+    const rows = adapter.prepare("SELECT * FROM knowledge_entries WHERE type = 'PEGA_SCHEMA' AND source = 'pega-schema:Rule-Obj-Idempotent'").all();
     expect(rows).toHaveLength(1);
   });
 
@@ -210,7 +208,7 @@ describe('PegaSchemaKBService', () => {
 
     expect(registry.isKnownClass('Rule-Obj-LearnTest')).toBe(true);
 
-    const row = db.prepare("SELECT * FROM knowledge_entries WHERE source = 'pega-schema:Rule-Obj-LearnTest'").get() as any;
+    const row = adapter.prepare("SELECT * FROM knowledge_entries WHERE source = 'pega-schema:Rule-Obj-LearnTest'").get() as any;
     expect(row).toBeDefined();
   });
 
@@ -232,7 +230,7 @@ describe('PegaSchemaKBService', () => {
     await kbService.learnSchema('Rule-Obj-NoRePersist', json);
     await kbService.learnSchema('Rule-Obj-NoRePersist', json);
 
-    const rows = db.prepare("SELECT * FROM knowledge_entries WHERE source = 'pega-schema:Rule-Obj-NoRePersist'").all();
+    const rows = adapter.prepare("SELECT * FROM knowledge_entries WHERE source = 'pega-schema:Rule-Obj-NoRePersist'").all();
     expect(rows).toHaveLength(1);
   });
 
@@ -380,7 +378,7 @@ describe('PegaSchemaKBService', () => {
 
     await kbService.saveSchemaToKB(def);
 
-    const row = db.prepare("SELECT source FROM knowledge_entries WHERE type = 'PEGA_SCHEMA'").get() as any;
+    const row = adapter.prepare("SELECT source FROM knowledge_entries WHERE type = 'PEGA_SCHEMA'").get() as any;
     expect(row.source).toBe('pega-schema:Rule-Obj-SourceKeyTest');
   });
 
@@ -390,7 +388,7 @@ describe('PegaSchemaKBService', () => {
     await kbService.learnSchema('Rule-Obj-TypeBeta', { pyLabel: 'Beta' });
     await kbService.learnSchema('Rule-Obj-TypeGamma', { pyLabel: 'Gamma' });
 
-    const rows = db.prepare("SELECT source FROM knowledge_entries WHERE type = 'PEGA_SCHEMA'").all() as any[];
+    const rows = adapter.prepare("SELECT source FROM knowledge_entries WHERE type = 'PEGA_SCHEMA'").all() as any[];
     const sources = rows.map(r => r.source).sort();
     expect(sources).toEqual([
       'pega-schema:Rule-Obj-TypeAlpha',
@@ -401,12 +399,12 @@ describe('PegaSchemaKBService', () => {
 
   // STC: KB-SVC-20 — Error handling: corrupted KB entry skipped gracefully
   it('corrupted KB entry skipped gracefully during load', async () => {
-    db.prepare(`
+    adapter.prepare(`
       INSERT INTO knowledge_entries (content, summary, type, tier, scope, source, tags)
       VALUES ('{invalid json}', 'bad entry', 'PEGA_SCHEMA', 'SEMANTIC', 'SHARED', 'pega-schema:BadEntry', 'pega,schema')
     `).run();
 
-    db.prepare(`
+    adapter.prepare(`
       INSERT INTO knowledge_entries (content, summary, type, tier, scope, source, tags)
       VALUES ('{"targetClass":"Rule-Obj-Good","dependencyPaths":[]}', 'good entry', 'PEGA_SCHEMA', 'SEMANTIC', 'SHARED', 'pega-schema:GoodEntry', 'pega,schema')
     `).run();

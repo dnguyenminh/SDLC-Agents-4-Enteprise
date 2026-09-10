@@ -8,6 +8,7 @@ import { AtlassianCredentialService } from "./AtlassianCredentialService";
 import type { IndexerHttpClient } from "./IndexerHttpClient";
 import { LinkCrawler, buildKbEntries, getSyncState, saveSyncState, buildIncrementalJql, isFullSync, nowIso, AttachmentFetcher } from "./jira-sync";
 import type { KbEntry } from "./jira-sync";
+import { getEffectiveScope } from "../utils/scope-detector";
 
 type ProgressReporter = vscode.Progress<{ message?: string }>;
 
@@ -80,7 +81,7 @@ export class JiraProjectIndexer {
                         content: `JIRA_ATTACHMENT | key=${issue.key} | file=${att.filename} | converted=${att.converted}\n\n${att.content.slice(0, 4000)}`,
                         summary: `${issue.key}: attachment ${att.filename}`,
                         type: "CONTEXT",
-                        scope: "PROJECT",
+                        scope: getEffectiveScope(),
                         source: `jira/${projectKey}/${issue.key}/attachment/${att.filename}`,
                         tags: `jira,${projectKey},attachment,${issue.key}`,
                     });

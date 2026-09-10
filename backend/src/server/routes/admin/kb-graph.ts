@@ -95,5 +95,48 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     return c.json({ status: 'sync_started', message: 'Graph sync triggered in background.' });
   });
 
+  app.post('/api/admin/kb/graph/populate-edges', async (c) => {
+    const user = await ctx.requireAuth(c);
+    if (user instanceof Response) return user;
+    const permCheck = await ctx.requirePermission(c, user.userId, 'GRAPH_MAINTAIN');
+    if (permCheck instanceof Response) return permCheck;
+    const projectId = ctx.getRequestProjectId(c);
+    // Use the shared ingest-edge extractor (single source of truth) instead of
+    // re-implementing strategy logic here. getDbAdapter() yields the admin adapter.
+    const { extractAndInsertIngestEdges } = await import('../../../modules/memory/engine/edge-on-ingest.js');
+    const { getDbAdapter } = await import('../../../admin/db/core.js');
+    const adapter = getDbAdapter();
+    // Engine-aware SQL: SQLite uses ?/0-1, PostgreSQL uses $n/boolean.
+    const isPg = adapter.getEngine() !== 'sqlite';
+    const archivedFalse = isPg ? 'archived = false' : 'archived = 0';
+    const projFilter = projectId
+      ? (isPg ? ' AND (project_id = $1 OR project_id IS NULL)' : ' AND (project_id = ? OR project_id IS NULL)')
+      : '';
+    const entries = await adapter.allAsync<{ id: number; content: string; source: string | null; tags: string | null; project_id: string | null }>(
+      `SELECT id, content, source, tags, project_id FROM knowledge_entries WHERE ${archivedFalse}${projFilter}`,
+      projectId ? [projectId] : [],
+    );
+    let totalEdges = 0;
+    let skippedEntries = 0;
+    for (const entry of entries) {
+      // Idempotent: skip entries that already have outgoing edges
+      const existing = await adapter.getAsync<{ one: number }>(
+        isPg
+          ? 'SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = $1 LIMIT 1'
+          : 'SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1',
+        [entry.id],
+      );
+      if (existing) { skippedEntries++; continue; }
+      totalEdges += await extractAndInsertIngestEdges(adapter, {
+        entryId: entry.id,
+        content: entry.content || '',
+        source: entry.source,
+        tags: entry.tags ?? undefined,
+        projectId: entry.project_id,
+      });
+    }
+    return c.json({ status: 'ok', nodesProcessed: entries.length, skippedEntries, edgesCreated: totalEdges });
+  });
+
   return app;
 }

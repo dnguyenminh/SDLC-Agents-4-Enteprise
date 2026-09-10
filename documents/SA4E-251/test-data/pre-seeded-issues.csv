@@ -1,0 +1,11 @@
+issue_key,summary,status,description,description,created_at
+SA4E-TEST-001,Test heading H2,TO DO,## Example,## Example,2026-01-01T00:00:00Z
+SA4E-TEST-002,Test heading H1,TO DO,# Title,# Title,2026-01-01T00:00:00Z
+SA4E-TEST-003,Test heading H3,TO DO,### Subsection,### Subsection,2026-01-01T00:00:00Z
+SA4E-TEST-004,Test nested list,TO DO,- Parent item\n  - Child item,- Parent item\n  - Child item,2026-01-01T00:00:00Z
+SA4E-TEST-005,Test nested 3 levels,TO DO,- A\n  - B\n    - C,- A\n  - B\n    - C,2026-01-01T00:00:00Z
+SA4E-TEST-006,Test smart link,TO DO,Reference issue SA4E-250,Reference issue SA4E-250,2026-01-01T00:00:00Z
+SA4E-TEST-007,Test multiple links,TO DO,See SA4E-250 and SA4E-123,See SA4E-250 and SA4E-123,2026-01-01T00:00:00Z
+SA4E-TEST-008,Test combined,TO DO,## Heading\n- Item\n  - Subitem SA4E-250,## Heading\n- Item\n  - Subitem SA4E-250,2026-01-01T00:00:00Z
+SA4E-250,Reference issue,Done,Original issue,Original issue,2025-12-01T00:00:00Z
+SA4E-123,Reference issue 2,Done,Original issue 2,Original issue 2,2025-12-01T00:00:00Z

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
+import { SqliteAdapter } from '../../../../database/adapters/SqliteAdapter.js';
 import { GraphService } from '../index.js';
 import pino from 'pino';
 
@@ -24,26 +23,25 @@ CREATE TABLE IF NOT EXISTS graph_edges (
 const log = pino({ level: 'silent' });
 
 describe('GraphService', () => {
-  let db: Database.Database;
-  let adapter: SqliteDbAdapter;
+  let adapter: SqliteAdapter;
   let svc: GraphService;
 
-  beforeEach(() => {
-    db = new Database(':memory:');
-    db.exec(GRAPH_SCHEMA);
-    adapter = new SqliteDbAdapter(db);
+  beforeEach(async () => {
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    await adapter.exec(GRAPH_SCHEMA);
     svc = new GraphService(adapter as any, log);
   });
 
-  afterEach(() => db.close());
+  afterEach(async () => adapter.disconnect());
 
   describe('searchNodes', () => {
     beforeEach(() => {
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('n1', 'Alpha', 'FUNCTION', 'CODE', 'p1', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('n2', 'Beta', 'CLASS', 'CODE', 'p1', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('n3', 'Gamma', 'DOCUMENT', 'SHARED', 'p2', 0, 0, 0, 0)`).run();
     });
 
@@ -78,14 +76,14 @@ describe('GraphService', () => {
 
   describe('getEdgesForNodeIds', () => {
     beforeEach(() => {
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('a', 'A', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('b', 'B', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('c', 'C', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_edges (source, target, weight, rel_type) VALUES ('a', 'b', 0.8, 'RELATED_TO')`).run();
-      db.prepare(`INSERT INTO graph_edges (source, target, weight, rel_type) VALUES ('b', 'c', 0.5, 'RELATED_TO')`).run();
+      adapter.prepare(`INSERT INTO graph_edges (source, target, weight, rel_type) VALUES ('a', 'b', 0.8, 'RELATED_TO')`).run();
+      adapter.prepare(`INSERT INTO graph_edges (source, target, weight, rel_type) VALUES ('b', 'c', 0.5, 'RELATED_TO')`).run();
     });
 
     it('returns edges where either endpoint matches', async () => {
@@ -106,11 +104,11 @@ describe('GraphService', () => {
     });
 
     it('detects a single community from connected nodes', async () => {
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('a', 'A', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('b', 'B', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 1.0)`).run();
+      adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 1.0)`).run();
       const communities = await svc.detectCommunities(10, 2);
       expect(communities).toHaveLength(1);
       expect(communities[0].nodeCount).toBe(2);
@@ -124,15 +122,15 @@ describe('GraphService', () => {
     });
 
     it('ranks nodes by connectivity', async () => {
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('hub', 'Hub', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('a', 'A', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('b', 'B', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('hub', 'a', 1.0)`).run();
-      db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('hub', 'b', 1.0)`).run();
-      db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 0.5)`).run();
+      adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('hub', 'a', 1.0)`).run();
+      adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('hub', 'b', 1.0)`).run();
+      adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 0.5)`).run();
 
       const ranked = await svc.computePageRank(0.85, 20, 0.001, 3);
       expect(ranked).toHaveLength(3);
@@ -151,11 +149,11 @@ describe('GraphService', () => {
     });
 
     it('returns correct counts and density', async () => {
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('a', 'A', 'FUNCTION', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+      adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
         VALUES ('b', 'B', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
-      db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 1.0)`).run();
+      adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 1.0)`).run();
 
       const stats = await svc.getGraphStats();
       expect(stats.nodeCount).toBe(2);

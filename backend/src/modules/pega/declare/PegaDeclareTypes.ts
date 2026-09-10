@@ -4,7 +4,7 @@
  * Declare Pages, Declare Constraints, Declare Index, Declare DecisionTable/DecisionTree.
  */
 
-import type { ExpressionAstNode } from '../expression/PegaExpressionAst.js';
+import type { ExprNode } from '../expression/pega-expr/nodes.js';
 
 export type DeclareType =
   | 'Declare-Expression'
@@ -31,7 +31,7 @@ export interface PegaDeclareExpression extends PegaDeclareRule {
   declareType: 'Declare-Expression';
   targetProperty: string;
   expression: string;
-  expressionAst?: ExpressionAstNode;
+  expressionAst?: ExprNode;
 }
 
 /**

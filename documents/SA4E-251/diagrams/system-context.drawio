@@ -1,0 +1,30 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="user" value="Automation User" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="200" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="mcp" value="MCP Server&#xa;jira_update_issue" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="180" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="jiraapi" value="Jira REST API v2" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="320" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="jiraui" value="Jira Cloud UI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="420" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="user" target="mcp" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="mcp" target="jiraapi" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="jiraapi" target="jiraui" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="jiraui" target="user" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

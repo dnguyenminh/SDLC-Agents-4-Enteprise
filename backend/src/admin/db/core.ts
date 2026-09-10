@@ -37,6 +37,11 @@ export function getActiveEngine(): string {
     const configPath = path.join(DATA_DIR, 'database.json');
     if (!fs.existsSync(configPath)) return 'sqlite';
     const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    // Source of truth: per-engine `active` flag. Fallback to legacy activeEngine.
+    const engines = raw.engines || {};
+    for (const e of ['postgresql', 'mysql', 'sqlite']) {
+      if (engines[e] && engines[e].active === true) return e;
+    }
     return raw.activeEngine || 'sqlite';
   } catch { return 'sqlite'; }
 }
@@ -47,10 +52,15 @@ export function getActiveDbConfig() {
     const configPath = path.join(DATA_DIR, 'database.json');
     if (!fs.existsSync(configPath)) return { engine: 'sqlite' as const, dbPath: DB_PATH };
     const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    if (raw.activeEngine === 'sqlite' || !raw.activeEngine) {
+    const engines = raw.engines || {};
+    let engine = raw.activeEngine;
+    for (const e of ['postgresql', 'mysql', 'sqlite']) {
+      if (engines[e] && engines[e].active === true) { engine = e; break; }
+    }
+    if (engine === 'sqlite' || !engine) {
       return { engine: 'sqlite' as const, dbPath: DB_PATH };
     }
-    return { engine: raw.activeEngine, ...raw.engines[raw.activeEngine] };
+    return { engine, ...engines[engine] };
   } catch { return { engine: 'sqlite' as const, dbPath: DB_PATH }; }
 }
 
@@ -119,6 +129,14 @@ export async function initAdapters(): Promise<void> {
   await adapter.connect();
   dbAdapter = adapter;
 
+  // Initialize schema and seed defaults for PostgreSQL/MySQL
+  try {
+    initSchema(adapter);
+    seedDefaults(adapter);
+  } catch (err) {
+    logger.error({ err }, '[admin] Failed to init schema/seed defaults');
+  }
+
   logger.info({ engine }, '[admin] DB adapter connected and ready');
 }
 
@@ -132,10 +150,11 @@ export function resetAdminDb(): void {
 }
 
 /**
- * Get the raw better-sqlite3 Database instance.
+ * Get the raw DB instance.
  * @deprecated Use getDbAdapter() for new code. Kept for backward compat with tests.
  */
-export function getAdminDb(): import('better-sqlite3').Database {
+export function getAdminDb(): any {
   const adapter = getUnifiedSqliteAdapter();
-  return adapter.getRawDb();
+  // getRawDb removed; return adapter directly for compat
+  return adapter as any;
 }

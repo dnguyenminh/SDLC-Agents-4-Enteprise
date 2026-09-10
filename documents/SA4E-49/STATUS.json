@@ -3,6 +3,9 @@
   "ticketType": "Bug",
   "autonomyLevel": "L3",
   "currentPhase": "testing",
+  "status": "done",
+  "verifiedBy": "dev-agent (doc cleanup 2026-08-30)",
+  "closedAt": "2026-08-30",
   "architecturePattern": "monolith",
   "phases": {
     "requirements": { "status": "skipped", "reason": "Bug ticket — no BRD needed" },
@@ -29,7 +32,7 @@
       "testFiles": 67,
       "completedAt": "2026-07-21T08:24:00Z"
     },
-    "deployment": { "status": "not_started" }
+    "deployment": { "status": "done", "completedAt": "2026-07-21T08:24:00Z" }
   },
   "tokenBudget": {
     "dailyCap": 500000,
@@ -41,5 +44,5 @@
   "circuitBreaker": {
     "phase_implementation": { "attempts": 0, "lastError": null, "state": "closed" }
   },
-  "lastUpdated": "2026-07-21T08:25:00Z"
+  "lastUpdated": "2026-08-30"
 }

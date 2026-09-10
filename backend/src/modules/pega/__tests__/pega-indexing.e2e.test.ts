@@ -83,6 +83,13 @@ describe('Pega Indexing E2E Integration Suite', () => {
 
     const mockLogger = { error: () => {}, info: () => {}, warn: () => {}, debug: () => {} } as any;
     app = new Hono();
+    // SA4E-241: mimic jwtAuth (anonymous mode) — inject projectContext from the
+    // X-Project-Id header so identity-bound routes work under test.
+    app.use('/api/v1/pega/*', async (c, next) => {
+      const projectId = c.req.header('X-Project-Id') || '';
+      c.set('projectContext' as never, { projectId, userId: 'anonymous' } as never);
+      return next();
+    });
     app.route('/api/v1', createPegaApiRoutes(mockRegistry, mockLogger));
   });
 
@@ -109,10 +116,11 @@ describe('Pega Indexing E2E Integration Suite', () => {
   it('TC-02: Ingest activity extracts symbol & unresolved dependencies', async () => {
     const res = await app.request('/api/v1/pega/ingest-rule', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // SA4E-241: identity via X-Project-Id + required client checksum (NT-4).
+      headers: { 'Content-Type': 'application/json', 'X-Project-Id': 'PEGA_APP_01' },
       body: JSON.stringify({
-        projectId: 'PEGA_APP_01',
         ruleJson: MOCK_ACTIVITY_JSON,
+        checksum: 'a'.repeat(64),
       }),
     });
     expect(res.status).toBe(201);
@@ -142,10 +150,10 @@ describe('Pega Indexing E2E Integration Suite', () => {
   it('TC-04: Ingest dependency activity resolves background queue', async () => {
     const res = await app.request('/api/v1/pega/ingest-rule', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Project-Id': 'PEGA_APP_01' },
       body: JSON.stringify({
-        projectId: 'PEGA_APP_01',
         ruleJson: MOCK_VALIDATE_DATA_ACTIVITY_JSON,
+        checksum: 'c'.repeat(64),
       }),
     });
     expect(res.status).toBe(201);
@@ -156,10 +164,10 @@ describe('Pega Indexing E2E Integration Suite', () => {
   it('TC-05: Ingest Data Transform (Rule-Obj-Model)', async () => {
     const res = await app.request('/api/v1/pega/ingest-rule', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Project-Id': 'PEGA_APP_01' },
       body: JSON.stringify({
-        projectId: 'PEGA_APP_01',
         ruleJson: MOCK_DATA_TRANSFORM_JSON,
+        checksum: 'd'.repeat(64),
       }),
     });
     expect(res.status).toBe(201);
@@ -171,10 +179,10 @@ describe('Pega Indexing E2E Integration Suite', () => {
   it('TC-06: Ingest Data instance (Data-Admin-Operator-ID)', async () => {
     const res = await app.request('/api/v1/pega/ingest-rule', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Project-Id': 'PEGA_APP_01' },
       body: JSON.stringify({
-        projectId: 'PEGA_APP_01',
         ruleJson: MOCK_OPERATOR_DATA_JSON,
+        checksum: 'f'.repeat(64),
       }),
     });
     expect(res.status).toBe(201);
@@ -196,10 +204,10 @@ describe('Pega Indexing E2E Integration Suite', () => {
 
     const ingestRes = await app.request('/api/v1/pega/ingest-rule', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Project-Id': 'PEGA_APP_01' },
       body: JSON.stringify({
-        projectId: 'PEGA_APP_01',
         ruleJson: MOCK_DECISION_TABLE_JSON,
+        checksum: 'e'.repeat(64),
       }),
     });
     expect(ingestRes.status).toBe(201);

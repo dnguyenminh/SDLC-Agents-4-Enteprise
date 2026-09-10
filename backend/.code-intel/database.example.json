@@ -1,1 +1,27 @@
-{ "activeEngine": "sqlite", "engines": { "sqlite": { "dbPath": "index.db" }, "postgresql": { "host": "localhost", "port": 5432, "username": "sa4e_user", "password": "sa4e_local_dev_password", "database": "sa4e_db", "ssl": false, "pool": { "min": 2, "max": 10 } } }, "migration": { "lastMigration": null, "backupSqlitePaths": [] } }
+{
+  "activeEngine": "sqlite",
+  "engines": {
+    "sqlite": { "dbPath": "index.db", "active": true },
+    "postgresql": {
+      "host": "<PG_HOST>",
+      "port": 5432,
+      "username": "<PG_USER>",
+      "password": "<PG_PASSWORD>",
+      "database": "<PG_DATABASE>",
+      "ssl": false,
+      "active": false,
+      "pool": { "min": 2, "max": 10 }
+    },
+    "mysql": {
+      "host": "<MYSQL_HOST>",
+      "port": 3306,
+      "username": "<MYSQL_USER>",
+      "password": "<MYSQL_PASSWORD>",
+      "database": "<MYSQL_DATABASE>",
+      "ssl": false,
+      "active": false,
+      "pool": { "min": 2, "max": 10 }
+    }
+  },
+  "migration": { "lastMigration": null, "backupSqlitePaths": [] }
+}

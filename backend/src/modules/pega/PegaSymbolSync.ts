@@ -4,11 +4,10 @@
  * Feature flag: PEGA_DUAL_WRITE (default true) controls dual-write.
  */
 
-import { createHash } from 'crypto';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import {
   resolveSymbolKind, buildVirtualPath, buildFqn, resolveRuleNameField,
-  resolveRuleSetName, resolveRuleSetVersion,
+  resolveClassNameField, resolveRuleSetName, resolveRuleSetVersion,
 } from './pega-mapping.js';
 import { extractRuleContent } from './PegaContentExtractor.js';
 import { SchemaStorageService, type IDatabaseAdapter } from './schema/SchemaStorageService.js';
@@ -36,22 +35,53 @@ export interface SymbolSyncResult {
 }
 
 /**
+ * SA4E-241 (NT-4) — thrown when a rule ingest arrives without a client-computed
+ * checksum. The backend never computes checksums, so this is a hard failure that
+ * signals the caller (extension) must be upgraded to send one.
+ */
+export class MissingChecksumError extends Error {
+  readonly code = 'MISSING_CHECKSUM';
+  constructor() {
+    super('checksum is required — the extension must send a client-computed checksum (NT-4). Upgrade the extension.');
+    this.name = 'MissingChecksumError';
+  }
+}
+
+/**
  * Sync a Pega rule into the symbols table (new path).
  * Creates: virtual file → symbol → body_embeddings → CODE_ENRICHMENT task.
  * @param adapter - Database adapter for SQL operations
  * @param ruleJson - Raw Pega rule JSON content
  * @param projectId - Tenant project identifier (SEC-04)
  * @param promptContext - Prompt context for doc_comment
+ * @param checksum - SA4E-241: client-computed checksum (computePegaChecksum, 3
+ *   save-time fields). Stored AS-IS as content_hash so the write-path value equals
+ *   what bulk-check compares against (INV-1). ⛔ REQUIRED — the backend NEVER
+ *   computes a checksum (NT-4); the extension is the single computation authority.
+ *   Missing/empty → throws MissingChecksumError (fail-closed; upgrade the extension).
  * @returns symbolId and fileId, or null if validation fails
+ * @throws MissingChecksumError when `checksum` is absent/empty
  */
 export async function syncRuleToSymbols(
   adapter: DatabaseAdapter,
   ruleJson: Record<string, unknown>,
   projectId: string,
   promptContext: string,
+  checksum: string,
 ): Promise<SymbolSyncResult | null> {
   const fields = extractRequiredFields(ruleJson);
-  if (!fields) return null;
+  if (!fields) {
+    logger.warn({ ruleJson }, 'extractRequiredFields returned null');
+    return null;
+  }
+  logger.info({ pxObjClass: fields.pxObjClass, pyClassName: fields.pyClassName, pyRuleName: fields.pyRuleName, projectId }, 'syncRuleToSymbols start');
+
+  // SA4E-241 (NT-4): fail-closed if the extension did not send a checksum. The
+  // backend must NEVER compute one (no full-JSON fallback) — an old extension that
+  // omits it must be upgraded rather than silently poisoning content_hash.
+  if (!checksum || !checksum.trim()) {
+    throw new MissingChecksumError();
+  }
 
   const { pxObjClass, pyClassName, pyRuleName } = fields;
   const kind = resolveSymbolKind(pxObjClass);
@@ -59,6 +89,7 @@ export async function syncRuleToSymbols(
   const version = resolveRuleSetVersion(ruleJson);
   const fqn = buildFqn(pxObjClass, pyClassName, pyRuleName, ruleSet, version);
   const virtualPath = buildVirtualPath(pyClassName, kind, pyRuleName, ruleSet, version);
+  logger.info({ fqn, virtualPath, kind, pyClassName, pyRuleName }, 'syncRuleToSymbols built identity');
   const ruleJsonStr = JSON.stringify(ruleJson);
 
   // SEC-06: skip oversized rules
@@ -67,7 +98,10 @@ export async function syncRuleToSymbols(
     return null;
   }
 
-  const contentHash = createHash('sha256').update(ruleJsonStr).digest('hex');
+  // SA4E-241 (NT-4/INV-1): store the client checksum AS-IS. This is the SAME value
+  // bulk-check compares against, so an unchanged rule is skipped next run. Backend
+  // does not (and must not) compute it.
+  const contentHash = checksum;
   const docComment = (promptContext || `${kind}: ${fqn}`).slice(0, 500);
 
   const fileId = await upsertVirtualFile(adapter, projectId, virtualPath, pyClassName, contentHash, ruleJsonStr.length);
@@ -150,7 +184,10 @@ async function resolveNestedLogicPaths(
 /** Extract and validate required fields from rule JSON. */
 function extractRequiredFields(ruleJson: Record<string, unknown>) {
   const pxObjClass = String((ruleJson as any)?.pxObjClass || '');
-  const pyClassName = String((ruleJson as any)?.pyClassName || '');
+  // Class via shared fallback (pyClassName → pxObjClass) so instance-level Data-Admin
+  // rules with no pyClassName still index. MUST match the FQN built in PegaIndexer's
+  // checksum dedup so a rule resolves to the SAME identity at write and at dedup.
+  const pyClassName = resolveClassNameField(ruleJson);
   // Name via canonical fallback (pyRuleName → pyActivityName → pyModelName → pyFlowName → pyLabel)
   const pyRuleName = resolveRuleNameField(ruleJson);
 

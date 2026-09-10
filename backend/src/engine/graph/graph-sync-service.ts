@@ -20,7 +20,7 @@ interface CodeSymbolRow {
   relative_path: string | null;
 }
 
-const CODE_KINDS = ['class', 'interface', 'function', 'method', 'enum', 'type', 'constructor'];
+const CODE_KINDS = ['class', 'interface', 'function', 'method', 'enum', 'type', 'constructor', 'property', 'variable', 'apex_class', 'trigger', 'flow', 'sf_object', 'sf_field', 'lwc_component', 'aura_component', 'visualforce_page'];
 
 export class GraphSyncService {
   private readonly adminDialect: DialectHelper;
@@ -47,69 +47,9 @@ export class GraphSyncService {
       this.log.info(`[graph-sync] Synced ${symbols.length} code nodes for project ${projectId}`);
       // SA4E-91: Extract and insert code edges (IMPORTS, CALLS, EXTENDS)
       await this.syncCodeEdges(projectId);
-      // SA4E-99: Queue CODE_ENRICHMENT tasks async (fire-and-forget, non-blocking)
-      this.queueCodeSummaryTasks(projectId, symbols).catch(err =>
-        this.log.warn({ err }, '[graph-sync] Code enrichment queue failed (non-fatal)'));
     } catch (err) {
       // Non-fatal: visualization projection must never fail the index run.
       this.log.error({ err }, `[graph-sync] Failed to sync code nodes for ${projectId}`);
-    }
-  }
-
-  /**
-   * SA4E-99: Queue CODE_ENRICHMENT tasks for symbols that have body text.
-   * Reads body from body_embeddings, creates pending_tasks for LLM summarization.
-   * Runs async — does NOT block code indexing.
-   */
-  private async queueCodeSummaryTasks(projectId: string, symbols: CodeSymbolRow[]): Promise<void> {
-    // Only queue for exported or complex symbols (top priority)
-    const candidates = symbols.slice(0, 200); // Cap at 200 per sync to avoid queue flood
-    const now = new Date().toISOString();
-    let queued = 0;
-
-    for (const s of candidates) {
-      // Read body text from body_embeddings
-      const bodyRow = await this.indexAdapter.getAsync<{ embedding: Buffer; token_count: number }>(
-        'SELECT embedding, token_count FROM body_embeddings WHERE symbol_id = ? AND chunk_index = 0',
-        [s.id],
-      );
-      if (!bodyRow || bodyRow.token_count < 10) continue;
-
-      const bodyText = bodyRow.embedding.toString('utf-8');
-      if (bodyText.length < 50) continue;
-
-      // Read signature from symbols table
-      const symRow = await this.indexAdapter.getAsync<{ signature: string | null }>(
-        'SELECT signature FROM symbols WHERE id = ?', [s.id],
-      );
-
-      const payload = {
-        symbol_id: s.id,
-        name: s.name,
-        kind: s.kind,
-        signature: symRow?.signature || null,
-        body: bodyText.slice(0, 4000),
-        file_path: s.relative_path || '',
-      };
-
-      // Insert into pending_tasks (use admin adapter — same DB as graph_nodes)
-      // Temporarily disable FK for CODE_ENRICHMENT (entry_id=symbolId, not a knowledge_entries ref)
-      try {
-        await this.adminAdapter.runAsync('PRAGMA foreign_keys = OFF', []);
-        await this.adminAdapter.runAsync(
-          `INSERT INTO pending_tasks (task_type, entry_id, payload, status, retry_count, max_retries, created_at)
-           VALUES ('CODE_ENRICHMENT', 0, ?, 'PENDING', 0, 2, ?)`,
-          [JSON.stringify(payload), now],
-        );
-        await this.adminAdapter.runAsync('PRAGMA foreign_keys = ON', []);
-        queued++;
-      } catch {
-        try { await this.adminAdapter.runAsync('PRAGMA foreign_keys = ON', []); } catch { /* restore FK constraint */ }
-      }
-    }
-
-    if (queued > 0) {
-      this.log.info(`[graph-sync] Queued ${queued} CODE_ENRICHMENT tasks for project ${projectId}`);
     }
   }
 
@@ -199,6 +139,8 @@ function fibonacciSphereGrouped(
   const TYPE_Z: Record<string, number> = {
     CLASS: 400, INTERFACE: 350, FUNCTION: 200, METHOD: 100,
     ENUM: 300, TYPE: 250, CONSTRUCTOR: 150, CODE_ENTITY: 0,
+    APEX_CLASS: 450, TRIGGER: 440, FLOW: 420, SF_OBJECT: 410,
+    SF_FIELD: 390, LWC_COMPONENT: 430, AURA_COMPONENT: 425, VISUALFORCE_PAGE: 415,
   };
   const zOffset = TYPE_Z[type] ?? 0;
   return {
