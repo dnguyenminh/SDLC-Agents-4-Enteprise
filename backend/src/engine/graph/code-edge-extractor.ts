@@ -32,8 +32,7 @@ export class MembershipEdgeStrategy implements CodeEdgeStrategy {
          ON parent.name = child.parent_symbol
         AND parent.project_id = child.project_id
        WHERE child.project_id = ?
-         AND child.parent_symbol IS NOT NULL
-         AND parent.kind IN ('class','lwc_component','apex_class','interface')`,
+         AND child.parent_symbol IS NOT NULL`,
       [projectId],
     );
     return rows.map(r => ({
