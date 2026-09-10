@@ -107,7 +107,7 @@ export class IndexingEngine {
   }
 
   async runFullIndex(scope?: Partial<IndexScope>, signal?: AbortSignal, userId?: string): Promise<void> {
-    const { projectId, workspace } = resolveScope(scope, {
+    const { projectId, workspace, displayName } = resolveScope(scope, {
       projectId: this.config.projectId,
       workspace: this.config.workspace,
     });
@@ -152,7 +152,7 @@ export class IndexingEngine {
       await this.createEnrichmentTasks(projectId);
       await new Promise<void>(resolve => setImmediate(resolve));
       logSfdxStats(this.adapter, this.config, logger);
-      this.registerWorkspace(projectId, workspace);
+      this.registerWorkspace(projectId, workspace, displayName);
 
       this.emitProgress(projectId, 'complete', files.length, files.length, undefined, this.indexSkipped);
       logger.error('[indexer] Full index complete');
@@ -197,10 +197,15 @@ export class IndexingEngine {
   }
 
   /** Register workspace in project_registry so admin dropdown shows it (non-fatal). */
-  private registerWorkspace(projectId: string, workspace: string): void {
+  private registerWorkspace(projectId: string, workspace: string, displayName?: string): void {
     try {
       const repo = new AdminGraphRepository(getDbAdapter());
-      repo.registerProject(projectId, path.basename(workspace), workspace);
+      // Prefer the client's real workspace name (X-Workspace-Root). The `workspace`
+      // arg is a synthetic temp scan dir named after projectId, so its basename would
+      // wrongly make display_name === project_id. Fall back to it only when no real
+      // name was provided (e.g. boot-time indexing of the actual config.workspace).
+      const name = displayName || path.basename(workspace);
+      repo.registerProject(projectId, name, workspace);
     } catch (err) {
       logger.warn({ err }, '[indexer] project_registry upsert skipped (non-fatal)');
     }

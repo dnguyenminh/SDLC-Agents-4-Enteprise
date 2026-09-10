@@ -42,6 +42,39 @@ export interface UploadResult {
 export class IndexerHttpClient {
     private tokenRefresher?: () => Promise<string | undefined>;
 
+    /** Command id used by the index status bar item to reveal the indexer output channel. */
+    private static readonly SHOW_OUTPUT_COMMAND = "kiroSdlc.showIndexerOutput";
+    /** Shared "Kiro Indexer" output channel — created once to avoid duplicate channels. */
+    private static indexerOutputChannel: vscode.OutputChannel | undefined;
+    /** Guard so the reveal command is registered exactly once. */
+    private static showOutputCommandRegistered = false;
+
+    /**
+     * Lazily create the shared indexer output channel and register a command that
+     * reveals it. status bar `command` only accepts a command id (it cannot call a
+     * method), so we register a small command that focuses the correct channel —
+     * more reliable than the generic (and mis-typed) output-toggle command.
+     */
+    private static getIndexerOutput(): vscode.OutputChannel {
+        if (!IndexerHttpClient.indexerOutputChannel) {
+            IndexerHttpClient.indexerOutputChannel = vscode.window.createOutputChannel("Kiro Indexer");
+        }
+        const channel = IndexerHttpClient.indexerOutputChannel;
+        if (!IndexerHttpClient.showOutputCommandRegistered) {
+            try {
+                vscode.commands.registerCommand(
+                    IndexerHttpClient.SHOW_OUTPUT_COMMAND,
+                    () => channel.show(true),
+                );
+                IndexerHttpClient.showOutputCommandRegistered = true;
+            } catch {
+                // Already registered (e.g. hot reload) — safe to ignore.
+                IndexerHttpClient.showOutputCommandRegistered = true;
+            }
+        }
+        return channel;
+    }
+
     constructor(private readonly backendUrl: string) {}
 
     /** SA4E-99: Set token refresher callback — called on 401 to get a fresh token. */
@@ -57,14 +90,17 @@ export class IndexerHttpClient {
      */
     async pollIndexProgress(token?: string, maxWaitMs = 300000): Promise<void> {
         const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
+        const outputChannel = IndexerHttpClient.getIndexerOutput();
+        statusBar.command = IndexerHttpClient.SHOW_OUTPUT_COMMAND;
         statusBar.show();
         const start = Date.now();
+        let consecutiveFails = 0;
         try {
             while (Date.now() - start < maxWaitMs) {
                 await new Promise(r => setTimeout(r, 2000));
                 const headers = await this.buildHeaders(token);
                 const url = `${this.backendUrl}/api/index/progress`;
-                let resp: { ok: boolean; body: string };
+                let resp: { ok: boolean; body: string; error?: string };
                 try {
                     const response = await fetch(url, {
                         method: "GET",
@@ -72,11 +108,28 @@ export class IndexerHttpClient {
                         signal: AbortSignal.timeout(5000),
                     });
                     resp = { ok: response.status === 200, body: await response.text() };
-                } catch {
-                    resp = { ok: false, body: "" };
+                } catch (err) {
+                    resp = { ok: false, body: "", error: (err as Error).message };
+                    outputChannel.appendLine(`[Index Poll] Fetch failed: ${(err as Error).message} — URL: ${url}`);
                 }
-                const { ok, body } = resp;
-                if (!ok) { statusBar.text = "$(sync~spin) Indexing..."; statusBar.tooltip = "Code Intelligence: Indexing workspace..."; continue; }
+                const { ok, body, error } = resp;
+                if (!ok) {
+                    consecutiveFails++;
+                    statusBar.text = "$(sync~spin) Indexing...";
+                    statusBar.tooltip = "Code Intelligence: Indexing workspace...";
+                    if (consecutiveFails >= 3) {
+                        statusBar.text = "$(error) Index: backend unreachable";
+                        const md = new vscode.MarkdownString(`Code Intelligence: Backend unreachable\nURL: ${url}\nReason: ${error || 'No response / non-200'}\n\nClick to open Output > Kiro Indexer for details.`);
+                        md.isTrusted = true;
+                        statusBar.tooltip = md;
+                        outputChannel.appendLine(`[Index Poll] Backend unreachable after ${consecutiveFails} consecutive failures. URL: ${url}, reason: ${error || 'non-200'}`);
+                        outputChannel.show(true);
+                        setTimeout(() => statusBar.dispose(), 30000);
+                        return;
+                    }
+                    continue;
+                }
+                consecutiveFails = 0;
                 try {
                     const progress = JSON.parse(body);
                     const status = progress.status;
@@ -100,8 +153,21 @@ export class IndexerHttpClient {
                     }
                     if (status === 'failed' || progress.phase === 'error') {
                         statusBar.text = "$(error) Index failed";
-                        statusBar.tooltip = `Code Intelligence: Indexing failed — ${progress.message || 'unknown error'}`;
-                        setTimeout(() => statusBar.dispose(), 8000);
+                        const errObj = progress.error;
+                        let tooltipMsg = 'Code Intelligence: Indexing FAILED\n';
+                        if (errObj) {
+                            tooltipMsg += `Phase: ${errObj.phase || progress.phase}\n`;
+                            tooltipMsg += `Error: ${errObj.message}\n`;
+                            if (errObj.file) tooltipMsg += `File: ${errObj.file}\n`;
+                            if (errObj.stack) tooltipMsg += `\n${errObj.stack}`;
+                        } else {
+                            tooltipMsg += `Error: ${progress.message || 'unknown error'}`;
+                        }
+                        const md = new vscode.MarkdownString(tooltipMsg);
+                        md.isTrusted = true;
+                        statusBar.tooltip = md;
+                        // Keep longer for user to read
+                        setTimeout(() => statusBar.dispose(), 30000);
                         return;
                     }
                     if (status === 'cancelled' || progress.phase === 'cancelled') {
@@ -238,8 +304,8 @@ export class IndexerHttpClient {
         const totalBatches = Math.ceil(totalFiles / batchSize);
         const incrementPerBatch = 100 / totalBatches;
 
-        // Create output channel for detailed error reporting
-        const channel = vscode.window.createOutputChannel("Kiro Indexer");
+        // Reuse the shared "Kiro Indexer" channel for detailed error reporting
+        const channel = IndexerHttpClient.getIndexerOutput();
 
         // Upload project code first (high priority)
         for (let i = 0; i < totalFiles; i += batchSize) {
@@ -304,7 +370,20 @@ export class IndexerHttpClient {
             report.report({ message: "Running full index on uploaded files..." });
             await this.triggerFullIndex(token);
             // SA4E-99: Poll backend progress until index + LLM enrichment complete
-            this.pollIndexProgress(token).catch(() => {}); // fire-and-forget, shows status bar
+            // Do not swallow errors — surface if poll fails
+            this.pollIndexProgress(token).catch(err => {
+                const ch = IndexerHttpClient.getIndexerOutput();
+                ch.appendLine(`[pollIndexProgress] Unhandled error: ${(err as Error).message}`);
+                ch.show(true);
+                vscode.window.showErrorMessage(`Index: poll failed — backend unreachable. See Output > Kiro Indexer.`);
+            });
+        }
+
+        if (uploaded === 0 && errors > 0) {
+            const ch = IndexerHttpClient.getIndexerOutput();
+            ch.appendLine(`[uploadSourceFiles] Upload failed for all batches — uploaded=0, errors=${errors}. Backend may be unreachable.`);
+            ch.show(true);
+            vscode.window.showErrorMessage(`Index: upload failed for all files — backend unreachable or error. See Output > Kiro Indexer.`);
         }
 
         const summary = `✅ Indexed ${uploaded} project files` + (errors > 0 ? `, ⚠️ Failed: ${errors} (see Output > Kiro Indexer for details)` : "");
@@ -313,10 +392,17 @@ export class IndexerHttpClient {
 
     /** SA4E-99: Trigger a full re-index on backend after all source files are written. */
     private async triggerFullIndex(token?: string): Promise<void> {
+        const url = `${this.backendUrl}/api/index/full`;
         try {
-            const url = `${this.backendUrl}/api/index/full`;
             const { ok, body } = await this.httpPostJson(url, {}, token);
-            if (ok && body) {
+            if (!ok) {
+                const ch = IndexerHttpClient.getIndexerOutput();
+                ch.appendLine(`[triggerFullIndex] FAILED — URL: ${url}, response: ${body}`);
+                ch.show(true);
+                vscode.window.showErrorMessage(`Index: backend unreachable — triggerFullIndex failed. See Output > Kiro Indexer.`);
+                return;
+            }
+            if (body) {
                 try {
                     const data = JSON.parse(body);
                     if (data.cancelledPrevious && data.message) {
@@ -324,7 +410,12 @@ export class IndexerHttpClient {
                     }
                 } catch { /* ignore parse errors */ }
             }
-        } catch { /* non-fatal */ }
+        } catch (err) {
+            const ch = IndexerHttpClient.getIndexerOutput();
+            ch.appendLine(`[triggerFullIndex] EXCEPTION — URL: ${url}, error: ${(err as Error).message}`);
+            ch.show(true);
+            vscode.window.showErrorMessage(`Index: backend unreachable — triggerFullIndex exception. See Output > Kiro Indexer.`);
+        }
     }
 
     /**

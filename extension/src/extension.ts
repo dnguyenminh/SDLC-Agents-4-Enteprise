@@ -304,6 +304,36 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
         }
       })
     );
+    // SA4E-157: Show enrichment failures details command
+    context.subscriptions.push(
+      vscode.commands.registerCommand('sa4e.showEnrichmentFailures', async () => {
+        try {
+          const status = await enrichmentService.pollNow();
+          if (!status) {
+            vscode.window.showErrorMessage('Cannot reach backend for enrichment status.');
+            return;
+          }
+          const output = vscode.window.createOutputChannel('Kiro Enrichment Failures');
+          output.clear();
+          output.appendLine(`Enrichment state: ${status.state}`);
+          output.appendLine(`Total: ${status.totalRules}, Completed: ${status.completedRules}, Failed: ${status.failedRules}`);
+          output.appendLine('');
+          if (status.recentFailures && status.recentFailures.length > 0) {
+            output.appendLine(JSON.stringify(status.recentFailures, null, 2));
+          } else {
+            output.appendLine('No recent failures recorded.');
+          }
+          output.show(true);
+          vscode.window.showInformationMessage('Enrichment failures logged to Output > Kiro Enrichment Failures', 'Retry Failed').then((selection) => {
+            if (selection === 'Retry Failed') {
+              vscode.commands.executeCommand('sa4e.retryFailedEnrichment');
+            }
+          });
+        } catch (err: any) {
+          vscode.window.showErrorMessage(`Failed to fetch failures: ${err.message}`);
+        }
+      })
+    );
   } catch (err) {
     outputChannel.appendLine(`[EnrichmentStatus] Init failed: ${(err as Error).message}`);
   }

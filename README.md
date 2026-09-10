@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.41.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.42.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,16 @@ MIT
 ---
 
 ## Changelog
+
+### v1.42.0 (2026-09-08)
+
+- **Multi-language tree-sitter parsers** — Real AST symbol extraction wired for C, C++, C#, PHP, Ruby, Scala, Swift and Kotlin (grammars bundled + copied to `dist` on build), plus a regex fallback for the same set. A shared `GenericTreeSitterParser` drives per-language node maps (`skipScopeNodes` moved to `grammar-config.json` and propagated to parsers). Symbol-kind fixes: correct name resolution for struct/enum (`type_identifier`), promote `method_declaration`/function-in-class to `method`, separate `variable`/`property`/`constant`, and dedupe symbols by name+kind+startLine.
+- **Salesforce indexing** — SFDX projects now index Apex, LWC (`.js` + minimal `.html` template extractor), Aura, Visualforce and `*-meta.xml`; extension source-upload glob extended for SFDX; `CODE_KINDS` extended so Salesforce entities project into the KB Graph.
+- **KB Graph edges** — Edge extraction rewritten to read from the `relationships` table (the tree-sitter source of truth) instead of the empty legacy tables. New `MembershipEdgeStrategy` (CONTAINS: class → members) and `FileContainsSymbolStrategy` (LWC component → file symbols); inherits/implements resolve-by-name (fan-out on `calls` avoided). Auto-heal job (`ensure-sa4e-301`) backfills edges for projects with none; unused `code_dependencies`/`code_call_graph` tables dropped; unique index ensured for idempotent edge inserts.
+- **KB Graph renderer** — Continuous budget-driven LOD replaces the discrete FAR/MID/CLOSE modes: a reusable `InstancedMesh` renders the nearest `detailBudget` nodes with pixel-accurate sphere scaling, edges show when detail is active, and labels are budget-limited. Interactive minimap (zoom/rotate/pan/span), bottom-left legend with Excel-style filter, and draggable resizable legend window.
+- **Enrichment dedup** — Removed the duplicate enrichment-queue path from graph-sync; `CodeEnrichmentTaskCreator` is now the single source with a PENDING/PROCESSING dedup guard; orphan `CODE_ENRICHMENT` tasks (`entry_id=0`/`project_id NULL`) cleaned on boot.
+- **Indexing status UX** — Index status bar item opens a real "Kiro Indexer" output channel on click, distinguishes "backend unreachable" from in-progress, and stops swallowing trigger/poll errors.
+- **Platform & CI** — Standardized on Node.js 22 LTS, upgraded GitHub Actions checkout/setup-node, and fixed rolldown native-binding install in CI.
 
 ### v1.41.1 (2026-09-06)
 

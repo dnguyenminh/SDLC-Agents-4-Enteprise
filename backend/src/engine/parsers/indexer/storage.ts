@@ -87,7 +87,13 @@ export async function extractAndStoreBodies(
 ): Promise<void> {
   try {
     const lines = source.split('\n');
-    const functionKinds = new Set(['function', 'method', 'arrow_function', 'generator', 'function_declaration']);
+    // Store bodies for function-like AND class-like kinds so LLM enrichment can
+    // generate pseudo code for classes (JS class, Apex class, interface, enum) too.
+    const bodyKinds = new Set([
+      'function', 'method', 'arrow_function', 'generator', 'function_declaration',
+      'constructor', 'trigger',
+      'class', 'apex_class', 'interface', 'enum',
+    ]);
     const minBodyLines = 3;
     // SA4E-104 debug: log symbolIds state
     const validIds = Array.from(symbolIds.values()).filter(v => v > 0);
@@ -103,7 +109,7 @@ export async function extractAndStoreBodies(
       ['embedding', 'token_count'],
     );
     for (const sym of result.symbols) {
-      if (!functionKinds.has(sym.kind)) continue;
+      if (!bodyKinds.has(sym.kind)) continue;
       const symbolId = symbolIds.get(sym.name);
       if (!symbolId) continue;
       const bodyLines = lines.slice(sym.startLine - 1, sym.endLine);

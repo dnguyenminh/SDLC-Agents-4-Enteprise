@@ -21,9 +21,17 @@ const LLM_TIMEOUT_MS = parseInt(process.env.LLM_ENRICH_TIMEOUT_MS || '120000', 1
 /** Max pseudo code length (BR-05). */
 const MAX_PSEUDO_CODE_LENGTH = 2000;
 
-// Strategy selection: which symbol kinds map to which enrichment strategy
-const CLASS_KINDS = new Set(['class', 'interface', 'enum']);
-const FUNCTION_KINDS = new Set(['function', 'method', 'arrow_function', 'generator']);
+// Strategy selection: which symbol kinds map to which enrichment strategy.
+// apex_class routes to CLASS_SUMMARY; trigger/constructor route to FUNCTION_SUMMARY
+// so Salesforce Apex entities are enriched with summary (+ pseudo code) like the rest.
+const CLASS_KINDS = new Set(['class', 'interface', 'enum', 'apex_class']);
+const FUNCTION_KINDS = new Set(['function', 'method', 'arrow_function', 'generator', 'constructor', 'trigger']);
+// Salesforce declarative metadata + properties: summarized from signature/name
+// (no code body, no pseudo code). Routed to METADATA_SUMMARY.
+const METADATA_KINDS = new Set([
+  'property', 'sf_field', 'sf_object', 'lwc_component', 'aura_component',
+  'flow', 'visualforce_page',
+]);
 
 /**
  * Orchestrates LLM enrichment for a single code symbol.
@@ -160,6 +168,7 @@ export class CodeEnrichmentHandler {
     if (workspaceType === 'pega' && isPegaKind(kind)) return 'PEGA_SUMMARY';
     if (FUNCTION_KINDS.has(kind)) return 'FUNCTION_SUMMARY';
     if (CLASS_KINDS.has(kind)) return 'CLASS_SUMMARY';
+    if (METADATA_KINDS.has(kind)) return 'METADATA_SUMMARY';
     return 'CLASS_SUMMARY'; // Fallback
   }
 
@@ -172,6 +181,7 @@ export class CodeEnrichmentHandler {
       [payload.symbolId],
     );
     if (!sym) throw new Error(`symbol_not_found: ${payload.symbolId}`);
+    // filePath comes from the task payload (already relative_path) — grounds metadata prompts.
 
     const bodyText = await this.loadBodyText(payload.symbolId);
     const childMembers = await this.loadChildMembers(payload.symbolId);
@@ -188,6 +198,9 @@ export class CodeEnrichmentHandler {
       // SA4E-106: Pega class from payload or parent_symbol; ruleset from payload
       pegaClass: payload.pegaClass || sym.parent_symbol || undefined,
       pegaRuleset: payload.pegaRuleset || undefined,
+      // Metadata grounding: owning object/component + source file path.
+      parentSymbol: sym.parent_symbol || undefined,
+      filePath: payload.filePath || undefined,
     };
   }
 
@@ -257,7 +270,7 @@ export class CodeEnrichmentHandler {
     const summary = summaryMatch?.[1] ?? raw.slice(0, 200).replace(/["\n]/g, ' ').trim();
     const result: CodeEnrichmentLLMResponse = { summary };
 
-    if ((strategy === 'FUNCTION_SUMMARY' || strategy === 'PEGA_SUMMARY') && pseudoMatch) {
+    if (strategy !== 'TAG_EXTRACTION' && pseudoMatch) {
       result.pseudo_code = pseudoMatch[1];
     }
     if (tagsMatch) {
@@ -274,9 +287,10 @@ export class CodeEnrichmentHandler {
     const tags = validateTags(response.tags);
     const tagsJson = tags.length > 0 ? JSON.stringify(tags) : null;
 
-    // SA4E-171: store pseudo_code for both FUNCTION and PEGA strategies
+    // Store pseudo_code for all summarizing strategies (CLASS, FUNCTION, PEGA).
+    // Only TAG_EXTRACTION produces no pseudo code.
     let pseudoCode: string | null = null;
-    if ((strategy === 'FUNCTION_SUMMARY' || strategy === 'PEGA_SUMMARY') && response.pseudo_code) {
+    if (strategy !== 'TAG_EXTRACTION' && response.pseudo_code) {
       pseudoCode = response.pseudo_code.length > MAX_PSEUDO_CODE_LENGTH
         ? response.pseudo_code.slice(0, MAX_PSEUDO_CODE_LENGTH) + '...'
         : response.pseudo_code;

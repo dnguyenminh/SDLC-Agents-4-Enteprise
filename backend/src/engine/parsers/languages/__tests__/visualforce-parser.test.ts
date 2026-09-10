@@ -10,7 +10,7 @@ describe('VisualforceParser', () => {
   it('VF-1: <apex:page controller> -> VisualforcePage symbol + uses relationship', () => {
     const source = '<apex:page controller="MyCtrl">\n  content\n</apex:page>';
     const result = parser.parse(source, 'force-app/main/default/pages/MyPage.page');
-    const sym = result.symbols.find(s => s.kind === 'class');
+    const sym = result.symbols.find(s => s.kind === 'visualforce_page');
     expect(sym).toBeDefined();
     expect(sym!.name).toBe('MyPage');
     expect(sym!.signature).toBe('VisualforcePage: MyPage');

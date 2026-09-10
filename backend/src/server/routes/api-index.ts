@@ -13,7 +13,7 @@ import { loadConfig } from '../../config/index.js';
 import { requireProjectId } from '../../engine/query/code-intel-isolation.js';
 import { validateSession } from '../../admin/db/sessions.js';
 import {
-  handleFullIndex, handleFileEvents, handleCancel, handleProgress,
+  handleFullIndex, handleFileEvents, handleCancel, handleProgress, resolveScope,
 } from './api-index-decoupled.js';
 import { PegaService } from '../../modules/pega/PegaService.js';
 
@@ -44,8 +44,9 @@ function resolveRequestScope(c: Context): IndexScope {
 function writeFilesPhase(userId: string, projectId: string, files: SourceFile[]): { written: number; rejected: string[] } {
   const rejected: string[] = [];
   let written = 0;
-  // SA4E-99: Consistent temp structure — Temp/{userId}/{projectId}/batch-docs/
-  const tempBase = path.join('C:\\projects\\kiro\\Temp', userId || 'local-dev', projectId, 'batch-docs');
+  // SA4E-99: Consistent temp structure — indexTempDir/{userId}/{projectId}/batch-docs/
+  const config = loadConfig();
+  const tempBase = path.join(config.indexTempDir, userId || 'local-dev', projectId, 'batch-docs');
   fs.mkdirSync(tempBase, { recursive: true });
   for (const file of files) {
     const targetPath = path.join(tempBase, file.path);
@@ -137,9 +138,12 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
     if (!files || !Array.isArray(files)) return c.json({ error: 'files array required' }, 400);
     const scope = resolveRequestScope(c);
 
-    // SA4E-99: Write to temp dir OUTSIDE workspace to avoid triggering Kiro file watcher
-    // Structure: Temp/{userId}/{projectId}/source/files...
-    const tempBase = path.join('C:\\projects\\kiro\\Temp', userId || 'local-dev', scope.projectId, 'source');
+    // SINGLE SOURCE OF TRUTH: write to the SAME dir that /api/index/full scans
+    // (via the shared resolveScope), so uploaded files are actually indexed and
+    // progress is keyed by the same userId:projectId. Previously this wrote to a
+    // hardcoded/`/source`-suffixed path that the index/progress routes never scanned.
+    const indexScope = resolveScope(c);
+    const tempBase = indexScope.workspace;
     const wsBasename = path.basename(scope.workspace);
     fs.mkdirSync(tempBase, { recursive: true });
 
@@ -160,32 +164,15 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
       } catch { rejected.push(filePath); }
     }
 
-    // Trigger async full index on the uploaded temp files so symbols/graph are generated
-    // This connects the upload step to the existing IndexingEngine pipeline.
-    try {
-      const codeIntel = registry.getModule('codeIntel') as any;
-      const indexer = codeIntel?.getIndexer?.();
-      if (indexer && typeof indexer.runFullIndex === 'function') {
-        // Fire-and-forget indexing on temp workspace
-        indexer.runFullIndex({ projectId: scope.projectId, workspace: tempBase }, undefined, userId || undefined)
-          .then(() => {
-            logger.info({ projectId: scope.projectId, workspace: tempBase, written: written.length }, '[index-source] Background index of uploaded files completed');
-            // Sync graph nodes after index
-            if (typeof indexer.syncGraphNodesPublic === 'function') {
-              indexer.syncGraphNodesPublic(scope.projectId).catch(() => {});
-            }
-          })
-          .catch((err: any) => {
-            logger.error({ err, projectId: scope.projectId }, '[index-source] Background index failed');
-          });
-      } else {
-        logger.warn({ projectId: scope.projectId }, '[index-source] CodeIntel indexer not available — files written but not indexed');
-      }
-    } catch (e) {
-      logger.warn({ err: e }, '[index-source] Failed to start background index');
-    }
+    // NOTE: This endpoint ONLY writes uploaded files to the shared index temp dir.
+    // It does NOT trigger indexing here — the client is expected to POST
+    // /api/index/full ONCE after all batches are written. Triggering per-batch
+    // caused: (a) startOrReplace cancelling+restarting on partial dirs (race), and
+    // (b) a throwaway IndexOperationManager whose progress was invisible to
+    // /api/index/progress (which reads the singleton) → status stuck at 0%.
+    // See documents/index-status-tooltip-error-detail.md ("ROOT CAUSE CHỐT").
 
-    return c.json({ written: written.length, skipped: 0, rejected, deps: [], projectId: scope.projectId, indexingStarted: true });
+    return c.json({ written: written.length, skipped: 0, rejected, deps: [], projectId: scope.projectId });
   } catch (err: any) {
     return indexError(c, err, logger, 'Error processing source batch');
   }
@@ -197,8 +184,9 @@ async function handleIndexDocument(c: Context, logger: Logger, userId = '') {
     const { path: relPath, content } = body;
     if (!relPath || !content) return c.json({ error: 'path and content required' }, 400);
     const scope = resolveRequestScope(c);
-    // SA4E-99: Consistent temp structure — Temp/{userId}/{projectId}/documents/
-    const tempBase = path.join('C:\\projects\\kiro\\Temp', userId || 'local-dev', scope.projectId, 'documents');
+    // SA4E-99: Consistent temp structure — indexTempDir/{userId}/{projectId}/documents/
+    const config = loadConfig();
+    const tempBase = path.join(config.indexTempDir, userId || 'local-dev', scope.projectId, 'documents');
     const wsBasename = path.basename(scope.workspace);
     let filePath = relPath;
     if (filePath.startsWith(wsBasename + '/') || filePath.startsWith(wsBasename + '\\')) {
@@ -234,7 +222,8 @@ async function handleIndexDocuments(c: Context, logger: Logger, userId = '') {
 async function handleIngestDocsFromTemp(c: Context, registry: ModuleRegistry, logger: Logger, userId: string) {
   try {
     const scope = resolveRequestScope(c);
-    const tempBase = path.join('C:\\projects\\kiro\\Temp', userId, scope.projectId, 'batch-docs');
+    const config = loadConfig();
+    const tempBase = path.join(config.indexTempDir, userId, scope.projectId, 'batch-docs');
 
     if (!fs.existsSync(tempBase)) {
       return c.json({ ingested: 0, message: 'No documents in Temp folder' });

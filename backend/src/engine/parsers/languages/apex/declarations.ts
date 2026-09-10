@@ -15,7 +15,7 @@ export function extractDeclarations(
     if (!child) continue;
     switch (child.type) {
       case 'class_declaration':
-        extractType(child, source, filePath, parentName, 'class', symbols, relationships, depth); break;
+        extractType(child, source, filePath, parentName, 'apex_class', symbols, relationships, depth); break;
       case 'interface_declaration':
         extractType(child, source, filePath, parentName, 'interface', symbols, relationships, depth); break;
       case 'enum_declaration':
@@ -71,7 +71,7 @@ export function extractMembers(
       case 'field_declaration':
         extractFields(member, source, filePath, className, symbols); break;
       case 'class_declaration':
-        extractType(member, source, filePath, className, 'class', symbols, relationships, depth + 1); break;
+        extractType(member, source, filePath, className, 'apex_class', symbols, relationships, depth + 1); break;
       case 'interface_declaration':
         extractType(member, source, filePath, className, 'interface', symbols, relationships, depth + 1); break;
       case 'enum_declaration':

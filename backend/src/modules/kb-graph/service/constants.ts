@@ -21,6 +21,14 @@ export const KIND_TO_TYPE: Record<string, string> = {
   enum: 'ENUM',
   constant: 'CONSTANT',
   variable: 'VARIABLE',
+  apex_class: 'APEX_CLASS',
+  trigger: 'TRIGGER',
+  flow: 'FLOW',
+  sf_object: 'SF_OBJECT',
+  sf_field: 'SF_FIELD',
+  lwc_component: 'LWC_COMPONENT',
+  aura_component: 'AURA_COMPONENT',
+  visualforce_page: 'VISUALFORCE_PAGE',
 };
 
 /**

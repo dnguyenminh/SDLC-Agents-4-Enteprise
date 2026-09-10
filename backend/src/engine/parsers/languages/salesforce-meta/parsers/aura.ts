@@ -6,5 +6,5 @@ export function parseAuraMeta(
 ): void {
   const componentName = nameFromPath(filePath);
   const lineCount = source.split('\n').length;
-  symbols.push({ name: componentName, kind: 'class', filePath, startLine: 1, endLine: lineCount, signature: `AuraComponent: ${componentName}`, modifiers: ['aura'], isExported: true });
+  symbols.push({ name: componentName, kind: 'aura_component', filePath, startLine: 1, endLine: lineCount, signature: `AuraComponent: ${componentName}`, modifiers: ['aura'], isExported: true });
 }

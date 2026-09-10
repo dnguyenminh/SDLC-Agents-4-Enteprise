@@ -24,6 +24,7 @@ export const EnrichmentStatusResponseSchema = z.object({
   currentFile: z.string().nullable(),
   lastPollAt: z.string().nullable(),
   activeTasks: z.array(z.object({ source: z.string() })).optional(),
+  recentFailures: z.array(z.object({ symbolName: z.string(), error: z.string(), taskId: z.number() })).optional(),
 });
 
 export type EnrichmentStatusResponse = z.infer<typeof EnrichmentStatusResponseSchema>;

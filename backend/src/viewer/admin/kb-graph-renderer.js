@@ -111,10 +111,12 @@
     SURVEY: 2, SYSADMIN: 2.5, PEGA_SCHEMA: 3, OTHER: 2,
   };
 
-  const FAR_THRESHOLD = 800;
-  const MID_THRESHOLD = 300;
-  const INSTANCED_RADIUS = 400;
-  const CLOSE_NODE_COUNT = 500;
+  const DETAIL_BUDGET_DEFAULT = 1500;
+  const LABEL_BUDGET_DEFAULT = 30;
+  const SPHERE_MIN_PX_DEFAULT = 8;    // floor: stay visible when zoomed far out
+  const SPHERE_MAX_PX_DEFAULT = 400;  // generous cap so zoom-in visibly enlarges nodes
+  const LABEL_MIN_PX_DEFAULT = 14;
+  const REFRESH_MS_DEFAULT = 160;
 
   class KBGraphRendererImpl {
     constructor(container, options) {
@@ -131,10 +133,7 @@
       this.animFrameId = null;
       this.pointsObject = null;
       this.instancedMesh = null;
-      this.closeGroup = null;
       this.edgeLines = null;
-      this.closeMeshes = [];
-      this.currentMode = 'FAR';
       this.selectedNodeId = null;
       this.hoveredNodeId = null;
       this.labelContainer = null;
@@ -143,6 +142,16 @@
       this.minimapSpanMode = false;
       this.minimapBBox = null;
       this.minimapDrag = null;
+      // LOD budget-driven options
+      this.detailBudget = this.options.detailBudget != null ? this.options.detailBudget : DETAIL_BUDGET_DEFAULT;
+      this.labelBudget = this.options.labelBudget != null ? this.options.labelBudget : LABEL_BUDGET_DEFAULT;
+      this.sphereMinPx = this.options.sphereMinPx != null ? this.options.sphereMinPx : SPHERE_MIN_PX_DEFAULT;
+      this.sphereMaxPx = this.options.sphereMaxPx != null ? this.options.sphereMaxPx : SPHERE_MAX_PX_DEFAULT;
+      this.labelMinPx = this.options.labelMinPx != null ? this.options.labelMinPx : LABEL_MIN_PX_DEFAULT;
+      this.refreshMs = this.options.refreshMs != null ? this.options.refreshMs : REFRESH_MS_DEFAULT;
+      this._lodAccum = 0;
+      this._detailIndices = [];
+      this._meshCapacity = 0;
     }
 
     init() {
@@ -153,7 +162,7 @@
       var h = this.container.clientHeight || 600;
 
       this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color(0x0f172a);
+      this.scene.background = new THREE.Color(0x334155);
 
       this.camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 100000);
       this.camera.position.set(0, 0, 3500);
@@ -177,7 +186,7 @@
       this.controls.target.set(0, 0, 0);
       this.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
       this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
-      this.controls.addEventListener('end', function() { self._updateMode(false); });
+      this.controls.addEventListener('end', function() { self._updateDetailLOD(true); });
       // Prevent page scroll from hijacking wheel zoom on the canvas
       this.renderer.domElement.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
       // Minimap: unified canvas interactions (drag=pan, wheel=zoom, right-drag=rotate, dblclick=span)
@@ -185,7 +194,6 @@
       this._clock = new THREE.Clock();
 
       // Custom input: node selection (click), focus (dblclick), node drag.
-      this._modeCheckAccum = 0;
       this._setupPointerInput();
 
       this.labelContainer = document.createElement('div');
@@ -222,7 +230,7 @@
       this.nodes = nodes; this.nodeMap.clear();
       for (var i = 0; i < nodes.length; i++) { this.nodeMap.set(nodes[i].id, i); }
       this._computeMinimapBBox();
-      this._buildPointsGeometry(); this._updateMode(true);
+      this._buildPointsGeometry(); this._updateDetailLOD(true);
     }
 
     loadEdges(edges) { this.edges = edges; this._buildEdgeGeometry(); }
@@ -250,7 +258,7 @@
       this.camera.position.copy(center.clone().add(dir.multiplyScalar(dist)));
       this.camera.updateProjectionMatrix();
       this.controls.update();
-      this._updateMode(true);
+      this._updateDetailLOD(true);
     }
 
     focusNode(id) {
@@ -258,6 +266,8 @@
       if (idx === undefined) return;
       var THREE = this.THREE;
       var node = this.nodes[idx];
+      // Move the orbit target ONTO the node so subsequent wheel-zoom dollies into it,
+      // then place the camera a short distance away along the current view direction.
       var center = new THREE.Vector3(node.x, node.y, node.z || 0);
       var dir = this.camera.position.clone().sub(this.controls.target);
       if (dir.lengthSq() < 1e-6) dir.set(0, 0, 1);
@@ -265,7 +275,7 @@
       this.controls.target.copy(center);
       this.camera.position.copy(center.clone().add(dir.multiplyScalar(200)));
       this.controls.update();
-      this._updateMode(true);
+      this._updateDetailLOD(true);
       this.selectedNodeId = id; this._dispatchNodeClick(node);
     }
 
@@ -296,6 +306,7 @@
       }
       var positions = new Float32Array(n * 3);
       var colors = new Float32Array(n * 3);
+      var sizes = new Float32Array(n); // per-node base world size (from NODE_SIZES)
       var tmpColor = new THREE.Color();
       for (var i = 0; i < n; i++) {
         var node = this.nodes[i];
@@ -306,29 +317,96 @@
         colors[i * 3] = tmpColor.r;
         colors[i * 3 + 1] = tmpColor.g;
         colors[i * 3 + 2] = tmpColor.b;
+        // Base size per type (default 2.5). Scaled up so world radius is meaningful.
+        var baseSize = (NODE_SIZES[node.type] || 2.5);
+        sizes[i] = baseSize;
       }
       var geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
       // Create glowing circle texture for better-looking nodes
       var canvas2d = document.createElement('canvas');
       canvas2d.width = 64; canvas2d.height = 64;
       var ctx2d = canvas2d.getContext('2d');
       var gradient = ctx2d.createRadialGradient(32, 32, 0, 32, 32, 32);
       gradient.addColorStop(0, 'rgba(255,255,255,1)');
-      gradient.addColorStop(0.3, 'rgba(255,255,255,0.8)');
-      gradient.addColorStop(0.7, 'rgba(255,255,255,0.3)');
+      gradient.addColorStop(0.35, 'rgba(255,255,255,0.85)');
+      gradient.addColorStop(0.75, 'rgba(255,255,255,0.35)');
       gradient.addColorStop(1, 'rgba(255,255,255,0)');
       ctx2d.fillStyle = gradient;
       ctx2d.fillRect(0, 0, 64, 64);
       var spriteTexture = new THREE.CanvasTexture(canvas2d);
-      var material = new THREE.PointsMaterial({
-        size: 10, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.95,
-        map: spriteTexture, alphaMap: spriteTexture, depthWrite: false
+
+      // Custom shader: distance attenuation for natural depth, but the on-screen
+      // pixel size is CLAMPED to [MIN_PIXELS, MAX_PIXELS] so nodes never shrink
+      // below what the human eye can comfortably see (min) nor bloat when close (max).
+      // uWorldScale converts the base world size into a pixel projection factor.
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var material = new THREE.ShaderMaterial({
+        uniforms: {
+          uTex: { value: spriteTexture },
+          uMinPx: { value: 7.0 * dpr },   // MIN visible size: ~7 CSS px (eye-friendly floor)
+          uMaxPx: { value: 46.0 * dpr },  // MAX size when zoomed in close
+          uPxPerWorld: { value: 0.0 },    // recomputed each resize (viewport height factor)
+          uOpacity: { value: 0.95 }
+        },
+        transparent: true,
+        depthWrite: false,
+        vertexShader: [
+          'attribute float aSize;',
+          'attribute vec3 color;',
+          'varying vec3 vColor;',
+          'uniform float uMinPx;',
+          'uniform float uMaxPx;',
+          'uniform float uPxPerWorld;',
+          'void main() {',
+          '  vColor = color;',
+          '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
+          '  float dist = -mv.z;',                       // camera-space depth (positive in front)
+          '  if (dist < 1.0) dist = 1.0;',
+          // Perspective attenuation: world size -> pixels = size * uPxPerWorld / dist
+          '  float px = aSize * uPxPerWorld / dist;',
+          '  px = clamp(px, uMinPx, uMaxPx);',            // enforce min/max on-screen size
+          '  gl_PointSize = px;',
+          '  gl_Position = projectionMatrix * mv;',
+          '}'
+        ].join('\n'),
+        fragmentShader: [
+          'uniform sampler2D uTex;',
+          'uniform float uOpacity;',
+          'varying vec3 vColor;',
+          'void main() {',
+          '  vec4 tex = texture2D(uTex, gl_PointCoord);',
+          '  if (tex.a < 0.02) discard;',
+          '  gl_FragColor = vec4(vColor, tex.a * uOpacity);',
+          '}'
+        ].join('\n')
       });
+      this.pointsMaterial = material;
+      this._updatePointSizeUniforms();
       this.pointsObject = new THREE.Points(geometry, material);
       this.pointsObject.renderOrder = 1;
       this.scene.add(this.pointsObject);
+    }
+
+    /**
+     * Recompute the world->pixel projection factor used by the point shader.
+     * For a perspective camera, an object of world size S at camera distance D
+     * projects to (S * viewportHeightPx / (2 * D * tan(fov/2))) pixels.
+     * We fold everything except D into uPxPerWorld so the shader only divides by dist.
+     */
+    _updatePointSizeUniforms() {
+      if (!this.pointsMaterial || !this.camera || !this.renderer) return;
+      var THREE = this.THREE;
+      var size = new THREE.Vector2();
+      this.renderer.getSize(size);
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var vpHeightPx = size.y * dpr;
+      var fovRad = this.camera.fov * Math.PI / 180;
+      var pxPerWorld = vpHeightPx / (2.0 * Math.tan(fovRad / 2.0));
+      // Multiply by an aesthetic gain so type sizes (1.5..6) map to a good pixel range.
+      this.pointsMaterial.uniforms.uPxPerWorld.value = pxPerWorld * 2.2;
     }
 
     _buildEdgeGeometry() {
@@ -364,133 +442,154 @@
       this.scene.add(this.edgeLines);
     }
 
-    // ===== LOD Mode Switching =====
+    // ===== LOD Detail Layer (budget-driven continuous) =====
 
-    _getCameraDistance() {
-      if (!this.camera || !this.controls) return 1000;
-      return this.camera.position.distanceTo(this.controls.target);
+    _updateDetailLOD(force) {
+      if (this._destroyed || !this.nodes.length || !this.camera || !this.controls) return;
+      this._refreshDetailLayer();
+      this._updateLabelsForDetail();
+      this._updatePointsOpacity();
+      if (this.edgeLines) {
+        this.edgeLines.visible = !!(this._detailIndices && this._detailIndices.length > 0);
+      }
     }
 
-    _updateMode(force) {
-      var dist = this._getCameraDistance();
-      var newMode;
-      if (dist > FAR_THRESHOLD) newMode = 'FAR';
-      else if (dist > MID_THRESHOLD) newMode = 'MID';
-      else newMode = 'CLOSE';
-      if (newMode === this.currentMode && !force) return;
-      this.currentMode = newMode;
-      this._cleanupModeObjects();
-      if (newMode === 'FAR') this._setupFarMode();
-      else if (newMode === 'MID') this._setupMidMode();
-      else this._setupCloseMode();
-    }
-
-    _cleanupModeObjects() {
+    _createDetailInstancedMesh(budget) {
+      var THREE = this.THREE;
       if (this.instancedMesh) {
         this.scene.remove(this.instancedMesh);
         this.instancedMesh.geometry.dispose();
         this.instancedMesh.material.dispose();
-        this.instancedMesh = null;
       }
-      if (this.closeGroup) {
-        this.scene.remove(this.closeGroup);
-        this.closeGroup.traverse(function(obj) {
-          if (obj.geometry) obj.geometry.dispose();
-          if (obj.material) obj.material.dispose();
-        });
-        this.closeGroup = null;
-        this.closeMeshes = [];
-      }
-      this._clearLabels();
-      if (this.pointsObject) this.pointsObject.visible = true;
-      // Edges visibility controlled per-mode (FAR=hidden, MID/CLOSE=visible)
-    }
-
-    _setupFarMode() {
-      if (this.pointsObject) {
-        this.pointsObject.material.size = 10;
-        this.pointsObject.material.opacity = 0.95;
-        this.pointsObject.visible = true;
-      }
-      // Hide edges at far distance — they create wireframe sphere that hides nodes
-      if (this.edgeLines) this.edgeLines.visible = false;
-    }
-
-    _setupMidMode() {
-      var THREE = this.THREE;
-      if (!this.nodes.length) return;
-      var target = this.controls.target;
-      var nearby = [];
-      var maxInstanced = 2000;
-      for (var i = 0; i < this.nodes.length; i++) {
-        var node = this.nodes[i];
-        var dx = node.x - target.x, dy = node.y - target.y, dz = node.z - target.z;
-        var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (d < INSTANCED_RADIUS) nearby.push({ idx: i, dist: d });
-      }
-      nearby.sort(function(a, b) { return a.dist - b.dist; });
-      var selected = nearby.slice(0, maxInstanced);
-      if (!selected.length) return;
-
-      var sphereGeo = new THREE.SphereGeometry(1, 8, 6);
-      var mat = new THREE.MeshLambertMaterial({ vertexColors: true });
-      this.instancedMesh = new THREE.InstancedMesh(sphereGeo, mat, selected.length);
+      var sphereGeo = new THREE.SphereGeometry(1, 12, 10);
+      // Per-instance color comes from InstancedMesh.instanceColor (set via setColorAt),
+      // NOT vertexColors — SphereGeometry has no per-vertex `color` attribute, so
+      // vertexColors:true would render every instance black. Base color is white so
+      // Three multiplies it by the per-instance color. Slight emissive keeps nodes
+      // visible even when a light does not face them.
+      var mat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x000000 });
+      this.instancedMesh = new THREE.InstancedMesh(sphereGeo, mat, budget);
       this.instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-
-      var dummy = new THREE.Object3D();
-      var colorArr = new Float32Array(selected.length * 3);
-      var tmpColor = new THREE.Color();
-      for (var i = 0; i < selected.length; i++) {
-        var node = this.nodes[selected[i].idx];
-        var size = (NODE_SIZES[node.type] || 3) * 1.5;
-        dummy.position.set(node.x, node.y, node.z);
-        dummy.scale.set(size, size, size);
-        dummy.updateMatrix();
-        this.instancedMesh.setMatrixAt(i, dummy.matrix);
-        tmpColor.setHex(colorForType(node.type));
-        colorArr[i * 3] = tmpColor.r; colorArr[i * 3 + 1] = tmpColor.g; colorArr[i * 3 + 2] = tmpColor.b;
-      }
-      this.instancedMesh.instanceMatrix.needsUpdate = true;
-      this.instancedMesh.geometry.setAttribute('color', new THREE.InstancedBufferAttribute(colorArr, 3));
-      this.instancedMesh.userData.nodeIndices = selected.map(function(s) { return s.idx; });
+      // Pre-allocate the per-instance color buffer so instanceColor exists before render.
+      var colorArr = new Float32Array(budget * 3);
+      for (var ci = 0; ci < colorArr.length; ci++) { colorArr[ci] = 1; }
+      this.instancedMesh.instanceColor = new THREE.InstancedBufferAttribute(colorArr, 3);
+      this.instancedMesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+      this.instancedMesh.count = 0;
+      this.instancedMesh.userData.nodeIndices = [];
       this.scene.add(this.instancedMesh);
-
-      if (this.pointsObject) { this.pointsObject.material.size = 2.5; this.pointsObject.material.opacity = 0.5; }
-      if (this.edgeLines) this.edgeLines.visible = true;
     }
 
-    _setupCloseMode() {
+    _refreshDetailLayer() {
       var THREE = this.THREE;
-      if (!this.nodes.length) return;
+      if (!this.nodes.length) { this._clearDetailMesh(); return; }
       var target = this.controls.target;
-      var scored = [];
-      for (var i = 0; i < this.nodes.length; i++) {
-        var node = this.nodes[i];
-        var dx = node.x - target.x, dy = node.y - target.y, dz = node.z - target.z;
-        scored.push({ idx: i, dist: Math.sqrt(dx * dx + dy * dy + dz * dz) });
+      var nodes = this.nodes;
+      var n = nodes.length;
+      var budget = this.detailBudget;
+      var candidates = new Array(n);
+      for (var i = 0; i < n; i++) {
+        var node = nodes[i];
+        var dx = node.x - target.x, dy = node.y - target.y, dz = (node.z || 0) - target.z;
+        var d2 = dx * dx + dy * dy + dz * dz;
+        candidates[i] = { idx: i, d2: d2 };
       }
-      scored.sort(function(a, b) { return a.dist - b.dist; });
-      var selected = scored.slice(0, CLOSE_NODE_COUNT);
-      this.closeGroup = new THREE.Group();
-      this.closeMeshes = [];
-      var sphereGeo = new THREE.SphereGeometry(1, 16, 12);
-      for (var i = 0; i < selected.length; i++) {
-        var node = this.nodes[selected[i].idx];
-        var hex = colorForType(node.type);
-        var material = new THREE.MeshPhongMaterial({ color: hex, emissive: hex, emissiveIntensity: 0.2 });
-        var mesh = new THREE.Mesh(sphereGeo, material);
-        var size = (NODE_SIZES[node.type] || 3) * 2;
-        mesh.position.set(node.x, node.y, node.z);
-        mesh.scale.set(size, size, size);
-        mesh.userData.nodeIdx = selected[i].idx;
-        mesh.userData.nodeId = node.id;
-        this.closeGroup.add(mesh);
-        this.closeMeshes.push(mesh);
+      candidates.sort(function(a, b) { return a.d2 - b.d2; });
+      var count = Math.min(budget, n);
+      var selected = candidates.slice(0, count);
+      this._detailIndices = selected.map(function(s) { return s.idx; });
+
+      if (!this.instancedMesh || this._meshCapacity !== budget) {
+        this._createDetailInstancedMesh(budget);
+        this._meshCapacity = budget;
       }
-      this.scene.add(this.closeGroup);
-      if (this.edgeLines) this.edgeLines.visible = true;
-      if (this.pointsObject) { this.pointsObject.material.size = 2; this.pointsObject.material.opacity = 0.35; }
-      this._showLabels(selected.slice(0, 20).map(function(s) { return s.idx; }));
+      var mesh = this.instancedMesh;
+      var dummy = new THREE.Object3D();
+      // projection factor for pixel size
+      var size = new THREE.Vector2();
+      this.renderer.getSize(size);
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var vpHeightPx = size.y * dpr;
+      var fovRad = this.camera.fov * Math.PI / 180;
+      var tanHalf = Math.tan(fovRad / 2);
+      // WORLD_SCALE turns a type's base size (1.5..6) into a fixed world radius, so
+      // spheres grow/shrink naturally as the camera zooms (real-object behaviour).
+      var WORLD_SCALE = 4.0;
+      var tmpColor = new THREE.Color();
+      var camPos = this.camera.position;
+      for (var i = 0; i < count; i++) {
+        var nodeIdx = this._detailIndices[i];
+        var node = nodes[nodeIdx];
+        var baseSize = NODE_SIZES[node.type] || 2.5;
+        // Fixed world radius for this node — scales with zoom like a real object.
+        var worldSize = baseSize * WORLD_SCALE;
+        // Distance camera -> node, used only to enforce the pixel floor/cap.
+        var dxc = node.x - camPos.x, dyc = node.y - camPos.y, dzc = (node.z || 0) - camPos.z;
+        var distCam = Math.sqrt(dxc * dxc + dyc * dyc + dzc * dzc);
+        if (distCam < 1) distCam = 1;
+        // Projected on-screen diameter (px) of the fixed world size at this distance.
+        // Viewport full height spans (2 * dist * tan(fov/2)) world units, so
+        // pixels = worldDiameter * vpHeightPx / (2 * dist * tan(fov/2)).
+        var denom = 2 * distCam * tanHalf;
+        var projPx = worldSize * vpHeightPx / denom;
+        // Floor: never smaller than sphereMinPx (stays visible when zoomed far out).
+        // Cap: never larger than sphereMaxPx (avoids a giant blob when zoomed in close).
+        if (projPx < this.sphereMinPx) {
+          worldSize = this.sphereMinPx * denom / vpHeightPx;
+        } else if (projPx > this.sphereMaxPx) {
+          worldSize = this.sphereMaxPx * denom / vpHeightPx;
+        }
+        if (worldSize < 0.01) worldSize = 0.01;
+        dummy.position.set(node.x, node.y, node.z || 0);
+        dummy.scale.set(worldSize, worldSize, worldSize);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+        tmpColor.setHex(colorForType(node.type));
+        if (mesh.setColorAt) { mesh.setColorAt(i, tmpColor); }
+      }
+      mesh.count = count;
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      mesh.userData.nodeIndices = this._detailIndices.slice();
+    }
+
+    _clearDetailMesh() {
+      if (this.instancedMesh) {
+        this.instancedMesh.count = 0;
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+        this._detailIndices = [];
+      }
+    }
+
+    _updatePointsOpacity() {
+      if (!this.pointsObject || !this.pointsObject.material.uniforms) return;
+      var visible = this._detailIndices ? this._detailIndices.length : 0;
+      var budget = this.detailBudget || 1;
+      var ratio = Math.min(1, visible / budget);
+      // opacity 0.95 -> 0.35
+      var opacity = 0.95 - 0.6 * ratio;
+      if (opacity < 0.35) opacity = 0.35;
+      this.pointsObject.material.uniforms.uOpacity.value = opacity;
+    }
+
+    _updateLabelsForDetail() {
+      var indices = [];
+      if (!this._detailIndices || !this._detailIndices.length) { this._clearLabels(); return; }
+      var nodes = this.nodes;
+      var minBase = 1.5, maxBase = 6;
+      var pxRange = this.sphereMaxPx - this.sphereMinPx;
+      // compute targetPx for first labelBudget candidates
+      var limit = Math.min(this.labelBudget, this._detailIndices.length);
+      for (var i = 0; i < limit; i++) {
+        var nodeIdx = this._detailIndices[i];
+        var node = nodes[nodeIdx];
+        var baseSize = NODE_SIZES[node.type] || 2.5;
+        var t = (baseSize - minBase) / (maxBase - minBase);
+        if (t < 0) t = 0; if (t > 1) t = 1;
+        var targetPx = this.sphereMinPx + t * pxRange;
+        if (targetPx >= this.labelMinPx) indices.push(nodeIdx);
+      }
+      this._showLabels(indices);
     }
 
     // ===== Labels =====
@@ -505,7 +604,7 @@
       for (var i = 0; i < indices.length; i++) {
         var node = this.nodes[indices[i]];
         var label = document.createElement('div');
-        label.style.cssText = 'position:absolute;color:#e2e8f0;font-size:10px;font-family:sans-serif;white-space:nowrap;background:rgba(30,41,59,0.8);padding:1px 4px;border-radius:3px;pointer-events:none;';
+        label.style.cssText = 'position:absolute;color:#f1f5f9;font-size:10px;font-family:sans-serif;white-space:nowrap;background:rgba(15,23,42,0.75);padding:1px 4px;border-radius:3px;pointer-events:none;';
         label.textContent = node.label || node.id;
         this.labelContainer.appendChild(label);
         this.activeLabels.push({ el: label, idx: indices[i] });
@@ -543,10 +642,6 @@
       this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
       this.raycaster.setFromCamera(this.mouse, this.camera);
-      if (this.closeMeshes.length > 0) {
-        var intersects = this.raycaster.intersectObjects(this.closeMeshes);
-        if (intersects.length > 0) return this.nodes[intersects[0].object.userData.nodeIdx];
-      }
       if (this.instancedMesh) {
         var intersects = this.raycaster.intersectObject(this.instancedMesh);
         if (intersects.length > 0 && intersects[0].instanceId !== undefined) {
@@ -589,9 +684,26 @@
         var node = self._raycastNodeAtScreen(e.clientX, e.clientY);
         if (node) self.focusNode(node.id);
       };
+      // Wheel-zoom homing: OrbitControls dollies toward `target`, which starts at the
+      // sphere center (empty). Without moving the target, zooming just approaches the
+      // hollow middle and stops at minDistance — far clusters on the shell are never
+      // reached. On each wheel-in, ease the target toward the node under the cursor
+      // (or nearest to the cursor ray) so zoom naturally homes into the pointed cluster.
+      this._onWheelHoming = function(e) {
+        if (e.deltaY >= 0) return; // only when zooming IN
+        var node = self._nodeUnderCursorOrRay(e.clientX, e.clientY);
+        if (!node) return;
+        // Ease target a fraction toward the node; OrbitControls.update() then dollies in.
+        var tgt = self.controls.target;
+        tgt.x += ((node.x) - tgt.x) * 0.25;
+        tgt.y += ((node.y) - tgt.y) * 0.25;
+        tgt.z += ((node.z || 0) - tgt.z) * 0.25;
+      };
       el.addEventListener('pointerdown', this._onPointerDown);
       el.addEventListener('pointerup', this._onPointerUp);
       el.addEventListener('dblclick', this._onDblClick);
+      // Capture phase so we adjust target BEFORE OrbitControls' own wheel dolly runs.
+      el.addEventListener('wheel', this._onWheelHoming, { capture: true, passive: true });
     }
 
     _removePointerInput() {
@@ -600,6 +712,33 @@
       if (this._onPointerDown) el.removeEventListener('pointerdown', this._onPointerDown);
       if (this._onPointerUp) el.removeEventListener('pointerup', this._onPointerUp);
       if (this._onDblClick) el.removeEventListener('dblclick', this._onDblClick);
+      if (this._onWheelHoming) el.removeEventListener('wheel', this._onWheelHoming, { capture: true });
+    }
+
+    /**
+     * Find the node under the cursor (direct hit) or, failing that, the node whose
+     * center is closest to the cursor pick ray. Lets zoom home into a cluster even
+     * when nodes render as tiny points far away.
+     */
+    _nodeUnderCursorOrRay(screenX, screenY) {
+      var direct = this._raycastNodeAtScreen(screenX, screenY);
+      if (direct) return direct;
+      var rect = this.renderer.domElement.getBoundingClientRect();
+      this.mouse.x = ((screenX - rect.left) / rect.width) * 2 - 1;
+      this.mouse.y = -((screenY - rect.top) / rect.height) * 2 + 1;
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      var ray = this.raycaster.ray;
+      var best = null, bestD2 = Infinity;
+      var THREE = this.THREE;
+      var p = new THREE.Vector3(), closest = new THREE.Vector3();
+      for (var i = 0; i < this.nodes.length; i++) {
+        var nd = this.nodes[i];
+        p.set(nd.x, nd.y, nd.z || 0);
+        ray.closestPointToPoint(p, closest);
+        var d2 = closest.distanceToSquared(p);
+        if (d2 < bestD2) { bestD2 = d2; best = nd; }
+      }
+      return best;
     }
 
     _raycastNodeAtScreen(screenX, screenY) {
@@ -607,9 +746,12 @@
       this.mouse.x = ((screenX - rect.left) / rect.width) * 2 - 1;
       this.mouse.y = -((screenY - rect.top) / rect.height) * 2 + 1;
       this.raycaster.setFromCamera(this.mouse, this.camera);
-      if (this.closeMeshes.length > 0) {
-        var hits = this.raycaster.intersectObjects(this.closeMeshes);
-        if (hits.length > 0) return this.nodes[hits[0].object.userData.nodeIdx];
+      if (this.instancedMesh) {
+        var hits = this.raycaster.intersectObject(this.instancedMesh);
+        if (hits.length > 0 && hits[0].instanceId !== undefined) {
+          var idx = this.instancedMesh.userData.nodeIndices[hits[0].instanceId];
+          return this.nodes[idx];
+        }
       }
       if (this.pointsObject) {
         var hits = this.raycaster.intersectObject(this.pointsObject);
@@ -642,6 +784,7 @@
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(w, h);
+      this._updatePointSizeUniforms(); // viewport height changed -> recompute px factor
     }
 
     _animate() {
@@ -650,11 +793,10 @@
       this.animFrameId = requestAnimationFrame(function() { self._animate(); });
       var dt = this._clock ? this._clock.getDelta() : 0.016;
       this.controls.update();
-      // SA4E-31: throttled LOD mode check (~every 200ms) since OrbitControls
-      // moves the camera continuously; _updateMode is cheap when mode is unchanged.
-      this._modeCheckAccum += dt;
-      if (this._modeCheckAccum >= 0.2) { this._modeCheckAccum = 0; this._updateMode(false); }
-      if (this.currentMode === 'CLOSE') this._updateLabels();
+      // Throttled LOD update
+      this._lodAccum += dt * 1000;
+      if (this._lodAccum >= this.refreshMs) { this._lodAccum = 0; this._updateDetailLOD(false); }
+      this._updateLabels();
       this.renderer.render(this.scene, this.camera);
       this._renderMinimap();
     }
