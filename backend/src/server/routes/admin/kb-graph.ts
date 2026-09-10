@@ -101,25 +101,24 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     const permCheck = await ctx.requirePermission(c, user.userId, 'GRAPH_MAINTAIN');
     if (permCheck instanceof Response) return permCheck;
     const projectId = ctx.getRequestProjectId(c);
-    const { EdgeOnIngestStrategy } = await import('../../../modules/memory/engine/edge-on-ingest.js');
-    const adapter = ctx.db.admin;
-    const entries = await adapter.allAsync<any>('SELECT id, content, source, project_id FROM knowledge_entries WHERE archived = 0' + (projectId ? ' AND (project_id = ? OR project_id IS NULL)' : ''), projectId ? [projectId] : []);
-    const nodes = new Map<number, any>();
-    for (const e of entries) nodes.set(e.id, e);
-    const strategy = new EdgeOnIngestStrategy();
+    const { extractAndInsertIngestEdges } = await import('../../../modules/memory/engine/edge-on-ingest.js');
+    const { getDbAdapter } = await import('../../../admin/db/core.js');
+    const adapter = getDbAdapter();
+    const entries = await adapter.allAsync<{ id: number; content: string | null; source: string | null; project_id: string | null }>(
+      'SELECT id, content, source, project_id FROM knowledge_entries WHERE archived = 0' + (projectId ? ' AND (project_id = ? OR project_id IS NULL)' : ''),
+      projectId ? [projectId] : [],
+    );
     let totalEdges = 0;
     let skippedEntries = 0;
     for (const entry of entries) {
-      const existing = await adapter.getAsync<any>('SELECT 1 FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1', [entry.id]);
+      const existing = await adapter.getAsync<{ one: number }>('SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1', [entry.id]);
       if (existing) { skippedEntries++; continue; }
-      const edges = strategy.extract({ entryId: entry.id, content: entry.content || '', projectId: entry.project_id }, nodes);
-      for (const edge of edges) {
-        await adapter.runAsync(
-          `INSERT OR IGNORE INTO knowledge_graph_edges (source_id, target_id, label, weight) VALUES (?, ?, ?, ?)`,
-          [edge.sourceId, edge.targetId, edge.label, edge.weight ?? 1]
-        );
-        totalEdges++;
-      }
+      totalEdges += await extractAndInsertIngestEdges(adapter, {
+        entryId: entry.id,
+        content: entry.content || '',
+        source: entry.source || undefined,
+        projectId: entry.project_id || undefined,
+      });
     }
     return c.json({ status: 'ok', nodesProcessed: entries.length, skippedEntries, edgesCreated: totalEdges });
   });
