@@ -87,8 +87,11 @@ export interface McpHarness {
 }
 
 /** Wire a real getMcpServer(registry) to a Client over linked in-memory transports. */
-export async function connectMcp(registry: ModuleRegistry): Promise<McpHarness> {
-  const server = getMcpServer(registry, silentLogger());
+export async function connectMcp(
+  registry: ModuleRegistry,
+  projectContext?: { projectId: string; userId?: string },
+): Promise<McpHarness> {
+  const server = getMcpServer(registry, silentLogger(), projectContext);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'sa4e18-test-client', version: '1.0.0' });
   await Promise.all([

@@ -95,12 +95,15 @@ export class OrchestrationModule implements IModule {
 
     handlers.set('execute_dynamic_tool', async (args: any) => {
       const toolName = args.toolName || args.tool_name;
-      const toolArgs = args.arguments || {};
+      const innerArgs = args.arguments || {};
 
-      // Proxy to child MCP server if it owns this tool
+      // Proxy to child MCP server if it owns this tool.
+      // Child servers are separate processes with their own schemas — forward ONLY
+      // the caller's declared arguments, never our internal scope keys (avoid leaking
+      // __projectId/_projectContext to third-party servers and tripping strict schemas).
       if (this.clientManager.ownsTool(toolName)) {
         try {
-          const result = await this.clientManager.executeTool(toolName, toolArgs);
+          const result = await this.clientManager.executeTool(toolName, innerArgs);
           if (this.registry && !result.isError) {
             trackToolUsage(this.registry, this.logger, toolName);
           }
@@ -118,6 +121,12 @@ export class OrchestrationModule implements IModule {
       if (!handler) {
         return { content: [{ type: 'text', text: `Tool ${toolName} not found` }], isError: true };
       }
+
+      // SA4E-41: the trusted tenant scope (__projectId/__userId/_projectContext) is
+      // stamped on the OUTER execute_dynamic_tool args by the dispatch layer. Forward
+      // it into the nested LOCAL tool's arguments, otherwise scoped reads like
+      // code_search run fail-closed (empty) when invoked via find_tools/dynamic.
+      const toolArgs = propagateScope(args, innerArgs);
 
       try {
         const result = await handler(toolArgs);
@@ -145,4 +154,30 @@ export class OrchestrationModule implements IModule {
       { name: 'toggle_tool', description: 'Enable or disable a tool', inputSchema: { type: 'object', properties: { tool_name: { type: 'string' }, enabled: { type: 'boolean' } }, required: ['tool_name'] }, category: 'orchestration' },
     ];
   }
+}
+
+/** Trusted scope keys stamped by the dispatch layer (SA4E-41). */
+const SCOPE_KEYS = ['__projectId', '__userId', '__workspaceRoot', '_projectContext'] as const;
+
+/**
+ * Forward trusted tenant scope from the outer execute_dynamic_tool args into the
+ * nested tool's arguments. Without this, scoped reads (code_search, get_curated_context,
+ * pega_*) run fail-closed when invoked via find_tools/execute_dynamic_tool, because
+ * the scope keys live on the OUTER args, not inside `arguments`.
+ *
+ * @param outer - The execute_dynamic_tool args carrying stamped scope keys.
+ * @param inner - The nested tool's own arguments (`args.arguments`).
+ * @returns inner args enriched with any scope keys present on outer (inner wins on conflict).
+ */
+function propagateScope(
+  outer: Record<string, unknown>,
+  inner: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...inner };
+  for (const key of SCOPE_KEYS) {
+    if (outer[key] !== undefined && merged[key] === undefined) {
+      merged[key] = outer[key];
+    }
+  }
+  return merged;
 }

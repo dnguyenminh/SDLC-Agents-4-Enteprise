@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.42.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.42.1.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,12 @@ MIT
 ---
 
 ## Changelog
+
+### v1.42.1 (2026-09-10)
+
+- **Tenant scope stamping for tool execution** — `/api/tools/execute` and `/api/code/search` now stamp the trusted tenant scope onto tool arguments using the canonical `__projectId`/`__userId` keys (not only `_projectContext`). Code-intel tools read `__projectId` and are fail-closed when absent, which previously made `code_search` return "No results found". Covers the MCP call path (`mcpServer`) and the KB API route. Added regression tests (`tools-execute-scope`, orchestration dynamic IT, mcpServer calltool IT).
+- **KB Graph edges (LWC dir-based)** — `FileContainsSymbolStrategy` now matches LWC/Aura component symbols to their code symbols by component **directory** (component lives in `.js-meta.xml`, code in `.js`), so LWC_COMPONENT nodes are no longer isolated (131/132 connected). Remaining isolated nodes are legitimate standalone entities (single-file metadata components).
+- **Indexer/query hardening** — graph `migrator` idempotency additions, `query-layer` scope resolution, `indexing-engine` fixes.
 
 ### v1.42.0 (2026-09-08)
 

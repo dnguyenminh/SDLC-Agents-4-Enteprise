@@ -5,7 +5,7 @@
  */
 
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
-import { buildCodeScopeFilter } from './code-intel-isolation.js';
+import { buildCodeScopeFilter, type CodeScopeFilter } from './code-intel-isolation.js';
 
 export interface SearchResult {
   name: string;
@@ -67,10 +67,26 @@ const SYMBOL_COLUMNS = `s.name, s.kind, s.signature, f.relative_path as filePath
 export class QueryLayer {
   constructor(private readonly adapter: DatabaseAdapter) {}
 
-  /** Full-text search across symbols using FTS5, scoped to one tenant. */
+  /**
+   * Full-text search across symbols, scoped to one tenant.
+   * Dual-dialect: SQLite uses the FTS5 `symbols_fts` virtual table (MATCH + rank);
+   * PostgreSQL falls back to an ILIKE search on the `symbols` table because the
+   * FTS5 virtual table is SQLite-specific (there is no tsvector column for code symbols).
+   */
   async searchCode(projectId: string | undefined, query: string, limit = 20): Promise<SearchResult[]> {
-    const ftsQuery = sanitizeFtsQuery(query);
     const scope = buildCodeScopeFilter(projectId, 's');
+    if (this.adapter.getEngine() === 'sqlite') {
+      return this.searchCodeSqlite(scope, sanitizeFtsQuery(query), limit);
+    }
+    return this.searchCodePortable(scope, query, limit);
+  }
+
+  /** SQLite FTS5 search against the symbols_fts virtual table. */
+  private async searchCodeSqlite(
+    scope: CodeScopeFilter,
+    ftsQuery: string,
+    limit: number,
+  ): Promise<SearchResult[]> {
     return this.adapter.allAsync<SearchResult>(
       `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
               s.start_line as startLine, s.end_line as endLine,
@@ -80,7 +96,68 @@ export class QueryLayer {
        JOIN files f ON s.file_id = f.id
        WHERE symbols_fts MATCH ? AND ${scope.clause}
        ORDER BY rank LIMIT ?`,
-      [ftsQuery, ...[...scope.params], limit],
+      [ftsQuery, ...scope.params, limit],
+    );
+  }
+
+  /**
+   * Full-text search for PostgreSQL using the `search_tsv` tsvector column
+   * (created by the graph migrator). Ranks by ts_rank and falls back to an
+   * ILIKE substring search when the query has no usable full-text terms.
+   */
+  private async searchCodePortable(
+    scope: CodeScopeFilter,
+    query: string,
+    limit: number,
+  ): Promise<SearchResult[]> {
+    const tsTerms = sanitizeLikeQuery(query);
+    if (this.adapter.getEngine() === 'postgresql' && tsTerms) {
+      const rows = await this.searchCodePostgresFts(scope, tsTerms, limit);
+      if (rows.length > 0) return rows;
+    }
+    return this.searchCodeLike(scope, tsTerms, limit);
+  }
+
+  /** PostgreSQL tsvector full-text search ranked by ts_rank. */
+  private async searchCodePostgresFts(
+    scope: CodeScopeFilter,
+    terms: string,
+    limit: number,
+  ): Promise<SearchResult[]> {
+    const tsQuery = terms.split(/\s+/).filter(Boolean).join(' | ');
+    return this.adapter.allAsync<SearchResult>(
+      `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
+              s.start_line as startLine, s.end_line as endLine,
+              s.doc_comment as docComment,
+              ts_rank(s.search_tsv, to_tsquery('english', ?)) as rank
+       FROM symbols s
+       JOIN files f ON s.file_id = f.id
+       WHERE s.search_tsv @@ to_tsquery('english', ?) AND ${scope.clause}
+       ORDER BY rank DESC LIMIT ?`,
+      [tsQuery, tsQuery, ...scope.params, limit],
+    );
+  }
+
+  /**
+   * Portable ILIKE substring search — used as the PostgreSQL fallback and for
+   * any other non-SQLite engine. Matches name, signature and doc comment.
+   */
+  private async searchCodeLike(
+    scope: CodeScopeFilter,
+    terms: string,
+    limit: number,
+  ): Promise<SearchResult[]> {
+    const pattern = `%${terms}%`;
+    return this.adapter.allAsync<SearchResult>(
+      `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
+              s.start_line as startLine, s.end_line as endLine,
+              s.doc_comment as docComment, 0 as rank
+       FROM symbols s
+       JOIN files f ON s.file_id = f.id
+       WHERE (s.name ILIKE ? OR s.signature ILIKE ? OR s.doc_comment ILIKE ?)
+         AND ${scope.clause}
+       ORDER BY s.name LIMIT ?`,
+      [pattern, pattern, pattern, ...scope.params, limit],
     );
   }
 
@@ -167,4 +244,17 @@ export class QueryLayer {
 
 function sanitizeFtsQuery(query: string): string {
   return query.replace(/[^\w\s*"]/g, ' ').trim() || '*';
+}
+
+/**
+ * Sanitize a query for use inside a LIKE/ILIKE pattern.
+ * Strips FTS operators and escapes LIKE wildcards (% and _) so user input is
+ * matched literally rather than as a wildcard pattern.
+ */
+function sanitizeLikeQuery(query: string): string {
+  return query
+    .replace(/[*"]/g, ' ')
+    .replace(/[%_\\]/g, '\\$&')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

@@ -125,6 +125,14 @@ export async function runGraphMigrations(adapter: DatabaseAdapter): Promise<void
   await execIdempotent(adapter, buildBodyEmbeddingsSchema(engine));
   logger.error('[graph-migrator] Body embeddings table ready');
 
+  // SA4E: PostgreSQL full-text search infrastructure for code symbols.
+  // SQLite already has the symbols_fts FTS5 virtual table (see engine/db/schema.ts);
+  // PostgreSQL needs a tsvector column + GIN index + maintenance trigger instead.
+  if (engine === 'postgresql') {
+    await ensurePostgresSymbolFts(adapter);
+    logger.error('[graph-migrator] PostgreSQL symbol FTS (tsvector) ready');
+  }
+
   // Update schema version
   if (engine === 'sqlite') {
     await adapter.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [3]);
@@ -135,6 +143,46 @@ export async function runGraphMigrations(adapter: DatabaseAdapter): Promise<void
     );
   }
   logger.error('[graph-migrator] Schema version set to 3');
+}
+
+/**
+ * Create PostgreSQL full-text search infrastructure on the `symbols` table.
+ * Adds a `search_tsv` tsvector column (weighted: name > signature > doc_comment),
+ * a GIN index for fast @@ lookups, a BEFORE INSERT/UPDATE trigger to keep it
+ * current, and backfills existing rows. Idempotent — safe to run repeatedly.
+ *
+ * Exported so it can be ensured on every startup independent of the graph
+ * schema gate (existing deployments already have `relationships`, so
+ * runGraphMigrations would otherwise be skipped and the column never created).
+ * No-op on non-PostgreSQL engines — SQLite uses the symbols_fts FTS5 table.
+ */
+export async function ensurePostgresSymbolFts(adapter: DatabaseAdapter): Promise<void> {
+  if (adapter.getEngine() !== 'postgresql') return;
+  const stmts = [
+    `ALTER TABLE symbols ADD COLUMN IF NOT EXISTS search_tsv tsvector`,
+    `CREATE INDEX IF NOT EXISTS idx_symbols_search_tsv ON symbols USING GIN (search_tsv)`,
+    `CREATE OR REPLACE FUNCTION symbols_tsv_update() RETURNS trigger AS $$
+      BEGIN
+        NEW.search_tsv :=
+          setweight(to_tsvector('english', COALESCE(NEW.name, '')), 'A') ||
+          setweight(to_tsvector('english', COALESCE(NEW.signature, '')), 'B') ||
+          setweight(to_tsvector('english', COALESCE(NEW.doc_comment, '')), 'C');
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql`,
+    `DROP TRIGGER IF EXISTS trg_symbols_tsv ON symbols`,
+    `CREATE TRIGGER trg_symbols_tsv
+       BEFORE INSERT OR UPDATE ON symbols
+       FOR EACH ROW EXECUTE FUNCTION symbols_tsv_update()`,
+    `UPDATE symbols SET search_tsv =
+        setweight(to_tsvector('english', COALESCE(name, '')), 'A') ||
+        setweight(to_tsvector('english', COALESCE(signature, '')), 'B') ||
+        setweight(to_tsvector('english', COALESCE(doc_comment, '')), 'C')
+      WHERE search_tsv IS NULL`,
+  ];
+  for (const stmt of stmts) {
+    await adapter.execAsync(stmt);
+  }
 }
 
 /** Execute DDL, ignoring "already exists" errors (idempotent). */

@@ -13,7 +13,7 @@ import { scanSingleFile, ScannedFile } from './file-scanner.js';
 import { TreeSitterIndexer } from '../parsers/tree-sitter-indexer.js';
 import { GrammarRegistry, loadGrammarConfig } from '../parsers/grammar-registry.js';
 import { GraphRepository } from '../graph/graph-repository.js';
-import { runGraphMigrations, isGraphSchemaReady } from '../graph/migrator.js';
+import { runGraphMigrations, isGraphSchemaReady, ensurePostgresSymbolFts } from '../graph/migrator.js';
 import { detectSfdxProject, getSfdxStats as getSfdxStatsImpl, logSfdxStats } from './sfdx-helper.js';
 import { detectModule, updateModules, detectAndStorePatterns } from './module-helper.js';
 import { isFileUnchanged, indexFileSymbolsRegex, upsertFileInDb, upsertFileRegexFallback } from './index-helper.js';
@@ -99,6 +99,9 @@ export class IndexingEngine {
   private async ensureGraphSchema(): Promise<void> {
     const ready = await isGraphSchemaReady(this.adapter);
     if (!ready) await runGraphMigrations(this.adapter);
+    // Ensure PostgreSQL symbol FTS infrastructure exists even when the graph
+    // schema was already provisioned (idempotent; no-op on SQLite).
+    await ensurePostgresSymbolFts(this.adapter);
   }
 
   async startBackgroundIndexing(): Promise<void> {
