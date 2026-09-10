@@ -25,30 +25,34 @@ export interface CodeEdgeStrategy {
 /** Extracts CONTAINS edges from file → symbol (file membership) for symbols without parent_symbol, e.g., LWC_COMPONENT. */
 export class FileContainsSymbolStrategy implements CodeEdgeStrategy {
   async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
-    // Map file_id to a synthetic node? For now create edge from file pseudo node to symbol.
-    // If graph_nodes uses file nodes with entry_id 'file:{file_id}', we can connect.
-    // Fallback: connect symbol to itself? Instead create CONTAINS from a synthetic file container.
-    // Simpler: create edge from symbol to symbol of same file where parent is the file's main component?
-    // We'll create CONTAINS from the first symbol of each file of kind lwc_component/apex_class/class to all other symbols in same file.
-    const rows = await indexAdapter.allAsync<{ child_id: number; parent_id: number }>(
-      `SELECT s1.id AS child_id, s2.id AS parent_id
-       FROM symbols s1
-       JOIN symbols s2
-         ON s2.project_id = s1.project_id
-        AND s2.file_id = s1.file_id
-        AND s2.kind IN ('lwc_component','apex_class','class')
-       WHERE s1.project_id = ?
+    // LWC/Aura components live in .js-meta.xml while code lives in .js/.cmp files.
+    // Match by directory: component symbol and symbols sharing same directory.
+    const rows = await indexAdapter.allAsync<{ child_id: number; parent_id: number; comp_path: string; sym_path: string }>(
+      `SELECT s1.id AS child_id, s2.id AS parent_id, cf.relative_path AS comp_path, sf.relative_path AS sym_path
+       FROM symbols s2
+       JOIN files cf ON cf.id = s2.file_id
+       JOIN files sf ON sf.project_id = cf.project_id
+       JOIN symbols s1 ON s1.file_id = sf.id AND s1.project_id = s2.project_id
+       WHERE s2.project_id = ?
+         AND s2.kind IN ('lwc_component','aura_component')
          AND s1.parent_symbol IS NULL
-         AND s2.parent_symbol IS NULL
          AND s1.id <> s2.id`,
       [projectId],
     );
-    return rows.map(r => ({
-      source: `code:${r.parent_id}`,
-      target: `code:${r.child_id}`,
-      label: 'CONTAINS',
-      weight: 0.4,
-    }));
+    const edges: CodeGraphEdge[] = [];
+    const seen = new Set<string>();
+    for (const r of rows) {
+      const compDir = r.comp_path.replace(/\\/g, '/').substring(0, r.comp_path.lastIndexOf('/'));
+      const symDir = r.sym_path.replace(/\\/g, '/').substring(0, r.sym_path.lastIndexOf('/'));
+      if (compDir && symDir && compDir === symDir) {
+        const key = `${r.parent_id}-${r.child_id}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          edges.push({ source: `code:${r.parent_id}`, target: `code:${r.child_id}`, label: 'CONTAINS', weight: 0.4 });
+        }
+      }
+    }
+    return edges;
   }
 }
 
