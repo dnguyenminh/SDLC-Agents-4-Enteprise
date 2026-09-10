@@ -364,12 +364,12 @@ project thực sự 0 edge, tránh chạy lại mỗi 10 phút cho project đã 
 5. Regression: `calls` ngoài project KHÔNG tạo edge tới node không tồn tại.
 
 ## DoD (thay cho DoD cũ ở trên)
-- [x] MembershipEdgeStrategy tạo edge CONTAINS class↔member (P1). Kết quả: project 7b11cdc169de edge chạm node 7 → 1.041.
+- [x] MembershipEdgeStrategy tạo edge CONTAINS class↔member (P1). Kết quả: project 7b11cdc169de edge chạm node 7 → 1.051, trong đó CONTAINS = 1.044, CALLS = 7.
 - [x] inherits/implements nội bộ tạo edge (P2). Resolve-by-name chỉ áp dụng cho inherits/implements, tránh fan-out calls.
 - [x] resolveTargets điều tra xong; 82% relationship target ngoài project là hành vi đúng cho calls built-in/lib.
 - [x] graph_edges touching SF nodes ≥ ~500 (thay vì 7); viewer hiển thị cạnh.
 - [x] 301 query đổi sang HAVING COUNT(edges)=0.
-- [ ] Có unit + integration test; tuân thủ code-standards + PG transaction rule.
+- [x] Có unit + integration test cho MembershipEdgeStrategy; tuân thủ code-standards + PG transaction rule.
 
 
 ---
@@ -445,3 +445,85 @@ SF_OBJECT → SF_FIELD. Kiểm `sf_field` có parent_symbol/file_id trỏ về o
 - [ ] SF_FIELD nối về SF_OBJECT.
 - [ ] Tỷ lệ node cô lập của SF giảm mạnh (kỳ vọng < 5%, chủ yếu là node thực sự độc lập).
 - [ ] graph_edges touching SF ≥ ~1500; viewer: cụm LWC không còn tách rời.
+
+
+---
+
+# ROOT CAUSE THẬT (verify PG) — STALE SYMBOL IDs trong relationships
+
+Sau P1/P2: graph vẫn chỉ CONTAINS 517 + CALLS 7; INHERITS/IMPLEMENTS = 0 edge; 232 node cô lập
+(LWC_COMPONENT 132, CLASS 59, SF_FIELD 28, FUNCTION 11). Dry-run extractor MỚI trên DB hiện tại:
+
+- MembershipEdgeStrategy → 517 CONTAINS, both-endpoints-in-graph = **517** ✅
+- RelationshipsEdgeStrategy → 3553 edge (CALLS 3408, IMPLEMENTS 72, INHERITS 70, USES 3),
+  both-endpoints-in-graph = **0** ❌
+
+## Bằng chứng STALE IDs (inherits/implements, 142 rows, target đã resolve)
+```
+src_exists in symbols: 0   | tgt_exists in symbols: 0
+id ranges:  symbols = 330137..331022 (886)   vs   relationships.source = 315801..331014
+```
+→ `relationships.source_symbol_id` / `target_symbol_id` trỏ tới symbol id CŨ (315801…) đã bị
+xóa. Symbol hiện tại có id 330137–331022. Khi re-index, symbols bị DELETE+INSERT (id MỚI), nhưng
+`relationships` giữ id CŨ → toàn bộ endpoint mồ côi → 0 khớp graph_nodes.
+
+## Vì sao CONTAINS đúng mà relationships sai
+- CONTAINS JOIN symbols↔symbols theo TÊN tại thời điểm chạy → id hiện tại → khớp.
+- Relationships dùng `source_symbol_id`/`target_symbol_id` LƯU SẴN → id cũ → không khớp.
+
+## Nguyên nhân cơ chế
+Index theo từng file: `storeResults` DELETE+INSERT symbols của file (id mới) và DELETE+INSERT
+relationships của file. Nhưng relationship từ file A trỏ tới symbol trong file B bằng id; khi
+file B re-index (id đổi), id trong relationship của file A KHÔNG được cập nhật. `resolveTargets()`
+chạy theo tên nhưng ghi lại target_symbol_id là id tại thời điểm đó — sẽ stale ở lần index sau.
+→ relationships tích lũy id "hóa thạch" qua các lần index từng file.
+
+## FIX (chọn hướng — khuyến nghị A)
+
+### A (khuyến nghị) — RelationshipsEdgeStrategy resolve endpoint theo TÊN tại thời điểm build
+Ngừng tin `source_symbol_id`/`target_symbol_id` đã lưu. Thay bằng JOIN theo tên (như CONTAINS)
+để lấy id HIỆN TẠI:
+```sql
+SELECT src.id AS source_id, tgt.id AS target_id, r.kind
+FROM relationships r
+JOIN symbols src ON src.id = r.source_symbol_id AND src.project_id = r.project_id   -- source thường cùng file, còn tồn tại? nếu stale, join theo tên nguồn
+-- Vấn đề: relationships không lưu source_symbol NAME, chỉ có id. Cần bổ sung source name khi ghi,
+-- HOẶC rebuild relationships mỗi lần index để id luôn tươi.
+```
+Lưu ý: relationships hiện chỉ có `target_symbol` (tên đích) — KHÔNG có tên nguồn. Nên resolve
+source theo tên không làm được trực tiếp. Do đó:
+
+### A' — Ghi relationships với id TƯƠI + rebuild toàn project (không incremental theo file)
+Khi index, sau khi TẤT CẢ symbols của project được ghi (id mới ổn định), rebuild `relationships`
+target_symbol_id (và đảm bảo source_symbol_id trỏ id mới). Tức: `resolveTargets()` phải chạy SAU
+khi toàn bộ symbols project được (re)ghi, và relationships của các file KHÁC cũng phải được
+re-resolve — không chỉ file vừa đổi.
+
+### B — Lưu tên cả hai đầu trong relationships (source_symbol + target_symbol)
+Thêm cột `source_symbol` (tên nguồn) khi ghi relationships. Edge extractor JOIN symbols theo
+(source_symbol name, target_symbol name) trong project → luôn dùng id hiện tại → không stale.
+Đây là fix bền vững nhất (giống cách CONTAINS đã đúng). Cần: parser đã biết tên nguồn
+(source symbol name) lúc emit relationship → thêm vào ExtractedRelationship + cột DB + storage.
+
+### C — Full re-index sạch (xóa symbols + relationships của project rồi index lại 1 lượt)
+Nếu stale do incremental per-file: một lần `DELETE FROM symbols/relationships WHERE project_id`
+rồi index toàn bộ trong 1 transaction → id nhất quán. Kiểm: runFullIndex có xóa sạch project
+trước khi index không, hay chỉ upsert từng file (gây lệch id)?
+
+## Kiểm chứng nhanh cho người fix
+- `SELECT COUNT(*) FROM relationships r WHERE r.project_id=SF AND NOT EXISTS
+   (SELECT 1 FROM symbols s WHERE s.id=r.source_symbol_id)` → nếu > 0: source stale (đã xác nhận: 142/142 inherits+implements stale).
+- Sau fix: both-endpoints-in-graph của RelationshipsEdgeStrategy > 0.
+
+## Còn lại (GAP 2a) — LWC_COMPONENT vẫn cô lập (132)
+Độc lập với stale-id: LWC_COMPONENT có parent_symbol=0, không là relationship source. CẦN
+MembershipEdgeStrategy mở rộng: file-level node (lwc_component/aura_component) → CONTAINS tới
+mọi symbol cùng file_id (xem GAP 2a ở trên). Chưa implement.
+
+## DoD (thay DoD trước)
+- [ ] RelationshipsEdgeStrategy tạo edge có CẢ 2 đầu là graph_node hiện tại (both-in-graph > 0).
+- [ ] Không còn stale: relationships endpoint id khớp symbols hiện tại (hoặc resolve theo tên).
+- [ ] INHERITS/IMPLEMENTS edge xuất hiện trong graph SF.
+- [ ] LWC_COMPONENT/AURA_COMPONENT nối qua file→symbol CONTAINS (GAP 2a).
+- [ ] Tỷ lệ node cô lập SF < 5% (hiện 26%).
+- [ ] Test: re-index 2 lần → relationship id không stale; edge both-in-graph ổn định.
