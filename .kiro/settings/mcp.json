@@ -66,35 +66,6 @@
         "CODE_INTEL_VIEWER_PORT": "3200",
         "FORCE_RESTART": "15"
       }
-    },
-    "atlassian-mcp-server": {
-      "type": "registry",
-      "disabled": true,
-      "autoApprove": [
-        "getVisibleJiraProjects",
-        "getAccessibleAtlassianResources",
-        "createJiraIssue",
-        "getTransitionsForJiraIssue",
-        "transitionJiraIssue",
-        "addCommentToJiraIssue",
-        "searchJiraIssuesUsingJql",
-        "getJiraIssue"
-      ]
-    },
-    "atlassian": {
-      "url": "http://localhost:3010/mcp",
-      "type": "httpStream",
-      "transportType": "httpStream",
-      "disabled": false,
-      "autoApprove": [
-        "jira_get_issue",
-        "jira_search",
-        "jira_get_transitions",
-        "jira_get_all_projects",
-        "jira_get_agile_boards",
-        "confluence_search",
-        "confluence_get_page"
-      ]
     }
   }
 }
