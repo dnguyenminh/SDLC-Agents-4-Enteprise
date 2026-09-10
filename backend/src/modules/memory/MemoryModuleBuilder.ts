@@ -94,6 +94,14 @@ export class MemoryModuleBuilder {
       this.mod.setDbManager(dbManager);
     }
 
+    // PostgreSQL: DatabaseManager (which applies the base SQLite schema) is
+    // skipped, so create the base memory tables here before migrations — the
+    // migrations only ALTER and would otherwise fail on missing relations.
+    if (this.memAdapter.getEngine() === 'postgresql') {
+      const { ensurePostgresMemorySchema } = await import('./schema/tables-pg.js');
+      await ensurePostgresMemorySchema(this.memAdapter);
+    }
+
     // Run versioned migrations via DatabaseAdapter
     await migrate001AddScopeColumns(this.memAdapter);
     await migrate002AddEvolutionColumns(this.memAdapter);

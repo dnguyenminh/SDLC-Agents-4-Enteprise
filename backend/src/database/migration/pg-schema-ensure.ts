@@ -15,6 +15,39 @@ import pino from 'pino';
 const logger = pino({ name: 'pg-schema-ensure' });
 
 /**
+ * Ensure engine "core" tables needed EARLY (before module init / tool ingestion)
+ * exist for PostgreSQL. Separated from the full ensure below because
+ * ensurePostgresIndexSchema also ALTERs memory tables that only exist after the
+ * memory module initializes — whereas these tables are needed at ALL_MODULES_READY.
+ *
+ * Mirrors the SQLite definitions in engine/db/schema.ts (mcp_tools, tool_usage).
+ */
+export async function ensurePostgresCoreTables(adapter: DatabaseAdapter): Promise<void> {
+  if (adapter.getEngine() !== 'postgresql') return;
+  if (!adapter.isConnected()) return;
+
+  await adapter.execAsync(`
+    CREATE TABLE IF NOT EXISTS mcp_tools (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL DEFAULT '',
+      schema_json TEXT NOT NULL DEFAULT '{}',
+      category TEXT,
+      server TEXT,
+      vector BYTEA
+    )
+  `);
+  await safeExec(adapter, 'CREATE INDEX IF NOT EXISTS idx_mcp_tools_server ON mcp_tools(server)');
+  await adapter.execAsync(`
+    CREATE TABLE IF NOT EXISTS tool_usage (
+      tool_name TEXT PRIMARY KEY,
+      call_count INTEGER NOT NULL DEFAULT 0,
+      last_called_at TEXT
+    )
+  `);
+}
+
+/**
  * Ensure PostgreSQL has the correct index schema on startup.
  * Called from PostgresAdapter.connect() or server init when engine=postgresql.
  */
@@ -23,6 +56,9 @@ export async function ensurePostgresIndexSchema(adapter: DatabaseAdapter): Promi
   if (!adapter.isConnected()) return;
 
   try {
+    // Core engine tables (idempotent — also created early during startup)
+    await ensurePostgresCoreTables(adapter);
+
     // 1. Ensure files table exists with correct columns
     await adapter.execAsync(`
       CREATE TABLE IF NOT EXISTS files (

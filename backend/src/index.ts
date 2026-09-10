@@ -46,6 +46,20 @@ async function main() {
     logger.error({ err }, 'Failed to ensure SA4E-215 tables; continuing startup');
   }
 
+  // --- PostgreSQL: create engine core tables (mcp_tools, tool_usage) BEFORE
+  // module init, since tool ingestion at ALL_MODULES_READY writes to mcp_tools.
+  // For SQLite these are created by DatabaseManager; PG has no equivalent early path. ---
+  try {
+    const { getDbAdapter } = await import('./admin/db/core.js');
+    const adminAdapter = getDbAdapter();
+    if (adminAdapter.getEngine() === 'postgresql' && adminAdapter.isConnected()) {
+      const { ensurePostgresCoreTables } = await import('./database/migration/pg-schema-ensure.js');
+      await ensurePostgresCoreTables(adminAdapter);
+    }
+  } catch (err) {
+    logger.error({ err }, 'Failed to ensure PostgreSQL core tables; continuing startup');
+  }
+
   // --- Registry + Factory ---
   const registry = new ModuleRegistry(logger, bus);
   const factory = new ModuleFactory(registry, logger, {
