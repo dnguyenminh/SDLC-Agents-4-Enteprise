@@ -32,6 +32,9 @@ import { createIngestRuleRoute } from './routes/pega-ingest-rule.js';
 import { createPegaSchemaRoutes } from './routes/pega-schema-routes.js';
 import { getDbAdapter } from '../admin/db/core.js';
 import { ensureSa4e101Tables } from '../database/schema-registry/ensure-sa4e-101.js';
+import { ensureSa4e300Cleanup } from '../database/schema-registry/ensure-sa4e-300.js';
+import { ensureSa4e302UniqueGraphEdges } from '../database/schema-registry/ensure-sa4e-302.js';
+import { ensureSa4e303DropUnusedTables } from '../database/schema-registry/ensure-sa4e-303.js';
 import { runStartupInterruptDetection } from '../engine/indexer/startup-interrupt-detector.js';
 import { CleanupScheduler } from '../engine/indexer/cleanup-scheduler.js';
 import { createPegaSyncToKbRoutes } from './routes/pega-sync-to-kb.js';
@@ -184,6 +187,13 @@ export class HttpServer {
         // All non-blocking — failures degrade gracefully (EF-04).
         ensureSa4e101Tables()
           .then(() => runStartupInterruptDetection())
+          // SA4E-300: one-time idempotent cleanup of orphan CODE_ENRICHMENT tasks
+          // left by the removed graph-sync enrichment path (Path A).
+          .then(() => ensureSa4e300Cleanup())
+          // SA4E-302: ensure unique index for graph_edges ON CONFLICT
+          .then(() => ensureSa4e302UniqueGraphEdges())
+          // SA4E-303: drop unused edge tables
+          .then(() => ensureSa4e303DropUnusedTables())
           .then(() => {
             this.cleanupScheduler = new CleanupScheduler();
             this.cleanupScheduler.start();
