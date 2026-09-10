@@ -25,8 +25,14 @@ const MAX_EVENTS_PER_REQUEST = 100;
 /** Singleton manager map — one per CodeIntelModule lifetime. */
 const managerCache = new WeakMap<object, IndexOperationManager>();
 
-/** Get or create IndexOperationManager for the codeIntel module. */
-function getManager(registry: ModuleRegistry): IndexOperationManager | null {
+/**
+ * Get or create the SINGLETON IndexOperationManager for the codeIntel module.
+ * Exported so all index routes (source upload + full + progress) share ONE
+ * manager instance — otherwise progress written by one route is invisible to
+ * another (each manager only tracks its own operations), and each extra
+ * instance leaks an `engine.on('progress')` listener.
+ */
+export function getManager(registry: ModuleRegistry): IndexOperationManager | null {
   const codeIntel = registry.getModule('codeIntel') as CodeIntelModule | undefined;
   if (!codeIntel || codeIntel.status !== 'ready') return null;
   const indexer = codeIntel.getIndexer();
@@ -41,7 +47,7 @@ function getManager(registry: ModuleRegistry): IndexOperationManager | null {
 }
 
 /** Resolve project scope from request headers (multi-tenant via JWT + X-Project-Id). */
-async function resolveScope(c: Context, sessionUserId?: string): Promise<{ userId: string; projectId: string; workspace: string }> {
+async function resolveScope(c: Context, sessionUserId?: string): Promise<{ userId: string; projectId: string; workspace: string; displayName?: string }> {
   const config = loadConfig();
   const projectId = requireProjectId(c.req.header('X-Project-Id') || config.projectId);
   // Prefer explicit session user, then JWT projectContext (multi-tenant), then default.
@@ -52,7 +58,12 @@ async function resolveScope(c: Context, sessionUserId?: string): Promise<{ userI
   const indexTempDir = await resolveIndexTempDir();
   const workspace = path.join(indexTempDir, userId, projectId);
   if (!fs.existsSync(workspace)) fs.mkdirSync(workspace, { recursive: true });
-  return { userId, projectId, workspace };
+  // The scan `workspace` above is a synthetic temp dir named after the projectId,
+  // so its basename is NOT a usable display name. The client sends its REAL
+  // workspace root via X-Workspace-Root — use that for project_registry.display_name.
+  const workspaceRoot = c.req.header('X-Workspace-Root') || c.req.header('x-workspace-root');
+  const displayName = workspaceRoot ? path.basename(workspaceRoot) : undefined;
+  return { userId, projectId, workspace, displayName };
 }
 
 /**

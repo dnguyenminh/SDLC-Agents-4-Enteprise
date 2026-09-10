@@ -73,7 +73,7 @@ const parsed = AuditLogInputSchema.safeParse(args);
       return errorResult(`Validation error: ${parsed.error.message}`);
     }
     const { project_id, limit, action_filter } = parsed.data;
-    const entries = this.service.getAuditLog(project_id, limit, action_filter);
+    const entries = await this.service.getAuditLog(project_id, limit, action_filter);
     return textResult({ entries, count: entries.length });
   }
 

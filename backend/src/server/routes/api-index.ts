@@ -352,32 +352,15 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
       } catch { rejected.push(filePath); }
     }
 
-    // Trigger async full index on the uploaded temp files so symbols/graph are generated
-    // This connects the upload step to the existing IndexingEngine pipeline.
-    try {
-      const codeIntel = registry.getModule('codeIntel') as any;
-      const indexer = codeIntel?.getIndexer?.();
-      if (indexer && typeof indexer.runFullIndex === 'function') {
-        // Fire-and-forget indexing on temp workspace
-        indexer.runFullIndex({ projectId: scope.projectId, workspace: tempBase }, undefined, userId || undefined)
-          .then(() => {
-            logger.info({ projectId: scope.projectId, workspace: tempBase, written: written.length }, '[index-source] Background index of uploaded files completed');
-            // Sync graph nodes after index
-            if (typeof indexer.syncGraphNodesPublic === 'function') {
-              indexer.syncGraphNodesPublic(scope.projectId).catch(() => {});
-            }
-          })
-          .catch((err: any) => {
-            logger.error({ err, projectId: scope.projectId }, '[index-source] Background index failed');
-          });
-      } else {
-        logger.warn({ projectId: scope.projectId }, '[index-source] CodeIntel indexer not available — files written but not indexed');
-      }
-    } catch (e) {
-      logger.warn({ err: e }, '[index-source] Failed to start background index');
-    }
+    // NOTE: This endpoint ONLY writes uploaded files to the shared index temp dir.
+    // It does NOT trigger indexing here — the client is expected to POST
+    // /api/index/full ONCE after all batches are written. Triggering per-batch
+    // caused: (a) startOrReplace cancelling+restarting on partial dirs (race), and
+    // (b) a throwaway IndexOperationManager whose progress was invisible to
+    // /api/index/progress (which reads the singleton) → status stuck at 0%.
+    // See documents/index-status-tooltip-error-detail.md ("ROOT CAUSE CHỐT").
 
-    return c.json({ written: written.length, skipped: 0, rejected, deps: [], projectId: scope.projectId, indexingStarted: true });
+    return c.json({ written: written.length, skipped: 0, rejected, deps: [], projectId: scope.projectId });
   } catch (err: any) {
     return indexError(c, err, logger, 'Error processing source batch');
   }

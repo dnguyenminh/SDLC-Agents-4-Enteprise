@@ -12,7 +12,10 @@ export type SymbolKind =
   | 'type' | 'enum' | 'variable' | 'namespace'
   | 'constructor' | 'property' | 'module'
   | 'trait' | 'struct' | 'constant'
-  | 'pega-rule';
+  | 'pega-rule'
+  // Salesforce-specific kinds emitted by the apex/aura/visualforce/salesforce-meta parsers.
+  | 'apex_class' | 'trigger' | 'aura_component' | 'visualforce_page'
+  | 'lwc_component' | 'flow' | 'sf_object' | 'sf_field';
 
 export type RelationshipKind =
   | 'calls' | 'imports' | 'inherits'

@@ -21,6 +21,9 @@ export default class VisualforceParser implements ILanguageParser {
         { attr: 'extensions', kind: 'apex-import' },
       ],
     });
+    if (isPage && symbols.length > 0) {
+      symbols.forEach(s => { s.kind = 'visualforce_page'; });
+    }
     return { symbols, relationships, errors: [] };
   }
 }

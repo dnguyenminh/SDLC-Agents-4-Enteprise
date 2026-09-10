@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.41.1-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.42.0-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/tools-66+-teal?style=for-the-badge" alt="Tools">
   <img src="https://img.shields.io/badge/node-%3E%3D18-green?style=for-the-badge" alt="Node">
 </p>
@@ -38,7 +38,7 @@ Server starts at **http://localhost:48721**. Verify it's running:
 
 ```bash
 curl http://localhost:48721/health
-# → {"status":"healthy","version":"1.41.1","uptime":5,"tools_loaded":52}
+# → {"status":"healthy","version":"1.42.0","uptime":5,"tools_loaded":52}
 ```
 
 ### Development Mode (auto-reload)
@@ -233,6 +233,7 @@ The embedding model is expected at `.code-intel/models/model.onnx`. Download it:
 
 | Version | Date | Ticket | Changes |
 |---------|------|--------|---------|
+| 1.42.0 | 2026-09-08 | SA4E-301 | Multi-language tree-sitter parsers (C/C++/C#/PHP/Ruby/Scala/Swift/Kotlin) via shared GenericTreeSitterParser + regex fallback; symbol-kind fixes (struct/enum naming, method promotion, variable/property/constant separation, dedupe). Salesforce indexing (Apex/LWC/Aura/Visualforce/meta) with grammars copied to dist. KB Graph edges rebuilt from `relationships` (MembershipEdgeStrategy CONTAINS + FileContainsSymbolStrategy + inherits/implements resolve-by-name); auto-heal backfill (ensure-sa4e-301), unused edge tables dropped (303), unique index (302). Enrichment dedup (single CodeEnrichmentTaskCreator + PENDING guard, orphan task cleanup 300). Continuous budget-driven KB Graph LOD renderer. Node.js 22 LTS. |
 | 1.38.0 | 2026-08-25 | SA4E-214 | Extension-driven schema creation for Pega rule types. Dual-strategy harness analysis (HarnessParser + LlmSectionExtractor fallback for stream-rendered harnesses), new `/api/v1/pega/schema/{analyze,store,find,update}` endpoints, schema-guided code enrichment. Fixed: TaskWorker delegates CODE_ENRICHMENT to CodeEnrichmentHandler (Pega flow summary/pseudo_code), enrichment percent Math.floor, admin static vendor asset MIME type. Backend 2634 tests ✓. |
 | 1.37.2 | 2026-08-24 | — | Proxy bug fix: global-fetch-patch defensive fallback for curl/powershell mode, cookie jar persistence, followRedirects, workspace-scoped config, PowerShell CLM compat, pwsh binary. SA4E-204/205/206 parallel orchestration docs. |
 | 1.37.0 | 2026-08-24 | SA4E-193 | Config Commands — 4 slash commands (/create-new-agent, hook, steering, skill) with ValidationGate schema enforcement (closes GAP-01, fixes D-1..D-7), offline-safe template fallback. Consolidated release carrying SA4E-190 content. Ext tests 1621 ✓ · Backend 2621 ✓ |

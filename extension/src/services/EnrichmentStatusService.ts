@@ -176,10 +176,28 @@ export class EnrichmentStatusService implements vscode.Disposable {
         break;
       case 'error':
         this.statusBarItem.text = '$(warning) KB: ' + response.failedRules + ' failed';
-        const md = new vscode.MarkdownString('**Enrichment completed with errors**\n\n' + response.failedRules + ' rules failed\n\nClick to retry failed items');
+        const failureLines: string[] = [];
+        failureLines.push('**Enrichment completed with errors**');
+        failureLines.push('');
+        failureLines.push(`${response.failedRules} rules failed`);
+        failureLines.push('');
+        if (response.recentFailures && response.recentFailures.length > 0) {
+          failureLines.push('**Recent failures:**');
+          for (const f of response.recentFailures.slice(0, 10)) {
+            const name = f.symbolName || `task-${f.taskId}`;
+            const err = f.error ? f.error.slice(0, 200) : 'Unknown error';
+            failureLines.push(`- \`${name}\`: ${err}`);
+          }
+          if (response.failedRules > response.recentFailures.length) {
+            failureLines.push(`…and ${response.failedRules - response.recentFailures.length} more`);
+          }
+        }
+        failureLines.push('');
+        failureLines.push('Click to view detailed failures in Output Channel');
+        const md = new vscode.MarkdownString(failureLines.join('\n'));
         md.isTrusted = true;
         this.statusBarItem.tooltip = md;
-        this.statusBarItem.command = 'sa4e.retryFailedEnrichment';
+        this.statusBarItem.command = 'sa4e.showEnrichmentFailures';
         this.statusBarItem.color = new vscode.ThemeColor('statusBarItem.warningForeground');
         break;
       default:

@@ -10,7 +10,7 @@ describe('AuraParser', () => {
   it('AUR-1: <aura:component implements> -> AuraComponent + implements relationship', () => {
     const source = '<aura:component implements="force:appHostable">\n</aura:component>';
     const result = parser.parse(source, 'force-app/main/default/aura/MyCmp.cmp');
-    const sym = result.symbols.find(s => s.kind === 'class');
+    const sym = result.symbols.find(s => s.kind === 'aura_component');
     expect(sym).toBeDefined();
     expect(sym!.name).toBe('MyCmp');
     expect(sym!.signature).toBe('AuraComponent: MyCmp');

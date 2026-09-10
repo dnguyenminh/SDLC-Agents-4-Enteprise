@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="dev" value="Developer" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="80" width="120" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="parser" value="Parser Layer" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="80" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="mapper" value="Graph Mapping Service" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="200" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="sync" value="Graph Sync Service" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="320" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="graph" value="KB Graph" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="440" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="dev" target="parser">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="parser" target="mapper">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="mapper" target="sync">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="sync" target="graph">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

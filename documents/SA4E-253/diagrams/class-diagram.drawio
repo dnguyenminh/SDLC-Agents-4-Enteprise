@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="constants" value="constants.ts&#10;+ KIND_TO_TYPE: Record&#10;+ graphTypeForKind(kind): string" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="80" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="syncservice" value="GraphSyncService&#10;- indexAdapter&#10;- adminAdapter&#10;+ syncProjectSymbols(pid)&#10;+ readTopSymbols(pid)&#10;+ replaceCodeNodes(pid, symbols)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="380" y="80" width="220" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="parser" value="SalesforceMetaParser&#10;+ parse(source, filePath): ParseResult" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="240" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="apexparser" value="Apex Parser&#10;+ extractDeclarations(node)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="380" y="240" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="syncservice" target="constants">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="parser" target="syncservice">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="apexparser" target="syncservice">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -11,10 +11,20 @@ import { DialectHelper } from '../../database/dialect/DialectHelper.js';
 import { TaskType, TaskStatus } from '../../modules/memory/task-queue/models.js';
 import { isPegaKind } from '../../modules/pega/pega-mapping.js';
 
-/** Kinds eligible for enrichment — excludes trivial symbols like variables. */
+/**
+ * Kinds eligible for enrichment — every non-trivial code symbol must be LLM-enriched.
+ * Includes Salesforce-specific kinds (apex_class, trigger) so Apex entities get
+ * summary + pseudo code like any other class/function. Trivial symbols (variables,
+ * constants, fields, properties) are intentionally excluded.
+ */
 const ENRICHABLE_KINDS = new Set([
-  'class', 'interface', 'enum',
-  'function', 'method', 'arrow_function', 'generator',
+  // Class-like
+  'class', 'interface', 'enum', 'apex_class',
+  // Function-like
+  'function', 'method', 'arrow_function', 'generator', 'constructor', 'trigger',
+  // Salesforce declarative metadata + component properties (summary only, no pseudo code)
+  'property', 'sf_field', 'sf_object', 'lwc_component', 'aura_component',
+  'flow', 'visualforce_page',
 ]);
 
 /**
@@ -236,6 +246,13 @@ export class CodeEnrichmentTaskCreator {
     symbolId: number, symbolName: string, kind: string,
     filePath: string, projectId: string,
   ): Promise<void> {
+    // Dedup guard: avoid duplicate PENDING/PROCESSING tasks for same symbol/project
+    const exists = await this.adapter.getAsync<{ id: number }>(
+      `SELECT id FROM pending_tasks WHERE task_type = ? AND entry_id = ? AND project_id = ? AND status IN (?, ?) LIMIT 1`,
+      [TaskType.CODE_ENRICHMENT, symbolId, projectId, TaskStatus.PENDING, TaskStatus.PROCESSING],
+    );
+    if (exists) return;
+
     // SA4E-171: dynamically set workspaceType based on symbol kind
     const payload = JSON.stringify({
       symbolId, symbolName, symbolKind: kind,
