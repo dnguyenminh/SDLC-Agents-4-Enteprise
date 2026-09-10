@@ -26,14 +26,14 @@ export interface CodeEdgeStrategy {
 export class MembershipEdgeStrategy implements CodeEdgeStrategy {
   async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
     const rows = await indexAdapter.allAsync<{ child_id: number; parent_id: number }>(
-      `SELECT child.id AS child_id, parent.id AS parent_id
+      `SELECT DISTINCT child.id AS child_id, parent.id AS parent_id
        FROM symbols child
        JOIN symbols parent
          ON parent.name = child.parent_symbol
         AND parent.project_id = child.project_id
-        AND parent.file_id = child.file_id
        WHERE child.project_id = ?
-         AND child.parent_symbol IS NOT NULL`,
+         AND child.parent_symbol IS NOT NULL
+         AND parent.kind IN ('class','lwc_component','apex_class','interface')`,
       [projectId],
     );
     return rows.map(r => ({
