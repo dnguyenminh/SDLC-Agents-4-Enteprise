@@ -8,11 +8,17 @@ import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import type { ServerConfig } from '../McpConfigService.js';
 
+export function normalizeTransportType(type: string): string {
+  if (type === 'streamable-http') return 'httpStream';
+  return type; // stdio, sse pass through
+}
+
 export function createTransport(name: string, config: ServerConfig): unknown {
-  if (config.type === 'sse' || config.transportType === 'sse') {
+  const transportType = normalizeTransportType(config.type ?? config.transportType ?? '');
+  if (transportType === 'sse') {
     return new SSEClientTransport(new URL(config.url!));
   }
-  if (config.type === 'httpStream' || config.transportType === 'httpStream') {
+  if (transportType === 'httpStream') {
     return new StreamableHTTPClientTransport(new URL(config.url!));
   }
   if (config.command) {

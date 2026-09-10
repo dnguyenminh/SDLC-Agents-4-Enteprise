@@ -45,6 +45,42 @@ export class McpClientManager {
     });
   }
 
+  normalizeTransportType(type: string): string {
+    if (type === 'streamable-http') return 'httpStream';
+    return type; // stdio, sse pass through
+  }
+
+  async loadFromDB(): Promise<void> {
+    const adapter = getDbAdapter();
+    try {
+      const rows = await adapter.allAsync<Record<string, unknown>>(
+        'SELECT name, transport_type, url, command, args, env, disabled FROM mcp_servers WHERE disabled = 0',
+      );
+      for (const row of rows) {
+        const normalizedType = this.normalizeTransportType(row.transport_type as string);
+        const serverConfig: ServerConfig = {
+          name: row.name as string,
+          url: row.url as string | undefined,
+          transportType: normalizedType,
+          command: row.command as string | undefined,
+          args: row.args ? JSON.parse(row.args as string) : [],
+          env: row.env ? JSON.parse(row.env as Record<string, string>) : {},
+          disabled: false, // already filtered by WHERE disabled = 0
+        };
+        try {
+          await this.connectServer(row.name as string, serverConfig);
+        } catch (err) {
+          this.logger.error({ err, server: row.name }, 'Failed to connect server from DB (will retry via health monitor)');
+          // Register so health monitor can attempt reconnect later
+          if (!this.stateTracker.getState(row.name)) this.stateTracker.register(row.name);
+          this.serverConfigs.set(row.name as string, serverConfig);
+        }
+      }
+    } catch (err) {
+      this.logger.error({ err }, 'Failed to load servers from DB');
+    }
+  }
+
   async initializeAll(): Promise<void> {
     const workspace = process.env.CODE_INTEL_WORKSPACE || process.cwd();
     const dataDir = process.env.CODE_INTEL_DATA_DIR || '.code-intel';
