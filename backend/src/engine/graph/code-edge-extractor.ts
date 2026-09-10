@@ -22,67 +22,49 @@ export interface CodeEdgeStrategy {
   extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]>;
 }
 
-/** Extracts IMPORTS edges from code_dependencies table. */
-export class ImportsEdgeStrategy implements CodeEdgeStrategy {
+/** Extracts edges from relationships table — source of truth for tree-sitter indexer. */
+export class RelationshipsEdgeStrategy implements CodeEdgeStrategy {
   async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
-    const rows = await indexAdapter.allAsync<{ source_file_id: number; target_file_id: number }>(
-      `SELECT cd.source_file_id, cd.target_file_id
-       FROM code_dependencies cd
-       JOIN files f ON cd.source_file_id = f.id
-       WHERE f.project_id = ? AND cd.target_file_id IS NOT NULL`,
+    // Join with symbols to resolve target_symbol_id on-the-fly when NULL
+    const rows = await indexAdapter.allAsync<{ source_symbol_id: number; target_symbol_id: number | null; resolved_id: number | null; kind: string }>(
+      `SELECT r.source_symbol_id,
+              r.target_symbol_id,
+              s.id AS resolved_id,
+              r.kind
+       FROM relationships r
+       LEFT JOIN symbols s ON s.name = r.target_symbol AND s.project_id = r.project_id
+       WHERE r.project_id = ? AND (r.target_symbol_id IS NOT NULL OR s.id IS NOT NULL)`,
       [projectId],
     );
-    return rows.map(r => ({
-      source: `code:${r.source_file_id}`,
-      target: `code:${r.target_file_id}`,
-      label: 'IMPORTS',
-      weight: 0.8,
-    }));
+    return rows.map(r => {
+      const targetId = r.target_symbol_id ?? r.resolved_id!;
+      const label = r.kind.toUpperCase();
+      const weight = this.weightForKind(r.kind);
+      return {
+        source: `code:${r.source_symbol_id}`,
+        target: `code:${targetId}`,
+        label,
+        weight,
+      };
+    });
   }
-}
 
-/** Extracts CALLS edges from code_call_graph table. */
-export class CallsEdgeStrategy implements CodeEdgeStrategy {
-  async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
-    const rows = await indexAdapter.allAsync<{ caller_id: number; callee_id: number }>(
-      `SELECT cg.caller_symbol_id AS caller_id, cg.callee_symbol_id AS callee_id
-       FROM code_call_graph cg
-       JOIN symbols s ON cg.caller_symbol_id = s.id
-       WHERE s.project_id = ?`,
-      [projectId],
-    );
-    return rows.map(r => ({
-      source: `code:${r.caller_id}`,
-      target: `code:${r.callee_id}`,
-      label: 'CALLS',
-      weight: 0.7,
-    }));
-  }
-}
-
-/** Extracts EXTENDS edges from class inheritance (parent_symbol_id). */
-export class ExtendsEdgeStrategy implements CodeEdgeStrategy {
-  async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
-    const rows = await indexAdapter.allAsync<{ child_id: number; parent_id: number }>(
-      `SELECT s.id AS child_id, s.parent_symbol_id AS parent_id
-       FROM symbols s
-       WHERE s.project_id = ? AND s.parent_symbol_id IS NOT NULL`,
-      [projectId],
-    );
-    return rows.map(r => ({
-      source: `code:${r.child_id}`,
-      target: `code:${r.parent_id}`,
-      label: 'EXTENDS',
-      weight: 0.9,
-    }));
+  private weightForKind(kind: string): number {
+    switch (kind.toLowerCase()) {
+      case 'calls': return 0.7;
+      case 'inherits': return 0.9;
+      case 'implements': return 0.85;
+      case 'imports': return 0.8;
+      case 'decorates': return 0.6;
+      case 'uses': return 0.5;
+      default: return 0.5;
+    }
   }
 }
 
 /** Registry of all code-edge strategies. */
 const CODE_EDGE_STRATEGIES: CodeEdgeStrategy[] = [
-  new ImportsEdgeStrategy(),
-  new CallsEdgeStrategy(),
-  new ExtendsEdgeStrategy(),
+  new RelationshipsEdgeStrategy(),
 ];
 
 /**
