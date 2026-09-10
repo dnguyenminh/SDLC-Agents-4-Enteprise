@@ -13,16 +13,15 @@ const logger = pino({ name: 'sa4e-301-edges' });
 export async function ensureSa4e301GraphEdges(): Promise<void> {
   const adapter = getDbAdapter();
   try {
-    // Find projects with nodes but no edges
-    // graph_edges has no project_id column, so we check if any node of the project appears in edges
+    // Find projects with code nodes but zero edges touching them
     const projects = await adapter.allAsync<{ project_id: string }>(
-      `SELECT DISTINCT gn.project_id
+      `SELECT gn.project_id
        FROM graph_nodes gn
+       LEFT JOIN graph_edges ge
+         ON ge.source = gn.entry_id OR ge.target = gn.entry_id
        WHERE gn.entry_id LIKE 'code:%'
-         AND NOT EXISTS (
-           SELECT 1 FROM graph_edges ge
-           WHERE ge.source = gn.entry_id OR ge.target = gn.entry_id
-         )
+       GROUP BY gn.project_id
+       HAVING COUNT(ge.source) = 0
        LIMIT 20`,
     );
     if (!projects.length) {

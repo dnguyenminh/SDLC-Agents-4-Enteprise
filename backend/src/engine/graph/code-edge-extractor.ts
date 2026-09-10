@@ -22,6 +22,29 @@ export interface CodeEdgeStrategy {
   extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]>;
 }
 
+/** Extracts CONTAINS edges from parent_symbol → child symbols (membership). */
+export class MembershipEdgeStrategy implements CodeEdgeStrategy {
+  async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
+    const rows = await indexAdapter.allAsync<{ child_id: number; parent_id: number }>(
+      `SELECT child.id AS child_id, parent.id AS parent_id
+       FROM symbols child
+       JOIN symbols parent
+         ON parent.name = child.parent_symbol
+        AND parent.project_id = child.project_id
+        AND parent.file_id = child.file_id
+       WHERE child.project_id = ?
+         AND child.parent_symbol IS NOT NULL`,
+      [projectId],
+    );
+    return rows.map(r => ({
+      source: `code:${r.parent_id}`,
+      target: `code:${r.child_id}`,
+      label: 'CONTAINS',
+      weight: 0.5,
+    }));
+  }
+}
+
 /** Extracts edges from relationships table — source of truth for tree-sitter indexer. */
 export class RelationshipsEdgeStrategy implements CodeEdgeStrategy {
   async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
@@ -64,6 +87,7 @@ export class RelationshipsEdgeStrategy implements CodeEdgeStrategy {
 
 /** Registry of all code-edge strategies. */
 const CODE_EDGE_STRATEGIES: CodeEdgeStrategy[] = [
+  new MembershipEdgeStrategy(),
   new RelationshipsEdgeStrategy(),
 ];
 
