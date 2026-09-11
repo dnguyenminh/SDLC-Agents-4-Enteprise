@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.42.1-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.42.2-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -244,6 +244,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.42.2 (2026-09-11)
+
+- **SA4E-257: Wire DB-backed MCP server config to McpClientManager** — Backend release sync. McpServerConfigRepository reads `mcp_servers` table, real-time CRUD hooks enable auto connect/reconnect/disconnect, transport normalization `streamable-http → httpStream`, mock logs removed. Version aligned.
 
 ### v1.42.0 (2026-09-08)
 
