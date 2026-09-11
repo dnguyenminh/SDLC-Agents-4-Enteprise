@@ -45,7 +45,6 @@ const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
   '.toml': 'toml',
   '.cls': 'apex',
   '.trigger': 'apex',
-  '.pega': 'pega',
   // ---- SA4E-223: new Salesforce simple extensions ----
   '.apex': 'apex',
   '.soql': 'apex',
@@ -58,6 +57,11 @@ const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
   '.tokens': 'aura',
   // ---- SA4E-... LWC HTML template support ----
   '.html': 'lwc-html',
+  // ---- SA4E-261: Tier B extensions for unified whitelist ----
+  '.jsp': 'jsp',
+  '.xml': 'xml',
+  '.properties': 'properties',
+  '.css': 'css',
 };
 
 /**

@@ -13,6 +13,7 @@ export type SymbolKind =
   | 'constructor' | 'property' | 'module'
   | 'trait' | 'struct' | 'constant'
   | 'pega-rule'
+  | 'file'
   // Salesforce-specific kinds emitted by the apex/aura/visualforce/salesforce-meta parsers.
   | 'apex_class' | 'trigger' | 'aura_component' | 'visualforce_page'
   | 'lwc_component' | 'flow' | 'sf_object' | 'sf_field';

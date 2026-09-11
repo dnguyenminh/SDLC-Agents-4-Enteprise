@@ -3,6 +3,7 @@
  * Maps DetectionResult to IndexingConfig for async-file-scanner.
  */
 import type { DetectionResult, IndexingConfig } from './models.js';
+import { UNIFIED_EXTENSIONS_WITH_DOT } from '../../../config/unified-extensions.js';
 
 /** Base excludes always applied regardless of project type */
 const BASE_EXCLUDES = ['.git', '.svn', '.hg'];
@@ -13,16 +14,8 @@ const FALLBACK_EXCLUDES = [
   '.idea', '.vscode', '__pycache__', '.venv', 'target',
 ];
 
-/** Fallback extensions (mirrors config/index.ts DEFAULT_EXTENSIONS) */
-export const FALLBACK_EXTENSIONS = [
-  '.ts', '.tsx', '.js', '.jsx', '.kt', '.java', '.py',
-  '.go', '.rs', '.c', '.cpp', '.h', '.hpp', '.cs',
-  '.php', '.rb', '.scala', '.swift',
-  // ---- SA4E-223: ensure known Salesforce extensions pass Gate 2 (DISC-1) ----
-  '.cls', '.trigger', '.apex', '.soql', '.page', '.component', '.cmp', '.app', '.evt', '.intf', '.tokens', '.pega',
-  // ---- LWC HTML template support ----
-  '.html',
-];
+/** Fallback extensions aligned with unified whitelist (SA4E-261) */
+export const FALLBACK_EXTENSIONS = [...UNIFIED_EXTENSIONS_WITH_DOT];
 
 /**
  * Resolves a DetectionResult into scanner-ready IndexingConfig.

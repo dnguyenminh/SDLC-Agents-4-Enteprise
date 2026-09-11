@@ -52,15 +52,21 @@ export class TreeSitterIndexer {
     this.timeoutPerFile = timeoutPerFile;
   }
 
+  private readonly TIER_B_EXTENSIONS = new Set(['xml','sql','properties','yml','yaml','html','css']);
+
   async indexFile(filePath: string, relativePath: string, projectId: string): Promise<IndexResult> {
     const startTime = Date.now();
     let source: string;
     try {
       const stat = fs.statSync(filePath);
-      if (stat.size > this.maxFileSize) return await this.regexFallback(filePath, relativePath, projectId, startTime);
+      if (stat.size > this.maxFileSize) return await this.fullTextFallback(filePath, relativePath, projectId, startTime);
       source = fs.readFileSync(filePath, 'utf-8');
     } catch {
       return { filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1, duration: Date.now() - startTime, method: 'regex-fallback', dependencies: [] };
+    }
+    const ext = path.extname(filePath).toLowerCase().slice(1);
+    if (this.TIER_B_EXTENSIONS.has(ext)) {
+      return await this.fullTextFallback(filePath, relativePath, projectId, startTime, source);
     }
     const parser = await this.registry.getParser(filePath);
     let result: ParseResult;
@@ -72,11 +78,8 @@ export class TreeSitterIndexer {
         result = await withTimeout(parsePromise, this.timeoutPerFile, relativePath);
         method = 'tree-sitter';
       } catch (err) {
-        logger.warn({ err, relativePath }, '[indexer] parse exceeded timeoutPerFile — degrading to empty result');
-        return {
-          filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1,
-          duration: Date.now() - startTime, method: 'timeout-degraded', dependencies: [],
-        };
+        logger.warn({ err, relativePath }, '[indexer] parse failed/timeout — fallback to full-text');
+        return await this.fullTextFallback(filePath, relativePath, projectId, startTime, source);
       }
     } else {
       return await this.regexFallback(filePath, relativePath, projectId, startTime);
@@ -109,11 +112,42 @@ export class TreeSitterIndexer {
     }
   }
 
+  private async fullTextFallback(filePath: string, relativePath: string, projectId: string, startTime: number, source?: string): Promise<IndexResult> {
+    try {
+      const ext = path.extname(filePath).toLowerCase().slice(1);
+      const content = source ?? fs.readFileSync(filePath, 'utf-8');
+      // Store full-text in knowledge_entries for Tier B searchability (SA4E-261)
+      await this.adapter.runAsync(
+        `INSERT INTO knowledge_entries (content, summary, type, tier, scope, project_id, source, tags)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(source, project_id) DO UPDATE SET content = excluded.content, summary = excluded.summary, updated_at = CURRENT_TIMESTAMP`,
+        [content, relativePath, 'CONTEXT', 'WORKING', 'PROJECT', projectId, relativePath, `code,source,${ext}`]
+      );
+      // SA4E-261 stretch: ensure Tier B files appear in graph as SOURCE nodes
+      const fileRow = await this.adapter.getAsync<{ id: number }>(
+        'SELECT id FROM files WHERE relative_path = ? AND project_id = ?',
+        [relativePath, projectId]
+      );
+      if (fileRow?.id) {
+        const fileName = path.basename(relativePath);
+        const insertSymSql = 'INSERT OR REPLACE INTO symbols (project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        await this.adapter.runAsync(insertSymSql, [
+          projectId, fileRow.id, fileName, 'file', ext, 1, 1, null, null, null
+        ]);
+      }
+      return { filePath: relativePath, symbolCount: 1, relationshipCount: 0, parseErrors: 0, duration: Date.now() - startTime, method: 'regex-fallback', dependencies: [] };
+    } catch (err) {
+      logger.warn({ err, relativePath }, '[tree-sitter-indexer] full-text fallback failed');
+      return { filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1, duration: Date.now() - startTime, method: 'regex-fallback', dependencies: [] };
+    }
+  }
+
   private extToLanguage(ext: string): string {
     const map: Record<string, string> = {
       '.ts': 'typescript', '.tsx': 'typescript', '.js': 'javascript', '.jsx': 'javascript',
       '.py': 'python', '.kt': 'kotlin', '.kts': 'kotlin', '.java': 'java', '.go': 'go', '.rs': 'rust',
       '.cls': 'apex', '.trigger': 'apex',
+      '.jsp': 'java',
       // ── NEW language routing (SA4E-225) ──
       '.scala': 'scala',
       '.c': 'c', '.h': 'c',

@@ -140,7 +140,7 @@ async function processCodeSymbols(
 ): Promise<void> {
   try {
     const adapter = getDbAdapter();
-    const INCLUDE_KINDS = ['function', 'class', 'interface', 'method', 'type', 'enum', 'constructor'];
+    const INCLUDE_KINDS = ['function', 'class', 'interface', 'method', 'type', 'enum', 'constructor', 'file'];
     const placeholders = INCLUDE_KINDS.map(() => '?').join(',');
     const rows = await adapter.allAsync<any>(
       `SELECT s.id, s.name, s.kind, f.path as file_path, f.language

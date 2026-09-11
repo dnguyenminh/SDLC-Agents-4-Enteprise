@@ -7,6 +7,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { httpPostJson as utilHttpPostJson } from "../utils/http-client-utils";
 import { detectSfdxProject } from "../sf-indexer";
+import { UNIFIED_EXTENSIONS } from "./unified-extensions.js";
 
 export interface DocEntry {
     path: string;
@@ -289,9 +290,8 @@ export class IndexerHttpClient {
             ]);
             projectFiles = [...clsFiles, ...triggerFiles, ...metaFiles, ...lwcJsFiles, ...lwcHtmlFiles];
         } else {
-            projectFiles = await vscode.workspace.findFiles(
-                "**/*.{ts,tsx,kt,java,py,go,rs}", libraryExcludes
-            );
+            const globPattern = `**/*.{${UNIFIED_EXTENSIONS.join(',')}}`;
+            projectFiles = await vscode.workspace.findFiles(globPattern, libraryExcludes);
         }
 
         if (projectFiles.length === 0) { return { uploaded: 0, errors: 0, summary: "ℹ️ No source files found" }; }

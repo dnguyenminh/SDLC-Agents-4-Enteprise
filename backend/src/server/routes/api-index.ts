@@ -16,6 +16,7 @@ import {
   handleFullIndex, handleFileEvents, handleCancel, handleProgress, resolveScope,
 } from './api-index-decoupled.js';
 import { PegaService } from '../../modules/pega/PegaService.js';
+import { UNIFIED_EXTENSIONS } from '../../config/unified-extensions';
 
 interface SourceFile {
   path: string;
@@ -156,12 +157,23 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
       if (filePath.startsWith(wsBasename + '/') || filePath.startsWith(wsBasename + '\\')) {
         filePath = filePath.substring(wsBasename.length + 1);
       }
+      // Path safety: reject traversal
+      if (filePath.includes('..') || path.isAbsolute(filePath)) {
+        rejected.push(file.path);
+        continue;
+      }
+      // Extension validation against unified whitelist
+      const ext = path.extname(filePath).slice(1).toLowerCase();
+      if (!UNIFIED_EXTENSIONS.includes(ext as any)) {
+        rejected.push(file.path);
+        continue;
+      }
       const targetPath = path.join(tempBase, filePath);
       try {
         fs.mkdirSync(path.dirname(targetPath), { recursive: true });
         fs.writeFileSync(targetPath, file.content, 'utf-8');
         written.push(filePath);
-      } catch { rejected.push(filePath); }
+      } catch { rejected.push(file.path); }
     }
 
     // NOTE: This endpoint ONLY writes uploaded files to the shared index temp dir.

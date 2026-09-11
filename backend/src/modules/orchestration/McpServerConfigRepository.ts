@@ -38,6 +38,22 @@ export class McpServerConfigRepository {
     }
   }
 
+  /**
+   * Defensive normalization for stdio args. Historical rows in mcp_servers may
+   * contain double-encoded elements (e.g. `"\"--directory\""`) which reach the
+   * spawned process as literal `"--directory"` and break `uv`. Strip a single
+   * pair of wrapping double quotes from each arg so legacy data still connects.
+   * @param raw Parsed args array from the DB (may be null).
+   * @returns Sanitized string[] safe to pass to the transport spawn.
+   */
+  private static sanitizeArgs(raw: unknown): string[] {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((a) => {
+      const s = String(a);
+      return s.length >= 2 && s.startsWith('"') && s.endsWith('"') ? s.slice(1, -1) : s;
+    });
+  }
+
   private static normalizeTransport(type: string): string {
     return type === 'streamable-http' ? 'httpStream' : type;
   }
@@ -52,7 +68,7 @@ export class McpServerConfigRepository {
       transportType: transport,
       url: row.url || undefined,
       command: row.command || undefined,
-      args: (this.safeParse(row.args) as string[]) || [],
+      args: this.sanitizeArgs(this.safeParse(row.args)),
       env: (this.safeParse(row.env) as Record<string, string>) || {},
       disabled: !!row.disabled,
       autoApprove: (this.safeParse(row.auto_approve) as string[]) || [],

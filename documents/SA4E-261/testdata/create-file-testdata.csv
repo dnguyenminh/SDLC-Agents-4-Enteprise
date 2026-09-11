@@ -1,0 +1,8 @@
+test_case_id,file_path,file_extension,content,expected_tier,expected_http_code,description
+TC-001,WEB-INF/views/adminHome.jsp,jsp,<html>Admin Home</html>,B,200,Valid JSP upload Tier B
+TC-002,pom.xml,xml,<project><modelVersion>4.0.0</modelVersion></project>,B,200,Valid XML upload Tier B
+TC-003,db/schema.sql,sql,CREATE TABLE users;,B,200,Valid SQL upload Tier B
+TC-004,application.properties,properties,server.port=8080,B,200,Valid properties Tier B
+TC-005,application.yml,yml,server: port: 8080,B,200,Valid yml Tier B
+TC-200,malware.exe,exe,binary data,,400,Unsupported extension rejected
+TC-201,../etc/passwd,passwd,root:x:0:0, ,400,Path traversal rejected

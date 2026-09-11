@@ -8,6 +8,7 @@ export const LEVEL_MAP: Record<string, number> = {
   LESSON_LEARNED: 1, ERROR_PATTERN: 1, DOCUMENT: 1,
   FUNCTION: 1, METHOD: 1, CLASS: 0, INTERFACE: 0,
   TYPE: 1, CONSTRUCTOR: 1, PROPERTY: 2, ENUM: 1,
+  SOURCE_FILE: 0,
 };
 
 export const KIND_TO_TYPE: Record<string, string> = {
@@ -21,6 +22,7 @@ export const KIND_TO_TYPE: Record<string, string> = {
   enum: 'ENUM',
   constant: 'CONSTANT',
   variable: 'VARIABLE',
+  file: 'SOURCE_FILE',
   apex_class: 'APEX_CLASS',
   trigger: 'TRIGGER',
   flow: 'FLOW',
