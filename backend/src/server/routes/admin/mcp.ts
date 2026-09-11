@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import * as fs from 'fs';
 import * as path from 'path';
 import { loadConfig, getWorkspacePath } from '../../../config/index.js';
-import { recordAudit } from '../../../admin/admin-db.js';
+import { recordAudit, getDbAdapter } from '../../../admin/admin-db.js';
 import type { AdminContext } from './context.js';
 
 export function addMcpLog(ctx: AdminContext, serverId: string, level: string, message: string) {
@@ -19,34 +19,42 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
     if (user instanceof Response) return user;
     const permCheck = await ctx.requirePermission(c, user.userId, 'MCP_ACCESS');
     if (permCheck instanceof Response) return permCheck;
-    const cfg = loadConfig();
-    const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
-    let servers: any[] = [];
     const orchestration = ctx.registry?.getModule?.('orchestration');
     const clientManager = orchestration?.getClientManager?.();
-    if (fs.existsSync(orchPath)) {
-      try {
-        const orch = JSON.parse(fs.readFileSync(orchPath, 'utf-8'));
-        servers = Object.entries(orch.mcpServers || {}).map(([name, cfg]: [string, any]) => {
-          const serverToggles = ctx.toolToggles[name] || {};
-          const isConnected = clientManager?.isServerConnected?.(name) ?? false;
-          const actualToolCount = clientManager?.getServerToolCount?.(name) ?? 0;
-          const configTools = cfg.tools || cfg.autoApprove || [];
-          let tools: any[];
-          if (isConnected && actualToolCount > 0) {
-            const proxied = (clientManager?.getProxiedTools?.() || []).filter((t: any) => t.category === name);
-            tools = proxied.map((t: any) => ({ name: t.name, description: t.description || '', enabled: serverToggles[t.name] !== false }));
-          } else tools = configTools.map((t: string) => ({ name: t, description: '', enabled: serverToggles[t] !== false }));
-          return {
-            id: name, name, url: cfg.url || '', type: cfg.type || cfg.transportType || 'stdio',
-            transportType: cfg.transportType || cfg.type || 'stdio',
-            command: cfg.command || '', args: cfg.args || [], env: cfg.env || {},
-            disabled: cfg.disabled || false,
-            status: cfg.disabled ? 'stopped' : (isConnected ? 'running' : 'disconnected'), tools,
-          };
-        });
-      } catch (err) { ctx.logger.warn({ err, context: 'mcp-list' }, 'Failed to list MCP servers'); }
-    }
+    let servers: any[] = [];
+    try {
+      const adapter = getDbAdapter();
+      const rows = await adapter.allAsync<any>('SELECT * FROM mcp_servers');
+      const safeParse = (v: string | null) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
+      servers = rows.map((row: any) => {
+        const name = row.name;
+        const serverToggles = ctx.toolToggles[name] || {};
+        const isConnected = clientManager?.isServerConnected?.(name) ?? false;
+        const actualToolCount = clientManager?.getServerToolCount?.(name) ?? 0;
+        const configTools = safeParse(row.tools) || safeParse(row.auto_approve) || [];
+        let tools: any[];
+        if (isConnected && actualToolCount > 0) {
+          const proxied = (clientManager?.getProxiedTools?.() || []).filter((t: any) => t.category === name);
+          tools = proxied.map((t: any) => ({ name: t.name, description: t.description || '', enabled: serverToggles[t.name] !== false }));
+        } else {
+          tools = (Array.isArray(configTools) ? configTools : []).map((t: string) => ({ name: t, description: '', enabled: serverToggles[t] !== false }));
+        }
+        const transportType = row.transport_type === 'streamable-http' ? 'httpStream' : (row.transport_type || 'stdio');
+        return {
+          id: name,
+          name,
+          url: row.url || '',
+          type: transportType,
+          transportType,
+          command: row.command || '',
+          args: safeParse(row.args) || [],
+          env: safeParse(row.env) || {},
+          disabled: !!row.disabled,
+          status: row.disabled ? 'stopped' : (isConnected ? 'running' : 'disconnected'),
+          tools,
+        };
+      });
+    } catch (err) { ctx.logger.warn({ err, context: 'mcp-list-db' }, 'Failed to list MCP servers from DB'); }
     const allHandlers = ctx.registry?.getToolHandlers?.();
     if (allHandlers) {
       const allDefs = ctx.registry?.getAllToolDefinitions?.() || [];
@@ -79,17 +87,26 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
     if (clientManager) {
       try {
         await clientManager.disconnectServer(serverId);
-        const cfg = loadConfig();
-        const orchPath = path.resolve(getWorkspacePath(), cfg.dataDir, cfg.orchestrationConfigPath);
-        if (fs.existsSync(orchPath)) {
-          const orch = JSON.parse(fs.readFileSync(orchPath, 'utf-8'));
-          const serverCfg = orch.mcpServers?.[serverId];
-          if (serverCfg && !serverCfg.disabled) {
-            await clientManager.connectServer(serverId, serverCfg);
-            const toolCount = clientManager.getServerToolCount(serverId);
-            addMcpLog(ctx, serverId, 'INFO', `Reconnected. ${toolCount} tools loaded.`);
-            return c.json({ success: true, status: 'connected', tools: toolCount });
-          }
+        const adapter = getDbAdapter();
+        const safeParse = (v: string | null) => { try { return v ? JSON.parse(v) : null; } catch { return null; } };
+        const row = await adapter.getAsync<any>('SELECT * FROM mcp_servers WHERE name = ? OR server_id = ?', [serverId, serverId]);
+        if (row && !row.disabled) {
+          const transportType = row.transport_type === 'streamable-http' ? 'httpStream' : row.transport_type;
+          const serverCfg = {
+            name: row.name,
+            url: row.url,
+            command: row.command,
+            args: safeParse(row.args) || [],
+            env: safeParse(row.env) || {},
+            type: transportType,
+            transportType,
+            disabled: !!row.disabled,
+            autoApprove: safeParse(row.auto_approve) || [],
+          };
+          await clientManager.connectServer(serverId, serverCfg);
+          const toolCount = clientManager.getServerToolCount(serverId);
+          addMcpLog(ctx, serverId, 'INFO', `Reconnected. ${toolCount} tools loaded.`);
+          return c.json({ success: true, status: 'connected', tools: toolCount });
         }
       } catch (err: any) { addMcpLog(ctx, serverId, 'ERROR', `Restart failed: ${err.message}`); return c.json({ success: false, error: err.message, status: 'disconnected' }); }
     }
@@ -122,21 +139,7 @@ export function createMcpRoutes(ctx: AdminContext): Hono {
     const allowedServers = (permCheck.roleData as any)?.allowedServers;
     if (Array.isArray(allowedServers) && !allowedServers.includes(serverId)) return c.json({ error: 'Forbidden: server not in allowedServers' }, 403);
     const logs = ctx.mcpServerLogs[serverId] || [];
-    if (logs.length === 0) {
-      const now = Date.now();
-      const mockLogs = [
-        { offset: -300000, level: 'INFO', message: `Server "${serverId}" started successfully` },
-        { offset: -240000, level: 'INFO', message: 'Connected to transport layer' },
-        { offset: -180000, level: 'INFO', message: 'Tools registered and ready' },
-        { offset: -60000, level: 'DEBUG', message: 'Health check passed' },
-        { offset: 0, level: 'INFO', message: 'Accepting tool calls' },
-      ];
-      mockLogs.forEach(m => {
-        if (!ctx.mcpServerLogs[serverId]) ctx.mcpServerLogs[serverId] = [];
-        ctx.mcpServerLogs[serverId].push({ timestamp: new Date(now + m.offset).toISOString(), level: m.level, message: m.message });
-      });
-    }
-    return c.json({ serverId, logs: ctx.mcpServerLogs[serverId] || [] });
+    return c.json({ serverId, logs });
   });
 
   return app;
