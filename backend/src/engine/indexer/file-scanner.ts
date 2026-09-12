@@ -159,7 +159,7 @@ function processFile(fullPath: string, relPath: string, config: AppConfig, root:
 
   const ext = getExtension(fullPath);
   // Allow through if simple extension matches OR if compound extension detected (salesforce-meta)
-  if (!config.includeExtensions.includes(ext) && ext !== '.kts' && language !== 'salesforce-meta') return null;
+  if (!config.includeExtensions.includes(ext) && ext !== '.kts' && language !== 'salesforce-meta' && ext !== '.jsp') return null;
 
   try {
     // F-01: reject symlinks that escape the workspace (realpath containment).

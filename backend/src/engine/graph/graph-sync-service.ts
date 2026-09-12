@@ -20,7 +20,7 @@ interface CodeSymbolRow {
   relative_path: string | null;
 }
 
-const CODE_KINDS = ['class', 'interface', 'function', 'method', 'enum', 'type', 'constructor', 'property', 'variable', 'apex_class', 'trigger', 'flow', 'sf_object', 'sf_field', 'lwc_component', 'aura_component', 'visualforce_page'];
+const CODE_KINDS = ['class', 'interface', 'function', 'method', 'enum', 'type', 'constructor', 'property', 'variable', 'apex_class', 'trigger', 'flow', 'sf_object', 'sf_field', 'lwc_component', 'aura_component', 'visualforce_page', 'jsp_page', 'tag', 'controller', 'rest_controller', 'controller_advice', 'service', 'repository', 'component', 'configuration', 'entity', 'transactional', 'http_get', 'http_post', 'http_put', 'http_delete', 'http_patch', 'security'];
 
 export class GraphSyncService {
   private readonly adminDialect: DialectHelper;

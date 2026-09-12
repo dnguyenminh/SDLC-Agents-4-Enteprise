@@ -14,6 +14,11 @@ export type SymbolKind =
   | 'trait' | 'struct' | 'constant'
   | 'pega-rule'
   | 'file'
+  | 'tag'
+  | 'jsp_page'
+  | 'controller' | 'rest_controller' | 'controller_advice' | 'service' | 'repository' | 'component' | 'configuration' | 'entity'
+  | 'transactional' | 'http_get' | 'http_post' | 'http_put' | 'http_delete' | 'http_patch'
+  | 'security'
   // Salesforce-specific kinds emitted by the apex/aura/visualforce/salesforce-meta parsers.
   | 'apex_class' | 'trigger' | 'aura_component' | 'visualforce_page'
   | 'lwc_component' | 'flow' | 'sf_object' | 'sf_field';

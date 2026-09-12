@@ -72,6 +72,15 @@
       ]
     },
     {
+      "id": "jsp",
+      "extensions": [
+        ".jsp"
+      ],
+      "wasmPath": "grammars/tree-sitter-jsp.wasm",
+      "parserModule": "./languages/jsp-parser.js",
+      "skipScopeNodes": []
+    },
+    {
       "id": "go",
       "extensions": [
         ".go"

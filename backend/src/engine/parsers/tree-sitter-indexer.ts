@@ -84,6 +84,9 @@ export class TreeSitterIndexer {
     } else {
       return await this.regexFallback(filePath, relativePath, projectId, startTime);
     }
+    if (ext === 'java') {
+      result = this.reclassifyJavaSymbols(source, result);
+    }
     const symbolIds = await storeResults(this.adapter, relativePath, result, projectId);
     await extractAndStoreBodies(this.adapter, relativePath, source, result, symbolIds, projectId);
     const dependencies = this.depResolver.resolve(source, relativePath, this.workspace);
@@ -140,6 +143,53 @@ export class TreeSitterIndexer {
       logger.warn({ err, relativePath }, '[tree-sitter-indexer] full-text fallback failed');
       return { filePath: relativePath, symbolCount: 0, relationshipCount: 0, parseErrors: 1, duration: Date.now() - startTime, method: 'regex-fallback', dependencies: [] };
     }
+  }
+
+  private reclassifyJavaSymbols(source: string, result: ParseResult): ParseResult {
+    const classAnnotationMap: Record<string, string[]> = {
+      rest_controller: ['@RestController'],
+      controller_advice: ['@ControllerAdvice'],
+      controller: ['@Controller'],
+      service: ['@Service'],
+      repository: ['@Repository'],
+      component: ['@Component'],
+      configuration: ['@Configuration'],
+      entity: ['@Entity', '@Table'],
+    };
+    const methodAnnotationMap: Record<string, string[]> = {
+      transactional: ['@Transactional'],
+      http_get: ['@GetMapping', '@RequestMapping'],
+      http_post: ['@PostMapping'],
+      http_put: ['@PutMapping'],
+      http_delete: ['@DeleteMapping'],
+      http_patch: ['@PatchMapping'],
+      security: ['@PreAuthorize', '@Secured', '@RolesAllowed', '@PostAuthorize'],
+    };
+    const classSymbols = result.symbols.filter(s => s.kind === 'class');
+    for (const sym of classSymbols) {
+      const idx = source.indexOf(sym.name);
+      if (idx === -1) continue;
+      const snippet = source.substring(Math.max(0, idx - 600), idx);
+      for (const [kind, anns] of Object.entries(classAnnotationMap)) {
+        if (anns.some(a => snippet.includes(a))) {
+          sym.kind = kind as any;
+          break;
+        }
+      }
+    }
+    const methodSymbols = result.symbols.filter(s => s.kind === 'method');
+    for (const sym of methodSymbols) {
+      const idx = source.indexOf(sym.name);
+      if (idx === -1) continue;
+      const snippet = source.substring(Math.max(0, idx - 400), idx);
+      for (const [kind, anns] of Object.entries(methodAnnotationMap)) {
+        if (anns.some(a => snippet.includes(a))) {
+          sym.kind = kind as any;
+          break;
+        }
+      }
+    }
+    return result;
   }
 
   private extToLanguage(ext: string): string {

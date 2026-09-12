@@ -24,8 +24,15 @@ const MAX_PSEUDO_CODE_LENGTH = 2000;
 // Strategy selection: which symbol kinds map to which enrichment strategy.
 // apex_class routes to CLASS_SUMMARY; trigger/constructor route to FUNCTION_SUMMARY
 // so Salesforce Apex entities are enriched with summary (+ pseudo code) like the rest.
-const CLASS_KINDS = new Set(['class', 'interface', 'enum', 'apex_class']);
-const FUNCTION_KINDS = new Set(['function', 'method', 'arrow_function', 'generator', 'constructor', 'trigger']);
+const CLASS_KINDS = new Set([
+  'class', 'interface', 'enum', 'apex_class',
+  'configuration', 'constant', 'controller', 'entity',
+  'repository', 'service', 'namespace', 'jsp_page'
+]);
+const FUNCTION_KINDS = new Set([
+  'function', 'method', 'arrow_function', 'generator', 'constructor', 'trigger',
+  'http_get', 'http_post', 'transactional'
+]);
 // Salesforce declarative metadata + properties: summarized from signature/name
 // (no code body, no pseudo code). Routed to METADATA_SUMMARY.
 const METADATA_KINDS = new Set([
