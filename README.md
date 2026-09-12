@@ -66,11 +66,11 @@ MIT
 
 ## Changelog
 
-### v1.42.2 (2026-09-11)
+### v1.42.3 (2026-09-11)
 
 - **SA4E-257: Wire DB-backed MCP server config to McpClientManager** — `McpServerConfigRepository` reads `mcp_servers` table, `McpClientManager.initializeAll` loads enabled servers from DB with real-time connect/reconnect/disconnect hooks on CRUD, transport normalization `streamable-http → httpStream`, mock logs removed. Tests pass, no regression SA4E-215.
 
-### v1.42.1 (2026-09-10)
+### v1.42.2 (2026-09-10)
 
 - **Tenant scope stamping for tool execution** — `/api/tools/execute` and `/api/code/search` now stamp the trusted tenant scope onto tool arguments using the canonical `__projectId`/`__userId` keys (not only `_projectContext`). Code-intel tools read `__projectId` and are fail-closed when absent, which previously made `code_search` return "No results found". Covers the MCP call path (`mcpServer`) and the KB API route. Added regression tests (`tools-execute-scope`, orchestration dynamic IT, mcpServer calltool IT).
 - **KB Graph edges (LWC dir-based)** — `FileContainsSymbolStrategy` now matches LWC/Aura component symbols to their code symbols by component **directory** (component lives in `.js-meta.xml`, code in `.js`), so LWC_COMPONENT nodes are no longer isolated (131/132 connected). Remaining isolated nodes are legitimate standalone entities (single-file metadata components).
