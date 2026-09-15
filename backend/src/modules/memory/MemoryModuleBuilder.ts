@@ -28,8 +28,11 @@ import { migrate001AddScopeColumns } from './migrations/001-add-scope-columns.js
 import { migrate002AddEvolutionColumns } from './migrations/002-add-evolution-columns.js';
 import { migrate003PendingTasks } from './migrations/003-pending-tasks.js';
 import { migrate004ResetSequences } from './migrations/004-reset-sequences.js';
+import { migrate005FixPendingTasksSerial } from './migrations/005-fix-pending-tasks-serial.js';
+import { migrate006FixFilesSchema } from './migrations/006-fix-files-schema.js';
 import { migrate005UniqueSourceProject } from './migrations/005-unique-source-project.js';
 import { migrate006PendingTasksProjectId } from './migrations/006-pending-tasks-project-id.js';
+import { migrate008PendingTasksDriftColumns } from './migrations/008-pending-tasks-drift-columns.js';
 import { ScopePromotionService } from './promotion/index.js';
 import { TierConsolidationService } from './consolidation/service.js';
 import { startScheduler } from './evolution/Scheduler.js';
@@ -92,12 +95,17 @@ export class MemoryModuleBuilder {
     }
 
     // Ensure base memory tables exist in THIS adapter's view before versioned
-    // migrations. SqliteAdapter works on an in-memory snapshot of the host
-    // file, so tables created elsewhere (native driver) may not be visible
-    // here on fresh DBs — migrate001 then failed with "no such table:
-    // knowledge_entries", leaving the memory module in error and /health
-    // at 503 forever (E2E setup timeout). Idempotent (IF NOT EXISTS).
-    if (this.memAdapter.getEngine() === 'sqlite') {
+    // migrations (which only ALTER and would otherwise fail on missing relations).
+    if (this.memAdapter.getEngine() === 'postgresql') {
+      // PostgreSQL: DatabaseManager (SQLite base schema) is skipped — create the
+      // PG-dialect base memory tables here (FTS handled separately via tsvector).
+      const { ensurePostgresMemorySchema } = await import('./schema/tables-pg.js');
+      await ensurePostgresMemorySchema(this.memAdapter);
+    } else if (this.memAdapter.getEngine() === 'sqlite') {
+      // SqliteAdapter works on an in-memory snapshot of the host file, so tables
+      // created elsewhere (native driver) may not be visible here on fresh DBs —
+      // migrate001 then failed with "no such table: knowledge_entries", leaving
+      // the memory module in error and /health at 503 forever. Idempotent.
       const { MEMORY_SCHEMA } = await import('./schema/index.js');
       await this.memAdapter.execAsync(MEMORY_SCHEMA);
     }
@@ -107,8 +115,12 @@ export class MemoryModuleBuilder {
     await migrate002AddEvolutionColumns(this.memAdapter);
     await migrate003PendingTasks(this.memAdapter);
     await migrate004ResetSequences(this.memAdapter);
+    await migrate005FixPendingTasksSerial(this.memAdapter);
+    await migrate006FixFilesSchema(this.memAdapter);
     await migrate005UniqueSourceProject(this.memAdapter);
     await migrate006PendingTasksProjectId(this.memAdapter);
+    // SA4E-6 follow-up: heal pending_tasks column drift (priority, etc.) on legacy DBs
+    await migrate008PendingTasksDriftColumns(this.memAdapter);
 
     // SA4E-79: Add enrichment_status tracking columns
     const { migrate007Up } = await import('./schema/migrations/007_enrichment_status.js');

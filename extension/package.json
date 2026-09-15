@@ -315,6 +315,11 @@
           "default": "",
           "description": "OpenRouter API base URL"
         },
+        "kiroSdlc.llmServerBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:11434/v1",
+          "description": "LLM Server base URL (OpenAI-compatible, e.g. http://localhost:11434/v1)"
+        },
         "kiroSdlc.kiroModel": {
           "type": "string",
           "default": "auto",

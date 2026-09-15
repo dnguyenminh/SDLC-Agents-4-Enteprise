@@ -1,0 +1,30 @@
+**/.git
+**/.gitignore
+**/node_modules
+**/dist
+**/.code-intel
+**/*.iml
+**/.idea
+
+# VSCode extension — not needed for server
+extension/
+
+# Docs
+documents/
+**/*.md
+
+# Test artifacts
+**/tests/
+backend/test-*.ts
+backend/test_tools.ts
+backend/vitest.config.ts
+backend/test.md
+
+# OS artifacts
+**/.DS_Store
+**/Thumbs.db
+
+# Env files (supply at runtime via docker-compose)
+**/.env
+**/.env.*
+!**/.env.example

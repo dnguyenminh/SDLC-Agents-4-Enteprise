@@ -134,6 +134,7 @@ export class SettingsMessageHandler {
       openai: "openaiBaseUrl",
       lmstudio: "lmstudioBaseUrl",
       openrouter: "openrouterBaseUrl",
+      "llm-server": "llmServerBaseUrl",
     };
     const key = keyMap[provider];
     if (key) { await this.configService.updateConfig(key, url); }

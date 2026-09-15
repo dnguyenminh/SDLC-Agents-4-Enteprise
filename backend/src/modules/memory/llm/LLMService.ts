@@ -6,16 +6,19 @@
 import type { LLMAdapter, LLMConfig, LLMMessage, LLMProvider, LLMResponse } from './types.js';
 import { OllamaAdapter } from './ollama-adapter.js';
 import { OpenAIAdapter } from './openai-adapter.js';
+import { DifyAdapter } from './dify-adapter.js';
 
 const ADAPTERS: Record<LLMProvider, () => LLMAdapter> = {
   ollama: () => new OllamaAdapter(),
   openai: () => new OpenAIAdapter(),
-  anthropic: () => new OpenAIAdapter(), // Anthropic via compatible API
-  gemini: () => new OpenAIAdapter(),    // Gemini via compatible API
-  lmstudio: () => new OpenAIAdapter(),  // LM Studio via OpenAI-compatible API
-  copilot: () => new OpenAIAdapter(),   // Copilot via compatible API
-  opencode: () => new OpenAIAdapter(),   // OpenCode via OpenAI-compatible API
-  'opencode-zen': () => new OpenAIAdapter(), // OpenCode Zen via OpenAI-compatible API
+  anthropic: () => new OpenAIAdapter(),
+  gemini: () => new OpenAIAdapter(),
+  lmstudio: () => new OpenAIAdapter(),
+  'llm-server': () => new OpenAIAdapter(),
+  copilot: () => new OpenAIAdapter(),
+  opencode: () => new OpenAIAdapter(),
+  'opencode-zen': () => new OpenAIAdapter(),
+  dify: () => new DifyAdapter(),
 };
 
 const DEFAULT_CONFIGS: Record<LLMProvider, Partial<LLMConfig>> = {
@@ -24,9 +27,11 @@ const DEFAULT_CONFIGS: Record<LLMProvider, Partial<LLMConfig>> = {
   anthropic: { baseUrl: 'https://api.anthropic.com/v1', model: 'claude-3-haiku-20240307', temperature: 0.3, maxTokens: 2048 },
   gemini: { baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-1.5-flash', temperature: 0.3, maxTokens: 2048 },
   lmstudio: { baseUrl: 'http://localhost:1234/v1', model: 'default', temperature: 0.3, maxTokens: 2048 },
+  'llm-server': { baseUrl: 'http://localhost:11434/v1', model: '', temperature: 0.3, maxTokens: 2048 },
   copilot: { baseUrl: 'http://localhost:11435', model: 'copilot', temperature: 0.3, maxTokens: 2048 },
   opencode: { baseUrl: 'https://opencode.ai/zen/go/v1', model: 'deepseek-v4-flash', temperature: 0.3, maxTokens: 2048 },
   'opencode-zen': { baseUrl: 'https://opencode.ai/zen/v1', model: 'deepseek-v4-flash-free', temperature: 0.3, maxTokens: 2048 },
+  dify: { baseUrl: 'http://localhost:3000', model: 'dify-app', temperature: 0.3, maxTokens: 2048 },
 };
 
 export class LLMService {

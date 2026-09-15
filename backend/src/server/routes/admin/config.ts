@@ -129,10 +129,12 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     anthropic: 'claude-sonnet-4',
     openrouter: 'openai/gpt-4o-mini',
     lmstudio: 'local-model',
+    'llm-server': 'bocalan/Qwen2.5-Coder-3B-Instruct-Q4_K_M-GGUF',
     gemini: 'gemini-2.0-flash',
     copilot: 'copilot',
     opencode: 'deepseek-v4-flash',
     'opencode-zen': 'deepseek-v4-flash-free',
+    dify: 'dify-app',
   };
   const ZEN_FREE_MODELS = ['deepseek-v4-flash-free', 'big-pickle', 'mimo-v2.5-free', 'north-mini-code-free'];
 
@@ -189,6 +191,15 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
         if (r.status === 401) return c.json({ success: false, errorType: 'auth', message: `HTTP ${r.status} — API key rejected (Unauthorized)` });
         const body = JSON.parse(r.text); const msg = body.error?.message || r.text;
         return c.json({ success: false, errorType: 'http', message: `HTTP ${r.status} — ${msg.substring(0, 300)}` });
+      }
+
+      if (prov === 'dify') {
+        const r = await doFetch(base + '/v1/chat-messages', { inputs: {}, query: 'Say hello in 5 words', response_mode: 'blocking', conversation_id: '', user: 'test' }, authHeaders, controller.signal);
+        clearTimeout(timeout);
+        if (r.ok) { const info = JSON.parse(r.text).answer || ''; return c.json({ success: true, errorType: null, message: `Connected + Authenticated (${r.ms}ms) — ${info.substring(0, 80)}` }); }
+        if (r.status === 401) return c.json({ success: false, errorType: 'auth', message: `HTTP ${r.status} — API key rejected (Unauthorized)` });
+        const body = JSON.parse(r.text); const msg = body.message || body.code || r.text;
+        return c.json({ success: false, errorType: 'http', message: `HTTP ${r.status} — ${msg.substring(0, 200)}` });
       }
 
       // Step 1: connectivity probe

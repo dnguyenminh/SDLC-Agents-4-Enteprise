@@ -158,6 +158,13 @@ export class DatabaseConfigService {
     const enc = data.subarray(12, data.length - 16);
     const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
     decipher.setAuthTag(tag);
-    return decipher.update(enc) + decipher.final('utf8');
+    try {
+      return decipher.update(enc) + decipher.final('utf8');
+    } catch {
+      throw new Error(
+        `Database password decryption failed — the encryption key at "${this.keyPath}" may have changed or been replaced. ` +
+        `Re-enter your database password in the admin UI to re-encrypt it with the current key.`,
+      );
+    }
   }
 }

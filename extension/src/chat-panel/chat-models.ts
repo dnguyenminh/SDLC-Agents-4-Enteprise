@@ -25,6 +25,7 @@ export const DEFAULT_MODELS: Record<string, string> = {
   onnx: "phi-3-mini",
   lmstudio: "local-model",
   openrouter: "anthropic/claude-sonnet-4",
+  "llm-server": "",
 };
 
 /** Available models per provider — static catalog (fallback when gateway is unreachable). */
@@ -97,6 +98,7 @@ export const AVAILABLE_MODELS: Record<string, ChatModelEntry[]> = {
     { id: "meta-llama/llama-4-maverick", name: "Llama 4 Maverick" },
     { id: "qwen/qwen3-235b", name: "Qwen3 235B" },
   ],
+  "llm-server": [],
 };
 
 /** Get the static fallback model list for a provider (never undefined). */

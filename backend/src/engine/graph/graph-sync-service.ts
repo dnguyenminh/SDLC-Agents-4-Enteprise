@@ -107,7 +107,7 @@ export class GraphSyncService {
         const pos = fibonacciSphereGrouped(i, group.length, gi, totalGroups, nodeType);
         await this.adminAdapter.runAsync(sql, [
           `code:${s.id}`, this.toLabel(s), nodeType, 'CODE',
-          projectId, pos.x, pos.y, pos.z, 'micro', `code-${nodeType.toLowerCase()}`,
+          projectId, pos.x, pos.y, pos.z, 2, `code-${nodeType.toLowerCase()}`,
         ]);
       }
     }

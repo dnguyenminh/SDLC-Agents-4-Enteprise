@@ -38,7 +38,8 @@ async function upsertGraphNode(entryId: number, summary: string, type: string, p
       entryId: `doc-${entryId}`, label: summary.substring(0, 60),
       type: type.toUpperCase(), tier: 'SHARED',
       projectId: projectId || '', x: pos.x, y: pos.y, z: pos.z,
-      level: String(pos.level), clusterId: pos.clusterId,
+      // pos.level is numeric (from LEVEL_MAP); do NOT stringify — schema is INTEGER.
+      level: pos.level, clusterId: pos.clusterId,
     });
     logger.info({ entryId, type }, '[graph] Upserted graph node for KB entry');
   } catch (err: any) {
@@ -205,9 +206,10 @@ export async function handleIngestFile(
   if (scopeCtx) {
     const { clause, params } = buildIngestFileDeleteClause(scopeCtx as ProjectContext, filePath);
     // Delete stale graph nodes before removing KB entries (while IDs still exist)
+    let oldIds: { id: number }[] = [];
     try {
       const adminAdapter = getDbAdapter();
-      const oldIds = await engine.getAdapter().allAsync<{ id: number }>(
+      oldIds = await engine.getAdapter().allAsync<{ id: number }>(
         'SELECT id FROM knowledge_entries WHERE source = $1 AND project_id = $2',
         [filePath, (scopeCtx as any).projectId ?? ''],
       );
@@ -216,12 +218,17 @@ export async function handleIngestFile(
         await adminAdapter.runAsync(`DELETE FROM graph_nodes WHERE entry_id IN (${idList})`, []);
       }
     } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale graph nodes (non-fatal)'); }
+    if (oldIds.length > 0) {
+      const numericIds = oldIds.map(r => r.id).join(',');
+      await engine.getAdapter().runAsync(`DELETE FROM pending_tasks WHERE entry_id IN (${numericIds})`, []);
+    }
     await engine.getAdapter().runAsync(clause, params);
   } else {
     // Delete stale graph nodes before removing KB entries (while IDs still exist)
+    let oldIds: { id: number }[] = [];
     try {
       const adminAdapter = getDbAdapter();
-      const oldIds = await engine.getAdapter().allAsync<{ id: number }>(
+      oldIds = await engine.getAdapter().allAsync<{ id: number }>(
         'SELECT id FROM knowledge_entries WHERE source = $1',
         [filePath],
       );
@@ -230,6 +237,10 @@ export async function handleIngestFile(
         await adminAdapter.runAsync(`DELETE FROM graph_nodes WHERE entry_id IN (${idList})`, []);
       }
     } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale graph nodes (non-fatal)'); }
+    if (oldIds.length > 0) {
+      const numericIds = oldIds.map(r => r.id).join(',');
+      await engine.getAdapter().runAsync(`DELETE FROM pending_tasks WHERE entry_id IN (${numericIds})`, []);
+    }
     await engine.getAdapter().runAsync('DELETE FROM knowledge_entries WHERE source = ?', [filePath]);
   }
 
