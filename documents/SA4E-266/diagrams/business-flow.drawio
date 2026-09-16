@@ -1,0 +1,54 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="lane1" value="Client" style="swimlane;horizontal=0;startSize=30;fillColor=#dae8cc;strokeColor=#82b366;fontSize=13;fontStyle=1;rounded=0;shadow=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="300" height="520" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="req" value="HTTP Request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;" vertex="1" parent="lane1">
+      <mxGeometry x="80" y="80" width="160" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="unauth" value="401 Unauthorized" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="lane1">
+      <mxGeometry x="80" y="400" width="160" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="lane2" value="jwt-auth middleware" style="swimlane;horizontal=0;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;rounded=0;shadow=0;" vertex="1" parent="1">
+      <mxGeometry x="340" y="40" width="380" height="520" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="detect" value="Detect token type" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="lane2">
+      <mxGeometry x="110" y="50" width="160" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="jwks" value="EntraRS256: fetch JWKS (cache)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;" vertex="1" parent="lane2">
+      <mxGeometry x="30" y="200" width="150" height="70" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="verify" value="Verify sig/iss/aud/exp/nonce" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;" vertex="1" parent="lane2">
+      <mxGeometry x="200" y="330" width="160" height="70" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="lane3" value="Local (HS256)" style="swimlane;horizontal=0;startSize=30;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;fontStyle=1;rounded=0;shadow=0;" vertex="1" parent="1">
+      <mxGeometry x="720" y="40" width="300" height="520" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="localverify" value="LocalHS256 verify (khong doi)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="lane3">
+      <mxGeometry x="70" y="200" width="160" height="70" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="pass" value="pass" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="lane3">
+      <mxGeometry x="80" y="400" width="140" height="50" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="req" target="detect">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="RS256/Entra" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=11;" edge="1" parent="1" source="detect" target="jwks">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="HS256/Local" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=11;" edge="1" parent="1" source="detect" target="localverify">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="jwks" target="verify">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="sai" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=11;fontColor=#d79b00;" edge="1" parent="1" source="verify" target="unauth">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="localverify" target="pass">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

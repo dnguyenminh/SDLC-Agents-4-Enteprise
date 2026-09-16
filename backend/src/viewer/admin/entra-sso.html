@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><title>Entra SSO Configuration</title></head>
+<body>
+<h1>Entra SSO Configuration Management</h1>
+<form id="sso-form">
+<label>Tenant ID <input name="tenantId" required pattern="[0-9a-fA-F-]{36}"/></label><br/>
+<label>Client ID <input name="clientId" required pattern="[0-9a-fA-F-]{36}"/></label><br/>
+<label>Client Secret <input name="clientSecret" type="password" required minlength="8"/></label><br/>
+<label>Redirect URI <input name="redirectUri" required/></label><br/>
+<label>Issuer URL <input name="issuerUrl" required/></label><br/>
+<label>JWKS URL <input name="jwksUrl"/></label><br/>
+<label>Enabled <input name="enabled" type="checkbox"/></label><br/>
+<button type="submit">Save</button>
+</form>
+<div id="status"></div>
+<script>
+document.getElementById('sso-form').addEventListener('submit', async e=>{
+ e.preventDefault();
+ const data=Object.fromEntries(new FormData(e.target));
+ data.enabled=data.enabled==='on';
+ const res=await fetch('/api/v1/entra-sso/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+ document.getElementById('status').textContent=res.status===201?'Saved':'Error';
+});
+</script>
+</body>
+</html>

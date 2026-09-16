@@ -1,0 +1,3 @@
+id,name,email,role,status,created_at,description
+thread-001,Test Thread 1,, ,ACTIVE,2026-01-01T00:00:00Z,Pre-seeded thread with valid UUID v4 for checkpoint tests
+thread-002,Test Thread 2,, ,ACTIVE,2026-01-01T00:00:00Z,Second pre-seeded thread

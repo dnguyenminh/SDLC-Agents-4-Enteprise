@@ -12,6 +12,7 @@
 import type { MiddlewareHandler } from 'hono';
 import { createProjectContext } from '../../modules/memory/ProjectContext.js';
 import { validateSession } from '../../admin/admin-db.js';
+import { getEntraVerifier, isEntraToken, tryEntraVerification, validateEntraAuthConfig } from './verifiers/entra-auth.js';
 
 const REQUIRE_AUTH = process.env.CODE_INTEL_REQUIRE_AUTH === 'true';
 const TOKEN_SECRET = process.env.KB_TOKEN_SECRET || '';
@@ -21,6 +22,8 @@ export function validateJwtConfig(): void {
   if (REQUIRE_AUTH && !TOKEN_SECRET) {
     throw new Error('KB_TOKEN_SECRET must be set when authentication is required');
   }
+  // SA4E-266 §3.1 — Entra verification vars required under the SSO gate (fail-fast).
+  validateEntraAuthConfig();
 }
 
 export function isJwtAuthRequired(): boolean {
@@ -90,6 +93,13 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
     //  1. JWT (header.payload.signature) — signed with KB_TOKEN_SECRET
     //  2. Admin session token — opaque hex, validated against sessions table
     const looksLikeJwt = token.split('.').length === 3;
+
+    // SA4E-266 — Entra RS256 detection (FSD §8.1): routed tokens verify fail-closed.
+    const detPayload = looksLikeJwt ? decodeJwtPayload(token) : null;
+    const entra = getEntraVerifier();
+    if (entra && isEntraToken(token, detPayload)) {
+      return tryEntraVerification(entra, token, c, next, projectId);
+    }
 
     if (looksLikeJwt) {
       if (TOKEN_SECRET) {

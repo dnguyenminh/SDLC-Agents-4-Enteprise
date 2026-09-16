@@ -91,18 +91,9 @@ export class JitProvisioningService {
 
       // Link local account to SSO
       await this.db.runAsync(
-        `UPDATE users SET external_provider = ?, external_subject_id = ?, access_group_id = ?, last_login = ? WHERE user_id = ?`,
-        [this.provider, oid, accessGroup, new Date().toISOString(), user.user_id]
+        `UPDATE users SET external_provider = ?, external_subject_id = ?, access_group_id = ?, last_login = ?, account_type = ?, password_hash = NULL WHERE user_id = ?`,
+        [this.provider, oid, accessGroup, new Date().toISOString(), 'SSO', user.user_id]
       );
-
-      // Set account_type consistently to SSO for linked accounts when policy requires
-      // Keep original type per NO-HYBRID decision; optional migration to SSO can be done explicitly
-      // Here we enforce account_type='SSO' only for newly provisioned users, not for existing LOCAL links
-      // If business requires conversion, uncomment next lines:
-      // await this.db.runAsync(
-      //   `UPDATE users SET account_type = 'SSO', password_hash = NULL WHERE user_id = ?`,
-      //   [user.user_id]
-      // );
 
       user = await this.db.getAsync<any>('SELECT * FROM users WHERE user_id = ?', [user.user_id]);
       await this.auditLink(user.user_id, email, oid);

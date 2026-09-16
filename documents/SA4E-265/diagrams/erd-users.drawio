@@ -1,0 +1,90 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="users" value="users (after S2 migration)" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="180" width="340" height="342" as="geometry"/>
+    </mxCell>
+    <mxCell id="u1" value="user_id : TEXT  PK" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="30" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u2" value="username : TEXT  UNIQUE NOT NULL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="56" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u3" value="email : TEXT  NOT NULL DEFAULT ''" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="82" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u4" value="password_hash : TEXT  NULL (was NOT NULL) — BR-03/BR-04" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="108" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u5" value="account_type : TEXT  NOT NULL DEFAULT 'LOCAL' — NEW (BR-01)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="134" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u6" value="external_provider : TEXT  NULL — NEW (BR-02)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="160" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u7" value="external_subject_id : TEXT  NULL — NEW (BR-02)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="186" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u8" value="status : TEXT  NOT NULL DEFAULT 'ACTIVE'" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="212" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u9" value="access_group_id : TEXT  FK (access_groups)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="238" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u10" value="force_password_change : INTEGER  DEFAULT 0" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="264" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u11" value="created_at : TEXT  NOT NULL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="290" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="u12" value="last_login : TEXT  NULL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="users">
+      <mxGeometry x="0" y="316" width="340" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="groups" value="access_groups (unchanged)" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="520" y="40" width="300" height="134" as="geometry"/>
+    </mxCell>
+    <mxCell id="g1" value="access_group_id : TEXT  PK" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="groups">
+      <mxGeometry x="0" y="30" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="g2" value="access_group_name : TEXT  UNIQUE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="groups">
+      <mxGeometry x="0" y="56" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="g3" value="is_system_group : INTEGER  DEFAULT 0" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="groups">
+      <mxGeometry x="0" y="82" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="g4" value="created_at / updated_at : TEXT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="groups">
+      <mxGeometry x="0" y="108" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="sessions" value="sessions (unchanged)" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="520" y="480" width="300" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" value="session_id : TEXT  PK" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="sessions">
+      <mxGeometry x="0" y="30" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2" value="user_id : TEXT  FK (users, ON DELETE CASCADE)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="sessions">
+      <mxGeometry x="0" y="56" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3" value="token : TEXT  UNIQUE" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="sessions">
+      <mxGeometry x="0" y="82" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4" value="login_at / expires_at : TEXT  NOT NULL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="sessions">
+      <mxGeometry x="0" y="108" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="s5" value="is_active : INTEGER  DEFAULT 1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="sessions">
+      <mxGeometry x="0" y="134" width="300" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="note" value="&lt;b&gt;NEW constraints (S2)&lt;/b&gt;&lt;hr/&gt;&lt;b&gt;uq_users_external_identity&lt;/b&gt;&lt;br/&gt;UNIQUE (external_provider, external_subject_id)&lt;br/&gt;NULL pairs never conflict (BR-02)&lt;hr/&gt;&lt;b&gt;chk_users_account_type&lt;/b&gt;&lt;br/&gt;CHECK (account_type IN ('LOCAL','SSO'))&lt;br/&gt;NO HYBRID (BR-01) — PG native / SQLite fresh-DDL&lt;br/&gt;+ app guard on legacy SQLite&lt;hr/&gt;&lt;b&gt;BR-03 / BR-04&lt;/b&gt;: password_hash NULL&lt;br/&gt;only when account_type='SSO'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="520" y="240" width="320" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="N:1 access_group_id" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="users" target="groups">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="N:1 user_id" style="edgeStyle=entityRelationEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.9;entryDx=0;entryDy=0;" edge="1" parent="1" source="sessions" target="users">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.45;entryDx=0;entryDy=0;" edge="1" parent="1" source="note" target="users">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

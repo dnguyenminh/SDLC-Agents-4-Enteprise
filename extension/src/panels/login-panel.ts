@@ -21,7 +21,10 @@ export class LoginPanel implements vscode.Disposable {
     const lastUsername = await this.authManager.getLastUsername();
     this.panel = vscode.window.createWebviewPanel("kiroSdlc.login", "SDLC Agents 4 Enterprise — Login", vscode.ViewColumn.One, { enableScripts: true, retainContextWhenHidden: false });
     this.panel.webview.html = this.getHtml(lastUsername);
-    this.panel.webview.onDidReceiveMessage(async (msg) => { if (msg.type === "login") { await this.handleLogin(msg.username, msg.password); } }, null, this.disposables);
+    this.panel.webview.onDidReceiveMessage(async (msg) => {
+      if (msg.type === "login") { await this.handleLogin(msg.username, msg.password); }
+      else if (msg.type === "entra") { await this.handleEntra(); }
+    }, null, this.disposables);
     this.panel.onDidDispose(() => { this.panel = null; }, null, this.disposables);
   }
 
@@ -31,6 +34,17 @@ export class LoginPanel implements vscode.Disposable {
     this.postMessage({ type: "loading", loading: true });
     try {
       await this.authManager.login(username, password);
+      this.postMessage({ type: "success" });
+      setTimeout(() => this.close(), 500);
+    } catch (err) {
+      this.postMessage({ type: "error", message: (err as Error).message });
+    }
+  }
+
+  private async handleEntra(): Promise<void> {
+    this.postMessage({ type: "loading", loading: true });
+    try {
+      await this.authManager.loginEntra();
       this.postMessage({ type: "success" });
       setTimeout(() => this.close(), 500);
     } catch (err) {
@@ -66,6 +80,8 @@ export class LoginPanel implements vscode.Disposable {
     .btn { width: 100%; padding: 12px; font-size: 1em; border: none; border-radius: 4px; cursor: pointer; margin-top: 8px; font-weight: 500; }
     .btn-primary { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
     .btn-primary:hover { background: var(--vscode-button-hoverBackground); }
+    .btn-secondary { background: var(--vscode-button-secondaryBackground, transparent); color: var(--vscode-button-secondaryForeground, var(--vscode-foreground)); border: 1px solid var(--vscode-button-border, var(--vscode-input-border)); }
+    .btn-secondary:hover { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground)); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .error { color: var(--vscode-errorForeground); text-align: center; margin-top: 16px; font-size: 0.85em; display: none; }
     .success { color: var(--vscode-testing-iconPassed); text-align: center; margin-top: 16px; font-size: 0.9em; display: none; }
@@ -89,6 +105,7 @@ export class LoginPanel implements vscode.Disposable {
       </div>
       <button type="submit" class="btn btn-primary" id="loginBtn">Login</button>
     </form>
+    <button type="button" class="btn btn-secondary" id="entraBtn">Sign in with Microsoft</button>
     <div class="error" id="errorMsg"></div>
     <div class="success" id="successMsg">Login successful</div>
   </div>
@@ -96,6 +113,7 @@ export class LoginPanel implements vscode.Disposable {
     const vscode = acquireVsCodeApi();
     const form = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
+    const entraBtn = document.getElementById('entraBtn');
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
     const pwdInput = document.getElementById('password');
@@ -116,20 +134,28 @@ export class LoginPanel implements vscode.Disposable {
       vscode.postMessage({ type: 'login', username: u, password: p });
     });
 
+    entraBtn.addEventListener('click', () => {
+      errorMsg.style.display = 'none';
+      vscode.postMessage({ type: 'entra' });
+    });
+
     window.addEventListener('message', (event) => {
       const msg = event.data;
       if (msg.type === 'loading') {
         loginBtn.disabled = msg.loading;
+        entraBtn.disabled = msg.loading;
         loginBtn.textContent = msg.loading ? 'Logging in...' : 'Login';
       } else if (msg.type === 'error') {
         errorMsg.style.display = 'block';
         errorMsg.textContent = msg.message;
         loginBtn.disabled = false;
+        entraBtn.disabled = false;
         loginBtn.textContent = 'Login';
       } else if (msg.type === 'success') {
         successMsg.style.display = 'block';
         errorMsg.style.display = 'none';
         loginBtn.disabled = true;
+        entraBtn.disabled = true;
         loginBtn.textContent = 'Done';
       }
     });

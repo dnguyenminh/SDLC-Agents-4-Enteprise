@@ -51,6 +51,7 @@ export function registerCommands(context: vscode.ExtensionContext, deps: Command
         async () => { await authManager?.refreshToken(); return authManager?.getTokenSync() || undefined; }
     )),
     vscode.commands.registerCommand("kiroSdlc.login", () => handleLogin(context, authManager, treeProvider)),
+    vscode.commands.registerCommand("kiroSdlc.loginEntra", () => handleLoginEntra(authManager)),
     vscode.commands.registerCommand("kiroSdlc.logout", () => handleLogout(authManager, panelManager)),
     vscode.commands.registerCommand("kiroSdlc.openKbGraph", () => panelManager?.openPanel("graph")),
     vscode.commands.registerCommand("kiroSdlc.openKbDashboard", () => panelManager?.openPanel("dashboard")),
@@ -121,6 +122,16 @@ async function handleLogin(context: vscode.ExtensionContext, authManager?: AuthM
     if (state === "AUTHENTICATED") { treeProvider?.setAuthenticated(true, "admin"); }
     else if (state === "UNAUTHENTICATED") { treeProvider?.setAuthenticated(false); }
   });
+}
+
+async function handleLoginEntra(authManager?: AuthManager): Promise<void> {
+  if (!authManager) { vscode.window.showErrorMessage("Auth manager not initialized."); return; }
+  try {
+    await authManager.loginEntra();
+    vscode.window.showInformationMessage("✅ Signed in with Microsoft Entra ID");
+  } catch (err: any) {
+    vscode.window.showErrorMessage(`Entra login failed: ${err.message}`);
+  }
 }
 
 async function handleLogout(authManager?: AuthManager, panelManager?: WebviewPanelManager): Promise<void> {

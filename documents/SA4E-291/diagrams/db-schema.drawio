@@ -1,0 +1,15 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="2" value="PipelineState" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="80" y="80" width="240" height="120" as="geometry"/>
+</mxCell>
+<mxCell id="3" value="RemoteCheckpointer" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="380" y="80" width="240" height="120" as="geometry"/>
+</mxCell>
+<mxCell id="4" value="No new tables for SA4E-291" style="text;html=1;" vertex="1" parent="1">
+<mxGeometry x="80" y="240" width="400" height="40" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

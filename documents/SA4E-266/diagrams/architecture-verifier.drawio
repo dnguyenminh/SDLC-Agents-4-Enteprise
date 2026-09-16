@@ -1,0 +1,66 @@
+<mxGraphModel dx="1400" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="920" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="n-client" value="&lt;b&gt;Client&lt;/b&gt;&lt;br&gt;Bearer ID token (RS256 / HS256)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8cc;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="500" y="40" width="340" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-mw" value="&lt;b&gt;jwt-auth middleware (Hono)&lt;/b&gt;&lt;br&gt;createJwtAuth() — strategy select (SA4E-266)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="500" y="150" width="340" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-detect" value="&lt;b&gt;Token Detection (FSD §8.1)&lt;/b&gt;&lt;br&gt;parse JWT header (segment 0) → kid, alg&lt;br&gt;kid present AND iss = Entra authority?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="470" y="260" width="400" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-local" value="&lt;b&gt;LocalHS256Verifier&lt;/b&gt;&lt;br&gt;HS256 + KB_TOKEN_SECRET&lt;br&gt;legacy path unchanged (BR-04, UC-04)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="80" y="430" width="340" height="100" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-entra" value="&lt;b&gt;EntraRS256Verifier (NEW)&lt;/b&gt;&lt;br&gt;RS256 + JWKS key selected by kid (BR-01)&lt;br&gt;verify signature → iss / aud / exp (BR-03)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="480" y="430" width="360" height="100" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-out-local" value="Opaque session — legacy behavior&lt;br&gt;unchanged (UC-04, BR-04)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="80" y="640" width="340" height="70" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-out" value="Pass → opaque session issued (UC-01)&lt;br&gt;ERR-01..ERR-04 → 401 | ERR-05 → 503" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="480" y="640" width="360" height="70" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-cache" value="&lt;b&gt;JwksCache&lt;/b&gt;&lt;br&gt;TTL 1h (BR-02)&lt;br&gt;kid miss → exactly 1 refresh() retry&lt;br&gt;2nd miss → null → ERR-05 (503)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="940" y="430" width="320" height="110" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-disc" value="&lt;b&gt;OIDC Discovery (24h cache)&lt;/b&gt;&lt;br&gt;GET {authority}/.well-known/openid-configuration&lt;br&gt;→ jwks_uri, issuer (FSD §8.2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="940" y="650" width="320" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n-entraid" value="&lt;b&gt;Microsoft Entra ID&lt;/b&gt;&lt;br&gt;JWKS endpoint + issuer (external)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8cc;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="940" y="820" width="320" height="70" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e1" value="Bearer ID token" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n-client" target="n-mw">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="parse header (seg 0)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n-mw" target="n-detect">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="HS256 / no kid — legacy (BR-04)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="n-detect" target="n-local">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="kid + iss = Entra authority" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="n-detect" target="n-entra">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="HS256 valid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n-local" target="n-out-local">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="sig + iss + aud + exp OK" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;" edge="1" parent="1" source="n-entra" target="n-out">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="getKey(kid)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="n-entra" target="n-cache">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="refresh() — GET JWKS keys" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="n-cache" target="n-entraid">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e9" value="GET openid-configuration (cache 24h)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="n-disc" target="n-entraid">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e10" value="jwks_uri" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;exitX=0;exitY=0.25;entryX=0.5;entryY=1;dashed=1;" edge="1" parent="1" source="n-disc" target="n-cache">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

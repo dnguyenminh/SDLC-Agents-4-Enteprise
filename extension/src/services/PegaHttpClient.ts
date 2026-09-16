@@ -259,9 +259,16 @@ export class PegaHttpClient {
           throw new Error(`HTTP ${res.status} ${res.statusText || "Auth Error"}`);
         }
 
-        // Server errors — fatal, throw immediately
+        // Server errors — Pega sometimes returns HTTP 500 with a "class/rule
+        // does not exist" body instead of the correct 404 (server-side bug).
+        // Detect that pattern and treat as not-found so the crawl skips this
+        // rule and continues, instead of aborting the whole indexing run.
         if (res.status === 504 || res.status === 503 || res.status === 502 || res.status === 500) {
-          throw new Error(`HTTP ${res.status} ${res.statusText || "Server Error"}`);
+          if (this.looksLikeNotFoundBody(text)) {
+            const reason = this.extractBodyError(text) || `HTTP ${res.status}`;
+            throw new Error(`Rule not found: ${insKey} (Pega ${reason})`);
+          }
+          throw new Error(`HTTP ${res.status} ${res.statusText || "Server Error"} at ${url} — body: ${text.substring(0, 200)}`);
         }
 
         if (res.ok) {
@@ -338,9 +345,16 @@ export class PegaHttpClient {
           throw new Error(`HTTP ${res.status} ${res.statusText || "Auth Error"}`);
         }
 
-        // Server errors — fatal
+        // Server errors — Pega sometimes returns HTTP 500 with a "class/rule
+        // does not exist" body instead of the correct 404 (server-side bug).
+        // Detect that pattern and treat as not-found so the crawl skips this
+        // rule and continues, instead of aborting the whole indexing run.
         if (res.status === 504 || res.status === 503 || res.status === 502 || res.status === 500) {
-          throw new Error(`HTTP ${res.status} ${res.statusText || "Server Error"}`);
+          if (this.looksLikeNotFoundBody(text)) {
+            const reason = this.extractBodyError(text) || `HTTP ${res.status}`;
+            throw new Error(`Rule not found for triple: ${pxObjClass} | ${appliesTo} | ${pyRuleName} (Pega ${reason})`);
+          }
+          throw new Error(`HTTP ${res.status} ${res.statusText || "Server Error"} at ${url} — body: ${text.substring(0, 200)}`);
         }
 
         if (res.ok) {
@@ -424,6 +438,47 @@ export class PegaHttpClient {
    * @returns The first result object, or null when it's an empty/absent list
    *   (rule genuinely not found). A non-list body is passed through unchanged.
    */
+  /**
+   * Detect whether a Pega error response body indicates the rule/class does
+   * not exist. Pega sometimes returns HTTP 500 for rule-not-found instead of
+   * the correct 404, so callers use this to reclassify a 5xx as "skip this
+   * rule and continue crawling" rather than "abort the whole indexing run".
+   *
+   * @param text Raw response body text.
+   * @returns true when the body message signals a not-found condition.
+   */
+  private looksLikeNotFoundBody(text: string): boolean {
+    if (!text) { return false; }
+    const lower = text.toLowerCase();
+    return lower.includes("does not exist")
+      || lower.includes("rule not found")
+      || lower.includes("record not found")
+      || lower.includes("no rule found")
+      || lower.includes("cannot be found")
+      || lower.includes("no such rule");
+  }
+
+  /**
+   * Extract the `error` message from a Pega JSON error body when present.
+   * Falls back to a short prefix of the raw body when parsing fails so the
+   * caller always has a human-readable reason to surface in logs.
+   *
+   * @param text Raw response body text.
+   * @returns Short error string (max ~180 chars), or empty string when
+   *   nothing useful could be extracted.
+   */
+  private extractBodyError(text: string): string {
+    if (!text) { return ""; }
+    try {
+      const json = JSON.parse(text) as { error?: unknown; message?: unknown };
+      const raw = typeof json.error === "string" ? json.error
+        : typeof json.message === "string" ? json.message
+        : "";
+      if (raw) { return raw.substring(0, 180); }
+    } catch { /* not JSON — fall through */ }
+    return text.substring(0, 180).replace(/\s+/g, " ").trim();
+  }
+
   private unwrapQueryResult(json: Record<string, unknown>): Record<string, unknown> | null {
     const isListEnvelope = json.pxObjClass === "Code-Pega-List"
       || Array.isArray(json.pxResults)

@@ -110,8 +110,8 @@ export async function createUser(
   const hash = hashPassword(password);
 
   await adapter.runAsync(
-    `INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at)
-     VALUES (?, ?, ?, ?, 'ACTIVE', ?, 1, ?)`,
+    `INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at, account_type)
+     VALUES (?, ?, ?, ?, 'ACTIVE', ?, 1, ?, 'LOCAL')`,
     [userId, username, email, hash, accessGroupId, now],
   );
 

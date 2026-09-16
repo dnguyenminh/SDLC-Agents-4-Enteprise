@@ -7,6 +7,7 @@ import { execSync } from 'child_process';
 import * as os from 'os';
 import pino from 'pino';
 import { SandboxConfigSchema } from './SandboxConfig.js';
+import { EntraSurfaceSchema, loadEntraConfig } from './EntraConfig.js';
 
 const logger = pino({ name: 'app-config' });
 
@@ -50,6 +51,7 @@ const UnifiedConfigSchema = z.object({
   excludePatterns: z.array(z.string()),
   includeExtensions: z.array(z.string()),
   sandbox: SandboxConfigSchema,
+  entra: EntraSurfaceSchema, // SA4E-264 — Entra ID SSO surface (gate: SSO_ENABLED)
 });
 
 export type UnifiedConfig = z.infer<typeof UnifiedConfigSchema>;
@@ -164,6 +166,8 @@ export function loadConfig(overrides?: Partial<UnifiedConfig>): UnifiedConfig {
     includeExtensions: fileConfig.includeExtensions ?? DEFAULT_EXTENSIONS,
     sandbox: fileConfig.sandbox ?? {},
     ...overrides,
+    // SA4E-264 — gate + validate Entra config at startup (fail-fast; never bypassed by overrides)
+    entra: loadEntraConfig(process.env),
   };
 
   return UnifiedConfigSchema.parse(raw) as UnifiedConfig;
