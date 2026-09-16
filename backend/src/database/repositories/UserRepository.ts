@@ -110,7 +110,7 @@ export class UserRepository implements IAuthUserRepository {
       await this.adapter.runAsync(
         `INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at, account_type)
          VALUES (?, ?, ?, ?, 'ACTIVE', ?, 1, ?, ?)`,
-        [userId, username, params.email, params.passwordHash, 'grp-dev', now, accountType],
+        [userId, username, params.email, params.passwordHash, 'grp-viewer', now, accountType],
       );
       const row = await this.adapter.getAsync<any>('SELECT * FROM users WHERE user_id = ?', [userId]);
       return row;

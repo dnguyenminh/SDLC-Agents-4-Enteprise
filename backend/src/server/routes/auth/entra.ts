@@ -147,13 +147,14 @@ export function createEntraAuthRoutes() {
       };
       const { user } = await jitService.provision(claimsPayload);
       await db.runAsync(
-        `INSERT INTO audit_log (id, timestamp, user_id, action, details, status) VALUES (?, ?, ?, ?, ?, ?)`,
-        [randomUUID(), new Date().toISOString(), user.user_id, 'SSO_LOGIN_ENTRA', JSON.stringify({ email: claimsPayload.email, oid: claimsPayload.oid || claimsPayload.sub }), 'SUCCESS']
+        `INSERT INTO audit_log (audit_id, user_id, username, action, resource, resource_id, changes, timestamp, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [randomUUID(), user.user_id, user.username || '', 'SSO_LOGIN_ENTRA', 'auth', '', JSON.stringify({ email: claimsPayload.email, oid: claimsPayload.oid || claimsPayload.sub }), new Date().toISOString(), '']
       );
       await db.runAsync(`DELETE FROM sessions WHERE user_id = ?`, [user.user_id]);
       const sessionToken = randomUUID();
       const expiresAt = new Date(Date.now() + 3600_000).toISOString();
-      await db.runAsync(`INSERT INTO sessions (id, user_id, token, expires_at, created_at) VALUES (?, ?, ?, ?, ?)`, [randomUUID(), user.user_id, sessionToken, expiresAt, new Date().toISOString()]);
+      const loginAt = new Date().toISOString();
+      await db.runAsync(`INSERT INTO sessions (session_id, user_id, token, device, ip_address, login_at, expires_at, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [randomUUID(), user.user_id, sessionToken, '', '', loginAt, expiresAt, 1]);
       if (entry.redirectTo) {
         const redirectUrl = new URL(entry.redirectTo);
         redirectUrl.searchParams.set('token', sessionToken);

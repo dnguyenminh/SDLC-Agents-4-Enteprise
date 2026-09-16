@@ -51,11 +51,12 @@ async function migrateUsersSso(db: DatabaseAdapter, engine: DatabaseEngine): Pro
             access_group_id TEXT,
             force_password_change INTEGER,
             created_at TEXT,
+            last_login TEXT,
             account_type TEXT NOT NULL DEFAULT 'LOCAL',
             external_provider TEXT,
             external_subject_id TEXT
           )`);
-          await db.execAsync(`INSERT INTO users SELECT user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at, COALESCE(account_type,'LOCAL'), external_provider, external_subject_id FROM users_old`);
+          await db.execAsync(`INSERT INTO users SELECT user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at, last_login, COALESCE(account_type,'LOCAL'), external_provider, external_subject_id FROM users_old`);
           await db.execAsync(`DROP TABLE users_old`);
         }
       } catch {}
