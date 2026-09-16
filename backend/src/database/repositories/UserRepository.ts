@@ -5,14 +5,16 @@
  */
 
 import type { DatabaseAdapter } from '../adapters/DatabaseAdapter.js';
-import type { IUserRepository } from './interfaces.js';
+import type { IAuthUserRepository } from './interfaces.js';
 import { translateError } from '../errors/index.js';
+import { verifyPassword } from '../../admin/db/password.js';
+import * as crypto from 'crypto';
 
 /**
  * Repository for user-related database operations.
  * All queries use parameterized values to prevent SQL injection.
  */
-export class UserRepository implements IUserRepository {
+export class UserRepository implements IAuthUserRepository {
   constructor(private readonly adapter: DatabaseAdapter) {}
 
   /**
@@ -61,6 +63,71 @@ export class UserRepository implements IUserRepository {
         'UPDATE users SET email = ? WHERE user_id = ?',
         [email, userId],
       );
+    } catch (err) {
+      throw translateError(err);
+    }
+  }
+
+  async findByEmail(email: string): Promise<any | null> {
+    try {
+      const row = await this.adapter.getAsync<any>(
+        'SELECT * FROM users WHERE email = ?', [email],
+      );
+      return row || null;
+    } catch (err) {
+      throw translateError(err);
+    }
+  }
+
+  async findByUsername(username: string): Promise<any | null> {
+    try {
+      const row = await this.adapter.getAsync<any>(
+        'SELECT * FROM users WHERE username = ?', [username],
+      );
+      return row || null;
+    } catch (err) {
+      throw translateError(err);
+    }
+  }
+
+  async findById(userId: string): Promise<any | null> {
+    try {
+      const row = await this.adapter.getAsync<any>(
+        'SELECT * FROM users WHERE user_id = ?', [userId],
+      );
+      return row || null;
+    } catch (err) {
+      throw translateError(err);
+    }
+  }
+
+  async createUser(params: { email: string; username?: string; passwordHash: string; accountType?: string }): Promise<any> {
+    try {
+      const userId = 'user-' + crypto.randomUUID().slice(0, 8);
+      const now = new Date().toISOString();
+      const username = params.username || params.email.split('@')[0];
+      const accountType = params.accountType || 'LOCAL';
+      await this.adapter.runAsync(
+        `INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at, account_type)
+         VALUES (?, ?, ?, ?, 'ACTIVE', ?, 1, ?, ?)`,
+        [userId, username, params.email, params.passwordHash, 'grp-dev', now, accountType],
+      );
+      const row = await this.adapter.getAsync<any>('SELECT * FROM users WHERE user_id = ?', [userId]);
+      return row;
+    } catch (err) {
+      throw translateError(err);
+    }
+  }
+
+  async verifyCredentials(identifier: string, password: string): Promise<any | null> {
+    try {
+      const byEmail = await this.findByEmail(identifier);
+      const user = byEmail || await this.findByUsername(identifier);
+      if (!user) return null;
+      if (user.status !== 'ACTIVE') return null;
+      if (!user.password_hash) return null;
+      const ok = verifyPassword(password, user.password_hash as string);
+      return ok ? user : null;
     } catch (err) {
       throw translateError(err);
     }

@@ -24,9 +24,54 @@ function insertIgnore(engine: DatabaseEngine, sql: string): string {
 }
 
 /** Initialize admin schema tables (idempotent CREATE IF NOT EXISTS). */
+async function migrateUsersSso(db: DatabaseAdapter, engine: DatabaseEngine): Promise<void> {
+  try {
+    if (engine === 'postgresql') {
+      await db.execAsync(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_type TEXT NOT NULL DEFAULT 'LOCAL'`);
+      await db.execAsync(`ALTER TABLE users ADD COLUMN IF NOT EXISTS external_provider TEXT`);
+      await db.execAsync(`ALTER TABLE users ADD COLUMN IF NOT EXISTS external_subject_id TEXT`);
+      await db.execAsync(`ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL`);
+      await db.execAsync(`CREATE UNIQUE INDEX IF NOT EXISTS uq_users_external_identity ON users (external_provider, external_subject_id)`);
+    } else {
+      try { await db.execAsync(`ALTER TABLE users ADD COLUMN account_type TEXT NOT NULL DEFAULT 'LOCAL'`); } catch {}
+      try { await db.execAsync(`ALTER TABLE users ADD COLUMN external_provider TEXT`); } catch {}
+      try { await db.execAsync(`ALTER TABLE users ADD COLUMN external_subject_id TEXT`); } catch {}
+      // SQLite cannot ALTER COLUMN nullability; recreate table if password_hash is NOT NULL
+      try {
+        const info = await db.allAsync(`PRAGMA table_info(users)`);
+        const col = (info as any[]).find(c => c.name === 'password_hash');
+        if (col && col.notnull === 1) {
+          await db.execAsync(`ALTER TABLE users RENAME TO users_old`);
+          await db.execAsync(`CREATE TABLE users (
+            user_id TEXT PRIMARY KEY,
+            username TEXT,
+            email TEXT UNIQUE,
+            password_hash TEXT,
+            status TEXT,
+            access_group_id TEXT,
+            force_password_change INTEGER,
+            created_at TEXT,
+            account_type TEXT NOT NULL DEFAULT 'LOCAL',
+            external_provider TEXT,
+            external_subject_id TEXT
+          )`);
+          await db.execAsync(`INSERT INTO users SELECT user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at, COALESCE(account_type,'LOCAL'), external_provider, external_subject_id FROM users_old`);
+          await db.execAsync(`DROP TABLE users_old`);
+        }
+      } catch {}
+      await db.execAsync(`CREATE UNIQUE INDEX IF NOT EXISTS uq_users_external_identity ON users (external_provider, external_subject_id)`);
+    }
+  } catch (err) {
+    console.debug('[schema] users_sso migration:', (err as Error).message);
+  }
+}
+
 export async function initSchema(db: DatabaseAdapter): Promise<void> {
   const engine = db.getEngine();
   await db.execAsync(schemaSql(engine));
+
+  // SA4E-265 migration: users_sso
+  await migrateUsersSso(db, engine);
 
   // Idempotent migration: add project_id to graph_nodes for existing DBs
   try {
@@ -132,8 +177,8 @@ async function seedAdminUser(db: DatabaseAdapter): Promise<void> {
     : crypto.randomBytes(18).toString('base64url');
   const hash = hashPassword(initialPassword);
   await db.runAsync(
-    `INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at)
-     VALUES (?, ?, ?, ?, 'ACTIVE', 'grp-admin', 1, ?)`,
+    `INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at, account_type)
+     VALUES (?, ?, ?, ?, 'ACTIVE', 'grp-admin', 1, ?, 'LOCAL')`,
     ['user-admin-001', 'admin', 'admin@localhost', hash, now],
   );
 
@@ -175,12 +220,15 @@ function schemaSql(engine: DatabaseEngine): string {
       user_id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       email TEXT NOT NULL DEFAULT '',
-      password_hash TEXT NOT NULL,
+      password_hash TEXT,
       status TEXT NOT NULL DEFAULT 'ACTIVE',
       access_group_id TEXT NOT NULL,
       force_password_change INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
-      last_login TEXT
+      last_login TEXT,
+      account_type TEXT NOT NULL DEFAULT 'LOCAL' CHECK (account_type IN ('LOCAL','SSO')),
+      external_provider TEXT,
+      external_subject_id TEXT
     );
 
     CREATE TABLE IF NOT EXISTS access_groups (
@@ -240,6 +288,8 @@ function schemaSql(engine: DatabaseEngine): string {
     CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);
     CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
     CREATE INDEX IF NOT EXISTS idx_config_changes_time ON config_changes(changed_at);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_users_external_identity ON users (external_provider, external_subject_id);
 
     CREATE TABLE IF NOT EXISTS graph_nodes (
       entry_id TEXT PRIMARY KEY,
