@@ -47,10 +47,12 @@ function codeChallenge(verifier: string) {
 
 function getClientIp(c: any): string {
   const trustProxy = process.env.TRUST_PROXY === 'true';
-  if (trustProxy) {
-    return c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || '127.0.0.1';
+  const xff = c.req.header('x-forwarded-for');
+  const xri = c.req.header('x-real-ip');
+  if (trustProxy || xff) {
+    return xff?.split(',')[0]?.trim() || xri || '127.0.0.1';
   }
-  return '127.0.0.1';
+  return c.req.header('x-real-ip') || '127.0.0.1';
 }
 
 const callbackQuery = z.object({ code: z.string(), state: z.string().optional() });
