@@ -89,9 +89,9 @@ export class JitProvisioningService {
         throw new Error('Email already linked to another SSO identity');
       }
 
-      // Link local account to SSO
+      // Link local account to SSO - preserve password for local login
       await this.db.runAsync(
-        `UPDATE users SET external_provider = ?, external_subject_id = ?, access_group_id = ?, last_login = ?, account_type = ?, password_hash = NULL WHERE user_id = ?`,
+        `UPDATE users SET external_provider = ?, external_subject_id = ?, access_group_id = ?, last_login = ?, account_type = ? WHERE user_id = ?`,
         [this.provider, oid, accessGroup, new Date().toISOString(), 'SSO', user.user_id]
       );
 
