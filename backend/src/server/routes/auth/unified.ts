@@ -76,6 +76,7 @@ export function createUnifiedAuthRoutes() {
       };
       return c.json(response);
     } catch (err: any) {
+      console.error('Login error', err);
       return c.json({ error: 'Internal error' }, 500);
     }
   });
@@ -93,15 +94,16 @@ export function createUnifiedAuthRoutes() {
         return c.json({ success: false, error: { code: 'ERR_001', message: 'Email already registered' } }, 400);
       }
       const hash = hashPassword(password);
-      const user = await repo.createUser({ email, username: email, passwordHash: hash });
+      const user = await repo.createUser({ email, username: email, passwordHash: hash, accessGroupId: access_group_id || 'grp-viewer' });
       await recordAudit(user.user_id as string, email, 'REGISTER', 'user', user.user_id as string);
       const response = {
         success: true,
-        data: { userId: user.user_id, email, accessGroupId: access_group_id || 'grp-dev' },
+        data: { userId: user.user_id, email, accessGroupId: user.access_group_id },
         user: { userId: user.user_id, email, username: email }
       };
       return c.json(response, 200);
     } catch (err: any) {
+      console.error('Register error', err);
       return c.json({ success: false, error: { code: 'ERR_001', message: 'Registration failed' } }, 500);
     }
   });
@@ -116,8 +118,10 @@ export function createUnifiedAuthRoutes() {
       const userAgent = c.req.header('user-agent') || '';
       const uaHash = crypto.createHash('sha256').update(userAgent).digest('hex');
       const user = await sessions.validate(token, uaHash);
-      if (user) await recordAudit(user.userId, user.username, 'LOGOUT', 'auth');
-      await sessions.invalidate(token);
+      if (user) {
+        await recordAudit(user.userId, user.username, 'LOGOUT', 'auth');
+        await sessions.invalidate(token);
+      }
     }
     return c.json({ success: true, message: 'Successfully logged out' });
   });
@@ -134,7 +138,8 @@ export function createUnifiedAuthRoutes() {
       const result = await sessions.refresh(token, uaHash);
       if (!result) return c.json({ error: 'Invalid or expired session' }, 401);
       return c.json({ token: result.token, expiresAt: result.expiresAt, success: true, data: { token: result.token } });
-    } catch {
+    } catch (e) {
+      console.error('Refresh error', e);
       return c.json({ error: 'Internal error' }, 500);
     }
   });

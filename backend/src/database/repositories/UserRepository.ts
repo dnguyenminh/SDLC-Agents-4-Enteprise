@@ -101,16 +101,17 @@ export class UserRepository implements IAuthUserRepository {
     }
   }
 
-  async createUser(params: { email: string; username?: string; passwordHash: string; accountType?: string }): Promise<any> {
+  async createUser(params: { email: string; username?: string; passwordHash: string; accountType?: string; accessGroupId?: string }): Promise<any> {
     try {
       const userId = 'user-' + crypto.randomUUID().slice(0, 8);
       const now = new Date().toISOString();
       const username = params.username || params.email.split('@')[0];
       const accountType = params.accountType || 'LOCAL';
+      const accessGroupId = params.accessGroupId || 'grp-viewer';
       await this.adapter.runAsync(
         `INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at, account_type)
          VALUES (?, ?, ?, ?, 'ACTIVE', ?, 1, ?, ?)`,
-        [userId, username, params.email, params.passwordHash, 'grp-viewer', now, accountType],
+        [userId, username, params.email, params.passwordHash, accessGroupId, now, accountType],
       );
       const row = await this.adapter.getAsync<any>('SELECT * FROM users WHERE user_id = ?', [userId]);
       return row;

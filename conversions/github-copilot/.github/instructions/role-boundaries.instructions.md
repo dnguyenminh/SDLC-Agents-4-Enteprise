@@ -11,8 +11,8 @@ applyTo: '**'
 | Agent | Creates/Writes | CANNOT do |
 |---|---|---|
 | **sm-agent** | STATUS.json, RUN-LOG.md, jira.conf | ❌ Write documents, code, diagrams, tests |
-| **ba-agent** | BRD.md, FSD.md (draft), diagrams | ❌ Write TDD, code, tests, DPG |
-| **ta-agent** | FSD.md (enrichment only) | ❌ Write BRD, TDD, code, tests |
+| **ba-agent** | BRD.md, FSD.md (draft), diagrams, Test Case review verdict (Phase 4) | ❌ Write TDD, code, tests, DPG |
+| **ta-agent** | FSD.md (enrichment only), Implementation review verdict (Phase 5) | ❌ Write BRD, TDD, code, tests |
 | **sa-agent** | TDD.md, DISCREPANCY.md, diagrams | ❌ Write BRD, FSD, code, tests |
 | **qa-agent** | STP.md, STC.md, TEST-REPORT.md, CSVs | ❌ Write BRD, FSD, TDD, production code |
 | **dev-agent** | Source code, tests, UG.md | ❌ Write BRD, FSD, TDD, STP, DPG |
@@ -46,3 +46,8 @@ Before starting work, each agent MUST verify scope:
 | Tests need writing | SM → invoke dev-agent |
 | TDD needs diagrams | SM → invoke sa-agent |
 | Deploy guide needed | SM → invoke devops-agent |
+
+## Cross-Agent Review Gates
+
+- **Test Cases (Phase 4):** After QA produces the STC, SM invokes ba-agent to review it. QA's test planning is done ONLY after the BA returns APPROVED. SM never approves the STC itself.
+- **Implementation (Phase 5):** After DEV implements, SM invokes ta-agent to review the code for design conformance. The implementation is done ONLY after the TA returns APPROVED. SM never approves the code itself.

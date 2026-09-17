@@ -174,16 +174,11 @@ export function createEntraAuthRoutes() {
       // Set HttpOnly Secure cookie binding
       const maxAge = Math.max(0, Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000));
       const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-      const cookie = `session_token=${session.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secureFlag}`;
+      const cookie = `session_token=${session.token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secureFlag}`;
       c.header('Set-Cookie', cookie);
-      const legacyRedirect = process.env.SSO_LEGACY_REDIRECT_WITH_TOKEN === 'true';
-      let redirectUrl = entry.redirectTo || '/admin?page=dashboard';
-      if (legacyRedirect) {
-        const url = new URL(redirectUrl, 'http://localhost');
-        url.searchParams.set('token', session.token);
-        url.searchParams.set('expiresAt', session.expiresAt);
-        redirectUrl = url.toString().replace('http://localhost', '');
-      }
+      const allowedRedirects = (process.env.SSO_ALLOWED_REDIRECTS || '/admin?page=dashboard').split(',').map(s=>s.trim());
+      const redirectUrlRaw = entry.redirectTo || '/admin?page=dashboard';
+      const redirectUrl = allowedRedirects.includes(redirectUrlRaw) ? redirectUrlRaw : allowedRedirects[0];
       return c.redirect(redirectUrl);
     } catch (e: any) {
       return c.json({ error: 'internal_error', message: e.message }, 500);
