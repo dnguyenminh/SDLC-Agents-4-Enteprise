@@ -167,7 +167,8 @@ export class PiWorkflowEngine {
   }
 
   private async handleApprovalGate(updatedPiState: any, pipelineState: any, ticketKey: string, threadId: string) {
-    const needsApproval = !!(updatedPiState?.metadata?.needsApproval || updatedPiState?.toolCalls > 0);
+    const toolCallsArr = Array.isArray(updatedPiState?.toolCalls) ? updatedPiState.toolCalls : [];
+    const needsApproval = !!(updatedPiState?.metadata?.needsApproval || toolCallsArr.length > 0);
     let approvalRequested = false;
     if (needsApproval) {
       try {

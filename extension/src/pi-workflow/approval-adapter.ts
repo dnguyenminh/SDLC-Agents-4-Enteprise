@@ -65,6 +65,7 @@ export class ApprovalAdapter implements IApprovalAdapter {
   }
 
   async requestApproval(toolCall: any): Promise<any> {
+    let extId: string | undefined;
     try {
       const piId = toolCall?.tool_use_id;
       const sessionId = toolCall?.sessionId ?? 'default';
@@ -73,7 +74,7 @@ export class ApprovalAdapter implements IApprovalAdapter {
       if (!piId) {
         return { error: 'ADAPTER-001', isApproved: false };
       }
-      const extId = this.normalizeId(piId, sessionId, ticketKey);
+      extId = this.normalizeId(piId, sessionId, ticketKey);
       const key = `${sessionId}:${piId}`;
       const entry = this.map.get(key);
       if (entry) entry.threadId = threadId;
@@ -85,6 +86,7 @@ export class ApprovalAdapter implements IApprovalAdapter {
       }
       return { isApproved: false, pending: true, extensionId: extId, piId, threadId };
     } catch (e: any) {
+      if (extId) this.pending.delete(extId);
       return { error: e.code || 'ADAPTER-004', isApproved: false };
     }
   }
