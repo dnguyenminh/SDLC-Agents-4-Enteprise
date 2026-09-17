@@ -29,6 +29,15 @@ export class ApprovalAdapter implements IApprovalAdapter {
 
   constructor(private gate?: any) {}
 
+  private purgeStalePending(maxAgeMs = 30 * 60 * 1000) {
+    const now = Date.now();
+    for (const [extId, entry] of this.pending.entries()) {
+      if (now - entry.ts > maxAgeMs) {
+        this.pending.delete(extId);
+      }
+    }
+  }
+
   private normPiId(piId: string) {
     return this.normalizeToolUseId({ id: piId });
   }
@@ -65,6 +74,7 @@ export class ApprovalAdapter implements IApprovalAdapter {
   }
 
   async requestApproval(toolCall: any): Promise<any> {
+    this.purgeStalePending();
     let extId: string | undefined;
     try {
       const piId = toolCall?.tool_use_id;
