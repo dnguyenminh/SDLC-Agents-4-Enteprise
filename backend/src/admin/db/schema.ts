@@ -74,6 +74,11 @@ export async function initSchema(db: DatabaseAdapter): Promise<void> {
   // SA4E-265 migration: users_sso
   await migrateUsersSso(db, engine);
 
+  // SA4E-262 migration: add user_agent_hash to sessions for session fixation hardening
+  try {
+    await db.execAsync(`ALTER TABLE sessions ADD COLUMN user_agent_hash TEXT DEFAULT ''`);
+  } catch (err) { console.debug('[schema] sessions.user_agent_hash already exists :', (err as Error).message); }
+
   // Idempotent migration: add project_id to graph_nodes for existing DBs
   try {
     await db.execAsync(`ALTER TABLE graph_nodes ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
@@ -255,6 +260,7 @@ function schemaSql(engine: DatabaseEngine): string {
       token TEXT UNIQUE NOT NULL,
       device TEXT DEFAULT '',
       ip_address TEXT DEFAULT '',
+      user_agent_hash TEXT DEFAULT '',
       login_at TEXT NOT NULL,
       expires_at TEXT NOT NULL,
       is_active INTEGER NOT NULL DEFAULT 1,

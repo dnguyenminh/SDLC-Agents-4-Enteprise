@@ -35,6 +35,7 @@ export async function createSession(
   userId: string,
   device?: string,
   ip?: string,
+  userAgentHash?: string,
 ): Promise<Session & { token: string }> {
   const adapter = getDbAdapter();
   const sessionId = 'sess-' + crypto.randomUUID().slice(0, 8);
@@ -43,9 +44,9 @@ export async function createSession(
   const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
   await adapter.runAsync(
-    `INSERT INTO sessions (session_id, user_id, token, device, ip_address, login_at, expires_at, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-    [sessionId, userId, token, device || '', ip || '', now.toISOString(), expires.toISOString()],
+    `INSERT INTO sessions (session_id, user_id, token, device, ip_address, user_agent_hash, login_at, expires_at, is_active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+    [sessionId, userId, token, device || '', ip || '', userAgentHash || '', now.toISOString(), expires.toISOString()],
   );
 
   return {

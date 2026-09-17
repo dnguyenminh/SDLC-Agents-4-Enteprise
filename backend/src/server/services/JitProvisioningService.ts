@@ -23,8 +23,28 @@ export interface JitProvisionResult {
 export class JitProvisioningService {
   private readonly provider = 'entra';
   private readonly defaultGroup = 'grp-viewer';
+  private readonly groupMapping: Record<string, string>;
 
-  constructor(private readonly db: DatabaseAdapter) {}
+  constructor(private readonly db: DatabaseAdapter) {
+    this.groupMapping = this.loadGroupMapping();
+  }
+
+  private loadGroupMapping(): Record<string, string> {
+    const raw = process.env.ENTRA_GROUP_MAPPING;
+    if (!raw) {
+      // Fallback to legacy defaults for backward compatibility when env var is not set
+      return { Admin: 'grp-admin', Dev: 'grp-dev' };
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return parsed as Record<string, string>;
+      }
+    } catch (e) {
+      logger.warn({ e, raw }, 'Failed to parse ENTRA_GROUP_MAPPING, using empty mapping');
+    }
+    return {};
+  }
 
   async provision(claims: EntraClaims, defaultGroup?: string): Promise<JitProvisionResult> {
     const email = (claims.email || '').trim().toLowerCase();
@@ -127,8 +147,14 @@ export class JitProvisioningService {
 
   private mapGroup(groups: string[], fallback: string): string {
     if (!groups.length) return fallback;
-    const g = groups[0];
-    return g.includes('Admin') ? 'grp-admin' : g.includes('Dev') ? 'grp-dev' : 'grp-viewer';
+    for (const g of groups) {
+      for (const [key, internalId] of Object.entries(this.groupMapping)) {
+        if (g.includes(key)) {
+          return internalId;
+        }
+      }
+    }
+    return fallback;
   }
 
   private generateUsername(email: string, name: string): string {

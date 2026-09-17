@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { randomBytes, createHash } from 'crypto';
+import { randomBytes, createHash, randomUUID } from 'crypto';
 import { loadEntraConfig } from '../../../config/EntraConfig.js';
 import { getEntraVerifier } from '../../middleware/verifiers/entra-auth.js';
 import { getDbAdapter } from '../../../admin/db/core.js';
 import { JitProvisioningService } from '../../services/JitProvisioningService.js';
+import { SessionService } from '../../services/SessionService.js';
 
 const PKCE_TTL_MS = 5 * 60 * 1000;
 const PKCE_MAX_ENTRIES = 1000;
@@ -43,6 +44,17 @@ function generateVerifier() {
 
 function codeChallenge(verifier: string) {
   return base64url(createHash('sha256').update(verifier).digest());
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64url').toString('utf8');
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
 }
 
 function getClientIp(c: any): string {
@@ -132,9 +144,15 @@ export function createEntraAuthRoutes() {
       const verifier = getEntraVerifier();
       if (!verifier) return c.json({ error: 'verifier_unavailable' }, 500);
       const claims = await verifier.verify(data.id_token);
-      const raw = claims as any;
-      if (typeof raw.nonce === 'string' && raw.nonce !== entry.nonce) {
-        return c.json({ error: 'invalid_nonce' }, 401);
+      const payload = decodeJwtPayload(data.id_token);
+      const tokenNonce = typeof payload?.nonce === 'string' ? payload.nonce : undefined;
+      if (typeof tokenNonce === 'string') {
+        if (tokenNonce !== entry.nonce) {
+          return c.json({ error: 'invalid_nonce' }, 401);
+        }
+      } else {
+        // nonce missing in id_token — fallback to state validation only
+        // State validation already performed above; allow continuation
       }
       const db = getDbAdapter();
       const { randomUUID } = await import('crypto');
@@ -150,20 +168,23 @@ export function createEntraAuthRoutes() {
       const { user } = await jitService.provision(claimsPayload);
       await db.runAsync(
         `INSERT INTO audit_log (audit_id, user_id, username, action, resource, resource_id, changes, timestamp, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [randomUUID(), user.user_id, user.username || '', 'SSO_LOGIN_ENTRA', 'auth', '', JSON.stringify({ email: claimsPayload.email, oid: claimsPayload.oid || claimsPayload.sub }), new Date().toISOString(), '']
+        [randomUUID(), user.user_id, user.username || '', 'SSO_LOGIN_ENTRA', 'auth', '', JSON.stringify({ email: claimsPayload.email, oid: claimsPayload.oid || claimsPayload.sub }), new Date().toISOString(), ip]
       );
+      // Session fixation hardening: rotate session ID and bind to user-agent
       await db.runAsync(`DELETE FROM sessions WHERE user_id = ?`, [user.user_id]);
-      const sessionToken = randomUUID();
-      const expiresAt = new Date(Date.now() + 3600_000).toISOString();
-      const loginAt = new Date().toISOString();
-      await db.runAsync(`INSERT INTO sessions (session_id, user_id, token, device, ip_address, login_at, expires_at, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [randomUUID(), user.user_id, sessionToken, '', '', loginAt, expiresAt, 1]);
+      const userAgent = c.req.header('user-agent') || '';
+      const userAgentHash = createHash('sha256').update(userAgent).digest('hex');
+      const sessionService = new SessionService();
+      const session = await sessionService.issue(user.user_id, userAgent, ip, userAgentHash);
+      // Set HttpOnly Secure cookie binding
+      const maxAge = Math.max(0, Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000));
+      const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+      const cookie = `session_token=${session.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secureFlag}`;
+      c.header('Set-Cookie', cookie);
       if (entry.redirectTo) {
-        const redirectUrl = new URL(entry.redirectTo);
-        redirectUrl.searchParams.set('token', sessionToken);
-        redirectUrl.searchParams.set('expiresAt', expiresAt);
-        return c.redirect(redirectUrl.toString());
+        return c.redirect(entry.redirectTo);
       }
-      return c.redirect(`/admin?token=${sessionToken}&page=dashboard`);
+      return c.redirect('/admin?page=dashboard');
     } catch (e: any) {
       return c.json({ error: 'internal_error', message: e.message }, 500);
     }
