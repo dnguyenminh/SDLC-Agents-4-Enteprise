@@ -201,10 +201,14 @@ export class PiWorkflowEngine {
   }
 
   private async persistPipelineState(state: any): Promise<void> {
-    // Persist directly to avoid double conversion loss. Ensure shape via adapter once.
-    const workflowState = (state && state.ticketKey && state.threadId)
-      ? state as PiWorkflowState
-      : this.stateAdapter.fromPiState(this.stateAdapter.toPiState(state as any));
+    // Validate shape via adapter to avoid persisting malformed state
+    const piInternal = this.stateAdapter.toPiState(state as any);
+    const workflowState = this.stateAdapter.fromPiState(piInternal);
+    // Merge original fields that adapter may not preserve
+    workflowState.ticketKey = state.ticketKey ?? workflowState.ticketKey;
+    workflowState.threadId = state.threadId ?? workflowState.threadId;
+    workflowState.currentPhase = state.currentPhase ?? workflowState.currentPhase;
+    workflowState.pipelineStatus = state.pipelineStatus ?? workflowState.pipelineStatus;
     await this.stateIO.persistWorkflowState(workflowState);
   }
 }

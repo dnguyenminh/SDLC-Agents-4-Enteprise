@@ -16,6 +16,7 @@ import { createApiRoute } from './routes/api.js';
 import { createProjectTypeRoutes } from './routes/project-type-routes.js';
 import { createEnrichmentStatusRoutes } from './routes/enrichment-status-routes.js';
 import { createAdminRoute } from './routes/admin.js';
+import { createTestsRoute } from './routes/tests.js';
 import { createMcpConfigRoutes } from '../modules/orchestration/McpConfigRoutes.js';
 import { McpConfigService } from '../modules/orchestration/McpConfigService.js';
 import { createRequestLogger } from './middleware/request-logger.js';
@@ -99,6 +100,7 @@ export class HttpServer {
     app.route('/', createToolsRoute(toolRouter, this.logger));
     app.route('/', createApiRoute(this.options.registry, this.logger));
     app.route('/', createAdminRoute(this.logger, this.options.registry));
+    app.route('/', createTestsRoute(this.logger));
 
     this.registerMcpConfigRoutes(app);
 

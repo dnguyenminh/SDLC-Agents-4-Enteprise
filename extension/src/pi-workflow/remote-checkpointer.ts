@@ -36,7 +36,6 @@ export class RemoteCheckpointer implements ICheckpointerAdapter {
     if (payload.length > 10 * 1024 * 1024) {
       throw new PayloadTooLargeError();
     }
-    try { JSON.parse(payload); } catch { throw new SerializationError(); }
 
     const res = await fetch(`${this.baseUrl}/api/v1/threads/${encodeURIComponent(threadId)}/checkpoint`, {
       method: 'POST',
