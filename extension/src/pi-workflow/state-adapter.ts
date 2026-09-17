@@ -92,7 +92,8 @@ export class StateAdapter implements IStateAdapter {
       agentOutputs: piState.agentOutputs ?? {},
       errors: piState.errors ?? [],
     };
-
+    // Remove internal-only field to keep WorkflowState clean
+    delete (workflowState as any).toolCalls;
     return workflowState;
   }
 

@@ -172,10 +172,13 @@ export class PiWorkflowEngine {
     let approvalRequested = false;
     if (needsApproval) {
       try {
+        const crypto = await import('crypto');
+        const fallbackId = crypto.randomUUID ? crypto.randomUUID() : `${ticketKey}-${threadId}-${Date.now()}`;
         const result = await this.approvalAdapter.requestApproval({
-          tool_use_id: updatedPiState?.metadata?.toolUseId ?? `${ticketKey}-${threadId}`,
+          tool_use_id: updatedPiState?.metadata?.toolUseId ?? fallbackId,
           sessionId: updatedPiState?.sessionId ?? '',
           ticketKey,
+          threadId,
         });
         if (result?.isApproved === true) {
           approvalRequested = false;
