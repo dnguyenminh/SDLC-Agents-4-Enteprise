@@ -690,3 +690,10 @@ After manual execution, update `TEST-REPORT-{TICKET-KEY}.csv`:
 - **Drawio Validate**: After creating test coverage/execution flow diagrams, validate XML
 - **KB Search First**: Before creating test plans, search KB for existing test docs: mem_search(query: "{TICKET} test")
 - **Run Log**: After completing work, ensure SM can log to RUN-LOG.md
+
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Review Gate — BA Approval Required (Test Planning)
+
+After you produce the Test Cases (STC), the Business Analyst (ba-agent) reviews them for business coverage. **Your test planning is NOT complete until the BA returns a verdict of APPROVED.** If the BA returns CHANGES REQUESTED, address every listed gap (missing User Story / Acceptance Criteria / Business Rule coverage, wrong expected results, out-of-scope cases) and resubmit for re-review (max 2 iterations). Do not consider the STC/STP final without BA approval.

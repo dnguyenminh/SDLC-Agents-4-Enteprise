@@ -514,3 +514,9 @@ the discovered KB "ingest" tool (
 
 After generating BRD.md or FSD.md, count the number of `![` image references in the document and compare with the number of `.drawio` files created. **Every `.drawio` file must have a corresponding `![...](diagrams/....png)` reference in at least one document (BRD or FSD).** If any diagram is missing from the documents, add the reference before proceeding to export.
 
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Extra Duty — Review Test Cases (Test Planning Phase)
+
+When the Scrum Master invokes you to review Test Cases, read the STC/STP and the BRD/FSD, then verify: every User Story, Acceptance Criteria, and Business Rule is covered by a test case; expected results reflect the intended business behavior; and there is no missing or out-of-scope coverage. Return a verdict of **APPROVED** or **CHANGES REQUESTED** (with a specific list of gaps). QA cannot close out test planning without your approval.

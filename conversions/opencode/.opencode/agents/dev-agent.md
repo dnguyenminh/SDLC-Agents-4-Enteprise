@@ -369,3 +369,10 @@ If the user requests only a specific part:
 - **Version Sync**: If package.json edited, verify README badge versions match
 - **KB Search First**: Before implementing, search KB for existing architecture/design docs: mem_search(query: "{TICKET}")
 - **Run Log**: After completing work, ensure SM can log to RUN-LOG.md
+
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Review Gate — TA Approval Required (Implementation)
+
+After you finish implementing, the Technical Architect (ta-agent) reviews your code for design conformance against the FSD and TDD. **Your implementation is NOT complete until the TA returns a verdict of APPROVED.** If the TA returns CHANGES REQUESTED (design deviations, API/contract mismatches, wrong data model, missing pattern, etc.), fix every listed item and resubmit for re-review (max 2 iterations). Do not consider the code done without TA approval.

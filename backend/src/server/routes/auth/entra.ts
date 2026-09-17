@@ -76,9 +76,10 @@ export function createEntraAuthRoutes() {
     const { config } = loadEntraConfig(process.env);
     if (!config) return c.json({ error: 'SSO not enabled' }, 400);
     const url = new URL(c.req.url);
-    const redirectTo = url.searchParams.get('redirect_to') || undefined;
-    const stateParam = url.searchParams.get('state');
-    const state = stateParam && stateParam.length > 0 ? stateParam : base64url(randomBytes(16));
+    const redirectToRaw = url.searchParams.get('redirect_to') || undefined;
+    const allowedRedirects = (process.env.SSO_ALLOWED_REDIRECTS || '/admin?page=dashboard').split(',').map(s=>s.trim());
+    const redirectTo = redirectToRaw && allowedRedirects.includes(redirectToRaw) ? redirectToRaw : allowedRedirects[0];
+    const state = base64url(randomBytes(16));
     const verifier = generateVerifier();
     const challenge = codeChallenge(verifier);
     const nonce = base64url(randomBytes(16));
@@ -165,20 +166,25 @@ export function createEntraAuthRoutes() {
         [randomUUID(), user.user_id, user.username || '', 'SSO_LOGIN_ENTRA', 'auth', '', JSON.stringify({ email: claimsPayload.email, oid: claimsPayload.oid || claimsPayload.sub }), new Date().toISOString(), ip]
       );
       // Session fixation hardening: rotate session ID and bind to user-agent
-      await db.runAsync(`DELETE FROM sessions WHERE user_id = ?`, [user.user_id]);
+      await db.runAsync(`UPDATE sessions SET is_active = 0 WHERE user_id = ?`, [user.user_id]);
       const userAgent = c.req.header('user-agent') || '';
       const userAgentHash = createHash('sha256').update(userAgent).digest('hex');
       const sessionService = new SessionService();
-      const session = await sessionService.issue(user.user_id, userAgent, ip, userAgentHash);
+      const session = await sessionService.issue(user.user_id, '', ip, userAgentHash);
       // Set HttpOnly Secure cookie binding
       const maxAge = Math.max(0, Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000));
       const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
       const cookie = `session_token=${session.token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${secureFlag}`;
       c.header('Set-Cookie', cookie);
-      if (entry.redirectTo) {
-        return c.redirect(entry.redirectTo);
+      const legacyRedirect = process.env.SSO_LEGACY_REDIRECT_WITH_TOKEN === 'true';
+      let redirectUrl = entry.redirectTo || '/admin?page=dashboard';
+      if (legacyRedirect) {
+        const url = new URL(redirectUrl, 'http://localhost');
+        url.searchParams.set('token', session.token);
+        url.searchParams.set('expiresAt', session.expiresAt);
+        redirectUrl = url.toString().replace('http://localhost', '');
       }
-      return c.redirect('/admin?page=dashboard');
+      return c.redirect(redirectUrl);
     } catch (e: any) {
       return c.json({ error: 'internal_error', message: e.message }, 500);
     }

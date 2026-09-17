@@ -69,10 +69,11 @@ async function migrateUsersSso(db: DatabaseAdapter, engine: DatabaseEngine): Pro
 
 export async function initSchema(db: DatabaseAdapter): Promise<void> {
   const engine = db.getEngine();
-  await db.execAsync(schemaSql(engine));
 
   // SA4E-265 migration: users_sso
   await migrateUsersSso(db, engine);
+
+  await db.execAsync(schemaSql(engine));
 
   // SA4E-262 migration: add user_agent_hash to sessions for session fixation hardening
   try {

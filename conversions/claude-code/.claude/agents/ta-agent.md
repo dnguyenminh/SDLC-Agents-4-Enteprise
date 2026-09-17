@@ -296,3 +296,9 @@ agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="ARTIF
 agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="DONE", message="FSD enrichment complete: 3372 lines, 143KB")
 ```
 
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Extra Duty — Review Implementation (Implementation Phase)
+
+When the Scrum Master invokes you to review an implementation, read the FSD + TDD and the code diff, then verify the code conforms to the technical design: API contracts, integration points, data model, algorithm/pseudocode alignment, correct design patterns, and no unjustified deviations. Return a verdict of **APPROVED** or **CHANGES REQUESTED** (with a specific list of changes). DEV cannot close out implementation without your approval.

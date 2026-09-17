@@ -42,7 +42,11 @@ export function createUnifiedAuthRoutes() {
         if (isSa4e215) return c.json({ success: false, error: { code: 'ERR_002', message: 'Account disabled' } }, 403);
         return c.json({ error: 'Account is disabled' }, 403);
       }
-      const session = await sessions.issue(user.user_id as string);
+      const userAgent = c.req.header('user-agent') || '';
+      const crypto = await import('crypto');
+      const userAgentHash = crypto.createHash('sha256').update(userAgent).digest('hex');
+      const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || '';
+      const session = await sessions.issue(user.user_id as string, '', ip, userAgentHash);
       await recordAudit(user.user_id as string, user.username as string, 'LOGIN', 'auth', session.sessionId);
       const permissions = await getUserPermissions(user.user_id as string);
       const userPayload = {
@@ -109,7 +113,9 @@ export function createUnifiedAuthRoutes() {
       try { const body = await c.req.json(); token = body?.refresh_token || ''; } catch {}
     }
     if (token) {
-      const user = await sessions.validate(token);
+      const userAgent = c.req.header('user-agent') || '';
+      const uaHash = require('crypto').createHash('sha256').update(userAgent).digest('hex');
+      const user = await sessions.validate(token, uaHash);
       if (user) await recordAudit(user.userId, user.username, 'LOGOUT', 'auth');
       await sessions.invalidate(token);
     }
@@ -123,7 +129,9 @@ export function createUnifiedAuthRoutes() {
       if (!parsed.success) return c.json({ error: 'Refresh token required' }, 400);
       const token = parsed.data.sessionToken || parsed.data.refresh_token;
       if (!token) return c.json({ error: 'Refresh token required' }, 400);
-      const result = await sessions.refresh(token);
+      const userAgent = c.req.header('user-agent') || '';
+      const uaHash = require('crypto').createHash('sha256').update(userAgent).digest('hex');
+      const result = await sessions.refresh(token, uaHash);
       if (!result) return c.json({ error: 'Invalid or expired session' }, 401);
       return c.json({ token: result.token, expiresAt: result.expiresAt, success: true, data: { token: result.token } });
     } catch {
@@ -134,7 +142,9 @@ export function createUnifiedAuthRoutes() {
   app.get('/me', async (c) => {
     const auth = c.req.header('Authorization') || '';
     const token = auth.replace('Bearer ', '');
-    const user = await sessions.validate(token);
+    const userAgent = c.req.header('user-agent') || '';
+    const uaHash = require('crypto').createHash('sha256').update(userAgent).digest('hex');
+    const user = await sessions.validate(token, uaHash);
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
     const [permissions, dbUser] = await Promise.all([
       getUserPermissions(user.userId),
@@ -154,7 +164,9 @@ export function createUnifiedAuthRoutes() {
   app.post('/change-password', async (c) => {
     const auth = c.req.header('Authorization') || '';
     const token = auth.replace('Bearer ', '');
-    const user = await sessions.validate(token);
+    const userAgent = c.req.header('user-agent') || '';
+    const uaHash = require('crypto').createHash('sha256').update(userAgent).digest('hex');
+    const user = await sessions.validate(token, uaHash);
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
     const body = await c.req.json();
     const parsed = changePasswordSchema.safeParse(body);

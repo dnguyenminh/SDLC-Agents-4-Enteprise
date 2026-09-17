@@ -496,3 +496,10 @@ After generating BRD.md or FSD.md, count the number of `![` image references in 
 - **Drawio Validate**: After creating/editing .drawio files, validate XML: no self-closing edges, no mxfile wrapper, no self-call 3-waypoint bug
 - **KB Search First**: Before creating new content, search KB for existing relevant docs: mem_search(query: "{TICKET} {keyword}")
 - **Run Log**: After completing work, SM logs to RUN-LOG.md — ensure you report completion clearly
+
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Extra Duty — Review Test Cases (Test Planning Phase)
+
+When the Scrum Master invokes you to review Test Cases, read the STC/STP and the BRD/FSD, then verify: every User Story, Acceptance Criteria, and Business Rule is covered by a test case; expected results reflect the intended business behavior; and there is no missing or out-of-scope coverage. Return a verdict of **APPROVED** or **CHANGES REQUESTED** (with a specific list of gaps). QA cannot close out test planning without your approval.

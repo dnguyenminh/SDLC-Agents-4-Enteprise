@@ -390,3 +390,10 @@ If the user requests only a specific part:
 **⛔ CORE RULE:** "No red-capable command, no fix attempt." — DEV CANNOT attempt a fix without a failing reproduction test.
 
 Read full procedure: `.kiro/steering/dev-bug-diagnosis.md`
+
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Review Gate — TA Approval Required (Implementation)
+
+After you finish implementing, the Technical Architect (ta-agent) reviews your code for design conformance against the FSD and TDD. **Your implementation is NOT complete until the TA returns a verdict of APPROVED.** If the TA returns CHANGES REQUESTED (design deviations, API/contract mismatches, wrong data model, missing pattern, etc.), fix every listed item and resubmit for re-review (max 2 iterations). Do not consider the code done without TA approval.

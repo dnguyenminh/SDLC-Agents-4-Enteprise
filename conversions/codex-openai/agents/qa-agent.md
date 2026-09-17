@@ -704,3 +704,10 @@ After manual execution, update `TEST-REPORT-{TICKET-KEY}.csv`:
 - Error messages in expected results must match FSD error codes (NG-xxx).
 - Non-functional test cases must have measurable acceptance criteria (e.g., "response time ≤ 5 seconds").
 - RTM must show 100% coverage — no requirement left untested.
+
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Review Gate — BA Approval Required (Test Planning)
+
+After you produce the Test Cases (STC), the Business Analyst (ba-agent) reviews them for business coverage. **Your test planning is NOT complete until the BA returns a verdict of APPROVED.** If the BA returns CHANGES REQUESTED, address every listed gap (missing User Story / Acceptance Criteria / Business Rule coverage, wrong expected results, out-of-scope cases) and resubmit for re-review (max 2 iterations). Do not consider the STC/STP final without BA approval.
