@@ -114,7 +114,8 @@ export class ApprovalAdapter implements IApprovalAdapter {
   }
 
   getThreadIdForTool(toolId: string, sessionId?: string): string | undefined {
-    const key = `${sessionId || 'default'}:${toolId}`;
+    const piId = this.extensionToPiId(toolId) ?? toolId;
+    const key = `${sessionId || 'default'}:${piId}`;
     return this.map.get(key)?.threadId;
   }
 

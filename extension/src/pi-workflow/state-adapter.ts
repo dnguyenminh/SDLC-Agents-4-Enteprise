@@ -40,8 +40,10 @@ export class StateAdapter implements IStateAdapter {
       ? state.piSessionId
       : randomUUID();
 
+    const { toolCalls, ...rest } = state as any;
+
     const piState: PiInternalState = {
-      ...state,
+      ...rest,
       piSessionId,
       currentAgentId: state.currentAgentId ?? null,
       toolCallCount: state.toolCallCount ?? 0,

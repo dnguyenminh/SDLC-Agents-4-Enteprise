@@ -5,6 +5,7 @@ import { PhaseRouter, IPhaseRouter } from './phase-router';
 import { PiAgentExecutor, IPiAgentExecutor } from './pi-agent-executor';
 import { WorkflowStateIO } from './pi-workflow-state-io';
 import type { PiWorkflowState, PiInternalState } from './types/pi-workflow-state';
+import { randomUUID } from 'crypto';
 
 export interface WorkflowExecuteInput {
   ticketKey: string;
@@ -116,7 +117,7 @@ export class PiWorkflowEngine {
           ticketKey: state.ticketKey,
           threadId: state.threadId,
           currentPhase: state.currentPhase,
-          input: '',
+          input: 'resume after approval',
         });
       }
     } catch (e) {
@@ -172,8 +173,7 @@ export class PiWorkflowEngine {
     let approvalRequested = false;
     if (needsApproval) {
       try {
-        const crypto = await import('crypto');
-        const fallbackId = crypto.randomUUID ? crypto.randomUUID() : `${ticketKey}-${threadId}-${Date.now()}`;
+        const fallbackId = randomUUID();
         const result = await this.approvalAdapter.requestApproval({
           tool_use_id: updatedPiState?.metadata?.toolUseId ?? fallbackId,
           sessionId: updatedPiState?.sessionId ?? '',
