@@ -75,10 +75,39 @@ export class PiWorkflowEngine {
 
   async handleToolApproval(decision: 'approve' | 'reject', toolId: string): Promise<void> {
     this.approvalAdapter.handleApproval(decision, toolId);
-    // Resume workflow if paused for approval
+    const adapterAny = this.approvalAdapter as any;
+    const threadId = adapterAny.getThreadIdForTool?.(toolId) ?? toolId;
+    if (!threadId || !/^([0-9a-fA-F-]{36}|thread-[a-zA-Z0-9-]+)$/.test(threadId)) {
+      console.warn('[PiWorkflowEngine] handleToolApproval: invalid threadId, cannot resume', { toolId, threadId });
+      return;
+    }
+    await this.resumeAfterApproval(threadId, decision);
+  }
+
+  async handleApprovalDecisionFromUI(extensionId: string, decision: 'approve' | 'reject'): Promise<void> {
+    const adapterAny = this.approvalAdapter as any;
+    const pending = adapterAny.getPendingApproval?.(extensionId);
+    if (!pending?.threadId) {
+      console.warn('[PiWorkflowEngine] Approval decision received without threadId, cannot resume');
+      // Still resolve decision to avoid stuck state
+      if (typeof adapterAny.resolveApprovalFromUI === 'function') {
+        adapterAny.resolveApprovalFromUI(extensionId, decision);
+      } else {
+        this.approvalAdapter.handleApproval(decision, extensionId);
+      }
+      return;
+    }
+    const threadId = pending.threadId;
+    if (typeof adapterAny.resolveApprovalFromUI === 'function') {
+      adapterAny.resolveApprovalFromUI(extensionId, decision);
+    } else {
+      this.approvalAdapter.handleApproval(decision, extensionId);
+    }
+    await this.resumeAfterApproval(threadId, decision);
+  }
+
+  private async resumeAfterApproval(threadId: string, decision: 'approve' | 'reject') {
     try {
-      // Resolve threadId from approval mapping, fallback to toolId
-      const threadId = (this.approvalAdapter as any).getThreadIdForTool?.(toolId) || toolId;
       const state = await this.checkpointerAdapter.load(threadId);
       if (state && state.pipelineStatus === 'paused') {
         state.pipelineStatus = decision === 'approve' ? 'running' : 'error';
@@ -172,9 +201,10 @@ export class PiWorkflowEngine {
   }
 
   private async persistPipelineState(state: any): Promise<void> {
-    // Convert PipelineState to PiWorkflowState for persistence
-    const piInternal = this.stateAdapter.toPiState(state as any);
-    const workflowState = this.stateAdapter.fromPiState(piInternal);
+    // Persist directly to avoid double conversion loss. Ensure shape via adapter once.
+    const workflowState = (state && state.ticketKey && state.threadId)
+      ? state as PiWorkflowState
+      : this.stateAdapter.fromPiState(this.stateAdapter.toPiState(state as any));
     await this.stateIO.persistWorkflowState(workflowState);
   }
 }

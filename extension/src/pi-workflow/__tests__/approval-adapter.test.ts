@@ -92,4 +92,34 @@ describe('ApprovalAdapter', () => {
     expect(ids.size).toBe(100);
     expect(adapter.getMappingCount()).toBe(100);
   });
+
+  it('resolveApprovalFromUI stores decision with normalized key and clears pending', async () => {
+    const toolCall = {
+      tool_use_id: 'pi_tool:123',
+      sessionId: 'sess:1',
+      ticketKey: 'SA4E-295',
+      threadId: '11111111-1111-4111-8111-111111111111',
+    };
+    const result = await adapter.requestApproval(toolCall);
+    expect(result.pending).toBe(true);
+    const extId = result.extensionId!;
+    const pendingBefore = adapter.getPendingApproval(extId);
+    expect(pendingBefore).toBeDefined();
+    expect(pendingBefore?.piId).toBe('pi_tool:123');
+
+    adapter.resolveApprovalFromUI(extId, 'approve');
+    expect(adapter.getPendingApproval(extId)).toBeUndefined();
+    const decision = adapter.getDecision('pi_tool:123', 'sess:1');
+    expect(decision).toBe('approve');
+
+    const result2 = await adapter.requestApproval(toolCall);
+    expect(result2.pending).toBe(false);
+    expect(result2.isApproved).toBe(true);
+  });
+
+  it('getDecision normalizes tool id with colon', () => {
+    adapter.handleApproval('reject', 'tool:with:colons');
+    const decision = adapter.getDecision('tool:with:colons');
+    expect(decision).toBe('reject');
+  });
 });

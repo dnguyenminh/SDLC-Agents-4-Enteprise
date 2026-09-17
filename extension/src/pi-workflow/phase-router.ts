@@ -6,6 +6,8 @@
 import { z } from 'zod';
 import type { PiWorkflowState } from './types/pi-workflow-state';
 import { logger } from '../logger';
+import type { PiProvider } from './pi-provider';
+import { createPiProvider } from './pi-provider';
 
 export type SDLCPhase =
   | 'requirements'
@@ -56,6 +58,12 @@ export interface IPhaseRouter {
  */
 export class IntentClassifier {
   private readonly schema = IntentSchema;
+  private piProvider?: PiProvider;
+  private piAgentId = 'intent-classifier';
+
+  constructor(piProvider?: PiProvider) {
+    this.piProvider = piProvider;
+  }
 
   classify(inputText: string): Intent {
     const text = inputText.toLowerCase();
@@ -77,7 +85,6 @@ export class IntentClassifier {
       intent = { type: 'continue', confidence: 0.5, reason: 'Default continue' };
     }
 
-    // Validate with Zod
     const parsed = this.schema.safeParse(intent);
     if (!parsed.success) {
       logger.error('Intent schema validation failed', { issues: parsed.error.issues, intent });
@@ -85,10 +92,48 @@ export class IntentClassifier {
     }
     return parsed.data;
   }
+
+  async classifyWithPi(inputText: string): Promise<Intent> {
+    if (!this.piProvider) {
+      try {
+        const provider = createPiProvider();
+        await provider.initialize({ transportType: 'HTTP' });
+        this.piProvider = provider;
+      } catch {
+        return this.classify(inputText);
+      }
+    }
+    try {
+      const agent = await this.piProvider.createAgent(this.piAgentId);
+      const prompt = `Classify the user input into SDLC intent. Respond with JSON matching schema: {type:'phase_change'|'continue'|'finish'|'manual_review'|'unknown', target?:string, confidence:number, reason:string}. Input: ${inputText}`;
+      const chunks: string[] = [];
+      for await (const chunk of agent.stream({ agentId: this.piAgentId, messages: [{ role: 'user', content: prompt }] })) {
+        if (chunk.type === 'text' && chunk.content) chunks.push(chunk.content);
+      }
+      const raw = chunks.join('');
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      const parsedJson = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      if (parsedJson) {
+        const validated = IntentSchema.safeParse(parsedJson);
+        if (validated.success) {
+          logger.info('Intent classified via Pi SDK', { intent: validated.data });
+          return validated.data;
+        }
+      }
+      logger.warn('Pi SDK intent parse failed, fallback heuristic', { raw });
+    } catch (e) {
+      logger.error('Pi SDK intent classification error', { error: (e as Error).message });
+    }
+    return this.classify(inputText);
+  }
 }
 
 export class PhaseRouter implements IPhaseRouter {
-  private readonly classifier = new IntentClassifier();
+  private readonly classifier: IntentClassifier;
+
+  constructor(piProvider?: PiProvider) {
+    this.classifier = new IntentClassifier(piProvider);
+  }
 
   nextPhase(current: string): string | null {
     const normalized = current.toLowerCase();
@@ -108,6 +153,15 @@ export class PhaseRouter implements IPhaseRouter {
     } catch (e) {
       logger.error('Intent classification error', { error: (e as Error).message });
       return { type: 'unknown' };
+    }
+  }
+
+  async classifyIntentAsync(inputText: string): Promise<Intent> {
+    try {
+      return await this.classifier.classifyWithPi(inputText);
+    } catch (e) {
+      logger.error('Async intent classification error', { error: (e as Error).message });
+      return this.classifier.classify(inputText);
     }
   }
 
