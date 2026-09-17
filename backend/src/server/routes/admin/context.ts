@@ -5,6 +5,7 @@
  */
 
 import type { Logger } from 'pino';
+import * as crypto from 'crypto';
 import {
   validateSession,
   getUserPermissions,
@@ -51,7 +52,6 @@ export function createAdminContext(logger: Logger, registry?: any): AdminContext
     const token = auth.replace('Bearer ', '');
     if (!token) return null;
     const userAgent = c.req.header('user-agent') || '';
-    const crypto = require('crypto');
     const uaHash = crypto.createHash('sha256').update(userAgent).digest('hex');
     const session = await validateSession(token, uaHash);
     if (!session) return null;
