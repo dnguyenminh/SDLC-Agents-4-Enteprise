@@ -111,12 +111,28 @@ export class ApprovalAdapter implements IApprovalAdapter {
     const piId = this.extensionToPiId(toolId) ?? toolId;
     const normalized = this.normPiId(piId);
     this.decisions.set(normalized, decision);
+    // also store with session-specific key if session known
+    for (const [key, entry] of this.map.entries()) {
+      if (entry.piId === piId) {
+        const sessionId = key.split(':')[0];
+        const sessionKey = this.decisionKey(sessionId, piId);
+        this.decisions.set(sessionKey, decision);
+      }
+    }
   }
 
   getThreadIdForTool(toolId: string, sessionId?: string): string | undefined {
     const piId = this.extensionToPiId(toolId) ?? toolId;
-    const key = `${sessionId || 'default'}:${piId}`;
-    return this.map.get(key)?.threadId;
+    if (sessionId) {
+      const key = `${sessionId}:${piId}`;
+      const entry = this.map.get(key);
+      if (entry?.threadId) return entry.threadId;
+    }
+    // fallback search by piId across sessions
+    for (const entry of this.map.values()) {
+      if (entry.piId === piId && entry.threadId) return entry.threadId;
+    }
+    return undefined;
   }
 
   getDecision(toolId: string, sessionId?: string): 'approve' | 'reject' | null {

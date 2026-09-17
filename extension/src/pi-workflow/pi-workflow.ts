@@ -117,7 +117,7 @@ export class PiWorkflowEngine {
           ticketKey: state.ticketKey,
           threadId: state.threadId,
           currentPhase: state.currentPhase,
-          input: 'resume after approval',
+          input: { resume: true },
         });
       }
     } catch (e) {
