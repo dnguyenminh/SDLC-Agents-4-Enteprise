@@ -1,0 +1,4 @@
+test_case_id,username,role,token_present,expected_http_code,expected_error_message,description
+E2E-API-01,qa@example.com,QA,true,200,,Valid JWT for QA Engineer
+E2E-API-02,qa@example.com,QA,false,401,Unauthorized,No token provided
+E2E-API-03,dev@example.com,DEVELOPER,true,403,Forbidden,Wrong role for test execution

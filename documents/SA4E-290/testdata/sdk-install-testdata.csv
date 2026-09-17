@@ -1,0 +1,4 @@
+test_case_id,packageName,version,expected_result,description
+TC-001,@earendil-works/pi-agent-core,1.0.0,node_modules exists,Valid version install
+TC-301,@earendil-works/pi-agent-core,1.0.0,Version matches docs,Version confirmed from docs
+TC-402,@earendil-works/pi-agent-core,invalid-version,validation error,Invalid semver rejected

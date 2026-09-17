@@ -1,0 +1,6 @@
+test_case_id,pi_session_id,current_agent_id,tool_call_count,current_phase,expected_result,description
+TC-301,pi_sess_abc123,ba-agent,0,Requirements,Unique piSessionId,Unique session id
+TC-301,pi_sess_def456,ta-agent,0,Requirements,Unique piSessionId,Second unique session
+TC-302,pi_sess_abc123,ba-agent,0,InvalidPhase,Validation error,Invalid phase rejected
+TC-303,pi_sess_abc123,ba-agent,-1,Requirements,Normalized to zero,Negative tool call count
+TC-703,pi_sess_abc123,ba-agent,3,Design,Round-trip mapping success,StateAdapter round-trip

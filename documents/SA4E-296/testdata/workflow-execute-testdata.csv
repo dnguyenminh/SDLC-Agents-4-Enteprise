@@ -1,0 +1,4 @@
+test_case_id,ticket_key,thread_id,current_phase,input,expected_http_code,expected_result,description
+TC-001,SA4E-296,uuid-001,Requirements,{},201,Workflow started with Pi SDK,Valid creation happy path
+TC-002,SA4E-296,uuid-001,Specification,{},200,State resumed correctly,Resume after restart
+TC-401,SA4E-296,,Requirements,{},400,Ticket key required,Empty ticket key validation

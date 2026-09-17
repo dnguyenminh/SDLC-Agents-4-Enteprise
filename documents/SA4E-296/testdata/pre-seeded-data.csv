@@ -1,0 +1,4 @@
+id,ticket_key,thread_id,current_phase,pipeline_status,pi_session_id,current_agent_id,tool_call_count,description
+1,SA4E-296,uuid-001,Requirements,running,pi_sess_abc123,ba-agent,0,Sample ticket for end-to-end flow
+2,SA4E-296,uuid-002,Specification,running,pi_sess_def456,ta-agent,2,Specification phase sample
+3,SA4E-296,uuid-003,Implementation,paused,pi_sess_ghi789,dev-agent,5,Approval pending sample

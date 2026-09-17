@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-09-16T00:00:00.000Z" agent="Mozilla/5.0" version="24.9.0" etag="SA4E-289">
+ <diagram name="Chat Window Internal" id="chat-internal">
+  <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+   <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="window" value="Chat Webview Window" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;" vertex="1" parent="1">
+     <mxGeometry x="60" y="40" width="700" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="toolbar" value="Toolbar: Session ID | Phase | PiProvider Status | Settings" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f4ff;" vertex="1" parent="1">
+     <mxGeometry x="80" y="70" width="660" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="leftPane" value="Left Pane&#10;• Conversation History&#10;• Tool Calls Log&#10;• State Snapshot" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9f9f9;" vertex="1" parent="1">
+     <mxGeometry x="80" y="130" width="220" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="centerPane" value="Center Pane&#10;• Message Thread&#10;• Streaming Output&#10;• Markdown Render" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;" vertex="1" parent="1">
+     <mxGeometry x="320" y="130" width="400" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="rightPane" value="Right Pane&#10;• Current State JSON&#10;• Checkpoint History&#10;• Approval Queue" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9f9f9;" vertex="1" parent="1">
+     <mxGeometry x="740" y="130" width="0" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="inputArea" value="Input Area&#10;• Textarea&#10;• Attach File&#10;• Send / Stop Streaming" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3f3f3;" vertex="1" parent="1">
+     <mxGeometry x="80" y="540" width="660" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="statusBar" value="Status: Connected WebSocket | Tokens 1,234 | Latency 120ms" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2d2d2d;" vertex="1" parent="1">
+     <mxGeometry x="80" y="640" width="660" height="20" as="geometry"/>
+    </mxCell>
+   </root>
+  </mxGraphModel>
+ </diagram>
+</mxfile>

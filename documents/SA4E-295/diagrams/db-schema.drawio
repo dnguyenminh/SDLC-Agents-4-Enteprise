@@ -1,0 +1,1 @@
+<mxfile><diagram name="DB Schema"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="mapping" value="ToolIdMapping\npiToolUseId\n extensionToolId\n sessionId\n ticketKey\n createdAt" style="shape=swimlane" vertex="1" parent="1"><mxGeometry x="150" y="100" width="200" height="150" as="geometry"/></mxCell></root></mxGraphModel></diagram></mxfile>

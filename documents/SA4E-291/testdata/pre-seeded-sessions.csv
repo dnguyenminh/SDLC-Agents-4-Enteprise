@@ -1,0 +1,4 @@
+id,ticketKey,sessionId,agentId,status,created_at,description
+sess-001,SA4E-291,pi_sess_123,ba-agent,ACTIVE,2026-09-16T00:00:00Z,Admin session for happy path tests
+sess-002,SA4E-291,pi_sess_124,ta-agent,ACTIVE,2026-09-16T00:00:00Z,Session for tool_use tests
+sess-003,SA4E-291,pi_sess_125,dev-agent,ACTIVE,2026-09-16T00:00:00Z,Session for error handling tests

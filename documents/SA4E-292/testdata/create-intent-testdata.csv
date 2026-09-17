@@ -1,0 +1,4 @@
+test_case_id,inputText,intent_json,expected_http_code,expected_result,description
+TC-001,"Move to specification phase","{""action"":""transition"",""target"":""specification""}",200,nextPhase=specification,Valid intent happy path
+TC-201,"","{}",400,Validation error,Empty intent
+TC-202,"Invalid","{""action"":""transition""}",400,Missing target,Invalid intent schema

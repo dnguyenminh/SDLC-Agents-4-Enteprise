@@ -1,0 +1,4 @@
+id,name,email,role,status,created_at,description
+admin-001,Admin User,admin@example.com,ADMINISTRATOR,ACTIVE,2026-01-01T00:00:00Z,Admin with full permissions — actor for all tests
+qa-002,QA Engineer,qa@example.com,QA,ACTIVE,2026-01-01T00:00:00Z,Standard QA user for test execution
+dev-003,Developer,dev@example.com,DEVELOPER,ACTIVE,2026-01-01T00:00:00Z,Developer for cleanup verification

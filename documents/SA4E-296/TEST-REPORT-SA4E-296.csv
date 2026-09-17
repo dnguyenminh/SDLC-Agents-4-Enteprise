@@ -1,0 +1,10 @@
+TC_ID,Title,Priority,Type,Requirement,Preconditions,Test_Data,Steps_Summary,Expected_Result,Status,Actual_Result,Evidence_Path,Defect_ID,Executed_By,Executed_Date,Notes
+TC-001,PiWorkflow Engine End-to-End Execution,High,Functional,Story 1 AC1,Feature toggle enabled,SA4E-296 uuid-001,Invoke workflow.execute and verify phase advance,PipelineStatus running and phase advances,NOT_RUN,,evidence/TC-001.png,,,
+TC-002,State Persist and Resume,High,Functional,Story 1 AC2,Checkpoint saved,uuid-001,Stop and restart workflow,State loaded correctly,NOT_RUN,,evidence/TC-002.png,,,
+TC-003,Human Approval Gate Approve Flow,High,Functional,Story 2 AC2,Tool requires approval,tool-approve-001,Approve tool call,Tool executed,NOT_RUN,,evidence/TC-003.png,,,
+TC-004,Human Approval Gate Reject Flow,High,Functional,Story 2 AC3,Approval pending,tool-reject-001,Reject tool call,Workflow logged rejection,NOT_RUN,,evidence/TC-004.png,,,
+TC-101,rememberPattern Respected,High,Functional,Story 2 AC4,Previous approval with remember=true,tool-remember-001,Request same tool,Auto-approved,NOT_RUN,,evidence/TC-101.png,,,
+TC-201,State Mapping Error Fallback,High,Functional Exception,State mapping lỗi,Corrupt state,invalid piSessionId,Invoke with invalid state,Error logged and fallback,NOT_RUN,,evidence/TC-201.png,,,
+TC-202,Approval Timeout Auto-Reject,High,Functional Exception,Approval pending,tool-timeout-001,Wait 10 min,Auto-reject,NOT_RUN,,evidence/TC-202.png,,,
+TC-301,piSessionId Unique Per Thread,High,Business Rule,BRD Validation,Two threads,pi_sess_abc123/def456,Start two workflows,Distinct piSessionId,NOT_RUN,,evidence/TC-301.png,,,
+TC-601,Workflow Latency vs LangGraph,Medium,Non-Functional Performance,NFR Performance,100 turns,baseline,Run 100 turns,p95 latency ≤1.15x baseline,NOT_RUN,,evidence/TC-601.png,,,

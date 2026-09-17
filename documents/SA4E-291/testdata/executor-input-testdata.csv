@@ -1,0 +1,9 @@
+test_case_id,ticketKey,sessionId,agentId,messages,tools,expected_result,expected_error_code,description
+TC-001,SA4E-291,pi_sess_123,ba-agent,"[{""role"":""user"",""content"":""hello""}]","[]",success,,Valid single turn no tool
+TC-002,SA4E-291,pi_sess_124,ta-agent,"[{""role"":""user"",""content"":""search docs""}]","[{""name"":""search_document""}]",tool_call_normalized,,Tool_use handling
+TC-003,SA4E-291,pi_sess_123,ba-agent,"[{""role"":""user"",""content"":""long output""}]","[]",stream_chunks,,Streaming emission
+TC-101,SA4E-291,pi_sess_123,ba-agent,"[{""role"":""user"",""content"":""simple""}]","[]",messages_returned,,No tool_use flow
+TC-201,SA4E-291,pi_sess_125,dev-agent,"[{""role"":""user"",""content"":""timeout""}]","[]",error,PI_TIMEOUT,Pi SDK timeout retry
+TC-301,INVALID,pi_sess_123,ba-agent,"[{""role"":""user"",""content"":""test""}]","[]",error,INVALID_INPUT,Invalid ticketKey pattern
+TC-302,SA4E-291,,ba-agent,"[{""role"":""user"",""content"":""test""}]","[]",error,INVALID_INPUT,Empty sessionId
+TC-303,SA4E-291,pi_sess_123,ba-agent,"[]","[]",error,INVALID_INPUT,Empty messages

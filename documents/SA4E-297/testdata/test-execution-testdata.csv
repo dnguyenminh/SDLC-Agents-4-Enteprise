@@ -1,0 +1,5 @@
+test_case_id,ticketKey,scope,modules,expected_http_code,expected_result,description
+E2E-API-01,SA4E-297,unit,"pi-workflow,pi-agent-executor",200,executionId returned,Valid unit test execution
+E2E-API-03,SA4E-999,integration,,400,Prerequisite SA4E-29x not completed,Missing prerequisite
+IT-01,SA4E-297,integration,,200,Phase transitions correct,7-phase pipeline
+IT-02,SA4E-297,integration,state-adapter,200,State fields preserved,Persistence check

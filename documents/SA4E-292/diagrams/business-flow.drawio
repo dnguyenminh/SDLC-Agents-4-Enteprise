@@ -1,0 +1,60 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-292: Phase Router — Business Flow" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="10" width="500" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane1" value="User" style="swimlane;horizontal=0;startSize=60;fillColor=#e1f5fe;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="1100" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane2" value="PiWorkflow Engine" style="swimlane;horizontal=0;startSize=60;fillColor=#fff2cc;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="160" width="1100" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane3" value="Phase Router" style="swimlane;horizontal=0;startSize=60;fillColor=#dae8fc;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="260" width="1100" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane4" value="PiAgent Executor" style="swimlane;horizontal=0;startSize=60;fillColor=#d5e8d4;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="380" width="1100" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane5" value="RemoteCheckpointer" style="swimlane;horizontal=0;startSize=60;fillColor=#f8cecc;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="480" width="1100" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" value="Provide Input / Ticket" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane1">
+      <mxGeometry x="80" y="20" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="a1" value="Intent Classification&#10;(Zod + LLM)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2">
+      <mxGeometry x="80" y="20" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" value="Route Phase" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+      <mxGeometry x="80" y="20" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="d1" value="Decision: Next Phase?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+      <mxGeometry x="300" y="30" width="120" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="Execute Agent Turn" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane4">
+      <mxGeometry x="80" y="20" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1" value="Persist State" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane5">
+      <mxGeometry x="80" y="20" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="s1" target="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="a1" target="r1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="r1" target="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" edge="1" parent="1" source="d1" target="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" edge="1" parent="1" source="e1" target="r1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" edge="1" parent="1" source="d1" target="p1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

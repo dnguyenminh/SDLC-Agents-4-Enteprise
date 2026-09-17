@@ -1,0 +1,3 @@
+test_case_id,piSessionId,inputText,expected_classified_intent,expected_error,description
+TC-002,pi_sess_123,"Move to specification phase","{""type"":""phase_change"",""target"":""specification""}",,Valid classification
+TC-203,pi_sess_123,"Timeout test","",LLM timeout,Fallback to default

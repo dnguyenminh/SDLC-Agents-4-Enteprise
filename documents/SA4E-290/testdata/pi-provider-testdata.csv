@@ -1,0 +1,8 @@
+test_case_id,providerName,transportType,config,expected_result,description
+TC-002,PiProvider,WebSocket,"{""baseUrl"":""ws://localhost:8080""}",piSessionId returned,Valid WebSocket config happy path
+TC-003,PiProvider,HTTP,"{""baseUrl"":""http://localhost:8080""}",piSessionId returned,Valid HTTP config happy path
+TC-101,PiProvider,TCP,"{}",ConfigurationError thrown,Invalid transport rejected
+TC-202,PiProvider,WebSocket,"{}",ConfigurationError thrown,Missing config throws
+TC-304,PiProvider,WebSocket,"{}",Accepted,Valid transport accepted
+TC-304,PiProvider,HTTP,"{}",Accepted,Valid transport accepted
+TC-304,PiProvider,FTP,"{}",Rejected,Invalid transport rejected

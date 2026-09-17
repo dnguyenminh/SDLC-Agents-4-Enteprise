@@ -1,0 +1,18 @@
+<mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="lane1" value="Developer" style="swimlane;horizontal=0;startSize=110;fillColor=#dae8fc;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="760" height="120" as="geometry"/></mxCell>
+<mxCell id="lane2" value="QA Engineer" style="swimlane;horizontal=0;startSize=110;fillColor=#fff2cc;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="200" width="760" height="120" as="geometry"/></mxCell>
+<mxCell id="lane3" value="QA Lead" style="swimlane;horizontal=0;startSize=110;fillColor=#d5e8d4;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="360" width="760" height="120" as="geometry"/></mxCell>
+<mxCell id="s1" value="Verify prerequisites SA4E-290..296" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane1"><mxGeometry x="80" y="40" width="160" height="60" as="geometry"/></mxCell>
+<mxCell id="s2" value="Remove LangGraph artifacts" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane1"><mxGeometry x="300" y="40" width="160" height="60" as="geometry"/></mxCell>
+<mxCell id="s3" value="Create test plan" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2"><mxGeometry x="80" y="40" width="160" height="60" as="geometry"/></mxCell>
+<mxCell id="s4" value="Run unit tests" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2"><mxGeometry x="300" y="40" width="160" height="60" as="geometry"/></mxCell>
+<mxCell id="s5" value="Run integration tests" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2"><mxGeometry x="520" y="40" width="160" height="60" as="geometry"/></mxCell>
+<mxCell id="s6" value="Review test reports" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3"><mxGeometry x="80" y="40" width="160" height="60" as="geometry"/></mxCell>
+<mxCell id="s7" value="Sign-off" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3"><mxGeometry x="300" y="40" width="120" height="60" as="geometry"/></mxCell>
+<mxCell id="e1" edge="1" parent="1" source="s1" target="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e2" edge="1" parent="1" source="s3" target="s4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e3" edge="1" parent="1" source="s4" target="s5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e4" edge="1" parent="1" source="s5" target="s6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e5" edge="1" parent="1" source="s2" target="s4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e6" edge="1" parent="1" source="s6" target="s7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root></mxGraphModel>

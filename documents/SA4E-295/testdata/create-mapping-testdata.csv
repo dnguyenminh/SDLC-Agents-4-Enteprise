@@ -1,0 +1,5 @@
+test_case_id,piToolUseId,sessionId,ticketKey,expected_http_code,description
+TC-001,pi_abc123,sess_789,SA4E-295,201,Valid creation happy path
+TC-201,,sess_789,SA4E-295,400,Missing piToolUseId -> ADAPTER-001
+TC-202,pi_invalid,sess_invalid,SA4E-295,400,Invalid session -> ADAPTER-002
+TC-401,,sess_789,SA4E-295,400,Empty id boundary

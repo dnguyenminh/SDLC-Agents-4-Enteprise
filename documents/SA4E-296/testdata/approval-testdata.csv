@@ -1,0 +1,6 @@
+test_case_id,tool_id,requires_approval,decision,remember_pattern,expected_http_code,expected_result,description
+TC-003,tool-approve-001,true,approve,false,200,Tool executed after approval,Happy path approve
+TC-004,tool-reject-001,true,reject,false,200,Workflow logged rejection,Reject flow
+TC-101,tool-remember-001,true,approve,true,200,Auto-approved on second call,rememberPattern respected
+TC-202,tool-timeout-001,true,,false,408,Auto-reject after timeout,Approval timeout
+TC-304,tool-invalid-decision-001,true,maybe,false,400,Invalid decision rejected,Decision enum validation

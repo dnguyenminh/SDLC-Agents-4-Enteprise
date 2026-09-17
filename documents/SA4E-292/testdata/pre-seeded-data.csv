@@ -1,0 +1,4 @@
+id,ticketKey,currentPhase,pipelineStatus,piSessionId,description
+state-001,SA4E-292,requirements,IN_PROGRESS,pi_sess_123,Valid state for routing test
+state-002,SA4E-292,specification,IN_PROGRESS,pi_sess_124,State in specification
+state-003,SA4E-292,invalid_phase,IN_PROGRESS,pi_sess_125,Invalid phase for error test

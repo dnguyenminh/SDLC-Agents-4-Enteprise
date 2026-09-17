@@ -1,0 +1,4 @@
+sessionId,ticketKey,status,created_at,description
+sess_789,SA4E-295,ACTIVE,2026-09-16T00:00:00Z,Pre-seeded active session for adapter tests
+sess_001,SA4E-295,ACTIVE,2026-09-16T00:00:00Z,Session for approval success
+sess_dup,SA4E-295,ACTIVE,2026-09-16T00:00:00Z,Session for duplicate mapping test
