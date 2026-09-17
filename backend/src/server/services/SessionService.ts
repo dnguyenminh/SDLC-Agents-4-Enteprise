@@ -4,13 +4,13 @@ export class SessionService {
   async issue(userId: string, device?: string, ip?: string, userAgentHash?: string) {
     return createSession(userId, device, ip, userAgentHash);
   }
-  async validate(token: string) {
-    return validateSession(token);
+  async validate(token: string, userAgentHash?: string) {
+    return validateSession(token, userAgentHash);
   }
   async invalidate(token: string) {
     await invalidateSession(token);
   }
-  async refresh(token: string) {
-    return refreshSession(token);
+  async refresh(token: string, userAgentHash?: string) {
+    return refreshSession(token, userAgentHash);
   }
 }

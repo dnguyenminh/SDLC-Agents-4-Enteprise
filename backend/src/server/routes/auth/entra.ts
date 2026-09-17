@@ -146,16 +146,10 @@ export function createEntraAuthRoutes() {
       const claims = await verifier.verify(data.id_token);
       const payload = decodeJwtPayload(data.id_token);
       const tokenNonce = typeof payload?.nonce === 'string' ? payload.nonce : undefined;
-      if (typeof tokenNonce === 'string') {
-        if (tokenNonce !== entry.nonce) {
-          return c.json({ error: 'invalid_nonce' }, 401);
-        }
-      } else {
-        // nonce missing in id_token — fallback to state validation only
-        // State validation already performed above; allow continuation
+      if (typeof tokenNonce !== 'string' || tokenNonce !== entry.nonce) {
+        return c.json({ error: 'invalid_nonce' }, 401);
       }
       const db = getDbAdapter();
-      const { randomUUID } = await import('crypto');
       const jitService = new JitProvisioningService(db);
       const claimsPayload = {
         email: (claims as any).email as string,
