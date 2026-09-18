@@ -70,7 +70,7 @@ export class PhaseRouter implements IPhaseRouter {
     }
 
     let nextPhase: SDLCPhase | 'finish' | null = null;
-    const currentPhase = (state.currentPhase as SDLCPhase) || 'requirements';
+    const currentPhase = ((state.currentPhase as string) || 'requirements').toLowerCase() as SDLCPhase;
     const currentIdx = PHASE_ORDER.indexOf(currentPhase);
     if (currentIdx === -1) {
       errors.push('Unknown phase');
@@ -115,9 +115,12 @@ export class PhaseRouter implements IPhaseRouter {
           break;
         }
         default: {
-          const np = this.nextPhase(currentPhase);
-          if (np) nextPhase = np as SDLCPhase;
-          else nextPhase = 'finish';
+          const msg = `Unrecognized or unknown intent type '${(intent as any)?.type}'`;
+          errors.push(msg);
+          logger.warn('PhaseRouter: unknown intent, routing paused for review', {
+            ticketKey: state.ticketKey,
+            intentType: (intent as any)?.type,
+          });
           break;
         }
       }

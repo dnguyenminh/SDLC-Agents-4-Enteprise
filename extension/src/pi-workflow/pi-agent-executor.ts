@@ -48,12 +48,18 @@ export class PiAgentExecutor implements IPiAgentExecutor {
       tools: piState.tools ?? [],
     };
     const result = await this.executeTurn(input);
+    const toolCalls = result.toolCalls ?? [];
+    const firstToolUseId = toolCalls[0]?.toolUseId;
     return {
       ...piState,
       ...result,
-      toolCalls: result.toolCalls ?? [],
-      toolCallCount: result.toolCalls?.length ?? 0,
-      metadata: { ...piState.metadata, needsApproval: (result.toolCalls?.length ?? 0) > 0 },
+      toolCalls,
+      toolCallCount: toolCalls.length,
+      metadata: {
+        ...piState.metadata,
+        needsApproval: toolCalls.length > 0,
+        ...(firstToolUseId ? { toolUseId: firstToolUseId } : {}),
+      },
       sessionId: result.sessionId,
       phase: piState.phase,
       status: result.error ? 'error' : 'running',

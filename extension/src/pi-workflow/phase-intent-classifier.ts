@@ -22,8 +22,10 @@ export class IntentClassifier {
     this.piProvider = piProvider;
   }
 
-  classify(inputText: string): Intent {
-    const text = inputText.toLowerCase();
+  classify(inputText: any): Intent {
+    const text = typeof inputText === 'string'
+      ? inputText.toLowerCase()
+      : String(inputText?.prompt || inputText?.text || inputText || '').toLowerCase();
     let intent: Intent = { type: 'unknown' };
 
     if (text.includes('move to') || text.includes('transition to') || text.includes('next phase')) {

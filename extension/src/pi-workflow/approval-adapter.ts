@@ -59,12 +59,13 @@ export class ApprovalAdapter implements IApprovalAdapter {
     return extId;
   }
 
-  extensionToPiId(extensionId: string, sessionId: string): string | undefined {
-    const entry = this.forward.get(extensionId);
-    if (!entry) return undefined;
+  extensionToPiId(extensionId: string, sessionId?: string): string | undefined {
+    const fwd = this.forward.get(extensionId);
+    if (!fwd) return undefined;
+    const sid = sessionId || fwd.sessionId;
     // Session-scoped: reject cross-session leakage
-    if (sessionId && entry.sessionId !== sessionId) return undefined;
-    return entry.piId;
+    if (fwd.sessionId !== sid) return undefined;
+    return fwd.piId;
   }
 
   getMappingCount(): number {
@@ -115,58 +116,41 @@ export class ApprovalAdapter implements IApprovalAdapter {
 
   handleApproval(decision: 'approve' | 'reject', toolId: string, sessionId?: string): void {
     const fwd = this.forward.get(toolId);
-    const piId = (sessionId ? this.extensionToPiId(toolId, sessionId) : this.extensionToPiId(toolId, '')) ?? toolId;
-    const normalized = this.normPiId(piId);
-    this.decisions.set(normalized, decision);
-    // Prefer session owning the extId to avoid cross-session pollution
-    if (fwd && (!sessionId || fwd.sessionId === sessionId)) {
-      this.decisions.set(this.decisionKey(fwd.sessionId, piId), decision);
-      return;
-    }
-    if (sessionId) {
-      this.decisions.set(this.decisionKey(sessionId, piId), decision);
-      return;
-    }
-    // legacy fallback: store for all sessions with same piId
-    for (const [key, entry] of this.map.entries()) {
-      if (entry.piId === piId) {
-        const sid = key.split(':')[0];
-        this.decisions.set(this.decisionKey(sid, piId), decision);
-      }
-    }
+    const sid = sessionId || fwd?.sessionId || 'default';
+    const piId = this.extensionToPiId(toolId, sid) ?? toolId;
+    if (!piId) return;
+    this.decisions.set(this.decisionKey(sid, piId), decision);
   }
 
   getThreadIdForTool(toolId: string, sessionId?: string): string | undefined {
-    const piId = this.extensionToPiId(toolId, sessionId ?? '') ?? toolId;
-    if (sessionId) {
-      const key = `${sessionId}:${piId}`;
-      const entry = this.map.get(key);
-      if (entry?.threadId) return entry.threadId;
-    }
-    // fallback search by piId across sessions
-    for (const entry of this.map.values()) {
-      if (entry.piId === piId && entry.threadId) return entry.threadId;
-    }
-    return undefined;
+    const fwd = this.forward.get(toolId);
+    const sid = sessionId || fwd?.sessionId || 'default';
+    const piId = this.extensionToPiId(toolId, sid) ?? toolId;
+    if (!piId) return undefined;
+    const key = `${sid}:${piId}`;
+    const entry = this.map.get(key);
+    return entry?.threadId;
   }
 
   getDecision(toolId: string, sessionId?: string): 'approve' | 'reject' | null {
-    const piId = this.extensionToPiId(toolId, sessionId ?? '') ?? toolId;
-    const key = sessionId ? this.decisionKey(sessionId, piId) : this.normPiId(piId);
-    return this.decisions.get(key) ?? this.decisions.get(this.normPiId(piId)) ?? null;
+    const fwd = this.forward.get(toolId);
+    const sid = sessionId || fwd?.sessionId || 'default';
+    const piId = this.extensionToPiId(toolId, sid) ?? toolId;
+    const key = this.decisionKey(sid, piId);
+    return this.decisions.get(key) ?? null;
   }
 
   getPendingApprovals(): Array<{ extensionId: string; piId: string; sessionId: string; ticketKey: string; threadId?: string; ts: number }> {
     return Array.from(this.pending.entries()).map(([extensionId, v]) => ({ extensionId, ...v }));
   }
 
-  resolveApprovalFromUI(extensionId: string, decision: 'approve' | 'reject'): void {
+  resolveApprovalFromUI(extensionId: string, decision: 'approve' | 'reject', sessionId?: string): void {
     const pending = this.pending.get(extensionId);
     if (!pending) return;
-    const key = this.decisionKey(pending.sessionId, pending.piId);
-    const norm = this.normPiId(pending.piId);
+    const effectiveSessionId = sessionId || pending.sessionId;
+    if (!effectiveSessionId || pending.sessionId !== effectiveSessionId) return;
+    const key = this.decisionKey(effectiveSessionId, pending.piId);
     this.decisions.set(key, decision);
-    this.decisions.set(norm, decision);
     if (this.gate && typeof this.gate.handleToolApproval === 'function') {
       try { this.gate.handleToolApproval(decision, pending.piId); } catch {}
     }

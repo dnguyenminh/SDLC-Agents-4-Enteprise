@@ -75,10 +75,16 @@ export class PiWorkflowEngine {
     return { pipelineState: workflowState };
   }
 
-  async handleToolApproval(decision: 'approve' | 'reject', toolId: string): Promise<void> {
-    this.approvalAdapter.handleApproval(decision, toolId);
+  async handleToolApproval(decision: 'approve' | 'reject', toolId: string, sessionId?: string): Promise<void> {
     const adapterAny = this.approvalAdapter as any;
-    const threadId = adapterAny.getThreadIdForTool?.(toolId) ?? toolId;
+    const pending = adapterAny.getPendingApproval?.(toolId);
+    const effectiveSessionId = sessionId || pending?.sessionId;
+    if (!effectiveSessionId) {
+      console.warn('[PiWorkflowEngine] handleToolApproval called without sessionId');
+      return;
+    }
+    this.approvalAdapter.handleApproval(decision, toolId, effectiveSessionId);
+    const threadId = adapterAny.getThreadIdForTool?.(toolId, effectiveSessionId) ?? (pending?.threadId || toolId);
     if (!threadId || !/^([0-9a-fA-F-]{36}|thread-[a-zA-Z0-9-]+)$/.test(threadId)) {
       console.warn('[PiWorkflowEngine] handleToolApproval: invalid threadId, cannot resume', { toolId, threadId });
       return;
@@ -86,24 +92,28 @@ export class PiWorkflowEngine {
     await this.resumeAfterApproval(threadId, decision);
   }
 
-  async handleApprovalDecisionFromUI(extensionId: string, decision: 'approve' | 'reject'): Promise<void> {
+  async handleApprovalDecisionFromUI(extensionId: string, decision: 'approve' | 'reject', sessionId?: string): Promise<void> {
     const adapterAny = this.approvalAdapter as any;
     const pending = adapterAny.getPendingApproval?.(extensionId);
+    const effectiveSessionId = sessionId || pending?.sessionId;
+    if (!effectiveSessionId) {
+      console.warn('[PiWorkflowEngine] Approval decision received without sessionId, cannot resume');
+      return;
+    }
     if (!pending?.threadId) {
       console.warn('[PiWorkflowEngine] Approval decision received without threadId, cannot resume');
-      // Still resolve decision to avoid stuck state
       if (typeof adapterAny.resolveApprovalFromUI === 'function') {
-        adapterAny.resolveApprovalFromUI(extensionId, decision);
+        adapterAny.resolveApprovalFromUI(extensionId, decision, effectiveSessionId);
       } else {
-        this.approvalAdapter.handleApproval(decision, extensionId);
+        this.approvalAdapter.handleApproval(decision, extensionId, effectiveSessionId);
       }
       return;
     }
     const threadId = pending.threadId;
     if (typeof adapterAny.resolveApprovalFromUI === 'function') {
-      adapterAny.resolveApprovalFromUI(extensionId, decision);
+      adapterAny.resolveApprovalFromUI(extensionId, decision, effectiveSessionId);
     } else {
-      this.approvalAdapter.handleApproval(decision, extensionId);
+      this.approvalAdapter.handleApproval(decision, extensionId, effectiveSessionId);
     }
     await this.resumeAfterApproval(threadId, decision);
   }
@@ -161,10 +171,12 @@ export class PiWorkflowEngine {
     let approvalRequested = false;
     if (needsApproval) {
       try {
-        const fallbackId = randomUUID();
+        const firstToolId = toolCallsArr[0]?.toolUseId ?? toolCallsArr[0]?.id;
+        const toolUseId = updatedPiState?.metadata?.toolUseId || firstToolId || randomUUID();
+        const sessionId = updatedPiState?.sessionId || updatedPiState?.piSessionId || 'default';
         const result = await this.approvalAdapter.requestApproval({
-          tool_use_id: updatedPiState?.metadata?.toolUseId ?? fallbackId,
-          sessionId: updatedPiState?.sessionId ?? '',
+          tool_use_id: toolUseId,
+          sessionId,
           ticketKey,
           threadId,
         });

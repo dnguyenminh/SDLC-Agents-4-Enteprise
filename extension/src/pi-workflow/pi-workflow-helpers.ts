@@ -46,8 +46,9 @@ export function adaptAndMerge(
   workflowState.ticketKey = ticketKey;
   workflowState.threadId = threadId;
   workflowState.currentPhase = updatedPiState.phase ?? updatedPiState.currentPhase ?? currentPhase;
-  let status: 'running' | 'finished' | 'paused' | 'error' = updatedPiState.status === 'finished' ? 'finished' : 'running';
-  if (approvalRequested) status = 'paused';
+  let status: 'running' | 'finished' | 'paused' | 'error' =
+    routedState.pipelineStatus || (updatedPiState.status === 'finished' ? 'finished' : 'running');
+  if (approvalRequested || routeResult.errors.length > 0) status = 'paused';
   workflowState.pipelineStatus = status as any;
   return workflowState;
 }
