@@ -114,8 +114,7 @@ export function createUnifiedAuthRoutes() {
     }
     if (token) {
       const userAgent = c.req.header('user-agent') || '';
-      const uaHash = crypto.createHash('sha256').update(userAgent).digest('hex');
-      const user = await sessions.validate(token, uaHash);
+      const user = await sessions.validate(token, userAgent);
       if (user) {
         await recordAudit(user.userId, user.username, 'LOGOUT', 'auth');
       }
