@@ -110,6 +110,7 @@ async function seedDefaultSsoProviders(db: DatabaseAdapter): Promise<void> {
 }
 
 async function seedSsoProvidersFromEnv(db: DatabaseAdapter): Promise<void> {
+  try {
     const cnt = await db.getAsync<{count:number}>('SELECT COUNT(*) as count FROM sso_providers');
     if (cnt && cnt.count > 0) return;
     const env = process.env;
