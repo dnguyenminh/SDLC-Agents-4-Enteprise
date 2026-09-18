@@ -26,7 +26,7 @@ export interface PiInternalState extends PiWorkflowState {
   agentId?: string;
   phase?: string;
   ticket?: string;
-  toolCalls?: number | any[];
+  toolCalls?: any[];
   status?: string;
   metadata?: Record<string, any>;
   [key: string]: any;

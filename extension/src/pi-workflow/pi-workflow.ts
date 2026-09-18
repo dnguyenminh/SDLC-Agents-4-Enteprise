@@ -135,7 +135,7 @@ export class PiWorkflowEngine {
       pipelineStatus: 'running',
       documents: {},
       agentOutputs: [],
-      errors: [],
+      errors: [] as string[],
       chatHistory: [],
       createdAt: new Date().toISOString(),
       lastUpdatedAt: new Date().toISOString(),
