@@ -168,9 +168,8 @@ export function createEntraAuthRoutes() {
       // Session fixation hardening: rotate session ID and bind to user-agent
       await db.runAsync(`UPDATE sessions SET is_active = 0 WHERE user_id = ?`, [user.user_id]);
       const userAgent = c.req.header('user-agent') || '';
-      const userAgentHash = createHash('sha256').update(userAgent).digest('hex');
       const sessionService = new SessionService();
-      const session = await sessionService.issue(user.user_id, '', ip, userAgentHash);
+      const session = await sessionService.issue(user.user_id, '', ip, userAgent);
       // Set HttpOnly Secure cookie binding
       const maxAge = Math.max(0, Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000));
       const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
@@ -178,7 +177,14 @@ export function createEntraAuthRoutes() {
       c.header('Set-Cookie', cookie);
       const allowedRedirects = (process.env.SSO_ALLOWED_REDIRECTS || '/admin?page=dashboard').split(',').map(s=>s.trim());
       const redirectUrlRaw = entry.redirectTo || '/admin?page=dashboard';
-      const redirectUrl = allowedRedirects.includes(redirectUrlRaw) ? redirectUrlRaw : allowedRedirects[0];
+      const normalize = (u: string) => {
+        try { return new URL(u, 'http://localhost').pathname + new URL(u, 'http://localhost').search; }
+        catch { return u; }
+      };
+      const allowed = allowedRedirects.map(normalize);
+      const target = normalize(redirectUrlRaw);
+      const idx = allowed.findIndex(a => a === target || target.startsWith(a.replace(/\?.*$/, '')));
+      const redirectUrl = idx >= 0 ? redirectUrlRaw : allowedRedirects[0];
       return c.redirect(redirectUrl);
     } catch (e: any) {
       return c.json({ error: 'internal_error', message: e.message }, 500);

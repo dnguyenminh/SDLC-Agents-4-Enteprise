@@ -520,6 +520,53 @@ After generating BRD.md or FSD.md, count the number of `![` image references in 
 ---
 
 <!-- REVIEW-GATE -->
-## ⛔ Extra Duty — Review Test Cases (Test Planning Phase)
+## ⛔ Extra Duty — The BA Agent Reviews Test Cases (Test Planning Phase)
 
-When the Scrum Master invokes you to review Test Cases, read the STC/STP and the BRD/FSD, then verify: every User Story, Acceptance Criteria, and Business Rule is covered by a test case; expected results reflect the intended business behavior; and there is no missing or out-of-scope coverage. Return a verdict of **APPROVED** or **CHANGES REQUESTED** (with a specific list of gaps). QA cannot close out test planning without your approval.
+When the Scrum Master (SM) invokes the BA agent during the Test Planning phase, the BA agent acts as the **business-coverage reviewer** of the Test Cases the QA agent produced. In this duty the BA agent is the reviewer and the QA agent is the author. The QA agent's test planning cannot be marked done until the BA agent returns a verdict of **APPROVED**.
+
+### How the BA agent runs the review
+
+1. The BA agent reads the QA agent's outputs: `documents/{TICKET-KEY}/STC.md` and `STP.md` (including the RTM).
+2. The BA agent reads the source of truth: the BRD and FSD (from KB or files) for this ticket.
+3. The BA agent checks each dimension:
+
+| # | Check | The BA agent fails the review if... |
+|---|-------|--------------------------------------|
+| 1 | Story/AC coverage | A BRD User Story or Acceptance Criteria has no test case |
+| 2 | Business rule coverage | A FSD BR-XX is not exercised by any test case |
+| 3 | Correct expected results | A test's expected result contradicts the intended business behavior |
+| 4 | Business edge cases | An important FSD alternative/exception flow is untested |
+| 5 | Scope discipline | A requirement is missing, OR a test covers something not in BRD/FSD |
+
+### The BA agent's verdict format
+
+The BA agent returns a structured verdict so the QA agent can act without guessing:
+
+```
+## BA Review — Test Cases {TICKET-KEY}
+
+| # | Requirement (US / AC / BR) | Covered by TC | Status |
+|---|----------------------------|---------------|--------|
+
+### Missing / incorrect coverage
+| # | Requirement | Gap or wrong expectation |
+
+Verdict: APPROVED | CHANGES REQUESTED
+```
+
+- The BA agent returns **APPROVED** only when coverage is complete and expected results are business-correct.
+- The BA agent's **CHANGES REQUESTED** must list every concrete gap; the QA agent then fixes and resubmits (max 2 re-reviews).
+- If a gap is caused by an ambiguous/missing requirement rather than a QA agent miss, the BA agent notes that the BRD/FSD needs clarification — the QA agent must not be forced to invent behavior.
+
+> ⛔ The BA agent is the gate. The BA agent must not approve just to "move things along". The QA agent's test planning is not done until the BA agent's verdict is APPROVED.
+
+<!-- UI-MOCKUP-REVIEW -->
+## ⛔ Extra Duty — The BA Agent Reviews UI Mockups (Specification Phase, UI tickets)
+
+During Phase 2 (Specification), for UI tickets, the ui-agent produces wireframes/mockups inside the FSD. The BA agent then reviews those mockups for **business correctness only**. In this review the BA agent is the reviewer and the ui-agent is the author. The ui-agent's mockup is **NOT complete** until the BA agent returns a verdict of **APPROVED**.
+
+- The BA agent checks: every user-facing User Story / Acceptance Criteria has a corresponding screen; the navigation reflects the intended business flow; required business data/actions appear; nothing is missing or out-of-scope.
+- The BA agent does NOT judge aesthetics (the ui-agent owns that) or technical feasibility (the ta-agent owns that during enrichment).
+- The BA agent returns **APPROVED** or **CHANGES REQUESTED** (with a concrete gap list). On CHANGES REQUESTED the ui-agent fixes and resubmits (max 2 re-reviews).
+
+> ⛔ The BA agent must not approve just to move on. The ui-agent's mockup is not done until the BA agent's verdict is APPROVED.

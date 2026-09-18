@@ -62,7 +62,7 @@ Multi-agent SDLC pipeline with specialized agents (SM, BA, TA, SA, QA, DEV, DevO
 |-------|------|-------|--------|---------------|
 | 1 | Requirements | BA | BRD.md | Jira ticket exists |
 | 2 | Specification | BA + TA | FSD.md | BRD.md exists |
-| 2.5 | UI Design | UI | Wireframes | FSD.md with UI specs |
+
 | 3 | Design | SA | TDD.md | FSD.md exists |
 | 3.5 | Feedback Loop | BA↔SA | FSD fix + TDD update | DISCREPANCY.md exists |
 | 3.7 | Security Design Review | Security | SECURITY-REVIEW.md | TDD.md exists |

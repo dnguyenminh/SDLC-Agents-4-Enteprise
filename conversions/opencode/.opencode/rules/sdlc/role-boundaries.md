@@ -11,13 +11,13 @@ This file defines EXACTLY what each agent is responsible for. No agent may perfo
 | Agent | Creates/Writes | Reads | CANNOT do |
 |-------|---------------|-------|-----------|
 | **sm-agent** | STATUS.json, RUN-LOG.md, jira.conf | All files (for verification) | ❌ Write documents, code, diagrams, tests |
-| **ba-agent** | BRD.md, FSD.md (draft), diagrams, Test Case review verdict (Phase 4) | Jira tickets, KB, code intelligence, STP/STC | ❌ Write TDD, code, tests, DPG |
+| **ba-agent** | BRD.md, FSD.md (draft), diagrams, UI Mockup review verdict (Phase 2), Test Case review verdict (Phase 4) | Jira tickets, KB, code intelligence, UI wireframes, STP/STC | ❌ Write TDD, code, tests, DPG |
 | **ta-agent** | FSD.md (enrichment only), Implementation review verdict (Phase 5) | BRD, FSD draft, code intelligence, source code (git diff) | ❌ Write BRD, TDD, code, tests |
 | **sa-agent** | TDD.md, DISCREPANCY.md, diagrams | BRD, FSD, KB, code intelligence, DB schema | ❌ Write BRD, FSD, code, tests |
 | **qa-agent** | STP.md, STC.md, TEST-REPORT.md, test data CSVs, diagrams | BRD, FSD, TDD, source code | ❌ Write BRD, FSD, TDD, production code |
 | **dev-agent** | Source code, unit tests, integration tests, UG.md | TDD, FSD, BRD, KB, code intelligence | ❌ Write BRD, FSD, TDD, STP, DPG |
 | **devops-agent** | CI/CD configs (Phase 4.5), DPG.md, RLN.md, Dockerfile, infra configs, diagrams | TDD, FSD, BRD, STP, source code configs | ❌ Write BRD, FSD, TDD, STP, application code |
-| **ui-agent** | Wireframes, UI specs, draw.io mockups | FSD, BRD, existing frontend code | ❌ Write backend code, TDD, STP |
+| **ui-agent** | Wireframes (.drawio + .png), UI-SPEC, FSD UI Specifications section (Phase 2), HTML/CSS prototype (Phase 5); owns aesthetic/UX quality of its own mockups | FSD, BRD, existing frontend code + design system | ❌ Write backend code, TDD, STP; ❌ judge business correctness (BA does) or technical feasibility (TA does) |
 | **security-agent** | SECURITY-REVIEW.md (3.7), SECURITY-ASSESSMENT.md (5.7), PENTEST-REPORT.md (6.3), SECURITY-DEPLOY-REVIEW.md (6.7) | TDD, source code, CI/CD configs, Dockerfile, DPG, deps, running app | ❌ Write feature code, fix code (only report findings) |
 
 ## SM-Specific Enforcement
@@ -70,6 +70,9 @@ Before starting work:
 | Tests need writing | SM → invoke dev-agent | SM writes test code |
 | TDD needs diagrams | SM → invoke sa-agent | SM generates draw.io XML |
 | UG needs BA review | SM → invoke ba-agent with review prompt | SM reviews UG itself |
+| UI mockup needed in FSD (Phase 2, UI tickets) | SM → invoke ui-agent to create wireframes/mockups | SM/BA draws wireframes itself |
+| UI mockup needs business review (Phase 2) | SM → invoke ba-agent to review mockup — UI mockup done only after BA APPROVED | SM approves mockup itself / UI self-approves business correctness |
+| UI mockup aesthetics/UX quality | ui-agent self-checks against design system; user gives final visual sign-off | SM reviews aesthetics |
 | Test Cases need business review (Phase 4) | SM → invoke ba-agent to review STC — QA done only after BA APPROVED | SM approves STC itself / QA self-approves |
 | Implementation needs design review (Phase 5) | SM → invoke ta-agent to review code — code done only after TA APPROVED | SM approves code itself / DEV self-approves |
 | Deploy guide needed | SM → invoke devops-agent | SM writes DPG |

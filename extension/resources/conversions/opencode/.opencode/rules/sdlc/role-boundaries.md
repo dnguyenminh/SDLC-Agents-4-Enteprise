@@ -11,8 +11,8 @@ This file defines EXACTLY what each agent is responsible for. No agent may perfo
 | Agent | Creates/Writes | Reads | CANNOT do |
 |-------|---------------|-------|-----------|
 | **sm-agent** | STATUS.json, RUN-LOG.md, jira.conf | All files (for verification) | ❌ Write documents, code, diagrams, tests |
-| **ba-agent** | BRD.md, FSD.md (draft), diagrams | Jira tickets, KB, code intelligence | ❌ Write TDD, code, tests, DPG |
-| **ta-agent** | FSD.md (enrichment only) | BRD, FSD draft, code intelligence | ❌ Write BRD, TDD, code, tests |
+| **ba-agent** | BRD.md, FSD.md (draft), diagrams, Test Case review verdict (Phase 4) | Jira tickets, KB, code intelligence, STP/STC | ❌ Write TDD, code, tests, DPG |
+| **ta-agent** | FSD.md (enrichment only), Implementation review verdict (Phase 5) | BRD, FSD draft, code intelligence, source code (git diff) | ❌ Write BRD, TDD, code, tests |
 | **sa-agent** | TDD.md, DISCREPANCY.md, diagrams | BRD, FSD, KB, code intelligence, DB schema | ❌ Write BRD, FSD, code, tests |
 | **qa-agent** | STP.md, STC.md, TEST-REPORT.md, test data CSVs, diagrams | BRD, FSD, TDD, source code | ❌ Write BRD, FSD, TDD, production code |
 | **dev-agent** | Source code, unit tests, integration tests, UG.md | TDD, FSD, BRD, KB, code intelligence | ❌ Write BRD, FSD, TDD, STP, DPG |
@@ -70,5 +70,7 @@ Before starting work:
 | Tests need writing | SM → invoke dev-agent | SM writes test code |
 | TDD needs diagrams | SM → invoke sa-agent | SM generates draw.io XML |
 | UG needs BA review | SM → invoke ba-agent with review prompt | SM reviews UG itself |
+| Test Cases need business review (Phase 4) | SM → invoke ba-agent to review STC — QA done only after BA APPROVED | SM approves STC itself / QA self-approves |
+| Implementation needs design review (Phase 5) | SM → invoke ta-agent to review code — code done only after TA APPROVED | SM approves code itself / DEV self-approves |
 | Deploy guide needed | SM → invoke devops-agent | SM writes DPG |
 

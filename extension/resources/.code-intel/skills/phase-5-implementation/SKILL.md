@@ -37,11 +37,31 @@ invokeSubAgent(
 )
 ```
 
-### Step 5c: Verify & Push
+### Step 5c: TA Reviews Implementation (MANDATORY — code done only after TA approves)
+
+**Sau khi DEV implement xong, TA (Technical Architect) PHẢI review code để xác nhận implementation bám sát thiết kế kỹ thuật (FSD/TDD). Code chỉ hoàn thành khi TA agent approve.**
 
 4. Verify code created (check for new/modified files)
 
-5. Commit and push:
+5. Invoke TA to review the implementation. TA reads FSD + TDD from KB and the code diff (git diff main..{TICKET}), then checks:
+   1. Design conformance — Code có bám sát architecture/component design trong TDD?
+   2. API contracts — Endpoints/signatures match TDD API design exactly?
+   3. Integration — External/internal integrations đúng như TDD?
+   4. Data model — Entities/fields khớp FSD + TDD data design?
+   5. Pseudocode alignment — Complex logic implement đúng thuật toán đã thiết kế?
+   6. Deviations — Có lệch thiết kế không? Nếu có, có justify được không?
+   7. Patterns — Dùng đúng design pattern như TDD chỉ định?
+   TA returns verdict: **APPROVED** or **CHANGES REQUESTED** (with the list of changes).
+
+6. Handle TA verdict:
+   - **APPROVED** → proceed to push
+   - **CHANGES REQUESTED** → invoke DEV to fix theo danh sách từ TA → re-invoke TA to re-review (max 2 iterations)
+
+7. ⛔ **Implementation KHÔNG được đánh dấu done cho tới khi TA verdict = APPROVED.** Nếu sau 2 iterations vẫn CHANGES REQUESTED → report user.
+
+### Step 5d: Verify & Push
+
+8. Commit and push:
 ```bash
 git add -A
 git commit -m "{TICKET}: {summary from Jira}"

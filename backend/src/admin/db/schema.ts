@@ -67,6 +67,73 @@ async function migrateUsersSso(db: DatabaseAdapter, engine: DatabaseEngine): Pro
   }
 }
 
+async function seedDefaultSsoProviders(db: DatabaseAdapter): Promise<void> {
+  try {
+    const templates = [
+      {
+        provider_type: 'google',
+        name: 'Google',
+        enabled: 0,
+        login_ui_html: `<a class="sso-btn sso-google" href="/auth/google/login"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.6-5.1 3.6-3.1 0-5.6-2.5-5.6-5.6s2.5-5.6 5.6-5.6c1.8 0 3 .8 3.7 1.4l2.5-2.4C17 2.9 14.7 1.8 12 1.8 6.8 1.8 2.5 6.1 2.5 11.3S6.8 20.8 12 20.8c5.6 0 9.3-4 9.3-9.3 0-.6 0-1.2-.1-1.8H12z"/></svg> Sign in with Google</a>`,
+      },
+      {
+        provider_type: 'github',
+        name: 'GitHub',
+        enabled: 0,
+        login_ui_html: `<a class="sso-btn sso-github" href="/auth/github/login"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a12 12 0 0 0-3.79 23.4c.6.11.82-.26.82-.58v-2.02c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.1-.75.08-.73.08-.73 1.22.09 1.86 1.26 1.86 1.26 1.08 1.86 2.83 1.32 3.52 1.01.11-.79.42-1.32.76-1.62-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.4 11.4 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.8 5.65-5.48 5.95.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.82.58A12 12 0 0 0 12 .5Z"/></svg> Sign in with GitHub</a>`,
+      },
+      {
+        provider_type: 'x',
+        name: 'X',
+        enabled: 0,
+        login_ui_html: `<a class="sso-btn sso-x" href="/auth/x/login">Sign in with X</a>`,
+      },
+      {
+        provider_type: 'facebook',
+        name: 'Facebook',
+        enabled: 0,
+        login_ui_html: `<a class="sso-btn sso-facebook" href="/auth/facebook/login"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#1877F2" d="M24 12.07C24 5.41 18.63 0 12 0S0 5.41 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.8-4.7 4.55-4.7 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.48 0-1.94.92-1.94 1.86v2.24h3.3l-.53 3.49h-2.77V24C19.61 23.1 24 18.1 24 12.07z"/></svg> Sign in with Facebook</a>`,
+      },
+    ];
+    const now = new Date().toISOString();
+    for (const t of templates) {
+      const exists = await db.getAsync('SELECT 1 FROM sso_providers WHERE provider_type = ?', [t.provider_type]);
+      if (!exists) {
+        const provider_id = `${t.provider_type}-${Date.now()}`;
+        await db.runAsync(`INSERT INTO sso_providers (provider_id, provider_type, name, enabled, client_id, client_secret, tenant_id, redirect_uri, allowed_redirects, scopes, login_ui_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+          [provider_id, t.provider_type, t.name, t.enabled, '', '', '', '', '', '', t.login_ui_html, now, now]);
+      }
+    }
+  } catch (err) {
+    console.debug('[schema] seedDefaultSsoProviders:', (err as Error).message);
+  }
+}
+
+async function seedSsoProvidersFromEnv(db: DatabaseAdapter): Promise<void> {
+    const cnt = await db.getAsync<{count:number}>('SELECT COUNT(*) as count FROM sso_providers');
+    if (cnt && cnt.count > 0) return;
+    const env = process.env;
+    if (!env.SSO_ENABLED || env.SSO_ENABLED !== 'true') return;
+    const tenant = env.ENTRA_TENANT_ID || '';
+    const clientId = env.ENTRA_CLIENT_ID || '';
+    const clientSecret = env.ENTRA_CLIENT_SECRET || '';
+    if (!tenant || !clientId) return;
+    const now = new Date().toISOString();
+    const provider_id = `entra-${Date.now()}`;
+    const name = 'Entra ID';
+    const enabled = 1;
+    const redirect_uri = env.ENTRA_REDIRECT_URI || '';
+    const allowed_redirects = env.SSO_ALLOWED_REDIRECTS || '';
+    const scopes = env.ENTRA_SCOPES || 'openid profile email offline_access';
+    const login_ui_html = `<button class="sso-btn sso-entra">Sign in with Entra ID</button>`;
+    await db.runAsync(`INSERT INTO sso_providers (provider_id, provider_type, name, enabled, client_id, client_secret, tenant_id, redirect_uri, allowed_redirects, scopes, login_ui_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [provider_id, 'entra', name, enabled, clientId, clientSecret, tenant, redirect_uri, allowed_redirects, scopes, login_ui_html, now, now]);
+    console.debug('[schema] sso_providers seeded from env');
+  } catch (err) {
+    console.debug('[schema] seedSsoProvidersFromEnv:', (err as Error).message);
+  }
+}
+
 export async function initSchema(db: DatabaseAdapter): Promise<void> {
   const engine = db.getEngine();
 
@@ -112,6 +179,17 @@ export async function initSchema(db: DatabaseAdapter): Promise<void> {
        ON group_permissions(access_group_id, permission_id)`,
     );
   } catch (err) { console.debug('[schema] group_permissions unique index :', (err as Error).message); }
+
+  // Migration: add login_ui_html column if missing
+  try {
+    await db.execAsync(`ALTER TABLE sso_providers ADD COLUMN login_ui_html TEXT NOT NULL DEFAULT ''`);
+  } catch (err) { console.debug('[schema] login_ui_html already exists:', (err as Error).message); }
+
+  // Migration: seed sso_providers from env if table empty
+  await seedSsoProvidersFromEnv(db);
+
+  // Seed default provider templates for Google/GitHub/X/Facebook
+  await seedDefaultSsoProviders(db);
 }
 
 /** Seed default access groups and admin user. */
@@ -298,6 +376,24 @@ function schemaSql(engine: DatabaseEngine): string {
     CREATE INDEX IF NOT EXISTS idx_config_changes_time ON config_changes(changed_at);
 
     CREATE UNIQUE INDEX IF NOT EXISTS uq_users_external_identity ON users (external_provider, external_subject_id);
+
+    CREATE TABLE IF NOT EXISTS sso_providers (
+      provider_id TEXT PRIMARY KEY,
+      provider_type TEXT NOT NULL CHECK (provider_type IN ('entra','google','github','x','facebook','azuread')),
+      name TEXT NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      client_id TEXT NOT NULL DEFAULT '',
+      client_secret TEXT NOT NULL DEFAULT '',
+      tenant_id TEXT NOT NULL DEFAULT '',
+      redirect_uri TEXT NOT NULL DEFAULT '',
+      allowed_redirects TEXT NOT NULL DEFAULT '',
+      scopes TEXT NOT NULL DEFAULT '',
+      login_ui_html TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT ${now},
+      updated_at TEXT NOT NULL DEFAULT ${now}
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_sso_providers_type ON sso_providers(provider_type);
 
     CREATE TABLE IF NOT EXISTS graph_nodes (
       entry_id TEXT PRIMARY KEY,

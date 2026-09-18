@@ -11,6 +11,7 @@
  * Mounted at /api/sa4e-215/auth (via sa4e-215/index.ts).
  * Delegates to unified auth routes for single code path.
  */
+import { Hono } from 'hono';
 import { createUnifiedAuthRoutes } from '../auth/unified.js';
 
 export function createSa4e215AuthRoutes(): Hono {

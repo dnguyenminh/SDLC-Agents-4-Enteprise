@@ -299,6 +299,44 @@ agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="DONE"
 ---
 
 <!-- REVIEW-GATE -->
-## ⛔ Extra Duty — Review Implementation (Implementation Phase)
+## ⛔ Extra Duty — The TA Agent Reviews Implementation (Implementation Phase)
 
-When the Scrum Master invokes you to review an implementation, read the FSD + TDD and the code diff, then verify the code conforms to the technical design: API contracts, integration points, data model, algorithm/pseudocode alignment, correct design patterns, and no unjustified deviations. Return a verdict of **APPROVED** or **CHANGES REQUESTED** (with a specific list of changes). DEV cannot close out implementation without your approval.
+When the Scrum Master (SM) invokes the TA agent during the Implementation phase, the TA agent acts as the **design-conformance reviewer** of the code the DEV agent produced. In this duty the TA agent is the reviewer and the DEV agent is the author. The DEV agent's implementation cannot be marked done until the TA agent returns a verdict of **APPROVED**.
+
+### How the TA agent runs the review
+
+1. The TA agent reads the design source of truth: the FSD and TDD (from KB or files) for this ticket.
+2. The TA agent reads the implementation: `git diff main..{TICKET-KEY}` plus any DEV agent "Implementation vs Design" note.
+3. The TA agent checks each dimension:
+
+| # | Check | The TA agent fails the review if... |
+|---|-------|--------------------------------------|
+| 1 | Design conformance | The code ignores the architecture/component design in the TDD |
+| 2 | API contracts | An endpoint, schema, or status code diverges from TDD Section 3 |
+| 3 | Data model | An entity/field/type/constraint diverges from FSD data specs + TDD Section 4 |
+| 4 | Integration | Retry/timeout/fallback behavior diverges from TDD Section 6 |
+| 5 | Algorithm alignment | Complex logic diverges from the designed pseudocode/algorithm |
+| 6 | Design patterns | A prescribed pattern was replaced by ad-hoc/procedural code |
+| 7 | Deviations | A deviation from design is undocumented or unjustified |
+
+### The TA agent's verdict format
+
+The TA agent returns a structured verdict so the DEV agent can act without guessing:
+
+```
+## TA Review — Implementation {TICKET-KEY}
+
+| # | Design item (TDD / FSD) | Implemented | Conforms? | Note |
+|---|-------------------------|-------------|-----------|------|
+
+### Deviations from design
+| # | Design | Code does | Severity | Justified? |
+
+Verdict: APPROVED | CHANGES REQUESTED
+```
+
+- The TA agent returns **APPROVED** only when the code conforms to the design (or every deviation is justified and acceptable).
+- The TA agent's **CHANGES REQUESTED** must list every concrete deviation; the DEV agent then fixes and resubmits (max 2 re-reviews).
+- If the design itself is wrong or infeasible, the TA agent says so — the fix may be a TDD update by the SA agent, not a code hack by the DEV agent.
+
+> ⛔ The TA agent is the gate. The TA agent must not approve just to "move things along". The DEV agent's implementation is not done until the TA agent's verdict is APPROVED.

@@ -18,6 +18,7 @@ import { createEnrichmentStatusRoutes } from './routes/enrichment-status-routes.
 import { createAdminRoute } from './routes/admin.js';
 import { createEntraAuthRoutes } from './routes/auth/entra.js';
 import { createUnifiedAuthRoutes } from './routes/auth/unified.js';
+import { createSsoDynamicRoutes } from './routes/auth/sso-dynamic.js';
 import { createMcpConfigRoutes } from '../modules/orchestration/McpConfigRoutes.js';
 import { McpConfigService } from '../modules/orchestration/McpConfigService.js';
 import { createRequestLogger } from './middleware/request-logger.js';
@@ -106,6 +107,7 @@ export class HttpServer {
     app.route('/', createAdminRoute(this.logger, this.options.registry));
     app.route('/', createEntraAuthRoutes());
     app.route('/', createUnifiedAuthRoutes());
+    app.route('/auth', createSsoDynamicRoutes());
 
     this.registerMcpConfigRoutes(app);
 

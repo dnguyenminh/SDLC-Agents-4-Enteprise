@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import * as crypto from 'crypto';
 import { getDbAdapter } from '../../../admin/admin-db.js';
 import { hashPassword, verifyPassword } from '../../../admin/db/password.js';
 import { recordAudit, getUserPermissions, getUserById, changePassword } from '../../../admin/admin-db.js';
@@ -44,9 +43,8 @@ export function createUnifiedAuthRoutes() {
         return c.json({ error: 'Account is disabled' }, 403);
       }
       const userAgent = c.req.header('user-agent') || '';
-      const userAgentHash = crypto.createHash('sha256').update(userAgent).digest('hex');
       const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || '';
-      const session = await sessions.issue(user.user_id as string, '', ip, userAgentHash);
+      const session = await sessions.issue(user.user_id as string, '', ip, userAgent);
       await recordAudit(user.user_id as string, user.username as string, 'LOGIN', 'auth', session.sessionId);
       const permissions = await getUserPermissions(user.user_id as string);
       const userPayload = {
@@ -91,7 +89,7 @@ export function createUnifiedAuthRoutes() {
       const { email, password, access_group_id } = parsed.data;
       const existing = await repo.findByEmail(email);
       if (existing) {
-        return c.json({ success: false, error: { code: 'ERR_001', message: 'Email already registered' } }, 400);
+        return c.json({ success: false, error: { code: 'ERR_002', message: 'Email already registered' } }, 400);
       }
       const hash = hashPassword(password);
       const user = await repo.createUser({ email, username: email, passwordHash: hash, accessGroupId: access_group_id || 'grp-viewer' });
@@ -120,8 +118,8 @@ export function createUnifiedAuthRoutes() {
       const user = await sessions.validate(token, uaHash);
       if (user) {
         await recordAudit(user.userId, user.username, 'LOGOUT', 'auth');
-        await sessions.invalidate(token);
       }
+      await sessions.invalidate(token);
     }
     return c.json({ success: true, message: 'Successfully logged out' });
   });
@@ -134,8 +132,7 @@ export function createUnifiedAuthRoutes() {
       const token = parsed.data.sessionToken || parsed.data.refresh_token;
       if (!token) return c.json({ error: 'Refresh token required' }, 400);
       const userAgent = c.req.header('user-agent') || '';
-      const uaHash = crypto.createHash('sha256').update(userAgent).digest('hex');
-      const result = await sessions.refresh(token, uaHash);
+      const result = await sessions.refresh(token, userAgent);
       if (!result) return c.json({ error: 'Invalid or expired session' }, 401);
       return c.json({ token: result.token, expiresAt: result.expiresAt, success: true, data: { token: result.token } });
     } catch (e) {
@@ -148,8 +145,7 @@ export function createUnifiedAuthRoutes() {
     const auth = c.req.header('Authorization') || '';
     const token = auth.replace('Bearer ', '');
     const userAgent = c.req.header('user-agent') || '';
-    const uaHash = crypto.createHash('sha256').update(userAgent).digest('hex');
-    const user = await sessions.validate(token, uaHash);
+    const user = await sessions.validate(token, userAgent);
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
     const [permissions, dbUser] = await Promise.all([
       getUserPermissions(user.userId),
@@ -170,8 +166,7 @@ export function createUnifiedAuthRoutes() {
     const auth = c.req.header('Authorization') || '';
     const token = auth.replace('Bearer ', '');
     const userAgent = c.req.header('user-agent') || '';
-    const uaHash = crypto.createHash('sha256').update(userAgent).digest('hex');
-    const user = await sessions.validate(token, uaHash);
+    const user = await sessions.validate(token, userAgent);
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
     const body = await c.req.json();
     const parsed = changePasswordSchema.safeParse(body);

@@ -44,7 +44,7 @@ export interface IAuthUserRepository extends IUserRepository {
   findByEmail(email: string): Promise<any | null>;
   findByUsername(username: string): Promise<any | null>;
   findById(userId: string): Promise<any | null>;
-  createUser(params: { email: string; username?: string; passwordHash: string; accountType?: string }): Promise<any>;
+  createUser(params: { email: string; username?: string; passwordHash: string; accountType?: string; accessGroupId?: string }): Promise<any>;
   verifyCredentials(identifier: string, password: string): Promise<any | null>;
 }
 

@@ -413,5 +413,20 @@ Add comment block at top of each HTML file:
 ### Step 3: Verify
 - Open HTML in browser — must render correctly
 - All interactions work with mock data (modal open/close, form validation)
-- Matches wireframes from Phase 2.5
+- Matches wireframes from Phase 2
 
+<!-- UI-PHASE2-GATE -->
+## Phase 2: Specification — UI Mockup inside the FSD (for UI tickets)
+
+The UI agent participates **inside Phase 2 (Specification)**, between the BA agent's FSD draft (Step 2a) and the TA agent's technical enrichment (Step 2c). Flow: `2a BA draft → 2b UI agent mockup → 2b.5 BA reviews mockup → 2c TA enrich → 2d finalize`. The SM invokes the UI agent only when the ticket has UI; backend-only tickets skip it.
+
+### Responsibility split
+
+- **Aesthetic / UX quality / design-system consistency** → the UI agent owns this itself (self-check against the existing design system + frontend code). SM does NOT review aesthetics.
+- **Business correctness of the mockup** → the BA agent reviews this (Step 2b.5). The BA agent is the reviewer; the UI agent is the author.
+- **Technical feasibility** → the TA agent checks this during enrichment (Step 2c).
+- **Final visual sign-off** → the user/PO when approving the FSD.
+
+### ⛔ BA Review Gate (Step 2b.5)
+
+After the UI agent produces the mockups, they enter a mandatory business-correctness review by the BA agent. The UI agent's mockup is **NOT complete** until the BA agent returns **APPROVED**. On **CHANGES REQUESTED**, the UI agent fixes every listed business gap and resubmits to the BA agent (max 2 iterations). The UI agent must not consider the mockup done without the BA agent's APPROVED verdict.

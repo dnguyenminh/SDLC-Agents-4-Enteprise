@@ -1,4 +1,4 @@
-import { getDbAdapter } from '../adapters/index.js';
+import { getDbAdapter } from '../../admin/db/core.js';
 
 /**
  * SA4E-276: Ensure Entra SSO config tables exist

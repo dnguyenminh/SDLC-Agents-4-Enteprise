@@ -10,9 +10,8 @@
  */
 
 import type { MiddlewareHandler } from 'hono';
-import crypto from 'crypto';
 import { createProjectContext } from '../../modules/memory/ProjectContext.js';
-import { validateSession } from '../../admin/admin-db.js';
+import { SessionService } from '../services/SessionService.js';
 import { getEntraVerifier, isEntraToken, tryEntraVerification, validateEntraAuthConfig } from './verifiers/entra-auth.js';
 
 const REQUIRE_AUTH = process.env.CODE_INTEL_REQUIRE_AUTH === 'true';
@@ -126,9 +125,8 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
     }
 
     const userAgent = c.req.header('user-agent') || '';
-    const uaHash = crypto.createHash('sha256').update(userAgent).digest('hex');
-    // SA4E-50: validateSession is now async — await it
-    const session = await safeValidateSession(token, uaHash);
+    const sessionService = new SessionService();
+    const session = await sessionService.validate(token, userAgent);
     if (!session) {
       if (!mustAuth) return anonymous();
       return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
@@ -137,18 +135,6 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
     c.set('projectContext', ctx);
     return next();
   };
-}
-
-/** validateSession wrapped so a DB error never crashes auth (fails closed). */
-async function safeValidateSession(
-  token: string,
-  userAgentHash?: string,
-): Promise<{ userId: string; username: string; accessGroupId: string } | null> {
-  try {
-    return await validateSession(token, userAgentHash);
-  } catch {
-    return null;
-  }
 }
 
 export interface JwtVerification {

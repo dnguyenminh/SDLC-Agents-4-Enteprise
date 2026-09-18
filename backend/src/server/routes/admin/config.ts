@@ -9,6 +9,7 @@ import { validateExternalUrl } from '../../middleware/url-validator.js';
 import { getConfigChanges, recordConfigChange, recordAudit, getAuditLogs, loadPersistedLLMConfig, getLatestConfigValue } from '../../../admin/admin-db.js';
 import type { AdminContext } from './context.js';
 import { bus, Events } from '../../../shared/EventBus.js';
+import { authRuntimeOverrides } from '../../../config/EntraConfig.js';
 
 async function getEffectiveConfig(ctx: AdminContext): Promise<Record<string, Record<string, any>>> {
   const cfg = loadConfig();
@@ -18,6 +19,14 @@ async function getEffectiveConfig(ctx: AdminContext): Promise<Record<string, Rec
   const base: Record<string, Record<string, any>> = {
     server: { port: cfg.port, host: cfg.host, logLevel: cfg.logLevel, indexTempDir: (cfg as any).indexTempDir || defaultIndexTempDir },
     embedding: { model: 'paraphrase-multilingual-MiniLM-L12-v2', dimensions: 384, onnxModelPath: cfg.onnxModelPath },
+    auth: { 
+      ssoEnabled: process.env.SSO_ENABLED === 'true',
+      entraTenantId: process.env.ENTRA_TENANT_ID || '',
+      entraClientId: process.env.ENTRA_CLIENT_ID || '',
+      entraClientSecret: process.env.ENTRA_CLIENT_SECRET ? '***' : '',
+      entraRedirectUri: process.env.ENTRA_REDIRECT_URI || `http://localhost:${cfg.port}/auth/entra/callback`,
+      ssoAllowedRedirects: process.env.SSO_ALLOWED_REDIRECTS || `http://localhost:${cfg.port}`
+    },
     llm: {
       provider: process.env.LLM_PROVIDER || 'ollama',
       model: process.env.LLM_MODEL || 'qwen2.5:7b-instruct-q4_K_M',
@@ -83,6 +92,30 @@ async function getEffectiveConfig(ctx: AdminContext): Promise<Record<string, Rec
       if (!isNaN(n) && n > 0) base.rateLimit.maxRpm = n;
     }
   } catch (err) { ctx.logger.debug({ err, context: 'ratelimit-config' }, 'DB not ready for rateLimit config — using env defaults'); }
+
+  // Merge DB-persisted auth config
+  try {
+    const authKeys = ['ssoEnabled','entraTenantId','entraClientId','entraClientSecret','entraRedirectUri','ssoAllowedRedirects'] as const;
+    const envKeyMap: Record<string, string> = {
+      ssoEnabled: 'SSO_ENABLED',
+      entraTenantId: 'ENTRA_TENANT_ID',
+      entraClientId: 'ENTRA_CLIENT_ID',
+      entraClientSecret: 'ENTRA_CLIENT_SECRET',
+      entraRedirectUri: 'ENTRA_REDIRECT_URI',
+      ssoAllowedRedirects: 'SSO_ALLOWED_REDIRECTS',
+    };
+    for (const key of authKeys) {
+      const val = await getLatestConfigValue('auth', key);
+      if (val !== undefined) {
+        if (key === 'ssoEnabled') base.auth.ssoEnabled = val === 'true';
+        else if (key === 'entraClientSecret') base.auth.entraClientSecret = val ? '***' : '';
+        else base.auth[key] = val;
+        // Sync to Entra runtime overrides so EntraConfig reads from DB
+        const envKey = envKeyMap[key];
+        if (envKey) authRuntimeOverrides.set(envKey, String(val));
+      }
+    }
+  } catch (err) { ctx.logger.debug({ err, context: 'auth-config' }, 'DB not ready for auth config — using env defaults'); }
 
   // Runtime in-memory overrides (from PATCH calls in current session) always win
   for (const [section, keys] of Object.entries(ctx.configOverrides)) {
@@ -254,6 +287,26 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     const config = await getEffectiveConfig(ctx);
     if (!config[section]) return c.json({ error: `Section "${section}" not found` }, 404);
     if (!(key in config[section])) return c.json({ error: `Key "${key}" not found in section "${section}"` }, 404);
+    // Validate auth keys
+    if (section === 'auth') {
+      if (key === 'ssoEnabled') {
+        if (typeof value !== 'boolean' && value !== 'true' && value !== 'false') {
+          return c.json({ error: 'ssoEnabled must be true/false' }, 400);
+        }
+      }
+      if (key === 'entraTenantId' || key === 'entraClientId') {
+        if (!/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(value))) {
+          return c.json({ error: `${key} must be a valid GUID` }, 400);
+        }
+      }
+      if (key === 'entraRedirectUri') {
+        try { new URL(String(value)); } catch { return c.json({ error: 'entraRedirectUri must be a valid URL' }, 400); }
+      }
+      if (key === 'ssoAllowedRedirects') {
+        const parts = String(value).split(',').map(s => s.trim()).filter(Boolean);
+        for (const p of parts) { try { new URL(p); } catch { return c.json({ error: `ssoAllowedRedirects contains invalid URL: ${p}` }, 400); } }
+      }
+    }
     const oldValue = JSON.stringify(config[section][key]);
     const newValue = typeof value === 'string' ? value : JSON.stringify(value);
     const requiresRestart = (ctx.RESTART_REQUIRED_KEYS[section] || []).includes(key);
@@ -272,6 +325,22 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     // If rate-limit config changed, hot-reload the middleware cap (no restart)
     if (section === 'rateLimit') {
       await bus.emit(Events.RATE_LIMIT_CONFIG_CHANGED, { section, key, value });
+    }
+    // If auth config changed, hot-reload Entra verifier config
+    if (section === 'auth') {
+      const envKeyMap: Record<string, string> = {
+        ssoEnabled: 'SSO_ENABLED',
+        entraTenantId: 'ENTRA_TENANT_ID',
+        entraClientId: 'ENTRA_CLIENT_ID',
+        entraClientSecret: 'ENTRA_CLIENT_SECRET',
+        entraRedirectUri: 'ENTRA_REDIRECT_URI',
+        ssoAllowedRedirects: 'SSO_ALLOWED_REDIRECTS',
+      };
+      const envKey = envKeyMap[key];
+      if (envKey) {
+        authRuntimeOverrides.set(envKey, String(value));
+      }
+      await bus.emit(Events.AUTH_CONFIG_CHANGED, { section, key, value });
     }
     return c.json({ success: true, requiresRestart, section, key, value });
   });

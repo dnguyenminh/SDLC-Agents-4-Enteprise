@@ -6,6 +6,8 @@ import pino from 'pino';
 
 const logger = pino({ name: 'app-config' });
 
+export const authRuntimeOverrides = new Map<string, string>();
+
 const GUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const MULTI_TENANT = ['common', 'organizations', 'consumers'] as const;
 const SCOPE_TOKEN_REGEX = /^[A-Za-z0-9._:/-]+$/;
@@ -183,11 +185,44 @@ function warnIfScopesMissingRefresh(scopes: string[]): void {
   }
 }
 
+export async function loadEntraConfigAsync(env: NodeJS.ProcessEnv = process.env): Promise<EntraSurface> {
+  const mergedEnv = { ...env };
+  for (const [key, val] of authRuntimeOverrides.entries()) {
+    mergedEnv[key] = val;
+  }
+  try {
+    const { getAdminDb } = await import('../admin/admin-db.js');
+    const db = getAdminDb();
+    const row = await db.getAsync('SELECT * FROM sso_providers WHERE provider_type = ? AND enabled = 1 ORDER BY updated_at DESC LIMIT 1', ['entra']);
+    if (row) {
+      const cfg = {
+        ENTRA_TENANT_ID: row.tenant_id,
+        ENTRA_CLIENT_ID: row.client_id,
+        ENTRA_CLIENT_SECRET: row.client_secret,
+        ENTRA_REDIRECT_URI: row.redirect_uri,
+        ENTRA_SCOPES: row.scopes,
+        SSO_ENABLED: 'true'
+      };
+      Object.assign(mergedEnv, cfg);
+    }
+  } catch {}
+  if (!envBool(mergedEnv, 'SSO_ENABLED', false)) return gateOffSurface(mergedEnv);
+  registerSecretValue(mergedEnv.ENTRA_CLIENT_SECRET);
+  throwIfMissingRequired(mergedEnv);
+  const config = parseAndDerive(mergedEnv);
+  warnIfScopesMissingRefresh(config.scopes);
+  return { ssoEnabled: true, config };
+}
+
 export function loadEntraConfig(env: NodeJS.ProcessEnv): EntraSurface {
-  if (!envBool(env, 'SSO_ENABLED', false)) return gateOffSurface(env);
-  registerSecretValue(env.ENTRA_CLIENT_SECRET);
-  throwIfMissingRequired(env);
-  const config = parseAndDerive(env);
+  const mergedEnv = { ...env };
+  for (const [key, val] of authRuntimeOverrides.entries()) {
+    mergedEnv[key] = val;
+  }
+  if (!envBool(mergedEnv, 'SSO_ENABLED', false)) return gateOffSurface(mergedEnv);
+  registerSecretValue(mergedEnv.ENTRA_CLIENT_SECRET);
+  throwIfMissingRequired(mergedEnv);
+  const config = parseAndDerive(mergedEnv);
   warnIfScopesMissingRefresh(config.scopes);
   return { ssoEnabled: true, config };
 }
