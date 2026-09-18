@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { PiProvider } from './pi-provider';
 import { createPiProvider } from './pi-provider';
 import { logger } from '../logger';
-import type { SDLCPhase } from './phase-router';
+import { PHASE_ORDER, type SDLCPhase } from './sdlc-phases';
 
 export const IntentSchema = z.object({
   type: z.enum(['phase_change', 'continue', 'finish', 'manual_review', 'unknown']),
@@ -12,17 +12,6 @@ export const IntentSchema = z.object({
 });
 
 export type Intent = z.infer<typeof IntentSchema>;
-
-const PHASE_ORDER: SDLCPhase[] = [
-  'requirements',
-  'specification',
-  'design',
-  'test_planning',
-  'implementation',
-  'user_guide',
-  'testing',
-  'deployment',
-];
 
 export class IntentClassifier {
   private readonly schema = IntentSchema;

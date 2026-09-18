@@ -6,6 +6,7 @@ import { PiAgentExecutor, IPiAgentExecutor } from './pi-agent-executor';
 import { WorkflowStateIO } from './pi-workflow-state-io';
 import type { PiWorkflowState, PiInternalState } from './types/pi-workflow-state';
 import { randomUUID } from 'crypto';
+import { persistPipelineState as persistViaHelper, adaptAndMerge } from './pi-workflow-helpers';
 
 export interface WorkflowExecuteInput {
   ticketKey: string;
@@ -149,20 +150,7 @@ export class PiWorkflowEngine {
   private async adaptAndPersist(updatedPiState: any, ticketKey: string, threadId: string, currentPhase: string, approvalRequested: boolean, userInput: any) {
     const intent = this.phaseRouter.classifyIntent(userInput || '');
     const routeResult = this.phaseRouter.routePhase({ ticketKey, threadId, currentPhase: currentPhase as any, pipelineStatus: 'running' } as any, intent);
-    // Use full updatedState from router to avoid data loss
-    const routedState = routeResult.updatedState;
-    const mergedPiState = { ...updatedPiState, ...routedState };
-    if (routeResult.nextPhase) mergedPiState.phase = routeResult.nextPhase;
-    else if (routeResult.errors.length > 0) mergedPiState.status = 'paused';
-    else mergedPiState.status = 'finished';
-    if (routeResult.errors.length) mergedPiState.errors = [...(mergedPiState.errors ?? []), ...routeResult.errors];
-    const workflowState = this.stateAdapter.fromPiState(mergedPiState);
-    workflowState.ticketKey = ticketKey;
-    workflowState.threadId = threadId;
-    workflowState.currentPhase = updatedPiState.phase ?? updatedPiState.currentPhase ?? currentPhase;
-    let status: 'running' | 'finished' | 'paused' | 'error' = updatedPiState.status === 'finished' ? 'finished' : 'running';
-    if (approvalRequested) status = 'paused';
-    workflowState.pipelineStatus = status as any;
+    const workflowState = adaptAndMerge(updatedPiState, routeResult, this.stateAdapter, ticketKey, threadId, currentPhase, approvalRequested);
     await this.stateIO.persistWorkflowState(workflowState);
     return workflowState;
   }
@@ -205,15 +193,7 @@ export class PiWorkflowEngine {
   }
 
   private async persistPipelineState(state: any): Promise<void> {
-    // Validate shape via adapter to avoid persisting malformed state
-    const piInternal = this.stateAdapter.toPiState(state as any);
-    const workflowState = this.stateAdapter.fromPiState(piInternal);
-    // Merge original fields that adapter may not preserve
-    workflowState.ticketKey = state.ticketKey ?? workflowState.ticketKey;
-    workflowState.threadId = state.threadId ?? workflowState.threadId;
-    workflowState.currentPhase = state.currentPhase ?? workflowState.currentPhase;
-    workflowState.pipelineStatus = state.pipelineStatus ?? workflowState.pipelineStatus;
-    await this.stateIO.persistWorkflowState(workflowState);
+    await persistViaHelper(state, this.stateAdapter, this.stateIO);
   }
 }
 

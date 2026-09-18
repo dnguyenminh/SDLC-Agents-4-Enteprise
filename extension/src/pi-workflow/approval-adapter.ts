@@ -13,7 +13,7 @@ export interface IApprovalAdapter {
   getMappingCount(): number;
   clear(): void;
   requestApproval(toolCall: any): Promise<any>;
-  handleApproval(decision: 'approve' | 'reject', toolId: string): void;
+  handleApproval(decision: 'approve' | 'reject', toolId: string, sessionId?: string): void;
 }
 
 type MappingEntry = { piId: string; ticketKey: string; threadId?: string; ts: number; extId?: string };
@@ -22,7 +22,7 @@ import { randomUUID } from 'crypto';
 
 export class ApprovalAdapter implements IApprovalAdapter {
   private map = new Map<string, MappingEntry>();
-  private forward = new Map<string, string>();
+  private forward = new Map<string, { piId: string; sessionId: string }>();
   private counter = 0;
   private decisions = new Map<string, 'approve' | 'reject'>();
   private pending = new Map<string, { piId: string; sessionId: string; ticketKey: string; threadId?: string; ts: number }>();
@@ -55,12 +55,16 @@ export class ApprovalAdapter implements IApprovalAdapter {
     const extId = `ext_${randomUUID()}`;
     const entry: MappingEntry = { piId: piToolUseId, ticketKey, ts: Date.now(), extId };
     this.map.set(key, entry);
-    this.forward.set(extId, piToolUseId);
+    this.forward.set(extId, { piId: piToolUseId, sessionId });
     return extId;
   }
 
   extensionToPiId(extensionId: string, sessionId: string): string | undefined {
-    return this.forward.get(extensionId);
+    const entry = this.forward.get(extensionId);
+    if (!entry) return undefined;
+    // Session-scoped: reject cross-session leakage
+    if (sessionId && entry.sessionId !== sessionId) return undefined;
+    return entry.piId;
   }
 
   getMappingCount(): number {
@@ -70,6 +74,8 @@ export class ApprovalAdapter implements IApprovalAdapter {
   clear(): void {
     this.map.clear();
     this.forward.clear();
+    this.pending.clear();
+    this.decisions.clear();
     this.counter = 0;
   }
 
@@ -107,16 +113,25 @@ export class ApprovalAdapter implements IApprovalAdapter {
     return String(raw).replace(/[^a-zA-Z0-9_-]/g, '_');
   }
 
-  handleApproval(decision: 'approve' | 'reject', toolId: string): void {
-    const piId = this.extensionToPiId(toolId, '') ?? toolId;
+  handleApproval(decision: 'approve' | 'reject', toolId: string, sessionId?: string): void {
+    const fwd = this.forward.get(toolId);
+    const piId = (sessionId ? this.extensionToPiId(toolId, sessionId) : this.extensionToPiId(toolId, '')) ?? toolId;
     const normalized = this.normPiId(piId);
     this.decisions.set(normalized, decision);
-    // also store with session-specific key if session known
+    // Prefer session owning the extId to avoid cross-session pollution
+    if (fwd && (!sessionId || fwd.sessionId === sessionId)) {
+      this.decisions.set(this.decisionKey(fwd.sessionId, piId), decision);
+      return;
+    }
+    if (sessionId) {
+      this.decisions.set(this.decisionKey(sessionId, piId), decision);
+      return;
+    }
+    // legacy fallback: store for all sessions with same piId
     for (const [key, entry] of this.map.entries()) {
       if (entry.piId === piId) {
-        const sessionId = key.split(':')[0];
-        const sessionKey = this.decisionKey(sessionId, piId);
-        this.decisions.set(sessionKey, decision);
+        const sid = key.split(':')[0];
+        this.decisions.set(this.decisionKey(sid, piId), decision);
       }
     }
   }

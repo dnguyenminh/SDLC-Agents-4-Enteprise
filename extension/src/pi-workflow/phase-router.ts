@@ -2,29 +2,9 @@ import type { PiWorkflowState } from './types/pi-workflow-state';
 import { logger } from '../logger';
 import { IntentClassifier, IntentSchema as IntentSchemaBase, type Intent } from './phase-intent-classifier';
 import type { PiProvider } from './pi-provider';
+import { PHASE_ORDER, type SDLCPhase } from './sdlc-phases';
 
 export { IntentSchemaBase as IntentSchema };
-
-export type SDLCPhase =
-  | 'requirements'
-  | 'specification'
-  | 'design'
-  | 'test_planning'
-  | 'implementation'
-  | 'user_guide'
-  | 'testing'
-  | 'deployment';
-
-const PHASE_ORDER: SDLCPhase[] = [
-  'requirements',
-  'specification',
-  'design',
-  'test_planning',
-  'implementation',
-  'user_guide',
-  'testing',
-  'deployment',
-];
 
 export interface RouteResult {
   nextPhase: SDLCPhase | 'finish' | null;
@@ -99,35 +79,49 @@ export class PhaseRouter implements IPhaseRouter {
     if (errors.length === 0) {
       switch (intent.type) {
         case 'phase_change': {
-        if (intent.target && PHASE_ORDER.includes(intent.target as SDLCPhase)) {
-          const targetIdx = PHASE_ORDER.indexOf(intent.target as SDLCPhase);
-          if (targetIdx > currentIdx) nextPhase = intent.target as SDLCPhase;
-          else errors.push('Target phase is not ahead in SDLC flow');
-        } else {
-          errors.push('Invalid target phase');
+          if (intent.target && PHASE_ORDER.includes(intent.target as SDLCPhase)) {
+            const targetIdx = PHASE_ORDER.indexOf(intent.target as SDLCPhase);
+            if (targetIdx > currentIdx) {
+              nextPhase = intent.target as SDLCPhase;
+            } else {
+              const msg = `Target phase '${intent.target}' is not ahead of current '${currentPhase}'`;
+              errors.push('Target phase is not ahead in SDLC flow');
+              logger.warn('PhaseRouter: target not ahead, manual review required', {
+                ticketKey: state.ticketKey,
+                currentPhase,
+                target: intent.target,
+                msg,
+              });
+            }
+          } else {
+            errors.push('Invalid target phase');
+          }
+          break;
         }
-        break;
-      }
-      case 'continue': {
-        if (currentIdx !== -1 && currentIdx < PHASE_ORDER.length - 1) {
-          nextPhase = PHASE_ORDER[currentIdx + 1];
-        } else {
+        case 'continue': {
+          if (currentIdx !== -1 && currentIdx < PHASE_ORDER.length - 1) {
+            nextPhase = PHASE_ORDER[currentIdx + 1];
+          } else {
+            nextPhase = 'finish';
+          }
+          break;
+        }
+        case 'finish': {
           nextPhase = 'finish';
+          break;
         }
-        break;
+        case 'manual_review': {
+          errors.push('Manual review required');
+          break;
+        }
+        default: {
+          const np = this.nextPhase(currentPhase);
+          if (np) nextPhase = np as SDLCPhase;
+          else nextPhase = 'finish';
+          break;
+        }
       }
-      case 'finish': {
-        nextPhase = 'finish';
-        break;
-      }
-      case 'manual_review': {
-        errors.push('Manual review required');
-        break;
-      }
-      default:
-        errors.push('Unknown intent');
     }
-  }
 
     const updatedState = { ...state };
     if (nextPhase && nextPhase !== 'finish') {
@@ -138,6 +132,8 @@ export class PhaseRouter implements IPhaseRouter {
       updatedState.pipelineStatus = 'paused';
     } else if (nextPhase === 'finish') {
       updatedState.pipelineStatus = 'finished';
+    } else {
+      updatedState.pipelineStatus = 'running';
     }
 
     return { nextPhase, updatedState, errors };

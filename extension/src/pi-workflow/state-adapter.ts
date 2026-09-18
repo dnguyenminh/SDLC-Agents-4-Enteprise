@@ -55,7 +55,7 @@ export class StateAdapter implements IStateAdapter {
       status: state.pipelineStatus,
       sessionId: piSessionId,
       agentId: state.currentAgentId ?? '',
-      toolCalls: state.toolCallCount ?? 0,
+      toolCalls: [],
     };
 
     return piState;
@@ -75,11 +75,9 @@ export class StateAdapter implements IStateAdapter {
       throw new StateMappingError('Mapping failed: toolCallCount must be >= 0 integer');
     }
 
-    const toolCallCount = typeof piState.toolCalls === 'number'
-      ? piState.toolCalls
-      : Array.isArray(piState.toolCalls)
-        ? piState.toolCalls.length
-        : piState.toolCallCount ?? 0;
+    const toolCallCount = Array.isArray(piState.toolCalls)
+      ? piState.toolCalls.length
+      : piState.toolCallCount ?? 0;
 
     const workflowState: PiWorkflowState = {
       ...piState,

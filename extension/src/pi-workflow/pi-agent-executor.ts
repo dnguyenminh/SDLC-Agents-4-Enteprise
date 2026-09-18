@@ -51,7 +51,8 @@ export class PiAgentExecutor implements IPiAgentExecutor {
     return {
       ...piState,
       ...result,
-      toolCalls: result.toolCalls?.length ?? 0,
+      toolCalls: result.toolCalls ?? [],
+      toolCallCount: result.toolCalls?.length ?? 0,
       metadata: { ...piState.metadata, needsApproval: (result.toolCalls?.length ?? 0) > 0 },
       sessionId: result.sessionId,
       phase: piState.phase,
