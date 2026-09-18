@@ -105,8 +105,8 @@ describe('PiWorkflowEngine Integration', () => {
   });
 
   it('STC: IT-05 — phase router transitions correctly', () => {
-    expect(phaseRouter.nextPhase('Requirements')).toBe('Specification');
-    expect(phaseRouter.nextPhase('Specification')).toBe('Design');
+    expect(phaseRouter.nextPhase('Requirements')).toBe('specification');
+    expect(phaseRouter.nextPhase('Specification')).toBe('design');
     expect(phaseRouter.nextPhase('Deployment')).toBeNull();
     expect(phaseRouter.isTerminal('Deployment')).toBe(true);
     expect(phaseRouter.isTerminal('Design')).toBe(false);

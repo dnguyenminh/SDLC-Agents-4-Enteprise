@@ -17,8 +17,8 @@ describe('PhaseRouter', () => {
   });
 
   it('nextPhase returns next in order', () => {
-    expect(router.nextPhase('requirements')).toBe('Specification');
-    expect(router.nextPhase('design')).toBe('Test_planning');
+    expect(router.nextPhase('requirements')).toBe('specification');
+    expect(router.nextPhase('design')).toBe('test_planning');
     expect(router.nextPhase('deployment')).toBeNull();
     expect(router.nextPhase('unknown')).toBeNull();
   });
@@ -57,7 +57,7 @@ describe('PhaseRouter', () => {
     const state = baseState({ currentPhase: 'specification' });
     const intent = { type: 'continue' as const };
     const result = router.routePhase(state, intent);
-    expect(result.nextPhase).toBe('Design');
+    expect(result.nextPhase).toBe('design');
   });
 
   it('routePhase with finish returns finish', () => {
