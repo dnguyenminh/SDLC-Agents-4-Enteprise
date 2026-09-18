@@ -17,6 +17,7 @@ import {
 import { updateServiceStatus } from './stores/connectionStore';
 import { hydrateChat } from './stores/chatStore';
 import { updateDiffCount, setDiffSummary } from './stores/diffTrackerStore';
+import { updatePiWorkflowState } from './stores/piWorkflowStore';
 
 /** Message handler map — Strategy pattern for inbound message routing */
 type HandlerMap = Record<string, (msg: ExtensionMessage) => void>;
@@ -82,6 +83,11 @@ function buildHandlers(): HandlerMap {
     },
     DIFF_SUMMARY_RESPONSE: (msg) => {
       if (msg.type === 'DIFF_SUMMARY_RESPONSE') setDiffSummary(msg.summary);
+    },
+    PI_WORKFLOW_STATE_UPDATE: (msg) => {
+      if (msg.type === 'PI_WORKFLOW_STATE_UPDATE' && msg.state) {
+        updatePiWorkflowState(msg.state);
+      }
     },
   };
 }

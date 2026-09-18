@@ -92,16 +92,18 @@ export class PiProviderImpl implements PiProvider {
     this.config = config;
 
     try {
-      // Dynamic import to allow lazy loading of SDK
-      await import('@earendil-works/pi-agent-core');
-      // SDK initialization - actual API may vary
+      const mod = await import('@earendil-works/pi-agent-core');
+      const PiAgent = (mod as any).PiAgent || (mod as any).default?.PiAgent;
+      if (!PiAgent) throw new Error('PiAgent export not found');
       const sessionId = config.sessionId ?? `pi_sess_${Date.now()}`;
       this.piSessionId = sessionId;
+      // Store SDK class for real agent creation
+      (this as any).PiAgentClass = PiAgent;
     } catch (err) {
-      // Fallback stub when SDK not installed – allow tests to run
       console.warn('[PiProvider] SDK not available, using stub. Error:', err);
       const sessionId = config.sessionId ?? `pi_sess_stub_${Date.now()}`;
       this.piSessionId = sessionId;
+      (this as any).PiAgentClass = null;
     }
   }
 
@@ -113,20 +115,32 @@ export class PiProviderImpl implements PiProvider {
       throw new ConfigurationError('agentId must be non-empty');
     }
 
-    // Stub implementation - actual SDK call would happen here
+    const PiAgentClass = (this as any).PiAgentClass;
+    if (PiAgentClass) {
+      try {
+        const agent = await PiAgentClass.create({
+          agentId,
+          transport: this.config.transportType,
+          baseUrl: this.config.baseUrl,
+          sessionId: this.piSessionId,
+          tools,
+        });
+        this.agent = agent as unknown as PiAgent;
+        return this.agent;
+      } catch (e) {
+        console.warn('[PiProvider] SDK agent creation failed, falling back to stub', e);
+      }
+    }
+
     const agent: PiAgent = {
       sessionId: this.piSessionId ?? 'pi_sess_unknown',
       id: agentId,
       async *stream(input: PiInput) {
-        // Placeholder stream
         yield { type: 'text', content: 'PiAgent stub response' };
         yield { type: 'done' };
       },
       async handleToolUse(toolCall: ToolCall): Promise<ToolResult> {
-        return {
-          toolCallId: toolCall.id,
-          result: { stub: true },
-        };
+        return { toolCallId: toolCall.id, result: { stub: true } };
       },
     };
     this.agent = agent;

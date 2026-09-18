@@ -41,3 +41,8 @@ export {
   updateDiffCount, setDiffSummary, toggleDiffPanel, resetDiffTracker,
 } from './diffTrackerStore';
 export type { DiffSummaryPayload, ChangeEntryPayload } from './diffTrackerStore';
+
+export {
+  piWorkflowState, updatePiWorkflowState, setPiSessionId, setPiPhase, setPiProviderStatus,
+} from './piWorkflowStore';
+export type { PiWorkflowState } from './piWorkflowStore';

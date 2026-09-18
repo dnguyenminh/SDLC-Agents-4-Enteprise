@@ -11,6 +11,7 @@
   import ChatMessageList from './ChatMessageList.svelte';
   import ChatInput from './ChatInput.svelte';
   import PermissionGuard from './PermissionGuard.svelte';
+  import LeftPane from './LeftPane.svelte';
   import { addUserMessage } from '../stores/chatStore';
   import { activeToolsList, addSessionTypeApproval, addSessionCommandPattern } from '../stores/toolStore';
   import { sendPrompt, dispatchCommand, requestSyncState, respondToolCall } from '../postMessage';
@@ -110,8 +111,13 @@
 <div class="chat-panel" role="main" aria-label="Chat panel">
   <ChatHeader />
   <ServiceOfflineWarning />
-  <ChatMessageList />
-  <ChatInput on:send={handleSend} on:command={handleCommand} />
+  <div class="chat-main">
+    <LeftPane />
+    <div class="chat-center">
+      <ChatMessageList />
+      <ChatInput on:send={handleSend} on:command={handleCommand} />
+    </div>
+  </div>
 
   {#if pendingTool}
     <PermissionGuard
@@ -136,5 +142,16 @@
     font-family: var(--vscode-font-family, sans-serif);
     color: var(--vscode-foreground);
     background: var(--vscode-editor-background);
+  }
+  .chat-main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+  .chat-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 </style>

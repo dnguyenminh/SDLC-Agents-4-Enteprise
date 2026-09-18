@@ -35,6 +35,10 @@ import {
 
 type CompiledGraph = Awaited<ReturnType<typeof buildPipelineGraph>>;
 
+/**
+ * @deprecated SA4E-297: LangGraphEngine is deprecated and will be removed.
+ * Migrate to PiWorkflow Engine (src/pi-workflow/).
+ */
 export class LangGraphEngine {
   private graph: CompiledGraph | null = null;
   private checkpointer: RemoteCheckpointer;

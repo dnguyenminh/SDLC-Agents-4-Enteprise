@@ -7,6 +7,7 @@
   import { hasActiveConnection } from '../stores/connectionStore';
   import { selectedAgent } from '../stores/agentStore';
   import { isStreaming } from '../stores/chatStore';
+  import { piWorkflowState } from '../stores/piWorkflowStore';
   import ContextBadge from './ContextBadge.svelte';
   import AgentSelector from './AgentSelector.svelte';
   import ChangeBadge from './ChangeBadge.svelte';
@@ -20,6 +21,9 @@
         {$selectedAgent.name}
       </span>
     {/if}
+    <span class="meta-badge">Session: {$piWorkflowState.sessionId || '—'}</span>
+    <span class="meta-badge">Phase: {$piWorkflowState.phase || '—'}</span>
+    <span class="meta-badge pi-status" class:connected={$piWorkflowState.providerStatus === 'connected'}>Pi: {$piWorkflowState.providerStatus}</span>
   </div>
 
   <div class="header-right">
@@ -69,12 +73,24 @@
     margin: 0;
     color: var(--vscode-foreground);
   }
-  .agent-name {
+  .agent-name, .meta-badge {
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 3px;
     background: var(--vscode-badge-background, #4d4d4d);
     color: var(--vscode-badge-foreground, #fff);
+  }
+  .meta-badge {
+    margin-left: 4px;
+    opacity: 0.8;
+  }
+  .pi-status {
+    background: var(--vscode-badge-background, #4d4d4d);
+    color: var(--vscode-badge-foreground, #fff);
+  }
+  .pi-status.connected {
+    background: var(--vscode-terminal-ansiGreen, #4ec9b0);
+    color: #000;
   }
   .header-right {
     display: flex;

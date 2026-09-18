@@ -7,6 +7,7 @@
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import type { IMessageRouter } from '../router/IMessageRouter';
+import { bindPiWorkflowEngineToPanel } from '../../pi-workflow/pi-workflow';
 
 /**
  * Creates and manages the Svelte Chat Webview panel.
@@ -36,6 +37,8 @@ export class ChatWebviewProvider implements vscode.Disposable {
       viewColumn,
       this.getWebviewOptions()
     );
+
+    bindPiWorkflowEngineToPanel(this.panel);
 
     this.panel.webview.html = this.buildHtml(this.panel.webview);
     this.registerMessageListener();

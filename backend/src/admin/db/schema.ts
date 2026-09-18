@@ -126,46 +126,6 @@ function ensureAdminPermissions(db: SyncDatabaseAdapter): void {
   }
 }
 
-  db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
-     VALUES (?, ?, 0, ?, ?)`,
-    ['grp-dev', 'Developers', now, now],
-  );
-  const devPerms = ['DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'MCP_ACCESS', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW'];
-  for (const perm of devPerms) {
-    db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
-      ['grp-dev', perm, '{}'],
-    );
-  }
-
-  db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
-     VALUES (?, ?, 0, ?, ?)`,
-    ['grp-viewer', 'Viewers', now, now],
-  );
-  const viewerPerms = ['DASHBOARD_VIEW', 'KB_READ', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW'];
-  for (const perm of viewerPerms) {
-    db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
-      ['grp-viewer', perm, '{}'],
-    );
-  }
-
-  db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
-     VALUES (?, ?, 0, ?, ?)`,
-    ['grp-mcp-ops', 'MCP Operators', now, now],
-  );
-  const mcpPerms = ['DASHBOARD_VIEW', 'MCP_ACCESS', 'MCP_MANAGE'];
-  for (const perm of mcpPerms) {
-    db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
-      ['grp-mcp-ops', perm, '{}'],
-    );
-  }
-}
-
 function seedAdminUser(db: SyncDatabaseAdapter): void {
   const now = new Date().toISOString();
   const envPassword = process.env.ADMIN_INITIAL_PASSWORD;
