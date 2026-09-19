@@ -22,12 +22,22 @@ export class IntentClassifier {
     this.piProvider = piProvider;
   }
 
-  classify(inputText: string): Intent {
-    if (typeof inputText !== 'string') {
-      logger.warn('IntentClassifier.classify: received non-string input, returning unknown intent', { type: typeof inputText });
+  classify(inputText: any): Intent {
+    let text = '';
+    if (typeof inputText === 'string') {
+      text = inputText.toLowerCase();
+    } else if (inputText && typeof inputText === 'object') {
+      const extracted = inputText.prompt || inputText.text || inputText.content || inputText.message;
+      if (typeof extracted === 'string' && extracted.trim()) {
+        text = extracted.toLowerCase();
+      } else {
+        logger.warn('IntentClassifier.classify: received object without valid string content', { keys: Object.keys(inputText) });
+        return { type: 'unknown' };
+      }
+    } else {
+      logger.warn('IntentClassifier.classify: received non-string non-object input', { type: typeof inputText });
       return { type: 'unknown' };
     }
-    const text = inputText.toLowerCase();
     let intent: Intent = { type: 'unknown' };
 
     if (text.includes('move to') || text.includes('transition to') || text.includes('next phase')) {

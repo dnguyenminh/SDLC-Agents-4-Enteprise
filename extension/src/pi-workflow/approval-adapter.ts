@@ -129,6 +129,11 @@ export class ApprovalAdapter implements IApprovalAdapter {
     if (toolId && this.pending.has(toolId)) {
       this.pending.delete(toolId);
     }
+    for (const [extId, p] of this.pending.entries()) {
+      if (p.piId === piId && p.sessionId === sid) {
+        this.pending.delete(extId);
+      }
+    }
   }
 
   getThreadIdForTool(toolId: string, sessionId?: string): string | undefined {
