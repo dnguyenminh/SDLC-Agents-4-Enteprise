@@ -9,7 +9,7 @@ export class AdapterError extends Error {
 
 export interface IApprovalAdapter {
   normalizeId(piToolUseId: string, sessionId: string, ticketKey: string): string;
-  extensionToPiId(extensionId: string, sessionId: string): string | undefined;
+  extensionToPiId(extensionId: string, sessionId?: string): string | undefined;
   getMappingCount(): number;
   clear(): void;
   requestApproval(toolCall: any): Promise<any>;
@@ -116,26 +116,45 @@ export class ApprovalAdapter implements IApprovalAdapter {
 
   handleApproval(decision: 'approve' | 'reject', toolId: string, sessionId?: string): void {
     const fwd = this.forward.get(toolId);
-    const sid = sessionId || fwd?.sessionId || 'default';
-    const piId = this.extensionToPiId(toolId, sid) ?? toolId;
-    if (!piId) return;
+    const pending = this.pending.get(toolId);
+    const sid = sessionId || fwd?.sessionId || pending?.sessionId || 'default';
+    let piId: string | undefined;
+    if (fwd || toolId.startsWith('ext_')) {
+      piId = this.extensionToPiId(toolId, sid);
+      if (!piId) return; // Early return on extensionId session mismatch or invalid extId
+    } else {
+      piId = toolId;
+    }
     this.decisions.set(this.decisionKey(sid, piId), decision);
   }
 
   getThreadIdForTool(toolId: string, sessionId?: string): string | undefined {
     const fwd = this.forward.get(toolId);
-    const sid = sessionId || fwd?.sessionId || 'default';
-    const piId = this.extensionToPiId(toolId, sid) ?? toolId;
-    if (!piId) return undefined;
+    const pending = this.pending.get(toolId);
+    const sid = sessionId || fwd?.sessionId || pending?.sessionId || 'default';
+    let piId: string | undefined;
+    if (fwd || toolId.startsWith('ext_')) {
+      piId = this.extensionToPiId(toolId, sid);
+      if (!piId) return undefined;
+    } else {
+      piId = toolId;
+    }
     const key = `${sid}:${piId}`;
     const entry = this.map.get(key);
-    return entry?.threadId;
+    return entry?.threadId ?? pending?.threadId;
   }
 
   getDecision(toolId: string, sessionId?: string): 'approve' | 'reject' | null {
     const fwd = this.forward.get(toolId);
-    const sid = sessionId || fwd?.sessionId || 'default';
-    const piId = this.extensionToPiId(toolId, sid) ?? toolId;
+    const pending = this.pending.get(toolId);
+    const sid = sessionId || fwd?.sessionId || pending?.sessionId || 'default';
+    let piId: string | undefined;
+    if (fwd || toolId.startsWith('ext_')) {
+      piId = this.extensionToPiId(toolId, sid);
+      if (!piId) return null;
+    } else {
+      piId = toolId;
+    }
     const key = this.decisionKey(sid, piId);
     return this.decisions.get(key) ?? null;
   }

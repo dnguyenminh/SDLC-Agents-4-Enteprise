@@ -115,12 +115,9 @@ export class PhaseRouter implements IPhaseRouter {
           break;
         }
         default: {
-          const msg = `Unrecognized or unknown intent type '${(intent as any)?.type}'`;
-          errors.push(msg);
-          logger.warn('PhaseRouter: unknown intent, routing paused for review', {
-            ticketKey: state.ticketKey,
-            intentType: (intent as any)?.type,
-          });
+          const np = this.nextPhase(currentPhase);
+          if (np) nextPhase = np as SDLCPhase;
+          else nextPhase = 'finish';
           break;
         }
       }
