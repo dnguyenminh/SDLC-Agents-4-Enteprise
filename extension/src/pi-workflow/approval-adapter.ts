@@ -126,6 +126,9 @@ export class ApprovalAdapter implements IApprovalAdapter {
       piId = toolId;
     }
     this.decisions.set(this.decisionKey(sid, piId), decision);
+    if (toolId && this.pending.has(toolId)) {
+      this.pending.delete(toolId);
+    }
   }
 
   getThreadIdForTool(toolId: string, sessionId?: string): string | undefined {
@@ -141,7 +144,11 @@ export class ApprovalAdapter implements IApprovalAdapter {
     }
     const key = `${sid}:${piId}`;
     const entry = this.map.get(key);
-    return entry?.threadId ?? pending?.threadId;
+    if (entry?.threadId) return entry.threadId;
+    if (pending && pending.sessionId === sid && pending.piId === piId) {
+      return pending.threadId;
+    }
+    return undefined;
   }
 
   getDecision(toolId: string, sessionId?: string): 'approve' | 'reject' | null {

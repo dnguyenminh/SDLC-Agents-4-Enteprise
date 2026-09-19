@@ -24,8 +24,8 @@ export class IntentClassifier {
 
   classify(inputText: string): Intent {
     if (typeof inputText !== 'string') {
-      logger.warn('IntentClassifier.classify: received non-string input', { type: typeof inputText });
-      inputText = String((inputText as any)?.prompt || (inputText as any)?.text || inputText || '');
+      logger.warn('IntentClassifier.classify: received non-string input, returning unknown intent', { type: typeof inputText });
+      return { type: 'unknown' };
     }
     const text = inputText.toLowerCase();
     let intent: Intent = { type: 'unknown' };

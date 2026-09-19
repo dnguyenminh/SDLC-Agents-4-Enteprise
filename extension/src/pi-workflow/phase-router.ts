@@ -115,6 +115,11 @@ export class PhaseRouter implements IPhaseRouter {
           break;
         }
         default: {
+          logger.warn('PhaseRouter: unrecognized intent type, defaulting to next phase transition', {
+            ticketKey: state.ticketKey,
+            intentType: intent.type,
+            currentPhase,
+          });
           const np = this.nextPhase(currentPhase);
           if (np) nextPhase = np as SDLCPhase;
           else nextPhase = 'finish';
