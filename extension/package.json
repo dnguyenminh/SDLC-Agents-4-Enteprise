@@ -468,7 +468,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
-    "@earendil-works/pi-agent-core": "^0.1.0",
+    "@earendil-works/pi-agent-core": "0.80.10",
     "@langchain/core": "^1.2.0",
     "@langchain/langgraph": "^1.4.4",
     "@modelcontextprotocol/sdk": "^1.29.0",

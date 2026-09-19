@@ -61,4 +61,23 @@ describe('PiProvider (SA4E-290)', () => {
     expect(result.toolCallId).toBe('tc-1');
     expect(result.result).toBeDefined();
   });
+
+  it('fails closed when SDK missing in production mode', async () => {
+    const origEnv = process.env.NODE_ENV;
+    const origVitest = process.env.VITEST;
+    try {
+      process.env.NODE_ENV = 'production';
+      delete process.env.VITEST;
+
+      await provider.initialize({ transportType: 'HTTP' });
+
+      // If SDK module is not loaded (or stub), createAgent must throw
+      if (!provider.sdkAvailable) {
+        await expect(provider.createAgent('ba-agent')).rejects.toThrow('PI_SDK_UNAVAILABLE');
+      }
+    } finally {
+      process.env.NODE_ENV = origEnv;
+      process.env.VITEST = origVitest;
+    }
+  });
 });

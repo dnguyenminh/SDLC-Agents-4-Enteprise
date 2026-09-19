@@ -110,4 +110,11 @@ export class PiWorkflowEngine {
 
     return { nextPhase: routingResult.nextPhase, nextState };
   }
+
+  /**
+   * Public accessor to load persisted state from checkpointer.
+   */
+  async loadPersistedState(threadId: string): Promise<PiInternalState | null> {
+    return this.checkpointer.loadPiState(threadId);
+  }
 }

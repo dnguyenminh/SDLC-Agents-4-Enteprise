@@ -9,3 +9,8 @@ export * from './checkpointer-adapter.js';
 export * from './approval-adapter.js';
 export * from './pi-workflow.js';
 export * from './utils/tool-normalizer.js';
+export * from './pi-workflow-adapter.js';
+export * from './pi-workflow-state-store.js';
+export * from './pi-workflow-gate.js';
+export * from './remote-checkpointer-store.js';
+export * from './kb-client.js';

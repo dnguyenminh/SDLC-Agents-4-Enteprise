@@ -12,6 +12,9 @@ export interface ToolApprovalGateHandler {
 }
 
 export class ApprovalAdapter {
+  /** SEC-289-02: consumed tool-use IDs — each approval is single-use to prevent replay. */
+  private readonly consumedApprovals = new Set<string>();
+
   constructor(private gateHandler?: ToolApprovalGateHandler) {}
 
   normalizeToolUseId(rawId: string): string {
@@ -28,7 +31,17 @@ export class ApprovalAdapter {
     const normalized = normalizeToolCall(toolCall as any);
     const toolUseId = this.normalizeToolUseId(normalized.id);
 
+    // SEC-289-02: reject any attempt to reuse an already-consumed approval decision.
+    if (this.consumedApprovals.has(toolUseId)) {
+      return {
+        approved: false,
+        normalizedToolCall: { ...normalized, id: toolUseId },
+        reason: 'Approval replay detected: toolUseId already consumed'
+      };
+    }
+
     if (!this.gateHandler) {
+      this.consumedApprovals.add(toolUseId);
       return {
         approved: true,
         normalizedToolCall: { ...normalized, id: toolUseId },
@@ -43,6 +56,10 @@ export class ApprovalAdapter {
       agentId: context?.agentId,
       ticketKey: context?.ticketKey
     });
+
+    if (gateResult.approved) {
+      this.consumedApprovals.add(toolUseId);
+    }
 
     return {
       approved: gateResult.approved,
