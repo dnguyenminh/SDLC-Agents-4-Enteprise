@@ -22,7 +22,7 @@ export class IntentClassifier {
     this.piProvider = piProvider;
   }
 
-  classify(inputText: any): Intent {
+  classify(inputText: string | Record<string, any>): Intent {
     let text = '';
     if (typeof inputText === 'string') {
       text = inputText.toLowerCase();
@@ -63,7 +63,7 @@ export class IntentClassifier {
     return parsed.data;
   }
 
-  async classifyWithPi(inputText: string): Promise<Intent> {
+  async classifyWithPi(inputText: string | Record<string, any>): Promise<Intent> {
     if (!this.piProvider) {
       try {
         const provider = createPiProvider();

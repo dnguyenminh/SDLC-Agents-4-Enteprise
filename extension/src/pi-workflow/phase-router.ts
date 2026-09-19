@@ -16,7 +16,7 @@ export interface IPhaseRouter {
   nextPhase(current: string): string | null;
   isTerminal(phase: string): boolean;
   routePhase(state: PiWorkflowState, intent: Intent): RouteResult;
-  classifyIntent(inputText: string): Intent;
+  classifyIntent(inputText: string | Record<string, any>): Intent;
 }
 
 export class PhaseRouter implements IPhaseRouter {

@@ -129,7 +129,7 @@ export class ApprovalAdapter implements IApprovalAdapter {
     if (toolId && this.pending.has(toolId)) {
       this.pending.delete(toolId);
     }
-    for (const [extId, p] of this.pending.entries()) {
+    for (const [extId, p] of Array.from(this.pending.entries())) {
       if (p.piId === piId && p.sessionId === sid) {
         this.pending.delete(extId);
       }
