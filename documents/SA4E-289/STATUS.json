@@ -1,7 +1,7 @@
 {
   "ticket": "SA4E-289",
   "title": "[Epic] Migrate LangGraph Workflow Engine to Pi SDK (Option C)",
-  "status": "IN_PROGRESS",
+  "status": "COMPLETED",
   "assignee": "SM",
   "description": "Full replacement of the LangGraph-based workflow engine in the SDLC Agents 4 Enterprise VS Code extension with the Pi SDK (@earendil-works/pi-agent-core), following Option C: Full Replacement strategy.\n\nSee extension/docs/pi-migration-plan.md for the full plan.\n\nKey Phases:\n1. Install Pi SDK & Create Pi Provider\n2. Build PiAgent Executor (single turn)\n3. Implement Phase Router\n4. Implement State & Checkpointer Adapters\n5. Integration & Human Approval Logic\n6. Testing, QA, and LangGraph Cleanup",
   "priority": "HIGH",
@@ -15,19 +15,19 @@
     },
     {
       "id": "SA",
-      "status": "IN_PROGRESS",
+      "status": "COMPLETED",
       "description": "Architecture Design (PiWorkflow Engine)",
       "artifacts": []
     },
     {
       "id": "DEV",
-      "status": "TODO",
+      "status": "COMPLETED",
       "description": "Implementation of PiWorkflow components",
       "artifacts": []
     },
     {
       "id": "QA",
-      "status": "TODO",
+      "status": "COMPLETED",
       "description": "Testing and Validation",
       "artifacts": []
     }
@@ -36,37 +36,37 @@
     {
       "id": "SA4E-289-ST1",
       "title": "Install Pi SDK & Create Pi Provider",
-      "status": "TODO",
+      "status": "COMPLETED",
       "assignee": "DEV"
     },
     {
       "id": "SA4E-289-ST2",
       "title": "Build PiAgent Executor (single turn)",
-      "status": "TODO",
+      "status": "COMPLETED",
       "assignee": "DEV"
     },
     {
       "id": "SA4E-289-ST3",
       "title": "Implement Phase Router",
-      "status": "TODO",
+      "status": "COMPLETED",
       "assignee": "DEV"
     },
     {
       "id": "SA4E-289-ST4",
       "title": "Implement State & Checkpointer Adapters",
-      "status": "TODO",
+      "status": "COMPLETED",
       "assignee": "DEV"
     },
     {
       "id": "SA4E-289-ST5",
       "title": "Integration & Human Approval Logic",
-      "status": "TODO",
+      "status": "COMPLETED",
       "assignee": "DEV"
     },
     {
       "id": "SA4E-289-ST6",
       "title": "Testing, QA, and LangGraph Cleanup",
-      "status": "TODO",
+      "status": "COMPLETED",
       "assignee": "QA"
     }
   ],

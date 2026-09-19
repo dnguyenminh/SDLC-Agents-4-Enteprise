@@ -1,0 +1,77 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Extension Package / Service Modules -->
+    <mxCell id="2" value="VS Code Settings (package.json)" style="component;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="220" height="70" />
+    </mxCell>
+
+    <mxCell id="3" value="PegaCatalogIndexer Service" style="component;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="340" y="60" width="240" height="70" />
+    </mxCell>
+
+    <mxCell id="4" value="PegaBfsIndexer Facade" style="component;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="340" y="180" width="240" height="80" />
+    </mxCell>
+
+    <mxCell id="5" value="PegaBfsPipeline (Producer-Consumer)" style="component;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="640" y="180" width="260" height="80" />
+    </mxCell>
+
+    <mxCell id="6" value="BoundedChannel&lt;FetchedRule&gt;" style="component;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="940" y="180" width="200" height="80" />
+    </mxCell>
+
+    <mxCell id="7" value="PegaRuleChecksumStrategy (NT-2)" style="component;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="320" width="250" height="80" />
+    </mxCell>
+
+    <mxCell id="8" value="Local Workspace File System&#xa;(saveRuleFile / tryReadLocalRule)" style="component;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="340" y="320" width="240" height="80" />
+    </mxCell>
+
+    <mxCell id="9" value="PegaHttpClient (REST Client)" style="component;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="640" y="320" width="220" height="80" />
+    </mxCell>
+
+    <mxCell id="10" value="PegaStreamIngester Client" style="component;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="340" y="460" width="240" height="70" />
+    </mxCell>
+
+    <!-- Connectors -->
+    <mxCell id="c1" value="Reads preferLocal config" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="c2" value="Delegates index run" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="c3" value="Spawns fetch/ingest pipeline" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="c4" value="Pushes/Takes FetchedRule" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="5" target="6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="c5" value="Calculates 3-field SHA256" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="7">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="c6" value="Reads/Writes rules/*.pega.json" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="8">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="c7" value="Fallback getRuleByInsKey" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="9">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="c8" value="POST ingestSingleRule (INV-1)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="4" target="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

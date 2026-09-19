@@ -1,13 +1,17 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
+import pino from 'pino';
 import { getDbAdapter } from '../../../admin/admin-db.js';
 import { hashPassword, verifyPassword } from '../../../admin/db/password.js';
 import { recordAudit, getUserPermissions, getUserById, changePassword } from '../../../admin/admin-db.js';
 import { UserRepository } from '../../../database/repositories/UserRepository.js';
 import { SessionService } from '../../services/SessionService.js';
 
+const logger = pino({ name: 'auth-unified' });
+
 const loginSchema = z.object({ identifier: z.string().optional(), username: z.string().optional(), email: z.string().optional(), password: z.string() });
-const registerSchema = z.object({ email: z.string().email(), password: z.string().min(6), username: z.string().optional(), access_group_id: z.string().optional() });
+// Self-registration never accepts access_group_id — group is always grp-viewer (privilege-escalation guard).
+const registerSchema = z.object({ email: z.string().email(), password: z.string().min(6), username: z.string().optional() });
 const refreshSchema = z.object({ sessionToken: z.string().optional(), refresh_token: z.string().optional() });
 const changePasswordSchema = z.object({ currentPassword: z.string(), newPassword: z.string().min(6) });
 
@@ -86,13 +90,13 @@ export function createUnifiedAuthRoutes() {
       if (!parsed.success) {
         return c.json({ success: false, error: { code: 'ERR_001', message: 'Email and password are required' } }, 400);
       }
-      const { email, password, access_group_id } = parsed.data;
+      const { email, password } = parsed.data;
       const existing = await repo.findByEmail(email);
       if (existing) {
         return c.json({ success: false, error: { code: 'ERR_002', message: 'Email already registered' } }, 400);
       }
       const hash = hashPassword(password);
-      const user = await repo.createUser({ email, username: email, passwordHash: hash, accessGroupId: access_group_id || 'grp-viewer' });
+      const user = await repo.createUser({ email, username: email, passwordHash: hash, accessGroupId: 'grp-viewer' });
       await recordAudit(user.user_id as string, email, 'REGISTER', 'user', user.user_id as string);
       const response = {
         success: true,
@@ -101,8 +105,8 @@ export function createUnifiedAuthRoutes() {
       };
       return c.json(response, 200);
     } catch (err: any) {
-      console.error('Register error', err);
-      return c.json({ success: false, error: { code: 'ERR_001', message: 'Registration failed' } }, 500);
+      logger.error({ err, context: 'register' }, 'Register error');
+      return c.json({ success: false, error: { code: 'ERR_003', message: 'Registration failed' } }, 500);
     }
   });
 

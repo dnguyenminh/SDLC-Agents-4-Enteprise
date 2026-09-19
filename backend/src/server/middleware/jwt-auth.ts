@@ -126,7 +126,12 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
 
     const userAgent = c.req.header('user-agent') || '';
     const sessionService = new SessionService();
-    const session = await sessionService.validate(token, userAgent);
+    let session: any = null;
+    try {
+      session = await sessionService.validate(token, userAgent);
+    } catch {
+      // DB error never crashes auth — fail closed for mustAuth, graceful for anonymous
+    }
     if (!session) {
       if (!mustAuth) return anonymous();
       return unauthorized('TOKEN_INVALID', 'Invalid or expired token');

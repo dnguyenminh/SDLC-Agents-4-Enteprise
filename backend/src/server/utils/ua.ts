@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 
 export function normalizeUserAgent(ua: string): string {
-  return ua.split('(')[0].trim().toLowerCase();
+  if (!ua) return '';
+  return ua.trim().toLowerCase();
 }
 
 export function hashUserAgent(ua: string): string {
