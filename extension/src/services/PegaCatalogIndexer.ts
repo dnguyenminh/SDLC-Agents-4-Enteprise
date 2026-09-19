@@ -30,6 +30,10 @@ export interface CatalogIndexResult {
   appName: string;
   catalogRules: number;
   totalIngested: number;
+  /** SA4E-301: rules served from the local workspace (checksum match). */
+  localServed: number;
+  /** SA4E-301: rules downloaded from the Pega server. */
+  downloaded: number;
 }
 
 /**
@@ -92,7 +96,7 @@ export class PegaCatalogIndexer {
 
     if (toFetch.length === 0) {
       this.log("[Catalog] ✅ Nothing changed — index is up to date.");
-      return { appName, catalogRules: parsed.items.length, totalIngested: 0 };
+      return { appName, catalogRules: parsed.items.length, totalIngested: 0, localServed: 0, downloaded: 0 };
     }
 
     // 6: reuse BFS indexer to fetch content + ingest (+ discover relatives)
@@ -101,10 +105,27 @@ export class PegaCatalogIndexer {
     const dedupSet = createPegaDedupSet(root, "catalog-indexer");
     try {
       const bfsResult = await bfs.run(projectId, toFetch, dedupSet, report, root);
-      return { appName, catalogRules: parsed.items.length, totalIngested: bfsResult.totalIngested };
+      // SA4E-301: propagate local-cache telemetry to the final summary/output channel.
+      this.logTelemetry(bfsResult);
+      return {
+        appName,
+        catalogRules: parsed.items.length,
+        totalIngested: bfsResult.totalIngested,
+        localServed: bfsResult.localServed,
+        downloaded: bfsResult.downloaded,
+      };
     } finally {
       dedupSet.dispose();
     }
+  }
+
+  /**
+   * SA4E-301 — Telemetry: local-cache usage summary line, matching the existing
+   * output logging style (this.log is wired to the Output channel).
+   */
+  private logTelemetry(result: { localServed: number; downloaded: number }): void {
+    const total = result.localServed + result.downloaded;
+    this.log(`[Catalog] 🏛️ Pega: ${total} rules — ${result.localServed} from local cache, ${result.downloaded} downloaded`);
   }
 
   /**

@@ -1,0 +1,82 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- Swimlanes -->
+    <mxCell id="lane1" value="Business Analyst" style="swimlane;horizontal=0;startSize=110;fillColor=#d5e8d4;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="lane2" value="Development" style="swimlane;horizontal=0;startSize=110;fillColor=#dae8fc;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="40" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="lane3" value="Pega Indexer" style="swimlane;horizontal=0;startSize=110;fillColor=#fff2cc;html=1;" vertex="1" parent="1">
+      <mxGeometry x="520" y="40" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <!-- Steps -->
+    <mxCell id="s1" value="1. Receive CR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="lane1">
+      <mxGeometry x="20" y="20" width="180" height="40" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="s2" value="2. Define scope" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="lane1">
+      <mxGeometry x="20" y="70" width="180" height="40" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="s3" value="3. Implement logic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane2">
+      <mxGeometry x="260" y="20" width="200" height="40" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="s4" value="4. Add checksum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane2">
+      <mxGeometry x="260" y="70" width="200" height="40" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="s5" value="5. Check setting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane3">
+      <mxGeometry x="480" y="20" width="200" height="40" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="s6" value="6. Compare checksums" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane3">
+      <mxGeometry x="480" y="70" width="200" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- Edges -->
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="s1" target="s3">
+      <mxGeometry relative="1" as="geometry">
+        <mxArray as="points">
+          <mxPoint x="220" y="50"/>
+          <mxPoint x="260" y="50"/>
+        </mxArray>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="s3" target="s5">
+      <mxGeometry relative="1" as="geometry">
+        <mxArray as="points">
+          <mxPoint x="280" y="90"/>
+          <mxPoint x="460" y="90"/>
+        </mxArray>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="s5" target="s6">
+      <mxGeometry relative="1" as="geometry">
+        <mxArray as="points">
+          <mxPoint x="500" y="90"/>
+          <mxPoint x="480" y="90"/>
+        </mxArray>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Start/End -->
+    <mxCell id="start" value="Start" style="ellipse;fillColor=#000000;html=1;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="20" y="40" width="60" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="end" value="End" style="ellipse;fillColor=#000000;html=1;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1120" y="680" width="60" height="30" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

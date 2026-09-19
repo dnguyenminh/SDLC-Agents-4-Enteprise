@@ -1,0 +1,22 @@
+# RUN-LOG — SA4E-301
+
+| # | Agent | Phase | Action | Result | Timestamp |
+|---|-------|-------|--------|--------|-----------|
+| 1 | SM | bootstrap | Bootstrap MCP (http://localhost:9181/mcp) via initialize + tools/list | CONNECTED — sdlc-agents-4-enterprise v1.11.0, 12 core tools loaded | 2026-09-18T17:10:00Z |
+| 2 | SM | bootstrap | find_tools("jira issue get transitions attachments") — discover Jira tools | OK — jira_get_issue, jira_transition_issue, jira_transition_by_name, jira_add_comment, jira_attach_file, jira_get_comments... available via execute_dynamic_tool | 2026-09-18T17:11:00Z |
+| 3 | SM | bootstrap | orchestration_status() | ready — markdown-exporter-local connected (6 tools), markitdown disconnected (non-blocking) | 2026-09-18T17:11:00Z |
+| 4 | SM | resume | Read STATUS.json + scan documents/SA4E-301/ | Phase 1 (requirements) done (BRD.md v1 + 2 diagrams); Phase 2 in_progress (FSD.md absent); Jira In Progress | 2026-09-18T17:12:00Z |
+| 5 | SM | resume | execute_dynamic_tool(jira_get_issue SA4E-301) + jira_get_comments | Ticket fetched (Feature, In Progress, 0 comments) — summary + full description context | 2026-09-18T17:13:00Z |
+| 6 | SM | phase-1-verify | Verify BRD quality gates (6 checks: sections, user stories, diagrams, drawio XML) | PASS 6/6 — BRD.md 479 lines, use-case + business-flow drawio valid (mxGraphModel, no self-closing edges). Gap: BRD.md không embed images / thiếu Diagram Index → giao BA fix khi Phase 2 | 2026-09-18T17:14:00Z |
+| 7 | SM | phase-1-verify | mem_ingest_file(BRD.md → KB, REQUIREMENT, PROJECT) | Ingested (29 entries) | 2026-09-18T17:15:00Z |
+| 8 | SM | phase-2-start | Update STATUS.json — specification in_progress, chuẩn bị invoke ba-agent (FSD draft + BRD diagram fix) | Done — session resume: MCP re-connected, code-intel index verified | 2026-09-19T09:00:00Z |
+| 9 | ta-agent | phase-2-enrichment | Review và bổ sung technical depth cho FSD.md (API contracts, Zod schemas, pseudocode, DB DDL, NFRs) | PASS — FSD.md enriched, ingested to KB (43 entries) | 2026-09-19T09:12:00Z |
+| 10 | SM | phase-2-verify | Verify FSD quality gates + embed images | PASS — FSD-embedded.md generated, STATUS specification done | 2026-09-19T09:15:00Z |
+| 11 | sa-agent | phase-3-design | Phân tích FSD.md và codebase, tạo TDD.md + 6 draw.io diagrams (architecture, component, deployment, api-sequence, db-schema, class-diagram), export PNG, ingest KB | PASS — TDD.md v1.0 created, 6 draw.io + PNG exported, 53 KB entries ingested | 2026-09-19T10:05:00Z |
+| 12 | ba-agent | phase-2-draft (retroactive — session ses_f49cb5d39ffesRwxCL71cr2IuO) | Tạo FSD.md draft từ BRD + Jira context; fix BRD gaps (embed 2 diagram images + Diagram Index tại Appendix) | PASS — FSD.md draft created (~43KB sau khi ta-agent enrich), BRD Diagram Index added (line 463), BRD-embedded.md generated | 2026-09-19T09:08:00Z |
+| 13 | SM | phase-4-test-planning | Xác minh lại state session mới (MCP 200 OK, TDD/FSD structure PASS, 26 diagram files, extension test = vitest); Invoke qa-agent: tạo STP.md + STC.md | In progress | 2026-09-19T10:30:00Z |
+| 14 | qa-agent | phase-4-test-planning | Tạo test data CSVs (5 files, 64 rows) + test-coverage/test-execution-flow drawio+PNG; session 1-2 bị cut trước khi viết docs (context exhaustion) → retry write-first | PASS — CSVs + diagrams created; STP/STC docs ban đầu MISSING | 2026-09-19T11:10:00Z |
+| 15 | qa-agent | phase-4-test-planning | Retry write-first: viết STP.md (225 lines, 10 sections, RTM 100%) + STC.md (142 lines, 39 TCs, table format, chunked 3 edits) | PASS — cả 2 docs created + ingested KB (STP 23 entries, STC 16 entries) | 2026-09-19T11:25:00Z |
+| 16 | SM | phase-4-review | SM review STP/STC (10 tiêu chí) | Approve with conditions — STC PASS; STP §5 RTM mislabel AC-5..AC-8. Invoke qa-agent fix RTM → corrected (verified) | 2026-09-19T11:30:00Z |
+| 17 | SM | phase-4-finalize | Export 5 DOCX (BRD/FSD/TDD/STP/STC-v1-SA4E-301) + attach 35 files lên Jira (5 DOCX + 15 drawio + 15 PNG) + Jira comment Test Plan Approved | DONE — 35/35 attached, 0 failed. TDD DOCX export plain (embedded variant fail 3 lần — PNGs attach riêng) | 2026-09-19T11:35:00Z |
+| 18 | SM | phase-5-start | Invoke dev-agent: implement prefer-local-on-checksum-match theo TDD (PegaLocalRuleResolver mới, setting, PegaBfsIndexer nhánh read-local, manifest trong saveRuleFile, telemetry counters, tests) | In progress | 2026-09-19T11:40:00Z |

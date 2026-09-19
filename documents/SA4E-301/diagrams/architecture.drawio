@@ -1,0 +1,75 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    
+    <!-- User / IDE -->
+    <mxCell id="2" value="Developer / VS Code IDE" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="60" y="240" width="40" height="80" as="geometry" />
+    </mxCell>
+
+    <!-- Extension Container -->
+    <mxCell id="3" value="VS Code Extension Host Process (SDLC Extension)" style="swimlane;whiteSpace=wrap;html=1;startSize=30;horizontal=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="100" width="520" height="420" as="geometry" />
+    </mxCell>
+
+    <mxCell id="4" value="Configuration Manager&#xa;(vscode.workspace.getConfiguration)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="3">
+      <mxGeometry x="30" y="50" width="220" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="5" value="PegaCatalogIndexer&#xa;(Catalog Export &amp; Delta Check)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="3">
+      <mxGeometry x="270" y="50" width="220" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="6" value="PegaBfsIndexer &amp; PegaBfsPipeline&#xa;(Producer-Consumer Orchestrator)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="3">
+      <mxGeometry x="30" y="160" width="460" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="7" value="PegaRuleChecksumStrategy&#xa;(3-Field SHA256: pzInsKey + pxUpdate + pxSave)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="3">
+      <mxGeometry x="30" y="270" width="240" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="8" value="PegaStreamIngester&#xa;(Backend Streaming Ingest Client)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="3">
+      <mxGeometry x="300" y="270" width="190" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- External Systems -->
+    <mxCell id="9" value="Local Workspace Storage&#xa;rules/&lt;safeClass&gt;/&lt;safeName&gt;.pega.json" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="210" y="580" width="220" height="100" as="geometry" />
+    </mxCell>
+
+    <mxCell id="10" value="Remote Pega Platform Server&#xa;(PRPC REST API: getRuleByInsKey)" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="780" y="120" width="240" height="130" as="geometry" />
+    </mxCell>
+
+    <mxCell id="11" value="Code-Intelligence Backend Server&#xa;(Hono API + SQLite / PostgreSQL KB)" style="shape=module;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="780" y="340" width="240" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- Edges -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="2" target="6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e2" value="Read config setting" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="6" target="4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e3" value="Prefer-Local Read &amp; Verify" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="6" target="9">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e4" value="3-Field Checksum" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="6" target="7">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e5" value="Fallback Download (Missing/Mismatch)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="6" target="10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e6" value="POST /api/v1/pega/ingest-rule (INV-1)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="8" target="11">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

@@ -1,0 +1,56 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="state_discovered" value="Rule Discovered&#xa;(Catalog Row)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="100" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="state_local_check" value="Checking Local File&#xa;&amp; Config Setting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="240" y="100" width="150" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="state_checksum_verify" value="Verifying Checksum&#xa;(computePegaChecksum)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="440" y="100" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="state_local_match" value="Local Content Served&#xa;(Network Skipped)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="660" y="30" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="state_remote_fallback" value="Remote Fallback&#xa;(Mismatch / Missing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="660" y="170" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="state_downloaded" value="Server Content&#xa;Downloaded &amp; Saved" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="880" y="170" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="state_ingested" value="Rule Ingested &amp; Indexed&#xa;(Invariant INV-1 Verified)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="880" y="30" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="1. Process Item" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="state_discovered" target="state_local_check">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="2. File Exists &amp; preferLocal=true" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="state_local_check" target="state_checksum_verify">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="3a. Checksum Match" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#82b366;" edge="1" parent="1" source="state_checksum_verify" target="state_local_match">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="3b. Checksum Mismatch" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;" edge="1" parent="1" source="state_checksum_verify" target="state_remote_fallback">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="No local file OR preferLocal=false" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#d6b656;" edge="1" parent="1" source="state_local_check" target="state_remote_fallback">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="315" y="200"/>
+          <mxPoint x="660" y="200"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="4. getRuleByInsKey" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="state_remote_fallback" target="state_downloaded">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="5a. Ingest Local" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#82b366;" edge="1" parent="1" source="state_local_match" target="state_ingested">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="5b. Ingest Downloaded" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="state_downloaded" target="state_ingested">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

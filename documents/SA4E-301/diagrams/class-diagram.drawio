@@ -1,0 +1,58 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- PegaCatalogIndexer -->
+    <mxCell id="c1" value="PegaCatalogIndexer&#xa;-------------------&#xa;+ run(root, report, secrets): Promise&lt;CatalogIndexResult|null&gt;&#xa;- applyIncrementalSkip(backendUrl, projectId, items): Promise&lt;CrawlPlanItem[]&gt;&#xa;- resolveAppName(root): string" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="380" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- PegaBfsIndexer -->
+    <mxCell id="c2" value="PegaBfsIndexer&#xa;-------------------&#xa;- ingester: PegaStreamIngester&#xa;- seenRuleTypes: Set&lt;string&gt;&#xa;-------------------&#xa;+ run(projectId, fetchQueue, dedupSet, report, root): Promise&lt;BfsIndexResult&gt;&#xa;- ingestOne(projectId, fetched, root): Promise&lt;Result&gt;&#xa;- ingestAndDiscover(projectId, ruleJson, checksum): Promise&lt;Result&gt;&#xa;- computeChecksum(rule): string" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="40" y="200" width="420" height="170" as="geometry" />
+    </mxCell>
+
+    <!-- PegaBfsPipeline -->
+    <mxCell id="c3" value="PegaBfsPipeline&#xa;-------------------&#xa;- inFlight: number&#xa;- processed: number&#xa;- drainLock: Promise&lt;void&gt;&#xa;-------------------&#xa;+ run(fetchQueue, dedupSet, counters): Promise&lt;void&gt;&#xa;- supply(channel, fetchQueue): Promise&lt;void&gt;&#xa;- consume(channel, fetchQueue, dedupSet, counters): Promise&lt;void&gt;&#xa;- drain(fetched, outcome, fetchQueue, dedupSet, counters): Promise&lt;void&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="520" y="200" width="440" height="170" as="geometry" />
+    </mxCell>
+
+    <!-- BoundedChannel -->
+    <mxCell id="c4" value="BoundedChannel&lt;T&gt;&#xa;-------------------&#xa;- queue: T[]&#xa;- capacity: number&#xa;-------------------&#xa;+ push(item: T): Promise&lt;void&gt;&#xa;+ take(): Promise&lt;ChannelResult&lt;T&gt;&gt;&#xa;+ close(): void" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="520" y="40" width="280" height="120" as="geometry" />
+    </mxCell>
+
+    <!-- PegaRuleChecksumStrategy -->
+    <mxCell id="c5" value="PegaRuleChecksumStrategy (NT-2)&#xa;-------------------&#xa;+ sourceKind: 'pega-rule'&#xa;-------------------&#xa;+ compute(input: PegaRuleChecksumInput): string&#xa;+ computePegaChecksum(r: PegaRuleChecksumInput): string" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="410" width="420" height="130" as="geometry" />
+    </mxCell>
+
+    <!-- PegaStreamIngester -->
+    <mxCell id="c6" value="PegaStreamIngester&#xa;-------------------&#xa;- backendUrl: string&#xa;-------------------&#xa;+ ingestSingleRule(projectId, ruleJson, checksum, version): Promise&lt;IngestResponse&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="520" y="410" width="440" height="130" as="geometry" />
+    </mxCell>
+
+    <!-- Relationships -->
+    <mxCell id="rel1" value="Delegates catalog run" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="c1" target="c2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="rel2" value="Instantiates &amp; drives" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="c2" target="c3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="rel3" value="Uses buffer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="c3" target="c4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="rel4" value="Uses for INV-1 checksum" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="c2" target="c5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="rel5" value="Ingests rules" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="c2" target="c6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>

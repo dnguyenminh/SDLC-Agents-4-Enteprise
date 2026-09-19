@@ -31,10 +31,12 @@ import type { PegaHttpClient } from "./PegaHttpClient";
 
 type LogFn = (msg: string) => void;
 
-/** A rule fetched from Pega, awaiting ingest. */
+/** A rule fetched from Pega (or served locally — SA4E-301), awaiting ingest. */
 export interface FetchedRule {
   ruleObj: Record<string, unknown>;
   item: CrawlPlanItem;
+  /** SA4E-301: where the content came from — "local" skips the network download. */
+  source?: "local" | "downloaded";
 }
 
 /** Mutable counters threaded through the whole run. */
@@ -43,7 +45,19 @@ export interface BfsCounters {
   discoveredCount: number;
   skippedCount: number;
   errorCount: number;
+  /** SA4E-301: rules served from the local workspace (checksum match). */
+  localServed: number;
+  /** SA4E-301: rules downloaded from the Pega server. */
+  downloaded: number;
 }
+
+/** SA4E-301 — A local-cache hit returned by the resolver before fetch. */
+export interface LocalFetchHit {
+  ruleObj: Record<string, unknown>;
+}
+
+/** SA4E-301 — Consulted per item BEFORE the network call; null → download. */
+export type LocalResolveFn = (item: CrawlPlanItem) => Promise<LocalFetchHit | null>;
 
 /** Callback that ingests one fetched rule and reports status + discovered relatives. */
 export type IngestFn = (rule: FetchedRule) => Promise<{ ingested: boolean; relatives: UnresolvedDependency[] }>;
@@ -59,6 +73,8 @@ export interface PipelineOptions {
   maxQueueSize: number;
   maxIterations: number;
   resilient: boolean;
+  /** SA4E-301: local-cache resolver consulted before each network fetch. */
+  resolveLocalBeforeFetch?: LocalResolveFn;
 }
 
 /**
@@ -129,11 +145,16 @@ export class PegaBfsPipeline {
       this.processed += batch.length;
       this.onProgress?.(this.processed, fetchQueue.length);
 
-      const fetchResult = await fetchRulesInParallel(batch, this.pegaClient, this.log, !this.opts.resilient);
+      // SA4E-301: serve local-cache matches straight to the channel (no network).
+      // Only the remaining items hit fetchRulesInParallel / getRuleByInsKey.
+      const netBatch = await this.serveLocally(channel, batch);
+      if (netBatch.length === 0) { continue; } // entire batch served from local
+
+      const fetchResult = await fetchRulesInParallel(netBatch, this.pegaClient, this.log, !this.opts.resilient);
       if (fetchResult.serverError) {
         this.aborted = fetchResult.serverError;
         // These rules never reach a consumer, so release their in-flight count.
-        this.inFlight -= batch.length;
+        this.inFlight -= netBatch.length;
         break;
       }
 
@@ -141,7 +162,7 @@ export class PegaBfsPipeline {
       // them as errors and release their in-flight slots so liveness holds.
       // Safe to mutate counters here: the supplier is a single loop and errorCount
       // is never touched inside the (consumer-side) drain section.
-      const missed = batch.length - fetchResult.fetched.length;
+      const missed = netBatch.length - fetchResult.fetched.length;
       if (missed > 0) { this.inFlight -= missed; this.fetchErrors += missed; }
 
       for (const fetched of fetchResult.fetched) {
@@ -149,6 +170,30 @@ export class PegaBfsPipeline {
       }
     }
     channel.close();
+  }
+
+  /**
+   * SA4E-301 — Consult the local resolver per item BEFORE the network call and
+   * push local-cache matches into the channel with source="local". Returns the
+   * subset of the batch that still needs a server download. A resolver throw is
+   * treated as a miss (download) — fail-safe, never breaks the supplier loop.
+   */
+  private async serveLocally(
+    channel: BoundedChannel<FetchedRule>,
+    batch: CrawlPlanItem[],
+  ): Promise<CrawlPlanItem[]> {
+    const resolver = this.opts.resolveLocalBeforeFetch;
+    if (!resolver) { return batch; }
+    const netBatch: CrawlPlanItem[] = [];
+    for (const item of batch) {
+      const hit = await resolver(item).catch(() => null);
+      if (hit) {
+        await channel.push({ ruleObj: hit.ruleObj, item, source: "local" });
+      } else {
+        netBatch.push(item);
+      }
+    }
+    return netBatch;
   }
 
   /** Consumer loop: ingest one rule (parallel), then drain results (serial). */
@@ -194,6 +239,8 @@ export class PegaBfsPipeline {
     await prior;
     try {
       if (outcome.ingested) { counters.totalIngested++; } else { counters.skippedCount++; }
+      // SA4E-301: count by content source — local cache vs server download.
+      if (fetched.source === "local") { counters.localServed++; } else { counters.downloaded++; }
       counters.discoveredCount += this.enqueueRelatives(outcome.relatives, fetchQueue, dedupSet);
     } finally {
       release!();

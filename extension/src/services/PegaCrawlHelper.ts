@@ -9,6 +9,7 @@ import { parallelBatch } from "./parallel-utils";
 import { computeOptimalConcurrency, measureLatency } from "./concurrency-tuner";
 import type { PegaHttpClient } from "./PegaHttpClient";
 import type { MembershipSet } from "./DiskBackedSet";
+import { MANIFEST_RELATIVE_PATH, RuleManifestSchema } from "../models/PegaLocalRuleModels";
 
 /** Computed at runtime — see computeFetchConcurrency() */
 let FETCH_CONCURRENCY = 10; // default until measured
@@ -179,6 +180,8 @@ export async function fetchRuleTypesInParallel(
 /**
  * Save a Pega rule object as a .pega.json file in the workspace rules/ directory.
  * Idempotent: skips if file already exists.
+ * SA4E-301: also keeps rules/.manifest.json in sync (pzInsKey → relativePath) so
+ * the prefer-local resolver can find this file on the next index run.
  */
 export function saveRuleFile(
     rObj: Record<string, unknown>,
@@ -188,16 +191,8 @@ export function saveRuleFile(
     fallbackName?: string,
 ): void {
     try {
-        const objClass = (rObj.pxObjClass as string) || fallbackClass || "Rule";
-        const ruleName = (rObj.pyRuleName as string)
-            || (rObj.pyPropertyName as string)
-            || (rObj.pyActivityName as string)
-            || (rObj.pyFlowName as string)
-            || (rObj.pyModelName as string)
-            || (rObj.pyLabel as string)
-            || fallbackName || "Rule";
-        const safeClass = objClass.replace(/[^a-zA-Z0-9_-]/g, "_");
-        const safeName = ruleName.replace(/[^a-zA-Z0-9_.-]/g, "_");
+        const safeClass = sanitizePegaClass((rObj.pxObjClass as string) || fallbackClass || "Rule");
+        const safeName = sanitizePegaName(resolveRuleName(rObj, fallbackName));
 
         const targetDir = path.join(root, "rules", safeClass);
         if (!fs.existsSync(targetDir)) {
@@ -208,8 +203,60 @@ export function saveRuleFile(
             fs.writeFileSync(filePath, JSON.stringify(rObj, null, 2), "utf-8");
             log(`[Pega Indexer] 💾 Saved ${safeClass}/${safeName}.pega.json`);
         }
+        updateRuleManifest(root, (rObj.pzInsKey as string) || "", filePath, log);
     } catch (fileErr: any) {
         log(`[Pega Indexer] ⚠️ File save error: ${fileErr.message}`);
+    }
+}
+
+/** Resolve a rule's file name from its own fields, with fallbacks. */
+function resolveRuleName(rObj: Record<string, unknown>, fallbackName?: string): string {
+    return (rObj.pyRuleName as string)
+        || (rObj.pyPropertyName as string)
+        || (rObj.pyActivityName as string)
+        || (rObj.pyFlowName as string)
+        || (rObj.pyModelName as string)
+        || (rObj.pyLabel as string)
+        || fallbackName || "Rule";
+}
+
+/** Sanitize a rule class segment for safe filesystem paths (shared canonical form). */
+export function sanitizePegaClass(cls: string): string {
+    return cls.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
+/** Sanitize a rule name segment for safe filesystem paths (allows dots). */
+export function sanitizePegaName(name: string): string {
+    return name.replace(/[^a-zA-Z0-9_.-]/g, "_");
+}
+
+/**
+ * SA4E-301 — Update rules/.manifest.json with pzInsKey → relativePath after a
+ * rule file save. Idempotent (re-save overwrites the same entry). Tolerant: a
+ * manifest write failure is logged as a warning and NEVER fails the save —
+ * the manifest is an optimization-only lookup for the prefer-local resolver.
+ */
+export function updateRuleManifest(
+    root: string,
+    pzInsKey: string,
+    filePath: string,
+    log: LogFn,
+): void {
+    if (!pzInsKey) { return; }
+    try {
+        const manifestPath = path.join(root, MANIFEST_RELATIVE_PATH);
+        let manifest: Record<string, string> = {};
+        if (fs.existsSync(manifestPath)) {
+            const parsed = RuleManifestSchema.safeParse(JSON.parse(fs.readFileSync(manifestPath, "utf-8")));
+            if (parsed.success) { manifest = parsed.data; }
+        }
+        // Forward slashes: the manifest is OS-agnostic and read back by the resolver.
+        manifest[pzInsKey] = path.relative(root, filePath).replace(/\\/g, "/");
+        const dir = path.dirname(manifestPath);
+        if (!fs.existsSync(dir)) { fs.mkdirSync(dir, { recursive: true }); }
+        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), "utf-8");
+    } catch (err: any) {
+        log(`[Pega Indexer] ⚠️ Manifest update skipped for ${pzInsKey}: ${err.message}`);
     }
 }
 

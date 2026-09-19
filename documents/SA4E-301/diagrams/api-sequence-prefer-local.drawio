@@ -1,0 +1,85 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#ffffff">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Lifelines -->
+    <mxCell id="p1" value="Developer / VS Code" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="120" height="520" as="geometry" />
+    </mxCell>
+
+    <mxCell id="p2" value="PegaBfsIndexer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="220" y="40" width="130" height="520" as="geometry" />
+    </mxCell>
+
+    <mxCell id="p3" value="Local Workspace FS" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="410" y="40" width="130" height="520" as="geometry" />
+    </mxCell>
+
+    <mxCell id="p4" value="Checksum Strategy" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="600" y="40" width="130" height="520" as="geometry" />
+    </mxCell>
+
+    <mxCell id="p5" value="Pega Server API" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="780" y="40" width="130" height="520" as="geometry" />
+    </mxCell>
+
+    <mxCell id="p6" value="Backend Ingest API" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="970" y="40" width="130" height="520" as="geometry" />
+    </mxCell>
+
+    <!-- Messages -->
+    <mxCell id="m1" value="1: Trigger Pega Indexing" style="html=1;verticalAlign=bottom;endArrow=block;edgeStyle=elbowEdgeStyle;" edge="1" parent="1" source="p1" target="p2">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="100" y="110" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m2" value="2: readPipelineConfig() -&gt; preferLocal=true" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;edgeStyle=elbowEdgeStyle;" edge="1" parent="1" source="p2" target="p2">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="20" y="20" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m3" value="3: Check local file rules/&lt;safeClass&gt;/&lt;safeName&gt;.pega.json" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="p2" target="p3">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="160" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m4" value="4: Return local JSON content" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="p3" target="p2">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="190" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m5" value="5: computePegaChecksum(local 3-fields)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="p2" target="p4">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="220" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m6" value="6: Return 64-char sha256 hex" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="p4" target="p2">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="250" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m7" value="7: Checksum Match? YES -&gt; Skip Pega GET request!" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#82b366;fillColor=#d5e8d4;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="280" width="310" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="m8" value="8: POST /api/v1/pega/ingest-rule (local JSON + verifiedChecksum)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="p2" target="p6">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="330" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m9" value="9: HTTP 200 { status: 'success', ruleId: 101 }" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="p6" target="p2">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="360" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m10" value="10: Checksum Mismatch / File Missing -&gt; Fallback GET /prweb/api/v1/rules/{insKey}" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#b85450;" edge="1" parent="1" source="p2" target="p5">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="410" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m11" value="11: HTTP 200 Return Pega Rule JSON" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="p5" target="p2">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="440" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m12" value="12: saveRuleFile() idempotent write to disk" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="p2" target="p3">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="470" as="offset" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m13" value="13: Summary: 🏛️ Pega: X rules — Y from local cache, Z downloaded" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;" edge="1" parent="1" source="p2" target="p1">
+      <mxGeometry relative="1" as="geometry"><mxPoint y="500" as="offset" /></mxGeometry>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

@@ -1,0 +1,135 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- Swimlane/container for system boundary -->
+    <mxCell id="boundary" value="SA4E-301: Pega Indexer Enhancement" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="1000" height="700" as="geometry"/>
+    </mxCell>
+
+    <!-- Actor: Developer -->
+    <mxCell id="actor_dev" value="Developer" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="boundary">
+      <mxGeometry x="60" y="120" width="140" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Actor: Pega Indexer -->
+    <mxCell id="actor_indexer" value="Pega Indexer" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="boundary">
+      <mxGeometry x="60" y="200" width="140" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Actor: BA/SA -->
+    <mxCell id="actor_ba" value="BA/SA" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="boundary">
+      <mxGeometry x="60" y="280" width="140" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Use Case: Configure setting -->
+    <mxCell id="uc1" value="Configure prefer-local setting" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="boundary">
+      <mxGeometry x="280" y="100" width="200" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Use Case: Check local file before download -->
+    <mxCell id="uc2" value="Check local file before download" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="boundary">
+      <mxGeometry x="280" y="180" width="200" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Use Case: Log rule source statistics -->
+    <mxCell id="uc3" value="Log rule source statistics" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="boundary">
+      <mxGeometry x="280" y="260" width="200" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Use Case: Fail-safe checksum verification -->
+    <mxCell id="uc4" value="Fail-safe checksum verification" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="boundary">
+      <mxGeometry x="280" y="340" width="200" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Use Case: Maintain invariant INV-1 -->
+    <mxCell id="uc5" value="Maintain invariant INV-1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="boundary">
+      <mxGeometry x="280" y="420" width="200" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- Connections: Developer --> 
+    <mxCell id="e1" value="1. configure setting" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_dev" target="uc1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="140" as="sourcePoint"/>
+        <mxPoint x="280" y="120" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e2" value="2. review requirements" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_dev" target="uc2">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="220" as="sourcePoint"/>
+        <mxPoint x="280" y="200" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e3" value="3. validate criteria" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_dev" target="uc3">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="300" as="sourcePoint"/>
+        <mxPoint x="280" y="280" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e4" value="4. approve setting" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_ba" target="uc1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="340" as="sourcePoint"/>
+        <mxPoint x="280" y="100" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Connections: Pega Indexer -->
+    <mxCell id="e5" value="1. check local file" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_indexer" target="uc2">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="220" as="sourcePoint"/>
+        <mxPoint x="280" y="180" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e6" value="2. verify checksum" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_indexer" target="uc4">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="300" as="sourcePoint"/>
+        <mxPoint x="280" y="340" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e7" value="3. log statistics" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_indexer" target="uc3">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="380" as="sourcePoint"/>
+        <mxPoint x="280" y="260" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e8" value="4. maintain INV-1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_indexer" target="uc5">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="460" as="sourcePoint"/>
+        <mxPoint x="280" y="420" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Connections: BA/SA -->
+    <mxCell id="e9" value="1. review and approve" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_ba" target="uc1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="380" as="sourcePoint"/>
+        <mxPoint x="280" y="100" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="e10" value="2. verify INV-1 compliance" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor_ba" target="uc5">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="460" as="sourcePoint"/>
+        <mxPoint x="280" y="420" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Waypoint for backward edge from uc3 to actor -->
+    <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="uc3" target="actor_indexer">
+      <mxGeometry relative="1" as="geometry">
+        <mxArray as="points">
+          <mxPoint x="500" y="260"/>
+          <mxPoint x="80" y="260"/>
+        </mxArray>
+      </mxGeometry>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

@@ -330,6 +330,11 @@
           "default": true,
           "description": "Use the Pega Rule Catalog Export API (fast, authoritative rule list) when indexing Pega source code. Disable to force the legacy BFS crawl."
         },
+        "kiroSdlc.pega.preferLocalOnChecksumMatch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Prefer reading a rule from the local workspace when its checksum matches the Pega catalog (saves bandwidth and index time). Disable to always download rule content from the server."
+        },
         "kiroSdlc.pegaUsername": {
           "type": "string",
           "default": "",

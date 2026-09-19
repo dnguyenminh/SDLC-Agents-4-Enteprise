@@ -11,9 +11,10 @@ import type { PegaHttpClient } from "./PegaHttpClient";
 import type { ISchemaOrchestrator } from "./PegaSchemaOrchestrator";
 import { saveRuleFile, calibrateFetchConcurrency } from "./PegaCrawlHelper";
 import { PegaStreamIngester } from "./PegaStreamIngester";
+import { readLocalRuleIfChecksumMatches } from "./PegaLocalRuleResolver";
 import type { UnresolvedDependency } from "./DependencyMapper";
 import type { MembershipSet } from "./DiskBackedSet";
-import { PegaBfsPipeline, type FetchedRule } from "./PegaBfsPipeline";
+import { PegaBfsPipeline, type BfsCounters, type FetchedRule, type LocalFetchHit } from "./PegaBfsPipeline";
 
 type ProgressReporter = vscode.Progress<{ message?: string }>;
 type LogFn = (msg: string) => void;
@@ -47,14 +48,16 @@ interface PipelineTuning {
   fetchBatchSize: number;
   ingestConcurrency: number;
   channelCapacity: number;
+  preferLocalOnChecksumMatch: boolean; // SA4E-301
 }
 
 /**
  * Read + clamp the pipeline tuning from `kiroSdlc.pega.*` settings.
  * Called at the start of each run so edits in the Settings UI apply to the next
  * index without a reload. Invalid/out-of-range values fall back to safe defaults.
+ * Exported for unit tests (config-read coverage).
  */
-function readPipelineConfig(): PipelineTuning {
+export function readPipelineConfig(): PipelineTuning {
   const cfg = vscode.workspace.getConfiguration("kiroSdlc");
   const clamp = (v: number | undefined, def: number, b: { min: number; max: number }): number =>
     (typeof v === "number" && Number.isFinite(v)) ? Math.min(b.max, Math.max(b.min, Math.round(v))) : def;
@@ -68,7 +71,15 @@ function readPipelineConfig(): PipelineTuning {
     ? clamp(rawCapacity, ingestConcurrency * 2, CHANNEL_CAPACITY_BOUNDS)
     : ingestConcurrency * 2;
 
-  return { fetchBatchSize, ingestConcurrency, channelCapacity };
+  // SA4E-301: prefer local rule content when the checksum matches the catalog.
+  const preferLocal = cfg.get<boolean>("pega.preferLocalOnChecksumMatch", true);
+
+  return {
+    fetchBatchSize,
+    ingestConcurrency,
+    channelCapacity,
+    preferLocalOnChecksumMatch: typeof preferLocal === "boolean" ? preferLocal : true,
+  };
 }
 
 /** Summary returned after BFS completes */
@@ -78,6 +89,10 @@ export interface BfsIndexResult {
   discoveredCount: number;
   skippedCount: number;
   errorCount: number;
+  /** SA4E-301: rules served from the local workspace (checksum match, no download). */
+  localServed: number;
+  /** SA4E-301: rules downloaded from the Pega server. */
+  downloaded: number;
 }
 
 /**
@@ -127,7 +142,7 @@ export class PegaBfsIndexer {
     // Effective cap scales with the seed count so a full catalog is never truncated.
     // Seeds + MAX_QUEUE_SIZE covers all seeds plus the relatives the queue can hold.
     const maxIterations = Math.max(MIN_BFS_ITERATIONS, initialCount + MAX_QUEUE_SIZE);
-    const counters = { totalIngested: 0, discoveredCount: 0, skippedCount: 0, errorCount: 0 };
+    const counters = { totalIngested: 0, discoveredCount: 0, skippedCount: 0, errorCount: 0, localServed: 0, downloaded: 0 };
 
     // Read tuning from settings at run start so Settings-UI edits apply to the next
     // index run without a window reload (effect-on-next-run semantics).
@@ -151,6 +166,12 @@ export class PegaBfsIndexer {
         maxQueueSize: MAX_QUEUE_SIZE,
         maxIterations,
         resilient: this.resilient,
+        // SA4E-301: resolve rules from the local workspace BEFORE the network
+        // call. Undefined when the setting is off → behavior identical to the
+        // pre-SA4E-301 download-everything path.
+        resolveLocalBeforeFetch: tuning.preferLocalOnChecksumMatch
+          ? (item: CrawlPlanItem) => this.resolveLocalForItem(item, root)
+          : undefined,
       },
       (fetched: FetchedRule) => this.ingestOne(projectId, fetched, root),
       (processed, queued) => report.report({
@@ -161,10 +182,38 @@ export class PegaBfsIndexer {
     await pipeline.run(fetchQueue, dedupSet, counters);
 
     this.log(`[BfsIndexer] ✅ BFS complete: ingested=${counters.totalIngested}, discovered=${counters.discoveredCount}, errors=${counters.errorCount}`);
+    this.logTelemetry(counters);
     return { ...counters, initialCount };
   }
 
   // ─── Private Helpers ────────────────────────────────────────────────────
+
+  /**
+   * SA4E-301 — Resolve a rule from the local workspace BEFORE the network fetch
+   * (invoked by the pipeline supplier, where the getRuleByInsKey call happens).
+   * Serves the local file when its checksum matches the catalog row; returns null
+   * on any miss (missing/unreadable/invalid/checksum mismatch) so the supplier
+   * falls back to the standard download. Mismatch is logged at info level.
+   */
+  private async resolveLocalForItem(item: CrawlPlanItem, root: string): Promise<LocalFetchHit | null> {
+    const local = await readLocalRuleIfChecksumMatches(
+      root, item.insKey, item.checksum, item.pxObjClass, item.pyRuleName,
+    );
+    if (local.source === "local") { return { ruleObj: local.rule }; }
+    if (local.reason === "checksum-mismatch") {
+      this.log(`[BfsIndexer] ℹ️ Checksum mismatch for ${item.insKey} (${local.detail ?? ""}) — downloading from server`);
+    }
+    return null;
+  }
+
+  /**
+   * SA4E-301 — Telemetry: local-cache usage summary on the Output channel,
+   * matching the existing single-line summary style.
+   */
+  private logTelemetry(counters: BfsCounters): void {
+    const total = counters.localServed + counters.downloaded;
+    this.log(`[BfsIndexer] 🏛️ Pega: ${total} rules — ${counters.localServed} from local cache, ${counters.downloaded} downloaded`);
+  }
 
   /**
    * Ingest one fetched rule: save to disk, POST to backend, fire schema hook.

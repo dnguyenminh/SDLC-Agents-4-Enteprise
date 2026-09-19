@@ -12,3 +12,5 @@ export { summaryToCrawlItem, parseRuleSetEntry } from "./PegaCrawlModels";
 export type { ExportStatus, RuleCatalogRow } from "./PegaCatalogModels";
 export { CATALOG_COLUMNS, catalogRowToSummary } from "./PegaCatalogModels";
 export type { ClassRuleInput, DataTableResolveResult, DataTableRuleInfo } from "./DataTableModels";
+export type { LocalRuleResult, LocalRuleHit, LocalRuleMiss, LocalRuleReadReason, LocalRuleJson } from "./PegaLocalRuleModels";
+export { MANIFEST_RELATIVE_PATH, LocalRuleJsonSchema, RuleManifestSchema } from "./PegaLocalRuleModels";

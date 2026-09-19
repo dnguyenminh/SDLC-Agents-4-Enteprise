@@ -1,0 +1,27 @@
+test_case_id,key,value,expected_value,description
+"TC-PBT-01,TC-PBT-02,TC-PBT-06,TC-E2E-API-04",rule_A.pzInsKey,RULE-OBJ-ACTIVITY WORK- CLAIMCREATE!ACTION,,Warm-cache rule A — canonical identification
+"TC-PBT-01,TC-PBT-02,TC-PBT-06",rule_A.pxUpdateDateTime,20260919T100000.000 GMT,,Rule A update timestamp
+"TC-PBT-01,TC-PBT-02,TC-PBT-06",rule_A.pxSaveDateTime,20260919T100000.000 GMT,,Rule A save timestamp
+"TC-PBT-01,TC-PBT-02,TC-PBT-06,TC-E2E-API-04",rule_A.checksum,33c2f8d923379eefc13669e173a426e88386c6751f2c0a904416cd8e8f7b7f40,Known vector HASH1 — sha256(trim(pzInsKey)+"|"+trim(pxUpdateDateTime)+"|"+trim(pxSaveDateTime)) lowercase hex
+"TC-PBT-05,TC-UT-06",rule_A.localRelativePath,rules/Rule-Obj-Activity/ClaimCreate.pega.json,,Expected local path — safeClass=Rule-Obj-Activity (hyphens kept); safeName=ClaimCreate
+"TC-PBT-05",stale_variant.pxUpdateDateTime,20260101T080000.000 GMT,b384818c9d36da9fa0534f1251c2af5a69896812d2c3eaf8e1de1ecedd915f9c,Changing pxUpdateDateTime changes hash — HASH2 (stale) differs from HASH1
+"TC-PBT-05",sensitivity_variant.pzInsKey,RULE-OBJ-ACTIVITY WORK- CLAIMCREATE!ACTIOX,different-from-HASH1,Changing one character of pzInsKey changes the hash (avalanche property)
+"TC-PBT-05",sensitivity_variant.pxSaveDateTime,20260919T100000.001 GMT,different-from-HASH1,Changing pxSaveDateTime by 1ms changes the hash
+"TC-PBT-03,TC-PBT-06",untrimmed_joined_string,"  RULE-OBJ-ACTIVITY WORK- CLAIMCREATE!ACTION  |  20260919T100000.000 GMT  |  20260919T100000.000 GMT  ",3951b6e95e013c602ae55e6cb6557c93cfd299a42bca10260057375130c51db9,Raw untrimmed joined string hashes DIFFERENTLY (HASH9 != HASH1) — proves computePegaChecksum trims internally
+TC-PBT-04,format_probe.inputs,50+ generated variations — random hex fields; empty pxUpdateDateTime; empty pxSaveDateTime; unicode suffix in pzInsKey,every result matches ^[a-f0-9]{64}$ and equals its lowercase form,Output format invariant probe — 64-char lowercase hex for arbitrary inputs
+TC-UT-11,uppercase_catalog_checksum,BE454F43E2FC10F50FFB14D2D72B15EBDCC1636B4403E73B3DDB29AD095A77E8,match against computed HASH5 (lowercase),Case-insensitive comparison probe (BR-3)
+TC-UT-11,malformed_catalog_checksum,not-a-hash,treated as mismatch — fallback to server download; no crash,Malformed catalog checksum must not crash the resolver (fail-safe)
+TC-UT-06,traversal_probe.pxObjClass,../etc,sanitized to _etc (no directory escape),Path traversal attempt must be neutralized — CWE-22 (TDD §7.2)
+TC-UT-06,special_chars.pxObjClass,Embed-Card-Details!,sanitized to Embed-Card-Details_,Special char (!) replaced with underscore per sanitization regex
+TC-UT-06,special_chars.pyRuleName,Is Overdue!,sanitized to Is_Overdue_,Space and ! replaced with underscore per sanitization regex
+"TC-E2E-API-01,TC-E2E-API-02,TC-E2E-API-03,TC-E2E-API-04,TC-IT-08,TC-IT-09",project_id,a1b2c3d4e5f6,,12-char hex projectId used by all ingest calls (FSD §3.4.6 IngestRuleRequestSchema)
+"TC-E2E-API-01,TC-E2E-API-02,TC-E2E-API-03,TC-IT-01,TC-IT-08",backend_url,http://127.0.0.1:48721,,Code-Intel backend base URL (TDD §11.3 example)
+"TC-E2E-API-01,TC-E2E-API-02,TC-E2E-API-03",temp_workspace_root,{tmpRoot},Real temp directory per test run (fs.mkdtempSync) — NO mocked FS for integration tests
+"TC-E2E-API-01,TC-E2E-API-02,TC-E2E-API-03",warm_rules.count,3,3 warm-cache rules (ClaimCreate + ValidateRule + IsOverdue) with matching local files
+TC-E2E-API-02,mixed_run.composition,2 local hits (ClaimCreate + ValidateRule) + 1 miss (ClaimAmount),telemetry = 3 rules — 2 from local cache, 1 downloaded,Mixed lifecycle composition
+TC-E2E-API-03,setting_off.run,preferLocal=false,telemetry = 3 rules — 0 from local cache, 3 downloaded,Setting OFF full run — identical to current behavior
+TC-IT-10,retry_probe.responses,2x reject HTTP 503 then resolve,3 total getRuleByInsKey calls; final result = server content,Transient HTTP 503 → 3 retries with exponential backoff (AF-3.1 — unchanged behavior)
+TC-IT-12,bulk_check_failure.response,HTTP 500 or network error from POST /api/v1/pega/rulecatalog/bulk-check,all 3 items returned unchanged; indexing continues; warning logged,Bulk-check failure must fail-safe — independent layer unchanged (FSD §3.5.6)
+TC-IT-08,ingest_one.local_hit.expected_payload,ruleObj = local JSON (ClaimCreate); checksum = 33c2f8d923379eefc13669e173a426e88386c6751f2c0a904416cd8e8f7b7f40,ingest POST called once with local content + HASH1; fromLocal = 1,Local-hit ingest payload verification (UC-2 steps 9-10)
+TC-IT-09,ingest_one.miss.expected_payload,ruleObj = server JSON (ClaimAmount); checksum = dccd98beb210e1ae033eee88fe7549646781f28ba9c57752dfe462a99587a27c,ingest POST called once with server content + HASH3; fromServer = 1,Miss-path ingest payload verification (UC-3 steps 6-7)
+TC-IT-05,missing_3fields.local_checksum,bf1f20d8c46b520efff80f23211fefd6270c38962fb7421b773a40ecb0cc0bcb,differs from catalog HASH5 — fallback,Local checksum computed with absent pxSaveDateTime (HASH8)

@@ -1,0 +1,14 @@
+test_case_id,category,input_or_command,input_value,expected_result,description
+TC-UT-01,config-declaration,extension/package.json → contributes.configuration.properties[kiroSdlc.pega.preferLocalOnChecksumMatch],type=boolean; default=true; description non-empty,Property exists beside kiroSdlc.pega.useCatalogExport (~line 328),AC-1 — setting declared in package.json with default true
+TC-UT-02,config-read,vscode.workspace.getConfiguration(kiroSdlc).get(pega.preferLocalOnChecksumMatch; default true),key absent from settings,returns true,BR-1 — default true when key missing
+TC-UT-03,config-read,readPipelineConfig(),preferLocal=false,returns false,AC-5/BR-2 — explicit false honored
+TC-UT-04,config-read,readPipelineConfig(),non-boolean values — string true / number 123 / null,returns true in all 3 cases,EF-1.1 — non-boolean trapped to default true
+TC-UT-05,config-error,readPipelineConfig(),vscode getConfiguration() throws exception,returns default tuning (preferLocal=true) + warning logged; no crash,EF-1.2 — config read error trapped
+TC-IT-07,pipeline-config,readPipelineConfig() read at each ingestOne run start,setting OFF in settings.json,local check skipped; getRuleByInsKey called once per rule,AC-5/BR-2 — effect on next indexing run without window reload
+TC-E2E-CLI-01,build,npm run build (workdir extension/),exit code 0,0 TypeScript compile errors,AC-9 — build passes
+TC-E2E-CLI-02,build,npm test (= vitest run; workdir extension/),exit code 0,All suites pass incl. PegaBfsIndexer.preferLocal.test.ts + PegaRuleChecksumStrategy.test.ts,AC-9 — full test suite passes
+TC-E2E-CLI-02,lint,npx eslint src/ --ext .ts (workdir extension/),exit code 0,0 lint errors,AC-9 support — lint clean
+TC-SIT-01,manual-ui,VS Code Settings UI → search preferLocalOnChecksumMatch,setting visible,Checkbox checked (default true) + description shown,AC-1 — Settings UI verification
+TC-SIT-02,manual-ui,Run index command (setting ON) → open Output channel SDLC Agents,warm workspace,"Final line matches ^🏛️ Pega: \d+ rules — \d+ from local cache, \d+ downloaded$ and X = Y + Z",AC-6/BR-8 — telemetry summary in Output channel
+TC-SIT-03,manual-ui,Toggle setting OFF → re-run index command,setting false,All rules downloaded; summary shows 0 from local cache,AC-5 — behavior identical to current (no regression)
+TC-SIT-04,manual-exploratory,Corrupt a local rule file → re-run index command,invalid JSON in rules/*/*.pega.json,Warning logged + server download + file overwritten + no stale ingest,AC-7 — fail-safe visual verification in real IDE
