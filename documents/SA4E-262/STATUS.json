@@ -1,1 +1,35 @@
-{"ticket":"SA4E-262","status":"DONE","phase":"UAT","completed_at":"2026-09-17","notes":"SSO Entra ID epic completed"}
+{
+  "ticket": "SA4E-262",
+  "type": "Epic",
+  "summary": "[SSO] Tích hợp Microsoft Entra ID (OIDC + PKCE) với JIT provisioning, giữ local account song song",
+  "jiraStatus": "In Progress",
+  "currentPhase": "testing",
+  "lastUpdated": "2026-09-20",
+  "notes": "Trạng thái đồng bộ lại theo XÁC MINH CODE + TEST THỰC TẾ (2026-09-20). Bản cũ ghi 'DONE/UAT' là chưa chính xác so với Jira (còn In Progress/In Review) và RUN-LOG (ghi blocked). Xem documents/SA4E-262/HANDOVER-PLAN.md.",
+  "verification": {
+    "method": "npx vitest run (nhóm test SSO cốt lõi)",
+    "date": "2026-09-20",
+    "result": "58/58 pass sau khi fix bug seed + client-initiated state + siết isLoopbackRedirect (7 test bảo mật mới)"
+  },
+  "children": {
+    "SA4E-264": { "summary": "[Config] Entra env + validation zod", "type": "Task", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "backend/src/config/EntraConfig.ts; tests/unit/EntraConfig.test.ts (11 pass)" },
+    "SA4E-265": { "summary": "[DB] Migration account_type LOCAL/SSO + external_subject_id", "type": "Task", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "backend/src/admin/db/schema.ts (uq_users_external_identity, password_hash nullable)" },
+    "SA4E-266": { "summary": "[Backend] Verify RS256+JWKS+discovery+Strategy", "type": "Story", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "backend/src/server/middleware/verifiers/*; verifier.test.ts (17 pass)" },
+    "SA4E-267": { "summary": "[Backend] OAuth2 Auth Code + PKCE callback", "type": "Story", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "backend/src/server/routes/auth/entra.ts; entra-oauth.it.test.ts (6 pass) — client-initiated state model" },
+    "SA4E-268": { "summary": "[Backend] JIT Provisioning Service", "type": "Story", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "backend/src/server/services/JitProvisioningService.ts; __tests__ (5 pass) — email_verified gate, anti-HYBRID, grp-viewer" },
+    "SA4E-269": { "summary": "[Backend] Single UserRepository", "type": "Story", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "backend/src/server/routes/auth/unified.ts; UserRepository.test.ts (12 pass)" },
+    "SA4E-270": { "summary": "[Extension] Wire PKCE vào AuthManager", "type": "Story", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "extension/src/auth/{AuthManager,PkceService,TokenRefreshTimer}.ts; pkce-service.test.ts" },
+    "SA4E-271": { "summary": "[Config/DevOps] Đăng ký App Entra", "type": "Task", "jiraStatus": "In Review", "codeStatus": "docs", "evidence": "documents/SA4E-271/ (bộ docs đầy đủ)" },
+    "SA4E-272": { "summary": "[Security] Hardening", "type": "Story", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "entra.ts: session rotation, user-agent binding, rate limit callback, PKCE S256; EntraConfig redact secrets" },
+    "SA4E-273": { "summary": "[Extension] UI Sign in with Microsoft", "type": "Story", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "extension/src/panels/login-panel.ts (entraBtn); command kiroSdlc.loginEntra" },
+    "SA4E-274": { "summary": "[QA] Test Planning STP/STC + tests", "type": "Task", "jiraStatus": "In Review", "codeStatus": "done", "evidence": "5 unit + 1 integration test file; 51/51 pass" },
+    "SA4E-275": { "summary": "[Docs] Cập nhật auth-sso", "type": "Task", "jiraStatus": "In Review", "codeStatus": "docs", "evidence": "documents/SA4E-275/ (bộ docs đầy đủ)" },
+    "SA4E-276": { "summary": "Admin UI for Entra SSO configuration management", "type": "Task", "jiraStatus": "In Progress", "codeStatus": "partial", "evidence": "backend/src/server/routes/admin/sso-providers.ts + admin viewer HTML. CHƯA có webview trong extension — cần chốt phạm vi." }
+  },
+  "openItems": [
+    "P2: Chốt phạm vi SA4E-276 (admin viewer HTML đã đủ hay cần webview extension).",
+    "P2: Gán assignee cho Epic + 13 con (hiện chưa gán).",
+    "P3: Code review 2-axis + (user duyệt UAT/Deploy) → merge master + version sync.",
+    "P1 (ĐÃ FIX 2026-09-20): bug seed sso_providers 12/13 placeholder; mô hình state CSRF."
+  ]
+}

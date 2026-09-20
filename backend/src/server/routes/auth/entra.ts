@@ -67,6 +67,30 @@ function getClientIp(c: any): string {
   return c.req.header('x-real-ip') || '127.0.0.1';
 }
 
+/**
+ * A loopback redirect target is the extension's local callback server.
+ *
+ * SECURITY: This endpoint appends the real session token to the redirect URL,
+ * so the set of accepted targets is deliberately narrow — it must match exactly
+ * what the extension's AuthManager.loginEntra() constructs:
+ *   http://127.0.0.1:<port>/callback
+ * i.e. scheme=http, host=127.0.0.1 (NOT localhost/::1 — avoids DNS-rebinding and
+ * widening the surface), path=/callback. Any other target is treated as a
+ * web/admin redirect (cookie-based, allow-listed paths) and never receives the
+ * token on the URL. This prevents token exfiltration via a crafted redirect_to.
+ */
+export function isLoopbackRedirect(raw: string | undefined): boolean {
+  if (!raw) return false;
+  try {
+    const u = new URL(raw);
+    return u.protocol === 'http:'
+      && u.hostname === '127.0.0.1'
+      && u.pathname === '/callback';
+  } catch {
+    return false;
+  }
+}
+
 const callbackQuery = z.object({ code: z.string(), state: z.string().optional() });
 
 export function createEntraAuthRoutes() {
@@ -78,8 +102,19 @@ export function createEntraAuthRoutes() {
     const url = new URL(c.req.url);
     const redirectToRaw = url.searchParams.get('redirect_to') || undefined;
     const allowedRedirects = (process.env.SSO_ALLOWED_REDIRECTS || '/admin?page=dashboard').split(',').map(s=>s.trim());
-    const redirectTo = redirectToRaw && allowedRedirects.includes(redirectToRaw) ? redirectToRaw : allowedRedirects[0];
-    const state = base64url(randomBytes(16));
+    // Loopback callbacks (extension desktop flow) are trusted; internal paths must
+    // be allow-listed. Everything else falls back to the first allow-listed path.
+    const redirectTo = redirectToRaw && (isLoopbackRedirect(redirectToRaw) || allowedRedirects.includes(redirectToRaw))
+      ? redirectToRaw
+      : allowedRedirects[0];
+    // Client-initiated state model (SA4E-267/270/272): the caller (e.g. extension
+    // AuthManager) generates its own `state` and verifies it on the loopback
+    // redirect for CSRF protection. Backend MUST honor that state so it can
+    // round-trip end-to-end; only fall back to a server-generated random state
+    // when the caller did not provide one. Either way the state is the key into
+    // `store` (codeVerifier + nonce), so backend-side CSRF/PKCE stays intact.
+    const clientState = url.searchParams.get('state') || undefined;
+    const state = clientState && clientState.length > 0 ? clientState : base64url(randomBytes(16));
     const verifier = generateVerifier();
     const challenge = codeChallenge(verifier);
     const nonce = base64url(randomBytes(16));
@@ -175,8 +210,21 @@ export function createEntraAuthRoutes() {
       const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : '';
       const cookie = `session_token=${session.token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secureFlag}`;
       c.header('Set-Cookie', cookie);
-      const allowedRedirects = (process.env.SSO_ALLOWED_REDIRECTS || '/admin?page=dashboard').split(',').map(s=>s.trim());
       const redirectUrlRaw = entry.redirectTo || '/admin?page=dashboard';
+
+      // Desktop/extension loopback flow: return state (for the caller's CSRF
+      // check) + token + expiresAt on the URL so AuthManager can complete login.
+      // The cookie is set too, but the extension consumes the token param.
+      if (isLoopbackRedirect(redirectUrlRaw)) {
+        const loopbackUrl = new URL(redirectUrlRaw);
+        loopbackUrl.searchParams.set('state', state);
+        loopbackUrl.searchParams.set('token', session.token);
+        loopbackUrl.searchParams.set('expiresAt', session.expiresAt);
+        return c.redirect(loopbackUrl.toString());
+      }
+
+      // Web/admin flow: only allow-listed internal paths, session carried by cookie.
+      const allowedRedirects = (process.env.SSO_ALLOWED_REDIRECTS || '/admin?page=dashboard').split(',').map(s=>s.trim());
       const normalize = (u: string) => {
         try { return new URL(u, 'http://localhost').pathname + new URL(u, 'http://localhost').search; }
         catch { return u; }

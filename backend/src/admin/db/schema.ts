@@ -100,12 +100,15 @@ async function seedDefaultSsoProviders(db: DatabaseAdapter): Promise<void> {
       const exists = await db.getAsync('SELECT 1 FROM sso_providers WHERE provider_type = ?', [t.provider_type]);
       if (!exists) {
         const provider_id = `${t.provider_type}-${Date.now()}`;
-        await db.runAsync(`INSERT INTO sso_providers (provider_id, provider_type, name, enabled, client_id, client_secret, tenant_id, redirect_uri, allowed_redirects, scopes, login_ui_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        // 13 columns → 13 placeholders (fix SA4E-262: was 12 placeholders for 13 values)
+        await db.runAsync(`INSERT INTO sso_providers (provider_id, provider_type, name, enabled, client_id, client_secret, tenant_id, redirect_uri, allowed_redirects, scopes, login_ui_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
           [provider_id, t.provider_type, t.name, t.enabled, '', '', '', '', '', '', t.login_ui_html, now, now]);
       }
     }
   } catch (err) {
-    console.debug('[schema] seedDefaultSsoProviders:', (err as Error).message);
+    // Non-fatal: seed of default provider templates is optional, but surface the
+    // error (console.error, not debug) so a broken INSERT is not swallowed silently.
+    console.error('[schema] seedDefaultSsoProviders failed:', (err as Error).message);
   }
 }
 
@@ -127,11 +130,13 @@ async function seedSsoProvidersFromEnv(db: DatabaseAdapter): Promise<void> {
     const allowed_redirects = env.SSO_ALLOWED_REDIRECTS || '';
     const scopes = env.ENTRA_SCOPES || 'openid profile email offline_access';
     const login_ui_html = `<button class="sso-btn sso-entra">Sign in with Entra ID</button>`;
-    await db.runAsync(`INSERT INTO sso_providers (provider_id, provider_type, name, enabled, client_id, client_secret, tenant_id, redirect_uri, allowed_redirects, scopes, login_ui_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+    // 13 columns → 13 placeholders (fix SA4E-262: was 12 placeholders for 13 values)
+    await db.runAsync(`INSERT INTO sso_providers (provider_id, provider_type, name, enabled, client_id, client_secret, tenant_id, redirect_uri, allowed_redirects, scopes, login_ui_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [provider_id, 'entra', name, enabled, clientId, clientSecret, tenant, redirect_uri, allowed_redirects, scopes, login_ui_html, now, now]);
     console.debug('[schema] sso_providers seeded from env');
   } catch (err) {
-    console.debug('[schema] seedSsoProvidersFromEnv:', (err as Error).message);
+    // Non-fatal, but surface the error so a broken INSERT is not swallowed silently.
+    console.error('[schema] seedSsoProvidersFromEnv failed:', (err as Error).message);
   }
 }
 
