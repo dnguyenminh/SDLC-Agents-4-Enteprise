@@ -60,11 +60,21 @@ export async function recordConfigChange(
  * @param limit - Max entries (default 10)
  */
 export async function getConfigChanges(limit = 10): Promise<ConfigChange[]> {
-  const adapter = getDbAdapter();
-  const rows = await adapter.allAsync<any>(
-    'SELECT * FROM config_changes ORDER BY changed_at DESC LIMIT ?', [limit],
-  );
-  return rows.map(rowToConfigChange);
+  // Fail-safe: if the config_changes table is not ready yet (e.g. right after
+  // switching to a freshly-provisioned Postgres engine before migrations run),
+  // return an empty history instead of throwing. Throwing here would bubble up
+  // through GET /api/admin/config and blank out the ENTIRE config page
+  // (LLM / taskWorker / auth sections all disappear, leaving only Database).
+  // Mirrors the resilient pattern used by getLatestConfigValue/loadPersistedLLMConfig.
+  try {
+    const adapter = getDbAdapter();
+    const rows = await adapter.allAsync<any>(
+      'SELECT * FROM config_changes ORDER BY changed_at DESC LIMIT ?', [limit],
+    );
+    return rows.map(rowToConfigChange);
+  } catch {
+    return [];
+  }
 }
 
 /**

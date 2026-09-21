@@ -8,6 +8,7 @@
 
 import * as vscode from "vscode";
 import { TokenRefreshTimer } from "./TokenRefreshTimer";
+import type { SsoProviderInfo } from "./SsoTypes";
 
 export type AuthState = "UNAUTHENTICATED" | "AUTHENTICATING" | "AUTHENTICATED";
 
@@ -119,7 +120,40 @@ export class AuthManager implements vscode.Disposable {
     }
   }
 
-  async loginEntra(): Promise<void> {
+  /**
+   * List enabled SSO providers from the backend (public, pre-login endpoint).
+   * Used by the login panel to render provider buttons dynamically.
+   * @returns Array of enabled providers (safe fields only). Empty on failure.
+   */
+  async listSsoProviders(): Promise<SsoProviderInfo[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/auth/sso/providers`);
+      if (!response.ok) { return []; }
+      const data = await response.json() as { providers?: SsoProviderInfo[] };
+      // Backend already filters to enabled=1; guard against nulls defensively.
+      return (data.providers ?? []).filter((p) => p && p.provider_type);
+    } catch (err) {
+      // Non-fatal: login panel still shows username/password + Entra button.
+      console.warn("Failed to list SSO providers:", (err as Error).message);
+      return [];
+    }
+  }
+
+  /**
+   * Login via any SSO provider using the loopback (client-initiated) flow.
+   * Opens the browser to /auth/{provider}/login, captures the token on a
+   * temporary local callback server, validating host/origin/state (CSRF).
+   *
+   * Generalized from the original Entra-only flow so adding a provider needs
+   * no new client code — the backend route /auth/{provider}/login handles it.
+   *
+   * @param providerType Provider key: 'entra' | 'google' | 'github' | ...
+   * @throws AuthError on state mismatch, provider error, timeout, or no token
+   */
+  async loginSso(providerType: string): Promise<void> {
+    if (!providerType || !/^[a-z0-9_-]+$/i.test(providerType)) {
+      throw new AuthError(`Invalid SSO provider: ${providerType}`);
+    }
     this.transitionTo("AUTHENTICATING");
     try {
       const crypto = await import("crypto");
@@ -127,7 +161,7 @@ export class AuthManager implements vscode.Disposable {
       const port = 8765 + Math.floor(Math.random() * 1000);
       const redirectTo = `http://127.0.0.1:${port}/callback`;
       const vscodeMod = await import("vscode");
-      const authUrl = `${this.baseUrl}/auth/entra/login?state=${encodeURIComponent(state)}&redirect_to=${encodeURIComponent(redirectTo)}`;
+      const authUrl = `${this.baseUrl}/auth/${encodeURIComponent(providerType)}/login?state=${encodeURIComponent(state)}&redirect_to=${encodeURIComponent(redirectTo)}`;
       await vscodeMod.env.openExternal(vscodeMod.Uri.parse(authUrl));
       const http = await import("http");
       let server: any = null;
@@ -250,8 +284,16 @@ export class AuthManager implements vscode.Disposable {
     } catch (err) {
       this.transitionTo("UNAUTHENTICATED");
       if (err instanceof AuthError) { throw err; }
-      throw new AuthError(`Entra login failed: ${(err as Error).message}`);
+      throw new AuthError(`${providerType} login failed: ${(err as Error).message}`);
     }
+  }
+
+  /**
+   * Backwards-compatible alias for the Entra loopback login flow.
+   * Kept so existing callers keep working after generalizing to loginSso.
+   */
+  async loginEntra(): Promise<void> {
+    return this.loginSso("entra");
   }
 
   /**

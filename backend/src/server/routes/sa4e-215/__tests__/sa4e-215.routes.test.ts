@@ -73,13 +73,13 @@ describe('AUTH', () => {
     expect(body.data.userId).toMatch(/^user-/);
   });
 
-  it('duplicate email -> ERR_001 (400)', async () => {
+  it('duplicate email -> ERR_002 (400)', async () => {
     const email = `dup-${Date.now()}@test.local`;
     await json('POST', '/auth/register', { email, password: 'Pass!234567' });
     const res = await json('POST', '/auth/register', { email, password: 'Pass!234567' });
     expect(res.status).toBe(400);
     const body = (await res.json()) as any;
-    expect(body.error.code).toBe('ERR_001');
+    expect(body.error.code).toBe('ERR_002');
   });
 
   it('missing email/password -> ERR_001 (400)', async () => {

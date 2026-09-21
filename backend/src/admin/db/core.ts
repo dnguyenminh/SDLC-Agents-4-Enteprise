@@ -80,10 +80,14 @@ let sqliteReady: Promise<void> | null = null;
 function getUnifiedSqliteAdapter(): SqliteAdapter {
   if (!sqliteAdapter) {
     sqliteAdapter = new SqliteAdapter(DB_PATH);
-    // SqliteAdapter.connect() is sync internally — safe to call eagerly
-    void sqliteAdapter.connect();
+    // SA4E-262 fix: connect() MUST be chained into sqliteReady — the previous
+    // `void connect()` orphaned the rejection, so a CANTOPEN during lazy init
+    // crashed the whole server (unhandled rejection) instead of failing the
+    // caller's request with a 500.
     const adapter = sqliteAdapter;
-    sqliteReady = initSchema(adapter).then(() => seedDefaults(adapter))
+    sqliteReady = adapter.connect()
+      .then(() => initSchema(adapter))
+      .then(() => seedDefaults(adapter))
       .catch((err) => logger.error({ err }, '[admin] SQLite schema init failed'));
   }
   return sqliteAdapter;
@@ -169,9 +173,13 @@ export function resetAdminDb(): void {
 /**
  * Get the raw DB instance.
  * @deprecated Use getDbAdapter() for new code. Kept for backward compat with tests.
+ * SA4E-262 fix: delegates to getDbAdapter() to honor the unified-DB contract.
+ * The previous implementation force-initialized the SQLite adapter even when the
+ * active engine was PostgreSQL — splitting admin-UI writes (SQLite) from
+ * auth/login-page reads (PostgreSQL) and crashing the server on first
+ * sso-providers/config request (lazy SqliteAdapter.connect threw CANTOPEN and
+ * the rejection was unhandled).
  */
 export function getAdminDb(): any {
-  const adapter = getUnifiedSqliteAdapter();
-  // getRawDb removed; return adapter directly for compat
-  return adapter as any;
+  return getDbAdapter() as any;
 }

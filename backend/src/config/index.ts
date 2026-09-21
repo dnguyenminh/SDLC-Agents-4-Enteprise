@@ -7,9 +7,26 @@ import { execSync } from 'child_process';
 import * as os from 'os';
 import pino from 'pino';
 import { SandboxConfigSchema } from './SandboxConfig.js';
-import { EntraSurfaceSchema, loadEntraConfig } from './EntraConfig.js';
+import { EntraSurfaceSchema, loadEntraConfig, type EntraSurface } from './EntraConfig.js';
 
 const logger = pino({ name: 'app-config' });
+
+/**
+ * Load the Entra surface for the startup config snapshot WITHOUT throwing.
+ * loadEntraConfig() fail-fasts when SSO_ENABLED=true but ENTRA_* env vars are
+ * missing. Under Hướng A the real config lives in the sso_providers table
+ * (read at runtime via loadEntraConfigAsync), so a missing env set here is
+ * expected and must NOT crash loadConfig() and every caller of it.
+ */
+function loadEntraSurfaceSafe(): EntraSurface {
+  try {
+    return loadEntraConfig(process.env);
+  } catch (err) {
+    logger.warn({ err: (err as Error).message },
+      'Entra env config unavailable at startup — SSO config resolved from DB at runtime');
+    return { ssoEnabled: false, config: null };
+  }
+}
 
 const DEFAULT_EXCLUDE = [
   'node_modules', '.git', 'dist', 'build', '.gradle',
@@ -166,8 +183,13 @@ export function loadConfig(overrides?: Partial<UnifiedConfig>): UnifiedConfig {
     includeExtensions: fileConfig.includeExtensions ?? DEFAULT_EXTENSIONS,
     sandbox: fileConfig.sandbox ?? {},
     ...overrides,
-    // SA4E-264 — gate + validate Entra config at startup (fail-fast; never bypassed by overrides)
-    entra: loadEntraConfig(process.env),
+    // SA4E-264 / Hướng A — Entra config snapshot. Runtime SSO now reads the
+    // effective config from the sso_providers table via loadEntraConfigAsync
+    // (single source of truth), so this synchronous env-only load MUST NOT throw
+    // and bring down every loadConfig() caller (e.g. GET /api/admin/config) when
+    // SSO is enabled but the ENTRA_* env vars are absent (config lives in DB).
+    // Degrade to a disabled surface instead of failing hard.
+    entra: loadEntraSurfaceSafe(),
   };
 
   return UnifiedConfigSchema.parse(raw) as UnifiedConfig;

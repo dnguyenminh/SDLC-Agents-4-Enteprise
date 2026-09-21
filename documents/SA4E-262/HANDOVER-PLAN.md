@@ -57,6 +57,12 @@ Ba nguồn trong repo mâu thuẫn nhau về trạng thái Epic:
    - Siết đúng contract extension: chỉ `http://127.0.0.1` + path `/callback`. Thêm 7 unit test cho các vector (https, localhost/::1, path lạ, host giả `127.0.0.1.evil.com`, private IP, internal path). Export `isLoopbackRedirect` để test.
    - **Rủi ro còn lại (P3 — Security):** vẫn chấp nhận `127.0.0.1` với **bất kỳ port** nào. Được bù bởi state do client tự sinh + verify (kẻ tấn công không biết state của nạn nhân) và port ngẫu nhiên phía client. Cần Security xác nhận mức chấp nhận này ở phase review.
 
+4. **✅ P1 — Fix UA hash mismatch khiến admin login 401 sau login thành công** — `backend/src/server/routes/admin/context.ts`:
+   - **Symptom:** login `POST /api/admin/auth/login` trả 200 + token, nhưng mọi API `/api/admin/*` sau đó trả **401 Unauthorized** → viewer gọi `window.__onAuthExpired()` → tự logout về login page. Từ phía user: "login không vào được" (không có error message nào hiển thị).
+   - **Root cause:** `context.ts` (`authenticate()`) tự hash user-agent bằng `crypto.createHash('sha256').update(userAgent)` (giữ nguyên chữ hoa), trong khi login lưu session qua `SessionService.issue()` → `hashUserAgent()` (`utils/ua.ts` — `ua.trim().toLowerCase()` rồi mới sha256). Browser UA có chữ hoa (`Mozilla/5.0 ...`) → 2 hash khác nhau → `validateSession` không tìm thấy session → 401.
+   - **Fix:** `context.ts` import và dùng `hashUserAgent()` từ `../../utils/ua.js` — nhất quán với `SessionService` và `jwt-auth.ts`.
+   - **Verify (browser + API thật, 2026-09-20):** login UI → token lưu → Dashboard render 8 cards; reload giữ session; `curl` login → `GET /api/admin/projects` với Bearer token → **200** (trước fix: 401). Nhóm test SSO **51/51 pass** sau fix.
+
 ---
 
 ## ❗ Việc còn tồn đọng (cần AI kế nhiệm xử lý)

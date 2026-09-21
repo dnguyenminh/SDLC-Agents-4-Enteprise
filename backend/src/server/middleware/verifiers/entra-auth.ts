@@ -10,14 +10,18 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { createProjectContext } from '../../../modules/memory/ProjectContext.js';
 import { EntraRS256Verifier } from './EntraRS256Verifier.js';
 import { parseJwtHeader, type TokenVerifier } from './TokenVerifier.js';
+import { loadEntraConfigAsync } from '../../../config/EntraConfig.js';
 
 const SSO_ENABLED = process.env.SSO_ENABLED === 'true' || process.env.SSO_ENABLED === '1';
 const ENTRA_AUTHORITY = (process.env.ENTRA_AUTHORITY || '').trim();
 const ENTRA_ISSUER = (process.env.ENTRA_ISSUER || '').trim();
-const ENTRA_JWKS_URI = (process.env.ENTRA_JWKS_URI || '').trim();
 const ENTRA_CLIENT_ID = (process.env.ENTRA_CLIENT_ID || '').trim();
 
 let entraVerifier: TokenVerifier | null = null;
+// Cache the config signature used to build the verifier so a change in the
+// DB-backed Entra config (Hướng A: sso_providers) rebuilds it instead of
+// serving a stale env-based verifier.
+let verifierKey = '';
 
 /** Fail-fast (TDD §3.1): when the SSO gate is on, Entra verification vars are required. */
 export function validateEntraAuthConfig(): void {
@@ -27,16 +31,42 @@ export function validateEntraAuthConfig(): void {
   if (!ENTRA_CLIENT_ID) throw new Error('ENTRA_CLIENT_ID must be set when SSO_ENABLED=true');
 }
 
-/** Lazily built RS256 verifier — constructed once, reused across requests. */
+/**
+ * Sync verifier (legacy detection path in jwt-auth). Uses env only — retained so
+ * bearer-token detection keeps working without an async hop. Callback flow uses
+ * getEntraVerifierAsync() which honors the DB-backed config (Hướng A).
+ */
 export function getEntraVerifier(): TokenVerifier | null {
   if (!SSO_ENABLED || !ENTRA_AUTHORITY || !ENTRA_ISSUER || !ENTRA_CLIENT_ID) return null;
-  if (!entraVerifier) {
+  if (!entraVerifier || verifierKey !== `env:${ENTRA_ISSUER}`) {
     entraVerifier = new EntraRS256Verifier({
       authority: ENTRA_AUTHORITY,
       issuer: ENTRA_ISSUER,
       audience: ENTRA_CLIENT_ID,
-      jwksUri: ENTRA_JWKS_URI || undefined,
+      jwksUri: (process.env.ENTRA_JWKS_URI || '').trim() || undefined,
     });
+    verifierKey = `env:${ENTRA_ISSUER}`;
+  }
+  return entraVerifier;
+}
+
+/**
+ * DB-first verifier (Hướng A — single source of truth). Loads the effective Entra
+ * config from sso_providers (fallback env) and builds/reuses an RS256 verifier
+ * keyed on issuer+audience so config changes take effect without a restart.
+ */
+export async function getEntraVerifierAsync(): Promise<TokenVerifier | null> {
+  const { config } = await loadEntraConfigAsync(process.env);
+  if (!config) return null;
+  const key = `db:${config.issuer}:${config.clientId}`;
+  if (!entraVerifier || verifierKey !== key) {
+    entraVerifier = new EntraRS256Verifier({
+      authority: config.authority,
+      issuer: config.issuer,
+      audience: config.clientId,
+      jwksUri: config.jwksUri || undefined,
+    });
+    verifierKey = key;
   }
   return entraVerifier;
 }

@@ -6,6 +6,7 @@
 import * as vscode from "vscode";
 import { getNonce } from "./base-panel";
 import { AuthManager } from "../auth/AuthManager";
+import type { SsoProviderInfo } from "../auth/SsoTypes";
 
 export class LoginPanel implements vscode.Disposable {
   private panel: vscode.WebviewPanel | null = null;
@@ -19,13 +20,26 @@ export class LoginPanel implements vscode.Disposable {
   async show(): Promise<void> {
     if (this.panel) { this.panel.reveal(); return; }
     const lastUsername = await this.authManager.getLastUsername();
+    // Fetch enabled providers to render extra SSO buttons (Google/GitHub/…).
+    // Entra keeps its dedicated static button so its flow is never affected.
+    const extraProviders = await this.getExtraSsoProviders();
     this.panel = vscode.window.createWebviewPanel("kiroSdlc.login", "SDLC Agents 4 Enterprise — Login", vscode.ViewColumn.One, { enableScripts: true, retainContextWhenHidden: false });
-    this.panel.webview.html = this.getHtml(lastUsername);
+    this.panel.webview.html = this.getHtml(lastUsername, extraProviders);
     this.panel.webview.onDidReceiveMessage(async (msg) => {
       if (msg.type === "login") { await this.handleLogin(msg.username, msg.password); }
-      else if (msg.type === "entra") { await this.handleEntra(); }
+      else if (msg.type === "entra") { await this.handleSso("entra"); }
+      else if (msg.type === "sso") { await this.handleSso(msg.provider); }
     }, null, this.disposables);
     this.panel.onDidDispose(() => { this.panel = null; }, null, this.disposables);
+  }
+
+  /**
+   * Enabled SSO providers excluding Entra (Entra has its own static button).
+   * Returns [] on any failure so the panel still shows local + Entra login.
+   */
+  private async getExtraSsoProviders(): Promise<SsoProviderInfo[]> {
+    const providers = await this.authManager.listSsoProviders();
+    return providers.filter((p) => p.provider_type.toLowerCase() !== "entra");
   }
 
   close(): void { this.panel?.dispose(); this.panel = null; }
@@ -41,10 +55,15 @@ export class LoginPanel implements vscode.Disposable {
     }
   }
 
-  private async handleEntra(): Promise<void> {
+  /**
+   * Handle an SSO login for any provider (entra, google, github, …).
+   * Surfaces failures to the user via the webview error banner — never
+   * swallows the exception.
+   */
+  private async handleSso(provider: string): Promise<void> {
     this.postMessage({ type: "loading", loading: true });
     try {
-      await this.authManager.loginEntra();
+      await this.authManager.loginSso(provider);
       this.postMessage({ type: "success" });
       setTimeout(() => this.close(), 500);
     } catch (err) {
@@ -54,9 +73,24 @@ export class LoginPanel implements vscode.Disposable {
 
   private postMessage(msg: unknown): void { this.panel?.webview.postMessage(msg); }
 
-  private getHtml(lastUsername: string = ""): string {
+  /**
+   * Build the dynamic SSO button markup for non-Entra providers.
+   * The provider_type drives the click handler (data-provider) and a brand
+   * CSS class; text falls back to "Sign in with {name}".
+   */
+  private renderSsoButtons(providers: SsoProviderInfo[]): string {
+    return providers.map((p) => {
+      const type = escapeHtml(p.provider_type);
+      const label = escapeHtml(`Sign in with ${p.name || p.provider_type}`);
+      const brand = `sso-${p.provider_type.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+      return `<button type="button" class="btn btn-secondary sso-btn ${brand}" data-provider="${type}">${label}</button>`;
+    }).join("\n    ");
+  }
+
+  private getHtml(lastUsername: string = "", extraProviders: SsoProviderInfo[] = []): string {
     const nonce = getNonce();
     const cspSource = this.panel!.webview.cspSource;
+    const ssoButtons = this.renderSsoButtons(extraProviders);
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,6 +117,7 @@ export class LoginPanel implements vscode.Disposable {
     .btn-secondary { background: var(--vscode-button-secondaryBackground, transparent); color: var(--vscode-button-secondaryForeground, var(--vscode-foreground)); border: 1px solid var(--vscode-button-border, var(--vscode-input-border)); }
     .btn-secondary:hover { background: var(--vscode-button-secondaryHoverBackground, var(--vscode-list-hoverBackground)); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .sso-btn { display: flex; align-items: center; justify-content: center; gap: 8px; }
     .error { color: var(--vscode-errorForeground); text-align: center; margin-top: 16px; font-size: 0.85em; display: none; }
     .success { color: var(--vscode-testing-iconPassed); text-align: center; margin-top: 16px; font-size: 0.9em; display: none; }
   </style>
@@ -106,6 +141,7 @@ export class LoginPanel implements vscode.Disposable {
       <button type="submit" class="btn btn-primary" id="loginBtn">Login</button>
     </form>
     <button type="button" class="btn btn-secondary" id="entraBtn">Sign in with Microsoft</button>
+    ${ssoButtons}
     <div class="error" id="errorMsg"></div>
     <div class="success" id="successMsg">Login successful</div>
   </div>
@@ -114,6 +150,7 @@ export class LoginPanel implements vscode.Disposable {
     const form = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
     const entraBtn = document.getElementById('entraBtn');
+    const ssoBtns = Array.from(document.querySelectorAll('.sso-btn'));
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
     const pwdInput = document.getElementById('password');
@@ -139,23 +176,33 @@ export class LoginPanel implements vscode.Disposable {
       vscode.postMessage({ type: 'entra' });
     });
 
+    ssoBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        errorMsg.style.display = 'none';
+        vscode.postMessage({ type: 'sso', provider: btn.getAttribute('data-provider') });
+      });
+    });
+
     window.addEventListener('message', (event) => {
       const msg = event.data;
       if (msg.type === 'loading') {
         loginBtn.disabled = msg.loading;
         entraBtn.disabled = msg.loading;
+        ssoBtns.forEach((b) => { b.disabled = msg.loading; });
         loginBtn.textContent = msg.loading ? 'Logging in...' : 'Login';
       } else if (msg.type === 'error') {
         errorMsg.style.display = 'block';
         errorMsg.textContent = msg.message;
         loginBtn.disabled = false;
         entraBtn.disabled = false;
+        ssoBtns.forEach((b) => { b.disabled = false; });
         loginBtn.textContent = 'Login';
       } else if (msg.type === 'success') {
         successMsg.style.display = 'block';
         errorMsg.style.display = 'none';
         loginBtn.disabled = true;
         entraBtn.disabled = true;
+        ssoBtns.forEach((b) => { b.disabled = true; });
         loginBtn.textContent = 'Done';
       }
     });
@@ -172,4 +219,17 @@ export class LoginPanel implements vscode.Disposable {
   }
 
   dispose(): void { this.close(); this.disposables.forEach(d => d.dispose()); }
+}
+
+/**
+ * Escape a string for safe interpolation into HTML attributes/text,
+ * preventing markup injection from provider names supplied via the backend.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
