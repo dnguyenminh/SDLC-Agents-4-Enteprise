@@ -195,11 +195,14 @@ export async function loadEntraConfigAsync(env: NodeJS.ProcessEnv = process.env)
     const db = getAdminDb();
     const row = await db.getAsync('SELECT * FROM sso_providers WHERE provider_type = ? AND enabled = 1 ORDER BY updated_at DESC LIMIT 1', ['entra']);
     if (row) {
+      // redirect_uri optional in the row: derive the default callback when empty
+      // so it always matches the backend /auth/entra/callback endpoint.
+      const { resolveRedirectUri } = await import('../server/auth/utils/callback-url.js');
       const cfg = {
         ENTRA_TENANT_ID: row.tenant_id,
         ENTRA_CLIENT_ID: row.client_id,
         ENTRA_CLIENT_SECRET: row.client_secret,
-        ENTRA_REDIRECT_URI: row.redirect_uri,
+        ENTRA_REDIRECT_URI: resolveRedirectUri('entra', row.redirect_uri),
         ENTRA_SCOPES: row.scopes,
         SSO_ENABLED: 'true'
       };

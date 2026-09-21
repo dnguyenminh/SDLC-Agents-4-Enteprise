@@ -6,6 +6,7 @@
  */
 
 import { GOOGLE_DEFAULT_SCOPES } from '../models/GoogleClaims.js';
+import { resolveRedirectUri } from '../utils/callback-url.js';
 
 /** Resolved Google configuration required to run the OIDC flow. */
 export interface GoogleConfig {
@@ -69,7 +70,9 @@ export async function loadGoogleConfig(): Promise<GoogleConfig> {
   return {
     clientId: requireField(row, 'client_id', 'client_id'),
     clientSecret: requireField(row, 'client_secret', 'client_secret'),
-    redirectUri: requireField(row, 'redirect_uri', 'redirect_uri'),
+    // redirect_uri is optional in the row: fall back to the derived default
+    // callback (SSO_BASE_URL/auth/google/callback) so admins can't misconfigure it.
+    redirectUri: resolveRedirectUri('google', row.redirect_uri),
     scopes: parseScopes(row.scopes),
   };
 }

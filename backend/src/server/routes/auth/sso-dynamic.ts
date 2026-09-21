@@ -12,8 +12,11 @@ export function createSsoDynamicRoutes() {
   router.get('/sso/providers', async (c) => {
     try {
       const db = getDbAdapter();
+      // Only advertise providers that are BOTH enabled AND actually configured
+      // (client_id present). A provider enabled with an empty client_id cannot
+      // start the OAuth flow, so showing its button would only produce errors.
       const rows = await db.allAsync<{ provider_id: string; provider_type: string; name: string; login_ui_html: string }>(
-        'SELECT provider_id, provider_type, name, login_ui_html FROM sso_providers WHERE enabled = 1 ORDER BY provider_type'
+        "SELECT provider_id, provider_type, name, login_ui_html FROM sso_providers WHERE enabled = 1 AND client_id <> '' ORDER BY provider_type"
       );
       return c.json({ providers: rows || [] });
     } catch {

@@ -6,6 +6,7 @@
  * strategy classes (DIP) and avoids duplicating the query per provider (DRY).
  */
 import type { SsoProviderConfig } from '../models/SsoProviderConfig.js';
+import { resolveRedirectUri } from './callback-url.js';
 
 interface SsoProviderRow {
   client_id: string;
@@ -43,9 +44,12 @@ export async function loadSsoProviderConfig(
 function buildConfig(providerType: string, row: SsoProviderRow): SsoProviderConfig {
   const clientId = row.client_id?.trim() ?? '';
   const clientSecret = row.client_secret?.trim() ?? '';
-  const redirectUri = row.redirect_uri?.trim() ?? '';
-  if (!clientId || !clientSecret || !redirectUri) {
-    throw new Error(`sso_provider_misconfigured: ${providerType} missing client_id/secret/redirect_uri`);
+  // redirect_uri is optional: only client_id/secret are truly required from the
+  // admin. The callback URL is derived (SSO_BASE_URL/auth/{provider}/callback)
+  // when left empty so it always matches the backend endpoint and cannot be typo'd.
+  if (!clientId || !clientSecret) {
+    throw new Error(`sso_provider_misconfigured: ${providerType} missing client_id/secret`);
   }
+  const redirectUri = resolveRedirectUri(providerType, row.redirect_uri);
   return { providerType, clientId, clientSecret, redirectUri, scopes: parseScopes(row.scopes) };
 }

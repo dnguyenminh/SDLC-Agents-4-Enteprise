@@ -70,16 +70,24 @@ export function createSsoProviderRoutes() {
     const redirectTo = resolveRedirectTarget(url.searchParams.get('redirect_to') || undefined);
     const clientState = url.searchParams.get('state') || undefined;
 
-    const authResult = await strategy.buildAuthorizeUrl({ redirectTo, state: clientState });
-    store.set(authResult.state, {
-      codeVerifier: authResult.codeVerifier,
-      nonce: authResult.nonce,
-      exp: Date.now() + PKCE_TTL_MS,
-      redirectTo,
-      provider: strategy.providerType,
-      state: authResult.state,
-    });
-    return c.redirect(authResult.url);
+    try {
+      const authResult = await strategy.buildAuthorizeUrl({ redirectTo, state: clientState });
+      store.set(authResult.state, {
+        codeVerifier: authResult.codeVerifier,
+        nonce: authResult.nonce,
+        exp: Date.now() + PKCE_TTL_MS,
+        redirectTo,
+        provider: strategy.providerType,
+        state: authResult.state,
+      });
+      return c.redirect(authResult.url);
+    } catch (e: any) {
+      // Most common cause: provider row exists but client_id/secret not filled in
+      // or the provider is disabled. Surface a clear 400 instead of a generic 500
+      // so the login page can tell the admin what to configure.
+      const msg = e?.message || 'SSO provider not configured';
+      return c.json({ error: 'sso_not_configured', provider: providerParam.toLowerCase(), message: msg }, 400);
+    }
   });
 
   app.get('/auth/:provider/callback', async (c) => {
