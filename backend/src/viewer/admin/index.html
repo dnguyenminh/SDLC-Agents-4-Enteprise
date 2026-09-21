@@ -520,6 +520,27 @@ function PortalInstance({permissions,username,isActive,impersonateUserId}){
   return(<div style={{display:isActive?'flex':'none',flex:1,height:'100%'}}><div className="sidebar" style={{width:200,background:'#f8fafc',borderRight:'1px solid #e2e8f0',overflow:'auto',flexShrink:0,padding:'12px 0',position:'relative',height:'auto',color:'#1e293b'}}><div style={{padding:'6px 12px 10px',borderBottom:'1px solid #e2e8f0',marginBottom:4}}><div style={{fontSize:12,color:'#1e293b',fontWeight:600}}>{username}</div><div style={{fontSize:10,color:'#64748b'}}>{permissions.length} perms</div></div><WorkspaceSelector onProjectChange={handleProjectChange}/>{visiblePages.map(p=>(<div key={p.id} style={{padding:'7px 12px',fontSize:12,cursor:'pointer',background:page===p.id?'#dbeafe':'transparent',color:page===p.id?'#1e40af':'#475569',borderLeft:page===p.id?'3px solid #3b82f6':'3px solid transparent'}} className="nav-item" onClick={()=>{if(impersonateUserId)__impersonateUserId=impersonateUserId;else __impersonateUserId=null;setPage(p.id);}}><span style={{marginRight:6}}>{p.icon}</span>{p.label}</div>))}</div><div className="main" key={currentProjectId+'_'+page} style={{flex:1,padding:20,overflow:'auto',marginLeft:0}}><ErrorBoundary key={currentProjectId+'_'+page}>{renderPage()}</ErrorBoundary></div></div>);
 }
 
+// SSO web flow: the /auth/{provider}/callback redirects back with the session
+// token on the URL (?sso_token=...&sso_expires=...). Persist it into the same
+// localStorage keys the SPA uses for Bearer auth, then strip the params from the
+// URL so the token isn't left in history. Runs once at load, before App mounts.
+window.__ssoBootstrap=(async function captureSsoToken(){
+  try{
+    const p=new URLSearchParams(window.location.search);
+    const tok=p.get('sso_token');
+    if(!tok) return;
+    localStorage.setItem('admin_token',tok);
+    p.delete('sso_token'); p.delete('sso_expires');
+    const qs=p.toString();
+    window.history.replaceState({},'',window.location.pathname+(qs?'?'+qs:''));
+    // Fetch the real user + permissions so the SPA renders the right pages.
+    try{
+      const r=await fetch('/api/admin/profile',{headers:{Authorization:'Bearer '+tok}});
+      if(r.ok){const u=await r.json();localStorage.setItem('admin_user',JSON.stringify({username:u.username||'sso-user',permissions:u.permissions||[],userId:u.userId,email:u.email}));}
+      else localStorage.setItem('admin_user',JSON.stringify({username:'sso-user',permissions:[]}));
+    }catch(e){localStorage.setItem('admin_user',JSON.stringify({username:'sso-user',permissions:[]}));}
+  }catch(e){}
+})();
 function App(){const[loggedIn,setLoggedIn]=useState(!!localStorage.getItem('admin_token'));const[forceChange,setForceChange]=useState(false);const[cpwd,setCpwd]=useState({c:'',n1:'',n2:'',err:''});
   const[tabs,setTabs]=useState([]);const[activeTab,setActiveTab]=useState('admin');const[usersList,setUsersList]=useState([]);const[showAddTab,setShowAddTab]=useState(false);
   const userInfo=JSON.parse(localStorage.getItem('admin_user')||'{}');
@@ -548,7 +569,9 @@ function App(){const[loggedIn,setLoggedIn]=useState(!!localStorage.getItem('admi
   </div>);
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+// Wait for the SSO token bootstrap (if a token arrived on the URL) so App mounts
+// with admin_token + admin_user already persisted — avoids a login-screen flash.
+Promise.resolve(window.__ssoBootstrap).then(()=>{ReactDOM.createRoot(document.getElementById('root')).render(<App/>);});
 </script>
 <script>
 // Disconnect Babel's MutationObserver to prevent it from transforming extension-injected scripts

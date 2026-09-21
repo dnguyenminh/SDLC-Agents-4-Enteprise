@@ -157,5 +157,11 @@ export function buildPostLoginRedirect(redirectToRaw: string | undefined, state:
     loopbackUrl.searchParams.set('expiresAt', session.expiresAt);
     return loopbackUrl.toString();
   }
-  return resolveWebRedirect(redirectUrlRaw);
+  // Web (browser) flow: the admin SPA authenticates via a Bearer token kept in
+  // localStorage, NOT the HttpOnly cookie. So we must hand the token to the SPA
+  // on the redirect URL (same-origin, allow-listed target) — otherwise the SPA
+  // lands on an authenticated route with no token and bounces back to login.
+  const webTarget = resolveWebRedirect(redirectUrlRaw);
+  const sep = webTarget.includes('?') ? '&' : '?';
+  return `${webTarget}${sep}sso_token=${encodeURIComponent(session.token)}&sso_expires=${encodeURIComponent(session.expiresAt)}`;
 }
