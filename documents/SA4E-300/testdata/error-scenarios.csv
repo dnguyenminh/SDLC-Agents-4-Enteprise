@@ -1,0 +1,6 @@
+test_case_id,error_code,http_status,error_message,details,action,description
+TC-001,500,500,Internal Server Error,ENOSPC: disk full,Free disk space,Backend generic error enriched
+TC-201,401,401,Unauthorized,,Re-authenticate required,Token expired
+TC-202,429,429,Server busy,Concurrency limit reached,Retry after 2s,Backpressure
+TC-203,ENOSPC,500,Disk full,ENOSPC: no space left on device,Free disk space,Disk full scenario
+TC-204,EACCES,500,Permission denied,EACCES: permission denied,Check file permissions,Permission denied scenario

@@ -18,9 +18,6 @@
 <mxCell id="m1" edge="1" parent="1" source="dev" target="ext" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
-<mxCell id="m1label" value="Trigger ingest source" style="html=1;align=center;" vertex="1" parent="1">
-<mxGeometry x="150" y="80" width="150" height="20" as="geometry"/>
-</mxCell>
 <mxCell id="m2" edge="1" parent="1" source="ext" target="backend" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
 <mxGeometry relative="1" as="geometry"/>
 </mxCell>
