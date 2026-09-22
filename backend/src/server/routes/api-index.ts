@@ -13,6 +13,8 @@ import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import { loadConfig } from '../../config/index.js';
 import { requireProjectId } from '../../engine/query/code-intel-isolation.js';
 import { validateSession } from '../../admin/db/sessions.js';
+import { getUserPermissions } from '../../admin/admin-db.js';
+import { verifyJwtToken, allowedProjectsFromClaims } from '../middleware/jwt-auth.js';
 import {
   handleFullIndex, handleFileEvents, handleCancel, handleProgress,
 } from './api-index-decoupled.js';
@@ -148,6 +150,65 @@ async function requireAuth(c: Context): Promise<{ userId: string } | null> {
   return session ?? null;
 }
 
+/**
+ * SA4E-300 SEC High #1 (BOLA) + High #2 (missing RBAC on sync-pega-rules).
+ * Authorization gates reusing EXISTING infra only (no new framework):
+ * - Global RBAC via getUserPermissions — same source as AdminContext.requirePermission
+ *   (server/routes/admin/context.ts); permission IDs from admin types: KB_WRITE is the
+ *   gate used by all KB write routes (kb-tags.ts, kb-operations.ts), GRAPH_MAINTAIN is
+ *   the gate used by populate-edges (admin/kb-graph.ts:104).
+ * - Tenant binding via verifyJwtToken + allowedProjectsFromClaims — same pattern as
+ *   verifyProjectBinding SEC-03 (server/routes/tools.ts): when the caller presents a
+ *   valid JWT carrying pid/pids grants, the requested project must be inside the grant.
+ * NOTE (fallback, PO risk-accept): there is NO project-membership table for opaque
+ * admin session tokens (users ↔ access_groups only), so session principals cannot be
+ * bound per-project. For them the global permission gate below is the enforced
+ * boundary; cross-project writes by a permissioned session user remain possible and
+ * must be risk-accepted or closed by adding per-project membership later.
+ * Returns a 403 JSON response when denied, or null when allowed.
+ */
+async function requireIndexPermission(
+  c: Context, userId: string, permissionId: string, logger: Logger,
+): Promise<Response | null> {
+  let has = false;
+  try {
+    const perms = await getUserPermissions(userId);
+    has = perms.some((p: any) => p.permissionId === permissionId);
+  } catch (err) {
+    // Fail closed: DB error must not grant access.
+    logger.warn({ err, userId, permissionId }, '[index] permission lookup failed — denying');
+    return c.json({ error: 'Forbidden', details: 'Unable to verify permissions', action: 'Retry or contact an administrator' }, 403);
+  }
+  if (!has) {
+    logger.warn({ userId, permissionId }, '[index] missing required permission — rejected');
+    return c.json({ error: 'Forbidden', details: `Missing required permission: ${permissionId}`, action: 'Contact an administrator to grant access' }, 403);
+  }
+  return null;
+}
+
+/**
+ * SA4E-300 SEC High #1 (BOLA): bind the requested projectId to the caller's JWT
+ * project grants (tools.ts SEC-03 pattern). Opaque session tokens carry no
+ * per-project grant → allowed here (global permission gate still applies, see above).
+ * Returns a 403 JSON response when the project is outside the grant, else null.
+ */
+async function verifyIndexProjectBinding(
+  c: Context, projectId: string, logger: Logger,
+): Promise<Response | null> {
+  const auth = c.req.header('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!token) return null;
+  const { valid, payload } = await verifyJwtToken(token);
+  if (!valid || !payload) return null; // opaque/admin-session token → no per-tenant grant
+  const granted = allowedProjectsFromClaims(payload);
+  if (granted.length === 0) return null; // JWT without project claim → no grant to enforce
+  if (projectId && !granted.includes(projectId)) {
+    logger.warn({ projectId, sub: (payload as any)?.sub }, '[index] project outside principal grant — rejected');
+    return c.json({ error: 'Forbidden', details: `No access to project '${projectId}'`, action: 'Use an authorized project' }, 403);
+  }
+  return null;
+}
+
 /** Register the /api/index/* routes on the given app. */
 export function registerIndexRoutes(app: Hono, registry: ModuleRegistry, logger: Logger): void {
   app.post('/api/index/source', async (c) => {
@@ -196,7 +257,7 @@ export function registerIndexRoutes(app: Hono, registry: ModuleRegistry, logger:
   app.post('/api/index/sync-pega-rules', async (c) => {
     const session = await requireAuth(c);
     if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
-    return handleSyncPegaRules(c, registry, logger);
+    return handleSyncPegaRules(c, registry, logger, session.userId);
   });
   app.post('/api/index/cancel', async (c) => {
     const session = await requireAuth(c);
@@ -216,6 +277,11 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
     const { files } = body;
     if (!files || !Array.isArray(files)) return c.json({ error: 'files array required', details: 'Request body must contain files array', action: 'Provide files array in request body' }, 400);
     const scope = resolveRequestScope(c);
+    // SA4E-300 SEC High #1 (BOLA): global write gate + tenant binding.
+    const forbidden = await requireIndexPermission(c, userId, 'KB_WRITE', logger);
+    if (forbidden) return forbidden;
+    const bindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
+    if (bindingDenied) return bindingDenied;
 
     // SA4E-300 GAP 1: Write to temp dir OUTSIDE workspace to avoid triggering Kiro file watcher
     // Structure: {indexTempDir}/{userId}/{projectId}/source/files...
@@ -269,6 +335,11 @@ async function handleIndexDocument(c: Context, logger: Logger, userId = '') {
     const { path: relPath, content } = body;
     if (!relPath || !content) return c.json({ error: 'path and content required', details: 'Both path and content must be provided', action: 'Include path and content in request body' }, 400);
     const scope = resolveRequestScope(c);
+    // SA4E-300 SEC High #1 (BOLA): global write gate + tenant binding.
+    const docForbidden = await requireIndexPermission(c, userId, 'KB_WRITE', logger);
+    if (docForbidden) return docForbidden;
+    const docBindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
+    if (docBindingDenied) return docBindingDenied;
     // SA4E-300 GAP 1: Consistent temp structure — {indexTempDir}/{userId}/{projectId}/documents/
     const tempBase = resolveIndexTempBase(userId, scope.projectId, 'documents');
     const wsBasename = path.basename(scope.workspace);
@@ -294,6 +365,11 @@ async function handleIndexDocuments(c: Context, logger: Logger, userId = '') {
     const { files } = body;
     if (!files || !Array.isArray(files)) return c.json({ error: 'files array required', details: 'Request body must contain files array', action: 'Provide files array in request body' }, 400);
     const scope = resolveRequestScope(c);
+    // SA4E-300 SEC High #1 (BOLA): global write gate + tenant binding.
+    const docsForbidden = await requireIndexPermission(c, userId, 'KB_WRITE', logger);
+    if (docsForbidden) return docsForbidden;
+    const docsBindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
+    if (docsBindingDenied) return docsBindingDenied;
     const { written, rejected, rejectedReasons } = writeFilesPhase(userId, scope.projectId, files);
     if (rejectedReasons.length > 0) {
       logger.warn({ rejectedReasons, projectId: scope.projectId }, '[index] rejected unsafe paths');
@@ -311,6 +387,11 @@ async function handleIndexDocuments(c: Context, logger: Logger, userId = '') {
 async function handleIngestDocsFromTemp(c: Context, registry: ModuleRegistry, logger: Logger, userId: string) {
   try {
     const scope = resolveRequestScope(c);
+    // SA4E-300 SEC High #1 (BOLA): global write gate + tenant binding.
+    const ingestForbidden = await requireIndexPermission(c, userId, 'KB_WRITE', logger);
+    if (ingestForbidden) return ingestForbidden;
+    const ingestBindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
+    if (ingestBindingDenied) return ingestBindingDenied;
     // SA4E-300 GAP 1: sanitized cross-platform base {indexTempDir}/{userId}/{projectId}/batch-docs/
     const tempBase = resolveIndexTempBase(userId, scope.projectId, 'batch-docs');
 
@@ -366,13 +447,19 @@ async function handleIngestDocsFromTemp(c: Context, registry: ModuleRegistry, lo
 }
 
 /** SA4E-209: Trigger async Pega rules sync — returns 202 immediately, runs in background. */
-async function handleSyncPegaRules(c: Context, registry: ModuleRegistry, logger: Logger) {
+async function handleSyncPegaRules(c: Context, registry: ModuleRegistry, logger: Logger, userId = '') {
   try {
     const body = await c.req.json<{ projectId?: string }>();
     if (!body.projectId) {
       // SA4E-300 GAP 2: full {error, details, action} shape (keep 400)
       return c.json({ error: 'projectId is required', details: 'Request body must contain a non-empty projectId field', action: 'Include projectId in request body' }, 400);
     }
+    // SA4E-300 SEC High #2: same gate as populate-edges (GRAPH_MAINTAIN, kb-graph.ts:104).
+    const syncForbidden = await requireIndexPermission(c, userId, 'GRAPH_MAINTAIN', logger);
+    if (syncForbidden) return syncForbidden;
+    // SA4E-300 SEC High #1 (BOLA): body.projectId must be inside the caller's JWT grant.
+    const syncBindingDenied = await verifyIndexProjectBinding(c, body.projectId, logger);
+    if (syncBindingDenied) return syncBindingDenied;
     const memModule = registry.getModule('memory') as any;
     if (!memModule || memModule.status !== 'ready') {
       // SA4E-300 GAP 2: full {error, details, action} shape (keep 503)

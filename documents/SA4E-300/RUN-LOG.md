@@ -121,3 +121,19 @@
 - Fix: edge-on-ingest.ts them export extractIngestEdges(ctx, nodes) (4 strategies, pure), extractAndInsertIngestEdges refactor dung lai; kb-graph.ts dung getDbAdapter() + nodes array + INSERT cot relation (sqlite OR IGNORE / pg ON CONFLICT), giu RBAC/counters/response; khong doi facade/schema.
 - Test: them 3 cases extractIngestEdges aggregator vao edge-on-ingest.test.ts.
 - Tu verify: backend npm run build XANH 0 error (lan dau full build xanh), vitest edge-on-ingest 14/14 + api-index-errors 18/18 = 32/32 PASS. BUG-002 CLOSED, khong can ticket rieng; AC-6 build gate unblocked.
+
+### 2026-09-19 - Security Deployment Review (6.7) done
+- security-agent: 0 Critical / 2 High / 4 Medium / 5 Low / 3 Info (13 findings). High#1 BOLA projectId tuy y, High#2 sync-pega-rules thieu RBAC.
+- Verdict: GO WITH CONDITIONS cho staging (sqlite, trusted users); NO-GO production den khi fix 2 High. Dieu kien: KB_TOKEN_SECRET+REQUIRE_AUTH, fix/PO risk-accept #1/#2, giam sat disk/429, chay 5 NOT_RUN staging, DevOps bo sung DPG/RLN + npm audit.
+- Ghi nhan lech trang thai BUG-002 (TEST-REPORT OPEN vs RUN-LOG/build xanh) — can QA addendum. File: SECURITY-DEPLOY-REVIEW.md (32.7KB, ingested KB).
+
+### 2026-09-19 - Fix 2 High + DPG/RLN verified
+- DEV: gate KB_WRITE (4 handlers index) + JWT project binding (verifyProjectBinding pattern tools.ts) + GRAPH_MAINTAIN cho sync-pega-rules; 403 enriched; fail-closed. Luu y: session-token user co permission van ghi moi project (thieu membership infra) — can PO risk-accept/follow-up.
+- Tests: api-index-errors +7 SEC (403 thieu quyen, 202/200 pass, JWT grant) = 25; edge-on-ingest 14. Tu verify: build XANH, 39/39 PASS.
+- DevOps: DPG.md (~24KB staging-only: secrets/env 48722/sqlite, build, JWT, 5 NOT_RUN, rollback/health) + RLN.md (~12KB, de xuat v1.44.0 MINOR chua tag/chua deploy).
+- Con lai: QA addendum TEST-REPORT (BUG-002 closure + 2 Highs fixed + build xanh), PO risk-accept/follow-up membership, 5 NOT_RUN staging, npm audit.
+
+### 2026-09-19 - Backfill security docs + TEST-REPORT Round 4
+- security-agent: SECURITY-REVIEW (3.7, CONDITIONAL PASS) + SECURITY-ASSESSMENT (5.7, PASS WITH CONDITIONS) + PENTEST-REPORT (6.3, CONDITIONAL PASS). Moi: npm audit that (backend 2 vulns, extension 8 vulns, transitive) -> DevOps fix co kiem soat.
+- qa-agent: TEST-REPORT addendum Round 4 (359->446 dong, ingest KB 43 entries). Metrics: automated 66/66 (27 ext + 39 backend), STC 15/20, open BUG 0, open High 0. BUG-002 chot CLOSED. Verdict: PASS WITH CONDITIONS — Ready for staging, NOT production.
+- Con mo: 5 NOT_RUN staging, membership risk-accept, UAT.
