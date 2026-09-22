@@ -1,0 +1,87 @@
+<mxGraphModel dx="1422" dy="798" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="t" value="SA4E-265 (S2) — component design: UsersSsoMigration · ISSOUserRepository · MigrationRunner" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="20" width="700" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="b1" value="«module» backend/src/admin/db/schema.ts — single DDL source (no forked migration files)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;align=left;spacingLeft=8;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="340" y="100" width="520" height="280" as="geometry" />
+    </mxCell>
+    <mxCell id="c1" value="«component»&#10;UsersSsoMigration [C1]&#10;(exported, stateless)&#10;— detectEngine(db)&#10;— up(db): Promise&lt;MigrationResult&gt;&#10;— down(db): Promise&lt;MigrationResult&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="370" y="150" width="220" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="c2" value="«component»&#10;MigrationRunner&#10;(module-private)&#10;— detectSchemaState (PRAGMA / information_schema)&#10;— engine branch (PG ALTER / SQLite rebuild)&#10;— verification probes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="620" y="150" width="220" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="c0" value="«caller»&#10;initSchema(db)&#10;calls up() after execAsync(schemaSql)&#10;fail-loud guard (H3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="160" width="220" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="f5" value="«future consumer — dashed»&#10;S5 JIT Provisioning (SA4E-268)&#10;first caller of ISSOUserRepository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="940" y="140" width="260" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="f6" value="«future consumer — dashed»&#10;S6 Repository Unification (SA4E-269)&#10;merges C2 into unified IUserRepository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="940" y="240" width="260" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="b2" value="«module» backend/src/database/repositories" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;align=left;spacingLeft=8;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="340" y="420" width="520" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="r1" value="«component»&#10;UserRepository&#10;implements IUserRepository + ISSOUserRepository&#10;constructor-injected DatabaseAdapter&#10;translateError → RepositoryError" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="370" y="465" width="220" height="115" as="geometry" />
+    </mxCell>
+    <mxCell id="r2" value="«interface»&#10;ISSOUserRepository [C2]&#10;— findByExternalSubject&#10;— createUserSSO&#10;— linkLocalAccount" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="465" width="220" height="115" as="geometry" />
+    </mxCell>
+    <mxCell id="b3" value="«module» backend/src/database/adapters — DatabaseAdapter (Strategy, async-only surface)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=12;align=left;spacingLeft=8;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="340" y="640" width="520" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="a1" value="SqliteAdapter&#10;(better-sqlite3 / sql.js)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="370" y="685" width="220" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="a2" value="PostgreSqlAdapter&#10;(pg 8.22)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="685" width="220" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="db1" value="«table» users&#10;12 columns (S2 target shape)&#10;uq_users_external_identity&#10;chk_users_account_type" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="370" y="810" width="220" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="db2" value="«tables — unchanged»&#10;access_groups · sessions&#10;users.access_group_id N:1&#10;sessions.user_id N:1 (ON DELETE CASCADE)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="810" width="220" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="g1" value="up() / down()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="c0" target="c1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g2" value="delegates (engine branch, detection, probes)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="c1" target="c2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g3" value="execAsync / runAsync / getAsync / transactionAsync (sync API throws on PG)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c2" target="a1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g4" value="async-only API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c2" target="a2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g5" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="r1" target="r2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g6" value="consumes in S5 (JIT create / link)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="f5" target="r2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g7" value="merges in S6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="f6" target="r2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g8" value="parameterized SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="r1" target="a1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g9" value="parameterized SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="r1" target="a2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="a1" target="db1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="a2" target="db2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="g12" value="same users table — S2 extends shape" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="db1" target="db2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

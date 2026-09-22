@@ -13,6 +13,7 @@ import {
 import { loadConfig } from '../../../config/index.js';
 import { DatabaseManager } from '../../../database/DatabaseManager.js';
 import { getDbAdapter } from '../../../admin/db/core.js';
+import { hashUserAgent } from '../../utils/ua.js';
 
 export interface AdminContext {
   logger: Logger;
@@ -50,7 +51,9 @@ export function createAdminContext(logger: Logger, registry?: any): AdminContext
     const auth = c.req.header('Authorization') || '';
     const token = auth.replace('Bearer ', '');
     if (!token) return null;
-    const session = await validateSession(token);
+    const userAgent = c.req.header('user-agent') || '';
+    const uaHash = hashUserAgent(userAgent);
+    const session = await validateSession(token, uaHash);
     if (!session) return null;
 
     const impersonateId = c.req.header('X-Impersonate') || '';

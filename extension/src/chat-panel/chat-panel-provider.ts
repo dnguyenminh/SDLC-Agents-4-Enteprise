@@ -7,7 +7,7 @@
 import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
 import { IServerManager } from "../types/server-types";
-import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
+import { PiWorkflowAdapter, KbRemoteCheckpointerStore } from "../pi-workflow";
 import { createLlmProvider } from "../langgraph/providers";
 import { MessageHandler } from "./message-handler";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage } from "./message-protocol";
@@ -21,7 +21,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   public static readonly viewType = "kiroChatPanel";
 
   private view: vscode.WebviewView | undefined;
-  private engine: LangGraphEngine | null = null;
+  private engine: PiWorkflowAdapter | null = null;
   private messageHandler: MessageHandler | null = null;
   private messageBuffer: ChatExtToWebviewMessage[] = [];
   private contextUsageTracker: ContextUsageTracker = new ContextUsageTracker();
@@ -41,13 +41,13 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       // Static model map is unreliable because user controls context size via CLI args.
       const engine = this.getEngine();
       const detectedWindow = engine.getDetectedContextWindow();
-      if (detectedWindow > 0) {
+      if (detectedWindow && detectedWindow > 0) {
         this.contextUsageTracker.setMaxTokens(detectedWindow);
       } else {
         // Provider hasn't detected yet — trigger detection now (fast: single HTTP call)
         await engine.detectContextWindowEarly();
         const freshWindow = engine.getDetectedContextWindow();
-        if (freshWindow > 0) {
+        if (freshWindow && freshWindow > 0) {
           this.contextUsageTracker.setMaxTokens(freshWindow);
         }
         // If still 0 (provider offline), keep default 128000 — will sync on first invoke
@@ -121,8 +121,12 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   /** SA4E-185: Set the diagnostics feed service for the engine. */
-  setDiagnosticsFeedService(feed: DiagnosticsFeedService): void {
-    this.diagnosticsFeedService = feed;
+  setDiagnosticsFeedService(diagnosticsFeedService: DiagnosticsFeedService | undefined) {
+    this.diagnosticsFeedService = diagnosticsFeedService ?? null;
+    // Propagate to the engine so the PiWorkflowAdapter (and its consumers) see the feed.
+    if (this.engine) {
+      this.engine.setDiagnosticsFeed(diagnosticsFeedService);
+    }
   }
 
   /** SA4E-183: Set the DiffTracker for file change tracking. */
@@ -173,7 +177,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       // After first ensureGraph() call, detectContextWindow() has run and provider
       // reports the actual value (e.g., 32768 for llama-server -c 65536 -np 2).
       const detectedWindow = engine.getDetectedContextWindow();
-      if (detectedWindow > 0) {
+      if (detectedWindow && detectedWindow > 0) {
         this.contextUsageTracker.setMaxTokens(detectedWindow);
       }
 
@@ -252,7 +256,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       // SA4E-182: Sync maxTokens from detected context window
       if (this.engine) {
         const detectedWindow = this.engine.getDetectedContextWindow();
-        if (detectedWindow > 0) {
+        if (detectedWindow && detectedWindow > 0) {
           this.contextUsageTracker.setMaxTokens(detectedWindow);
         }
       }
@@ -356,16 +360,23 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     }
   }
 
-  private getEngine(): LangGraphEngine {
+  private getEngine(): PiWorkflowAdapter {
     if (!this.engine) {
-      this.engine = new LangGraphEngine(
-        this.mcpManager,
-        this.workspaceRoot,
-        (msg) => this.sendToWebview(msg),
-        this.secrets ? createLlmProvider(this.secrets) : undefined,
-        undefined,
-        this.diagnosticsFeedService ?? undefined
-      );
+      this.engine = new PiWorkflowAdapter({
+        mcpManager: this.mcpManager,
+        workspaceRoot: this.workspaceRoot,
+        onEvent: (msg) => this.sendToWebview(msg),
+        llmProvider: this.secrets ? createLlmProvider(this.secrets) : undefined,
+        diagnosticsFeed: this.diagnosticsFeedService ?? undefined,
+        checkpointerStore: new KbRemoteCheckpointerStore({
+          workspaceRoot: this.workspaceRoot,
+        }),
+        secrets: this.secrets,
+      });
+    }
+    // Keep the engine's diagnostics feed in sync with the provider's stored service.
+    if (this.diagnosticsFeedService) {
+      this.engine.setDiagnosticsFeed(this.diagnosticsFeedService);
     }
     return this.engine;
   }

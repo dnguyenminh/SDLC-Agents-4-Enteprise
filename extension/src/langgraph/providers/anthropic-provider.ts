@@ -86,12 +86,13 @@ export class AnthropicProvider extends BaseLlmProvider {
     return `${this.baseUrl}/v1/messages`;
   }
 
-  protected getHealthCheckRequest() {
+  protected async getHealthCheckRequest() {
+    const apiKey = await this.getApiKey();
     return {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": "health-check",
+        "x-api-key": apiKey || "health-check",
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({

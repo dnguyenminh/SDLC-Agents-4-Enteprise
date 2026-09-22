@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "SDLC Pipeline Application Architecture",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "main-request-path",
+        "label": "Primary request path",
+        "focus": ["users", "api-gateway", "api-server", "database"],
+        "note": "Follow the primary customer request from edge to data store."
+      },
+      {
+        "id": "data-layer",
+        "label": "Data storage layer",
+        "focus": ["database"],
+        "note": "PostgreSQL for production deployment only."
+      }
+    ]
+  },
+  "components": [
+    { "id": "users", "type": "external", "label": "Users", "sublabel": "Browser / Mobile", "pos": [100, 500], "size": [120, 60] },
+    { "id": "api-gateway", "type": "backend", "label": "API Gateway", "sublabel": "Hono :48721", "pos": [300, 500], "size": [130, 60] },
+    { "id": "api-server", "type": "backend", "label": "API Server", "sublabel": "FastAPI :8000", "pos": [500, 350], "size": [130, 60] },
+    { "id": "database", "type": "database", "label": "PostgreSQL", "sublabel": "primary :5432", "pos": [700, 350], "size": [130, 60] },
+    { "id": "auth", "type": "security", "label": "Auth Service", "sublabel": "JWT + PKCE", "pos": [850, 450], "size": [130, 64], "tag": "OAuth 2.0" }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Application Core", "wraps": ["api-gateway", "api-server", "database"] }
+  ],
+  "connections": [
+    { "from": "users", "to": "api-gateway", "label": "HTTPS" },
+    { "from": "api-gateway", "to": "api-server", "label": "route" },
+    { "from": "api-gateway", "to": "auth", "label": "verify JWT", "variant": "security" },
+    { "from": "api-server", "to": "database", "label": "SQL", "route": "orthogonal-h" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Edge", "items": ["HTTPS secures all traffic", "JWT authentication at gateway"] },
+    { "dot": "emerald", "title": "Data Layer", "items": ["PostgreSQL production deployment"] },
+    { "dot": "rose", "title": "Security", "items": ["OAuth 2.0 with JWT + PKCE", "Auth service isolated at gateway"] }
+  ]
+}

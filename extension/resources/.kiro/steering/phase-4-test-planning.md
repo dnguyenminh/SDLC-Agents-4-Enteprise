@@ -65,9 +65,39 @@ Verdict: {Approve / Approve with conditions / Reject}
 ```
 
 **Outcomes:**
-- **Approve** → proceed to finalize
+- **Approve** → proceed to Step 4b.5 (BA review)
 - **Approve with conditions** → QA fixes → re-verify → proceed
 - **Reject** → QA redo → re-review (max 2 iterations)
+
+### Step 4b.5: BA Reviews Test Cases (MANDATORY — QA done only after BA approves)
+
+**Sau khi SM review pass, BA PHẢI review STC để xác nhận test cases phản ánh đúng business requirements. QA chỉ hoàn thành việc khi BA agent đồng ý.**
+
+1. Invoke BA:
+```
+invokeSubAgent(
+  name: "ba-agent",
+  prompt: "Review Test Cases cho {TICKET} tại documents/{TICKET}/STC.md (và STP.md). Đọc BRD từ KB (mem_search '{TICKET} BRD'). Kiểm tra:
+  1. Business coverage — Mọi User Story và Acceptance Criteria trong BRD đều có test case tương ứng?
+  2. Business rules — Mọi BR-XX trong FSD đều được test?
+  3. Đúng ý nghĩa nghiệp vụ — Expected results phản ánh đúng hành vi business mong đợi?
+  4. Edge cases nghiệp vụ — Các luồng exception/alternative quan trọng đã được cover?
+  5. Không thiếu, không thừa — Không bỏ sót requirement, không test ngoài scope.
+  Output format:
+  ## BA Review — Test Cases {TICKET}
+  | # | Requirement (US/AC/BR) | Covered by TC | Status |
+  |---|------------------------|---------------|--------|
+  ### Missing coverage
+  | # | Requirement | Gap |
+  Verdict: APPROVED / CHANGES REQUESTED (list changes)"
+)
+```
+
+2. Handle BA verdict:
+   - **APPROVED** → proceed to Step 4c/4d (finalize)
+   - **CHANGES REQUESTED** → invoke QA to fix STC/STP với danh sách gap từ BA → re-invoke BA to re-review (max 2 iterations)
+
+3. ⛔ **QA test planning KHÔNG được đánh dấu done cho tới khi BA verdict = APPROVED.** Nếu sau 2 iterations vẫn CHANGES REQUESTED → report user.
 
 ### Step 4c: Fix Issues (if any)
 
@@ -83,7 +113,9 @@ Max 2 iterations. If still Critical issues → report to user.
 
 ### Step 4d: Finalize
 
-1. Update STATUS: `test_planning.status = "done"`, `test_planning.review = "approved"`
+⛔ Prerequisite: SM review = Approve AND BA verdict = APPROVED (Step 4b.5). QA test planning KHÔNG được done nếu thiếu BA approval.
+
+1. Update STATUS: `test_planning.status = "done"`, `test_planning.review = "approved"`, `test_planning.baReview = "approved"`
 
 2. Attach to Jira (MANDATORY):
 ```
@@ -116,8 +148,11 @@ Chuyển sang Phase 5 (Implementation)?
 | 5 | Test Coverage Diagram (.drawio + .png) | Invoke QA for diagrams |
 | 6 | Test Execution Flow Diagram (.drawio + .png) | Invoke QA for diagrams |
 | 7 | CSV test data files | Re-invoke QA |
+| 8 | BA review of Test Cases = APPROVED | Invoke BA (Step 4b.5) — QA not done until BA approves |
 
 ## Agent Data Access
 
 **QA reads:** KB (BRD + FSD + TDD)
 **QA writes:** STP.md, STC.md → KB
+**BA reads:** KB (BRD + FSD), STP.md, STC.md — reviews test cases for business coverage
+**BA writes:** BA Review verdict (APPROVED / CHANGES REQUESTED) — gate for QA completion

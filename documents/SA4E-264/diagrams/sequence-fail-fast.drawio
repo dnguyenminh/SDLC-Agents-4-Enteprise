@@ -1,0 +1,48 @@
+<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="420" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="h1" value="Dev / Operator" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#dae8cc;strokeColor=#82b366;size=40;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="20" width="140" height="360" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="h2" value="Server (main)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#d5e8d4;strokeColor=#82b366;size=40;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="290" y="20" width="150" height="360" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="h3" value="loadConfig" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#d5e8d4;strokeColor=#82b366;size=40;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="520" y="20" width="140" height="360" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="h4" value="Zod Schema" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#dae8cc;strokeColor=#82b366;size=40;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="740" y="20" width="130" height="360" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1: start server (SSO_ENABLED=true, config missing)" style="html=1;verticalAlign=bottom;endArrow=block;entryX=0;entryY=0;" edge="1" parent="1" source="h1" target="h2">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="110" as="sourcePoint"></mxPoint>
+        <mxPoint x="365" y="110" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2: loadConfig() first (before listeners)" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="h2" target="h3">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="365" y="165" as="sourcePoint"></mxPoint>
+        <mxPoint x="590" y="165" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3: parse 9 ENTRA_* env vars" style="html=1;verticalAlign=bottom;endArrow=block;" edge="1" parent="1" source="h3" target="h4">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="590" y="220" as="sourcePoint"></mxPoint>
+        <mxPoint x="805" y="220" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4: ZodError (missing/invalid fields, collected)" style="html=1;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" parent="1" source="h4" target="h3">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="805" y="275" as="sourcePoint"></mxPoint>
+        <mxPoint x="590" y="275" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5: FATAL field-level error (secret ***REDACTED***) + process.exit(1)" style="html=1;verticalAlign=bottom;endArrow=block;dashed=1;" edge="1" parent="1" source="h3" target="h1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="590" y="330" as="sourcePoint"></mxPoint>
+        <mxPoint x="130" y="330" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

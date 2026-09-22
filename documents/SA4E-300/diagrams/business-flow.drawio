@@ -1,0 +1,53 @@
+<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="lane1" value="Developer" style="swimlane;horizontal=0;startSize=110;fillColor=#dae8fc;html=1;" vertex="1" parent="1">
+<mxGeometry x="0" y="0" width="720" height="110" as="geometry"/>
+</mxCell>
+<mxCell id="lane2" value="Extension" style="swimlane;horizontal=0;startSize=110;fillColor=#fff2cc;html=1;" vertex="1" parent="1">
+<mxGeometry x="0" y="110" width="720" height="110" as="geometry"/>
+</mxCell>
+<mxCell id="lane3" value="Backend" style="swimlane;horizontal=0;startSize=110;fillColor=#d5e8d4;html=1;" vertex="1" parent="1">
+<mxGeometry x="0" y="220" width="720" height="110" as="geometry"/>
+</mxCell>
+<mxCell id="lane4" value="Knowledge Base" style="swimlane;horizontal=0;startSize=110;fillColor=#f8cecc;html=1;" vertex="1" parent="1">
+<mxGeometry x="0" y="330" width="720" height="110" as="geometry"/>
+</mxCell>
+<mxCell id="s1" value="Start Ingest" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;" vertex="1" parent="lane1">
+<mxGeometry x="300" y="30" width="80" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="a1" value="Call /api/index/source" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2">
+<mxGeometry x="300" y="30" width="140" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="a2" value="Validate request & token" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+<mxGeometry x="300" y="30" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="a3" value="Process files & write" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+<mxGeometry x="500" y="30" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="a4" value="Store symbols / docs" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane4">
+<mxGeometry x="300" y="30" width="140" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="a5" value="Return response with error details" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane3">
+<mxGeometry x="100" y="30" width="180" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="a6" value="Show details in Output channel / toast" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lane2">
+<mxGeometry x="100" y="30" width="200" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="s1" target="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="a1" target="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="a2" target="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="a3" target="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="a3" target="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e6" edge="1" parent="1" source="a5" target="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root></mxGraphModel>

@@ -79,7 +79,13 @@ export class ProviderConfigService {
       : gatewayBaseUrl;
 
     if (fetchUrl) {
-      const gatewayModels = await fetchGatewayModels(fetchUrl);
+      // Pass the provider's API key as a Bearer token — gateways (e.g. OmniRoute)
+      // return 401 on /v1/models without it, which caused a silent fallback to the
+      // static catalog. Local providers (lmstudio/ollama) don't need auth.
+      const secretKey = SECRET_KEYS[provider];
+      const apiKey = secretKey ? await this.secrets.get(secretKey) : undefined;
+      const authHeader = apiKey ? `Bearer ${apiKey}` : undefined;
+      const gatewayModels = await fetchGatewayModels(fetchUrl, authHeader);
       if (gatewayModels && gatewayModels.length > 0) {
         models = gatewayModels;
       }

@@ -45,10 +45,18 @@ export class SqliteAdapter implements DatabaseAdapter {
       // import the persisted host file (written by disconnect() via
       // sqlite3_js_db_export) with sqlite3_deserialize instead.
       this.db = new sqlite3.oo1.DB(':memory:');
+      let deserialized = false;
       if (useFile && fs.existsSync(this.dbPath) && fs.statSync(this.dbPath).size > 0) {
         this.importHostFile(this.dbPath);
+        deserialized = true;
       }
-      this.db.exec("PRAGMA journal_mode = WAL;");
+      // SA4E-262 fix: WAL is a file-system journal mode. On the WASM in-memory /
+      // deserialized DB it attempts to create WAL files inside MEMFS and throws
+      // SQLITE_CANTOPEN. Skip it — durability for host-file DBs is provided by
+      // the sqlite3_js_db_export in disconnect().
+      if (!deserialized) {
+        this.db.exec("PRAGMA journal_mode = WAL;");
+      }
       this.db.exec("PRAGMA foreign_keys = ON;");
       this.connected = true;
     } catch (e) {
@@ -67,6 +75,16 @@ export class SqliteAdapter implements DatabaseAdapter {
    */
   private importHostFile(dbPath: string): void {
     const data = new Uint8Array(fs.readFileSync(dbPath));
+    // SA4E-262 fix: a host file written in WAL mode carries write/read version
+    // bytes 18/19 = 2. Deserializing such an image into the WASM in-memory DB
+    // makes every statement demand the -wal/-shm files, which do not exist in
+    // MEMFS -> SQLITE_CANTOPEN (server crash on first admin/config request).
+    // Patch the in-memory copy to legacy mode (1/1) — safe because a WAL image
+    // without a sidecar -wal file is self-contained (no pending transactions).
+    if (data.length > 19 && data[18] === 2 && data[19] === 2) {
+      data[18] = 1;
+      data[19] = 1;
+    }
     const capi = sqlite3.capi;
     const pData = sqlite3.wasm.allocFromTypedArray(data);
     let owned = false;

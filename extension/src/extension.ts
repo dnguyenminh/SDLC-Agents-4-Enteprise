@@ -353,7 +353,12 @@ function setupAuthStateHandlers(): void {
     statusBarManager?.setAuthState(state);
     if (state === "AUTHENTICATED") {
       wasAuthenticated = true;
-      treeProvider?.setAuthenticated(true, "admin");
+      // Resolve the REAL signed-in user (password or SSO) from the backend
+      // instead of hardcoding "admin". Set a neutral label first, then refine.
+      treeProvider?.setAuthenticated(true, "");
+      authManager?.fetchCurrentUsername().then((name) => {
+        if (authManager?.isAuthenticated) { treeProvider?.setAuthenticated(true, name); }
+      });
       panelManager?.notifyAllPanels({ type: "serverStatus", status: "connected" });
     } else if (state === "UNAUTHENTICATED") {
       treeProvider?.setAuthenticated(false);

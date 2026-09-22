@@ -163,10 +163,19 @@ export class KnowledgeClient {
   private readonly retries: number;
   private readonly getHeaders: () => Record<string, string>;
 
+  private readonly baseUrl: string;
+
   constructor(
-    private readonly baseUrl: string,
+    baseUrl: string,
     options: KnowledgeClientOptions = {}
   ) {
+    try {
+      const { validateBackendUrl } = require("./config/backend-url");
+      this.baseUrl = validateBackendUrl(baseUrl);
+    } catch (err: any) {
+      if (err.message && err.message.startsWith("[Security]")) throw err;
+      this.baseUrl = (baseUrl || "").replace(/\/$/, "");
+    }
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.retries = options.retries ?? DEFAULT_RETRIES;
     this.getHeaders = options.getHeaders ?? (() => ({}));

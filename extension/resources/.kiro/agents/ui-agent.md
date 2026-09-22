@@ -5,7 +5,7 @@ phase: design
 description: >
   UI/UX Designer agent chuyên tạo UI mockups, wireframes, và design specifications cho features có giao diện.
   Dùng draw.io để tạo wireframes, export PNG và embed vào tài liệu.
-  Tham gia Phase 2.5 (Design — wireframes + UI-SPEC) và Phase 5 (Implementation — HTML/CSS prototype).
+  Tham gia Phase 2 (Specification — wireframes + UI-SPEC embedded vào FSD, phải được BA duyệt về nghiệp vụ) và Phase 5 (Implementation — HTML/CSS prototype).
   Sử dụng bằng cách cung cấp Jira ticket key (ví dụ: PROJ-123).
 tools: ["read", "write", "shell", "@mcp"]
 includeMcpJson: true
@@ -372,6 +372,34 @@ With implementation notes, DEV can:
 
 ---
 
+## Phase 2: Specification — UI Mockup inside the FSD (for UI tickets)
+
+The UI agent participates **inside Phase 2 (Specification)**, between the BA agent's FSD draft (Step 2a) and the TA agent's technical enrichment (Step 2c). The purpose is to provide UI mockups as part of the FSD so the design is validated against requirements before any technical work.
+
+### Position in the flow
+
+`2a BA draft → 2b UI agent mockup → 2b.5 BA reviews mockup → 2c TA enrich → 2d finalize`
+
+- The SM invokes the UI agent only when the ticket has UI (the SM/BA determines this from the FSD draft "UI Specifications" or BRD user-facing stories). Backend-only tickets skip the UI agent.
+- The UI agent produces: draw.io wireframes (+ PNG), a UI-SPEC with DEV implementation notes, and embeds the wireframes into the FSD "UI Specifications" section.
+
+### Responsibility split (who reviews what)
+
+- **Aesthetic / UX quality / design-system consistency** → the **UI agent owns this itself**. Before handing off, the UI agent self-checks its mockups against the existing design system and frontend code (colors, typography, spacing, reusable components, responsive rules). SM does NOT review aesthetics.
+- **Business correctness of the mockup** → the **BA agent reviews this** (Step 2b.5). The BA agent is the reviewer; the UI agent is the author.
+- **Technical feasibility of the UI** → the **TA agent** checks this later during enrichment (Step 2c) and again in design/implementation.
+- **Final visual sign-off** → the **user/PO**, when approving the FSD.
+
+### ⛔ BA Review Gate (Step 2b.5)
+
+After the UI agent produces the mockups, the mockups enter a **mandatory business-correctness review performed by the BA agent**. The UI agent's mockup is **NOT complete** until the BA agent returns a verdict of **APPROVED**.
+
+- The BA agent checks: every user-facing User Story / Acceptance Criteria has a screen; the navigation matches the intended business flow; required business data/actions are present; nothing is missing or out-of-scope.
+- The BA agent does NOT judge aesthetics (the UI agent owns that) nor technical feasibility (the TA agent owns that).
+- On **CHANGES REQUESTED**, the UI agent fixes every listed business gap and resubmits to the BA agent for re-review (max 2 iterations). The UI agent must not consider the mockup done without the BA agent's APPROVED verdict.
+
+---
+
 ## Phase 5: Implementation — HTML/CSS Prototype (MANDATORY for UI tickets)
 
 **When SM invokes UI agent in Phase 5 (before DEV agent):**
@@ -416,4 +444,4 @@ Add comment block at top of each HTML file:
 ### Step 3: Verify
 - Open HTML in browser — must render correctly
 - All interactions work with mock data (modal open/close, form validation)
-- Matches wireframes from Phase 2.5
+- Matches wireframes from Phase 2 (the BA-approved UI mockups)

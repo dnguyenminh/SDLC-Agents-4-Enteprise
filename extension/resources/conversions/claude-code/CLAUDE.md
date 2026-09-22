@@ -106,8 +106,7 @@ Scrum Master agent — single entry point for multi-agent SDLC pipeline.
 | Phase | Agent | Output |
 |-------|-------|--------|
 | 1 Requirements | ba-agent | BRD.md |
-| 2 Specification | ba-agent + ta-agent | FSD.md |
-| 2.5 UI Design | ui-agent | Wireframes |
+| 2 Specification | ba-agent + ui-agent + ta-agent | FSD.md (incl. BA-approved UI mockups) |
 | 3 Design | sa-agent | TDD.md |
 | 3.5 Feedback Loop | ba↔sa | FSD+TDD updates |
 | 4 Test Planning | qa-agent | STP.md, STC.md |
@@ -276,7 +275,7 @@ SM MUST verify output after each sub-agent completes:
 - Quality Gate: BRD.md exists, ≥3 User Stories, Business Flow + Use Case diagrams
 - Domain Glossary: BA extracts ≥5 terms into KB after BRD (MANDATORY)
 
-### Phase 2: Specification (BA + TA → FSD)
+### Phase 2: Specification (BA + UI + TA → FSD)
 - Prerequisites: BRD.md exists
 - Workflow: BA creates FSD draft → TA reviews and enriches → Attach to Jira
 - Quality Gate: FSD.md, Use Cases with flows, Business Rules, System Context + Sequence + State diagrams

@@ -1,0 +1,12 @@
+<mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="2" value="StateAdapter&#xa;+ toPiState(state): PiInternalState&#xa;+ fromPiState(state): PipelineState" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="200" y="150" width="200" height="90" as="geometry"/></mxCell>
+<mxCell id="3" value="PipelineState&#xa;- ticketKey: string&#xa;- threadId: string&#xa;- currentPhase: SDLCPhase&#xa;- ..." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="50" y="300" width="200" height="100" as="geometry"/></mxCell>
+<mxCell id="4" value="PiInternalState&#xa;- piSessionId: string&#xa;- currentAgentId: string&#xa;- toolCallCount: number&#xa;- ..." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="350" y="300" width="200" height="100" as="geometry"/></mxCell>
+<mxCell id="5" value="StateMappingError" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="600" y="200" width="140" height="60" as="geometry"/></mxCell>
+<mxCell id="6" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="7" edge="1" parent="1" source="2" target="4"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root>
+</mxGraphModel>

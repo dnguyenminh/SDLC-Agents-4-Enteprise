@@ -169,13 +169,17 @@ export class OpenAIProvider extends BaseLlmProvider {
     return isLocal ? `${this.apiBase}/models` : `${this.apiBase}/chat/completions`;
   }
 
-  protected getHealthCheckRequest() {
+  protected async getHealthCheckRequest() {
+    // Attach Authorization when an API key is configured. Many self-hosted
+    // OpenAI-compatible gateways (LiteLLM, OmniRoute, vLLM behind auth) require
+    // a bearer token even on GET /v1/models, and would otherwise return 401.
+    const apiKey = await this.getApiKey();
     if (this.isLocalServer()) {
-      return { method: "GET" };
+      return { method: "GET", headers: buildHeaders(apiKey || "") };
     }
     return {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: buildHeaders(apiKey || ""),
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: "hi" }],
@@ -185,8 +189,10 @@ export class OpenAIProvider extends BaseLlmProvider {
   }
 
   protected isHealthyStatus(status: number): boolean {
-    if (this.isLocalServer()) return status === 200;
-    return status === 200 || status === 429;
+    // 200 = OK. 401/403 mean the server is reachable but the credentials are
+    // rejected — that is an auth problem, not an unreachable endpoint, so we
+    // still consider the provider "available". 429 = rate limited but alive.
+    return status === 200 || status === 401 || status === 403 || status === 429;
   }
 
   // --- Private helpers ---

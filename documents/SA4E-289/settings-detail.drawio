@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+ <diagram name="Settings">
+  <mxGraphModel>
+   <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="win" value="Settings – Pi Provider" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+     <mxGeometry x="60" y="40" width="700" height="450" as="geometry"/>
+    </mxCell>
+    <mxCell id="header" value="Pi Provider Configuration" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f4ff;" vertex="1" parent="1">
+     <mxGeometry x="80" y="70" width="660" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="form" value="Form&#10;Transport Type: [WebSocket ▼]&#10;Base URL: wss://pi.example.com&#10;Session ID: auto&#10;Timeout ms: 30000" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9f9f9;" vertex="1" parent="1">
+     <mxGeometry x="80" y="130" width="660" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="status" value="Status&#10;Connection: Connected&#10;Last Ping: 120ms&#10;Version: @earendil-works/pi-agent-core 1.0.0" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3f3f3;" vertex="1" parent="1">
+     <mxGeometry x="80" y="330" width="660" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="actions" value="[Save] [Test Connection] [Reset]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f4ff;" vertex="1" parent="1">
+     <mxGeometry x="80" y="430" width="660" height="40" as="geometry"/>
+    </mxCell>
+   </root>
+  </mxGraphModel>
+ </diagram>
+</mxfile>

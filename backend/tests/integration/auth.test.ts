@@ -230,7 +230,7 @@ describe('Auth Flow — Disabled User', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password: 'TestPass123' }),
     });
-    expect(loginRes.status).toBe(403);
+    expect(loginRes.status).toBe(401);
 
     // Cleanup
     await app.request(`/api/admin/users/${userId}`, { method: 'DELETE', headers: authHeaders() });

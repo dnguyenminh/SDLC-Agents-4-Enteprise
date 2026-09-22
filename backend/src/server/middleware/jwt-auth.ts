@@ -11,7 +11,8 @@
 
 import type { MiddlewareHandler } from 'hono';
 import { createProjectContext } from '../../modules/memory/ProjectContext.js';
-import { validateSession } from '../../admin/admin-db.js';
+import { SessionService } from '../services/SessionService.js';
+import { getEntraVerifier, isEntraToken, tryEntraVerification, validateEntraAuthConfig } from './verifiers/entra-auth.js';
 
 const REQUIRE_AUTH = process.env.CODE_INTEL_REQUIRE_AUTH === 'true';
 const TOKEN_SECRET = process.env.KB_TOKEN_SECRET || '';
@@ -21,6 +22,8 @@ export function validateJwtConfig(): void {
   if (REQUIRE_AUTH && !TOKEN_SECRET) {
     throw new Error('KB_TOKEN_SECRET must be set when authentication is required');
   }
+  // SA4E-266 §3.1 — Entra verification vars required under the SSO gate (fail-fast).
+  validateEntraAuthConfig();
 }
 
 export function isJwtAuthRequired(): boolean {
@@ -91,6 +94,13 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
     //  2. Admin session token — opaque hex, validated against sessions table
     const looksLikeJwt = token.split('.').length === 3;
 
+    // SA4E-266 — Entra RS256 detection (FSD §8.1): routed tokens verify fail-closed.
+    const detPayload = looksLikeJwt ? decodeJwtPayload(token) : null;
+    const entra = getEntraVerifier();
+    if (entra && isEntraToken(token, detPayload)) {
+      return tryEntraVerification(entra, token, c, next, projectId);
+    }
+
     if (looksLikeJwt) {
       if (TOKEN_SECRET) {
         const valid = await verifyHs256(token, TOKEN_SECRET);
@@ -114,8 +124,14 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
       return next();
     }
 
-    // SA4E-50: validateSession is now async — await it
-    const session = await safeValidateSession(token);
+    const userAgent = c.req.header('user-agent') || '';
+    const sessionService = new SessionService();
+    let session: any = null;
+    try {
+      session = await sessionService.validate(token, userAgent);
+    } catch {
+      // DB error never crashes auth — fail closed for mustAuth, graceful for anonymous
+    }
     if (!session) {
       if (!mustAuth) return anonymous();
       return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
@@ -124,17 +140,6 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
     c.set('projectContext', ctx);
     return next();
   };
-}
-
-/** validateSession wrapped so a DB error never crashes auth (fails closed). */
-async function safeValidateSession(
-  token: string,
-): Promise<{ userId: string; username: string; accessGroupId: string } | null> {
-  try {
-    return await validateSession(token);
-  } catch {
-    return null;
-  }
 }
 
 export interface JwtVerification {

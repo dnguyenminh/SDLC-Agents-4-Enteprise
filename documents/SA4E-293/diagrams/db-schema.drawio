@@ -1,0 +1,10 @@
+<mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="2" value="threads&#xa;thread_id PK&#xa;title&#xa;updated_at" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="200" y="150" width="140" height="100" as="geometry"/></mxCell>
+<mxCell id="3" value="checkpoints&#xa;thread_id FK&#xa;checkpoint JSON&#xa;metadata JSON" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="200" y="320" width="140" height="100" as="geometry"/></mxCell>
+<mxCell id="4" value="Note: PipelineState persisted as JSON blob in checkpoint.channel_values" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" parent="1"><mxGeometry x="200" y="500" width="300" height="40" as="geometry"/></mxCell>
+<mxCell id="5" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root>
+</mxGraphModel>

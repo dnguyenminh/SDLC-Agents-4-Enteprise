@@ -1,0 +1,27 @@
+<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="400" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="n1" value="VS Code / Kiro&#10;Extension" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8cc;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="140" width="160" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n2" value="SA4E Backend&#10;(loadConfig + zod validation)&#10;config layer only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="320" y="140" width="200" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n3" value="Microsoft Entra ID&#10;(tenant / issuer / JWKS&#10;values — S1 contract only)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8cc;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="620" y="140" width="180" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n4" value=".env / .env.example&#10;(9 ENTRA_* vars,&#10;secret untracked)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="330" y="20" width="180" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e1" value="HTTP / MCP" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="n1" target="n2">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="reads 9 env vars (validate fail-fast)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="n4" target="n2">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="OIDC values (tenant, issuer, JWKS)&#10;no network I/O in S1 validation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;" edge="1" parent="1" source="n2" target="n3">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
