@@ -1,11 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PiProvider } from '../pi-provider.js';
 
 describe('PiProvider (SA4E-290)', () => {
   let provider: PiProvider;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     provider = new PiProvider();
+    // Mock run() contract (real Agent runtime covered by pi-provider-runtime-smoke.test.ts)
+    vi.spyOn(provider, 'run').mockResolvedValue({
+      text: 'Mocked stream text',
+      toolCalls: [],
+      chunks: [{ type: 'text', content: 'Mocked stream text' }, { type: 'done' }],
+      messages: [{ role: 'assistant', content: 'Mocked stream text' }],
+    });
   });
 
   it('should have providerName set to PiProvider', () => {

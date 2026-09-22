@@ -119,8 +119,13 @@ async function handleLogin(context: vscode.ExtensionContext, authManager?: AuthM
   if (!authManager) { vscode.window.showErrorMessage("Auth manager not initialized."); return; }
   new LoginPanel(authManager, context.extensionUri).show();
   authManager.onStateChange((state) => {
-    if (state === "AUTHENTICATED") { treeProvider?.setAuthenticated(true, "admin"); }
-    else if (state === "UNAUTHENTICATED") { treeProvider?.setAuthenticated(false); }
+    if (state === "AUTHENTICATED") {
+      // Show the REAL signed-in user (password or SSO), not a hardcoded "admin".
+      treeProvider?.setAuthenticated(true, "");
+      authManager?.fetchCurrentUsername().then((name) => {
+        if (authManager?.isAuthenticated) { treeProvider?.setAuthenticated(true, name); }
+      });
+    } else if (state === "UNAUTHENTICATED") { treeProvider?.setAuthenticated(false); }
   });
 }
 

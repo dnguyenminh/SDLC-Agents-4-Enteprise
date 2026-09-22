@@ -23,7 +23,7 @@ class TestProvider extends BaseLlmProvider {
 
   protected async isConfigured(): Promise<boolean> { return this.configured; }
   protected getHealthCheckUrl(): string { return this.healthUrl; }
-  protected getHealthCheckRequest() { return this.healthRequest; }
+  protected async getHealthCheckRequest() { return this.healthRequest; }
   protected isHealthyStatus(status: number): boolean { return this.isHealthy(status); }
 
   public stream(response: any, extractToken: (parsed: any) => string | null): AsyncGenerator<string> {

@@ -125,8 +125,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     this.diagnosticsFeedService = diagnosticsFeedService ?? null;
     // Propagate to the engine so the PiWorkflowAdapter (and its consumers) see the feed.
     if (this.engine) {
-      (this.engine as unknown as { setDiagnosticsFeed?: (f: unknown) => void }).setDiagnosticsFeed?.(diagnosticsFeedService);
-      (this.engine as unknown as { diagnosticsFeed?: unknown }).diagnosticsFeed = diagnosticsFeedService;
+      this.engine.setDiagnosticsFeed(diagnosticsFeedService);
     }
   }
 
@@ -372,6 +371,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
         checkpointerStore: new KbRemoteCheckpointerStore({
           workspaceRoot: this.workspaceRoot,
         }),
+        secrets: this.secrets,
       });
     }
     // Keep the engine's diagnostics feed in sync with the provider's stored service.

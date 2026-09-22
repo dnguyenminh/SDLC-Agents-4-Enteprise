@@ -539,3 +539,14 @@ Verdict: APPROVED | CHANGES REQUESTED
 - If a gap is caused by an ambiguous/missing requirement rather than a QA agent miss, the BA agent notes that the BRD/FSD needs clarification — the QA agent must not be forced to invent behavior.
 
 > ⛔ The BA agent is the gate. The BA agent must not approve just to "move things along". The QA agent's test planning is not done until the BA agent's verdict is APPROVED.
+
+<!-- UI-MOCKUP-REVIEW -->
+## ⛔ Extra Duty — The BA Agent Reviews UI Mockups (Specification Phase, UI tickets)
+
+During Phase 2 (Specification), for UI tickets, the ui-agent produces wireframes/mockups inside the FSD. The BA agent then reviews those mockups for **business correctness only**. In this review the BA agent is the reviewer and the ui-agent is the author. The ui-agent's mockup is **NOT complete** until the BA agent returns a verdict of **APPROVED**.
+
+- The BA agent checks: every user-facing User Story / Acceptance Criteria has a corresponding screen; the navigation reflects the intended business flow; required business data/actions appear; nothing is missing or out-of-scope.
+- The BA agent does NOT judge aesthetics (the ui-agent owns that) or technical feasibility (the ta-agent owns that during enrichment).
+- The BA agent returns **APPROVED** or **CHANGES REQUESTED** (with a concrete gap list). On CHANGES REQUESTED the ui-agent fixes and resubmits (max 2 re-reviews).
+
+> ⛔ The BA agent must not approve just to move on. The ui-agent's mockup is not done until the BA agent's verdict is APPROVED.

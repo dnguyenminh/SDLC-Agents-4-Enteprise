@@ -210,10 +210,11 @@
   }
 
   function updateModelOptions(provider) {
-    var select = document.getElementById("model-input");
-    if (!select) return;
-    var currentVal = select.value;
-    select.innerHTML = "";
+    var input = document.getElementById("model-input");
+    var datalist = document.getElementById("model-datalist");
+    if (!input) return;
+    var currentVal = input.value;
+    if (datalist) datalist.innerHTML = "";
     var models = modelsFor(provider);
 
     models.forEach(function (m) {
@@ -231,28 +232,29 @@
       if (m.description) {
         opt.title = m.description;
       }
-      select.appendChild(opt);
+      if (datalist) datalist.appendChild(opt);
     });
 
     var ids = models.map(function (m) { return m.id; });
     if (currentVal && ids.indexOf(currentVal) !== -1) {
-      select.value = currentVal;
-    } else if (models.length > 0) {
-      select.value = models[0].id;
+      input.value = currentVal;
+    } else if (!currentVal && models.length > 0) {
+      input.value = models[0].id;
     }
 
-    updateModelDescription(select.value, models);
+    updateModelDescription(input.value.trim(), models);
   }
 
   function updateModelDescription(modelId, models) {
     var infoEl = document.getElementById("model-description-info");
     if (!infoEl) {
-      var select = document.getElementById("model-input");
-      if (!select || !select.parentNode) return;
+      var input = document.getElementById("model-input");
+      if (!input || !input.parentNode) return;
       infoEl = document.createElement("div");
       infoEl.id = "model-description-info";
+      infoEl.className = "field-hint";
       infoEl.style.cssText = "margin-top:4px;font-size:11px;opacity:0.7;line-height:1.4;min-height:16px;";
-      select.parentNode.insertBefore(infoEl, select.nextSibling);
+      input.parentNode.insertBefore(infoEl, input.nextSibling);
     }
     var found = null;
     for (var i = 0; i < models.length; i++) {
@@ -306,9 +308,20 @@
     saveKeyBtn.disabled = true;
   });
 
+  var modelInputTimeout = null;
+  modelInput.addEventListener("input", function () {
+    updateModelDescription(modelInput.value.trim(), modelsFor(currentProvider));
+    clearTimeout(modelInputTimeout);
+    // Debounce: persist free-typed model ids even if the user never blurs the field.
+    modelInputTimeout = setTimeout(function () {
+      var val = modelInput.value.trim();
+      if (val) vscode.postMessage({ type: "setModel", model: val });
+    }, 400);
+  });
   modelInput.addEventListener("change", function () {
-    vscode.postMessage({ type: "setModel", model: modelInput.value });
-    updateModelDescription(modelInput.value, modelsFor(currentProvider));
+    var val = modelInput.value.trim();
+    vscode.postMessage({ type: "setModel", model: val });
+    updateModelDescription(val, modelsFor(currentProvider));
   });
 
   // Default URLs per provider
@@ -632,12 +645,10 @@
     if (msg.provider === currentProvider) {
       updateModelOptions(msg.provider);
       if (msg.selected) {
-        var select = document.getElementById("model-input");
-        if (select) {
-          var ids = (msg.models || []).map(function (m) { return m.id; });
-          if (ids.indexOf(msg.selected) !== -1) {
-            select.value = msg.selected;
-          }
+        var input = document.getElementById("model-input");
+        if (input) {
+          input.value = msg.selected;
+          updateModelDescription(msg.selected, msg.models || []);
         }
       }
       if (currentProvider !== "ollama") {

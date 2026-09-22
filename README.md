@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.42.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.43.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.43.0 (2026-09-22)
+
+- **SA4E-262: Multi-provider SSO (Entra ID / Google / GitHub)** — Strategy-pattern SSO unified on a single source of truth (`sso_providers` table). Entra email verification now uses Microsoft's `xms_edov` claim (Entra omits standard `email_verified`); loopback (native-client) SSO sessions are no longer User-Agent-bound so the extension's `/api/admin/auth/me` works; the extension login screen renders provider buttons dynamically from `/auth/sso/providers` (no hardcoded Microsoft button); the sidebar shows the real signed-in user (password or SSO) instead of a hardcoded "admin". JIT provisioning rejections now return `403 provisioning_rejected` with a clear reason. Added SSO provider configuration guide.
 
 ### v1.42.3 (2026-09-11)
 

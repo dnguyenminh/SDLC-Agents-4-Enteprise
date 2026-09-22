@@ -1,4 +1,4 @@
-import type { IPiProvider } from './pi-provider.js';
+import type { IPiProvider, PiRunInput } from './pi-provider.js';
 import type { ExecuteTurnInput, PiAgentExecutionResult, NormalizedToolCall, StreamChunk } from './types/executor.types.js';
 import { normalizeToolCall } from './utils/tool-normalizer.js';
 
@@ -41,38 +41,30 @@ export class PiAgentExecutor {
       return buildErrorResult(input, 'INVALID_INPUT', validationError);
     }
 
-    const toolCalls: NormalizedToolCall[] = [];
-    const streamChunks: StreamChunk[] = [];
-    const updatedMessages = [...input.messages];
+    // Contract: provider.run() (real Agent) — prompt + subscribe events, not generator.
+    // FIX A: forward provider/model resolved by the engine down to the provider.
+    const runInput: PiRunInput = {
+      prompt: input.messages[input.messages.length - 1].content,
+      sessionId: input.sessionId,
+      tools: input.tools as PiRunInput['tools'],
+      provider: input.provider,
+      model: input.model,
+    };
 
+    let runResult;
     try {
-      await this.provider.createAgent(input.agentId, input.tools);
-      const prompt = input.messages[input.messages.length - 1].content;
-      let responseText = '';
+      runResult = await this.provider.run(runInput);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      const code = (err && typeof err === 'object' && 'code' in err && typeof err.code === 'string') ? err.code : 'PI_EXECUTION_ERROR';
+      return buildErrorResult(input, code, message);
+    }
 
-      for await (const chunk of this.provider.stream({ prompt })) {
-        streamChunks.push(chunk as StreamChunk);
-        if (chunk.type === 'text' && chunk.content) {
-          responseText += chunk.content;
-        } else if (chunk.type === 'tool_call' && chunk.toolCall) {
-          toolCalls.push(normalizeToolCall(chunk.toolCall as any));
-        } else if (chunk.type === 'error' && chunk.error) {
-          return {
-            ticketKey: input.ticketKey,
-            sessionId: input.sessionId,
-            agentId: input.agentId,
-            messages: updatedMessages,
-            toolCalls,
-            streamChunks,
-            error: { code: 'PI_EXECUTION_ERROR', message: chunk.error },
-          };
-        }
-      }
+    const streamChunks: StreamChunk[] = (runResult.chunks || []) as StreamChunk[];
+    const toolCalls: NormalizedToolCall[] = (runResult.toolCalls || []).map(tc => normalizeToolCall(tc));
 
-      if (responseText) {
-        updatedMessages.push({ role: 'assistant', content: responseText });
-      }
-
+    const updatedMessages = [...input.messages];
+    if (runResult.errorMessage) {
       return {
         ticketKey: input.ticketKey,
         sessionId: input.sessionId,
@@ -80,11 +72,23 @@ export class PiAgentExecutor {
         messages: updatedMessages,
         toolCalls,
         streamChunks,
-        piSessionId: input.sessionId,
-        toolCallCount: toolCalls.length,
+        error: { code: 'PI_EXECUTION_ERROR', message: runResult.errorMessage },
       };
-    } catch (err: any) {
-      return buildErrorResult(input, err?.code || 'PI_EXECUTION_ERROR', err?.message || String(err));
     }
+
+    if (runResult.text) {
+      updatedMessages.push({ role: 'assistant', content: runResult.text });
+    }
+
+    return {
+      ticketKey: input.ticketKey,
+      sessionId: input.sessionId,
+      agentId: input.agentId,
+      messages: updatedMessages,
+      toolCalls,
+      streamChunks,
+      piSessionId: input.sessionId,
+      toolCallCount: toolCalls.length,
+    };
   }
 }

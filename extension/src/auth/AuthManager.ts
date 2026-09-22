@@ -304,6 +304,30 @@ export class AuthManager implements vscode.Disposable {
   }
 
   /**
+   * Resolve the display name of the currently authenticated user from the
+   * backend (`GET /api/admin/auth/me`). Works for BOTH password and SSO sessions
+   * because both issue the same session token — so the sidebar shows the real
+   * user (e.g. an Entra/Google account) instead of a hardcoded name.
+   * @returns username, then email, then "" when unavailable (never throws).
+   */
+  async fetchCurrentUsername(): Promise<string> {
+    const token = this.cachedToken;
+    if (!token) return "";
+    try {
+      const response = await fetch(`${this.baseUrl}/api/admin/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return "";
+      const data = await response.json() as { username?: string; email?: string };
+      return data.username || data.email || "";
+    } catch (err) {
+      // Non-fatal: caller falls back to an empty label rather than blocking auth.
+      console.warn("Failed to fetch current user:", (err as Error).message);
+      return "";
+    }
+  }
+
+  /**
    * Refresh the access token using refresh endpoint.
    */
   async refreshToken(): Promise<void> {

@@ -4,6 +4,10 @@ export interface ExecuteTurnInput {
   agentId: string;
   messages: Array<{ role: string; content: string }>;
   tools?: Array<{ name: string; description?: string; parameters?: Record<string, unknown> }>;
+  /** FIX A: pi-ai provider id (e.g. 'anthropic') resolved by the engine. */
+  provider?: string;
+  /** FIX A: pi-ai model id (e.g. 'claude-opus-4-7') resolved by the engine. */
+  model?: string;
 }
 
 export interface NormalizedToolCall {

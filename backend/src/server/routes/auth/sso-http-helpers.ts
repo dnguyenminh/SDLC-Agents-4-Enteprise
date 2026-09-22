@@ -134,10 +134,19 @@ export function resolveWebRedirect(targetRaw: string): string {
   return idx >= 0 ? targetRaw : allowed[0];
 }
 
-/** Issue a rotated session and set the HttpOnly session cookie on the response. */
-export async function issueSessionCookie(c: Context, userId: string, ip: string): Promise<{ token: string; expiresAt: string }> {
+/**
+ * Issue a rotated session and set the HttpOnly session cookie on the response.
+ *
+ * @param bindUserAgent Bind the session to the caller's User-Agent (session-fixation
+ *   defense). MUST be false for the loopback (native-client) SSO flow: there the
+ *   token is minted in the BROWSER but consumed by the EXTENSION, so the two
+ *   User-Agents differ — binding would make every subsequent extension call
+ *   (e.g. /api/admin/auth/me) fail validation. Web flow keeps binding (true).
+ */
+export async function issueSessionCookie(c: Context, userId: string, ip: string, bindUserAgent = true): Promise<{ token: string; expiresAt: string }> {
   const sessionService = new SessionService();
-  const session = await sessionService.issue(userId, '', ip, c.req.header('user-agent') || '');
+  const userAgent = bindUserAgent ? (c.req.header('user-agent') || '') : '';
+  const session = await sessionService.issue(userId, '', ip, userAgent);
   const maxAge = Math.max(0, Math.floor((new Date(session.expiresAt).getTime() - Date.now()) / 1000));
   // SEC-04: fail-secure — always mark the session cookie Secure unless an operator
   // explicitly opts out (ALLOW_INSECURE_COOKIES==='true') for local HTTP dev. This

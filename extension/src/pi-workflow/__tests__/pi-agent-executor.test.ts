@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PiAgentExecutor } from '../pi-agent-executor.js';
 import { PiProvider } from '../pi-provider.js';
 import { normalizeToolCall } from '../utils/tool-normalizer.js';
@@ -13,12 +13,22 @@ describe('tool-normalizer', () => {
   });
 });
 
-describe('PiAgentExecutor (SA4E-291)', () => {
+describe('PiAgentExecutor (SA4E-291) — provider.run() contract', () => {
   let provider: PiProvider;
   let executor: PiAgentExecutor;
 
   beforeEach(async () => {
     provider = new PiProvider();
+    // Mock the run() contract (real Agent runtime is covered by pi-provider-runtime-smoke.test.ts)
+    vi.spyOn(provider, 'run').mockResolvedValue({
+      text: 'Mocked assistant response',
+      toolCalls: [],
+      chunks: [{ type: 'text', content: 'Mocked assistant response' }, { type: 'done' }],
+      messages: [
+        { role: 'user', content: 'Design architecture' },
+        { role: 'assistant', content: 'Mocked assistant response' },
+      ],
+    });
     await provider.initialize({ transportType: 'HTTP' });
     executor = new PiAgentExecutor(provider);
   });
@@ -69,5 +79,9 @@ describe('PiAgentExecutor (SA4E-291)', () => {
     expect(result.messages.length).toBe(2);
     expect(result.messages[1].role).toBe('assistant');
     expect(result.streamChunks.length).toBeGreaterThan(0);
+    expect(provider.run).toHaveBeenCalledWith(expect.objectContaining({
+      prompt: 'Design architecture',
+      sessionId: 'sess-1',
+    }));
   });
 });

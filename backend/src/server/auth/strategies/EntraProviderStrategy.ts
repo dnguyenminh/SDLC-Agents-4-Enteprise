@@ -90,6 +90,9 @@ export class EntraProviderStrategy implements SsoProviderStrategy {
     }
 
     const claims = await verifier.verify(data.id_token);
+    // verifier.verify() returns a trimmed claim set (sub/oid/email/…). Extra
+    // Entra-specific claims (xms_edov, preferred_username, upn, groups) survive
+    // only on the full decoded payload, so read those from `payload`.
     const payload = decodeJwtPayload(data.id_token);
     const tokenNonce = typeof payload?.nonce === 'string' ? payload.nonce : undefined;
 
@@ -99,16 +102,39 @@ export class EntraProviderStrategy implements SsoProviderStrategy {
       throw err;
     }
 
+    // Entra puts the address in `email`, but for some account types it only
+    // appears in `preferred_username`/`upn`. Prefer the verified `email` claim,
+    // then fall back so JIT still has an address.
+    const email = (claims as any).email
+      || (typeof payload?.preferred_username === 'string' ? payload.preferred_username : '')
+      || (typeof payload?.upn === 'string' ? payload.upn : '');
+
     return {
       provider: 'entra',
       externalSubjectId: (claims as any).oid || (claims as any).sub || '',
-      email: (claims as any).email || '',
-      // SEC-09: email_verified may arrive as boolean or the string "true"/"false".
-      // Boolean("false") === true would wrongly trust an unverified email, so use
-      // the shared normalizer that only treats true / "true" as verified.
-      emailVerified: isEmailVerified((claims as any).email_verified),
-      name: (claims as any).name || '',
-      groups: (claims as any).groups || [],
+      email: email || '',
+      // Entra ID does NOT emit the standard `email_verified` claim. Microsoft's
+      // documented equivalent is `xms_edov` (email domain owner verified): the
+      // email belongs to the user's tenant and the tenant admin verified the
+      // domain (MSA/Google/OTP-backed). Trust that as the verification signal,
+      // still honoring a standard `email_verified` if a flow ever provides it.
+      // SEC-09: normalize boolean-or-"true"/"false" string; never Boolean("false").
+      emailVerified: isEntraEmailVerified(payload),
+      name: (claims as any).name || (typeof payload?.name === 'string' ? payload.name : '') || '',
+      groups: Array.isArray(payload?.groups) ? (payload!.groups as string[]) : [],
     };
   }
+}
+
+/**
+ * Decide whether an Entra id_token's email is verified. Entra omits the standard
+ * `email_verified` claim, so the authoritative signal is `xms_edov` (email domain
+ * owner verified). Accepts either as boolean or "true"/"false" string.
+ * @param payload Full decoded id_token payload (may be null)
+ */
+function isEntraEmailVerified(payload: Record<string, unknown> | null): boolean {
+  const edov = payload?.['xms_edov'];
+  const std = payload?.['email_verified'];
+  return isEmailVerified(edov as boolean | string | undefined)
+    || isEmailVerified(std as boolean | string | undefined);
 }

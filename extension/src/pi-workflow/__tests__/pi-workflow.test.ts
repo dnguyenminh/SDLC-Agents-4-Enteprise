@@ -1,7 +1,22 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PiWorkflowEngine } from '../pi-workflow.js';
+import { PiProvider } from '../pi-provider.js';
 import type { RemoteCheckpointerStore } from '../checkpointer-adapter.js';
 import type { PipelineState } from '../types/pi-workflow-state.js';
+
+function mockRunProvider(text = 'Mocked assistant response'): PiProvider {
+  const provider = new PiProvider();
+  vi.spyOn(provider, 'run').mockImplementation(async (input) => ({
+    text,
+    toolCalls: [],
+    chunks: [{ type: 'text', content: text }, { type: 'done' }],
+    messages: [
+      { role: 'user', content: input.prompt },
+      { role: 'assistant', content: text },
+    ],
+  }));
+  return provider;
+}
 
 describe('PiWorkflowEngine Integration (SA4E-294/295)', () => {
   let engine: PiWorkflowEngine;
@@ -18,7 +33,7 @@ describe('PiWorkflowEngine Integration (SA4E-294/295)', () => {
       }
     };
 
-    engine = new PiWorkflowEngine({ remoteStore: mockStore });
+    engine = new PiWorkflowEngine({ remoteStore: mockStore, provider: mockRunProvider() });
     await engine.initialize('HTTP');
   });
 
@@ -63,7 +78,7 @@ describe('PiWorkflowEngine Integration (SA4E-294/295)', () => {
       }
     };
 
-    const customEngine = new PiWorkflowEngine({ gateHandler: mockGate });
+    const customEngine = new PiWorkflowEngine({ gateHandler: mockGate, provider: mockRunProvider() });
     await customEngine.initialize('HTTP');
 
     // Simulate tool call execution

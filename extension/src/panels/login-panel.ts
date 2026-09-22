@@ -20,26 +20,18 @@ export class LoginPanel implements vscode.Disposable {
   async show(): Promise<void> {
     if (this.panel) { this.panel.reveal(); return; }
     const lastUsername = await this.authManager.getLastUsername();
-    // Fetch enabled providers to render extra SSO buttons (Google/GitHub/…).
-    // Entra keeps its dedicated static button so its flow is never affected.
-    const extraProviders = await this.getExtraSsoProviders();
+    // Render an SSO button for EVERY provider the backend reports as enabled
+    // AND configured (GET /auth/sso/providers already filters enabled=1 with a
+    // non-empty client_id). No provider is hardcoded — including Entra — so the
+    // login screen always mirrors the backend's actual configuration.
+    const providers = await this.authManager.listSsoProviders();
     this.panel = vscode.window.createWebviewPanel("kiroSdlc.login", "SDLC Agents 4 Enterprise — Login", vscode.ViewColumn.One, { enableScripts: true, retainContextWhenHidden: false });
-    this.panel.webview.html = this.getHtml(lastUsername, extraProviders);
+    this.panel.webview.html = this.getHtml(lastUsername, providers);
     this.panel.webview.onDidReceiveMessage(async (msg) => {
       if (msg.type === "login") { await this.handleLogin(msg.username, msg.password); }
-      else if (msg.type === "entra") { await this.handleSso("entra"); }
       else if (msg.type === "sso") { await this.handleSso(msg.provider); }
     }, null, this.disposables);
     this.panel.onDidDispose(() => { this.panel = null; }, null, this.disposables);
-  }
-
-  /**
-   * Enabled SSO providers excluding Entra (Entra has its own static button).
-   * Returns [] on any failure so the panel still shows local + Entra login.
-   */
-  private async getExtraSsoProviders(): Promise<SsoProviderInfo[]> {
-    const providers = await this.authManager.listSsoProviders();
-    return providers.filter((p) => p.provider_type.toLowerCase() !== "entra");
   }
 
   close(): void { this.panel?.dispose(); this.panel = null; }
@@ -74,14 +66,15 @@ export class LoginPanel implements vscode.Disposable {
   private postMessage(msg: unknown): void { this.panel?.webview.postMessage(msg); }
 
   /**
-   * Build the dynamic SSO button markup for non-Entra providers.
+   * Build the dynamic SSO button markup for every enabled provider.
    * The provider_type drives the click handler (data-provider) and a brand
-   * CSS class; text falls back to "Sign in with {name}".
+   * CSS class. The visible label uses a friendly brand name for well-known
+   * providers (entra→Microsoft) and otherwise the admin-supplied provider name.
    */
   private renderSsoButtons(providers: SsoProviderInfo[]): string {
     return providers.map((p) => {
       const type = escapeHtml(p.provider_type);
-      const label = escapeHtml(`Sign in with ${p.name || p.provider_type}`);
+      const label = escapeHtml(`Sign in with ${brandLabel(p)}`);
       const brand = `sso-${p.provider_type.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
       return `<button type="button" class="btn btn-secondary sso-btn ${brand}" data-provider="${type}">${label}</button>`;
     }).join("\n    ");
@@ -140,7 +133,6 @@ export class LoginPanel implements vscode.Disposable {
       </div>
       <button type="submit" class="btn btn-primary" id="loginBtn">Login</button>
     </form>
-    <button type="button" class="btn btn-secondary" id="entraBtn">Sign in with Microsoft</button>
     ${ssoButtons}
     <div class="error" id="errorMsg"></div>
     <div class="success" id="successMsg">Login successful</div>
@@ -149,7 +141,6 @@ export class LoginPanel implements vscode.Disposable {
     const vscode = acquireVsCodeApi();
     const form = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
-    const entraBtn = document.getElementById('entraBtn');
     const ssoBtns = Array.from(document.querySelectorAll('.sso-btn'));
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
@@ -171,11 +162,6 @@ export class LoginPanel implements vscode.Disposable {
       vscode.postMessage({ type: 'login', username: u, password: p });
     });
 
-    entraBtn.addEventListener('click', () => {
-      errorMsg.style.display = 'none';
-      vscode.postMessage({ type: 'entra' });
-    });
-
     ssoBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
         errorMsg.style.display = 'none';
@@ -187,21 +173,18 @@ export class LoginPanel implements vscode.Disposable {
       const msg = event.data;
       if (msg.type === 'loading') {
         loginBtn.disabled = msg.loading;
-        entraBtn.disabled = msg.loading;
         ssoBtns.forEach((b) => { b.disabled = msg.loading; });
         loginBtn.textContent = msg.loading ? 'Logging in...' : 'Login';
       } else if (msg.type === 'error') {
         errorMsg.style.display = 'block';
         errorMsg.textContent = msg.message;
         loginBtn.disabled = false;
-        entraBtn.disabled = false;
         ssoBtns.forEach((b) => { b.disabled = false; });
         loginBtn.textContent = 'Login';
       } else if (msg.type === 'success') {
         successMsg.style.display = 'block';
         errorMsg.style.display = 'none';
         loginBtn.disabled = true;
-        entraBtn.disabled = true;
         ssoBtns.forEach((b) => { b.disabled = true; });
         loginBtn.textContent = 'Done';
       }
@@ -219,6 +202,23 @@ export class LoginPanel implements vscode.Disposable {
   }
 
   dispose(): void { this.close(); this.disposables.forEach(d => d.dispose()); }
+}
+
+/**
+ * Friendly brand label for a provider button. Well-known provider types get a
+ * recognizable brand name (e.g. Entra shows "Microsoft"); everything else falls
+ * back to the admin-configured display name, then the raw provider type.
+ */
+function brandLabel(p: SsoProviderInfo): string {
+  const known: Record<string, string> = {
+    entra: "Microsoft",
+    azuread: "Microsoft",
+    google: "Google",
+    github: "GitHub",
+    facebook: "Facebook",
+    x: "X",
+  };
+  return known[p.provider_type.toLowerCase()] || p.name || p.provider_type;
 }
 
 /**

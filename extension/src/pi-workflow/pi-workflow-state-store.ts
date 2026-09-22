@@ -42,6 +42,25 @@ export class PiStateStore {
     return fresh;
   }
 
+  /**
+   * Plain-chat entry: the executor requires a KEY-123-shaped ticketKey, so chat
+   * sessions use a CHAT-<timestamp> session identifier (not a Jira ticket).
+   */
+  chatStateFor(tabId: string): PipelineState {
+    const chatKey = `CHAT-${Date.now()}`;
+    const fresh: PipelineState = {
+      ticketKey: chatKey,
+      threadId: `${chatKey}-${tabId}`,
+      currentPhase: 'requirements',
+      pipelineStatus: 'READY',
+      chatHistory: [],
+      agentOutputs: {},
+      errors: [],
+    };
+    this.states.set(chatKey, fresh);
+    return fresh;
+  }
+
   save(ticketKey: string, state: PipelineState): void {
     this.states.set(ticketKey, state);
   }

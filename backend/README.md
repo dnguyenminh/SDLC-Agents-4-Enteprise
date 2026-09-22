@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.42.2-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.43.0-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/tools-66+-teal?style=for-the-badge" alt="Tools">
   <img src="https://img.shields.io/badge/node-%3E%3D18-green?style=for-the-badge" alt="Node">
 </p>
@@ -38,7 +38,7 @@ Server starts at **http://localhost:48721**. Verify it's running:
 
 ```bash
 curl http://localhost:48721/health
-# → {"status":"healthy","version":"1.42.2","uptime":5,"tools_loaded":52}
+# → {"status":"healthy","version":"1.43.0","uptime":5,"tools_loaded":52}
 ```
 
 ### Development Mode (auto-reload)
@@ -233,6 +233,7 @@ The embedding model is expected at `.code-intel/models/model.onnx`. Download it:
 
 | Version | Date | Ticket | Changes |
 |---------|------|--------|---------|
+| 1.43.0 | 2026-09-22 | SA4E-262 | Multi-provider SSO unified on `sso_providers` (Entra/Google/GitHub, Strategy pattern). Entra email verification via Microsoft `xms_edov` claim (Entra omits standard `email_verified`); loopback SSO sessions no longer User-Agent-bound so extension `/api/admin/auth/me` works; JIT provisioning rejections return `403 provisioning_rejected` with a clear reason. |
 | 1.42.2 | 2026-09-11 | SA4E-257 | Wire DB-backed MCP server config to McpClientManager: McpServerConfigRepository loads `mcp_servers` table, initializeAll reads enabled servers from DB, real-time hooks auto connect/reconnect/disconnect on CRUD, transport normalization `streamable-http → httpStream`, mock logs removed. Regression tests pass. |
 | 1.42.1 | 2026-09-10 | SA4E-258 | Tenant scope stamping for tool execution: `/api/tools/execute` + `/api/code/search` stamp trusted scope onto tool args via canonical `__projectId`/`__userId` (not only `_projectContext`), fixing code-intel tools (fail-closed on missing `__projectId`) that returned "No results found". Covers MCP call path (mcpServer) + KB API route. Graph migrator idempotency, query-layer scope resolution, indexing-engine fixes. KB Graph: FileContainsSymbolStrategy dir-based match for LWC/Aura components (LWC_COMPONENT no longer isolated). Regression tests added (tools-execute-scope, orchestration dynamic IT, mcpServer calltool IT). |
 | 1.42.0 | 2026-09-08 | SA4E-301 | Multi-language tree-sitter parsers (C/C++/C#/PHP/Ruby/Scala/Swift/Kotlin) via shared GenericTreeSitterParser + regex fallback; symbol-kind fixes (struct/enum naming, method promotion, variable/property/constant separation, dedupe). Salesforce indexing (Apex/LWC/Aura/Visualforce/meta) with grammars copied to dist. KB Graph edges rebuilt from `relationships` (MembershipEdgeStrategy CONTAINS + FileContainsSymbolStrategy + inherits/implements resolve-by-name); auto-heal backfill (ensure-sa4e-301), unused edge tables dropped (303), unique index (302). Enrichment dedup (single CodeEnrichmentTaskCreator + PENDING guard, orphan task cleanup 300). Continuous budget-driven KB Graph LOD renderer. Node.js 22 LTS. |

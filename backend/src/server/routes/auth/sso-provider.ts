@@ -24,6 +24,7 @@ import {
   resolveRedirectTarget,
   issueSessionCookie,
   buildPostLoginRedirect,
+  isLoopbackRedirect,
 } from './sso-http-helpers.js';
 
 const logger = pino({ name: 'sso-provider-route' });
@@ -43,10 +44,21 @@ function resolveStrategy(providerParam: string): SsoProviderStrategy | null {
   return ssoStrategyRegistry.get(provider) ?? null;
 }
 
+/** JIT provisioning rejections are business errors (403), not server faults. */
+function isProvisioningReject(msg: string | undefined): boolean {
+  if (!msg) return false;
+  return /not verified|linking rejected|already linked|not allowed|Missing required|HYBRID/i.test(msg);
+}
+
 /** Map strategy callback errors onto stable HTTP responses (no swallow). */
 function callbackError(c: any, e: any) {
   if (e.message === 'invalid_nonce' || e.message === 'invalid_state') return c.json({ error: e.message }, 401);
   if (e.status === 401 || e.status === 403) return c.json({ error: e.message }, e.status);
+  // JIT provisioning refused this identity — surface the reason (403), not 500.
+  if (isProvisioningReject(e.message)) {
+    logger.warn({ message: e.message }, 'SSO JIT provisioning rejected');
+    return c.json({ error: 'provisioning_rejected', message: e.message }, 403);
+  }
   // SEC-05: never reflect the upstream OAuth error body to the client (may leak
   // provider internals / tokens). Log the detail server-side, return generic.
   if (e.detail) {
@@ -126,7 +138,11 @@ async function handleCallback(
     const db = getDbAdapter();
     const { user } = await new JitProvisioningService(db).provision(profile);
     await auditAndRotate(db, user, profile, ip);
-    const session = await issueSessionCookie(c, user.user_id, ip);
+    // Loopback (native-client) flow: token consumed by the extension, whose
+    // User-Agent differs from this browser — skip UA binding so later
+    // /api/admin/auth/me calls from the extension don't 401. Web flow keeps it.
+    const isLoopback = isLoopbackRedirect(entry.redirectTo);
+    const session = await issueSessionCookie(c, user.user_id, ip, !isLoopback);
     return c.redirect(buildPostLoginRedirect(entry.redirectTo, state, session));
   } catch (e: any) {
     return callbackError(c, e);

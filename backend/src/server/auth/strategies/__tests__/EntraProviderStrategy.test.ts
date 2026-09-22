@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EntraProviderStrategy } from '../EntraProviderStrategy.js';
 
+/** Build a fake (unsigned) id_token from a claims payload for decode-path tests. */
+function makeIdToken(payload: Record<string, unknown>): string {
+  const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'key-1' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${header}.${body}.sig`;
+}
+
 const TENANT_ID = '00000000-0000-0000-0000-000000000001';
 const CLIENT_ID = '11111111-1111-1111-1111-111111111111';
 const CLIENT_SECRET = 'secret12345';
@@ -135,6 +142,83 @@ describe('EntraProviderStrategy', () => {
     });
 
     expect(profile.emailVerified).toBe(false);
+  });
+
+  // Root-cause fix: Entra ID does NOT emit standard `email_verified`. Its
+  // documented equivalent is `xms_edov` (email domain owner verified). A tenant
+  // account with xms_edov=true and no email_verified MUST be treated verified,
+  // so JIT provisioning succeeds instead of failing with internal_error.
+  it('treats xms_edov=true (no email_verified) as verified — Entra tenant account', async () => {
+    const expectedNonce = 'nonce-edov';
+    const payload = {
+      iss: `https://login.microsoftonline.com/${TENANT_ID}/v2.0`,
+      sub: 'sub-edov',
+      oid: 'oid-edov-1',
+      email: 'tenant.user@contoso.com',
+      xms_edov: true,
+      name: 'Tenant User',
+      nonce: expectedNonce,
+    };
+    const id_token = makeIdToken(payload);
+
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true, status: 200, json: async () => ({ id_token, access_token: 'at' }),
+    });
+    const entraAuthModule = await import('../../../middleware/verifiers/entra-auth.js');
+    vi.spyOn(entraAuthModule, 'getEntraVerifierAsync').mockResolvedValue({
+      verify: vi.fn().mockResolvedValue(payload),
+    } as any);
+
+    const profile = await strategy.handleCallback({
+      code: 'code', codeVerifier: 'v', nonce: expectedNonce,
+    });
+    expect(profile.emailVerified).toBe(true);
+    expect(profile.email).toBe('tenant.user@contoso.com');
+  });
+
+  // xms_edov as the string "false" must NOT be trusted (Boolean("false")===true trap).
+  it('treats xms_edov="false" as NOT verified', async () => {
+    const expectedNonce = 'nonce-edov-false';
+    const payload = {
+      iss: `https://login.microsoftonline.com/${TENANT_ID}/v2.0`,
+      sub: 'sub-edov-2', oid: 'oid-edov-2', email: 'u@contoso.com',
+      xms_edov: 'false', nonce: expectedNonce,
+    };
+    const id_token = makeIdToken(payload);
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true, status: 200, json: async () => ({ id_token, access_token: 'at' }),
+    });
+    const entraAuthModule = await import('../../../middleware/verifiers/entra-auth.js');
+    vi.spyOn(entraAuthModule, 'getEntraVerifierAsync').mockResolvedValue({
+      verify: vi.fn().mockResolvedValue(payload),
+    } as any);
+
+    const profile = await strategy.handleCallback({ code: 'c', codeVerifier: 'v', nonce: expectedNonce });
+    expect(profile.emailVerified).toBe(false);
+  });
+
+  // When `email` claim is absent, fall back to preferred_username so JIT has an address.
+  it('falls back to preferred_username when email claim is absent', async () => {
+    const expectedNonce = 'nonce-fallback';
+    const verifyClaims = { sub: 'sub-x', oid: 'oid-x', name: 'X' }; // no email from verify()
+    const payload = {
+      iss: `https://login.microsoftonline.com/${TENANT_ID}/v2.0`,
+      sub: 'sub-x', oid: 'oid-x',
+      preferred_username: 'fallback.user@contoso.com',
+      xms_edov: true, nonce: expectedNonce,
+    };
+    const id_token = makeIdToken(payload);
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true, status: 200, json: async () => ({ id_token, access_token: 'at' }),
+    });
+    const entraAuthModule = await import('../../../middleware/verifiers/entra-auth.js');
+    vi.spyOn(entraAuthModule, 'getEntraVerifierAsync').mockResolvedValue({
+      verify: vi.fn().mockResolvedValue(verifyClaims),
+    } as any);
+
+    const profile = await strategy.handleCallback({ code: 'c', codeVerifier: 'v', nonce: expectedNonce });
+    expect(profile.email).toBe('fallback.user@contoso.com');
+    expect(profile.emailVerified).toBe(true);
   });
 
   it('rejects callback with invalid_nonce when nonce does not match', async () => {

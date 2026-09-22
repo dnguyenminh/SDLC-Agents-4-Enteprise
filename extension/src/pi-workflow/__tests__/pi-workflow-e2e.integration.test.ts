@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   PiWorkflowEngine,
   PiProvider,
@@ -10,6 +10,20 @@ import {
   type RemoteCheckpointerStore,
   type ToolApprovalGateHandler
 } from '../index.js';
+
+function mockRunProvider(text = 'Mocked assistant response'): PiProvider {
+  const provider = new PiProvider();
+  vi.spyOn(provider, 'run').mockImplementation(async (input) => ({
+    text,
+    toolCalls: [],
+    chunks: [{ type: 'text', content: text }, { type: 'done' }],
+    messages: [
+      { role: 'user', content: input.prompt },
+      { role: 'assistant', content: text },
+    ],
+  }));
+  return provider;
+}
 
 describe('PiWorkflow E2E Integration Suite (SA4E-297)', () => {
   let engine: PiWorkflowEngine;
@@ -38,7 +52,8 @@ describe('PiWorkflow E2E Integration Suite (SA4E-297)', () => {
 
     engine = new PiWorkflowEngine({
       remoteStore: mockStore,
-      gateHandler: mockGate
+      gateHandler: mockGate,
+      provider: mockRunProvider()
     });
 
     await engine.initialize('WebSocket');

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-09-16T00:00:00.000Z" agent="Mozilla/5.0" version="24.9.0" etag="SA4E-289">
+ <diagram name="Chat Screen Detail" id="chat-detail">
+  <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+   <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="chatWindow" value="Pi Workflow – Agent Chat" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+     <mxGeometry x="80" y="40" width="660" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="header" value="Session: SA4E-289 | Agent: PiAgent | Phase: Design" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f4ff;" vertex="1" parent="1">
+     <mxGeometry x="100" y="70" width="620" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sidebarLeft" value="Worklist&#10;- SA4E-290&#10;- SA4E-291&#10;- SA4E-292" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3f3f3;" vertex="1" parent="1">
+     <mxGeometry x="100" y="130" width="150" height="400" as="geometry"/>
+    </mxCell>
+    <mxCell id="messageArea" value="Messages&#10;User: Migrate workflow&#10;PiAgent: Routing...&#10;PiAgent: State mapped&#10;PiAgent: Checkpoint saved" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;" vertex="1" parent="1">
+     <mxGeometry x="270" y="130" width="430" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="approvalBox" value="Approval Request&#10;Tool: create_checkpoint&#10;[Approve] [Reject]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+     <mxGeometry x="270" y="450" width="430" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="inputBar" value="Input: Type message... [Send]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9f9f9;" vertex="1" parent="1">
+     <mxGeometry x="270" y="540" width="430" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="statusBar" value="Status: PiProvider WebSocket Connected | Latency 120ms" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2d2d2d;" vertex="1" parent="1">
+     <mxGeometry x="100" y="580" width="620" height="20" as="geometry"/>
+    </mxCell>
+   </root>
+  </mxGraphModel>
+ </diagram>
+</mxfile>

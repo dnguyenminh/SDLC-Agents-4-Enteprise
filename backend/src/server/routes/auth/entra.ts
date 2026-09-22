@@ -22,6 +22,7 @@ import {
   resolveRedirectTarget,
   issueSessionCookie,
   buildPostLoginRedirect,
+  isLoopbackRedirect,
 } from './sso-http-helpers.js';
 
 // Re-export so existing imports of isLoopbackRedirect from this module keep working
@@ -101,17 +102,35 @@ async function handleEntraCallback(
     );
     await db.runAsync(`UPDATE sessions SET is_active = 0 WHERE user_id = ?`, [user.user_id]);
 
-    const session = await issueSessionCookie(c, user.user_id, ip);
+    // Loopback (native-client) flow hands the token to the extension, which has a
+    // different User-Agent than this browser request — don't UA-bind it or later
+    // /me calls from the extension would 401. Web flow keeps UA binding.
+    const isLoopback = isLoopbackRedirect(entry.redirectTo);
+    const session = await issueSessionCookie(c, user.user_id, ip, !isLoopback);
     return c.redirect(buildPostLoginRedirect(entry.redirectTo, state, session));
   } catch (e: any) {
     return entraError(c, e);
   }
 }
 
+/** JIT provisioning rejections are business errors (403), not server faults.
+ * Surface a clear reason so the login page can tell the user what went wrong
+ * instead of a generic internal_error. */
+function isProvisioningReject(msg: string | undefined): boolean {
+  if (!msg) return false;
+  return /not verified|linking rejected|already linked|not allowed|Missing required|HYBRID/i.test(msg);
+}
+
 /** Map Entra strategy errors onto the exact HTTP responses the tests expect. */
 function entraError(c: any, e: any) {
   if (e.message === 'invalid_nonce') return c.json({ error: 'invalid_nonce' }, 401);
   if (e.status === 401) return c.json({ error: e.message }, 401);
+  // JIT provisioning refused this identity (e.g. email not verified / no auto-link).
+  // Return 403 with the reason so it isn't misdiagnosed as a server fault.
+  if (isProvisioningReject(e.message)) {
+    logger.warn({ message: e.message }, 'Entra JIT provisioning rejected');
+    return c.json({ error: 'provisioning_rejected', message: e.message }, 403);
+  }
   // SEC-05: log upstream token-exchange detail server-side only; return generic.
   if (e.detail) {
     logger.error({ status: e.status, detail: e.detail }, 'Entra token exchange failed');
