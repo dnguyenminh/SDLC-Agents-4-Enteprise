@@ -1,0 +1,4 @@
+test_case_id,file_path,code,message,expected_http_code,description
+TC-003,/src/secret.ts,EACCES,Permission denied,200,File permission error
+TC-204,/src/readonly.md,EACCES,Permission denied,200,Read only file
+TC-003,/src/large.bin,ENOSPC,Disk full,200,Disk full during write

@@ -5,6 +5,9 @@
 
 import { Hono } from 'hono';
 import { getKbEntries, getKbEntryCount } from '../../../admin/admin-db.js';
+import { getDbAdapter } from '../../../admin/db/core.js';
+import { extractIngestEdges } from '../../../modules/memory/engine/edge-on-ingest.js';
+import type { NodeInfo, IngestEdgeContext } from '../../../modules/memory/engine/edge-on-ingest.js';
 import type { AdminContext } from './context.js';
 
 export function createKbGraphRoutes(ctx: AdminContext): Hono {
@@ -101,22 +104,34 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     const permCheck = await ctx.requirePermission(c, user.userId, 'GRAPH_MAINTAIN');
     if (permCheck instanceof Response) return permCheck;
     const projectId = ctx.getRequestProjectId(c);
-    const { EdgeOnIngestStrategy } = await import('../../../modules/memory/engine/edge-on-ingest.js');
-    const adapter = ctx.db.admin;
-    const entries = await adapter.allAsync<any>('SELECT id, content, source, project_id FROM knowledge_entries WHERE archived = 0' + (projectId ? ' AND (project_id = ? OR project_id IS NULL)' : ''), projectId ? [projectId] : []);
-    const nodes = new Map<number, any>();
-    for (const e of entries) nodes.set(e.id, e);
-    const strategy = new EdgeOnIngestStrategy();
+    // BUG-002: use shared adapter + shared extractIngestEdges (no EdgeOnIngestStrategy,
+    // no ctx.db.admin). Column is `relation`, not `label`.
+    const adapter = getDbAdapter();
+    const engine = adapter.getEngine();
+    const entries = await adapter.allAsync<any>('SELECT id, content, source, tags, project_id FROM knowledge_entries WHERE archived = 0' + (projectId ? ' AND (project_id = ? OR project_id IS NULL)' : ''), projectId ? [projectId] : []);
+    const nodes: NodeInfo[] = entries.map((e: any) => ({
+      id: e.id, content: e.content || '', source: e.source ?? null, tags: e.tags ?? '',
+    }));
+    const mapLabelToRelation = (label: string): string => {
+      const l = label.toUpperCase();
+      if (l === 'DISCUSSES' || l === 'BELONGS_TO' || l === 'REFERENCES') return 'reference';
+      return 'reference';
+    };
+    const insertSql = engine === 'sqlite'
+      ? `INSERT OR IGNORE INTO knowledge_graph_edges (source_id, target_id, relation, weight) VALUES (?, ?, ?, ?)`
+      : `INSERT INTO knowledge_graph_edges (source_id, target_id, relation, weight) VALUES ($1, $2, $3, $4) ON CONFLICT (source_id, target_id, relation) DO NOTHING`;
     let totalEdges = 0;
     let skippedEntries = 0;
     for (const entry of entries) {
       const existing = await adapter.getAsync<any>('SELECT 1 FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1', [entry.id]);
       if (existing) { skippedEntries++; continue; }
-      const edges = strategy.extract({ entryId: entry.id, content: entry.content || '', projectId: entry.project_id }, nodes);
+      const edgeCtx: IngestEdgeContext = { entryId: entry.id, content: entry.content || '', source: entry.source ?? null, projectId: entry.project_id };
+      const edges = extractIngestEdges(edgeCtx, nodes);
       for (const edge of edges) {
+        if (edge.sourceId === edge.targetId) continue;
         await adapter.runAsync(
-          `INSERT OR IGNORE INTO knowledge_graph_edges (source_id, target_id, label, weight) VALUES (?, ?, ?, ?)`,
-          [edge.sourceId, edge.targetId, edge.label, edge.weight ?? 1]
+          insertSql,
+          [edge.sourceId, edge.targetId, mapLabelToRelation(edge.label), edge.weight ?? 1]
         );
         totalEdges++;
       }

@@ -162,7 +162,7 @@ describe("IndexerHttpClient — proxy-compliant fetch usage", () => {
       const mcpResponse = { result: { content: [{ type: "text", text: "Synced 100 symbols" }] } };
       fetchMock.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mcpResponse),
+        text: () => Promise.resolve(JSON.stringify(mcpResponse)),
       });
 
       const result = await client.syncCodeSymbols();

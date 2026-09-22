@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1000" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="dev" value="Developer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+<mxGeometry x="80" y="80" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="ext" value="Extension&#xa;IndexingService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d9eaf7;" vertex="1" parent="1">
+<mxGeometry x="280" y="80" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="http" value="IndexerHttpClient&#xa;httpPostWithDetail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cfe2f3;" vertex="1" parent="1">
+<mxGeometry x="480" y="80" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="backend" value="Backend&#xa;api-index.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d9ead3;" vertex="1" parent="1">
+<mxGeometry x="680" y="80" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="kb" value="KB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce5cd;" vertex="1" parent="1">
+<mxGeometry x="880" y="80" width="80" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="msg1" value="Trigger ingest" style="text;html=1;align=center;verticalAlign=middle;resizable=0;" vertex="1" parent="1">
+<mxGeometry x="150" y="150" width="100" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="msg2" value="POST /api/index/source" style="text;html=1;align=center;verticalAlign=middle;resizable=0;" vertex="1" parent="1">
+<mxGeometry x="350" y="220" width="140" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="msg3" value="Error response {error,details,action}" style="text;html=1;align=center;verticalAlign=middle;resizable=0;" vertex="1" parent="1">
+<mxGeometry x="600" y="290" width="180" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="msg4" value="Show in Output Channel" style="text;html=1;align=center;verticalAlign=middle;resizable=0;" vertex="1" parent="1">
+<mxGeometry x="250" y="360" width="150" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="dev" target="ext" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="ext" target="http" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="http" target="backend" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="backend" target="kb" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="backend" target="http" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e6" edge="1" parent="1" source="http" target="ext" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e7" edge="1" parent="1" source="ext" target="dev" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

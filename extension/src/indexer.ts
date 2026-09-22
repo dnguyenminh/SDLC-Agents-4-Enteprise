@@ -75,7 +75,11 @@ function getIndexingOutputChannel(): vscode.OutputChannel {
 function createService(tokenRefresher?: () => Promise<string | undefined>): IndexingService {
     const client = new IndexerHttpClient(getBackendUrl());
     if (tokenRefresher) { client.setTokenRefresher(tokenRefresher); }
-    return new IndexingService(client, getIndexingOutputChannel());
+    const service = new IndexingService(client, getIndexingOutputChannel());
+    // SA4E-300 GAP 4: wire the same refresher into the service so
+    // pollTaskWorkerProgress can refresh (was never set before).
+    if (tokenRefresher) { service.setRefreshTokenFn(tokenRefresher); }
+    return service;
 }
 
 export async function promptIndexAfterInject(root: string, token?: string): Promise<void> {

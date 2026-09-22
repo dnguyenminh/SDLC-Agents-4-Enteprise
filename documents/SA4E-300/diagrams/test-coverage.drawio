@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Test Coverage Overview - SA4E-300" style="text;html=1;align=center;verticalAlign=middle;ês=1;fillColor=none;strokeColor=none;fontSize=18;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="200" y="40" width="450" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="req1" value="UC-1 Error Detail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4" vertex="1" parent="1">
+      <mxGeometry x="100" y="120" width="150" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="req2" value="UC-2 Per-file Fail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4" vertex="1" parent="1">
+      <mxGeometry x="100" y="200" width="150" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="req3" value="UC-3 Output Channel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4" vertex="1" parent="1">
+      <mxGeometry x="100" y="280" width="150" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="pbt" value="PBT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc" vertex="1" parent="1">
+      <mxGeometry x="320" y="120" width="80" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut" value="UT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc" vertex="1" parent="1">
+      <mxGeometry x="430" y="120" width="80" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="it" value="IT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc" vertex="1" parent="1">
+      <mxGeometry x="540" y="120" width="80" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2eapi" value="E2E-API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc" vertex="1" parent="1">
+      <mxGeometry x="650" y="120" width="80" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit" value="SIT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc" vertex="1" parent="1">
+      <mxGeometry x="760" y="120" width="80" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="req1" target="ut" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="req1" target="it" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="req1" target="e2eapi" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="req2" target="ut" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" edge="1" parent="1" source="req2" target="it" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" edge="1" parent="1" source="req3" target="sit" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

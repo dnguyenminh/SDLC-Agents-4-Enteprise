@@ -131,6 +131,23 @@ const INGEST_STRATEGIES: IngestEdgeStrategy[] = [
 ];
 
 /**
+ * Extract edges for an ingest context against in-memory nodes (pure, no DB I/O).
+ * Runs all 4 strategies and aggregates edges.
+ * BUG-002: extracted from extractAndInsertIngestEdges so admin
+ * populate-edges can reuse it without re-querying per entry.
+ */
+export function extractIngestEdges(
+  ctx: IngestEdgeContext,
+  existingNodes: NodeInfo[],
+): IngestGraphEdge[] {
+  const edges: IngestGraphEdge[] = [];
+  for (const strategy of INGEST_STRATEGIES) {
+    edges.push(...strategy.extract(ctx, existingNodes));
+  }
+  return edges;
+}
+
+/**
  * Extract and insert edges after a KB entry is ingested.
  * Queries existing knowledge_entries with project filter & pagination, then batch-inserts edges into knowledge_graph_edges.
  * @returns Number of edges created.
@@ -162,10 +179,7 @@ export async function extractAndInsertIngestEdges(
     const existingNodes = await adapter.allAsync<NodeInfo>(sql, pageParams);
     if (existingNodes.length === 0) break;
 
-    for (const strategy of INGEST_STRATEGIES) {
-      const edges = strategy.extract(ctx, existingNodes);
-      allEdges.push(...edges);
-    }
+    allEdges.push(...extractIngestEdges(ctx, existingNodes));
 
     offset += pageSize;
     if (existingNodes.length < pageSize) break;
