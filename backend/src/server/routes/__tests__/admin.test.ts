@@ -125,6 +125,43 @@ describe('Admin Routes — /api/admin/auth', () => {
     });
     expect(meRes.status).toBe(401);
   });
+
+  // SA4E-319: session sharing across clients with different user-agents.
+  describe('X-Client-Type: extension session (no UA-binding)', () => {
+    it('extension-issued session is accepted from a DIFFERENT user-agent (webview iframe)', async () => {
+      // Login as the extension host (Node UA) with the extension marker.
+      const loginRes = await app.request('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Client-Type': 'extension', 'User-Agent': 'node-extension-host/1.0' },
+        body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
+      });
+      expect(loginRes.status).toBe(200);
+      const token = (await loginRes.json() as any).token;
+
+      // Use that token from a DIFFERENT UA (simulating the Chromium webview iframe).
+      const profileRes = await app.request('/api/admin/profile', {
+        headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'Mozilla/5.0 (webview-chromium)' },
+      });
+      expect(profileRes.status).toBe(200);
+    });
+
+    it('browser-issued session (no marker) is REJECTED from a different user-agent (UA-binding stays ON)', async () => {
+      // Login WITHOUT the extension marker (public browser flow) → session binds to this UA.
+      const loginRes = await app.request('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0 (browser-A)' },
+        body: JSON.stringify({ username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD }),
+      });
+      expect(loginRes.status).toBe(200);
+      const token = (await loginRes.json() as any).token;
+
+      // A different UA must be rejected (session-fixation hardening preserved).
+      const profileRes = await app.request('/api/admin/profile', {
+        headers: { Authorization: `Bearer ${token}`, 'User-Agent': 'Mozilla/5.0 (browser-B-stolen-token)' },
+      });
+      expect(profileRes.status).toBe(401);
+    });
+  });
 });
 
 describe('Admin Routes — /api/admin/stats', () => {

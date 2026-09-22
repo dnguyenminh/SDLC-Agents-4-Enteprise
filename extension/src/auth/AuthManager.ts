@@ -96,7 +96,12 @@ export class AuthManager implements vscode.Disposable {
     try {
       const response = await fetch(`${this.baseUrl}/api/admin/auth/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        // SA4E-319: mark this as an extension-issued session. The backend then does NOT
+        // bind the session to a user-agent, because the SAME token is used by two
+        // legitimate clients — the extension host (Node) AND the webview iframe
+        // (Chromium) which have different user-agents. UA-binding stays ON for the
+        // public SSO browser flow (no X-Client-Type header there).
+        headers: { "Content-Type": "application/json", "X-Client-Type": "extension" },
         body: JSON.stringify({ username, password }),
       });
       if (!response.ok) {
@@ -338,7 +343,9 @@ export class AuthManager implements vscode.Disposable {
     try {
       const response = await fetch(`${this.baseUrl}/api/auth/refresh`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        // SA4E-319: same extension-client marker so refresh doesn't get rejected by
+        // UA-binding (the extension host UA differs from the login/webview UA).
+        headers: { "Content-Type": "application/json", "X-Client-Type": "extension" },
         body: JSON.stringify({ refresh_token: this.cachedToken }),
       });
       if (!response.ok) {

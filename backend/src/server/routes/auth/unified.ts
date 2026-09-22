@@ -48,7 +48,15 @@ export function createUnifiedAuthRoutes() {
       }
       const userAgent = c.req.header('user-agent') || '';
       const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || '';
-      const session = await sessions.issue(user.user_id as string, '', ip, userAgent);
+      // SA4E-319: The VS Code extension shares one session token across two clients with
+      // different user-agents — the extension host (Node) and the embedded webview iframe
+      // (Chromium). Binding the session to a single UA (SA4E-262 session-fixation hardening)
+      // would reject the iframe's requests (401) and cascade into a global logout. So for
+      // extension-issued sessions we skip UA-binding (issue with an empty UA). The public
+      // SSO/browser login flow sends no X-Client-Type header and keeps UA-binding ON.
+      const isExtensionClient = (c.req.header('x-client-type') || '').toLowerCase() === 'extension';
+      const sessionUserAgent = isExtensionClient ? '' : userAgent;
+      const session = await sessions.issue(user.user_id as string, '', ip, sessionUserAgent);
       await recordAudit(user.user_id as string, user.username as string, 'LOGIN', 'auth', session.sessionId);
       const permissions = await getUserPermissions(user.user_id as string);
       const userPayload = {
