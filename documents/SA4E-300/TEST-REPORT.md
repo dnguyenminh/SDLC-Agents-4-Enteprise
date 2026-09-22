@@ -11,11 +11,11 @@
 | Jira Ticket | SA4E-300 |
 | Title | [Extension/Backend] Cải thiện error detail trong luồng ingest source code vào KB |
 | Executed By | QA Agent |
-| Date | 2026-09-18 (Round 1) / 2026-09-18 (Round 2) / 2026-09-19 (Round 3) |
+| Date | 2026-09-18 (Round 1) / 2026-09-18 (Round 2) / 2026-09-19 (Round 3) / 2026-09-19 (Round 4 addendum — BUG-002 closure, security Highs fix) |
 | Environment | Windows 11 + Node 22 — extension (vitest 4.1.10, tsc 5.4) + backend (vitest 4.1.10); Round 1: no live backend server, no VS Code host. Round 2: backend REST/MCP reachable at 127.0.0.1:48721 (read-only probes only), still no VS Code host, no test JWT fixture |
 | Browser | N/A (no E2E-UI execution — VS Code host not available) |
-| Overall Verdict | **✅ PASS** (Round 3, 2026-09-19) |
-| Re-test Rounds | 1 (Round 2 re-execution after DEV fixed BUG-001) |
+| Overall Verdict | **⚠️ PASS WITH CONDITIONS — Ready for staging, NOT production (Round 4, 2026-09-19)** |
+| Re-test Rounds | 3 (Round 4: BUG-002 closed, 2 security Highs fixed + verified, build green, 66/66 automated) |
 
 ---
 
@@ -209,7 +209,7 @@ Backend REST is reachable at `http://127.0.0.1:48721`:
 ---
 
 <a id="bug-002"></a>
-### BUG-002: Backend full build fails on files unrelated to SA4E-300 — OPEN ❌
+### BUG-002: Backend full build fails on files unrelated to SA4E-300 — CLOSED ✅ (Round 4)
 
 | Field | Value |
 |-------|-------|
@@ -217,13 +217,15 @@ Backend REST is reachable at `http://127.0.0.1:48721`:
 | Priority | P2 |
 | Test Case | N/A (build gate; BRD Story 1 AC-6 requires `npm run build` pass) |
 | Component | Backend TS errors: `EdgeOnIngestStrategy`, `DatabaseManager admin` (files outside SA4E-300 scope) |
-| Status | **OPEN (carried over from implementation handoff; not re-run in Round 1 or Round 2 — out-of-scope files)** |
+| Status | **CLOSED (Round 4, 2026-09-19 — backend `npm run build` GREEN, 0 errors; see §8)** |
 
 **Description:** `npm run build` in `backend/` fails on TypeScript errors in files untouched by SA4E-300.
 
 **Root Cause:** Pre-existing/out-of-scope type errors, unrelated to the error-surfacing changes.
 
 **Fix:** Separate fix outside SA4E-300 scope (do NOT bundle into this ticket's error-surfacing changes). Targeted backend tests (5/5) prove SA4E-300 backend logic is sound.
+
+**Closure (Round 4, 2026-09-19):** DEV fixed root cause — `kb-graph.ts` called non-existent `EdgeOnIngestStrategy` + `ctx.db.admin` + SQL used the `label` column (schema is `relation`). Fix: `edge-on-ingest.ts` adds exported `extractIngestEdges(ctx, nodes)` (4 strategies, pure) and `extractAndInsertIngestEdges` reuses it; `kb-graph.ts` now uses `getDbAdapter()` + nodes array + INSERT on the `relation` column (sqlite OR IGNORE / pg ON CONFLICT); RBAC/counters/response unchanged, no facade/schema change. Verified per RUN-LOG 2026-09-19 "DEV fix BUG-002 verified": backend `npm run build` GREEN 0 errors (first fully-green build) + vitest edge-on-ingest 14/14 (incl. 3 new `extractIngestEdges` aggregator cases) + api-index-errors 18/18. No separate ticket needed — BRD Story 1 AC-6 build gate is unblocked. (QA wrote no code per role-boundaries.)
 
 ---
 
@@ -259,11 +261,12 @@ Per handoff, direct-backend `mem_search` for SA4E-300 returned 0 results (BRD/FS
 
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
-| Automated pass rate | ≥95% | 100% (45/45) | ✅ Met |
-| STC cases verified | 100% | 75% (15/20; 5 NOT_RUN need live env) | ⚠️ Partial |
-| Critical defects | 0 | 0 (BUG-001 closed, path safety / error contract / channel/token / observability fixed in Round 3) | ✅ Met |
-| Major defects | 0 | 1 (BUG-002, out-of-scope files, tracked separately) | ⚠️ Accepted risk |
-| Open defects | 0 | 1 (BUG-002 only) | ⚠️ See §7 conditions |
+| Automated pass rate | ≥95% | 100% (66/66: 27 extension + 39 backend) | ✅ Met |
+| STC cases verified | 100% | 75% (15/20; 5 NOT_RUN need staging env) | ⚠️ Partial |
+| Critical defects | 0 | 0 (BUG-001 closed; 2 security Highs fixed + verified) | ✅ Met |
+| Major defects | 0 | 0 (BUG-002 CLOSED — backend build green, Round 4) | ✅ Met |
+| Open defects (BUG-xxx) | 0 | 0 | ✅ Met |
+| Security Highs open | 0 | 0 (2/2 fixed + verified; 1 residual membership risk → PO risk-accept, not a staging blocker) | ✅ Met |
 | RTM coverage (STC plan) | 100% | 100% (unchanged from STC v1.0) | ✅ Met |
 
 ---
@@ -282,6 +285,11 @@ Per handoff, direct-backend `mem_search` for SA4E-300 returned 0 results (BRD/FS
 | (terminal) Round 2: GET /api/index/progress → 401; POST /api/index/source → 401 | Live-feasibility probes (read-only) | §2B |
 | (grep) no silent catch / no console in ingest flow | TC-303 / TC-702 evidence | §2.4 |
 | documents/SA4E-300/testdata/*.csv (4 files, pre-existing) | Test data (no new files added) | §3 |
+| (RUN-LOG) 2026-09-19 "DEV fix BUG-002 verified" | Backend `npm run build` GREEN 0 errors; edge-on-ingest 14/14 + api-index-errors 18/18 | §8 BUG-002 |
+| (RUN-LOG) 2026-09-19 "Fix 2 High + DPG/RLN verified" | KB_WRITE gate + JWT binding + GRAPH_MAINTAIN; backend 25/25 + 14/14 = 39/39; extension 27/27 | §8 SEC Highs |
+| documents/SA4E-300/DPG.md (23999 B, verified present) | Staging-only deploy guide (secrets/env, build, JWT, 5 NOT_RUN, rollback/health) | §8 |
+| documents/SA4E-300/RLN.md (12346 B, verified present) | Proposed v1.44.0 MINOR — NOT tagged, NOT deployed | §8 |
+| documents/SA4E-300/SECURITY-DEPLOY-REVIEW.md (32759 B, verified present) | 0 Critical / 2 High (fixed) / 4 Medium / 5 Low / 3 Info — GO WITH CONDITIONS staging | §8 |
 
 No screenshots (no UI execution). No new test-data files were created.
 
@@ -289,25 +297,88 @@ No screenshots (no UI execution). No new test-data files were created.
 
 ## 7. Conclusion
 
-**Overall Verdict: ✅ PASS** (path safety, error contract, client channel/token handling, and observability are fixed; all automated tests passing)
+**Overall Verdict: ⚠️ PASS WITH CONDITIONS — Ready for staging, NOT production** (Round 4: BUG-002 closed with backend build green, 2 security Highs fixed + verified; residual membership gap + 5 NOT_RUN + npm audit + UAT remain — see §8)
 
 | Metric | Result |
 |--------|--------|
-| Automated tests (vitest) | 45/45 PASS (100%) — 27 extension + 18 backend |
+| Automated tests (vitest) | 66/66 PASS (100%) — 27 extension (10 error + 14 proxy + 3 token-refresh) + 39 backend (25 api-index-errors + 14 edge-on-ingest) |
 | Extension compile / lint | ✅ GREEN (exit 0 / exit 0) |
-| STC verified (automated + static) | 15/20 (75%), 0 failed, 5 NOT_RUN |
-| Bugs found | 1 Critical (in-scope, now CLOSED) — BUG-002 remains out-of-scope |
-| Bugs resolved | Path safety, error contract, channel/token handling, observability fixed |
-| Re-test rounds | 3 (Round 3 after path safety & observability fixes) |
-| Critical defects open | 0 |
+| Backend build | ✅ GREEN, 0 errors (BUG-002 CLOSED — unblocks BRD Story 1 AC-6 build gate) |
+| Security Highs | 2/2 FIXED + verified (KB_WRITE gate on 4 handlers + JWT project binding + GRAPH_MAINTAIN; 403 enriched, fail-closed); 1 residual membership risk → PO risk-accept |
+| STC verified (automated + static) | 15/20 (75%), 0 failed, 5 NOT_RUN (staging) |
+| Bugs open (BUG-xxx) | 0 |
+| Release docs | DPG.md + RLN.md (v1.44.0 proposed, NOT tagged, NOT deployed) + SECURITY-DEPLOY-REVIEW.md present |
+| Re-test rounds | 4 (Round 4: BUG-002 closure + security Highs fix) |
+| Critical/Major defects open | 0 |
 
 **Conditions to close testing (SM action):**
 
-1. **BUG-002 tracked separately** — backend full-build failure is in files untouched by SA4E-300. Open (or confirm) a separate ticket for it; it MUST be fixed before release (BRD Story 1 AC-6 build gate) but must not hold SA4E-300's testing status.
+1. ✅ **DONE (Round 4) — BUG-002 closed** — backend full-build is GREEN; no separate ticket needed (supersedes the old condition that tracked it separately).
 2. **5 NOT_RUN live cases deferred to staging/UAT** — TC-101, TC-201, TC-703 need a staging backend with test JWT + project fixture harness; TC-701, TC-704 need a VS Code Extension host. None is failed; schedule them as UAT/staging follow-up (see §3.4).
-3. **Before release/deploy to production:** BUG-002 fixed + live-E2E follow-up executed (or formally risk-accepted by PO).
+3. **PO risk-accept (or follow-up ticket) for the residual tenant-membership gap** — a session-token user WITH permission can still write to any project (no membership infra yet). NOT a staging blocker, but MUST be accepted or scheduled before production.
+4. **`npm audit` per DPG requirement + UAT sign-off** before production. Production is **NO-GO** until conditions 2–3 plus a security re-review of the High fixes are complete (per SECURITY-DEPLOY-REVIEW v1.0).
 
-**Recommendation to SM:** ✅ **Close testing for SA4E-300 with PASS verdict** — path safety, error contract, client channel/token handling, and observability are fixed and verified. All automated tests passing (27/27 extension, 18/18 backend). BUG-002 remains out-of-scope and should be tracked separately; 5 live-E2E cases can be deferred to staging/UAT.
+**Recommendation to SM:** ⚠️ **Approve SA4E-300 for staging with the conditions in §8.4** — error surfacing is fixed and verified (66/66 automated PASS, backend + extension builds green, 2 security Highs fixed). Do NOT deploy to production until the 5 NOT_RUN staging cases pass, `npm audit` is clean, PO risk-accepts the membership gap, and UAT is signed off.
+
+---
+
+## 8. Addendum Round 4 — 2026-09-19 (BUG-002 CLOSED, Security Highs FIXED, DPG/RLN available)
+
+> Rounds 1–3 text above is preserved verbatim as history. This section defines the CURRENT state and supersedes two stale statuses that SECURITY-DEPLOY-REVIEW v1.0 flagged: (a) TEST-REPORT recorded BUG-002 as OPEN while the backend build was already GREEN, and (b) the 2 security High findings and the new DPG/RLN docs were not yet reflected. QA wrote no code and changed no BRD/FSD/TDD/STP/STC — all fixes below are DEV/DevOps work, recorded in RUN-LOG.md 2026-09-19 entries.
+
+### 8.1 Blocker status updates (old → new)
+
+| # | Item | Previously recorded | New status (2026-09-19) | Evidence |
+|---|------|---------------------|--------------------------|----------|
+| 1 | BUG-002 — backend `npm run build` (`EdgeOnIngestStrategy` / `DatabaseManager admin` / `label` vs `relation` column) | ⚠️ OPEN (Major/P2 — §2B/§4, "not re-run") | ✅ **CLOSED** — backend full build GREEN, 0 errors (first fully-green build; unblocks BRD Story 1 AC-6 build gate) | RUN-LOG 2026-09-19 "DEV fix BUG-002 verified": `extractIngestEdges` + `getDbAdapter()` + INSERT on `relation` column (sqlite OR IGNORE / pg ON CONFLICT); RBAC/counters/response unchanged, no facade/schema change |
+| 2 | SEC-HIGH-01 — BOLA: any authenticated user can write/sync to any project | Not in TEST-REPORT (found by SECURITY-DEPLOY-REVIEW v1.0) | ✅ **FIXED + verified** — KB_WRITE gate on 4 index handlers + JWT project binding (`verifyProjectBinding` pattern) + enriched 403, fail-closed | RUN-LOG 2026-09-19 "Fix 2 High + DPG/RLN verified"; +7 SEC tests in api-index-errors (403 no-permission, 202/200 pass, JWT grant) |
+| 3 | SEC-HIGH-02 — sync-pega-rules missing RBAC | Not in TEST-REPORT (found by SECURITY-DEPLOY-REVIEW v1.0) | ✅ **FIXED + verified** — GRAPH_MAINTAIN required on sync-pega-rules | Same as above |
+| 4 | Residual tenant-membership gap | — | ⚠️ **OPEN (risk-acceptance)** — session-token user WITH permission can still write any project (no membership infra); does NOT block staging; needs PO risk-accept / follow-up ticket | RUN-LOG 2026-09-19 note; SECURITY-DEPLOY-REVIEW Finding #1 context |
+| 5 | Release / deploy docs | Missing | ✅ **Available** — DPG.md (~24KB, staging-only), RLN.md (~12KB, proposed v1.44.0 MINOR, NOT tagged, NOT deployed), SECURITY-DEPLOY-REVIEW.md (32.7KB: 0 Critical / 2 High-fixed / 4 Medium / 5 Low / 3 Info, GO WITH CONDITIONS staging) | Files verified present (DPG 23999 B, RLN 12346 B, SEC-REVIEW 32759 B) |
+
+### 8.2 Verification evidence (Round 4 scope)
+
+| Gate | Result |
+|------|--------|
+| Backend `npm run build` | ✅ GREEN, 0 errors |
+| Backend vitest `api-index-errors` | ✅ 25/25 (18 existing + 7 new SEC) |
+| Backend vitest `edge-on-ingest` | ✅ 14/14 (incl. 3 new `extractIngestEdges` aggregator cases) |
+| Backend total | ✅ 39/39 PASS |
+| Extension `npm run compile` | ✅ GREEN, 0 errors |
+| Extension targeted (error 10 + proxy 14 + token-refresh 3) | ✅ 27/27 PASS |
+| Combined automated (Round 4 scope) | ✅ 66/66 (27 extension + 39 backend), 0 failed |
+
+### 8.3 Updated aggregate metrics
+
+| Metric | Round 3 | Round 4 (current) |
+|--------|---------|-------------------|
+| Automated pass rate | 100% (45/45) | 100% (66/66: 27 ext + 39 backend) |
+| STC verified | 75% (15/20, 5 NOT_RUN) | 75% (15/20, 5 NOT_RUN — unchanged, need staging env) |
+| Critical defects open | 0 | 0 |
+| Major defects open (BUG-002) | 1 | 0 (CLOSED) |
+| Security Highs open | 2 (unrecorded) | 0 (both FIXED + verified; 1 residual membership risk → PO accept) |
+| Open BUG-xxx | 1 (BUG-002) | 0 |
+| Release docs (DPG/RLN/SEC review) | Missing | Present (see §8.1 #5) |
+
+### 8.4 New verdict
+
+**⚠️ PASS WITH CONDITIONS — Ready for staging, NOT production.**
+
+Conditions (SM/PO action):
+
+1. PO risk-accept (or follow-up ticket) for the residual tenant-membership gap (§8.1 #4).
+2. Execute the 5 NOT_RUN live cases on staging — TC-101, TC-201, TC-703 (staging backend + test JWT/project fixture); TC-701, TC-704 (VS Code Extension host) — see §3.4.
+3. Run `npm audit` per DPG requirement before staging deploy sign-off.
+4. UAT with PO on staging.
+5. Production deploy only after conditions 1–4 plus a security re-review of the High fixes (NO-GO production until then, per SECURITY-DEPLOY-REVIEW v1.0).
+
+### 8.5 Still open (not blockers for staging)
+
+- 5 STC cases NOT_RUN: TC-101, TC-201, TC-701, TC-703, TC-704 (unchanged — waiting on staging env + fixtures).
+- Membership risk-accept / follow-up ticket (§8.4 #1).
+- `npm audit` (DPG requirement, not yet run).
+- UAT (PO sign-off pending).
+- RLN v1.44.0 is proposed only — NOT tagged, NOT deployed (tagging after staging pass + approvals).
 
 ---
 
@@ -318,6 +389,7 @@ No screenshots (no UI execution). No new test-data files were created.
 > Round 1 (2026-09-18, Initial) → 22/22 automated PASS; extension compile FAIL (BUG-001); 5 STC cases NOT_RUN (no live env).
 > Round 2 (2026-09-18, Re-execution after BUG-001 fix) → 29/29 automated PASS; extension compile GREEN; lint PASS; 5 STC cases still NOT_RUN (live fixture/host unavailable — re-assessed, see §2B/§3.4). BUG-001 CLOSED, BUG-002 still OPEN (out of scope).
 > Round 3 (2026-09-19, Path safety & observability fixes) → 45/45 automated PASS (27 extension + 18 backend); path safety, error contract, client channel/token handling, and observability verified. Verdict PASS.
+> Round 4 (2026-09-19, Addendum: BUG-002 closure + security Highs fix) → 66/66 automated PASS (27 extension + 39 backend); backend build GREEN; DPG/RLN/SEC-REVIEW present. BUG-002 CLOSED, 2 Highs FIXED + verified. 5 STC cases still NOT_RUN (staging). Verdict PASS WITH CONDITIONS (staging).
 
 ### Timeline Overview
 
@@ -325,13 +397,16 @@ No screenshots (no UI execution). No new test-data files were created.
 Round 1 (2026-09-18, Initial) → 22/22 automated PASS; extension compile FAIL (BUG-001); 5 STC cases NOT_RUN (no live env)
 Round 2 (2026-09-18, Re-execution) → 29/29 automated PASS; compile GREEN; BUG-001 CLOSED; 5 NOT_RUN (live env still unavailable)
 Round 3 (2026-09-19) → 45/45 automated PASS (27 extension + 18 backend); path safety, error contract, channel/token & observability fixed; verdict PASS
+Round 4 (2026-09-19, Addendum) → 66/66 automated PASS (27 extension + 39 backend); build GREEN; BUG-002 CLOSED; 2 Highs FIXED; verdict PASS WITH CONDITIONS (staging)
 ```
 
-| Bug / Fix | Round 1 | Round 2 | Round 3 (Final) |
-|-----------|---------|---------|-----------------|
+| Bug / Fix | Round 1 | Round 2 | Round 3 | Round 4 (Final) |
+|-----------|---------|---------|---------|-----------------|
 | BUG-001 (extension compile TS2339) | ❌ Found, OPEN | ✅ Fixed by DEV, verified by QA → CLOSED | ✅ Closed |
 | Path safety, error contract, channel/token, observability | ⛔ Not verified | ⛔ Partial | ✅ Fixed & verified (27/27 ext, 18/18 backend) |
-| BUG-002 (backend build, unrelated files) | ⚠️ Carried over, OPEN | ⚠️ Still OPEN (out of scope) | ⚠️ Still OPEN (separate ticket) |
+| BUG-002 (backend build, unrelated files) | ⚠️ Carried over, OPEN | ⚠️ Still OPEN (out of scope) | ⚠️ Still OPEN (separate ticket) | ✅ CLOSED (Round 4 — build GREEN) |
+| SEC-HIGH-01 (BOLA projectId, any-auth-user writes any project) | — (not yet found) | — | — (found post-Round 3 by SECURITY-DEPLOY-REVIEW v1.0) | ✅ FIXED + verified (Round 4: KB_WRITE gate + JWT binding) |
+| SEC-HIGH-02 (sync-pega-rules missing RBAC) | — (not yet found) | — | — (found post-Round 3 by SECURITY-DEPLOY-REVIEW v1.0) | ✅ FIXED + verified (Round 4: GRAPH_MAINTAIN) |
 
 ### Round 1 — 2026-09-18
 
@@ -357,3 +432,14 @@ Round 3 (2026-09-19) → 45/45 automated PASS (27 extension + 18 backend); path 
 - Static contract re-verified: return-type widening confirmed at IndexerHttpClient.ts:331-334; callers at 278-279, 291-292 type-check.
 
 **Round 2 Result:** 15/20 STC verified, 0 failed, 5 NOT_RUN; BUG-001 CLOSED, BUG-002 OPEN (out of scope) → verdict PASS WITH BLOCKERS (see §7 conditions).
+
+### Round 4 — 2026-09-19 (Addendum: BUG-002 closure + security Highs fix + DPG/RLN)
+
+**Scope:** Record independently-verified post-Round-3 events without re-running history: BUG-002 closure (backend build GREEN), 2 security High fixes + verification (39/39 backend, 27/27 extension), and new DPG/RLN/SECURITY-DEPLOY-REVIEW docs. No BRD/FSD/TDD/STP/STC or production-code change by QA.
+
+- BUG-002 fix (DEV): `extractIngestEdges` + `getDbAdapter()` + `relation` column → backend `npm run build` GREEN 0 errors (first fully-green build); edge-on-ingest 14/14 + api-index-errors 18/18 at closure → **BUG-002 CLOSED**, AC-6 build gate unblocked, no separate ticket needed.
+- Security Highs fix (DEV): KB_WRITE gate (4 handlers) + JWT project binding + GRAPH_MAINTAIN for sync-pega-rules; 403 enriched, fail-closed → api-index-errors 25/25 (18 + 7 SEC) + edge-on-ingest 14/14 = 39/39; extension compile GREEN + targeted 27/27 → **2 Highs FIXED + verified**. Residual: session-token user with permission can still write any project (no membership infra) → PO risk-accept / follow-up, NOT a staging blocker.
+- Docs (DevOps/Security): DPG.md (~24KB staging-only), RLN.md (~12KB, proposed v1.44.0, NOT tagged, NOT deployed), SECURITY-DEPLOY-REVIEW.md (0 Critical / 2 High-fixed / 4 Medium / 5 Low / 3 Info — GO WITH CONDITIONS staging) — all verified present.
+- Still open: 5 NOT_RUN (TC-101/201/701/703/704, staging), membership risk-accept, `npm audit` (DPG), UAT.
+
+**Round 4 Result:** 15/20 STC verified, 0 failed, 5 NOT_RUN (unchanged); 0 open BUG-xxx; 0 open security Highs → verdict **PASS WITH CONDITIONS — Ready for staging, NOT production** (see §8).
