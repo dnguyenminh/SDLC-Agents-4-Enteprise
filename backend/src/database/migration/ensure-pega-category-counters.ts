@@ -10,10 +10,12 @@ import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js
 
 export async function ensurePegaCategoryCountersTable(db: DatabaseAdapter): Promise<void> {
   const isPg = db.getEngine() === 'postgresql';
-  // PG: gen_random_uuid() (pgcrypto/pg13+) + now(); SQLite: randomblob UUID + datetime('now').
+  // PG: gen_random_uuid() (pgcrypto/pg13+); SQLite: 32-char random hex.
+  // (The previous UUID-formatting expression had unbalanced parentheses and
+  // broke with `near "||": syntax error` — keep the default simple and valid.)
   const idDefault = isPg
     ? `DEFAULT gen_random_uuid()::text`
-    : `DEFAULT (lower(hex(randomblob(4)) || '-' || substr(hex(randomblob(2)) || '4-', 1, 8)) || '-' || substr('89ab', random() % 4 + 1, 1) || '-' || substr(hex(randomblob(2)) || '10', 1, 4)) || '-' || substr(hex(randomblob(6)), 1, 12))`;
+    : `DEFAULT (lower(hex(randomblob(16))))`;
   const nowDefault = isPg ? `now()` : `(datetime('now'))`;
 
   await db.execAsync(`

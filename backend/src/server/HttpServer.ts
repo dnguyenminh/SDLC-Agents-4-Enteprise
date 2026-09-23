@@ -35,6 +35,7 @@ import { createPegaStreamRoutes } from './routes/pega-stream.js';
 import { createIngestRuleRoute } from './routes/pega-ingest-rule.js';
 import { createPegaSchemaRoutes } from './routes/pega-schema-routes.js';
 import { getDbAdapter } from '../admin/db/core.js';
+import { ensureEngineIndexSchema } from '../database/schema-registry/ensure-engine-schema.js';
 import { ensureSa4e101Tables } from '../database/schema-registry/ensure-sa4e-101.js';
 import { ensureSa4e300Cleanup } from '../database/schema-registry/ensure-sa4e-300.js';
 import { ensureSa4e302UniqueGraphEdges } from '../database/schema-registry/ensure-sa4e-302.js';
@@ -196,7 +197,12 @@ export class HttpServer {
         // SA4E-101: bootstrap persistent index-status tables, then mark stale
         // running ops as interrupted, then start the cleanup scheduler.
         // All non-blocking — failures degrade gracefully (EF-04).
-        ensureSa4e101Tables()
+        // Root-cause fix: sibling sqlite-wasm adapters each own a private
+        // in-memory DB, so the adapter serving tools may miss index tables
+        // created by database-manager's migration run. Re-apply canonical
+        // SCHEMA_V1 (idempotent) before anything queries files/symbols.
+        ensureEngineIndexSchema()
+          .then(() => ensureSa4e101Tables())
           .then(() => runStartupInterruptDetection())
           // SA4E-300: one-time idempotent cleanup of orphan CODE_ENRICHMENT tasks
           // left by the removed graph-sync enrichment path (Path A).

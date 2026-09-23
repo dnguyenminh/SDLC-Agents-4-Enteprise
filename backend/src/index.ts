@@ -65,6 +65,19 @@ async function main() {
 
     const adapter = memoryModule.getEngine().getAdapter();
 
+    // Ensure mcp_tools exists before tool ingestion (fresh DBs may reach here
+    // before the memory schema has created it). Canonical columns match
+    // engine/db/schema.ts SCHEMA_V1.
+    try {
+      const idCol = adapter.getEngine() === 'postgresql' ? 'SERIAL PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+      await adapter.execAsync(
+        `CREATE TABLE IF NOT EXISTS mcp_tools (id ${idCol}, name TEXT NOT NULL UNIQUE, description TEXT NOT NULL, schema_json TEXT NOT NULL, category TEXT, server TEXT, vector BLOB)`,
+      );
+      await adapter.execAsync(`CREATE INDEX IF NOT EXISTS idx_mcp_tools_server ON mcp_tools(server)`);
+    } catch (err) {
+      logger.debug({ err }, 'mcp_tools ensure skipped (non-fatal)');
+    }
+
     const orchestrationModule = registry.getModule('orchestration') as OrchestrationModule | undefined;
     const proxiedTools = orchestrationModule?.getClientManager().getProxiedTools() ?? [];
 
@@ -146,27 +159,50 @@ logger.info({ ingestedTools: ingestedCount, totalTools: allTools.length }, 'Inge
     logger.info({ indexTempDir }, 'Created index temp directory');
   }
 
-  // SA4E-103: Fix graph_nodes type for existing KB entries (one-time migration)
+  // SA4E-103: Fix graph_nodes type for existing KB entries (one-time migration).
+  // Guarded: skip when either table is missing (fresh DB) instead of erroring.
   try {
     const { getDbAdapter } = await import('./admin/db/core.js');
     const adminAdapter = getDbAdapter();
     if (adminAdapter.isConnected()) {
       const engine = adminAdapter.getEngine();
-      // SA4E-104: Ensure body_embeddings has project_id + UNIQUE constraint on PG
-      if (engine === 'postgresql') {
-        const { ensurePostgresIndexSchema } = await import('./database/migration/pg-schema-ensure.js');
-        await ensurePostgresIndexSchema(adminAdapter);
-      }
-      if (engine === 'postgresql') {
-        await adminAdapter.runAsync(
-          `UPDATE graph_nodes SET type = ke.type FROM knowledge_entries ke WHERE graph_nodes.entry_id = 'kb-entry:' || ke.id::text AND graph_nodes.type = 'KNOWLEDGE_ENTRY'`, [],
-        );
+      const tableExists = async (t: string): Promise<boolean> => {
+        try {
+          if (engine === 'postgresql') {
+            const rows = await adminAdapter.allAsync(
+              `SELECT table_name FROM information_schema.tables WHERE table_name = $1`, [t],
+            );
+            return rows.length > 0;
+          }
+          const rows = await adminAdapter.allAsync(
+            `SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [t],
+          );
+          return rows.length > 0;
+        } catch {
+          return false;
+        }
+      };
+      const hasGraphNodes = await tableExists('graph_nodes');
+      const hasEntries = await tableExists('knowledge_entries');
+      if (!hasGraphNodes || !hasEntries) {
+        logger.info('graph_nodes type migration skipped (required tables missing)');
       } else {
-        await adminAdapter.runAsync(
-          `UPDATE graph_nodes SET type = (SELECT ke.type FROM knowledge_entries ke WHERE 'kb-entry:' || ke.id = graph_nodes.entry_id) WHERE entry_id LIKE 'kb-entry:%' AND type = 'KNOWLEDGE_ENTRY'`, [],
-        );
+        // SA4E-104: Ensure body_embeddings has project_id + UNIQUE constraint on PG
+        if (engine === 'postgresql') {
+          const { ensurePostgresIndexSchema } = await import('./database/migration/pg-schema-ensure.js');
+          await ensurePostgresIndexSchema(adminAdapter);
+        }
+        if (engine === 'postgresql') {
+          await adminAdapter.runAsync(
+            `UPDATE graph_nodes SET type = ke.type FROM knowledge_entries ke WHERE graph_nodes.entry_id = 'kb-entry:' || ke.id::text AND graph_nodes.type = 'KNOWLEDGE_ENTRY'`, [],
+          );
+        } else {
+          await adminAdapter.runAsync(
+            `UPDATE graph_nodes SET type = (SELECT ke.type FROM knowledge_entries ke WHERE 'kb-entry:' || ke.id = graph_nodes.entry_id) WHERE entry_id LIKE 'kb-entry:%' AND type = 'KNOWLEDGE_ENTRY'`, [],
+          );
+        }
+        logger.info('Fixed graph_nodes types from KNOWLEDGE_ENTRY to actual entry types');
       }
-      logger.info('Fixed graph_nodes types from KNOWLEDGE_ENTRY to actual entry types');
     }
   } catch (err) {
     logger.warn({ err }, 'graph_nodes type migration skipped (non-fatal)');

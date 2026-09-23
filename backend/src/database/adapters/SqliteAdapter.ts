@@ -22,8 +22,26 @@ export class SqliteAdapter implements DatabaseAdapter {
   private db: any = null;
   private connected = false;
   private dirty = false;
+  /**
+   * Root-cause fix for sibling-adapter divergence: sqlite-wasm keeps a
+   * private in-memory DB per `new DB()` instance, so N adapters on the same
+   * host file each saw a different database (migrations visible on one,
+   * `no such table` on the others). File-backed adapters now share a single
+   * live DB per resolved path for the process lifetime (refcounted).
+   * `:memory:` adapters stay fully isolated (unit tests rely on it).
+   */
+  private static shared: Map<string, { db: any; refs: number; dirty: boolean }> = new Map();
+  private sharedKey: string | null = null;
 
   constructor(private readonly dbPath: string, private readonly nativeBinding?: string) {}
+
+  private markDirty(): void {
+    this.dirty = true;
+    if (this.sharedKey) {
+      const entry = SqliteAdapter.shared.get(this.sharedKey);
+      if (entry) entry.dirty = true;
+    }
+  }
 
   async connect(): Promise<void> {
     if (this.connected && this.db) return;
@@ -33,6 +51,19 @@ export class SqliteAdapter implements DatabaseAdapter {
         const dir = path.dirname(this.dbPath);
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true });
+        }
+      }
+      // Shared-DB fast path: another adapter already owns the live DB for
+      // this file — reuse it so every consumer sees the same tables/rows.
+      const useShared = useFile;
+      if (useShared) {
+        const existing = SqliteAdapter.shared.get(this.dbPath);
+        if (existing) {
+          this.db = existing.db;
+          this.sharedKey = this.dbPath;
+          existing.refs++;
+          this.connected = true;
+          return;
         }
       }
       // Root cause of SQLITE_CANTOPEN on Linux CI: @sqlite.org/sqlite-wasm in
@@ -49,6 +80,10 @@ export class SqliteAdapter implements DatabaseAdapter {
       if (useFile && fs.existsSync(this.dbPath) && fs.statSync(this.dbPath).size > 0) {
         this.importHostFile(this.dbPath);
         deserialized = true;
+      }
+      if (useShared) {
+        SqliteAdapter.shared.set(this.dbPath, { db: this.db, refs: 1, dirty: false });
+        this.sharedKey = this.dbPath;
       }
       // SA4E-262 fix: WAL is a file-system journal mode. On the WASM in-memory /
       // deserialized DB it attempts to create WAL files inside MEMFS and throws
@@ -110,12 +145,28 @@ export class SqliteAdapter implements DatabaseAdapter {
 
   async disconnect(): Promise<void> {
     if (this.db) {
-      if (this.dbPath !== ':memory:' && this.dbPath !== '' && this.dirty) {
+      const entry = this.sharedKey ? SqliteAdapter.shared.get(this.sharedKey) : undefined;
+      // The shared live object is always current, so export when any holder
+      // dirtied it — one export persists everyone's changes.
+      if (this.dbPath !== ':memory:' && this.dbPath !== '' && (this.dirty || entry?.dirty)) {
         const data = sqlite3.capi.sqlite3_js_db_export(this.db, 'main');
         fs.writeFileSync(this.dbPath, Buffer.from(data));
+        this.dirty = false;
+        if (entry) entry.dirty = false;
       }
-      this.db.close();
+      if (entry && this.sharedKey) {
+        entry.refs--;
+        // Last holder closes the shared DB; a later connect re-imports
+        // from the exported host file, preserving persistence semantics.
+        if (entry.refs <= 0) {
+          this.db.close();
+          SqliteAdapter.shared.delete(this.sharedKey);
+        }
+      } else {
+        this.db.close();
+      }
       this.db = null;
+      this.sharedKey = null;
       this.connected = false;
     }
   }
@@ -142,7 +193,7 @@ export class SqliteAdapter implements DatabaseAdapter {
 
   private execInternal(sql: string, params?: unknown[]) {
     const normalized = normalizeSqlitePlaceholders(sql);
-    this.dirty = true;
+    this.markDirty();
     const db = this.getDb();
     if (params && params.length > 0) {
       const stmt = db.prepare(normalized);
@@ -162,7 +213,7 @@ export class SqliteAdapter implements DatabaseAdapter {
 
   run(sql: string, params?: unknown[]): RunResult {
     const normalized = normalizeSqlitePlaceholders(sql);
-    this.dirty = true;
+    this.markDirty();
     const db = this.getDb();
     if (params && params.length) {
       const stmt = db.prepare(normalized);
@@ -195,7 +246,7 @@ export class SqliteAdapter implements DatabaseAdapter {
   }
 
   exec(sql: string): void {
-    this.dirty = true;
+    this.markDirty();
     try {
       this.getDb().exec(normalizeSqlitePlaceholders(sql));
     } catch (e: any) {
@@ -208,7 +259,7 @@ export class SqliteAdapter implements DatabaseAdapter {
   }
 
   transaction<T>(fn: () => T): T {
-    this.dirty = true;
+    this.markDirty();
     this.db.exec('BEGIN TRANSACTION;');
     try {
       const result = fn();
@@ -225,7 +276,7 @@ export class SqliteAdapter implements DatabaseAdapter {
     const db = this.getDb();
     return {
       run: (...params: unknown[]) => {
-        this.dirty = true;
+        this.markDirty();
         const stmt = db.prepare(normalized);
         if (params.length > 0) stmt.bind(params);
         while (stmt.step()) { /* step to exhaust */ }

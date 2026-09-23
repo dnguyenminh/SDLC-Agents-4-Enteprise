@@ -133,10 +133,17 @@ export async function runGraphMigrations(adapter: DatabaseAdapter): Promise<void
     logger.error('[graph-migrator] PostgreSQL symbol FTS (tsvector) ready');
   }
 
-  // Update schema version
+  // Update schema version (ensure tracking table exists first — fresh DBs may
+  // reach here before engine/db SCHEMA_V1 has created it).
   if (engine === 'sqlite') {
+    await adapter.execAsync(
+      `CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL DEFAULT (datetime('now')))`,
+    );
     await adapter.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [3]);
   } else {
+    await adapter.execAsync(
+      `CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT current_timestamp)`,
+    );
     await adapter.runAsync(
       'INSERT INTO schema_version (version) VALUES ($1) ON CONFLICT (version) DO NOTHING',
       [3],

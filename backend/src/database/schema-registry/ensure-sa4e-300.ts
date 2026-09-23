@@ -13,6 +13,22 @@ const logger = pino({ name: 'sa4e-300-cleanup' });
 
 export async function ensureSa4e300Cleanup(): Promise<void> {
   const adapter = getDbAdapter();
+  // Check if pending_tasks table exists (use allAsync: runAsync returns only {changes}).
+  let tableExists = false;
+  try {
+    const rows = await adapter.allAsync<{ name: string }>(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='pending_tasks'`,
+    );
+    tableExists = rows.length > 0;
+  } catch (err) {
+    console.debug('[sa4e-300] Table check failed:', (err as Error).message);
+  }
+
+  if (!tableExists) {
+    console.debug('[sa4e-300] pending_tasks table not found, skipping cleanup');
+    return;
+  }
+
   try {
     const result = await adapter.runAsync(
       `DELETE FROM pending_tasks
