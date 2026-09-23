@@ -15,5 +15,8 @@
     "security_review": { "status": "done", "file": "SECURITY-REPORT.md", "version": 1, "verdict": "APPROVE_WITH_CONDITIONS", "completedAt": "2026-09-23T12:39:41Z" },
     "kb_ingest": { "status": "done", "note": "Retroactive pipeline: ingest BRD/FSD/TDD/STP/STC/UI-SPEC/SECURITY-REPORT completed", "completedAt": "2026-09-23T17:30:00Z", "entries": { "BRD.md": 27, "FSD.md": 42, "TDD.md": 54, "STP.md": 43, "STC.md": 48, "UI-SPEC.md": 13, "SECURITY-REPORT.md": 40 } }
   },
-  "lastUpdated": "2026-09-23T17:30:00Z"
+  "jiraStatus": "In Progress",
+  "jiraAttachments": ["11399", "11400", "11401", "11402", "11403", "11404"],
+  "jiraTransition": "To Do → In Progress (2026-09-23T17:59:00+07:00)",
+  "lastUpdated": "2026-09-23T17:59:00+07:00"
 }
