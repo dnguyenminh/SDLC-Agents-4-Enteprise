@@ -13,13 +13,21 @@ const logger = pino({ name: 'sa4e-300-cleanup' });
 
 export async function ensureSa4e300Cleanup(): Promise<void> {
   const adapter = getDbAdapter();
-  // Check if pending_tasks table exists (use allAsync: runAsync returns only {changes}).
+  // Engine-aware existence check (use allAsync: runAsync returns only {changes}).
   let tableExists = false;
   try {
-    const rows = await adapter.allAsync<{ name: string }>(
-      `SELECT name FROM sqlite_master WHERE type='table' AND name='pending_tasks'`,
-    );
-    tableExists = rows.length > 0;
+    if (adapter.getEngine() === 'postgresql') {
+      const rows = await adapter.allAsync(
+        `SELECT table_name FROM information_schema.tables WHERE table_name = $1`,
+        ['pending_tasks'],
+      );
+      tableExists = rows.length > 0;
+    } else {
+      const rows = await adapter.allAsync<{ name: string }>(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name='pending_tasks'`,
+      );
+      tableExists = rows.length > 0;
+    }
   } catch (err) {
     console.debug('[sa4e-300] Table check failed:', (err as Error).message);
   }

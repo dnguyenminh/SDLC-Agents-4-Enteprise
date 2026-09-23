@@ -11,27 +11,32 @@ const logger = pino({ name: 'sa4e-303-cleanup' });
 
 export async function ensureSa4e303DropUnusedTables(): Promise<void> {
   const adapter = getDbAdapter();
+  const isPg = adapter.getEngine() === 'postgresql';
+  const tableExists = async (name: string): Promise<boolean> => {
+    try {
+      if (isPg) {
+        const rows = await adapter.allAsync(
+          `SELECT table_name FROM information_schema.tables WHERE table_name = $1`,
+          [name],
+        );
+        return rows.length > 0;
+      }
+      const rows = await adapter.allAsync<{ name: string }>(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name=?`,
+        [name],
+      );
+      return rows.length > 0;
+    } catch (err) {
+      console.debug('[sa4e-303] Table check failed:', (err as Error).message);
+      return false;
+    }
+  };
+
   // Check if code_dependencies table exists (use allAsync: runAsync returns only {changes}).
-  let depsExists = false;
-  try {
-    const rows = await adapter.allAsync<{ name: string }>(
-      `SELECT name FROM sqlite_master WHERE type='table' AND name='code_dependencies'`,
-    );
-    depsExists = rows.length > 0;
-  } catch (err) {
-    console.debug('[sa4e-303] Table check failed:', (err as Error).message);
-  }
+  const depsExists = await tableExists('code_dependencies');
 
   // Check if code_call_graph table exists
-  let graphExists = false;
-  try {
-    const rows = await adapter.allAsync<{ name: string }>(
-      `SELECT name FROM sqlite_master WHERE type='table' AND name='code_call_graph'`,
-    );
-    graphExists = rows.length > 0;
-  } catch (err) {
-    console.debug('[sa4e-303] Table check failed:', (err as Error).message);
-  }
+  const graphExists = await tableExists('code_call_graph');
 
   if (depsExists) {
     try {

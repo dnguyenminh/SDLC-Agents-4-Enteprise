@@ -1,35 +1,34 @@
 /**
  * Migration 001: Add scope and user_id columns to knowledge_entries.
- * Cross-engine: uses information_schema for PostgreSQL, pragma_table_info for SQLite.
- * 
- * Note: Columns 'scope' and 'user_id' are now created by Knex migration 000.
- * This migration checks if columns exist and skips if already present.
+ * Cross-engine: branches on adapter engine — information_schema for
+ * PostgreSQL, pragma_table_info for SQLite (no probe-then-fallback, so no
+ * expected-path error noise on either engine).
  */
-
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 
 async function columnExists(db: DatabaseAdapter, table: string, column: string): Promise<boolean> {
-  // SQLite: use pragma_table_info directly (no PG introspection needed)
   try {
+    if (db.getEngine() === 'postgresql') {
+      const pg = await db.allAsync<{ column_name: string }>(
+        `SELECT column_name FROM information_schema.columns WHERE table_name = $1 AND column_name = $2`,
+        [table, column],
+      );
+      return pg.length > 0;
+    }
     const lite = await db.allAsync<{ name: string }>(
       `SELECT name FROM pragma_table_info('${table}') WHERE name = ?`,
       [column],
     );
     return lite.length > 0;
   } catch (err) {
-    console.debug('[migration-001] SQLite introspection failed:', (err as Error).message);
+    console.debug('[migration-001] column introspection failed:', (err as Error).message);
     return false;
   }
 }
 
 export async function migrate001AddScopeColumns(db: DatabaseAdapter): Promise<void> {
-  // Skip if columns already exist (created by Knex migration 000)
   if (await columnExists(db, 'knowledge_entries', 'scope')) {
     console.debug('[migration-001] scope column already exists, skipping');
-    return;
-  }
-  if (await columnExists(db, 'knowledge_entries', 'user_id')) {
-    console.debug('[migration-001] user_id column already exists, skipping');
     return;
   }
 

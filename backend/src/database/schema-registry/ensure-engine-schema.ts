@@ -20,6 +20,14 @@ const logger = pino({ name: 'engine-schema' });
 
 export async function ensureEngineIndexSchema(): Promise<void> {
   const adapter = getDbAdapter();
+  // SCHEMA_V1 is SQLite-flavored DDL (AUTOINCREMENT, datetime('now')) — only
+  // meaningful for sqlite-wasm siblings. PostgreSQL schema is managed by
+  // database-manager migrations + pg-schema-ensure; running SQLite DDL there
+  // is a syntax error, so skip on non-sqlite engines.
+  if (adapter.getEngine() !== 'sqlite') {
+    logger.debug('[engine-schema] non-sqlite engine, skipping');
+    return;
+  }
   try {
     await adapter.execAsync(SCHEMA_V1);
     logger.info('[engine-schema] index tables ensured (files/symbols/modules/fts)');
