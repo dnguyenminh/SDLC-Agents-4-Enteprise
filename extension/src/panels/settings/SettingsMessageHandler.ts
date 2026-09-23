@@ -5,6 +5,7 @@
 
 import * as vscode from "vscode";
 import { SECRET_KEYS } from "../../models";
+import { validateBackendUrl, getAllowInsecureRemote } from "../../config/backend-url";
 import { LlmTestService } from "../../services/LlmTestService";
 import { ProviderConfigService } from "../../services/ProviderConfigService";
 import { AtlassianCredentialService } from "../../services/AtlassianCredentialService";
@@ -70,6 +71,9 @@ export class SettingsMessageHandler {
         break;
       case "setBackendUrl":
         await this.handleSetBackendUrl(msg.url);
+        break;
+      case "setAllowInsecureRemote":
+        await this.handleSetAllowInsecureRemote(msg.enabled);
         break;
       case "testBackendConnection":
         await this.handleTestBackend(msg.url);
@@ -187,11 +191,38 @@ export class SettingsMessageHandler {
   }
 
   private async handleSetBackendUrl(url: string): Promise<void> {
+    try {
+      // Server-side HTTPS enforcement at save time (UI-SPEC §5): bypass OFF
+      // rejects remote http, bypass ON accepts with a console.warn warning.
+      const validated = validateBackendUrl(url, {
+        allowInsecureRemote: getAllowInsecureRemote(),
+      });
+      await vscode.workspace.getConfiguration("kiroSdlc")
+        .update("backend.url", validated, vscode.ConfigurationTarget.Workspace);
+      this.postMessage({ type: "backendUrlSaved", success: true });
+    } catch (err: any) {
+      this.postMessage({ type: "backendUrlSaved", success: false, message: err.message });
+    }
+  }
+
+  private async handleSetAllowInsecureRemote(enabled: unknown): Promise<void> {
+    // SA4E-320 Finding #6: coerce to strict boolean before persisting —
+    // non-boolean truthy values from the webview must fail closed (false).
     await vscode.workspace.getConfiguration("kiroSdlc")
-      .update("backend.url", url, vscode.ConfigurationTarget.Workspace);
+      .update("backend.allowInsecureRemote", enabled === true, vscode.ConfigurationTarget.Workspace);
   }
 
   private async handleTestBackend(url: string): Promise<void> {
+    try {
+      validateBackendUrl(url, { allowInsecureRemote: getAllowInsecureRemote() });
+    } catch (err: any) {
+      this.postMessage({ type: "backendTestResult", success: false, message: err.message });
+      return;
+    }
+    await this.fetchBackendHealth(url);
+  }
+
+  private async fetchBackendHealth(url: string): Promise<void> {
     try {
       const start = Date.now();
       const controller = new AbortController();

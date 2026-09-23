@@ -1,0 +1,23 @@
+test_case_id,url,allow_insecure_remote,expected_result,expected_error_message,description
+TC-02,http://remote.server.internal:48721,(unset),REJECT,[Security] Insecure backend URL rejected: HTTP is only allowed for loopback,OFF/unset + remote HTTP rejected — fail-closed
+TC-02,http://192.168.1.100:48721,false,REJECT,[Security] Insecure backend URL rejected,OFF + LAN-IP remote HTTP rejected
+TC-02,http://remote.server.internal:48721,false,REJECT,[Security] Insecure backend URL rejected,Explicit false option + remote HTTP rejected
+TC-03,https://api.enterprise.internal/kb,false,ACCEPT,,Remote HTTPS accepted regardless of flag
+TC-03,https://my-backend.corp.com:8443,false,ACCEPT,,Remote HTTPS with port/path accepted
+TC-04,http://127.0.0.1:48721,false,ACCEPT,,Loopback IPv4 HTTP accepted
+TC-04,http://localhost:3000,false,ACCEPT,,Loopback hostname HTTP accepted
+TC-04,http://[::1]:8080,false,ACCEPT,,Loopback IPv6 HTTP accepted
+TC-05,http://remote.server.internal:48721,true,ACCEPT_WITH_WARN,,ON + remote HTTP accepted; console.warn must contain [Security] WARNING Insecure remote backend URL allowed (allowInsecureRemote=true) + unencrypted HTTP + Credentials and data can be intercepted (MITM) + Only use on trusted private networks
+TC-06,http://127.0.0.1:48721,true,ACCEPT_NO_WARN,,ON + loopback accepted with no console.warn
+TC-06,https://api.enterprise.internal,true,ACCEPT_NO_WARN,,ON + HTTPS remote accepted with no console.warn
+TC-11,ftp://remote.server.internal:21,true,REJECT,[Security] Invalid backend URL protocol,Bypass ON does not relax protocol allowlist (ftp)
+TC-11,ws://remote.server.internal,true,REJECT,[Security] Invalid backend URL protocol,Bypass ON does not relax protocol allowlist (ws)
+TC-11,not a valid url,true,REJECT,[Security] Malformed backend URL,Bypass ON still rejects malformed URL
+TC-11,http://,false,REJECT,[Security] Malformed backend URL,OFF-path malformed rejection regression
+TC-19,,any,DEFAULT_LOOPBACK,,Empty URL returns http://127.0.0.1:48721 without throwing
+TC-19,undefined,any,DEFAULT_LOOPBACK,,Non-string input returns default loopback without throwing
+TC-19,null,any,DEFAULT_LOOPBACK,,Null input returns default loopback without throwing
+S-01,http://127.0.0.1:48721/,false,ACCEPT,TC-20 trailing slash stripped → http://127.0.0.1:48721
+S-02,https://api.enterprise.internal/kb/,false,ACCEPT,TC-03/TC-20 trailing slash stripped → https://api.enterprise.internal/kb
+S-03,http://remote.server.internal:48721/,false,REJECT,[Security] Insecure backend URL rejected,TC-20 slash strip does not turn remote into loopback
+S-04,http://remote.server.internal:48721/,true,ACCEPT,TC-20 ON + remote HTTP with slash accepted after strip

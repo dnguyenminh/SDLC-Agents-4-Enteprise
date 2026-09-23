@@ -17,7 +17,8 @@ export class ProviderConfigService {
   async getCurrentState(): Promise<{
     provider: string; model: string; ollamaUrl: string; baseUrl: string;
     hasAnthropicKey: boolean; hasOpenaiKey: boolean;
-    backendUrl: string; mcpServerPort: number; enableMcpServer: boolean;
+    backendUrl: string; allowInsecureRemote: boolean;
+    mcpServerPort: number; enableMcpServer: boolean;
     pegaEndpoint: string; pegaUsername: string; hasPegaPassword: boolean;
     atlassianBaseUrl: string; atlassianEmail: string; hasAtlassianToken: boolean;
     atlassianConnectionType: string;
@@ -29,6 +30,7 @@ export class ProviderConfigService {
 
     const baseUrl = this.getBaseUrlForProvider(provider);
     const backendUrl = getBackendUrl();
+    const allowInsecureRemote = config.get<boolean>("backend.allowInsecureRemote", false);
     const mcpServerPort = config.get<number>("mcpServerPort", 9181);
     const enableMcpServer = config.get<boolean>("enableMcpServer", true);
 
@@ -46,7 +48,7 @@ export class ProviderConfigService {
     return {
       provider, model, ollamaUrl, baseUrl: baseUrl || "",
       hasAnthropicKey: !!anthropicKey, hasOpenaiKey: !!openaiKey,
-      backendUrl, mcpServerPort, enableMcpServer,
+      backendUrl, allowInsecureRemote, mcpServerPort, enableMcpServer,
       pegaEndpoint, pegaUsername, hasPegaPassword: !!pegaPassword,
       atlassianBaseUrl, atlassianEmail, hasAtlassianToken: !!atlassianToken,
       atlassianConnectionType,

@@ -1,0 +1,117 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="h1" value="User" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="Settings Webview&#10;(Save URL / Test)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="260" y="40" width="170" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="SettingsMessageHandler&#10;(Extension Host)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="500" y="40" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="validateBackendUrl&#10;(backend-url.ts)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="740" y="40" width="190" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="Workspace Settings&#10;(config read)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="980" y="40" width="170" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="l1" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="90" as="sourcePoint"/>
+        <mxPoint x="120" y="760" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="345" y="90" as="sourcePoint"/>
+        <mxPoint x="345" y="760" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="590" y="90" as="sourcePoint"/>
+        <mxPoint x="590" y="760" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="835" y="90" as="sourcePoint"/>
+        <mxPoint x="835" y="760" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1065" y="90" as="sourcePoint"/>
+        <mxPoint x="1065" y="760" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. Click Save URL / Test Connection" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="130" as="sourcePoint"/>
+        <mxPoint x="345" y="130" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. setBackendUrl {url} /&#10;testBackendConnection {url}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="345" y="185" as="sourcePoint"/>
+        <mxPoint x="590" y="185" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. Read backend.allowInsecureRemote&#10;(fresh, at validation time)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="590" y="240" as="sourcePoint"/>
+        <mxPoint x="1065" y="240" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. flag = true | false | undefined" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1065" y="295" as="sourcePoint"/>
+        <mxPoint x="590" y="295" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5. validateBackendUrl(url,&#10;{ allowInsecureRemote: flag })" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="590" y="345" as="sourcePoint"/>
+        <mxPoint x="835" y="345" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="altframe" value="alt — mutually exclusive outcomes" style="rounded=0;html=1;verticalAlign=top;align=left;spacingLeft=8;fontSize=11;dashed=1;dashPattern=8 4;strokeColor=#666666;fillColor=none;" vertex="1" parent="1">
+      <mxGeometry x="540" y="385" width="400" height="185" as="geometry"/>
+    </mxCell>
+    <mxCell id="m6" value="6a. ACCEPT — HTTPS remote or loopback&#10;(no warning, bypass irrelevant)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="835" y="435" as="sourcePoint"/>
+        <mxPoint x="590" y="435" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="6b. ACCEPT + console.warn&#10;(remote http AND flag === true)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="835" y="485" as="sourcePoint"/>
+        <mxPoint x="590" y="485" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="6c. REJECT [Security]&#10;(remote http AND flag !== true)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="835" y="535" as="sourcePoint"/>
+        <mxPoint x="590" y="535" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="efnote" value="EF: malformed URL or protocol not in {http, https} → REJECT (bypass does NOT apply — BR-07)" style="shape=note;whiteSpace=wrap;html=1;size=12;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="560" y="600" width="420" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="m9" value="7. backendUrlSaved {success, message}" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="590" y="685" as="sourcePoint"/>
+        <mxPoint x="345" y="685" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="8. Show error | 'Saved ✓' / test result" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="345" y="735" as="sourcePoint"/>
+        <mxPoint x="120" y="735" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

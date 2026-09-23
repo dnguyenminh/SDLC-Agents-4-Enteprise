@@ -53,6 +53,9 @@
   const saveBackendBtn = document.getElementById("save-backend-url-btn");
   const testBackendBtn = document.getElementById("test-backend-btn");
   const backendResult = document.getElementById("backend-test-result");
+  // SA4E-320 — opt-in HTTPS bypass for remote backend
+  const allowInsecureChk = document.getElementById("allow-insecure-remote-chk");
+  const allowInsecureWarning = document.getElementById("allow-insecure-remote-warning");
 
   const mcpPortInput = document.getElementById("mcp-port-input");
   const enableMcpChk = document.getElementById("enable-mcp-server-chk");
@@ -414,6 +417,12 @@
     showStatus(backendResult, "Saved \u2713", "success");
   });
 
+  // SA4E-320 — persist bypass flag immediately on change + toggle warning
+  allowInsecureChk.addEventListener("change", function () {
+    allowInsecureWarning.hidden = !allowInsecureChk.checked;
+    vscode.postMessage({ type: "setAllowInsecureRemote", enabled: allowInsecureChk.checked });
+  });
+
   testBackendBtn.addEventListener("click", () => {
     backendResult.textContent = "Testing...";
     backendResult.className = "status-indicator";
@@ -542,6 +551,10 @@
         const lat = msg.latencyMs ? " (" + msg.latencyMs + "ms)" : "";
         showStatus(backendResult, (msg.success ? "\u2705 " : "\u274c ") + msg.message + lat, msg.success ? "success" : "error");
         break;
+      case "backendUrlSaved":
+        // Overrides the optimistic "Saved ✓" when server-side validation rejects the URL
+        showStatus(backendResult, msg.success ? "Saved \u2713" : ("\u274C " + (msg.message || "Invalid URL")), msg.success ? "success" : "error");
+        break;
       case "mcpServerRestarted":
         showStatus(wrapperResult, (msg.success ? "\u2705 " : "\u274c ") + msg.message, msg.success ? "success" : "error");
         break;
@@ -607,6 +620,11 @@
     }
     if (msg.enableMcpServer !== undefined) {
       enableMcpChk.checked = msg.enableMcpServer;
+    }
+    // SA4E-320 — restore HTTPS bypass checkbox + warning visibility
+    if (msg.allowInsecureRemote !== undefined) {
+      allowInsecureChk.checked = msg.allowInsecureRemote;
+      allowInsecureWarning.hidden = !msg.allowInsecureRemote;
     }
     // Load Pega config
     if (msg.pegaEndpoint !== undefined && pegaEndpointInput) {

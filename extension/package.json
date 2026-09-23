@@ -188,6 +188,11 @@
           "default": "http://127.0.0.1:48721",
           "description": "Remote Kiro backend server URL"
         },
+        "kiroSdlc.backend.allowInsecureRemote": {
+          "type": "boolean",
+          "default": false,
+          "description": "Bypass the HTTPS requirement for remote (non-loopback) backend server URLs. When enabled, HTTP remote URLs are accepted but traffic is unencrypted — credentials and data can be intercepted. Only enable on trusted private networks."
+        },
         "kiroSdlc.backend.ssoEnabled": {
           "type": "boolean",
           "default": false,
