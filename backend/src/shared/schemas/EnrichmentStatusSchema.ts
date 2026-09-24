@@ -24,6 +24,10 @@ export const EnrichmentStatusResponseSchema = z.object({
   estimatedCompletion: z.string().nullable(),
   currentFile: z.string().nullable(),
   lastPollAt: z.string().nullable(),
+  /** Configured max tasks processed in parallel per poll cycle (taskWorker.concurrency). */
+  maxConcurrency: z.number().int().min(1).optional(),
+  /** Tasks currently in PROCESSING state (live parallelism). */
+  activeConcurrency: z.number().int().min(0).optional(),
 });
 
 export type EnrichmentStatusResponse = z.infer<typeof EnrichmentStatusResponseSchema>;
