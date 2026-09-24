@@ -1,337 +1,115 @@
 /**
- * SettingsMessageHandler — handles all webview messages for the Settings panel.
- * Extracted from SettingsPanel for SRP.
+ * SettingsMessageHandler — routes webview messages for the Settings panel.
+ * Thin router (SA4E-323 refactor): delegates each domain to a dedicated
+ * handler (LLM / backend / Pega / Atlassian / proxy) for SRP + ≤200 LOC.
+ * Behavior-preserving: message types and postMessage payloads unchanged.
  */
 
 import * as vscode from "vscode";
-import { SECRET_KEYS } from "../../models";
-import { validateBackendUrl, getAllowInsecureRemote } from "../../config/backend-url";
 import { LlmTestService } from "../../services/LlmTestService";
 import { ProviderConfigService } from "../../services/ProviderConfigService";
 import { AtlassianCredentialService } from "../../services/AtlassianCredentialService";
 import { ProxyMessageHandler, PROXY_MESSAGE_TYPES } from "../../proxy/ProxyMessageHandler";
+import { LlmSettingsHandler } from "./handlers/LlmSettingsHandler";
+import { BackendSettingsHandler } from "./handlers/BackendSettingsHandler";
+import { PegaSettingsHandler } from "./handlers/PegaSettingsHandler";
+import { AtlassianSettingsHandler } from "./handlers/AtlassianSettingsHandler";
 
 export class SettingsMessageHandler {
-  private readonly llmTestService: LlmTestService;
   private readonly configService: ProviderConfigService;
   private readonly proxyHandler: ProxyMessageHandler;
-  private readonly atlassianService: AtlassianCredentialService;
+  private readonly llm: LlmSettingsHandler;
+  private readonly backend: BackendSettingsHandler;
+  private readonly pega: PegaSettingsHandler;
+  private readonly atlassian: AtlassianSettingsHandler;
 
   constructor(
     private readonly secrets: vscode.SecretStorage,
     private readonly postMessage: (msg: any) => void
   ) {
-    this.llmTestService = new LlmTestService(secrets);
+    const llmTestService = new LlmTestService(secrets);
     this.configService = new ProviderConfigService(secrets);
     this.proxyHandler = new ProxyMessageHandler(secrets, postMessage);
-    this.atlassianService = new AtlassianCredentialService(secrets);
+    const atlassianService = new AtlassianCredentialService(secrets);
+    const refresh = () => this.sendCurrentState();
+
+    this.llm = new LlmSettingsHandler(secrets, llmTestService, this.configService, postMessage);
+    this.backend = new BackendSettingsHandler(postMessage);
+    this.pega = new PegaSettingsHandler(secrets, this.configService, postMessage, refresh);
+    this.atlassian = new AtlassianSettingsHandler(atlassianService, postMessage, refresh);
   }
 
   async handle(msg: any): Promise<void> {
-    // Delegate proxy messages to ProxyMessageHandler
     if (PROXY_MESSAGE_TYPES.includes(msg.type)) {
       await this.proxyHandler.handle(msg);
       return;
     }
+    if (await this.routeLlm(msg)) { return; }
+    if (await this.routeBackend(msg)) { return; }
+    if (await this.routePega(msg)) { return; }
+    await this.routeAtlassian(msg);
+  }
 
+  /** LLM provider messages. @returns true when handled. */
+  private async routeLlm(msg: any): Promise<boolean> {
     switch (msg.type) {
       case "ready":
-      case "getState":
-        await this.sendCurrentState();
-        break;
+      case "getState": await this.sendCurrentState(); return true;
       case "setProvider":
         await this.configService.updateConfig("llmProvider", msg.provider);
         await this.sendCurrentState();
-        await this.handleAutoTest(msg.provider);
-        break;
-      case "getModels":
-        await this.handleGetModels(msg.provider);
-        break;
-      case "setModel":
-        await this.configService.updateConfig("llmModel", msg.model);
-        break;
-      case "setOllamaUrl":
-        await this.configService.updateConfig("ollamaUrl", msg.url);
-        break;
-      case "setBaseUrl":
-        await this.handleSetBaseUrl(msg.provider, msg.url);
-        break;
-      case "saveApiKey":
-        await this.handleSaveApiKey(msg.provider, msg.key);
-        break;
-      case "clearApiKey":
-        await this.handleClearApiKey(msg.provider);
-        break;
-      case "testOllamaConnection":
-        await this.handleTestOllama(msg.url);
-        break;
+        await this.llm.autoTest(msg.provider); return true;
+      case "getModels": await this.llm.getModels(msg.provider); return true;
+      case "setModel": await this.configService.updateConfig("llmModel", msg.model); return true;
+      case "setOllamaUrl": await this.configService.updateConfig("ollamaUrl", msg.url); return true;
+      case "setBaseUrl": await this.llm.setBaseUrl(msg.provider, msg.url); return true;
+      case "saveApiKey": await this.llm.saveApiKey(msg.provider, msg.key); return true;
+      case "clearApiKey": await this.llm.clearApiKey(msg.provider); return true;
+      case "testOllamaConnection": await this.llm.testOllama(msg.url); return true;
       case "testLlm":
-      case "testLlmConnection":
-        await this.handleTestLlm(msg.provider, msg.baseUrl);
-        break;
-      case "setBackendUrl":
-        await this.handleSetBackendUrl(msg.url);
-        break;
-      case "setAllowInsecureRemote":
-        await this.handleSetAllowInsecureRemote(msg.enabled);
-        break;
-      case "testBackendConnection":
-        await this.handleTestBackend(msg.url);
-        break;
-      case "setMcpServerPort":
-        await this.handleSetMcpPort(msg.port);
-        break;
-      case "setEnableMcpServer":
-        await this.handleSetEnableMcp(msg.enabled);
-        break;
-      case "restartMcpServer":
-        await this.handleRestartMcpServer();
-        break;
-      case "savePegaConfig":
-        try {
-          await this.configService.updatePegaConfig(msg.endpoint, msg.username, msg.password);
-          this.postMessage({ type: "pegaSaved", success: true });
-          await this.sendCurrentState();
-        } catch (err: any) {
-          this.postMessage({ type: "pegaSaved", success: false, error: err.message || "Failed to save Pega config" });
-        }
-        break;
-      case "testPegaConnection":
-        try {
-          await this.handleTestPegaConnection();
-        } catch (err: any) {
-          this.postMessage({ type: "pegaTestResult", success: false, message: `Connection failed: ${err.message}` });
-        }
-        break;
-      case "fetchPegaContext":
-        try {
-          await this.handleFetchPegaContext();
-        } catch (err: any) {
-          this.postMessage({ type: "pegaContextFetched", success: false, message: `Fetch failed: ${err.message}` });
-        }
-        break;
-      case "saveAtlassianConfig":
-        await this.handleSaveAtlassianConfig(msg);
-        break;
-      case "clearPegaPassword":
-        try {
-          await this.configService.clearPegaPassword();
-          this.postMessage({ type: "pegaPasswordCleared", success: true });
-          await this.sendCurrentState();
-        } catch (err: any) {
-          this.postMessage({ type: "pegaPasswordCleared", success: false, error: err.message });
-        }
-        break;
-      case "clearAtlassianConfig":
-        try {
-          await this.atlassianService.clearConfig();
-          this.postMessage({ type: "atlassianCleared", success: true });
-          await this.sendCurrentState();
-        } catch (err: any) {
-          this.postMessage({ type: "atlassianCleared", success: false, error: err.message });
-        }
-        break;
-      case "testAtlassianConnection":
-        await this.handleTestAtlassianConnection();
-        break;
+      case "testLlmConnection": await this.llm.testLlm(msg.provider, msg.baseUrl); return true;
+      default: return false;
     }
   }
 
+  /** Backend URL / MCP wrapper messages. @returns true when handled. */
+  private async routeBackend(msg: any): Promise<boolean> {
+    switch (msg.type) {
+      case "setBackendUrl": await this.backend.setBackendUrl(msg.url); return true;
+      case "setAllowInsecureRemote": await this.backend.setAllowInsecureRemote(msg.enabled); return true;
+      case "testBackendConnection": await this.backend.testBackend(msg.url); return true;
+      case "setMcpServerPort": await this.backend.setMcpPort(msg.port); return true;
+      case "setEnableMcpServer": await this.backend.setEnableMcp(msg.enabled); return true;
+      case "restartMcpServer": await this.backend.restartMcpServer(); return true;
+      default: return false;
+    }
+  }
+
+  /** Pega connection messages. @returns true when handled. */
+  private async routePega(msg: any): Promise<boolean> {
+    switch (msg.type) {
+      case "savePegaConfig": await this.pega.save(msg.endpoint, msg.username, msg.password); return true;
+      case "testPegaConnection": await this.pega.test(); return true;
+      case "fetchPegaContext": await this.pega.fetchContext(); return true;
+      case "clearPegaPassword": await this.pega.clearPassword(); return true;
+      default: return false;
+    }
+  }
+
+  /** Atlassian connection messages. */
+  private async routeAtlassian(msg: any): Promise<void> {
+    switch (msg.type) {
+      case "saveAtlassianConfig": await this.atlassian.save(msg); break;
+      case "clearAtlassianConfig": await this.atlassian.clear(); break;
+      case "testAtlassianConnection": await this.atlassian.test(); break;
+    }
+  }
+
+  /** Post current provider state + model list to the webview. */
   private async sendCurrentState(): Promise<void> {
     const state = await this.configService.getCurrentState();
     this.postMessage({ type: "state", ...state });
     const { models, selected, defaultModel } = await this.configService.getModels(state.provider, state.model);
     this.postMessage({ type: "models", provider: state.provider, models, selected, defaultModel });
-  }
-
-  private async handleGetModels(provider: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
-    const currentModel = config.get<string>("llmModel", "");
-    const { models, selected, defaultModel } = await this.configService.getModels(provider, currentModel);
-    this.postMessage({ type: "models", provider, models, selected, defaultModel });
-  }
-
-  private async handleSetBaseUrl(provider: string, url: string): Promise<void> {
-    const keyMap: Record<string, string> = {
-      anthropic: "anthropicBaseUrl",
-      openai: "openaiBaseUrl",
-      lmstudio: "lmstudioBaseUrl",
-      openrouter: "openrouterBaseUrl",
-    };
-    const key = keyMap[provider];
-    if (key) { await this.configService.updateConfig(key, url); }
-  }
-
-  private async handleSaveApiKey(provider: string, key: string): Promise<void> {
-    const secretKey = SECRET_KEYS[provider];
-    if (!secretKey) {
-      this.postMessage({ type: "keySaved", provider, success: false, error: "Unknown provider" });
-      return;
-    }
-    try {
-      await this.secrets.store(secretKey, key);
-      this.postMessage({ type: "keySaved", provider, success: true });
-    } catch (err: any) {
-      this.postMessage({ type: "keySaved", provider, success: false, error: err.message });
-    }
-  }
-
-  private async handleClearApiKey(provider: string): Promise<void> {
-    const secretKey = SECRET_KEYS[provider];
-    if (!secretKey) { return; }
-    await this.secrets.delete(secretKey);
-    this.postMessage({ type: "keyCleared", provider });
-  }
-
-  private async handleTestOllama(url: string): Promise<void> {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${url}/api/tags`, { signal: controller.signal });
-      clearTimeout(timeout);
-      if (response.ok) {
-        this.postMessage({ type: "ollamaTested", success: true });
-      } else {
-        this.postMessage({ type: "ollamaTested", success: false, error: `HTTP ${response.status}` });
-      }
-    } catch (err: any) {
-      this.postMessage({ type: "ollamaTested", success: false, error: err.message });
-    }
-  }
-
-  private async handleTestLlm(provider?: string, baseUrl?: string): Promise<void> {
-    const result = await this.llmTestService.testLlm(provider, baseUrl);
-    this.postMessage({ type: "llmTestResult", ...result });
-  }
-
-  private async handleAutoTest(provider: string): Promise<void> {
-    const result = await this.llmTestService.autoTestAndNotify(provider);
-    this.postMessage({ type: "llmTestResult", ...result });
-  }
-
-  private async handleSetBackendUrl(url: string): Promise<void> {
-    try {
-      // Server-side HTTPS enforcement at save time (UI-SPEC §5): bypass OFF
-      // rejects remote http, bypass ON accepts with a console.warn warning.
-      const validated = validateBackendUrl(url, {
-        allowInsecureRemote: getAllowInsecureRemote(),
-      });
-      await vscode.workspace.getConfiguration("kiroSdlc")
-        .update("backend.url", validated, vscode.ConfigurationTarget.Workspace);
-      this.postMessage({ type: "backendUrlSaved", success: true });
-    } catch (err: any) {
-      this.postMessage({ type: "backendUrlSaved", success: false, message: err.message });
-    }
-  }
-
-  private async handleSetAllowInsecureRemote(enabled: unknown): Promise<void> {
-    // SA4E-320 Finding #6: coerce to strict boolean before persisting —
-    // non-boolean truthy values from the webview must fail closed (false).
-    await vscode.workspace.getConfiguration("kiroSdlc")
-      .update("backend.allowInsecureRemote", enabled === true, vscode.ConfigurationTarget.Workspace);
-  }
-
-  private async handleTestBackend(url: string): Promise<void> {
-    try {
-      validateBackendUrl(url, { allowInsecureRemote: getAllowInsecureRemote() });
-    } catch (err: any) {
-      this.postMessage({ type: "backendTestResult", success: false, message: err.message });
-      return;
-    }
-    await this.fetchBackendHealth(url);
-  }
-
-  private async fetchBackendHealth(url: string): Promise<void> {
-    try {
-      const start = Date.now();
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const response = await fetch(`${url}/health`, { signal: controller.signal });
-      clearTimeout(timeout);
-      const latencyMs = Date.now() - start;
-      if (response.ok) {
-        this.postMessage({ type: "backendTestResult", success: true, message: "Connected", latencyMs });
-      } else {
-        this.postMessage({ type: "backendTestResult", success: false, message: `HTTP ${response.status}`, latencyMs });
-      }
-    } catch (err: any) {
-      this.postMessage({ type: "backendTestResult", success: false, message: err.message });
-    }
-  }
-
-  private async handleSetMcpPort(port: number): Promise<void> {
-    await vscode.workspace.getConfiguration("kiroSdlc")
-      .update("mcpServerPort", port, vscode.ConfigurationTarget.Workspace);
-  }
-
-  private async handleSetEnableMcp(enabled: boolean): Promise<void> {
-    await vscode.workspace.getConfiguration("kiroSdlc")
-      .update("enableMcpServer", enabled, vscode.ConfigurationTarget.Workspace);
-  }
-
-  private async handleRestartMcpServer(): Promise<void> {
-    try {
-      await vscode.commands.executeCommand("kiroSdlc.restartMcpServer");
-      this.postMessage({ type: "mcpServerRestarted", success: true, message: "MCP wrapper server restarted successfully." });
-    } catch (err: any) {
-      this.postMessage({ type: "mcpServerRestarted", success: false, message: `Restart failed: ${err.message}` });
-    }
-  }
-
-  private async handleTestPegaConnection(): Promise<void> {
-    try {
-      const { PegaHttpClient } = await import("../../services/PegaHttpClient");
-      const client = new PegaHttpClient(this.secrets);
-      const endpoint = client.getPegaEndpoint();
-      // Only check connectivity — no auth, no login (OI-7: bounded 8s timeout)
-      const res = await fetch(endpoint, { method: "GET", signal: AbortSignal.timeout(8000) });
-      if (res.status > 0) {
-        this.postMessage({ type: "pegaTestResult", success: true, message: `✅ Network OK — Pega Server reachable (HTTP ${res.status}). Authentication not tested.` });
-      } else {
-        this.postMessage({ type: "pegaTestResult", success: false, message: "Connection failed: no response from server" });
-      }
-    } catch (err: any) {
-      this.postMessage({ type: "pegaTestResult", success: false, message: `Connection failed: ${err.message}` });
-    }
-  }
-
-  private async handleFetchPegaContext(): Promise<void> {
-    const folders = vscode.workspace.workspaceFolders;
-    if (!folders || folders.length === 0) {
-      this.postMessage({ type: "pegaContextFetched", success: false, message: "No workspace folder open to save Pega context." });
-      return;
-    }
-    const root = folders[0].uri.fsPath;
-    const client = new (await import("../../services/PegaHttpClient")).PegaHttpClient(this.secrets);
-    const result = await client.fetchAndSavePegaContext(root);
-    this.postMessage({
-      type: "pegaContextFetched",
-      success: true,
-      message: `Fetched context: App "${result.applicationName}" (${result.caseTypesCount} CaseTypes) → saved ${result.filePath}`
-    });
-  }
-
-  private async handleSaveAtlassianConfig(msg: any): Promise<void> {
-    try {
-      await this.atlassianService.saveConfig({
-        baseUrl: msg.baseUrl,
-        email: msg.email,
-        apiToken: msg.apiToken,
-        connectionType: msg.connectionType || "cloud",
-      });
-      this.postMessage({ type: "atlassianSaved", success: true });
-      await this.sendCurrentState();
-    } catch (err: any) {
-      this.postMessage({ type: "atlassianSaved", success: false, error: err.message });
-    }
-  }
-
-  private async handleTestAtlassianConnection(): Promise<void> {
-    try {
-      const result = await this.atlassianService.testConnection();
-      this.postMessage({ type: "atlassianTestResult", ...result });
-    } catch (err: any) {
-      this.postMessage({ type: "atlassianTestResult", success: false, message: err.message });
-    }
   }
 }

@@ -7,7 +7,7 @@ import * as vscode from "vscode";
 import { getStaticModels, fetchGatewayModels, getDefaultModel } from "../chat-panel/chat-models";
 import { SECRET_KEYS, PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS } from "../models";
 import { getBackendUrl } from "../config/backend-url";
-import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET, type SecretBase } from "./WorkspaceScopeResolver";
+import { ensureMigrated, getWsHash, secretKey, readScopedSecret, type SecretBase } from "./WorkspaceScopeResolver";
 
 /** Config keys isolated per workspace (SA4E-323) — never via generic updateConfig. */
 const WORKSPACE_SCOPED_KEYS = ["pegaEndpoint", "pegaUsername", "atlassianConnectionType"];
@@ -139,12 +139,13 @@ export class ProviderConfigService {
     await config.update(key, value || undefined, vscode.ConfigurationTarget.Global);
   }
 
-  /** Read a workspace secret; null scope falls back to the legacy flat key. */
+  /**
+   * Read a workspace secret; null scope falls back to the legacy flat key.
+   * SA4E-323: delegates to the shared readScopedSecret choke-point (BR-18) so
+   * scope/legacy resolution lives in exactly one place.
+   */
   private async readSecret(wsHash: string | null, base: SecretBase): Promise<string | undefined> {
-    try {
-      const key = wsHash ? secretKey(base, wsHash)! : LEGACY_SECRET[base];
-      return await this.secrets.get(key);
-    } catch { return undefined; }
+    return readScopedSecret(this.secrets, base, wsHash);
   }
 
   /** Best-effort secret read that never breaks state load (UC-3 EF-3). */

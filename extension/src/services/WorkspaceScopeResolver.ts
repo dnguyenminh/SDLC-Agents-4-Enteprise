@@ -73,6 +73,32 @@ export function migrationMarkerKey(wsHash: string): string {
   return `kiroSdlc.${wsHash}.migrated`;
 }
 
+/**
+ * Single choke-point for reading a per-workspace secret (SA4E-323, BR-18).
+ *
+ * Resolves the namespaced key via secretKey(); when no workspace is open
+ * (wsHash null) it falls back to the READ-ONLY legacy flat key (OI-4). Any
+ * SecretStorage error is swallowed to an empty string so credential reads
+ * never break state load (UC-3 EF-3). No inline hash derivation elsewhere.
+ *
+ * @param secrets VS Code SecretStorage to read from.
+ * @param base Secret base to resolve (pega / atlassian*).
+ * @param wsHash Workspace hash; defaults to the current workspace.
+ * @returns The stored secret, or "" when absent / on read failure.
+ */
+export async function readScopedSecret(
+  secrets: vscode.SecretStorage,
+  base: SecretBase,
+  wsHash: string | null = getWsHash(),
+): Promise<string> {
+  try {
+    const key = wsHash ? secretKey(base, wsHash)! : LEGACY_SECRET[base];
+    return (await secrets.get(key)) || "";
+  } catch {
+    return "";
+  }
+}
+
 /** Re-validate a legacy config value with the same rules as save paths. */
 function isValidFor(key: string, value: string): boolean {
   if (key === "pegaEndpoint") { return /^https?:\/\//.test(value); }
