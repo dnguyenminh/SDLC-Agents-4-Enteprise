@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.43.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.44.0-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.43.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.44.0.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.43.0.vsix
+code --install-extension sdlc-agents-4-enterprise-1.44.0.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,11 @@ MIT
 ---
 
 ## Changelog
+
+### v1.44.0 (2026-09-23)
+
+- **SA4E-320: Opt-in HTTPS bypass for remote backend** — New workspace-scoped setting `kiroSdlc.backend.allowInsecureRemote` (default off) lets users accept an HTTP remote backend URL on trusted private networks, with an explicit MITM warning; HTTPS enforcement stays on by default (SEC-289-03). Backend URL changes now apply at runtime without an extension reload (AuthManager, KnowledgeClient, and the backend client re-point + reconnect on config change). Security hardening: `restrictedConfigurations` + workspace-trust gate prevent untrusted-repo abuse; Pega endpoint HTTPS enforcement (SEC-02).
+- **SA4E-323: Per-workspace isolation for Pega/Atlassian settings** — Pega/Atlassian connection settings are isolated per workspace (secrets namespaced in the OS keychain), with a one-time migration of legacy global values. Internal refactor split `PegaHttpClient` and `SettingsMessageHandler` into focused ≤200-LOC modules.
 
 ### v1.43.0 (2026-09-22)
 

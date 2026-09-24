@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.43.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.44.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,11 @@ MIT
 ---
 
 ## Changelog
+
+### v1.44.0 (2026-09-23)
+
+- **SA4E-320: Opt-in HTTPS bypass for remote backend** — New workspace-scoped setting `kiroSdlc.backend.allowInsecureRemote` (default off) lets users accept an HTTP remote backend URL on trusted private networks, with an explicit MITM warning; enforcement stays on by default (SEC-289-03). Backend URL changes now apply at runtime without an extension reload. Security hardening: `restrictedConfigurations` + workspace-trust gate block untrusted-repo abuse; Pega endpoint HTTPS enforcement (SEC-02).
+- **SA4E-323: Per-workspace isolation for Pega/Atlassian settings** — Connection settings are isolated per workspace (secrets namespaced in the OS keychain), with a one-time migration of legacy global values. Internal refactor split `PegaHttpClient` and `SettingsMessageHandler` into focused ≤200-LOC modules.
 
 ### v1.43.0 (2026-09-22)
 
