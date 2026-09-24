@@ -6,6 +6,7 @@
 
 import * as vscode from "vscode";
 import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET, type SecretBase } from "./WorkspaceScopeResolver";
+import { assertWorkspaceTrusted } from "./WorkspaceTrustGuard";
 import type { CredentialResponse } from "./AtlassianTypes";
 
 /** Atlassian connection configuration */
@@ -86,6 +87,10 @@ export class AtlassianCredentialService {
 
   /** Build IPC credential response for a child server request. */
   async handleCredentialRequest(requestId: string): Promise<CredentialResponse> {
+    // SA4E-323 SEC-01: never release credentials to a child server (which uses
+    // the workspace-committable connection settings for its requests) while the
+    // workspace is untrusted.
+    assertWorkspaceTrusted();
     const config = await this.getConfig();
     if (!config) {
       throw new Error("Atlassian credentials not configured in extension.");
@@ -135,6 +140,9 @@ export class AtlassianCredentialService {
   }
 
   private async performMyselfRequest(config: AtlassianConfig): Promise<AtlassianTestResult> {
+    // SA4E-323 SEC-01: block the credential-bearing connectivity test while the
+    // workspace is untrusted (atlassianConnectionType is workspace-committable).
+    assertWorkspaceTrusted();
     const url = `${config.baseUrl.replace(/\/+$/, "")}/rest/api/2/myself`;
     const token = Buffer.from(`${config.email}:${config.apiToken}`).toString("base64");
     try {

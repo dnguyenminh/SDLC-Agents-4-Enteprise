@@ -7,6 +7,8 @@
 import * as vscode from "vscode";
 import { createHash } from "crypto";
 import { getWsHash, secretKey, LEGACY_SECRET } from "./WorkspaceScopeResolver";
+import { assertWorkspaceTrusted } from "./WorkspaceTrustGuard";
+import { enforcePegaEndpointHttps } from "../config/pega-endpoint";
 import type { RuleSetRuleSummary } from "../models";
 import { setProjectId } from "../extension";
 import { resolvePegaHierarchy, type HierarchyResult } from "./PegaHierarchyResolver";
@@ -37,6 +39,11 @@ export class PegaHttpClient {
   }
 
   public async getAuthHeader(): Promise<string> {
+    // SA4E-323 SEC-01: refuse to build credentials while the workspace is
+    // untrusted — a committed .vscode/settings.json could otherwise redirect
+    // the password to an attacker endpoint. This is the credential choke-point:
+    // every credentialed Pega request goes through getAuthHeader().
+    assertWorkspaceTrusted();
     const config = vscode.workspace.getConfiguration("kiroSdlc");
     const username = config.get<string>("pegaUsername", "").trim();
     const password = await this.readWorkspacePassword();
@@ -55,7 +62,11 @@ export class PegaHttpClient {
 
   public getPegaEndpoint(): string {
     const config = vscode.workspace.getConfiguration("kiroSdlc");
-    return config.get<string>("pegaEndpoint", "http://localhost:8080/prweb").replace(/\/$/, "");
+    const raw = config.get<string>("pegaEndpoint", "http://localhost:8080/prweb").replace(/\/$/, "");
+    // SA4E-323 SEC-02: enforce HTTPS for non-loopback endpoints before any
+    // Basic-auth credential is transmitted. Reuses isLoopbackHost +
+    // allowInsecureRemote opt-in from backend-url (single security policy).
+    return enforcePegaEndpointHttps(raw);
   }
 
   /** SA4E-241 SEC-03: configured Pega operator id (no hardcoded default). */
