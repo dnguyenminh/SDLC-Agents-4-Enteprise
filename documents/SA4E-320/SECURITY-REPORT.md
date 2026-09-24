@@ -40,10 +40,10 @@ However, three significant issues were identified: (1) **`KnowledgeClient` const
 | 2 | OFF branch byte-identical to pre-change | ✅ PASS | `git diff` shows pure refactor of same predicates; 4 original SEC-289-03 tests + 5 new tests = **9/9 passed** (vitest run verified) |
 | 3 | Warning logged when bypass active | ✅ PASS | `backend-url.ts:37-41` → `console.warn` on **every** `validateBackendUrl` call with bypass ON (not once — persistent visibility) |
 | 4 | UI warning visible when checked, hidden when unchecked | ✅ PASS | `SettingsPanel.ts:134` → warning div has `hidden` attr by default; `settings.js:421-424` toggles on change; `settings.js:624-628` restores from state; copy covers credential interception |
-| 5 | Bypass scope limited to HTTP-vs-HTTPS check | ✅ PASS (within validator) | `backend-url.ts:75-78` → only `http:` branch consults flag; `rejectUnsupportedProtocol` (line 78) always runs; tests `backend-url.test.ts:59-85` prove `ftp`/`ws`/malformed still rejected with bypass ON. ⚠️ See Finding #1 — KnowledgeClient does not receive the flag at all |
+| 5 | Bypass scope limited to HTTP-vs-HTTPS check | ✅ PASS (within validator) | `backend-url.ts:75-78` → only `http:` branch consults flag; `rejectUnsupportedProtocol` (line 78) always runs; tests `backend-url.test.ts:59-85` prove `ftp`/`ws`/malformed still rejected with bypass ON. ✅ Finding #1 resolved post-fix (see Addendum) |
 | 6 | Persistence scope + fresh re-read | ⚠️ PASS with condition | Written at `ConfigurationTarget.Workspace` (`SettingsMessageHandler.ts:216`); read fresh at every validation (`backend-url.ts:102-104`, `SettingsMessageHandler.ts:194-197`) — no stale cache. ⚠️ Workspace scope enables silent set via `.vscode/settings.json` (Finding #2) |
 | 7 | Flag source integrity (config only, no env/query) | ✅ PASS | Flag read exclusively via `vscode.workspace.getConfiguration("kiroSdlc").get("backend.allowInsecureRemote")`. `CODE_INTEL_PORT` env (`knowledge-client.ts:140-146`) only overrides port and **forces loopback host** `127.0.0.1` — cannot inject remote host or the flag |
-| 8 | knowledge-client bypass flow correctness | ❌ FAIL | `resolveKbBaseUrl()` honors flag via `getBackendUrl()` (`knowledge-client.ts:149-150`), BUT `KnowledgeClient` constructor calls `validateBackendUrl(baseUrl)` **without options** (`knowledge-client.ts:173-174`) → remote HTTP always rejected even with bypass ON → Finding #1 |
+| 8 | knowledge-client bypass flow correctness | ✅ PASS (re-verified post-fix) | constructor now forwards `allowInsecureRemote` via `getAllowInsecureRemote()` (`knowledge-client.ts:177-186`), consistent with `getBackendUrl()`/`resolveKbBaseUrl()`; regression tests `knowledge-client-bypass.test.ts` prove bypass ON + remote HTTP does **NOT** throw while bypass OFF still throws `[Security]` (Finding #1 regression); `ftp`/`ws`/malformed still rejected with flag ON |
 | 9 | OWASP/transport residual risks covered by warning | ⚠️ PARTIAL | UI warning + package.json description cover "credentials and data can be intercepted"; `console.warn` says only "unencrypted HTTP" (Finding #7); `sso_token` in URL query (Finding #8) not explicitly called out |
 
 ---
@@ -89,7 +89,7 @@ No issues introduced ✅ — flag cannot be set from env/URL; `CODE_INTEL_PORT` 
 
 ## Detailed Findings
 
-### Finding #1: KnowledgeClient constructor does not honor `allowInsecureRemote` — bypass does not flow (inconsistent enforcement)
+### Finding #1: KnowledgeClient constructor does not honor `allowInsecureRemote` — bypass does not flow (inconsistent enforcement) — ✅ RESOLVED post-fix (see Addendum)
 
 | Attribute | Value |
 |-----------|-------|
@@ -580,3 +580,28 @@ Prefer cookie-based or header-based bootstrap instead of query-string tokens for
 | 7 | `extension/src/config/__tests__/backend-url.test.ts` | Full (86 lines) + executed 9/9 pass |
 | 8 | `extension/src/knowledge-client.ts` | `:138-155` resolveKbBaseUrl, `:168-182` constructor validation |
 | + | Consumers: `extension.ts:177,211`, `tree-view-provider.ts:76`, `panel-html.ts:16,32`, `graph-panel.ts:46`, `RemoteConverter.ts:40`, `SessionManager.ts:26`, `remote-checkpointer.ts:50`, `remote-checkpointer-store.ts:70`, `indexer.ts:13`, `indexer-http.ts:11` | Bypass propagation / raw-read gaps |
+
+---
+
+## Addendum — Finding #1 RESOLVED (post-review, 2026-09-24)
+
+> Amended 2026-09-24 by Security Agent (SECURITY) — post-review follow-up for SA4E-320. This addendum records the post-fix resolution of Finding #1. Original finding bodies, severity ratings, and the overall verdict are preserved unchanged (historical record); status changes are recorded here and via the ✅ RESOLVED heading marker only.
+
+| Attribute | Value |
+|-----------|-------|
+| **Status** | Finding #1 (🟡 Medium, blocking for ticket acceptance) → **RESOLVED** — Conditions of Approval item #1 satisfied (code path) |
+| **What changed** | `KnowledgeClient` constructor now reads `kiroSdlc.backend.allowInsecureRemote` via `getAllowInsecureRemote()` and forwards it to `validateBackendUrl(baseUrl, { allowInsecureRemote })` — enforcement is now consistent between `getBackendUrl()`/`resolveKbBaseUrl()` consumers and `KnowledgeClient` |
+| **Fail-closed preserved** | Flag read failure → bypass OFF (enforcement stays ON); `[Security]`-prefixed validation errors are re-thrown from the constructor |
+
+**Evidence:**
+
+| # | Evidence | Detail |
+|---|----------|--------|
+| (a) | Code refs | `extension/src/knowledge-client.ts:176-186` — constructor forwards `allowInsecureRemote` via `getAllowInsecureRemote()` (source comment: "SA4E-320 Finding #1: forward the opt-in bypass flag so KnowledgeClient validation is consistent with getBackendUrl()/resolveKbBaseUrl(). Flag read failure → fail-closed (bypass OFF, enforcement stays ON)."); `:141-159` — `resolveKbBaseUrl()` delegates to `getBackendUrl()`, which reads both `backend.url` and the `allowInsecureRemote` flag |
+| (b) | Tests | `extension/src/config/__tests__/knowledge-client-bypass.test.ts` — 12 tests incl. **"bypass ON + remote HTTP → new KnowledgeClient does NOT throw (Finding #1 regression)"** and **"bypass OFF + remote HTTP → new KnowledgeClient still throws [Security]"**; `ftp`/`ws`/malformed URL still rejected with flag ON; loopback HTTP still allowed — **22/22 pass** (12 bypass + 10 backend-url) verified 2026-09-24 via `npx vitest run src/config/__tests__/knowledge-client-bypass.test.ts src/config/__tests__/backend-url.test.ts` |
+| (c) | Commit | `61ad0f8` on main ("SA4E-320: opt-in checkbox to bypass HTTPS enforcement for remote backend") — `knowledge-client.ts` +22 lines, `knowledge-client-bypass.test.ts` +124 lines; also `backend-url.ts` +82 changed, `backend-url.test.ts` +88 changed |
+| (d) | RUN-LOG | `documents/SA4E-320/RUN-LOG.md` #7 — "Fix blocking Finding #1 (forward allowInsecureRemote via getAllowInsecureRemote helper) + hardenings #6/#7" — 90+10+102 tests pass, `tsc` clean, KB ingest id=613792 |
+
+**Impact on verdict:** **Overall verdict remains APPROVE WITH CONDITIONS** — Finding #1 no longer blocks ticket acceptance; remaining open conditions: residual-risk comment (item #2) and splitting pre-existing Findings #3 (High) / #4 (Medium) into separate follow-up tickets (item #3).
+
+**Explicit note:** Pre-existing **Findings #3 and #4 remain OPEN** and are outside this ticket's scope — to be tracked as separate follow-up tickets referencing SEC-289-03 (see Verdict → Conditions #2).

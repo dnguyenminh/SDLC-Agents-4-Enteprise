@@ -12,11 +12,11 @@
     "ui_design": { "status": "done", "file": "UI-SPEC.md", "version": 1, "completedAt": "2026-09-23T12:17:57Z" },
     "implementation": { "status": "done", "filesTouched": 9, "completedAt": "2026-09-23T12:30:00Z" },
     "testing": { "status": "done", "completedAt": "2026-09-23T12:35:00Z" },
-    "security_review": { "status": "done", "file": "SECURITY-REPORT.md", "version": 1, "verdict": "APPROVE_WITH_CONDITIONS", "completedAt": "2026-09-23T12:39:41Z" },
+    "security_review": { "status": "done", "file": "SECURITY-REPORT.md", "version": 2, "verdict": "APPROVE_WITH_CONDITIONS", "completedAt": "2026-09-23T12:39:41Z", "amendedAt": "2026-09-24T08:36:55+07:00", "addendum": "Finding #1 RESOLVED post-fix — AC #8 FAIL→PASS; evidence: knowledge-client.ts:177-186 + knowledge-client-bypass.test.ts (12 tests, 22/22 pass) + commit 61ad0f8; remaining open conditions: residual-risk comment + follow-up tickets for pre-existing Findings #3 (High) / #4 (Medium)" },
     "kb_ingest": { "status": "done", "note": "Retroactive pipeline: ingest BRD/FSD/TDD/STP/STC/UI-SPEC/SECURITY-REPORT completed", "completedAt": "2026-09-23T17:30:00Z", "entries": { "BRD.md": 27, "FSD.md": 42, "TDD.md": 54, "STP.md": 43, "STC.md": 48, "UI-SPEC.md": 13, "SECURITY-REPORT.md": 40 } }
   },
-  "jiraStatus": "In Progress",
+  "jiraStatus": "Done",
   "jiraAttachments": ["11399", "11400", "11401", "11402", "11403", "11404"],
-  "jiraTransition": "To Do → In Progress (2026-09-23T17:59:00+07:00)",
-  "lastUpdated": "2026-09-23T17:59:00+07:00"
+  "jiraTransition": "To Do → In Progress (2026-09-23T17:59:00+07:00) → Done (2026-09-23T23:07:00+07:00, verified: commits 61ad0f8/b0042de on main, 25/25 targeted tests green)",
+  "lastUpdated": "2026-09-24T08:36:55+07:00"
 }
