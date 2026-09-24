@@ -1,0 +1,40 @@
+test_case_id,folder,endpoint,username,password,expected_http_code,expected_result,description
+PBT-01,A,C:\sdlc-test\ws-a,op.a,PassA-123!,,wsHash stable across repeated calls; secretKey identical,Isolation determinism property — same folder same key
+PBT-01,A,c:/sdlc-test/ws-a/,op.a,PassA-123!,,normalized equal to C:\sdlc-test\ws-a,Separator/trailing-slash variants converge
+PBT-02,A-vs-B,C:\sdlc-test\ws-a vs C:\sdlc-test\ws-b,,,,"hashA != hashB; secretKey(pega,A) != secretKey(pega,B)",Distinct folders distinct keys property
+PBT-03,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,,key=kiroSdlc.<hashA>.pegaPassword never flat,Secret key format property (Pega base)
+UT-01,—,C:\sdlc-test\ws-a,,,,"normalize -> c:/sdlc-test/ws-a",Backslash + drive-case normalization
+UT-01,—,c:/sdlc-test/ws-a///,,,,"normalize -> c:/sdlc-test/ws-a",Trailing-slash strip (keep root /)
+UT-01,—,/,,,,"normalize -> /",Unix root kept
+UT-01,—,vscode-remote://ssh+myhost/home/dev/proj/,,,,"scheme+authority preserved slash stripped",Remote URI normalization
+UT-03,A,C:\sdlc-test\ws-a,,,,"12-hex ^[0-9a-f]{12}$ == sha256(ws:c:/sdlc-test/ws-a)[:12]",wsHash algorithm verbatim (TDD 4.2)
+UT-05,A,https://x/prweb,op.a,PassA-123!,,updateConfig(pegaEndpoint) throws workspace-scoped error,Generic Global helper guard
+UT-05,A,,,,"updateConfig(llmModel) passes through to Global",LLM keys unaffected (regression lock)
+UT-06,A,https://pega-a2.corp/prweb,op.a2,,,"endpoint/username updated; password still PassA-123! hasPegaPassword=true",Blank password preserves stored secret
+UT-06,A,https://pega-a2.corp/prweb,op.a2,"   ",,"same as blank (whitespace preserved-rule)",Whitespace-only password preserves
+UT-07,A,ftp://evil/x,op.a,PassA-123!,,throw Invalid Pega Endpoint URL (http/https required.) zero writes,Non-http endpoint rejected
+UT-07,A,not-a-url,op.a,PassA-123!,,same rejection zero writes,Malformed endpoint rejected
+UT-07,A,,op.a,PassA-123!,,same rejection zero writes,Empty endpoint rejected
+UT-12,A,https://pega-a.corp.local:8443/prweb/,op.a,PassA-123!,,getPegaEndpoint strips trailing slash,Read normalization
+UT-12,A,http://localhost:8080/prweb (default),,,,empty stored -> compiled default (UC-4 AF-3),Workspace default (not another workspace URL)
+UT-14,A,,(empty),,throw Pega Operator ID is not configured (kiroSdlc.pegaUsername). Set it before indexing.,Fail-closed empty username (SEC-03)
+IT-01,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,,Workspace A stores + namespaced secret; no flat write,Save A happy path
+IT-01,B,,,,,getCurrentState B empty hasPegaPassword=false zero A strings,B isolated after A save
+IT-01,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,,A re-read intact (hasPegaPassword=true),A stable
+IT-02,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,,"getCurrentState/getAuthHeader(Basic b3AuYTpQYXNzQS0xMjMh)/getPegaEndpoint/getConfiguredUsername/indexer-check all A",Read-site consistency A
+IT-02,B,https://pega-b.corp.local:8443/prweb,op.b,PassB-456!,,"same five sites all B never A",Read-site consistency B
+IT-06,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,,state payload has A values + flags true; grep PassA-123! zero hits,State WYSIWYS + no secret in payload
+IT-06,B,,,,,state empty/defaults flags false zero A strings,B state isolated
+E2E-API-01,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,,pegaSaved success:true + auto state refresh (OI-12),IPC save Pega
+E2E-API-01,A,ftp://x,op.a,PassA-123!,,pegaSaved success:false Invalid Pega Endpoint URL prior values intact,IPC invalid endpoint
+E2E-API-03,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,,state shape frozen §3.8.2 + models double-post; zero secret hits,IPC getState contract
+E2E-API-04,A,https://pega-a.corp.local:8443/prweb,op.a,,200,"pegaTestResult success Network OK (HTTP 200) no auth header AbortSignal.timeout(8000)",IPC test Pega
+E2E-API-04,B,(empty),,,,"probes http://localhost:8080/prweb labeled workspace default",Empty-workspace test uses default
+E2E-UI-01,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,,panel shows A values,UI renders current workspace
+E2E-UI-01,B,,,,,panel empty no A strings state payload clean,UI fresh workspace empty
+E2E-UI-02,B,https://pega-b.corp.local:8443/prweb,op.b,PassB-456!,,pegaSaved success; B settings.json holds B values; A file unchanged,UI save B isolates from A
+E2E-UI-04,A,,,PassA-123!,,"placeholder saved-for-this-workspace; value never displayed",Presence placeholder A
+E2E-UI-04,B,,,,,placeholder Not set for this workspace,Presence placeholder B
+E2E-UI-06,A,https://pega-a.corp.local:8443/prweb,op.a,,200,Panel shows Network OK message,UI test Pega button
+SIT-01,A,https://<live-pega-a>/prweb,<live-op-a>,<live-pass-a>,200,Connected + indexing uses A creds (logs folder+hash no secrets),Live matrix workspace A
+SIT-01,B,https://<live-pega-b>/prweb,<live-op-b>,<live-pass-b>,200,Connected as B operator; A values intact on reopen,Live matrix workspace B

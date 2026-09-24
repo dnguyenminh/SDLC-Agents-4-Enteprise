@@ -7,6 +7,10 @@ import * as vscode from "vscode";
 import { getStaticModels, fetchGatewayModels, getDefaultModel } from "../chat-panel/chat-models";
 import { SECRET_KEYS, PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS } from "../models";
 import { getBackendUrl } from "../config/backend-url";
+import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET, type SecretBase } from "./WorkspaceScopeResolver";
+
+/** Config keys isolated per workspace (SA4E-323) — never via generic updateConfig. */
+const WORKSPACE_SCOPED_KEYS = ["pegaEndpoint", "pegaUsername", "atlassianConnectionType"];
 
 export class ProviderConfigService {
   constructor(private readonly secrets: vscode.SecretStorage) {}
@@ -23,6 +27,7 @@ export class ProviderConfigService {
     atlassianBaseUrl: string; atlassianEmail: string; hasAtlassianToken: boolean;
     atlassianConnectionType: string;
   }> {
+    await ensureMigrated(this.secrets);
     const config = vscode.workspace.getConfiguration("kiroSdlc");
     const provider = config.get<string>("llmProvider", "anthropic");
     const model = config.get<string>("llmModel", "");
@@ -34,15 +39,16 @@ export class ProviderConfigService {
     const mcpServerPort = config.get<number>("mcpServerPort", 9181);
     const enableMcpServer = config.get<boolean>("enableMcpServer", true);
 
-    const anthropicKey = await this.secrets.get(SECRET_KEYS.anthropic);
-    const openaiKey = await this.secrets.get(SECRET_KEYS.openai);
-    const pegaPassword = await this.secrets.get(SECRET_KEYS.pega);
+    const anthropicKey = await this.safeGet(SECRET_KEYS.anthropic);
+    const openaiKey = await this.safeGet(SECRET_KEYS.openai);
+    const wsHash = getWsHash();
+    const pegaPassword = await this.readSecret(wsHash, "pega");
     const pegaEndpoint = config.get<string>("pegaEndpoint", "http://localhost:8080/prweb");
     const pegaUsername = config.get<string>("pegaUsername", "");
 
-    const atlassianBaseUrl = await this.secrets.get(SECRET_KEYS.atlassianBaseUrl) || "";
-    const atlassianEmail = await this.secrets.get(SECRET_KEYS.atlassianEmail) || "";
-    const atlassianToken = await this.secrets.get(SECRET_KEYS.atlassianToken);
+    const atlassianBaseUrl = (await this.readSecret(wsHash, "atlassianBaseUrl")) || "";
+    const atlassianEmail = (await this.readSecret(wsHash, "atlassianEmail")) || "";
+    const atlassianToken = await this.readSecret(wsHash, "atlassianToken");
     const atlassianConnectionType = config.get<string>("atlassianConnectionType", "cloud");
 
     return {
@@ -56,12 +62,33 @@ export class ProviderConfigService {
   }
 
   async updatePegaConfig(endpoint: string, username: string, password?: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
-    await config.update("pegaEndpoint", endpoint, vscode.ConfigurationTarget.Global);
-    await config.update("pegaUsername", username, vscode.ConfigurationTarget.Global);
-    if (password && password.trim().length > 0) {
-      await this.secrets.store(SECRET_KEYS.pega, password);
+    const wsHash = getWsHash();
+    if (!wsHash) {
+      throw new Error("No workspace folder open — Pega config requires a workspace to isolate credentials.");
     }
+    await ensureMigrated(this.secrets);
+    const e = (endpoint || "").trim();
+    const u = (username || "").trim();
+    if (!/^https?:\/\//.test(e)) { throw new Error("Invalid Pega Endpoint URL (http/https required)."); }
+    try {
+      const config = vscode.workspace.getConfiguration("kiroSdlc");
+      await config.update("pegaEndpoint", e, vscode.ConfigurationTarget.Workspace);
+      await config.update("pegaUsername", u, vscode.ConfigurationTarget.Workspace);
+      if (password && password.trim().length > 0) {
+        await this.secrets.store(secretKey("pega", wsHash)!, password);
+      }
+    } catch (err: any) {
+      throw new Error(`Failed to save Pega config: ${err.message} (password may not be saved — retry).`);
+    }
+  }
+
+  /** OI-8: explicit clear of the workspace Pega password; marker stays. */
+  async clearPegaPassword(): Promise<void> {
+    const wsHash = getWsHash();
+    if (!wsHash) {
+      throw new Error("No workspace folder open — Pega config requires a workspace to isolate credentials.");
+    }
+    await this.secrets.delete(secretKey("pega", wsHash)!);
   }
 
   /**
@@ -84,8 +111,8 @@ export class ProviderConfigService {
       // Pass the provider's API key as a Bearer token — gateways (e.g. OmniRoute)
       // return 401 on /v1/models without it, which caused a silent fallback to the
       // static catalog. Local providers (lmstudio/ollama) don't need auth.
-      const secretKey = SECRET_KEYS[provider];
-      const apiKey = secretKey ? await this.secrets.get(secretKey) : undefined;
+      const providerSecretKey = SECRET_KEYS[provider];
+      const apiKey = providerSecretKey ? await this.secrets.get(providerSecretKey) : undefined;
       const authHeader = apiKey ? `Bearer ${apiKey}` : undefined;
       const gatewayModels = await fetchGatewayModels(fetchUrl, authHeader);
       if (gatewayModels && gatewayModels.length > 0) {
@@ -105,8 +132,25 @@ export class ProviderConfigService {
 
   /** Update a kiroSdlc configuration key globally. */
   async updateConfig(key: string, value: any): Promise<void> {
+    if (WORKSPACE_SCOPED_KEYS.includes(key)) {
+      throw new Error(`Use workspace-scoped method for ${key} (SA4E-323).`);
+    }
     const config = vscode.workspace.getConfiguration("kiroSdlc");
     await config.update(key, value || undefined, vscode.ConfigurationTarget.Global);
+  }
+
+  /** Read a workspace secret; null scope falls back to the legacy flat key. */
+  private async readSecret(wsHash: string | null, base: SecretBase): Promise<string | undefined> {
+    try {
+      const key = wsHash ? secretKey(base, wsHash)! : LEGACY_SECRET[base];
+      return await this.secrets.get(key);
+    } catch { return undefined; }
+  }
+
+  /** Best-effort secret read that never breaks state load (UC-3 EF-3). */
+  private async safeGet(key: string): Promise<string | undefined> {
+    try { return await this.secrets.get(key); }
+    catch { return undefined; }
   }
 
   private getBaseUrlForProvider(provider: string): string {

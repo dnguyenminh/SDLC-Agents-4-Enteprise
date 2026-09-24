@@ -91,6 +91,7 @@ export class SettingsMessageHandler {
         try {
           await this.configService.updatePegaConfig(msg.endpoint, msg.username, msg.password);
           this.postMessage({ type: "pegaSaved", success: true });
+          await this.sendCurrentState();
         } catch (err: any) {
           this.postMessage({ type: "pegaSaved", success: false, error: err.message || "Failed to save Pega config" });
         }
@@ -111,6 +112,24 @@ export class SettingsMessageHandler {
         break;
       case "saveAtlassianConfig":
         await this.handleSaveAtlassianConfig(msg);
+        break;
+      case "clearPegaPassword":
+        try {
+          await this.configService.clearPegaPassword();
+          this.postMessage({ type: "pegaPasswordCleared", success: true });
+          await this.sendCurrentState();
+        } catch (err: any) {
+          this.postMessage({ type: "pegaPasswordCleared", success: false, error: err.message });
+        }
+        break;
+      case "clearAtlassianConfig":
+        try {
+          await this.atlassianService.clearConfig();
+          this.postMessage({ type: "atlassianCleared", success: true });
+          await this.sendCurrentState();
+        } catch (err: any) {
+          this.postMessage({ type: "atlassianCleared", success: false, error: err.message });
+        }
         break;
       case "testAtlassianConnection":
         await this.handleTestAtlassianConnection();
@@ -264,8 +283,8 @@ export class SettingsMessageHandler {
       const { PegaHttpClient } = await import("../../services/PegaHttpClient");
       const client = new PegaHttpClient(this.secrets);
       const endpoint = client.getPegaEndpoint();
-      // Only check connectivity — no auth, no login
-      const res = await fetch(endpoint, { method: "GET" });
+      // Only check connectivity — no auth, no login (OI-7: bounded 8s timeout)
+      const res = await fetch(endpoint, { method: "GET", signal: AbortSignal.timeout(8000) });
       if (res.status > 0) {
         this.postMessage({ type: "pegaTestResult", success: true, message: `✅ Network OK — Pega Server reachable (HTTP ${res.status}). Authentication not tested.` });
       } else {
@@ -301,6 +320,7 @@ export class SettingsMessageHandler {
         connectionType: msg.connectionType || "cloud",
       });
       this.postMessage({ type: "atlassianSaved", success: true });
+      await this.sendCurrentState();
     } catch (err: any) {
       this.postMessage({ type: "atlassianSaved", success: false, error: err.message });
     }

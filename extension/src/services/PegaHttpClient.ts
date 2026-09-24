@@ -6,7 +6,7 @@
 
 import * as vscode from "vscode";
 import { createHash } from "crypto";
-import { SECRET_KEYS } from "../models";
+import { getWsHash, secretKey, LEGACY_SECRET } from "./WorkspaceScopeResolver";
 import type { RuleSetRuleSummary } from "../models";
 import { setProjectId } from "../extension";
 import { resolvePegaHierarchy, type HierarchyResult } from "./PegaHierarchyResolver";
@@ -39,9 +39,18 @@ export class PegaHttpClient {
   public async getAuthHeader(): Promise<string> {
     const config = vscode.workspace.getConfiguration("kiroSdlc");
     const username = config.get<string>("pegaUsername", "").trim();
-    const password = (await this.secrets.get(SECRET_KEYS.pega)) || "";
+    const password = await this.readWorkspacePassword();
     const credentials = Buffer.from(`${username}:${password}`).toString("base64");
     return `Basic ${credentials}`;
+  }
+
+  /** Current-workspace Pega password; legacy flat key only when no folder. */
+  private async readWorkspacePassword(): Promise<string> {
+    try {
+      const wsHash = getWsHash();
+      const key = wsHash ? secretKey("pega", wsHash)! : LEGACY_SECRET.pega;
+      return (await this.secrets.get(key)) || "";
+    } catch { return ""; }
   }
 
   public getPegaEndpoint(): string {

@@ -1,0 +1,47 @@
+test_case_id,area,input,expected_result,description
+PBT-06,slash-normalization,https://host:port/path + 0-3 trailing slashes,getPegaEndpoint identical slash-free for all variants,Endpoint normalization property
+PBT-06,slash-normalization,https://host + trailing slashes,myself URL identical {base}/rest/api/2/myself,BaseUrl normalization property
+UT-02,null-scope,workspaceFolders=[],getWsHash null,Empty folders null scope
+UT-02,null-scope,workspaceFolders=undefined,getWsHash null,Undefined folders null scope
+UT-02,null-scope,createHash throws,getWsHash null fail closed to UC-6 fallback,Hash failure null scope
+UT-04,null-scope,secretKey(pega) with null scope,null (callers take fallback never flat),No key without workspace
+UT-04,null-scope,secretKey(atlassianToken) with null scope,null,No key without workspace
+UT-04,marker,migrationMarkerKey(hashA),kiroSdlc.<hashA>.migrated,Marker namespaced format
+IT-13,no-folder save,updatePegaConfig under [] ,throw No workspace folder open — Pega config requires a workspace to isolate credentials.,Pega save blocked
+IT-13,no-folder save,saveConfig under [],throw No workspace folder open — open a folder to configure per-workspace Atlassian credentials.,Atlassian save blocked
+IT-13,zero-write,diff Workspace+Global+secrets vs snapshot,byte-identical ZERO writes all stores,No silent global write
+IT-13,read-only fallback,reads under null scope,legacy globals read-only (or empty) never throw,Reads do not fail
+IT-14,multi-root,getWorkspaceFolder with [A B],C:\sdlc-test\ws-a (folders[0]),Canonical folder
+IT-14,multi-root,5x getCurrentState under [A B],identical A values every time,Deterministic reads
+IT-14,multi-root,reorder [B A] getCurrentState,B values (identity follows folders[0]),Order-driven identity
+IT-14,multi-root,config.update target audit,writes land in folders[0] scope only folders[1..N] never touched,Write scoping
+IT-15,keychain outage,secrets.get throws (password key),hasPegaPassword=false rest intact state posted + warning,Partial secret failure
+IT-15,keychain outage,all secrets.get throw,both flags false config values intact NEVER another workspace cached,Full outage fail closed
+IT-15,recovery,heal + getState,correct flags retried cleanly,Recovery
+E2E-API-06,fetch guard,no folder post fetchPegaContext,"pegaContextFetched success:false No workspace folder open to save Pega context. (verbatim)",Guard wording frozen
+E2E-API-06,multi-root,[A B] post fetchPegaContext,disk-save root A path; client workspace-resolved,Root deterministic
+E2E-UI-05,empty window,open Settings with no folder,"banner shared read-only wording (OI-5); values legacy/empty read-only",Banner + read-only
+E2E-UI-05,empty window,click Save Pega + Save Atlassian,both blocked exact no-workspace strings; IT-13 zero-write holds,UI saves blocked
+E2E-UI-07,fresh workspace C,open Settings in C after A configured,"endpoint default http://localhost:8080/prweb username '' flags false type cloud; zero A strings",No prefill
+E2E-UI-08,multi-root [A B],open Settings,shows A values + folderCount>1 note (OI-5 wording),Canonical display + note
+E2E-UI-08,multi-root [A B],reopen repeatedly,same A values every time,Display determinism
+SIT-03,no-leak sweep,ripgrep CanaryPass-A-9z9z! + CanaryToken-B-8y8y! across settings.json files,ZERO hits outside keychain,Canary settings.json sweep
+SIT-03,no-leak sweep,same canaries across output-channel log, ZERO hits,Canary log sweep
+SIT-03,no-leak sweep,same canaries across captured state/Saved/TestResult payloads,ZERO hits (password/token),Canary IPC/webview sweep
+SIT-03,error paths,force bad-URL save + 401 test + no-folder save,error messages contain NO canary strings (screenshots),Error-message sweep
+SIT-04,timing,20x getState folder A,p95 <300ms ≤6 secret gets 0 network,GetState budget
+SIT-04,timing,first getState folder B (legacy seeded incl. migration),p95 <500ms,Migration budget
+SIT-04,timing,getWsHash microbench,<1ms per call zero I/O,Hash budget
+SIT-04,timeout,Atlassian + Pega test vs black-hole URL,both bounded ≤~8000ms (abort fires),Timeout budgets
+SIT-05,concurrency,two windows folder A save E1 then E2,both succeed same scope hashA,Same-scope saves
+SIT-05,concurrency,refresh both windows,both converge E2 (last-write-wins) screenshots,Convergence
+SIT-06,remote,remote folder save + close + reopen,same values (scheme+authority deterministic),Remote determinism
+SIT-06,normalization,C:\PROJ vs c:\proj\ (same folder two forms),same values identical wsHash in debug log,Form-insensitive identity
+SIT-06,remote,different remote folder,empty (different key),Folder-key binding
+SIT-07,read-only settings,save Pega in folder C (read-only .vscode/settings.json),"pegaSaved false Failed to save Pega config: {message} (password may not be saved — retry).",Partial-save warning
+SIT-07,read-only settings,restore write + save again,success idempotent overwrite same namespaced keys,Recovery save
+SIT-07,read-only migration,first open read-only then writable reopen,NO marker first; retry completes missing config writes,Deferred migration
+SIT-08,release note,read note vs SIT-02 evidence,accurate (inherit-on-first-open; settings.json location; per-workspace saves),Docs match behavior
+SIT-08,committed settings,git repo workspace inspection,endpoints/usernames in file secrets NOT in file (OI-11 warning present),OI-11 warning
+SIT-08,single-credential flow,migrate A then open B,B works zero extra steps no data loss,Regression-mitigation flow
+SIT-08,wording,banner + multi-root note + not-configured messages,human judgment clear names workspace context (Minor defects if not),UX sign-off

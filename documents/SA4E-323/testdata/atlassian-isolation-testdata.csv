@@ -1,0 +1,42 @@
+test_case_id,folder,base_url,email,api_token,connection_type,expected_http_code,expected_result,description
+PBT-03,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,keys kiroSdlc.<hashA>.atlassian.baseUrl/.email/.apiToken never flat,Secret key format property (Atlassian bases)
+UT-08,A,ftp://x,a@corp.local,tokenA-xxx,cloud,,throw Invalid Jira Base URL format. nothing persisted,FTP URL rejected
+UT-08,A,not-a-url,a@corp.local,tokenA-xxx,cloud,,same rejection nothing persisted,Malformed URL rejected
+UT-08,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,passes validation stores namespaced triple,Valid URL accepted
+UT-09,A,https://a.atlassian.net,a@corp.local,,cloud,,getConfig null (token missing),Incomplete triple null
+UT-09,A,https://a.atlassian.net,,tokenA-xxx,cloud,,getConfig null (email missing),Incomplete triple null
+UT-09,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,getConfig returns full triple,Complete triple returned
+UT-09,B,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,getConfig null under hashB (A values invisible),Cross-workspace null
+UT-10,A,,,,(absent),,readConnectionType cloud,Default cloud
+UT-10,A,,,,server,,readConnectionType server,Server preserved
+UT-10,A,,,,banana,,readConnectionType coerced cloud,Invalid value coerced
+UT-10,A,,,,CLOUD,,readConnectionType coerced cloud,Case-sensitive coerce
+UT-11,A,https://a.atlassian.net,,tokenA-xxx,cloud,,throw Atlassian email/API token must not be empty. nothing persisted,Empty email rejected (OI-9)
+UT-11,A,https://a.atlassian.net,a@corp.local,"   ",cloud,,same rejection,Blank token rejected (OI-9)
+UT-13,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,401,"Authentication failed (401). Check email/token. fetch called once",401 scoped no cross retry
+IT-03,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,3 namespaced secrets + Workspace type; no flat writes,Save A happy path
+IT-03,B,,,,cloud,,getConfig null type cloud default (B own default),B isolated after A save
+IT-03,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,A triple intact, A re-read
+IT-03,B,https://b-jira.corp.local,b@corp.local,patB-yyy,server,,B server triple stored; A still cloud triple,B save does not touch A
+IT-04,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,"credentials r1 {email apiToken baseUrl} shape exact §3.8.3",IPC triple A
+IT-04,B,https://b-jira.corp.local,b@corp.local,patB-yyy,server,,B triple returned,B IPC isolated
+IT-04,B (token deleted),https://b-jira.corp.local,b@corp.local,,server,,throw Atlassian credentials not configured in extension. no fallback to A,Incomplete B throws verbatim
+IT-05,A,https://a.atlassian.net,a@corp.local,tokenA-v1,cloud,200,first request header uses tokenA-v1,Hot-reload before save
+IT-05,A,https://a.atlassian.net,a@corp.local,tokenA-v2,cloud,200,second request (no restart) header uses tokenA-v2,Mid-session save picked up
+IT-06,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,state has A triple + hasAtlassianToken true token zero hits,State Atlassian facet
+E2E-API-02,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,(omitted),,atlassianSaved success stored cloud + state refresh,IPC save default type AF-1
+E2E-API-02,B,https://b-jira.corp.local,b@corp.local,patB-yyy,server,,B stored server A still cloud,IPC per-workspace types
+E2E-API-02,A,ftp://x,a@corp.local,tokenA-xxx,cloud,,atlassianSaved success:false Invalid Jira Base URL format. A intact,IPC invalid URL
+E2E-API-03,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,state keys frozen + models double-post token zero hits,IPC getState Atlassian facet
+E2E-API-05,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,200,Connected as Alice Nguyen Basic(a@corp.local:tokenA-xxx) slashes stripped,IPC test success
+E2E-API-05,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,401,"Authentication failed (401). Check email/token. 1 fetch call",IPC test 401 scoped
+E2E-API-05,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,500,HTTP 500: Server Error,IPC test other HTTP
+E2E-API-05,B,https://b-jira.corp.local,b@corp.local,patB-yyy,server,200,Connected as Bob Tran with B Basic header,IPC test B authenticates as B
+E2E-API-07,B (empty),,,,,,No credentials configured. fetch count 0,Jira triple incomplete no network
+E2E-UI-01,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,,panel shows A URL/email/type cloud,UI renders Atlassian A
+E2E-UI-03,B,https://b-jira.corp.local,b@corp.local,patB-yyy,server,,atlassianSaved success radio server A unchanged cloud,UI save server type B
+E2E-UI-03,B,ftp://x,b@corp.local,patB-yyy,server,,atlassianSaved false Invalid Jira Base URL format. form NOT cleared,UI invalid save keeps form
+E2E-UI-06,A,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,200,Panel Connected as Alice Nguyen,UI test button A
+E2E-UI-06,B,https://b-jira.corp.local,b@corp.local,patB-yyy,server,200,Panel Connected as Bob Tran,UI test button B
+SIT-01,A,https://<live-jira-a>,<live-email-a>,<live-token-a>,cloud,200,Connected as <A Jira user>,Live Jira A
+SIT-01,B,https://<live-jira-b>,<live-email-b>,<live-token-b>,server,200,Connected as <B Jira user> (distinct),Live Jira B
