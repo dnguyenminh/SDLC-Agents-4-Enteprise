@@ -99,14 +99,19 @@ export class TaskWorker {
     } catch { return null; }
   }
 
+  /** Upper bound for parallel task processing — guards against runaway config. */
+  private static readonly MAX_CONCURRENCY = 64;
+
   /**
    * Update mutable config fields at runtime — no restart needed.
    * Called when admin changes taskWorker config via Admin UI.
-   * Supported keys: concurrency (1-8), baseInterval, maxInterval.
+   * Supported keys: concurrency (1-MAX_CONCURRENCY), baseInterval, maxInterval.
    */
   updateConfig(patch: Partial<Pick<TaskWorkerConfig, 'concurrency' | 'baseInterval' | 'maxInterval'>>): void {
-    if (patch.concurrency !== undefined) {
-      (this.config as any).concurrency = Math.max(1, Math.min(patch.concurrency, 8));
+    if (patch.concurrency !== undefined && Number.isFinite(patch.concurrency)) {
+      // Clamp to [1, MAX_CONCURRENCY]. Admin-configured values (e.g. 30) are honored;
+      // only truly out-of-range values are bounded.
+      (this.config as any).concurrency = Math.max(1, Math.min(patch.concurrency, TaskWorker.MAX_CONCURRENCY));
     }
     if (patch.baseInterval !== undefined) (this.config as any).baseInterval = patch.baseInterval;
     if (patch.maxInterval !== undefined) (this.config as any).maxInterval = patch.maxInterval;
@@ -172,6 +177,9 @@ export class TaskWorker {
   }
 
   getRepository(): PendingTaskRepository { return this.repo; }
+
+  /** Currently configured max parallel tasks per poll cycle. */
+  getConcurrency(): number { return this.config.concurrency ?? 1; }
 
   // ── Private ──
 

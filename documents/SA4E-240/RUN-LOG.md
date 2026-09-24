@@ -23,3 +23,6 @@
 | 19 | 2025-01-27 02:55 | SM | testing | Viết TEST-REPORT.md; transition In Progress→In Review→(Verify) | ✅ success | ~15k | - |
 | 20 | 2025-01-27 03:00 | SM | pentest | Pentest N/A (read-only extension, no new endpoint); cover qua Security Code Review | ⚠️ n/a | ~5k | - |
 | 21 | 2025-01-27 03:00 | SM | uat | ⛔ STOP tại UAT gate (L3) — chờ user/PO xác nhận | ✅ success | ~3k | - |
+| 22 | 2026-09-24 12:45 | security-agent | security_deploy_review | SECURITY-DEPLOY-REVIEW.md v1 PASS | ✅ success | ~5k | - |
+| 23 | 2026-09-24 12:50 | devops-agent | deployment | DPG.md + RLN.md created, deployment marked done | ✅ success | ~5k | - |
+| 24 | 2026-09-24 13:00 | SM | close | Ticket closed, STATUS updated | ✅ success | ~2k | - |

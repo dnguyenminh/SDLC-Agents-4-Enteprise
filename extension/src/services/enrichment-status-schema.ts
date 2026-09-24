@@ -12,6 +12,7 @@ export const EnrichmentStateEnum = z.enum(['idle', 'running', 'complete', 'error
 /** Response schema — validated with safeParse before UI consumption. */
 export const EnrichmentStatusResponseSchema = z.object({
   state: EnrichmentStateEnum,
+  projectId: z.string().nullable().optional(),
   totalRules: z.number().int().min(0),
   completedRules: z.number().int().min(0),
   failedRules: z.number().int().min(0),
@@ -23,6 +24,11 @@ export const EnrichmentStatusResponseSchema = z.object({
   estimatedCompletion: z.string().nullable(),
   currentFile: z.string().nullable(),
   lastPollAt: z.string().nullable(),
+  // Configured max parallel tasks (taskWorker.concurrency) + live processing count.
+  // MUST be declared here — zod safeParse strips undeclared keys, which would
+  // drop these fields before the dashboard reads them (falling back to 20).
+  maxConcurrency: z.number().int().min(1).optional(),
+  activeConcurrency: z.number().int().min(0).optional(),
   activeTasks: z.array(z.object({ source: z.string() })).optional(),
   recentFailures: z.array(z.object({ symbolName: z.string(), error: z.string(), taskId: z.number() })).optional(),
 });

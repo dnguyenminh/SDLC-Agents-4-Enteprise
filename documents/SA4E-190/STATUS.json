@@ -1,7 +1,9 @@
 {
   "ticket": "SA4E-190",
   "autonomyLevel": "L3",
-  "currentPhase": "requirements",
+  "currentPhase": "closed",
+  "status": "closed",
+  "closedAt": "2026-09-24",
   "todos": [
     {
       "id": "SA4E-190-TO-01",
@@ -68,5 +70,5 @@
       "result": "passed"
     }
   },
-  "lastUpdated": "2026-09-23T14:59:23.191Z"
+  "lastUpdated": "2026-09-24T12:05:00Z"
 }
