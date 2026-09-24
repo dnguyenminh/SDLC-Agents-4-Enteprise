@@ -16,6 +16,10 @@ export class BackendSettingsHandler {
   async setBackendUrl(url: string): Promise<void> {
     try {
       const validated = validateBackendUrl(url, { allowInsecureRemote: getAllowInsecureRemote() });
+      // SA4E-320/323: backend.url is workspace-scoped (each workspace keeps its
+      // own value). Untrusted repos cannot abuse this because the key is listed
+      // in package.json capabilities.untrustedWorkspaces.restrictedConfigurations
+      // (VS Code ignores its workspace value while the workspace is untrusted).
       await vscode.workspace.getConfiguration("kiroSdlc")
         .update("backend.url", validated, vscode.ConfigurationTarget.Workspace);
       this.postMessage({ type: "backendUrlSaved", success: true });
@@ -28,6 +32,11 @@ export class BackendSettingsHandler {
   async setAllowInsecureRemote(enabled: unknown): Promise<void> {
     // Finding #6: coerce to strict boolean before persisting (fail-closed).
     const boolEnabled = enabled === true;
+    // SA4E-320/323: allowInsecureRemote is workspace-scoped (each workspace keeps
+    // its own opt-in). Untrusted repos cannot force it on: the key is in
+    // capabilities.untrustedWorkspaces.restrictedConfigurations, so VS Code
+    // ignores its workspace value while the workspace is untrusted, and the
+    // trust gate blocks credential ops regardless.
     await vscode.workspace.getConfiguration("kiroSdlc")
       .update("backend.allowInsecureRemote", boolEnabled, vscode.ConfigurationTarget.Workspace);
     if (!boolEnabled) { this.revalidateStoredUrl(); }

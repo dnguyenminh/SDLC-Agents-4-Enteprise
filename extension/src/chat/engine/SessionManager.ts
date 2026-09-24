@@ -16,7 +16,7 @@ import { KnowledgeClient, resolveKbBaseUrl, type KbMessage } from '../../knowled
  */
 export class SessionManager implements ISessionManager {
   private session: SessionData | null = null;
-  private readonly client: KnowledgeClient;
+  private client: KnowledgeClient;
 
   /**
    * @param workspaceRoot - Absolute path to workspace root (kept for API compat)
@@ -24,6 +24,17 @@ export class SessionManager implements ISessionManager {
    */
   constructor(_workspaceRoot: string, client?: KnowledgeClient) {
     this.client = client ?? new KnowledgeClient(resolveKbBaseUrl());
+  }
+
+  /**
+   * Swap in a KB client bound to a new backend URL, without an extension
+   * reload (SA4E-320). Clears the cached session so the next call re-resolves
+   * the thread against the new backend.
+   * @param client KnowledgeClient pointing at the new backend URL.
+   */
+  updateClient(client: KnowledgeClient): void {
+    this.client = client;
+    this.session = null;
   }
 
   /**

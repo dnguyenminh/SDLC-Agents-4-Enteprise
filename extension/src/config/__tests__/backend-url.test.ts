@@ -12,6 +12,16 @@ describe('validateBackendUrl (SEC-289-03 / Transport Security)', () => {
     expect(isLoopbackHost('localhost')).toBe(true);
   });
 
+  it('distinguishes loopback IPs from hostnames sharing a 127 prefix', () => {
+    expect(isLoopbackHost('127.5.5.5')).toBe(true);
+    expect(isLoopbackHost('127.999.0.1')).toBe(false);
+    expect(isLoopbackHost('127.attacker.com')).toBe(false);
+    expect(isLoopbackHost('127.0.0.1.evil.test')).toBe(false);
+    expect(isLoopbackHost('LOCALHOST')).toBe(true);
+    expect(isLoopbackHost('::1')).toBe(true);
+    expect(isLoopbackHost('[::1]')).toBe(true);
+  });
+
   it('allows https remote URLs', () => {
     expect(validateBackendUrl('https://api.enterprise.internal/kb')).toBe('https://api.enterprise.internal/kb');
     expect(validateBackendUrl('https://my-backend.corp.com:8443')).toBe('https://my-backend.corp.com:8443');
@@ -92,6 +102,20 @@ describe('validateBackendUrl allowInsecureRemote bypass (SA4E-320)', () => {
       'https://api.enterprise.internal'
     );
     expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('bypass ON: 127-prefixed hostname requires explicit opt-in and warning', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const url = 'http://127.attacker.com:48721';
+    expect(validateBackendUrl(url, { allowInsecureRemote: true })).toBe(url);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringMatching(/\[Security\] WARNING: Insecure remote backend URL allowed/));
+  });
+
+  it('bypass OFF: 127-prefixed hostname is rejected as remote HTTP', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(() => validateBackendUrl('http://127.attacker.com:48721')).toThrow(
+      /Insecure backend URL rejected/
+    );
   });
 
   it('bypass ON: malformed URL still rejected', () => {

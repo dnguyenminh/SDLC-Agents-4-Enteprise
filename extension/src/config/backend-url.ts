@@ -8,7 +8,7 @@
 import * as vscode from "vscode";
 
 /** Compile-time fallback — matches package.json configuration default. */
-const DEFAULT_BACKEND_URL = "http://127.0.0.1:48721";
+export const DEFAULT_BACKEND_URL = "http://127.0.0.1:48721";
 
 /** Options for validateBackendUrl (backward-compatible optional param). */
 export interface ValidateBackendUrlOptions {
@@ -16,14 +16,18 @@ export interface ValidateBackendUrlOptions {
   allowInsecureRemote?: boolean;
 }
 
+import { isIP } from "node:net";
+
+/**
+ * True only for genuine loopback hosts. A bare "127." prefix is insufficient —
+ * "127.attacker.com" is a DNS name, not an IP — so IPv4 hosts are matched only
+ * after isIP() confirms them as real IPv4 addresses (SA4E-320 Finding #4).
+ */
 export function isLoopbackHost(hostname: string): boolean {
-  return (
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "::1" ||
-    hostname === "[::1]" ||
-    hostname.startsWith("127.")
-  );
+  const host = hostname.toLowerCase();
+  if (host === "localhost" || host === "::1" || host === "[::1]") return true;
+  if (isIP(host) === 4) return host.startsWith("127.");
+  return false;
 }
 
 /**

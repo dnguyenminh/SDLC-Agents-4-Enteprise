@@ -10,6 +10,7 @@ import { WebviewPanelManager } from "./webview-panel-manager";
 import { KiroTreeViewProvider } from "./sidebar/tree-view-provider";
 import { writeBundledMcpConfig } from "./mcp-injector";
 import { ConfigWatcher } from "./config-watcher";
+import { getBackendUrl, DEFAULT_BACKEND_URL } from "./config/backend-url";
 import { KbEventBus } from "./kb-event-bus";
 import { DiagnosticsFeedService } from "./langgraph/diagnostics/diagnostics-feed-service";
 import { ChatPanelProvider } from "./chat-panel/chat-panel-provider";
@@ -174,7 +175,13 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   context.subscriptions.push(outputChannel);
 
   const mcpConfig = vscode.workspace.getConfiguration("kiroSdlc");
-  const backendUrl = mcpConfig.get<string>("backend.url") || "http://127.0.0.1:48721";
+  let backendUrl: string;
+  try {
+    backendUrl = getBackendUrl();
+  } catch (err: any) {
+    console.warn(`[Security] backend.url validation failed at activate: ${err?.message} — falling back to loopback default`);
+    backendUrl = DEFAULT_BACKEND_URL;
+  }
 
   authManager = new AuthManager(context.secrets, backendUrl);
   await authManager.initialize();
@@ -220,6 +227,23 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   context.subscriptions.push(
     vscode.commands.registerCommand("kiroSdlc.openAgenticChat", () => {
       openAgenticChat(context, workspaceRoot, chatPanelProvider);
+    })
+  );
+
+  // SA4E-320: apply a new backend.url at runtime — no extension reload needed.
+  // AuthManager + RemoteBackendClient captured the URL at activation, so a Save
+  // in Settings previously only took effect after "Reload Window". This listener
+  // re-points every long-lived consumer and reconnects.
+  const buildKbHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = { "X-Project-Id": getProjectId() };
+    const token = authManager?.getTokenSync();
+    if (token) { headers["Authorization"] = `Bearer ${token}`; }
+    return headers;
+  };
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (!event.affectsConfiguration("kiroSdlc.backend.url")) { return; }
+      applyBackendUrlChange(outputChannel, buildKbHeaders);
     })
   );
 
@@ -375,6 +399,33 @@ function setupAuthStateHandlers(): void {
       }
     }
   });
+}
+
+/**
+ * Re-point every long-lived backend consumer at the newly-saved backend.url
+ * and reconnect, so a Settings change applies without an extension reload
+ * (SA4E-320). Validation failures fall back to the loopback default (fail-safe,
+ * same policy as activation). Safe to call repeatedly (updates are no-ops when
+ * the URL is unchanged).
+ */
+function applyBackendUrlChange(
+  outputChannel: vscode.OutputChannel,
+  buildKbHeaders: () => Record<string, string>
+): void {
+  let backendUrl: string;
+  try {
+    backendUrl = getBackendUrl();
+  } catch (err: any) {
+    console.warn(`[Security] backend.url validation failed on change: ${err?.message} — falling back to loopback default`);
+    backendUrl = DEFAULT_BACKEND_URL;
+  }
+  outputChannel.appendLine(`[Kiro] backend.url changed → ${backendUrl}. Applying without reload...`);
+  authManager?.updateBaseUrl(backendUrl);
+  sessionManager?.updateClient(new KnowledgeClient(backendUrl, { getHeaders: buildKbHeaders }));
+  // Reconnect the backend client last (async) so it picks up the new URL + token.
+  mcpManager?.updateBackendUrl(backendUrl)
+    .then(() => treeProvider?.refresh())
+    .catch((err) => outputChannel.appendLine(`[Kiro] Backend reconnect after URL change failed: ${(err as Error).message}`));
 }
 
 function setupTreeView(context: vscode.ExtensionContext): void {
