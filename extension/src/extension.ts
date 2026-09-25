@@ -10,6 +10,7 @@ import { WebviewPanelManager } from "./webview-panel-manager";
 import { KiroTreeViewProvider } from "./sidebar/tree-view-provider";
 import { writeBundledMcpConfig } from "./mcp-injector";
 import { ConfigWatcher } from "./config-watcher";
+import { getBackendUrl, DEFAULT_BACKEND_URL } from "./config/backend-url";
 import { KbEventBus } from "./kb-event-bus";
 import { DiagnosticsFeedService } from "./langgraph/diagnostics/diagnostics-feed-service";
 import { ChatPanelProvider } from "./chat-panel/chat-panel-provider";
@@ -174,7 +175,13 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   context.subscriptions.push(outputChannel);
 
   const mcpConfig = vscode.workspace.getConfiguration("kiroSdlc");
-  const backendUrl = mcpConfig.get<string>("backend.url") || "http://127.0.0.1:48721";
+  let backendUrl: string;
+  try {
+    backendUrl = getBackendUrl();
+  } catch (err: any) {
+    console.warn(`[Security] backend.url validation failed at activate: ${err?.message} — falling back to loopback default`);
+    backendUrl = DEFAULT_BACKEND_URL;
+  }
 
   authManager = new AuthManager(context.secrets, backendUrl);
   await authManager.initialize();

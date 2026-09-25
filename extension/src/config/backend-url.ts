@@ -8,7 +8,7 @@
 import * as vscode from "vscode";
 
 /** Compile-time fallback — matches package.json configuration default. */
-const DEFAULT_BACKEND_URL = "http://127.0.0.1:48721";
+export const DEFAULT_BACKEND_URL = "http://127.0.0.1:48721";
 
 /** Options for validateBackendUrl (backward-compatible optional param). */
 export interface ValidateBackendUrlOptions {
@@ -16,13 +16,20 @@ export interface ValidateBackendUrlOptions {
   allowInsecureRemote?: boolean;
 }
 
+/** Strict IPv4 loopback check — a "127." prefix alone is insufficient because "127.attacker.com" is a hostname, not an IP. */
+function isLoopbackIpv4(hostname: string): boolean {
+  const parts = hostname.split(".");
+  if (parts.length !== 4 || parts[0] !== "127") { return false; }
+  return parts.slice(1).every((p) => /^\d{1,3}$/.test(p) && Number(p) <= 255);
+}
+
 export function isLoopbackHost(hostname: string): boolean {
+  const host = hostname.toLowerCase();
   return (
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "::1" ||
-    hostname === "[::1]" ||
-    hostname.startsWith("127.")
+    host === "localhost" ||
+    host === "::1" ||
+    host === "[::1]" ||
+    isLoopbackIpv4(host)
   );
 }
 
