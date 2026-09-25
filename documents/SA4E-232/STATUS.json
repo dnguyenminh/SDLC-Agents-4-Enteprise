@@ -8,13 +8,13 @@
   "designDirection": "hop-nhat (huong 1) - port TypeScript, khong wrap JS",
   "referenceTool": "C:/projects/Pega/PegaPlatfrom/pega-rule-parser",
   "sequentialStories": [
-    { "key": "SA4E-233", "phase": "GD1", "title": "Nen expression ANTLR", "status": "not_started", "dependsOn": [] },
-    { "key": "SA4E-234", "phase": "GD2", "title": "Cat bo parser viet tay", "status": "not_started", "dependsOn": ["SA4E-233"] },
-    { "key": "SA4E-235", "phase": "GD3", "title": "Dependency tu pxRuleReferences", "status": "not_started", "dependsOn": [] },
-    { "key": "SA4E-236", "phase": "GD4", "title": "Hop nhat builder AST + pseudo-code", "status": "not_started", "dependsOn": ["SA4E-233"] },
-    { "key": "SA4E-237", "phase": "GD5", "title": "Semantic Resolution + bang pega_reference_resolution", "status": "not_started", "dependsOn": ["SA4E-235", "SA4E-236"] }
+    { "key": "SA4E-233", "phase": "GD1", "title": "Nen expression ANTLR", "status": "completed", "dependsOn": [] },
+    { "key": "SA4E-234", "phase": "GD2", "title": "Cat bo parser viet tay", "status": "completed", "dependsOn": ["SA4E-233"] },
+    { "key": "SA4E-235", "phase": "GD3", "title": "Dependency tu pxRuleReferences", "status": "completed", "dependsOn": [] },
+    { "key": "SA4E-236", "phase": "GD4", "title": "Hop nhat builder AST + pseudo-code", "status": "completed", "dependsOn": ["SA4E-233"] },
+    { "key": "SA4E-237", "phase": "GD5", "title": "Semantic Resolution + bang pega_reference_resolution", "status": "completed", "dependsOn": ["SA4E-235", "SA4E-236"] }
   ],
-  "currentStory": "SA4E-233",
+  "currentStory": "SA4E-237",
   "circuitBreaker": {
     "state": "blocked",
     "attempts": 0,
@@ -23,5 +23,7 @@
   "invocationCount": 0,
   "invocationCap": 30,
   "baseCommit": "a1fa869",
-  "lastUpdated": "2026-07-08T00:00:00Z"
+  "lastUpdated": "2026-09-25T22:45:00Z"
 }
+
+
