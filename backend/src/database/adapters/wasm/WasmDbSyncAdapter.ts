@@ -1,5 +1,5 @@
 import type { Database } from './wasmTypes.js';
-import type { RunResult, PreparedStatement } from '../../DatabaseAdapter.js';
+import type { RunResult, PreparedStatement } from '../DatabaseAdapter.js';
 
 export class WasmDbSyncAdapter {
   constructor(private readonly db: Database) {}
