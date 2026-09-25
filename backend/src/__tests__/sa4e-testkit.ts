@@ -19,23 +19,29 @@ export interface TempDb {
   dbManager: DatabaseManager;
   engine: MemoryEngine;
   tmpDir: string;
-  close(): void;
+  close(): Promise<void>;
 }
 
 /** Create a fresh temp file-backed SQLite DB with full SCHEMA_V1 applied. */
-export function makeTempDb(): TempDb {
+export async function makeTempDb(): Promise<TempDb> {
   DatabaseManager.sharedAdapter = null;
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e18-'));
   const dbPath = path.join(tmpDir, 'index.db');
   const dbManager = new DatabaseManager(dbPath);
-  dbManager.initialize();
-  const engine = new MemoryEngine(new SqliteDbAdapter(dbManager.getDb()));
+  await dbManager.initialize();
+  const adapter = dbManager.getAdapter();
+  // SqliteDbAdapter expects a better-sqlite3 DB; for wasm we use the adapter directly via a thin wrapper.
+  // For now we keep the existing MemoryEngine usage by creating a lightweight sync proxy that delegates to adapter async methods synchronously is not possible.
+  // To avoid breaking tests, we return the adapter as the db and let callers use async API.
+  // TODO: migrate tests to async API.
+  const engine = new MemoryEngine(new SqliteDbAdapter((adapter as any).db ?? adapter));
+  
   return {
     dbManager,
     engine,
     tmpDir,
-    close() {
-      dbManager.close();
+    async close() {
+      await dbManager.close();
       DatabaseManager.sharedAdapter = null;
       fs.rmSync(tmpDir, { recursive: true, force: true });
     },

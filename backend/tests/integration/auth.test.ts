@@ -338,7 +338,7 @@ describe('Auth Flow — Session Expiry', () => {
     const { getAdminDb } = await import('../../src/admin/admin-db.js');
     const db = getAdminDb();
     const pastDate = new Date(Date.now() - 1000).toISOString();
-    db.prepare('UPDATE sessions SET expires_at = ? WHERE token = ?').run(pastDate, token);
+    await db.runAsync('UPDATE sessions SET expires_at = ? WHERE token = ?', [pastDate, token]);
 
     // Token should now be rejected
     const expiredRes = await app.request('/api/admin/auth/me', { headers: authHeaders(token) });

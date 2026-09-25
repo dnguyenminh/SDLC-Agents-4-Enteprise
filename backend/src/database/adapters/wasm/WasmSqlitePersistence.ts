@@ -78,7 +78,13 @@ export class WasmSqlitePersistence {
     try {
       const bytes = this.sqlite3.capi.sqlite3_js_db_export(this.db);
       const dir = path.dirname(this.dbPath);
-      await fsp.mkdir(dir, { recursive: true });
+      try {
+        await fsp.mkdir(dir, { recursive: true });
+      } catch (e: any) {
+        if (e.code !== 'EEXIST' && e.code !== 'ENOENT' && e.code !== 'EPERM') {
+          throw e;
+        }
+      }
       const tmp = `${this.dbPath}.tmp-${process.pid}-${Date.now()}`;
       await fsp.writeFile(tmp, Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength));
       await fsp.rename(tmp, this.dbPath);

@@ -21,7 +21,6 @@ import {
   FakeToolSource,
 } from '../../src/modules/orchestration/reindex/__tests__/reindex-fakes.js';
 import type { IEmbedder } from '../../src/modules/orchestration/reindex/models/ports.js';
-import { SqliteDbAdapter } from '../../src/modules/memory/task-queue/SqliteDbAdapter.js';
 
 const silent = pino({ level: 'silent' });
 
@@ -38,59 +37,68 @@ class SlowEmbedder implements IEmbedder {
 
 interface Harness {
   tmp: TempDb;
-  db: any;
+  adapter: any;
   src: FakeToolSource;
   source: FakeEventSource;
   sub: ReindexSubscriber;
 }
 
-function harness(): Harness {
-  const tmp = makeTempDb();
-  const db = tmp.dbManager.getDb();
+async function harness(): Promise<Harness> {
+  const tmp = await makeTempDb();
+  const adapter = tmp.dbManager.getAdapter();
   const src = new FakeToolSource();
   const source = new FakeEventSource();
-  const service = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
+  const service = new ReindexService(() => adapter, new FakeEmbedder(), src, silent);
   const sub = new ReindexSubscriber(source, service, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
   sub.start();
-  return { tmp, db, src, source, sub };
+  return { tmp, adapter, src, source, sub };
 }
 
-function names(db: any, server: string): string[] {
-  return (db.prepare('SELECT name FROM mcp_tools WHERE server = ? ORDER BY name').all(server) as { name: string }[])
-    .map((r) => r.name);
+async function names(adapter: any, server: string): Promise<string[]> {
+  const rows = await adapter.allAsync<{ name: string }>('SELECT name FROM mcp_tools WHERE server = ? ORDER BY name', [server]);
+  return rows.map(r => r.name);
 }
 
-function seed(db: any, server: string | null, name: string): void {
-  db.prepare('INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?,?,?,?,?,?)')
-    .run(name, `${name} d`, '{}', server ?? 'memory', server, null);
+async function seed(adapter: any, server: string | null, name: string): Promise<void> {
+  await adapter.runAsync('INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?,?,?,?,?,?)', [name, `${name} d`, '{}', server ?? 'memory', server, null]);
+}
+
+async function waitForName(adapter: any, server: string, name: string, timeoutMs = 5000): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const rows = await adapter.allAsync<{ name: string }>('SELECT name FROM mcp_tools WHERE server = ?', [server]);
+    if (rows.some(r => r.name === name)) return true;
+    await new Promise(r => setTimeout(r, 25));
+  }
+  return false;
 }
 
 describe('SA4E-42 re-index integration', () => {
   let h: Harness;
-  beforeEach(() => { h = harness(); });
-  afterEach(() => { h.sub.stop(); h.tmp.close(); });
+  beforeEach(async () => { h = await harness(); });
+  afterEach(async () => { h.sub.stop(); await h.tmp.close(); });
 
   it('IT-01 (repro): late connect makes tools discoverable within ≤5s', async () => {
-    expect(names(h.db, 'atlassian')).toEqual([]); // disconnected at startup
+    expect(await names(h.adapter, 'atlassian')).toEqual([]); // disconnected at startup
     h.src.setTools('atlassian', ['jira_create_issue', 'jira_search']);
     h.src.setConnected('atlassian', true);
     const t0 = Date.now();
     h.source.emit('atlassian', 'connected');
     await h.sub.settle('atlassian');
-    expect(names(h.db, 'atlassian')).toContain('jira_create_issue');
-    const row = h.db.prepare('SELECT schema_json FROM mcp_tools WHERE name = ?').get('jira_create_issue') as any;
+    expect(await names(h.adapter, 'atlassian')).toContain('jira_create_issue');
+    const row = await h.adapter.getAsync<any>('SELECT schema_json FROM mcp_tools WHERE name = ?', ['jira_create_issue']);
     expect(() => JSON.parse(row.schema_json)).not.toThrow();
     expect(Date.now() - t0).toBeLessThanOrEqual(5000);
   });
 
   it('IT-02: previously indexed tools survive a late connect', async () => {
-    seed(h.db, 'markdown-exporter', 'export_docx');
+    await seed(h.adapter, 'markdown-exporter', 'export_docx');
     h.src.setTools('atlassian', ['jira_search']);
     h.src.setConnected('atlassian', true);
     h.source.emit('atlassian', 'connected');
     await h.sub.settle('atlassian');
-    expect(names(h.db, 'markdown-exporter')).toEqual(['export_docx']);
-    expect(names(h.db, 'atlassian')).toEqual(['jira_search']);
+    expect(await names(h.adapter, 'markdown-exporter')).toEqual(['export_docx']);
+    expect(await names(h.adapter, 'atlassian')).toEqual(['jira_search']);
   });
 
   it('IT-03: disconnect removes only that server rows', async () => {
@@ -98,11 +106,11 @@ describe('SA4E-42 re-index integration', () => {
     h.src.setConnected('atlassian', true);
     h.source.emit('atlassian', 'connected');
     await h.sub.settle('atlassian');
-    seed(h.db, 'markdown-exporter', 'export_docx');
+    await seed(h.adapter, 'markdown-exporter', 'export_docx');
     h.source.emit('atlassian', 'disconnected');
     await h.sub.settle('atlassian');
-    expect(names(h.db, 'atlassian')).toEqual([]);
-    expect(names(h.db, 'markdown-exporter')).toEqual(['export_docx']);
+    expect(await names(h.adapter, 'atlassian')).toEqual([]);
+    expect(await names(h.adapter, 'markdown-exporter')).toEqual(['export_docx']);
   });
 
   it('IT-04: failed state removes tools (same as disconnect)', async () => {
@@ -112,7 +120,7 @@ describe('SA4E-42 re-index integration', () => {
     await h.sub.settle('atlassian');
     h.source.emit('atlassian', 'failed');
     await h.sub.settle('atlassian');
-    expect(names(h.db, 'atlassian')).toEqual([]);
+    expect(await names(h.adapter, 'atlassian')).toEqual([]);
   });
 
   it('IT-05: idempotent repeated connects → no duplicates', async () => {
@@ -122,26 +130,26 @@ describe('SA4E-42 re-index integration', () => {
       h.source.emit('atlassian', 'connected');
       await h.sub.settle('atlassian');
     }
-    expect(names(h.db, 'atlassian')).toEqual(['a', 'b', 'c']);
+    expect(await names(h.adapter, 'atlassian')).toEqual(['a', 'b', 'c']);
   });
 
   it('IT-06: scoped ops leave other servers + core byte-identical', async () => {
-    seed(h.db, 'markdown-exporter', 'export_docx');
-    seed(h.db, null, 'mem_search');
-    const before = h.db.prepare("SELECT name, server FROM mcp_tools WHERE server IS NULL OR server='markdown-exporter' ORDER BY name").all();
+    await seed(h.adapter, 'markdown-exporter', 'export_docx');
+    await seed(h.adapter, null, 'mem_search');
+    const before = await h.adapter.allAsync<{ name: string; server: string }>("SELECT name, server FROM mcp_tools WHERE server IS NULL OR server='markdown-exporter' ORDER BY name");
     h.src.setTools('atlassian', ['jira_search']);
     h.src.setConnected('atlassian', true);
     h.source.emit('atlassian', 'connected');
     await h.sub.settle('atlassian');
     h.source.emit('atlassian', 'disconnected');
     await h.sub.settle('atlassian');
-    const after = h.db.prepare("SELECT name, server FROM mcp_tools WHERE server IS NULL OR server='markdown-exporter' ORDER BY name").all();
+    const after = await h.adapter.allAsync<{ name: string; server: string }>("SELECT name, server FROM mcp_tools WHERE server IS NULL OR server='markdown-exporter' ORDER BY name");
     expect(after).toEqual(before);
   });
 
   it('IT-07: non-blocking read during in-flight refresh (BR-09)', async () => {
-    seed(h.db, 'markdown-exporter', 'export_docx'); // pre-existing index stays readable
-    const svc = new ReindexService(() => new SqliteDbAdapter(h.db), new SlowEmbedder(100), h.src, silent);
+    await seed(h.adapter, 'markdown-exporter', 'export_docx'); // pre-existing index stays readable
+    const svc = new ReindexService(() => h.adapter, new SlowEmbedder(100), h.src, silent);
     const source = new FakeEventSource();
     const sub = new ReindexSubscriber(source, svc, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
     sub.start();
@@ -150,21 +158,22 @@ describe('SA4E-42 re-index integration', () => {
     source.emit('atlassian', 'connected'); // slow re-index starts (in flight)
     await new Promise((r) => setTimeout(r, 20)); // let the first embed be in progress
     const t0 = Date.now();
-    const rows = h.db.prepare('SELECT * FROM mcp_tools').all() as any[];
+    const rows = await h.adapter.allAsync<any>('SELECT * FROM mcp_tools');
     const readMs = Date.now() - t0;
     expect(readMs).toBeLessThan(50); // read not blocked by the async refresh
     expect(rows.some((r) => r.name === 'export_docx')).toBe(true); // current index visible
-    expect(names(h.db, 'atlassian')).toEqual([]); // new tools not yet committed
+    expect(await names(h.adapter, 'atlassian')).toEqual([]); // new tools not yet committed
     await sub.settle('atlassian'); // now the refresh completes
-    expect(names(h.db, 'atlassian')).toContain('jira_create_issue'); // new tools appear
+    const found = await waitForName(h.adapter, 'atlassian', 'jira_create_issue');
+    expect(found).toBe(true);
     sub.stop();
   });
 
   it('IT-08: fail-soft on embedding error leaves prior rows; later event succeeds', async () => {
-    seed(h.db, 'atlassian', 'jira_old');
+    await seed(h.adapter, 'atlassian', 'jira_old');
     const embedder = new FakeEmbedder();
     embedder.failFor('jira_new');
-    const svc = new ReindexService(() => new SqliteDbAdapter(h.db), embedder, h.src, silent);
+    const svc = new ReindexService(() => h.adapter, embedder, h.src, silent);
     const source = new FakeEventSource();
     const sub = new ReindexSubscriber(source, svc, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
     sub.start();
@@ -172,11 +181,12 @@ describe('SA4E-42 re-index integration', () => {
     h.src.setConnected('atlassian', true);
     source.emit('atlassian', 'connected');
     await sub.settle('atlassian');
-    expect(names(h.db, 'atlassian')).toContain('jira_old'); // prior preserved
+    expect(await names(h.adapter, 'atlassian')).toContain('jira_old'); // prior preserved
     h.src.setTools('atlassian', ['jira_ok']);
     source.emit('atlassian', 'connected');
     await sub.settle('atlassian');
-    expect(names(h.db, 'atlassian')).toContain('jira_ok'); // subscriber still alive
+    const found = await waitForName(h.adapter, 'atlassian', 'jira_ok', 2000);
+    expect(found).toBe(true); // subscriber still alive
     sub.stop();
   });
 
@@ -187,7 +197,7 @@ describe('SA4E-42 re-index integration', () => {
       h.source.emit('atlassian', state);
       await h.sub.settle('atlassian');
     }
-    expect(names(h.db, 'atlassian')).toEqual(['a', 'b']);
+    expect(await names(h.adapter, 'atlassian')).toEqual(['a', 'b']);
   });
 
   it('IT-10: prune tools removed upstream on reconnect', async () => {
@@ -198,31 +208,31 @@ describe('SA4E-42 re-index integration', () => {
     h.src.setTools('atlassian', ['t1', 't2', 't6']);
     h.source.emit('atlassian', 'connected');
     await h.sub.settle('atlassian');
-    expect(names(h.db, 'atlassian')).toEqual(['t1', 't2', 't6']);
+    expect(await names(h.adapter, 'atlassian')).toEqual(['t1', 't2', 't6']);
   });
 
   it('IT-11: migration adds server column + idempotent index', async () => {
     const adapter = new SqliteAdapter(':memory:');
     await adapter.connect();
-    adapter.exec(`CREATE TABLE mcp_tools (
+    await adapter.execAsync(`CREATE TABLE mcp_tools (
       id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE,
       description TEXT NOT NULL, schema_json TEXT NOT NULL, category TEXT, vector BLOB)`);
-    adapter.run('INSERT INTO mcp_tools (name, description, schema_json) VALUES (?,?,?)', ['old', 'd', '{}']);
-    migrateAddMcpToolsServerColumn(adapter);
-    migrateAddMcpToolsServerColumn(adapter); // second run is a safe no-op
-    const cols = adapter.all(`SELECT name FROM pragma_table_info('mcp_tools')`).map((c: any) => c.name);
-    expect(cols).toContain('server');
-    const idx = adapter.get("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_mcp_tools_server'");
+    await adapter.runAsync('INSERT INTO mcp_tools (name, description, schema_json) VALUES (?,?,?)', ['old', 'd', '{}']);
+    await migrateAddMcpToolsServerColumn(adapter);
+    await migrateAddMcpToolsServerColumn(adapter); // second run is a safe no-op
+    const cols = await adapter.allAsync(`SELECT name FROM pragma_table_info('mcp_tools')`);
+    expect(cols.map((c: any) => c.name)).toContain('server');
+    const idx = await adapter.getAsync("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_mcp_tools_server'");
     expect(idx).toBeDefined();
-    const existing = adapter.get('SELECT server FROM mcp_tools WHERE name = ?', ['old']) as any;
+    const existing = await adapter.getAsync('SELECT server FROM mcp_tools WHERE name = ?', ['old']) as any;
     expect(existing.server).toBeNull();
     await adapter.disconnect();
   });
 
   it('IT-12: cross-server name collision is not silently hijacked (F-01)', async () => {
     const warn = vi.fn();
-    seed(h.db, 'A', 'common_tool');
-    const svc = new ReindexService(() => new SqliteDbAdapter(h.db), new FakeEmbedder(), h.src, { info: vi.fn(), warn } as any);
+    await seed(h.adapter, 'A', 'common_tool');
+    const svc = new ReindexService(() => h.adapter, new FakeEmbedder(), h.src, { info: vi.fn(), warn } as any);
     const source = new FakeEventSource();
     const sub = new ReindexSubscriber(source, svc, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
     sub.start();
@@ -230,7 +240,7 @@ describe('SA4E-42 re-index integration', () => {
     h.src.setConnected('B', true);
     source.emit('B', 'connected');
     await sub.settle('B');
-    const row = h.db.prepare('SELECT server FROM mcp_tools WHERE name = ?').get('common_tool') as any;
+    const row = await h.adapter.getAsync<any>('SELECT server FROM mcp_tools WHERE name = ?', ['common_tool']);
     expect(row.server).toBe('A'); // not hijacked by B
     expect(warn).toHaveBeenCalled();
     sub.stop();
@@ -241,11 +251,11 @@ describe('SA4E-42 re-index integration', () => {
     h.src.setConnected('atlassian', true);
     h.source.emit('atlassian', 'connected');
     await h.sub.settle('atlassian');
-    expect(names(h.db, 'atlassian')).toEqual(['jira_search']);
+    expect(await names(h.adapter, 'atlassian')).toEqual(['jira_search']);
     h.sub.stop();
     h.src.setTools('atlassian', ['jira_new']);
     h.source.emit('atlassian', 'connected'); // no listener after stop
     await new Promise((r) => setTimeout(r, 10));
-    expect(names(h.db, 'atlassian')).toEqual(['jira_search']); // no new writes
+    expect(await names(h.adapter, 'atlassian')).toEqual(['jira_search']); // no new writes
   });
 });
