@@ -15,7 +15,7 @@ describe('IT-02: CallTool usage counting', () => {
   let ctx: TempDb;
 
   beforeEach(async () => {
-    ctx = makeTempDb();
+    ctx = await makeTempDb();
     const registry = new ModuleRegistry(silentLogger());
     const handlers = new Map();
     handlers.set('mem_search', okHandler);
@@ -24,7 +24,7 @@ describe('IT-02: CallTool usage counting', () => {
     registry.register(new StubModule('memory', defs, handlers, ctx.engine, 'ready'));
     harness = await connectMcp(registry);
   });
-  afterEach(async () => { await harness.close(); ctx.close(); });
+  afterEach(async () => { await harness.close(); await ctx.close(); });
 
   it('success increments counter (BR-07); error result not counted (BR-12)', async () => {
     const ok = await harness.client.callTool({ name: 'mem_search', arguments: {} });

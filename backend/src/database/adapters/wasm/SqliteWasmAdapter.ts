@@ -160,7 +160,7 @@ export class SqliteWasmAdapter implements DatabaseAdapter {
     this.persistence?.scheduleFlush();
   }
 
-  private getDb(): Database {
+  getDb(): Database {
     if (!this.db) throw new Error('SQLite (wasm) not connected');
     return this.db;
   }

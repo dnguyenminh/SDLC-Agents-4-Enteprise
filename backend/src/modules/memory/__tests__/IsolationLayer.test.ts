@@ -269,14 +269,14 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
     await ctx.engine.insert({ content: 'User1 pattern', summary: 'user1-priv', type: 'CONTEXT', scope: 'USER', user_id: 'u1', project_id: null });
     await ctx.engine.insert({ content: 'User2 pattern', summary: 'user2-priv', type: 'CONTEXT', scope: 'USER', user_id: 'u2', project_id: null });
   });
-  afterEach(() => ctx.close());
+  afterEach(async () => { await ctx.close(); });
 
   it('IT-01: buildReadFilter enforces strict isolation against real DB (SA4E-31)', () => {
-    ((ctx.engine.getDb() as any) as any).prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
+     ((ctx.dbManager.getDb() as any)).prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
     const pCtx = createProjectContext('app-A', 'u1');
     const { clause, params } = buildReadFilter(pCtx);
     const sql = `SELECT * FROM knowledge_entries WHERE archived = 0 AND ${clause}`;
-    const rows = (ctx.engine.getDb() as any).prepare(sql).all(...params) as any[];
+    const rows = (ctx.dbManager.getDb() as any).prepare(sql).all(...params) as any[];
     const summaries = rows.map((r: any) => r.summary);
     expect(summaries).toContain('proj-A');       // WORKSPACE app-A + user u1
     expect(summaries).toContain('shared');        // SHARED granted for app-A

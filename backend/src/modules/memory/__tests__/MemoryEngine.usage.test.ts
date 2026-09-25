@@ -8,8 +8,8 @@ import { makeTempDb, type TempDb } from '../../../__tests__/sa4e-testkit.js';
 
 describe('MemoryEngine tool usage', () => {
   let ctx: TempDb;
-  beforeEach(() => { ctx = makeTempDb(); });
-  afterEach(() => ctx.close());
+  beforeEach(async () => { ctx = await makeTempDb(); });
+  afterEach(async () => { await ctx.close(); });
 
   it('UT-06: first call inserts row with call_count = 1', async () => {
     await ctx.engine.incrementToolUsage('mem_search');

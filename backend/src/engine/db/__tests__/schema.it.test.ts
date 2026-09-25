@@ -9,12 +9,12 @@ import { makeTempDb, type TempDb } from '../../../__tests__/sa4e-testkit.js';
 
 describe('IT-05: tool_usage schema idempotency', () => {
   let ctx: TempDb;
-  beforeEach(() => { ctx = makeTempDb(); });
-  afterEach(() => ctx.close());
+  beforeEach(async () => { ctx = await makeTempDb(); });
+  afterEach(async () => { await ctx.close(); });
 
-  it('creates tool_usage with expected columns and preserves data on re-apply', async () => {
-    const db = ctx.dbManager.getDb();
-    const cols = db.pragma('table_info(tool_usage)') as any[];
+   it('creates tool_usage with expected columns and preserves data on re-apply', async () => {
+     const cols = await ctx.dbManager.getAdapter().allAsync('PRAGMA table_info(tool_usage)') as any[];
+     const byName = Object.fromEntries(cols.map(c => [c.name, c]));
     const byName = Object.fromEntries(cols.map(c => [c.name, c]));
     expect(byName['tool_name']).toBeDefined();
     expect(byName['tool_name'].pk).toBe(1);
@@ -24,7 +24,7 @@ describe('IT-05: tool_usage schema idempotency', () => {
 
     // Seed a row, then re-apply SCHEMA_V1 (simulate restart) — must not error or wipe.
     await ctx.engine.incrementToolUsage('mem_search');
-    expect(() => db.exec(SCHEMA_V1)).not.toThrow();
+    expect(() => ctx.dbManager.getAdapter().execAsync(SCHEMA_V1)).not.toThrow();
     const rows = await ctx.engine.getToolUsage('mem_search');
     expect(rows).toHaveLength(1);
     expect(rows[0].call_count).toBe(1);

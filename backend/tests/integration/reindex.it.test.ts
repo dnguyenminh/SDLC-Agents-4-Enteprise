@@ -21,7 +21,6 @@ import {
   FakeToolSource,
 } from '../../src/modules/orchestration/reindex/__tests__/reindex-fakes.js';
 import type { IEmbedder } from '../../src/modules/orchestration/reindex/models/ports.js';
-import { SqliteDbAdapter } from '../../src/modules/memory/task-queue/SqliteDbAdapter.js';
 
 const silent = pino({ level: 'silent' });
 
@@ -68,7 +67,7 @@ function seed(db: any, server: string | null, name: string): void {
 describe('SA4E-42 re-index integration', () => {
   let h: Harness;
   beforeEach(() => { h = harness(); });
-  afterEach(() => { h.sub.stop(); h.tmp.close(); });
+  afterEach(async () => { h.sub.stop(); await h.tmp.close(); });
 
   it('IT-01 (repro): late connect makes tools discoverable within ≤5s', async () => {
     expect(names(h.db, 'atlassian')).toEqual([]); // disconnected at startup
@@ -141,7 +140,7 @@ describe('SA4E-42 re-index integration', () => {
 
   it('IT-07: non-blocking read during in-flight refresh (BR-09)', async () => {
     seed(h.db, 'markdown-exporter', 'export_docx'); // pre-existing index stays readable
-    const svc = new ReindexService(() => new SqliteDbAdapter(h.db), new SlowEmbedder(100), h.src, silent);
+    const svc = new ReindexService(() => h.adapter, new SlowEmbedder(100), h.src, silent);
     const source = new FakeEventSource();
     const sub = new ReindexSubscriber(source, svc, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
     sub.start();

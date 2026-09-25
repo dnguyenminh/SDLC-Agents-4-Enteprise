@@ -10,7 +10,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import pino from 'pino';
 import { runMigrations } from './migrations.js';
-import { SqliteWasmAdapter } from '../../database/adapters/wasm/SqliteWasmAdapter.js';
+import { WasmDbSyncAdapter } from '../../database/adapters/wasm/WasmDbSyncAdapter.js';
+import { WasmSqliteAdapter } from '../../database/adapters/wasm/SqliteWasmAdapter.js';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 
 const logger = pino({ name: 'database-manager' });
@@ -58,6 +59,12 @@ export class DatabaseManager {
     await adapter.connect();
     await this.configureDatabase(adapter);
     await runMigrations(adapter, this.projectId);
+  }
+
+  /** Get the underlying sync-compatible database handle for engine consumers. */
+  getDb(): WasmDbSyncAdapter {
+    if (!this.adapter) throw new Error('Database not initialized');
+    return new WasmDbSyncAdapter((this.adapter as SqliteWasmAdapter).getDb());
   }
 
   /** Get the underlying database adapter. */

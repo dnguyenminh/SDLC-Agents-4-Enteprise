@@ -17,7 +17,7 @@ describe('IT-03: dynamic tool usage counting', () => {
   let ctx: TempDb;
 
   beforeEach(async () => {
-    ctx = makeTempDb();
+    ctx = await makeTempDb();
     const registry = new ModuleRegistry(silentLogger());
     const handlers = new Map();
     handlers.set('mem_admin', okHandler);
@@ -27,7 +27,7 @@ describe('IT-03: dynamic tool usage counting', () => {
     registry.register(orch);
     harness = await connectMcp(registry);
   });
-  afterEach(async () => { await harness.close(); ctx.close(); });
+  afterEach(async () => { await harness.close(); await ctx.close(); });
 
   it('inner tool counted once, wrapper counted in distinct row', async () => {
     const res = await harness.client.callTool({

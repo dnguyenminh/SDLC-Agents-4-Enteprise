@@ -11,13 +11,13 @@ describe('IT-04: mem_admin tool_usage read path', () => {
   let ctx: TempDb;
   let dispatcher: MemoryToolDispatcher;
 
-  beforeEach(() => {
-    ctx = makeTempDb();
+  beforeEach(async () => {
+    ctx = await makeTempDb();
     dispatcher = new MemoryToolDispatcher(ctx.engine, ctx.tmpDir);
     for (let i = 0; i < 5; i++) ctx.engine.incrementToolUsage('mem_search');
     for (let i = 0; i < 2; i++) ctx.engine.incrementToolUsage('code_search');
   });
-  afterEach(() => ctx.close());
+  afterEach(async () => { await ctx.close(); });
 
   it('returns JSON array of usage rows and supports name filter', async () => {
     const all = await dispatcher.dispatch('mem_admin', { action: 'tool_usage', limit: 20 });

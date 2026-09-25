@@ -15,13 +15,13 @@ import { makeTempDb, type TempDb } from '../../../../__tests__/sa4e-testkit.js';
 let ctx: TempDb;
 let tmpDir: string;
 
-beforeEach(() => {
-  ctx = makeTempDb();
+beforeEach(async () => {
+  ctx = await makeTempDb();
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ingest-it-'));
 });
 
-afterEach(() => {
-  ctx.close();
+afterEach(async () => {
+  await ctx.close();
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 

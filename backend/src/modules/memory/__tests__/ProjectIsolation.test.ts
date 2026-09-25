@@ -16,8 +16,8 @@ describe('SA4E-26 PBT — Scope Clause Properties', () => {
   let ctx: TempDb;
   let engine: MemoryEngine;
 
-  beforeEach(() => { ctx = makeTempDb(); engine = ctx.engine; });
-  afterEach(() => ctx.close());
+  beforeEach(async () => { ctx = await makeTempDb(); engine = ctx.engine; });
+  afterEach(async () => { await ctx.close(); });
 
   it('PBT-01: Scope clause with projectId includes SHARED visibility (SA4E-31)', () => {
     fc.assert(fc.property(
@@ -86,8 +86,8 @@ describe('SA4E-26 UT — buildScopeClause & buildScopeParams', () => {
   let ctx: TempDb;
   let engine: MemoryEngine;
 
-  beforeEach(() => { ctx = makeTempDb(); engine = ctx.engine; });
-  afterEach(() => ctx.close());
+  beforeEach(async () => { ctx = await makeTempDb(); engine = ctx.engine; });
+  afterEach(async () => { await ctx.close(); });
 
   it('UT-01: buildScopeClause with projectId returns strict per-workspace clause (SA4E-31)', () => {
     const clause = engine.buildScopeClause({ userId: 'user-1', projectId: 'app-A' });
@@ -211,8 +211,8 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
   let ctx: TempDb;
   let engine: MemoryEngine;
 
-  beforeEach(() => {
-    ctx = makeTempDb();
+  beforeEach(async () => {
+    ctx = await makeTempDb();
     engine = ctx.engine;
     // Seed data matching STP 6.1
     engine.insert({ content: 'Project A pattern', summary: 'seed-1', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'user-1', project_id: 'app-A' });
@@ -223,7 +223,7 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
     engine.insert({ content: 'Other user pattern', summary: 'seed-6', type: 'CONTEXT', scope: 'USER', user_id: 'user-2', project_id: 'app-A' });
     engine.insert({ content: 'Project A second pattern', summary: 'seed-7', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'user-2', project_id: 'app-A' });
   });
-  afterEach(() => ctx.close());
+  afterEach(async () => { await ctx.close(); });
 
   it('IT-01: Search with projectId filters PROJECT entries (SA4E-31: NULL no longer leaks)', async () => {
     const results = await engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });
