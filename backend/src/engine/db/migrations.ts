@@ -163,7 +163,7 @@ async function applyMigrationV2(db: QueryDatabaseAdapter): Promise<void> {
 
 /** Get set of column names for a table via pragma_table_info. */
 async function getExistingColumns(db: QueryDatabaseAdapter, table: string): Promise<Set<string>> {
-  const rows = await db.allAsync<{ name: string }>(`SELECT name FROM pragma_table_info('${table}')`);
+  const rows = await db.allAsync<{ name: string }>(`PRAGMA table_info('${table}')`);
   return new Set(rows.map(r => r.name));
 }
 
