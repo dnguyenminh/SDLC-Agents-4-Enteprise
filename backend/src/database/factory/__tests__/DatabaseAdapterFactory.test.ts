@@ -5,14 +5,14 @@
 
 import { describe, it, expect } from 'vitest';
 import { DatabaseAdapterFactory } from '../DatabaseAdapterFactory.js';
-import { SqliteAdapter } from '../../adapters/SqliteAdapter.js';
+import { SqliteWasmAdapter } from '../../adapters/wasm/SqliteWasmAdapter.js';
 import { PostgresAdapter } from '../../adapters/PostgresAdapter.js';
 import { MysqlAdapter } from '../../adapters/MysqlAdapter.js';
 
 describe('DatabaseAdapterFactory', () => {
   it('creates a SqliteAdapter for the sqlite engine', () => {
     const adapter = DatabaseAdapterFactory.create({ engine: 'sqlite', dbPath: ':memory:' });
-    expect(adapter).toBeInstanceOf(SqliteAdapter);
+    expect(adapter).toBeInstanceOf(SqliteWasmAdapter);
   });
 
   it('throws when sqlite has no dbPath', () => {

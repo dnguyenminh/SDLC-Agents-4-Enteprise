@@ -49,7 +49,7 @@ describe('CallTool project scope stamping', () => {
   let received: Record<string, unknown> | undefined;
 
   beforeEach(async () => {
-    ctx = makeTempDb();
+    ctx = await makeTempDb();
     received = undefined;
     const registry = new ModuleRegistry(silentLogger());
     const handlers = new Map();
@@ -62,7 +62,7 @@ describe('CallTool project scope stamping', () => {
     ));
     harness = await connectMcp(registry, { projectId: '7b11cdc169de', userId: 'mcp-client' });
   });
-  afterEach(async () => { await harness.close(); ctx.close(); });
+  afterEach(async () => { await harness.close(); await ctx.close(); });
 
   it('injects __projectId and __userId from projectContext into tool args', async () => {
     await harness.client.callTool({ name: 'code_search', arguments: { query: 'viewSource' } });
