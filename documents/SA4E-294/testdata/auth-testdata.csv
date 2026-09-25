@@ -1,0 +1,3 @@
+test_case_id,token,workspace_id,x_project_id,expected_http_code,description
+TC-303,valid_jwt_workspace_A,workspace-A,workspace-A,200,Valid workspace binding
+TC-303,valid_jwt_workspace_B,workspace-B,workspace-A,404,Workspace mismatch

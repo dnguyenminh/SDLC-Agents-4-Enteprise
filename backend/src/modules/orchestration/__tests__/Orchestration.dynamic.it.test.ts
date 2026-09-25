@@ -43,3 +43,45 @@ describe('IT-03: dynamic tool usage counting', () => {
     expect(inner[0].tool_name).not.toBe(wrapper[0].tool_name);
   });
 });
+
+/**
+ * Regression: execute_dynamic_tool must forward the trusted tenant scope
+ * (__projectId/__userId/_projectContext) — stamped on the OUTER args — into the
+ * nested LOCAL tool's arguments. Without this, scoped reads (code_search etc.)
+ * invoked via find_tools/dynamic run fail-closed and return empty results.
+ */
+describe('execute_dynamic_tool scope propagation', () => {
+  let harness: McpHarness;
+  let ctx: TempDb;
+  let seen: Record<string, unknown> | undefined;
+
+  beforeEach(async () => {
+    ctx = makeTempDb();
+    seen = undefined;
+    const registry = new ModuleRegistry(silentLogger());
+    const handlers = new Map();
+    // Capturing handler standing in for a scoped code-intel tool.
+    handlers.set('code_search', async (a: Record<string, unknown>) => {
+      seen = a;
+      return { content: [{ type: 'text', text: 'ok' }], isError: false };
+    });
+    registry.register(new StubModule('memory', [def('code_search', 'memory')], handlers, ctx.engine, 'ready'));
+    const orch = new OrchestrationModule(silentLogger(), registry);
+    await orch.initialize();
+    registry.register(orch);
+    // projectContext → MCP handler stamps __projectId/__userId on the OUTER args.
+    harness = await connectMcp(registry, { projectId: '7b11cdc169de', userId: 'mcp-client' });
+  });
+  afterEach(async () => { await harness.close(); ctx.close(); });
+
+  it('forwards __projectId/__userId into the nested tool arguments', async () => {
+    await harness.client.callTool({
+      name: 'execute_dynamic_tool',
+      arguments: { toolName: 'code_search', arguments: { query: 'viewSource' } },
+    });
+    expect(seen).toBeDefined();
+    expect(seen!.__projectId).toBe('7b11cdc169de');
+    expect(seen!.__userId).toBe('mcp-client');
+    expect(seen!.query).toBe('viewSource');
+  });
+});

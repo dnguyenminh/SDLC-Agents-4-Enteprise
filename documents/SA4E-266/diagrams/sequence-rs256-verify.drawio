@@ -1,0 +1,57 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="client" value="Client" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8cc;strokeColor=#82b366;fontSize=13;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="80" y="40" width="120" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="backend" value="Backend jwt-auth" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="400" y="40" width="160" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="jwks" value="JWKS (Entra + cache)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="800" y="40" width="200" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="m1" value="1. request + token" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;exitX=1;exitY=0;entryX=0;entryY=0" edge="1" parent="1" source="client" target="backend">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="200" y="120" as="sourcePoint"/>
+        <mxPoint x="400" y="120" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. detect token type (RS256 / HS256)" style="html=1;verticalAlign=middle;rounded=0;dashed=1;noEdgeStyle=1" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="140" as="sourcePoint"/>
+        <mxPoint x="480" y="190" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. fetch JWKS (cache hit / TTL 1h / kid miss → refresh)" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="220" as="sourcePoint"/>
+        <mxPoint x="900" y="220" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. return public key (kid)" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="270" as="sourcePoint"/>
+        <mxPoint x="560" y="270" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5. verify sig + iss/aud/exp/nonce" style="html=1;verticalAlign=middle;rounded=0;dashed=1;noEdgeStyle=1" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="480" y="310" as="sourcePoint"/>
+        <mxPoint x="480" y="360" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6a" value="6a. PASS → opaque session" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;strokeColor=#82b366" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="400" y="420" as="sourcePoint"/>
+        <mxPoint x="200" y="420" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6b" value="6b. FAIL → 401 invalid_signature / issuer_mismatch / audience_mismatch / token_expired" style="html=1;verticalAlign=bottom;endArrow=block;endSize=8;strokeColor=#d79b00" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="400" y="500" as="sourcePoint"/>
+        <mxPoint x="200" y="500" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

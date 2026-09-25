@@ -25,7 +25,9 @@ async function hasProjectId(db: QueryDatabaseAdapter, table: string): Promise<bo
 
 /** Recreate `files` with UNIQUE(project_id, path); preserves id for FK integrity. */
 async function recreateFiles(db: QueryDatabaseAdapter, legacyProjectId: string): Promise<void> {
-  if (await hasProjectId(db, 'files')) return;
+  const cols = await columns(db, 'files');
+  if (cols.has('project_id') && cols.has('file_created_at')) return;
+
   await db.execAsync(`CREATE TABLE files_new (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id TEXT NOT NULL,
@@ -42,13 +44,30 @@ async function recreateFiles(db: QueryDatabaseAdapter, legacyProjectId: string):
     file_version TEXT,
     UNIQUE(project_id, path)
   );`);
-  await db.runAsync(
-    `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
-        content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
-      SELECT id, ?, path, relative_path, language, module,
-        content_hash, size_bytes, last_indexed, line_count, NULL, NULL, NULL FROM files`,
-    [legacyProjectId],
-  );
+  // Copy existing data, map columns if present
+  if (cols.has('project_id') && cols.has('file_created_at')) {
+    await db.runAsync(
+      `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
+        SELECT id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version FROM files`,
+    );
+  } else if (cols.has('project_id')) {
+    await db.runAsync(
+      `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
+        SELECT id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, NULL, NULL, NULL FROM files`,
+    );
+  } else {
+    await db.runAsync(
+      `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
+        SELECT id, ?, path, relative_path, language, module,
+          content_hash, size_bytes, last_indexed, line_count, NULL, NULL, NULL FROM files`,
+      [legacyProjectId],
+    );
+  }
   await db.execAsync('DROP TABLE files; ALTER TABLE files_new RENAME TO files;');
   await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_files_path ON files(relative_path);
     CREATE INDEX IF NOT EXISTS idx_files_module ON files(module);

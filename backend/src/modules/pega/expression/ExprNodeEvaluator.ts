@@ -1,81 +1,107 @@
-/** Stateless evaluator for ExprNode trees produced by the ANTLR expression parser. */
+/**
+ * ExprNodeEvaluator.ts — Evaluates a POC expression AST (ExprNode) against a clipboard
+ * context, producing a runtime PegValue. This replaces the hand-written OOP nodes that
+ * carried their own `.evaluate()`; the single source of truth for PARSING is now the POC
+ * ANTLR parser (pega-expr/), and this class is the single source of truth for EVALUATION.
+ *
+ * Design: a visitor over the ExprNode discriminated union. Kept small (SRP): reference
+ * flattening lives in ExprReferenceResolver, builtin dispatch reuses PegaBuiltinFunctions.
+ */
+
 import type {
-  BinaryOpNode,
-  ConstantNode,
   ExprNode,
-  FunctionCallNode,
-  TernaryNode,
+  BinaryOpNode,
   UnaryOpNode,
-} from './expressionTypes.js';
-import { PegaBuiltinFunctions, PegExpressionError, PegValue } from './PegaExpressionAst.js';
+  TernaryNode,
+  FunctionCallNode,
+  ConstantNode,
+} from './pega-expr/nodes.js';
+import { PegValue, PegaBuiltinFunctions, PegExpressionError } from './PegaExpressionAst.js';
 import type { PegaClipboardContext } from './PegaClipboardContext.js';
-import { canonicalFunctionName } from './ExprFunctionName.js';
 import { referenceToParts } from './ExprReferenceResolver.js';
 import { applyBinaryOp, applyUnaryOp } from './ExprOperators.js';
 
+/** Max recursion depth to guard against pathological/hostile expressions. */
 const MAX_DEPTH = 100;
 
+/**
+ * Evaluates POC ExprNode trees to PegValue. Stateless across calls; pass the clipboard
+ * context per evaluation.
+ */
 export class ExprNodeEvaluator {
-  eval(node: ExprNode, context: PegaClipboardContext, depth = 0): PegValue {
+  /**
+   * Evaluate an expression AST node to a runtime value.
+   * @param node Expression AST node (from POC parseExpression)
+   * @param ctx Clipboard context used to resolve property references
+   * @param depth Current recursion depth (internal)
+   * @returns Evaluated PegValue
+   * @throws PegExpressionError on depth overflow, unresolved refs, or parse-error nodes
+   */
+  eval(node: ExprNode, ctx: PegaClipboardContext, depth = 0): PegValue {
     if (depth > MAX_DEPTH) {
       throw new PegExpressionError(`Expression exceeds max depth of ${MAX_DEPTH}`, 'MAX_DEPTH_EXCEEDED');
     }
     switch (node.kind) {
       case 'Constant': return this.evalConstant(node);
-      case 'Reference': return context.resolve(referenceToParts(node));
-      case 'BinaryOp': return this.evalBinary(node, context, depth);
-      case 'UnaryOp': return this.evalUnary(node, context, depth);
-      case 'Ternary': return this.evalTernary(node, context, depth);
-      case 'FunctionCall': return this.evalFunction(node, context, depth);
-      case 'Placeholder': return this.evalPlaceholder(node);
-      case 'ErrorExpr': return this.evalError(node);
+      case 'Reference': return ctx.resolve(referenceToParts(node));
+      case 'BinaryOp': return this.evalBinary(node, ctx, depth);
+      case 'UnaryOp': return this.evalUnary(node, ctx, depth);
+      case 'Ternary': return this.evalTernary(node, ctx, depth);
+      case 'FunctionCall': return this.evalFunction(node, ctx, depth);
+      case 'Placeholder':
+        throw new PegExpressionError(`Cannot evaluate template placeholder {${node.name}}`, 'PLACEHOLDER_NOT_EVALUABLE');
+      case 'ErrorExpr':
+        throw new PegExpressionError(`Cannot evaluate unparsed expression: ${node.message}`, 'PARSE_ERROR');
+      default: {
+        // Exhaustiveness guard — should be unreachable for a valid ExprNode.
+        const _never: never = node;
+        throw new PegExpressionError(`Unknown node kind: ${JSON.stringify(_never)}`, 'UNKNOWN_NODE');
+      }
     }
   }
 
+  /** Convert a typed constant literal into its runtime PegValue. */
   private evalConstant(node: ConstantNode): PegValue {
-    if (node.type === 'INTEGER' || node.type === 'LONG' ||
-        node.type === 'DOUBLE' || node.type === 'FLOAT') {
-      return PegValue.number(Number(node.value));
+    switch (node.type) {
+      case 'INTEGER': case 'LONG': case 'DOUBLE': case 'FLOAT':
+        return PegValue.number(Number(node.value));
+      case 'TRUE': return PegValue.bool(true);
+      case 'FALSE': return PegValue.bool(false);
+      default:
+        // QUOTED_STRING / CHAR_LITERAL / UNQUOTED_STRING / ANGLE_BRACKET_IDENTIFIER
+        return PegValue.text(String(node.value));
     }
-    if (node.type === 'TRUE') return PegValue.bool(true);
-    if (node.type === 'FALSE') return PegValue.bool(false);
-    return PegValue.text(String(node.value));
   }
 
+  /** Evaluate both operands then apply the binary operator. */
   private evalBinary(node: BinaryOpNode, ctx: PegaClipboardContext, depth: number): PegValue {
-    if (node.op === '&&' || node.op === '||') return this.evalLogical(node, ctx, depth);
     const left = this.eval(node.left, ctx, depth + 1);
     const right = this.eval(node.right, ctx, depth + 1);
     return applyBinaryOp(node.op, left, right);
   }
 
-  private evalLogical(node: BinaryOpNode, ctx: PegaClipboardContext, depth: number): PegValue {
-    const left = this.eval(node.left, ctx, depth + 1);
-    if (node.op === '&&' && !left.boolean) return PegValue.bool(false);
-    if (node.op === '||' && left.boolean) return PegValue.bool(true);
-    return applyBinaryOp(node.op, left, this.eval(node.right, ctx, depth + 1));
-  }
-
+  /** Evaluate the operand then apply the unary operator. */
   private evalUnary(node: UnaryOpNode, ctx: PegaClipboardContext, depth: number): PegValue {
-    return applyUnaryOp(node.op, this.eval(node.operand, ctx, depth + 1));
+    const operand = this.eval(node.operand, ctx, depth + 1);
+    return applyUnaryOp(node.op, operand);
   }
 
+  /** Evaluate condition, then only the taken branch (short-circuit). */
   private evalTernary(node: TernaryNode, ctx: PegaClipboardContext, depth: number): PegValue {
-    const condition = this.eval(node.cond, ctx, depth + 1);
-    const branch = condition.boolean ? node.whenTrue : node.whenFalse;
-    return this.eval(branch, ctx, depth + 1);
+    const cond = this.eval(node.cond, ctx, depth + 1);
+    return cond.boolean
+      ? this.eval(node.whenTrue, ctx, depth + 1)
+      : this.eval(node.whenFalse, ctx, depth + 1);
   }
 
+  /**
+   * Evaluate a function call by dispatching to the builtin whitelist.
+   * POC stores `name` WITHOUT the leading '@'; the whitelist is keyed WITH '@', so we
+   * rebuild the canonical '@name' key here (library-qualified calls use '@Lib.name').
+   */
   private evalFunction(node: FunctionCallNode, ctx: PegaClipboardContext, depth: number): PegValue {
-    const args = node.args.map((argument) => this.eval(argument, ctx, depth + 1));
-    return PegaBuiltinFunctions.call(canonicalFunctionName(node), args);
-  }
-
-  private evalPlaceholder(node: Extract<ExprNode, { kind: 'Placeholder' }>): PegValue {
-    throw new PegExpressionError(`Cannot evaluate template placeholder {${node.name}}`, 'PLACEHOLDER_NOT_EVALUABLE');
-  }
-
-  private evalError(node: Extract<ExprNode, { kind: 'ErrorExpr' }>): PegValue {
-    throw new PegExpressionError(`Cannot evaluate unparsed expression: ${node.message}`, 'PARSE_ERROR');
+    const args = node.args.map((a) => this.eval(a, ctx, depth + 1));
+    const key = node.library ? `@${node.library}.${node.name}` : `@${node.name}`;
+    return PegaBuiltinFunctions.call(key, args);
   }
 }

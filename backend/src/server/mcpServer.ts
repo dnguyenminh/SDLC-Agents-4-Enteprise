@@ -70,9 +70,19 @@ export function getMcpServer(registry: ModuleRegistry, logger: Logger, projectCo
     }
 
     try {
-      // Inject project context from HTTP request headers (multi-tenant support)
+      // Inject project context from HTTP request headers (multi-tenant support).
+      // Stamp the trusted scope under BOTH conventions so every consumer sees it:
+      //  - `__projectId` / `__userId`: canonical keys read by code-intel tools and
+      //    QueryLayer scope filters (fail-closed when absent → empty results).
+      //  - `_projectContext`: object form read by the memory tool decorators.
+      // Mirrors stampProjectScope() on the REST /tools route (single source of truth).
       const enrichedArgs = projectContext
-        ? { ...(args || {}), _projectContext: projectContext }
+        ? {
+            ...(args || {}),
+            _projectContext: projectContext,
+            __projectId: projectContext.projectId,
+            ...(projectContext.userId ? { __userId: projectContext.userId } : {}),
+          }
         : (args || {});
       const result = await handler(enrichedArgs);
 

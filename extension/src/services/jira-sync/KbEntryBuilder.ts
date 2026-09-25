@@ -5,6 +5,7 @@
 import { adfToMarkdown, htmlToPlaintext } from "./AdfConverter";
 import { summarizeComments, extractAllTicketRefs, formatCommentSummaries, type JiraComment } from "./CommentSummarizer";
 import type { CrawledIssue } from "./LinkCrawler";
+import { getEffectiveScope } from "../../utils/scope-detector";
 
 /** KB entry payload ready for ingestion. */
 export interface KbEntry {
@@ -56,7 +57,7 @@ function buildMetadataEntry(issue: CrawledIssue, projectKey: string): KbEntry {
         content: lines.join("\n"),
         summary: `${issue.key}: ${issue.summary}`,
         type: "REQUIREMENT",
-        scope: "PROJECT",
+        scope: getEffectiveScope(),
         source: `jira/${projectKey}/${issue.key}/metadata`,
         tags: `jira,${projectKey},${issue.issuetype},${issue.status}`,
     };
@@ -84,7 +85,7 @@ function buildCommentsEntry(issue: CrawledIssue, projectKey: string): KbEntry {
         content: lines.join("\n"),
         summary: `${issue.key}: ${comments.length} comments`,
         type: "CONTEXT",
-        scope: "PROJECT",
+        scope: getEffectiveScope(),
         source: `jira/${projectKey}/${issue.key}/comments`,
         tags: `jira,${projectKey},comments,${issue.key}`,
     };
@@ -122,7 +123,7 @@ function buildLinksEntry(issue: CrawledIssue, projectKey: string): KbEntry {
         content: lines.join("\n"),
         summary: `${issue.key}: ${issue.issuelinks.length} links, ${issue.subtasks.length} subtasks`,
         type: "CONTEXT",
-        scope: "PROJECT",
+        scope: getEffectiveScope(),
         source: `jira/${projectKey}/${issue.key}/links`,
         tags: `jira,${projectKey},links,${issue.key}`,
     };

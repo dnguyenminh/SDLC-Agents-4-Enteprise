@@ -1,5 +1,19 @@
 import type { PegaRuleAst, AstNode, AstReference } from './PegaRuleAst.js';
 import { SYSTEM_FIELD_PREFIXES, SYSTEM_FIELDS } from './PegaRuleAst.js';
+import { isExpressionField, renderFieldExpression } from './PegaExprAnnotator.js';
+
+/**
+ * Render a property value for pseudo-code. Expression-bearing fields (SA4E-236/GD4) are parsed
+ * by the ANTLR parser and re-emitted canonically; everything else is stringified as before.
+ * @param key Property name
+ * @param value Property value
+ */
+function renderPropertyValue(key: string, value: unknown): string {
+  if (isExpressionField(key) && typeof value === 'string') {
+    return renderFieldExpression(value);
+  }
+  return typeof value === 'object' ? JSON.stringify(value) : String(value);
+}
 
 const REFERENCE_FIELDS = new Set([
   'pyClassName', 'pySuperClass', 'pyPatternParent', 'pyDerivesFrom',
@@ -445,7 +459,7 @@ export class PegaRuleAstParser {
     if (Object.keys(semanticProps).length > 0) {
       lines.push('Properties:');
       for (const [k, v] of Object.entries(semanticProps)) {
-        lines.push(`  ${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`);
+        lines.push(`  ${k}: ${renderPropertyValue(k, v)}`);
       }
       lines.push('');
     }
@@ -499,7 +513,7 @@ export class PegaRuleAstParser {
       for (const [k, v] of Object.entries(node.properties)) {
         if (k.startsWith('px') && k !== 'pxObjClass') continue;
         if (k.startsWith('pz')) continue;
-        lines.push(`${indent}  ${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`);
+        lines.push(`${indent}  ${k}: ${renderPropertyValue(k, v)}`);
       }
       if (node.children.length > 0) {
         this.formatNodes(node.children, lines, indent + '  ', depth - 1);

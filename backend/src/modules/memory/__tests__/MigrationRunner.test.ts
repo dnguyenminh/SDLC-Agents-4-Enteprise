@@ -4,20 +4,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import Database from 'better-sqlite3';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { MigrationRunner } from '../MigrationRunner.js';
 import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 
-function createFreshDb(): { db: Database.Database; tmpDir: string; close: () => void } {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e27-mig-'));
-  const dbPath = path.join(tmpDir, 'test.db');
-  const db = new Database(dbPath);
-  db.pragma('journal_mode = WAL');
-  // Create the base knowledge_entries table (without project_id)
-  db.exec(`
+async function createFreshDb(): Promise<{ db: SqliteAdapter; close: () => Promise<void> }> {
+  const db = new SqliteAdapter(':memory:');
+  await db.connect();
+  await db.exec(`
     CREATE TABLE IF NOT EXISTS knowledge_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       content TEXT NOT NULL,
@@ -46,47 +40,42 @@ function createFreshDb(): { db: Database.Database; tmpDir: string; close: () => 
   `);
   return {
     db,
-    tmpDir,
-    close() {
-      db.close();
-      fs.rmSync(tmpDir, { recursive: true, force: true });
-    },
+    close: async () => { await db.disconnect(); },
   };
 }
 
 describe('SA4E-27 UT — MigrationRunner', () => {
-  let testCtx: ReturnType<typeof createFreshDb>;
+  let testCtx: Awaited<ReturnType<typeof createFreshDb>>;
 
-  beforeEach(() => { testCtx = createFreshDb(); });
-  afterEach(() => testCtx.close());
+  beforeEach(async () => { testCtx = await createFreshDb(); });
+  afterEach(async () => { await testCtx.close(); });
 
-  it('UT-MR-01: creates schema_migrations table on first run', () => {
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+  it('UT-MR-01: creates schema_migrations table on first run', async () => {
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     runner.run();
-    const tables = testCtx.db.prepare(
+    const tables = await testCtx.db.all(
       "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_migrations'",
-    ).all() as any[];
+    ) as any[];
     expect(tables.length).toBe(1);
   });
 
-  it('UT-MR-02: applies migration v1 (add project_id column)', () => {
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+  it('UT-MR-02: applies migration v1 (add project_id column)', async () => {
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     const result = runner.run();
     expect(result.applied).toBe(2);
     expect(result.skipped).toBe(0);
     expect(result.total).toBe(2);
 
-    // Verify column exists
-    const info = testCtx.db.prepare('PRAGMA table_info(knowledge_entries)').all() as any[];
+    const info = await testCtx.db.all('PRAGMA table_info(knowledge_entries)') as any[];
     const col = info.find((c: any) => c.name === 'project_id');
     expect(col).toBeDefined();
     expect(col.type).toBe('TEXT');
   });
 
-  it('UT-MR-03: records migration version in schema_migrations', () => {
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+  it('UT-MR-03: records migration version in schema_migrations', async () => {
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     runner.run();
-    const rows = testCtx.db.prepare('SELECT * FROM schema_migrations ORDER BY version').all() as any[];
+    const rows = await testCtx.db.all('SELECT * FROM schema_migrations ORDER BY version') as any[];
     expect(rows.length).toBe(2);
     expect(rows[0].version).toBe(1);
     expect(rows[0].name).toBe('add_project_id_column');
@@ -94,65 +83,55 @@ describe('SA4E-27 UT — MigrationRunner', () => {
     expect(rows[1].name).toBe('add_workspace_id_column');
   });
 
-  it('UT-MR-04: second run is idempotent (skips already applied)', () => {
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+  it('UT-MR-04: second run is idempotent (skips already applied)', async () => {
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     runner.run();
     const result2 = runner.run();
     expect(result2.applied).toBe(0);
     expect(result2.skipped).toBe(2);
   });
 
-  it('UT-MR-05: getAppliedVersions returns applied version numbers', () => {
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+  it('UT-MR-05: getAppliedVersions returns applied version numbers', async () => {
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     runner.run();
     expect(runner.getAppliedVersions()).toEqual([1, 2]);
   });
 
-  it('UT-MR-06: getCurrentVersion returns max applied version', () => {
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+  it('UT-MR-06: getCurrentVersion returns max applied version', async () => {
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     expect(runner.getCurrentVersion()).toBe(0);
     runner.run();
     expect(runner.getCurrentVersion()).toBe(2);
   });
 
-  it('UT-MR-07: handles duplicate column gracefully (SA4E-26 leftover)', () => {
-    // Manually add project_id column first (simulating SA4E-26)
-    testCtx.db.exec('ALTER TABLE knowledge_entries ADD COLUMN project_id TEXT DEFAULT NULL');
-
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
-    // Should not throw
+  it('UT-MR-07: handles duplicate column gracefully (SA4E-26 leftover)', async () => {
+    await testCtx.db.exec('ALTER TABLE knowledge_entries ADD COLUMN project_id TEXT DEFAULT NULL');
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     expect(() => runner.run()).not.toThrow();
-
-    // Should still record as applied
     expect(runner.getAppliedVersions()).toEqual([1, 2]);
   });
 
-  it('UT-MR-08: creates indexes even when column already exists', () => {
-    // Column already exists
-    testCtx.db.exec('ALTER TABLE knowledge_entries ADD COLUMN project_id TEXT DEFAULT NULL');
-
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+  it('UT-MR-08: creates indexes even when column already exists', async () => {
+    await testCtx.db.exec('ALTER TABLE knowledge_entries ADD COLUMN project_id TEXT DEFAULT NULL');
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     runner.run();
-
-    const indexes = testCtx.db.prepare(
+    const indexes = await testCtx.db.all(
       "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='knowledge_entries'",
-    ).all() as any[];
+    ) as any[];
     const names = indexes.map((i: any) => i.name);
     expect(names).toContain('idx_ke_project_id');
     expect(names).toContain('idx_ke_scope_project');
   });
 
-  it('UT-MR-09: downgrade detection logs warning but continues', () => {
-    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+  it('UT-MR-09: downgrade detection logs warning but continues', async () => {
+    const runner = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     runner.run();
-
-    // Simulate a future migration recorded manually
-    testCtx.db.prepare(
+    await testCtx.db.run(
       'INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)',
-    ).run(99, 'future_migration', new Date().toISOString());
-
+      [99, 'future_migration', new Date().toISOString()],
+    );
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const runner2 = new MigrationRunner(new SqliteDbAdapter(testCtx.db));
+    const runner2 = new MigrationRunner(new SqliteDbAdapter(testCtx.db as any));
     expect(() => runner2.run()).not.toThrow();
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining('DB version (99) ahead of code (2)'),
@@ -160,16 +139,12 @@ describe('SA4E-27 UT — MigrationRunner', () => {
     warnSpy.mockRestore();
   });
 
-  it('UT-MR-10: getAppliedVersions returns empty array when table does not exist', () => {
-    // Use a fresh DB without running ensureTrackingTable
-    const tmpDir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e27-fresh-'));
-    const db2 = new Database(path.join(tmpDir2, 'fresh.db'));
-    db2.exec('CREATE TABLE knowledge_entries (id INTEGER PRIMARY KEY, content TEXT)');
-
-    const runner = new MigrationRunner(new SqliteDbAdapter(db2));
+  it('UT-MR-10: getAppliedVersions returns empty array when table does not exist', async () => {
+    const db2 = new SqliteAdapter(':memory:');
+    await db2.connect();
+    await db2.exec('CREATE TABLE knowledge_entries (id INTEGER PRIMARY KEY, content TEXT)');
+    const runner = new MigrationRunner(new SqliteDbAdapter(db2 as any));
     expect(runner.getAppliedVersions()).toEqual([]);
-
-    db2.close();
-    fs.rmSync(tmpDir2, { recursive: true, force: true });
+    await db2.disconnect();
   });
 });

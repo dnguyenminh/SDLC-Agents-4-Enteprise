@@ -1,0 +1,3 @@
+test_case_id,name,email,role,status,expected_http_code,description
+TC-001,admin,admin@example.com,ADMINISTRATOR,ACTIVE,500,Backend 500 error scenario
+TC-201,tester,tester@example.com,READER,ACTIVE,401,Auth 401 expired token

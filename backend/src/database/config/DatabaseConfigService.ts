@@ -9,13 +9,25 @@ import * as crypto from 'crypto';
 import type { DatabaseEngine } from '../adapters/DatabaseAdapter.js';
 import type { DatabaseConnectionConfig } from '../factory/DatabaseAdapterFactory.js';
 
+export interface ActiveEngineFlag {
+  /** Whether this engine is the currently active one. Exactly ONE engine must be true at a time. */
+  active: boolean;
+}
+
+export interface SqliteEngineConfig extends ActiveEngineFlag {
+  dbPath: string;
+}
+export interface PostgresEngineConfig extends ConnectionParams, ActiveEngineFlag {}
+export interface MysqlEngineConfig extends ConnectionParams, ActiveEngineFlag {}
+
 export interface DatabaseJsonConfig {
+  // Kept in sync with the per-engine `active` flag (source of truth).
   activeEngine: DatabaseEngine;
   engines: {
     // SA4E-49: Unified single DB file
-    sqlite: { dbPath: string };
-    postgresql?: ConnectionParams;
-    mysql?: ConnectionParams;
+    sqlite: SqliteEngineConfig;
+    postgresql?: PostgresEngineConfig;
+    mysql?: MysqlEngineConfig;
   };
   migration: { lastMigration: string | null; backupSqlitePaths: string[] };
 }
@@ -65,7 +77,8 @@ export class DatabaseConfigService {
 
   getActiveConfig(): DatabaseConnectionConfig {
     const config = this.load();
-    switch (config.activeEngine) {
+    const engine = this.resolveActiveEngine(config);
+    switch (engine) {
       case 'sqlite':
         return { engine: 'sqlite', dbPath: path.join(this.dataDir, config.engines.sqlite.dbPath) };
       case 'postgresql': {
@@ -79,11 +92,31 @@ export class DatabaseConfigService {
     }
   }
 
+  /**
+   * Determine the active engine from the per-engine `active` flag (source of truth).
+   * Falls back to the legacy `activeEngine` string for backward compatibility.
+   */
+  private resolveActiveEngine(config: DatabaseJsonConfig): DatabaseEngine {
+    const candidates: DatabaseEngine[] = ['postgresql', 'mysql', 'sqlite'];
+    for (const e of candidates) {
+      const eng = (config.engines as Record<string, ActiveEngineFlag | undefined>)[e];
+      if (eng && eng.active === true) return e;
+    }
+    return config.activeEngine || 'sqlite';
+  }
+
   setActiveEngine(engine: DatabaseEngine, params?: ConnectionParams): void {
     const config = this.load();
     config.activeEngine = engine;
+    // Ensure exactly one engine has the active flag set.
+    for (const e of ['sqlite', 'postgresql', 'mysql'] as DatabaseEngine[]) {
+      const eng = (config.engines as Record<string, ActiveEngineFlag | undefined>)[e];
+      if (eng) eng.active = e === engine;
+    }
     if (params && engine !== 'sqlite') {
-      (config.engines as any)[engine] = params;
+      (config.engines as any)[engine] = { ...params, active: true };
+    } else if (engine === 'sqlite') {
+      config.engines.sqlite.active = true;
     }
     this.save(config);
   }
@@ -92,7 +125,7 @@ export class DatabaseConfigService {
     return {
       activeEngine: 'sqlite',
       // SA4E-49: Single unified DB file
-      engines: { sqlite: { dbPath: 'index.db' } },
+      engines: { sqlite: { dbPath: 'index.db', active: true } },
       migration: { lastMigration: null, backupSqlitePaths: [] },
     };
   }

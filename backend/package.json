@@ -1,6 +1,6 @@
 {
   "name": "sdlc-agent-4-enterprise-server",
-  "version": "1.40.0",
+  "version": "1.44.0",
   "description": "Code Intelligence MCP Server — multi-agent SDLC pipeline with semantic memory, code graph, and draw.io integration",
   "main": "dist/index.js",
   "bin": {
@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --ignore '.code-intel/**' --ignore 'documents/**' --ignore '../documents/**' --ignore '../extension/**' src/index.ts",
-    "build": "tsc && node -e \"const fs=require('fs');const path=require('path');function cp(s,d){if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});for(const f of fs.readdirSync(s)){const sp=path.join(s,f),dp=path.join(d,f);fs.statSync(sp).isDirectory()?cp(sp,dp):fs.copyFileSync(sp,dp);}}cp('src/viewer','dist/viewer');\"",
+    "build": "tsc && node -e \"const fs=require('fs');const path=require('path');function cp(s,d){if(!fs.existsSync(d))fs.mkdirSync(d,{recursive:true});for(const f of fs.readdirSync(s)){const sp=path.join(s,f),dp=path.join(d,f);fs.statSync(sp).isDirectory()?cp(sp,dp):fs.copyFileSync(sp,dp);}}cp('src/viewer','dist/viewer');cp('src/engine/parsers/grammars','dist/engine/parsers/grammars');\"",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
@@ -41,7 +41,7 @@
     "url": "git+https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise.git"
   },
   "engines": {
-    "node": ">=18.14.1"
+    "node": "22.x"
   },
   "dependencies": {
     "@hono/node-server": "^1.12.0",
@@ -58,10 +58,14 @@
     "elkjs": "^0.9.3",
     "hono": "^4.0.0",
     "jimp": "^1.6.1",
+    "jose": "^6.2.12",
+    "knex": "^3.3.0",
     "onnxruntime-node": "^1.18.0",
-    "pg": "^8.22.0",
+    "pg": "^8.23.0",
     "pino": "^9.14.0",
     "sql.js": "^1.14.2",
+    "sqlite3": "^6.0.1",
+    "tree-sitter": "^0.25.1",
     "web-tree-sitter": "^0.26.9",
     "zod": "^3.23.0"
   },
@@ -69,11 +73,11 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.60.0",
     "@types/bcrypt": "^6.0.0",
-    "@types/better-sqlite3": "^9.6.0",
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.0.0",
     "eslint": "^10.8.1",
     "fast-check": "^4.9.0",
     "globals": "^17.7.0",
+    "tree-sitter-jsp": "github:karlvr/tree-sitter-jsp",
     "tsx": "^4.0.0",
     "typescript": "^5.5.0",
     "typescript-eslint": "^8.67.0",

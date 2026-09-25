@@ -36,3 +36,42 @@ describe('IT-02: CallTool usage counting', () => {
     expect(await ctx.engine.getToolUsage('failing_tool')).toEqual([]);
   });
 });
+
+/**
+ * Regression: the MCP call handler must stamp the canonical scope keys
+ * (`__projectId`/`__userId`) — not only `_projectContext` — so code-intel tools
+ * and QueryLayer scope filters receive the tenant and are not fail-closed to
+ * empty results. Reproduces the "code_search returns nothing" bug.
+ */
+describe('CallTool project scope stamping', () => {
+  let harness: McpHarness;
+  let ctx: TempDb;
+  let received: Record<string, unknown> | undefined;
+
+  beforeEach(async () => {
+    ctx = makeTempDb();
+    received = undefined;
+    const registry = new ModuleRegistry(silentLogger());
+    const handlers = new Map();
+    handlers.set('code_search', async (args: Record<string, unknown>) => {
+      received = args;
+      return { content: [{ type: 'text', text: 'ok' }], isError: false };
+    });
+    registry.register(new StubModule(
+      'memory', [def('code_search', 'memory')], handlers, ctx.engine, 'ready',
+    ));
+    harness = await connectMcp(registry, { projectId: '7b11cdc169de', userId: 'mcp-client' });
+  });
+  afterEach(async () => { await harness.close(); ctx.close(); });
+
+  it('injects __projectId and __userId from projectContext into tool args', async () => {
+    await harness.client.callTool({ name: 'code_search', arguments: { query: 'viewSource' } });
+    expect(received).toBeDefined();
+    expect(received!.__projectId).toBe('7b11cdc169de');
+    expect(received!.__userId).toBe('mcp-client');
+    // Preserve the object form consumed by the memory tool decorators.
+    expect(received!._projectContext).toMatchObject({ projectId: '7b11cdc169de' });
+    // Original args untouched.
+    expect(received!.query).toBe('viewSource');
+  });
+});

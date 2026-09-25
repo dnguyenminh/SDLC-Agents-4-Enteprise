@@ -1,6 +1,6 @@
 {
   "name": "sdlc-agents-4-enterprise-monorepo",
-  "version": "1.40.0",
+  "version": "1.44.0",
   "private": true,
   "workspaces": ["backend", "extension"],
   "scripts": {
@@ -11,7 +11,12 @@
     "clean": "npm run clean --workspaces"
   },
   "engines": {
-    "node": ">=18.14.1"
+    "node": "22.x"
+  },
+  "description": "Multi-agent SDLC pipeline - 9 AI agents automate your software development workflow. BA -> SA -> DEV -> QA -> DevOps, orchestrated by Scrum Master.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise.git"
   },
   "overrides": {
     "esbuild": "0.28.2"

@@ -15,6 +15,12 @@ import type { ToolHandler, ToolResult } from '../types/tool.js';
 
 type CoreHandler<T = unknown> = (args: Record<string, unknown>) => T | Promise<T>;
 
+interface InjectedArgs {
+  _projectContext?: { userId?: string; projectId?: string };
+  __userId?: string;
+  __projectId?: string;
+}
+
 function toResult(text: string): ToolResult {
   return { content: [{ type: 'text' as const, text }], isError: false };
 }
@@ -37,13 +43,14 @@ export function withErrorHandling(logger: Logger, toolName: string): (next: Core
 
 export function withScopeContext(dispatcher: { setScopeContext: (ctx: { userId: string; projectId?: string } | undefined) => void }): (next: ToolHandler) => ToolHandler {
   return (next) => async (args) => {
-    const injectedCtx = (args as any)._projectContext;
+    const injectedArgs = args as InjectedArgs;
+    const injectedCtx = injectedArgs._projectContext;
     if (injectedCtx) {
       dispatcher.setScopeContext({ userId: injectedCtx.userId || '', projectId: injectedCtx.projectId || '' });
     } else {
-      const userId = (args as any).__userId as string | undefined;
+      const userId = injectedArgs.__userId;
       // SA4E-103: Also read __projectId stamped by stampProjectScope (MCP tool call path)
-      const projectId = (args as any).__projectId as string | undefined;
+      const projectId = injectedArgs.__projectId;
       dispatcher.setScopeContext(userId || projectId ? { userId: userId || '', projectId } : undefined);
     }
     return next(args);
@@ -52,7 +59,8 @@ export function withScopeContext(dispatcher: { setScopeContext: (ctx: { userId: 
 
 export function withProjectId(next: (args: Record<string, unknown>, projectId?: string) => Promise<string>): ToolHandler {
   return async (args) => {
-    const projectId = (args as any).__projectId as string | undefined;
+    const injectedArgs = args as InjectedArgs;
+    const projectId = injectedArgs.__projectId;
     const result = await next(args, projectId);
     return toResult(result);
   };

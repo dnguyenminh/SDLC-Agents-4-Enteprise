@@ -10,7 +10,7 @@ import type { AdminContext } from './context.js';
 import { DatabaseConfigService } from '../../../database/config/DatabaseConfigService.js';
 import { DatabaseAdapterFactory } from '../../../database/factory/DatabaseAdapterFactory.js';
 import { MigrationService, type MigrationProgress } from '../../../database/migration/MigrationService.js';
-import { resetAdminDb } from '../../../admin/db/core.js';
+import { resetAdminDb, initAdapters } from '../../../admin/db/core.js';
 import { loadConfig } from '../../../config/index.js';
 import { z } from 'zod';
 
@@ -25,6 +25,15 @@ const connectionSchema = z.object({
 });
 
 let activeMigration: MigrationService | null = null;
+
+/** Resolve active engine name from per-engine `active` flag (source of truth), falling back to `activeEngine`. */
+function resolveActiveEngineName(config: { activeEngine?: string; engines?: Record<string, { active?: boolean }> }): string {
+  const engines = config.engines || {};
+  for (const e of ['postgresql', 'mysql', 'sqlite']) {
+    if (engines[e] && engines[e].active === true) return e;
+  }
+  return config.activeEngine || 'sqlite';
+}
 
 export function createDatabaseRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
@@ -45,11 +54,14 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
 
   app.get('/api/admin/database/status', async (c) => {
     const deny = await authGuard(c); if (deny) return deny;
-    try {
-      const config = configService.load();
-      const engine = config.activeEngine;
-      const connParams = engine !== 'sqlite' && config.engines[engine]
-        ? { host: config.engines[engine]!.host, port: config.engines[engine]!.port, username: config.engines[engine]!.username, database: config.engines[engine]!.database, ssl: config.engines[engine]!.ssl }
+     try {
+       const config = configService.load();
+       const engine = resolveActiveEngineName(config);
+      // Non-sqlite engines expose connection params; sqlite does not.
+      const engineKey = engine as Exclude<keyof typeof config.engines, 'sqlite'>;
+      const engineCfg = engine !== 'sqlite' ? config.engines[engineKey] : undefined;
+      const connParams = engineCfg
+        ? { host: engineCfg.host, port: engineCfg.port, username: engineCfg.username, database: engineCfg.database, ssl: engineCfg.ssl }
         : undefined;
       return c.json({ success: true, data: { engine, status: 'connected', details: config.engines.sqlite, connection: connParams, lastMigration: config.migration.lastMigration } });
     } catch (err) {
@@ -188,6 +200,8 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
     if (!engine || engine === 'sqlite') {
       configService.setActiveEngine('sqlite');
       resetAdminDb();
+      // Ensure admin schema exists on the SQLite engine too (idempotent).
+      await initAdapters();
       // SA4E-45: hot-swap engine modules to use new adapter
       if (registry) await registry.reinitializeEngineModules();
       return c.json({ success: true, data: { message: 'Switched to SQLite. Engine modules reinitialized.' } });
@@ -195,6 +209,14 @@ export function createDatabaseRoutes(ctx: AdminContext): Hono {
     try {
       configService.setActiveEngine(engine, { host, port, username, password, database, ssl, pool: { min: 2, max: 10 } });
       resetAdminDb();
+      // Ensure the admin schema (users, sessions, config_changes, sso_providers,
+      // etc.) exists on the newly-selected engine BEFORE anything queries it.
+      // Root cause fix: switching to a fresh Postgres/MySQL that was never
+      // migrated left the admin tables missing, so getConfigChanges() (and other
+      // admin queries) threw and blanked the whole Configuration page. initAdapters
+      // runs initSchema + seedDefaults, both idempotent (CREATE TABLE IF NOT EXISTS
+      // / seed-if-empty), so it is safe when the schema already exists.
+      await initAdapters();
       // SA4E-45: hot-swap engine modules to use new adapter
       if (registry) await registry.reinitializeEngineModules();
       return c.json({ success: true, data: { message: `Switched to ${engine}. Engine modules reinitialized.` } });

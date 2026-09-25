@@ -1,0 +1,12 @@
+test_case_id,issue_key,description,expected_http_code,expected_result,description
+TC-001,SA4E-TEST-001,## Example,204,Success,Valid H2 heading preservation
+TC-002,SA4E-TEST-002,# Title,204,Success,Valid H1 heading preservation
+TC-003,SA4E-TEST-003,### Subsection,204,Success,Valid H3 heading preservation
+TC-004,SA4E-TEST-004,- Parent item
+  - Child item
+  - Child item with link to SA4E-123,204,Success,Valid nested list preservation
+TC-006,SA4E-TEST-006,Reference issue SA4E-250,204,Success,Valid smart link conversion
+TC-007,SA4E-TEST-007,See SA4E-250 and SA4E-123,204,Success,Multiple smart links
+TC-008,SA4E-TEST-008,## Heading
+- Item
+  - Subitem SA4E-250,204,Success,Combined markdown

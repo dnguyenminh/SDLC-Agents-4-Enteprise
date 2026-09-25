@@ -1,0 +1,41 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="ext" value="Extension Host — SDLC Agents 4 Enterprise (SA4E-320)&#10;SettingsMessageHandler · validateBackendUrl · ProviderConfigService&#10;Bypass flag read fresh at every validation (strict === true)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="460" y="230" width="300" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="webview" value="Settings Webview&#10;SettingsPanel + settings.js&#10;(checkbox, warning, Save/Test)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="220" y="250" width="180" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="user" value="Extension User (Administrator)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="260" width="40" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="wset" value="Workspace Settings&#10;(.vscode/settings.json)&#10;kiroSdlc.backend.allowInsecureRemote&#10;(boolean, default false)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="900" y="80" width="220" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="backend" value="Backend MCP Server (remote or loopback)&#10;HTTPS required for remote unless bypass ON" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;size=24;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="400" width="220" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="user interaction" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=classic;startFill=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="user" target="webview">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="setAllowInsecureRemote / state" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=classic;startFill=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="webview" target="ext">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="310" y="180"/>
+          <mxPoint x="610" y="180"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="read/write flag (fresh)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=classic;startFill=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="ext" target="wset">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="Test Connection" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=classic;startFill=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ext" target="backend">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note1" value="No new REST API — settings read/write via VS Code Configuration API&#10;(getConfiguration / update, Workspace scope)" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="460" y="430" width="320" height="60" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

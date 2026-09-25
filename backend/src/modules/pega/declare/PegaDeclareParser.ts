@@ -15,8 +15,7 @@
 
 import type { IPegaRuleParserStrategy, ParseResult } from '../strategies/IPegaRuleParserStrategy.js';
 import type { UnresolvedDependency } from '../models.js';
-import { ExpressionParser } from '../expression/ExpressionParser.js';
-import type { ExprNode } from '../expression/expressionTypes.js';
+import { parseExpression } from '../expression/pega-expr/parser.js';
 import type {
   PegaDeclareExpression,
   PegaDeclareOnChange,
@@ -137,13 +136,19 @@ export class PegaDeclareParser implements IPegaRuleParserStrategy {
 
   /**
    * Parse a Declare Expression rule.
-   * Uses the ANTLR ExpressionParser (WP1) to build an ExprNode AST from the expression string.
+   * Uses the embedded POC ANTLR parser to build an AST from the expression string.
    */
   public parseDeclareExpression(json: Record<string, unknown>): PegaDeclareExpression {
     const targetProperty = (json.pyProperty as string) || (json.pxResult as string) || '';
     const expression = (json.pyExpression as string) || '';
 
-    const expressionAst = expression ? this.buildExpressionAst(expression) : undefined;
+    // POC parseExpression never throws; it returns an ErrorExpr node on bad input.
+    // Keep the AST only when it parsed cleanly, otherwise leave it undefined.
+    let expressionAst = undefined;
+    if (expression) {
+      const parsed = parseExpression(expression);
+      if (parsed.kind !== 'ErrorExpr') expressionAst = parsed;
+    }
 
     return {
       pxObjClass: 'Rule-Declare-Expressions',
@@ -154,12 +159,6 @@ export class PegaDeclareParser implements IPegaRuleParserStrategy {
       expression,
       expressionAst,
     };
-  }
-
-  /** Build an ExprNode AST, or undefined when the expression does not parse. */
-  private buildExpressionAst(expression: string): ExprNode | undefined {
-    const ast = ExpressionParser.parseExpression(expression);
-    return ast.kind === 'ErrorExpr' ? undefined : ast;
   }
 
   /**

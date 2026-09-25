@@ -8,7 +8,7 @@ export function parseFlow(
   const flowName = nameFromPath(filePath);
   const processType = extractXmlValues(source, 'processType')[0] ?? 'Flow';
   const lineCount = source.split('\n').length;
-  symbols.push({ name: flowName, kind: 'class', filePath, startLine: 1, endLine: lineCount, signature: `Flow: ${flowName} (${processType})`, modifiers: [processType.toLowerCase()], isExported: true });
+  symbols.push({ name: flowName, kind: 'flow', filePath, startLine: 1, endLine: lineCount, signature: `Flow: ${flowName} (${processType})`, modifiers: [processType.toLowerCase()], isExported: true });
   const variables = extractXmlBlocks(source, 'variables');
   for (const varBlock of variables) {
     const varName = extractXmlValues(varBlock, 'name')[0];

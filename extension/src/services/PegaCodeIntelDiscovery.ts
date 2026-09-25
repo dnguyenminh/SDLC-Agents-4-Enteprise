@@ -19,9 +19,11 @@ export interface DiscoveryProgress {
 }
 
 export interface PegaCodeIntelDiscoveryResult {
-  servicePackages: number;
-  methods: number;
-  totalLinks: number;
+  // Backend returns either a numeric count or the raw array of items; the summary
+  // coerces both to a count. Typed as a union so callers handle both shapes.
+  servicePackages: number | unknown[];
+  methods: number | unknown[];
+  totalLinks: number | unknown[];
   accessGroups: string[];
 }
 
@@ -66,12 +68,12 @@ export class PegaCodeIntelDiscovery {
     return { appName: "HRAppsV2", appVersion: "01.01" };
   }
 
-  private async callBackendDiscovery(payload: Record<string, unknown>): Promise<PegaCodeIntelDiscoveryResult> {
+  private async callBackendDiscovery(payload: Record<string, unknown>, projectId: string): Promise<PegaCodeIntelDiscoveryResult> {
     const backendUrl = this.httpClient.getBackendUrlPublic().replace(/\/$/, "");
     const url = `${backendUrl}/api/v1/pega/discover`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Project-Id": projectId },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(120000),
     });
@@ -107,11 +109,14 @@ export class PegaCodeIntelDiscovery {
       codeIntelBase,
       authHeader,
       index: true,
-    });
+    }, projectId);
 
+    // Backend may return counts as numbers or arrays; coerce to a count so the
+    // summary never renders "[object Object]" (arrays stringify to their elements).
+    const count = (v: unknown): number => (Array.isArray(v) ? v.length : Number(v) || 0);
     const summary =
-      `✅ Pega CodeIntelligence discovery: ${data.servicePackages} service package(s), ` +
-      `${data.methods} method(s), ${data.totalLinks} linked rule(s) indexed.`;
+      `✅ Pega CodeIntelligence discovery: ${count(data.servicePackages)} service package(s), ` +
+      `${count(data.methods)} method(s), ${count(data.totalLinks)} linked rule(s) indexed.`;
     this.trace(`[PegaDiscovery] ${summary}`);
     report.report({ message: summary });
     return summary;

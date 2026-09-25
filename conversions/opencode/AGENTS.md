@@ -35,7 +35,7 @@ Scrum Master agent — single entry point for multi-agent SDLC pipeline.
 |-------|-------|--------|
 | 1 Requirements | @ba-agent | BRD.md |
 | 2 Specification | @ba-agent + @ta-agent | FSD.md |
-| 2.5 UI Design | @ui-agent | Wireframes |
+
 | 3 Design | @sa-agent | TDD.md |
 | 3.5 Feedback Loop | ba↔sa | FSD+TDD updates |
 | 4 Test Planning | @qa-agent | STP.md, STC.md |

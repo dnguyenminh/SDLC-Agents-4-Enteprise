@@ -1,53 +1,91 @@
-/** Pure runtime semantics for Pega expression operators. */
+/**
+ * ExprOperators.ts — Pure operator semantics for the expression evaluator.
+ * Maps POC operator lexemes (op: string) to PegValue results. Kept separate from the
+ * evaluator (SRP) so operator behaviour is independently testable.
+ *
+ * Operator coverage matches the PegaExpr grammar:
+ *   logical:     &&  ||
+ *   equality:    ==  !=  <>  =        (= and == both mean equality here)
+ *   like/fuzzy:  ^=  ~=               (string contains / case-insensitive equality)
+ *   relational:  >  <  >=  <=
+ *   arithmetic:  +  -  *  /  %        (+ doubles as string concat when non-numeric)
+ *   unary:       !  -  +
+ */
+
 import { PegValue, PegExpressionError } from './PegaExpressionAst.js';
 
-function isNumericPair(left: PegValue, right: PegValue): boolean {
-  return left.type === 'Number' && right.type === 'Number';
+/** True when both values are numeric-comparable (avoids "10" > "9" string surprises). */
+function bothNumeric(l: PegValue, r: PegValue): boolean {
+  return l.type === 'Number' && r.type === 'Number';
 }
 
-function applyAddition(left: PegValue, right: PegValue): PegValue {
-  if (isNumericPair(left, right)) return PegValue.number(left.number + right.number);
-  return PegValue.text(left.text + right.text);
+/** Equality by textual value (mirrors the previous hand-written EQ semantics). */
+function equals(l: PegValue, r: PegValue): boolean {
+  return l.text === r.text;
 }
 
-function applyDivision(left: PegValue, right: PegValue): PegValue {
-  if (right.number === 0) throw new PegExpressionError('Division by zero', 'DIVISION_BY_ZERO');
-  return PegValue.number(left.number / right.number);
-}
-
-function applyModulo(left: PegValue, right: PegValue): PegValue {
-  if (right.number === 0) throw new PegExpressionError('Modulo by zero', 'DIVISION_BY_ZERO');
-  return PegValue.number(left.number % right.number);
-}
-
-export function applyBinaryOp(op: string, left: PegValue, right: PegValue): PegValue {
+/**
+ * Apply a binary operator to two evaluated operands.
+ * @param op Operator lexeme from the AST
+ * @param l Left operand value
+ * @param r Right operand value
+ * @returns Result value
+ * @throws PegExpressionError for an unsupported operator
+ */
+export function applyBinaryOp(op: string, l: PegValue, r: PegValue): PegValue {
   switch (op) {
-    case '&&': return PegValue.bool(left.boolean && right.boolean);
-    case '||': return PegValue.bool(left.boolean || right.boolean);
-    case '=': case '==': return PegValue.bool(left.text === right.text);
-    case '<>': case '!=': return PegValue.bool(left.text !== right.text);
-    case '^=': return PegValue.bool(left.text.includes(right.text));
-    case '~=': return PegValue.bool(left.text.toLowerCase() === right.text.toLowerCase());
-    case '>': return PegValue.bool(left.number > right.number);
-    case '<': return PegValue.bool(left.number < right.number);
-    case '>=': return PegValue.bool(left.number >= right.number);
-    case '<=': return PegValue.bool(left.number <= right.number);
-    case '+': return applyAddition(left, right);
-    case '-': return PegValue.number(left.number - right.number);
-    case '*': return PegValue.number(left.number * right.number);
-    case '/': return applyDivision(left, right);
-    case '%': return applyModulo(left, right);
-    default: throw new PegExpressionError(`Unsupported binary operator '${op}'`, 'UNSUPPORTED_OPERATOR');
+    case '&&': return PegValue.bool(l.boolean && r.boolean);
+    case '||': return PegValue.bool(l.boolean || r.boolean);
+    case '==': case '=': return PegValue.bool(equals(l, r));
+    case '!=': case '<>': return PegValue.bool(!equals(l, r));
+    case '^=': return PegValue.bool(l.text.includes(r.text));
+    case '~=': return PegValue.bool(l.text.toLowerCase() === r.text.toLowerCase());
+    case '>': return PegValue.bool(l.number > r.number);
+    case '<': return PegValue.bool(l.number < r.number);
+    case '>=': return PegValue.bool(l.number >= r.number);
+    case '<=': return PegValue.bool(l.number <= r.number);
+    case '+': return applyPlus(l, r);
+    case '-': return PegValue.number(l.number - r.number);
+    case '*': return PegValue.number(l.number * r.number);
+    case '/': return applyDivide(l, r);
+    case '%': return applyModulo(l, r);
+    default:
+      throw new PegExpressionError(`Unsupported binary operator '${op}'`, 'UNSUPPORTED_OPERATOR');
   }
 }
 
-export function applyUnaryOp(op: string, value: PegValue): PegValue {
+/** '+' is numeric addition when both sides are numbers, else string concatenation. */
+function applyPlus(l: PegValue, r: PegValue): PegValue {
+  if (bothNumeric(l, r)) return PegValue.number(l.number + r.number);
+  return PegValue.text(l.text + r.text);
+}
+
+/** Division guarding against divide-by-zero (fail loudly rather than emit Infinity). */
+function applyDivide(l: PegValue, r: PegValue): PegValue {
+  if (r.number === 0) throw new PegExpressionError('Division by zero', 'DIVISION_BY_ZERO');
+  return PegValue.number(l.number / r.number);
+}
+
+/** Modulo guarding against divide-by-zero. */
+function applyModulo(l: PegValue, r: PegValue): PegValue {
+  if (r.number === 0) throw new PegExpressionError('Modulo by zero', 'DIVISION_BY_ZERO');
+  return PegValue.number(l.number % r.number);
+}
+
+/**
+ * Apply a unary prefix operator to an evaluated operand.
+ * @param op Unary operator lexeme ('!', '-', '+', '=')
+ * @param v Operand value
+ * @returns Result value
+ * @throws PegExpressionError for an unsupported operator
+ */
+export function applyUnaryOp(op: string, v: PegValue): PegValue {
   switch (op) {
-    case '!': case '.NOT.': return PegValue.bool(!value.boolean);
-    case 'ISNULL': case '.ISNULL': return PegValue.bool(value.type === 'Null');
-    case '-': return PegValue.number(-value.number);
-    case '+': return PegValue.number(value.number);
-    case '=': return value;
-    default: throw new PegExpressionError(`Unsupported unary operator '${op}'`, 'UNSUPPORTED_OPERATOR');
+    case '!': return PegValue.bool(!v.boolean);
+    case '-': return PegValue.number(-v.number);
+    case '+': return PegValue.number(v.number);
+    case '=': return v; // leading '=' prefix (Pega formula marker) — value unchanged
+    default:
+      throw new PegExpressionError(`Unsupported unary operator '${op}'`, 'UNSUPPORTED_OPERATOR');
   }
 }

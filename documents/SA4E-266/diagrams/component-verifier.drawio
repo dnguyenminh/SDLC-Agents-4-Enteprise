@@ -1,0 +1,27 @@
+<mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="620" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="c-tv" value="«interface»&lt;br&gt;&lt;b&gt;TokenVerifier&lt;/b&gt;&lt;hr&gt;+ verify(token: string): Promise&lt;VerifiedClaims&gt;&lt;br&gt;— strategy interface shared by both verifiers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;align=left;spacingLeft=10;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="440" y="40" width="420" height="110" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c-local" value="&lt;b&gt;LocalHS256Verifier&lt;/b&gt;&lt;hr&gt;implements TokenVerifier&lt;br&gt;+ verify(token): Promise&lt;VerifiedClaims&gt;&lt;br&gt;— HS256 + KB_TOKEN_SECRET&lt;br&gt;— legacy path unchanged (BR-04)&lt;br&gt;— extracted from jwt-auth.ts as-is" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;align=left;spacingLeft=10;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="80" y="300" width="350" height="160" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c-entra" value="&lt;b&gt;EntraRS256Verifier (NEW)&lt;/b&gt;&lt;hr&gt;implements TokenVerifier&lt;br&gt;+ verify(token): Promise&lt;VerifiedClaims&gt;&lt;br&gt;— kid → JwksCache.getKey(kid)&lt;br&gt;— jwtVerify (RS256) → signature (ERR-01)&lt;br&gt;— iss / aud / exp claims (ERR-02..04)&lt;br&gt;— returns VerifiedClaims { sub, oid, email, name }" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;align=left;spacingLeft=10;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="500" y="300" width="380" height="180" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c-cache" value="&lt;b&gt;JwksCache&lt;/b&gt;&lt;hr&gt;+ getKey(kid): Promise&lt;CryptoKey | null&gt;&lt;br&gt;+ refresh(): Promise&lt;void&gt;&lt;br&gt;— TTL 1h (BR-02)&lt;br&gt;— kid miss → exactly 1 refresh() retry&lt;br&gt;— 2nd miss → null → ERR-05 (503)&lt;br&gt;— in-memory Map: kid → { publicKey, fetchedAt }" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8cc;strokeColor=#82b366;fontSize=12;align=left;spacingLeft=10;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="960" y="300" width="330" height="180" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="r1" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;dashed=1;endArrow=block;endFill=1;exitX=0.5;exitY=0;entryX=0.2;entryY=1;" edge="1" parent="1" source="c-local" target="c-tv">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="r2" value="implements" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;dashed=1;endArrow=block;endFill=1;exitX=0.5;exitY=0;entryX=0.8;entryY=1;" edge="1" parent="1" source="c-entra" target="c-tv">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="r3" value="uses — getKey(kid) / refresh()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c-entra" target="c-cache">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

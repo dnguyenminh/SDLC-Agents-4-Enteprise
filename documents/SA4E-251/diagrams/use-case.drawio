@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net" modified="2026-09-06T00:00:00.000Z" version="21.10.0" etag="SA4E-251">
+  <diagram name="Use Case" id="use-case">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Use Case Diagram — SA4E-251" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="350" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="system" value="Jira MCP Description Update System" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="100" width="750" height="500" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor1" value="Automation User" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="220" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor2" value="Jira Admin" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="880" y="220" width="40" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc1" value="Update Issue Description via MCP" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="system">
+          <mxGeometry x="240" y="180" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc2" value="Preserve Markdown Headings" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="system">
+          <mxGeometry x="480" y="180" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc3" value="Preserve Nested Lists" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="system">
+          <mxGeometry x="720" y="180" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc4" value="Convert Smart Links" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="system">
+          <mxGeometry x="480" y="300" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="actor1" target="uc1" style="endArrow=none;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="actor1" target="uc2" style="endArrow=none;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="actor1" target="uc3" style="endArrow=none;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="actor1" target="uc4" style="endArrow=none;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="actor2" target="uc1" style="endArrow=none;html=1;">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

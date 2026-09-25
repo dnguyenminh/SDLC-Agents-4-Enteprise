@@ -13,6 +13,10 @@
  */
 import * as vscode from "vscode";
 import { httpGetJson, httpPostJson, httpPutJson, httpDeleteJson } from "./utils/http-client-utils";
+// SA4E-320 Finding #1: static import so URL validation + the allowInsecureRemote
+// bypass flag flow through ONE shared config path (same as getBackendUrl()).
+// The previous lazy require() failed to resolve under vitest, skipping validation.
+import { validateBackendUrl, getAllowInsecureRemote, getBackendUrl } from "./config/backend-url";
 
 // --- KB Entity Models (mirror backend/src/knowledge/models.ts) ---
 
@@ -145,11 +149,11 @@ export function resolveKbBaseUrl(): string {
     }
   }
   try {
-    // Delegate to shared config utility (reads package.json default)
-    const { getBackendUrl } = require("./config/backend-url");
+    // Delegate to shared config utility — reads backend.url AND the
+    // allowInsecureRemote flag from VS Code config (SA4E-320).
     return getBackendUrl();
   } catch {
-    // vscode unavailable (unit tests) — fall back to default
+    // Validation failure / config unavailable — fall back to default
     return "http://127.0.0.1:48721";
   }
 }
@@ -163,10 +167,27 @@ export class KnowledgeClient {
   private readonly retries: number;
   private readonly getHeaders: () => Record<string, string>;
 
+  private readonly baseUrl: string;
+
   constructor(
-    private readonly baseUrl: string,
+    baseUrl: string,
     options: KnowledgeClientOptions = {}
   ) {
+    try {
+      // SA4E-320 Finding #1: forward the opt-in bypass flag so KnowledgeClient
+      // validation is consistent with getBackendUrl()/resolveKbBaseUrl().
+      // Flag read failure → fail-closed (bypass OFF, enforcement stays ON).
+      let allowInsecureRemote = false;
+      try {
+        allowInsecureRemote = getAllowInsecureRemote() === true;
+      } catch {
+        allowInsecureRemote = false;
+      }
+      this.baseUrl = validateBackendUrl(baseUrl, { allowInsecureRemote });
+    } catch (err: any) {
+      if (err.message && err.message.startsWith("[Security]")) throw err;
+      this.baseUrl = (baseUrl || "").replace(/\/$/, "");
+    }
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.retries = options.retries ?? DEFAULT_RETRIES;
     this.getHeaders = options.getHeaders ?? (() => ({}));

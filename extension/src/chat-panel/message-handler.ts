@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
-import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
+import { PiWorkflowAdapter } from "../pi-workflow";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage, AutopilotMode } from "./message-protocol";
 import { buildEnrichedText, routeUserMessage } from "./message-routing";
 
@@ -14,7 +14,7 @@ export class MessageHandler {
   private currentMode: AutopilotMode = "autopilot";
 
   constructor(
-    private readonly getEngine: () => LangGraphEngine,
+    private readonly getEngine: () => PiWorkflowAdapter,
     private readonly sendToWebview: (msg: ChatExtToWebviewMessage) => void,
     private readonly workspaceRoot: string,
     private readonly onPickContext?: (contextType: string) => void,
@@ -205,7 +205,7 @@ export class MessageHandler {
   private async handleApproval(decision: string, feedback?: string): Promise<void> {
     const validDecisions = ["approve", "reject", "revise"] as const;
     if (!validDecisions.includes(decision as any)) { return; }
-    await this.getEngine().handleApproval(decision as any, feedback);
+    await this.getEngine().handleApproval(decision, feedback);
   }
 
   /** Handle tool-level approval from webview (ToolApprovalGate) */
@@ -227,12 +227,8 @@ export class MessageHandler {
   }
 
   /** SA4E-186: Route SELECT_AGENT to engine and confirm to webview. */
-  private handleSelectAgent(agentId: string | null): void {
-    const result = this.getEngine().selectAgent(agentId);
-    this.sendToWebview({
-      type: "chat:agentSwitched",
-      agentId: result.agentId,
-      agentName: result.agentName,
-    });
+  private async handleSelectAgent(agentId: string | null): Promise<void> {
+    if (agentId) { await this.getEngine().selectAgent(agentId); }
   }
 }
+

@@ -1,134 +1,146 @@
 ---
 name: fresh-context-review
-description: "Isolated code review technique where reviewer receives ONLY diff + specs, with no implementation history. Use for large features, security-sensitive changes, or complex refactoring."
+description: Fresh-Context Review — Cô lập ngữ cảnh khi Code Review
 ---
 
-# fresh-context-review
 
-Eliminates reviewer bias by spawning a separate agent with limited context — only the git diff and specification documents. No conversation history, no RUN-LOG, no STATUS.json.
+# Fresh-Context Review — Cô lập ngữ cảnh khi Code Review
 
-## When to Use
+## Mục đích
 
-- Large features (>500 lines changed)
-- Security-sensitive code (auth, encryption, access control)
-- Data model changes (DB schema, migrations)
-- Complex refactoring (>5 files modified)
-- Any change where "reviewer fatigue" or "agree with author" bias is suspected
+Cơ chế review code trong đó reviewer KHÔNG nhận bất kỳ lịch sử conversation/session nào.
+Reviewer chỉ thấy: git diff + specs (TDD, FSD, code-standards). Loại bỏ bias từ quá trình implementation.
 
-## How SM Invokes Fresh-Context Review
+## Khi nào kích hoạt
 
-SM spawns a separate sub-agent with **strictly limited contextFiles**:
+- Phase 6 Code Review (Axis 1: Standards, Axis 2: Spec Compliance)
+- SM PHẢI chạy fresh-context review khi ĐẠT bất kỳ điều kiện nào sau:
+  - >500 dòng thay đổi (git diff --stat)
+  - Security-related changes (auth, authorization, encryption)
+  - Data model changes (DB schema, migration files)
+  - Complex refactoring (>5 files modified)
+
+## Quy tắc cô lập ngữ cảnh (Context Isolation Rules)
+
+### Reviewer ĐƯỢC NHẬN (whitelist)
+
+| # | Input | Source |
+|---|-------|--------|
+| 1 | Git diff (main..{TICKET}) | `git diff main..{TICKET}` |
+| 2 | TDD.md | `documents/{TICKET}/TDD.md` |
+| 3 | FSD.md | `documents/{TICKET}/FSD.md` |
+| 4 | code-standards.md | `.opencode/rules/sdlc/code-standards.md` |
+| 5 | File tree (new/modified files only) | `git diff --name-status` |
+
+### Reviewer KHÔNG ĐƯỢC NHẬN (denylist)
+
+| # | Excluded Context | Reason |
+|---|-----------------|--------|
+| 1 | Prior conversation/session history | Prevents confirmation bias |
+| 2 | RUN-LOG.md | Shows what other agents decided |
+| 3 | STATUS.json progress data | Reveals implementation journey |
+| 4 | BRD.md (business context) | Forces pure technical review |
+| 5 | Implementation agent's reasoning | Prevents "agree with author" bias |
+| 6 | Test results / TEST-REPORT | Reviewer must judge code independently |
+
+### Reviewer prompt constraints
+
+- KHÔNG được chứa: "as discussed", "as implemented", "based on previous"
+- KHÔNG được reference: agent names, phase transitions, iteration history
+- PHẢI force independent analysis: reviewer forms own opinion FIRST
+
+## Fresh Review Prompt Template
 
 ```
 invokeSubAgent(
-  name: "dev-agent",
+  name: "{review-agent}",
   prompt: "INDEPENDENT CODE REVIEW — Fresh Context
 
   You are reviewing code changes for the FIRST time with NO prior context.
   You have NEVER seen this code before. Form your OWN assessment.
 
-  ## Diff
-  {paste git diff output here}
+  ## Input
+  - Git diff attached below
+  - Technical Design Document (TDD) for expected behavior
+  - Functional Specification (FSD) for business requirements
+  - Code standards for style/quality rules
 
-  ## Task
-  Review against TDD specs + code-standards. Report findings table.
+  ## Your Task
+  Review the diff against specs and standards. Report:
+
+  ### Findings
+  | # | File | Line | Issue | Severity | Category |
+  |---|------|------|-------|----------|----------|
+
+  Categories: SECURITY, LOGIC, STANDARD, SPEC-GAP, SCOPE-CREEP, PERFORMANCE
+
+  ### Summary
+  - Total issues: {N}
+  - Critical: {N} | High: {N} | Medium: {N} | Low: {N}
+  - Verdict: PASS / PASS-WITH-WARNINGS / FAIL
 
   ## Rules
-  - Do NOT assume implementation intent
-  - Do NOT reference any prior discussion
-  - Judge ONLY what code does vs what specs require
-  - Flag anything that SURPRISES you
+  - Do NOT assume anything about implementation intent
+  - Do NOT reference any prior discussion or decision
+  - Judge ONLY what the code does vs what specs say it should do
+  - Flag anything that SURPRISES you — if code does something unexpected, report it
   ",
   contextFiles: [
     { "path": "documents/{TICKET}/TDD.md" },
     { "path": "documents/{TICKET}/FSD.md" },
-    { "path": ".kiro/steering/code-standards.md" }
+    { "path": ".opencode/rules/sdlc/code-standards.md" }
   ]
 )
 ```
 
-**Critical:** Do NOT include RUN-LOG.md, STATUS.json, BRD.md, or any session history in contextFiles.
+## Comparison Mechanism (Biased vs Unbiased)
 
-## Prompt Template — Standards Axis (Fresh)
+Sau khi fresh review hoàn thành, SM so sánh findings:
 
-```
-INDEPENDENT CODE REVIEW — Standards (Fresh Context)
+### Quy trình
 
-Review this diff for code quality and standards compliance.
-You have ZERO context about WHY these changes were made.
+1. **Standard review** (Axis 1 + Axis 2) chạy trước — reviewer có full context
+2. **Fresh review** chạy sau — reviewer cô lập, chỉ thấy diff + specs
+3. SM so sánh hai kết quả:
 
-CHECK:
-1. File size ≤ 200 lines?
-2. Function size ≤ 20 lines?
-3. SOLID violations?
-4. Fowler code smells?
-5. Model/processing separation?
-6. Design patterns used appropriately?
-7. Exception handling — no swallowed exceptions?
-8. Zod validation on protocol boundaries?
-
-OUTPUT:
-| # | File | Line | Issue | Severity | Smell |
-|---|------|------|-------|----------|-------|
-
-Verdict: PASS / PASS-WITH-WARNINGS / FAIL
-```
-
-## Prompt Template — Spec Compliance Axis (Fresh)
-
-```
-INDEPENDENT CODE REVIEW — Spec Compliance (Fresh Context)
-
-Review this diff against the attached TDD and FSD.
-You have ZERO context about implementation decisions.
-
-CHECK:
-1. Missing features from TDD not implemented?
-2. Scope creep — code doing things NOT in specs?
-3. API contracts match TDD exactly?
-4. Business rules from FSD all implemented?
-5. Error codes handled correctly?
-6. Security design from TDD followed?
-
-OUTPUT:
-| # | Spec Section | Expected | Actual | Severity |
-|---|-------------|----------|--------|----------|
-
-Verdict: PASS / PASS-WITH-WARNINGS / FAIL
-```
-
-## Comparison Reporting
-
-After fresh review completes, SM compares with standard (context-aware) review:
+### Comparison Report Format
 
 ```markdown
 ## Fresh-Context Review Comparison — {TICKET}
 
-### Blind Spots (fresh found, standard missed)
-| # | Issue | Implication |
-|---|-------|-------------|
+### Findings ONLY in Fresh Review (Blind Spots)
+| # | Issue | Why Standard Review Missed It |
+|---|-------|-------------------------------|
 
-### Context-Dependent (standard found, fresh missed)
-| # | Issue | Why context was needed |
-|---|-------|----------------------|
+### Findings ONLY in Standard Review (Context-Dependent)
+| # | Issue | Why Fresh Review Missed It |
+|---|-------|----------------------------|
 
-### Agreement Rate: {N}%
-### Action: {BLOCK / FIX / LOG / NONE}
+### Common Findings (Both Reviews Agree)
+| # | Issue | Severity |
+|---|-------|----------|
+
+### Insight
+- Blind spots detected: {N}
+- Context-dependent issues: {N}
+- Agreement rate: {percent}%
+- Action: {merge findings / escalate blind spots / no action}
 ```
 
-## Decision Matrix
+### Hành động dựa trên comparison
 
-| Fresh Finds Critical + Standard Missed | → BLOCK pipeline, DEV must fix |
-| Fresh Finds High + Standard Missed | → DEV fix or user risk acceptance |
-| Only Medium/Low blind spots | → Log tech debt, proceed |
-| Fresh finds nothing new | → Confirms standard review quality |
+| Scenario | Action |
+|----------|--------|
+| Fresh review finds Critical issues standard missed | ❌ BLOCK — DEV must fix |
+| Fresh review finds High issues standard missed | ⚠️ DEV fix or user accepts risk |
+| Only Medium/Low blind spots | Log as tech debt, proceed |
+| Fresh review finds nothing new | ✅ Confirms standard review quality |
 
-## Anti-Patterns
+## SM Integration
 
-| ❌ Don't | ✅ Do |
-|----------|------|
-| Include RUN-LOG in fresh review context | Only diff + TDD + FSD + standards |
-| Use phrases like "as previously discussed" | Force independent assessment |
-| Skip fresh review for security changes | Always run for auth/crypto code |
-| Run fresh review for trivial changes | Only when criteria met (>500 LOC, security, etc.) |
-| Let same agent do both reviews | Use separate invocations with different context |
+SM chỉ chạy fresh-context review khi criteria đạt (xem "Khi nào kích hoạt").
+Fresh review là OPTIONAL enhancement — không block pipeline nếu unavailable.
+
+Thứ tự: Standard review → Fresh review → Comparison → Decision.
+
+

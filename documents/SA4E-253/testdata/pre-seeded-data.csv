@@ -1,0 +1,3 @@
+project_id,name,description,expected_node_types
+7b11cdc169de,Salesforce Test Project,Salesforce workspace for kind emission testing,APEX_CLASS;FLOW;SF_OBJECT;LWC_COMPONENT
+pega-test-001,Pega Regression Project,Pega data for backward compatibility,RULE_OBJ_FLOW;RULE_OBJ_ACTIVITY

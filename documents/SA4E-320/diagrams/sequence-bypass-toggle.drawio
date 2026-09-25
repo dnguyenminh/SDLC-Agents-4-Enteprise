@@ -1,0 +1,84 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="h1" value="User" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="Settings Webview&#10;(settings.js)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="40" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="SettingsMessageHandler&#10;(Extension Host)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="40" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="Workspace Settings&#10;(.vscode/settings.json)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="820" y="40" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="l1" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="90" as="sourcePoint"/>
+        <mxPoint x="120" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="380" y="90" as="sourcePoint"/>
+        <mxPoint x="380" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="640" y="90" as="sourcePoint"/>
+        <mxPoint x="640" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="910" y="90" as="sourcePoint"/>
+        <mxPoint x="910" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. Toggle checkbox ON (change event)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="130" as="sourcePoint"/>
+        <mxPoint x="380" y="130" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="w1" value="Warning text shown&#10;(warning color, amber)" style="shape=note;whiteSpace=wrap;html=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="290" y="152" width="180" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="m2" value="2. postMessage setAllowInsecureRemote&#10;{ enabled: true }" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="380" y="225" as="sourcePoint"/>
+        <mxPoint x="640" y="225" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. update backend.allowInsecureRemote&#10;= true (Workspace target)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="640" y="285" as="sourcePoint"/>
+        <mxPoint x="910" y="285" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. Persist OK (.vscode/settings.json)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="910" y="345" as="sourcePoint"/>
+        <mxPoint x="640" y="345" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5. state { allowInsecureRemote: true }" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="640" y="405" as="sourcePoint"/>
+        <mxPoint x="380" y="405" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="w2" value="Checked + warning visible&#10;(matches persisted value)" style="shape=note;whiteSpace=wrap;html=1;size=12;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="290" y="428" width="180" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="m6" value="6. UI reflects ON state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="380" y="500" as="sourcePoint"/>
+        <mxPoint x="120" y="500" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

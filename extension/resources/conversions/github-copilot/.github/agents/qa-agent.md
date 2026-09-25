@@ -701,3 +701,45 @@ After manual execution, update `TEST-REPORT-{TICKET-KEY}.csv`:
 - Error messages in expected results must match FSD error codes (NG-xxx).
 - Non-functional test cases must have measurable acceptance criteria (e.g., "response time ≤ 5 seconds").
 - RTM must show 100% coverage — no requirement left untested.
+
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Review Gate — BA (Business Analyst) Approval Required (Test Planning)
+
+After the QA agent produces the Test Cases (STC) and Test Plan (STP), the test planning enters a **mandatory business-coverage review performed by the BA agent (Business Analyst)**. The reviewer is the BA agent; the QA agent is the one being reviewed. The QA agent's test planning is **NOT complete** until the BA agent returns a verdict of **APPROVED**. The Scrum Master (SM) orchestrates this gate: the SM invokes the BA agent to review, then relays the BA agent's verdict back to the QA agent.
+
+### What the BA agent checks (the QA agent should design test cases to pass on the first round)
+
+The BA agent compares the QA agent's test cases against the BRD + FSD:
+
+| # | Review dimension | The BA agent expects the QA agent's test cases to... |
+|---|------------------|-------------------------------------------------------|
+| 1 | Business coverage | Cover every User Story and Acceptance Criteria in the BRD with at least one mapped test case |
+| 2 | Business rules | Exercise every BR-XX in the FSD with a test case |
+| 3 | Correct semantics | Have expected results that reflect the intended business behavior, not just technical status codes |
+| 4 | Business edge cases | Cover the important alternative/exception flows from the FSD |
+| 5 | Scope discipline | Miss no requirement and include no out-of-scope test (nothing outside the BRD/FSD) |
+
+### What the QA agent submits for review
+
+Before the SM invokes the BA agent, the QA agent must prepare:
+
+1. `documents/{TICKET-KEY}/STC.md` and `STP.md` — complete, with the RTM (Requirements Traceability Matrix) filled in.
+2. An RTM that explicitly maps each BRD Acceptance Criteria / FSD UC / FSD BR to its covering test case IDs — the BA agent reads this first.
+3. The test data CSVs referenced by the test cases.
+
+### How the QA agent handles the BA agent's verdict
+
+- **APPROVED** → the test-planning gate is passed. The QA agent proceeds to finalize (export DOCX/XLSX, ingest KB, etc.).
+- **CHANGES REQUESTED** → the BA agent returns a specific list of gaps. The QA agent MUST:
+  1. Treat each gap as a defect: add missing test cases, correct wrong expected results, or remove out-of-scope cases.
+  2. Update the RTM so coverage returns to 100%.
+  3. Resubmit to the BA agent for re-review.
+
+### Iteration limit & escalation
+
+- Maximum **2 fix→re-review iterations** between the QA agent and the BA agent.
+- If the BA agent still returns CHANGES REQUESTED after 2 iterations, the QA agent STOPS and reports to the SM with the remaining gaps and whether the blocker is a missing/ambiguous requirement in the BRD/FSD (which the BA agent must clarify — the QA agent must not guess). The QA agent must never mark test planning done without the BA agent's approval.
+
+> ⛔ The QA agent must not treat the STC/STP as final until the BA agent's verdict is APPROVED. Generated test cases without the BA agent's approval are NOT completed test planning.

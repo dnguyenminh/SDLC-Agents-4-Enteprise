@@ -1,11 +1,21 @@
 #!/usr/bin/env bash
-# SA4E-223 pre-commit hook
-# Runs lint-staged (eslint/tsc) and the line-count gate (BR-18 / AC7) on staged files.
+# SA4E-223 / SA4E-241 pre-commit hook
+# Runs, in order, on staged files:
+#   1. lint-staged (eslint --fix + prettier on staged TS)
+#   2. hardcoded-secret gate (SA4E-241 / SEC-03): blocks SSA@TGB, pega123!,
+#      default-credential fallbacks, and hardcoded default 'PegaCollProj'
+#   3. line-count gate (BR-18 / AC7): staged backend/src .ts <= 200 lines
 # Installed automatically if husky is present, or manually via scripts/setup-git-hooks.sh.
 set -e
 ROOT="$(git rev-parse --show-toplevel)"
+
 echo "[pre-commit] running lint-staged..."
 npx --no-install lint-staged || true
+
+echo "[pre-commit] hardcoded-secret gate (SA4E-241 / SEC-03) on staged files..."
+bash "$ROOT/scripts/check-secrets.sh" --staged
+
 echo "[pre-commit] line-count gate (BR-18 / AC7) on staged backend/src .ts files..."
 bash "$ROOT/scripts/check-line-count.sh" --staged
+
 echo "[pre-commit] OK"

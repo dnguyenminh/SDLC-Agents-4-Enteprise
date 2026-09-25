@@ -1,0 +1,30 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="user" value="User" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="mcp" value="MCP Server" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="60" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="jira" value="Jira API" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry x="480" y="60" width="120" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="msg1" value="jira_update_issue(issue_key, description)" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="user" target="mcp">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="msg2" value="Validate Schema" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="mcp" target="mcp">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="msg3" value="PUT /rest/api/2/issue/{key}" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="mcp" target="jira">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="msg4" value="204 No Content" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="jira" target="mcp">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="msg5" value="success=true" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="mcp" target="user">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

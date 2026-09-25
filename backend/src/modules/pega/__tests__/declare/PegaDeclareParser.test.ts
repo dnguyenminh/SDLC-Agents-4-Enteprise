@@ -34,19 +34,22 @@ describe('PegaDeclareParser', () => {
       expect(typed.declareType).toBe('Declare-Expression');
     });
 
-    it('parses expression string into an ExprNode with the ANTLR ExpressionParser', () => {
+    it('parses expression string into a POC ExprNode and evaluates it', () => {
       const json = {
         pxObjClass: 'Rule-Declare-Expressions',
         pyClassName: 'Work-Cover-Jira',
-        pyRuleName: 'FullName',
-        pyProperty: 'pyFullName',
-        pyExpression: '.pyFirstName .AND. .pyLastName',
+        pyRuleName: 'HasBoth',
+        pyProperty: 'pyHasBoth',
+        // Grammar-native logical operator (&&); raw parser does not handle Pega '.AND.' text.
+        pyExpression: '.pyFirstName = "John" && .pyLastName = "Doe"',
       };
 
       const typed = parser.parseDeclareExpression(json);
       expect(typed.expressionAst).toBeDefined();
+      // New model is a data AST discriminated by `kind` (not the old OOP `nodeType`).
       expect(typed.expressionAst!.kind).toBe('BinaryOp');
-      // Verify it evaluates correctly
+
+      // Evaluation is now done by ExprNodeEvaluator, not by a node method.
       const ctx = new PegaClipboardContext({
         pyWorkPage: {
           pyFirstName: { type: 'Text', value: 'John' },

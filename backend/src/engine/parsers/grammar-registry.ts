@@ -17,6 +17,7 @@ export interface LanguageConfig {
   extensions: string[];
   wasmPath: string | null;
   parserModule: string;
+  skipScopeNodes?: string[];
 }
 
 export interface GrammarRegistryConfig {
@@ -125,7 +126,7 @@ export class GrammarRegistry {
       if (typeof LangParserClass !== 'function') {
         throw new TypeError(`LangParserClass is not a constructor (got ${typeof LangParserClass})`);
       }
-      const langParser: ILanguageParser = new LangParserClass(parser, langId);
+      const langParser: ILanguageParser = new LangParserClass(parser, langId, undefined, langConfig.skipScopeNodes);
       this.languageParsers.set(langId, langParser);
 
       logger.error(`[grammar-registry] Loaded grammar: ${langId}`);

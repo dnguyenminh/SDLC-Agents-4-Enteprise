@@ -325,8 +325,7 @@ SM **không dừng lại để hỏi** về template. Thông báo rồi chạy t
 | Phase | Name | Agent | Output | Prerequisites |
 |-------|------|-------|--------|---------------|
 | 1 | Requirements | ba-agent | BRD.md | Jira ticket exists |
-| 2 | Specification | ba-agent + ta-agent | FSD.md | BRD.md exists |
-| 2.5 | UI Design | ui-agent (if ticket has UI) | Wireframes, Stitch screens | FSD.md exists with UI specs |
+| 2 | Specification | ba-agent + ui-agent + ta-agent | FSD.md (incl. BA-approved UI mockups for UI tickets) | BRD.md exists |
 | 3 | Design | sa-agent | TDD.md | FSD.md exists |
 | 3.5 | Feedback Loop | ba↔sa | FSD fix + TDD update | DISCREPANCY.md exists |
 | 4 | Test Planning | qa-agent | STP.md, STC.md | BRD + FSD + TDD exist |
@@ -628,7 +627,7 @@ invokeSubAgent(
 7. Report: "✅ Phase 1 done — BRD.md created & attached to Jira. Chuyển sang Phase 2 (Specification)?"
 8. Wait for user confirmation.
 
-### Step 2: Execute Phase — Specification (BA + TA → FSD)
+### Step 2: Execute Phase — Specification (BA + UI + TA → FSD)
 
 **Prerequisites:** BRD.md exists (or BRD ingested in KB)
 
@@ -687,7 +686,7 @@ invokeSubAgent(
    ✅ Phase 2 done — FSD.md created & attached to Jira (BA draft + TA enrichment).
    - BA: Use Cases, Business Rules, Data Specs, Diagrams
    - TA: API Contracts, Integration Specs, Pseudocode, Technical Review
-   Chuyển sang Phase 2.5 (UI Design) hoặc Phase 3 (Design)?
+   Chuyển sang Phase 3 (Design)? (UI mockup đã nằm trong Phase 2)
    ```
 10. Wait for user confirmation.
 

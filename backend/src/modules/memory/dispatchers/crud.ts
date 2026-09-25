@@ -22,6 +22,7 @@ import { computePositionByIndex } from '../../kb-graph/service/nodes.js';
 import { EpochService } from '../evolution/EpochService.js';
 import pino from 'pino';
 import { loadFileMetadata } from '../../../engine/indexer/file-scanner.js';
+import { extractAndInsertIngestEdges } from '../engine/edge-on-ingest.js';
 
 const logger = pino({ name: 'memory-tool-dispatcher' });
 
@@ -124,6 +125,20 @@ export async function handleIngest(
 
   await engine.auditLog('INGEST', id);
   await upsertGraphNode(id, summary, type, scopeCtx?.projectId ?? null);
+
+  // SA4E-250: Edge extraction now runs after node upsert with integer IDs, project filter & pagination
+  try {
+    await extractAndInsertIngestEdges(engine.getAdapter(), {
+      entryId: id,
+      content,
+      source: source ?? null,
+      tags,
+      type,
+      projectId: scopeCtx?.projectId ?? null,
+    });
+  } catch (err) {
+    logger.warn({ err }, '[edge-on-ingest] Non-blocking edge extraction failed');
+  }
 
   const supersedesId = a.supersedes_id as number | undefined;
   if (supersedesId) {
@@ -249,6 +264,18 @@ export async function handleIngestFile(
     }
     created++;
     await upsertGraphNode(id, summary, type, scopeCtx?.projectId ?? null);
+    try {
+      await extractAndInsertIngestEdges(engine.getAdapter(), {
+        entryId: id,
+        content: sec.trim(),
+        source: filePath,
+        tags: '',
+        type,
+        projectId: scopeCtx?.projectId ?? null,
+      });
+    } catch (err) {
+      logger.warn({ err }, '[edge-on-ingest] Non-blocking edge extraction failed for file ingest');
+    }
   }
   await engine.auditLog('INGEST_FILE');
 

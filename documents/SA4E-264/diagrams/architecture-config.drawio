@@ -1,0 +1,51 @@
+<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1140" pageHeight="400" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="t" value="Architecture — Config Layer: Entra ID (SA4E-264 S1)" style="text;html=1;fontSize=15;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="30" y="10" width="520" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n1" value="1. dotenv&#10;backend/.env → process.env&#10;(entrypoint, trước main())" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="30" y="70" width="155" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n2" value="2. loadConfig()&#10;backend/src/config/index.ts&#10;ĐẦU TIÊN trong main()&#10;raw.entra = loadEntraSurface(env)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="235" y="65" width="195" height="100" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n3" value="3. zod parse (fail-fast)&#10;UnifiedConfigSchema.parse(raw)&#10;entra: EntraSurfaceSchema&#10;collect-all, no network I/O" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="65" width="190" height="100" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n4" value="4. Singleton UnifiedConfig&#10;config.entra: EntraConfig | null&#10;(typed, truyền qua DI)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="65" width="180" height="100" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n5" value="5. Consumers&#10;S3 — SA4E-266 OIDC: authority, issuer, jwksUri, scopes&#10;S4 — SA4E-267 PKCE: clientId, clientSecret, redirectUri" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="950" y="55" width="170" height="120" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e1" value="nạp env" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="n1" target="n2">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="gate SSO_ENABLED (envBool)" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="n2" target="n3">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="parse OK → EntraConfig typed" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="n3" target="n4">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="config.entra (singleton)" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="n4" target="n5">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="er1" value="EntraConfigError&#10;field-level issues (ERR-01..04)&#10;secret ***REDACTED***" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="250" width="190" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="er2" value="main().catch&#10;FATAL [config] (redacted)&#10;→ process.exit(1)&#10;KHÔNG mở port / DB init" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="245" width="180" height="100" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="parse fail / missing" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1" source="n3" target="er1">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="throw" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="er1" target="er2">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="note" value="Invariants: (a) không port/DB init trước khi validate pass — (b) chỉ backend/src/config/* đọc process.env.ENTRA_* — (c) secret không bao giờ vào log/error — (d) S1 không network I/O" style="text;html=1;whiteSpace=wrap;fontSize=11;fontStyle=2;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="30" y="250" width="410" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

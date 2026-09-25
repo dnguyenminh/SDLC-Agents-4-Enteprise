@@ -5,7 +5,7 @@
 
 import * as vscode from "vscode";
 import { debugLog, debugError } from "../debug-logger";
-import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
+import { PiWorkflowAdapter } from "../pi-workflow";
 import { ChatExtToWebviewMessage } from "./message-protocol";
 
 const STATE_KEY = "chatPanel.state";
@@ -24,7 +24,7 @@ export class ChatStateManager implements vscode.Disposable {
     private readonly workspaceRoot: string,
     private readonly workspaceState: vscode.Memento | undefined,
     private readonly sendToWebview: (msg: ChatExtToWebviewMessage) => void,
-    private readonly getEngine: () => LangGraphEngine
+    private readonly getEngine: () => PiWorkflowAdapter
   ) {
     this.startAgentWatcher();
     this.startSteeringWatcher();

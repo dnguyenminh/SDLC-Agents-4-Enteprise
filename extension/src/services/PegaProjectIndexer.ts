@@ -43,7 +43,9 @@ export class PegaProjectIndexer {
         const { PegaHttpClient } = await import("./PegaHttpClient");
         const pegaClient = new PegaHttpClient(secrets, this.outputChannel);
 
-        const hierarchy = await pegaClient.resolveDeterministicPegaHierarchy(operatorId || "SSA@TGB");
+        // SA4E-241 SEC-03: no hardcoded operator-id default — resolver fails closed
+        // if neither the hint nor the configured pegaUsername is present.
+        const hierarchy = await pegaClient.resolveDeterministicPegaHierarchy(operatorId);
         const seeds = this.buildSeeds(hierarchy.seeds, caseTypes);
         const projectId = this.resolveProjectId(appName || hierarchy.appName);
         if (!projectId) { return null; }

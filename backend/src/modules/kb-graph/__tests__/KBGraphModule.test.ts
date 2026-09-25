@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { SqliteDbAdapter } from '../../memory/task-queue/SqliteDbAdapter.js';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { GraphService } from '../service/index.js';
 import { KBGraphModule } from '../KBGraphModule.js';
 import pino from 'pino';
@@ -25,15 +24,13 @@ CREATE TABLE IF NOT EXISTS graph_edges (
 const log = pino({ level: 'silent' }) as any;
 
 describe('KBGraphModule handlers', () => {
-  let db: Database.Database;
-  let adapter: SqliteDbAdapter;
+  let adapter: SqliteAdapter;
   let module: KBGraphModule;
 
-  beforeEach(() => {
-    db = new Database(':memory:');
-    db.exec(GRAPH_SCHEMA);
-    adapter = new SqliteDbAdapter(db);
-    // Override internal GraphService to use test adapter
+  beforeEach(async () => {
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    await adapter.exec(GRAPH_SCHEMA);
     const svc = new GraphService(adapter as any, log);
     module = new (class extends KBGraphModule {
       constructor() {
@@ -44,7 +41,7 @@ describe('KBGraphModule handlers', () => {
     })();
   });
 
-  afterEach(() => db.close());
+  afterEach(async () => adapter.disconnect());
 
   it('kb_graph_stats returns zeros on empty graph', async () => {
     const handlers = module.getToolHandlers();
@@ -57,11 +54,11 @@ describe('KBGraphModule handlers', () => {
   });
 
   it('kb_graph_stats returns correct counts', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n1', 'Node1', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n2', 'Node2', 'FUNCTION', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('n1', 'n2', 0.5)`).run();
+    adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('n1', 'n2', 0.5)`).run();
 
     const handlers = module.getToolHandlers();
     const result = await handlers.get('kb_graph_stats')!({});
@@ -72,9 +69,9 @@ describe('KBGraphModule handlers', () => {
   });
 
   it('kb_graph_query finds nodes by query', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n1', 'HelloWorld', 'FUNCTION', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n2', 'Other', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
 
     const handlers = module.getToolHandlers();
@@ -85,9 +82,9 @@ describe('KBGraphModule handlers', () => {
   });
 
   it('kb_graph_query filters by type', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n1', 'A', 'FUNCTION', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n2', 'B', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
 
     const handlers = module.getToolHandlers();
@@ -107,14 +104,14 @@ describe('KBGraphModule handlers', () => {
     expect(data.node).toBeDefined();
     expect(data.node.label).toBe('TestNode');
 
-    const count = db.prepare('SELECT COUNT(*) c FROM graph_nodes').get() as any;
+    const count = adapter.prepare('SELECT COUNT(*) c FROM graph_nodes').get() as any;
     expect(count.c).toBe(1);
   });
 
   it('kb_graph_add_edge creates an edge', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('a', 'A', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('b', 'B', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
 
     const handlers = module.getToolHandlers();
@@ -122,7 +119,7 @@ describe('KBGraphModule handlers', () => {
     const data = JSON.parse(result.content[0].text as string);
     expect(data.status).toBe('added');
 
-    const count = db.prepare('SELECT COUNT(*) c FROM graph_edges').get() as any;
+    const count = adapter.prepare('SELECT COUNT(*) c FROM graph_edges').get() as any;
     expect(count.c).toBe(1);
   });
 
@@ -133,11 +130,11 @@ describe('KBGraphModule handlers', () => {
   });
 
   it('kb_graph_community detects clusters', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('a', 'A', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('b', 'B', 'TYPE', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 1.0)`).run();
+    adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 1.0)`).run();
 
     const handlers = module.getToolHandlers();
     const result = await handlers.get('kb_graph_community')!({});
@@ -146,11 +143,11 @@ describe('KBGraphModule handlers', () => {
   });
 
   it('kb_graph_pagerank ranks nodes', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('a', 'A', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('b', 'B', 'CLASS', 'CODE', '', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 1.0)`).run();
+    adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('a', 'b', 1.0)`).run();
 
     const handlers = module.getToolHandlers();
     const result = await handlers.get('kb_graph_pagerank')!({ top_n: 2 });
@@ -174,14 +171,13 @@ describe('KBGraphModule handlers', () => {
 });
 
 describe('kb_graph_merge', () => {
-  let db: Database.Database;
-  let adapter: SqliteDbAdapter;
+  let adapter: SqliteAdapter;
   let module: KBGraphModule;
 
-  beforeEach(() => {
-    db = new Database(':memory:');
-    db.exec(GRAPH_SCHEMA);
-    adapter = new SqliteDbAdapter(db);
+  beforeEach(async () => {
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    await adapter.exec(GRAPH_SCHEMA);
     const svc = new GraphService(adapter as any, log);
     module = new (class extends KBGraphModule {
       constructor() { super(log); (this as any).graphService = svc; }
@@ -189,7 +185,7 @@ describe('kb_graph_merge', () => {
     })();
   });
 
-  afterEach(() => db.close());
+  afterEach(async () => adapter.disconnect());
 
   it('returns empty for no projectIds', async () => {
     const handler = module.getToolHandlers().get('kb_graph_merge')!;
@@ -200,9 +196,9 @@ describe('kb_graph_merge', () => {
   });
 
   it('merges nodes from multiple projects', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n1', 'A', 'CLASS', 'CODE', 'proj1', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n2', 'B', 'CLASS', 'CODE', 'proj2', 0, 0, 0, 0)`).run();
 
     const handler = module.getToolHandlers().get('kb_graph_merge')!;
@@ -214,9 +210,9 @@ describe('kb_graph_merge', () => {
   });
 
   it('detects label conflicts across projects', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n1', 'SameLabel', 'CLASS', 'CODE', 'proj1', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n2', 'SameLabel', 'CLASS', 'CODE', 'proj2', 0, 0, 0, 0)`).run();
 
     const handler = module.getToolHandlers().get('kb_graph_merge')!;
@@ -226,11 +222,11 @@ describe('kb_graph_merge', () => {
   });
 
   it('includes edges in merged result', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n1', 'A', 'CLASS', 'CODE', 'proj1', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('n2', 'B', 'CLASS', 'CODE', 'proj1', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('n1', 'n2', 0.5)`).run();
+    adapter.prepare(`INSERT INTO graph_edges (source, target, weight) VALUES ('n1', 'n2', 0.5)`).run();
 
     const handler = module.getToolHandlers().get('kb_graph_merge')!;
     const result = await handler({ project_ids: ['proj1'] });
@@ -241,14 +237,13 @@ describe('kb_graph_merge', () => {
 });
 
 describe('kb_graph_cross_sync', () => {
-  let db: Database.Database;
-  let adapter: SqliteDbAdapter;
+  let adapter: SqliteAdapter;
   let module: KBGraphModule;
 
-  beforeEach(() => {
-    db = new Database(':memory:');
-    db.exec(GRAPH_SCHEMA);
-    adapter = new SqliteDbAdapter(db);
+  beforeEach(async () => {
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    await adapter.exec(GRAPH_SCHEMA);
     const svc = new GraphService(adapter as any, log);
     module = new (class extends KBGraphModule {
       constructor() { super(log); (this as any).graphService = svc; }
@@ -256,7 +251,7 @@ describe('kb_graph_cross_sync', () => {
     })();
   });
 
-  afterEach(() => db.close());
+  afterEach(async () => adapter.disconnect());
 
   it('requires source and target', async () => {
     const handler = module.getToolHandlers().get('kb_graph_cross_sync')!;
@@ -265,9 +260,9 @@ describe('kb_graph_cross_sync', () => {
   });
 
   it('creates cross edges between matching nodes', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('s1', 'Common', 'CLASS', 'CODE', 'projA', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('t1', 'Common', 'CLASS', 'CODE', 'projB', 0, 0, 0, 0)`).run();
 
     const handler = module.getToolHandlers().get('kb_graph_cross_sync')!;
@@ -276,15 +271,15 @@ describe('kb_graph_cross_sync', () => {
     expect(data.edgesCreated).toBe(1);
     expect(data.matches).toBe(1);
 
-    const edge = db.prepare('SELECT * FROM graph_edges').get() as any;
+    const edge = adapter.prepare('SELECT * FROM graph_edges').get() as any;
     expect(edge.rel_type).toBe('CROSS_TENANT');
     expect(edge.weight).toBe(0.8);
   });
 
   it('handles no matching nodes', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('s1', 'Unique', 'CLASS', 'CODE', 'projA', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('t1', 'Different', 'CLASS', 'CODE', 'projB', 0, 0, 0, 0)`).run();
 
     const handler = module.getToolHandlers().get('kb_graph_cross_sync')!;
@@ -295,18 +290,18 @@ describe('kb_graph_cross_sync', () => {
   });
 
   it('remove_cross removes CROSS_TENANT edges', async () => {
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('s1', 'Common', 'CLASS', 'CODE', 'projA', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
+    adapter.prepare(`INSERT INTO graph_nodes (entry_id, label, type, tier, project_id, x, y, z, level)
       VALUES ('t1', 'Common', 'CLASS', 'CODE', 'projB', 0, 0, 0, 0)`).run();
-    db.prepare(`INSERT INTO graph_edges (source, target, weight, rel_type) VALUES ('s1', 't1', 0.8, 'CROSS_TENANT')`).run();
+    adapter.prepare(`INSERT INTO graph_edges (source, target, weight, rel_type) VALUES ('s1', 't1', 0.8, 'CROSS_TENANT')`).run();
 
     const handler = module.getToolHandlers().get('kb_graph_remove_cross')!;
     const result = await handler({ project_a: 'projA', project_b: 'projB' });
     const data = JSON.parse(result.content[0].text as string);
     expect(data.removed).toBe(1);
 
-    const count = db.prepare('SELECT COUNT(*) c FROM graph_edges').get() as any;
+    const count = adapter.prepare('SELECT COUNT(*) c FROM graph_edges').get() as any;
     expect(count.c).toBe(0);
   });
 });

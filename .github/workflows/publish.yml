@@ -27,7 +27,7 @@ jobs:
       ext_ver: ${{ steps.versions.outputs.ext_ver }}
       backend_ver: ${{ steps.versions.outputs.backend_ver }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Extract version from tag
         id: extract
@@ -57,18 +57,20 @@ jobs:
       run:
         working-directory: extension
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: extension/package-lock.json
 
-      - name: Sync version from tag
-        run: npm version ${{ needs.version-check.outputs.version }} --no-git-tag-version --allow-same-version
+      - name: Update version from tag
+        run: |
+          jq ".version = \"${{ needs.version-check.outputs.version }}\"" package.json > package.json.tmp && mv package.json.tmp package.json
+          git add package.json
 
-      - run: npm ci
+      - run: npm install
       - run: npm run copy-resources
       - run: npm run gen-checksums
       - run: npm run esbuild-production
@@ -96,20 +98,22 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - name: Sync version from git tag
-        run: npm version ${{ needs.version-check.outputs.version }} --no-git-tag-version --allow-same-version
+      - name: Update version from tag
+        run: |
+          jq ".version = \"${{ needs.version-check.outputs.version }}\"" package.json > package.json.tmp && mv package.json.tmp package.json
+          git add package.json
 
       - name: Install dependencies (with retry)
-        run: npm ci || (sleep 15 && npm ci) || (sleep 30 && npm ci)
+        run: npm install || (sleep 15 && npm install) || (sleep 30 && npm install)
 
       - run: npm run build
 

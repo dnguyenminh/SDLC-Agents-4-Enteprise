@@ -40,8 +40,12 @@ export abstract class BaseLlmProvider implements LlmProvider {
   /** Override: return the URL to ping for health check */
   protected abstract getHealthCheckUrl(): string;
 
-  /** Override: return HTTP method + headers + body for health check (default GET) */
-  protected getHealthCheckRequest(): { method: string; headers?: Record<string, string>; body?: string } {
+  /**
+   * Override: return HTTP method + headers + body for health check (default GET).
+   * Async so subclasses can resolve credentials (e.g. API key from SecretStorage)
+   * and attach an Authorization header before pinging the endpoint.
+   */
+  protected async getHealthCheckRequest(): Promise<{ method: string; headers?: Record<string, string>; body?: string }> {
     return { method: "GET" };
   }
 
@@ -55,7 +59,7 @@ export abstract class BaseLlmProvider implements LlmProvider {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
     try {
-      const { method, headers, body } = this.getHealthCheckRequest();
+      const { method, headers, body } = await this.getHealthCheckRequest();
       const response = await fetch(this.getHealthCheckUrl(), {
         method, headers, body, signal: controller.signal,
       });

@@ -1,35 +1,26 @@
 /**
  * ensure-pega-category-counters.ts — Ensure pega_category_counters table exists.
  * SA4E-217: Idempotent table creation, called at server startup.
- * Uses the async QueryDatabaseAdapter interface (execAsync) so it works on the
- * wasm SQLite engine (async-only) and PostgreSQL/MySQL alike.
- *
- * Engine-aware DDL: the `id` surrogate key uses a portable default per engine
- * (PostgreSQL gen_random_uuid(); SQLite hex(randomblob(...))). `rule_type` is the
- * real business key (UNIQUE).
+ * Multi-engine: uses the async DatabaseAdapter API + per-engine DDL so it runs on
+ * both SQLite and PostgreSQL (PostgresAdapter throws on the sync exec method).
+ * Extracted from migrate-pega-category-counters.ts for server-start execution.
  */
 
-import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 
-/** Detect the active engine via optional getEngine() (full DatabaseAdapter exposes it). */
-function detectEngine(db: QueryDatabaseAdapter): string {
-  const withEngine = db as unknown as { getEngine?: () => string };
-  return typeof withEngine.getEngine === 'function' ? withEngine.getEngine() : 'sqlite';
-}
-
-export async function ensurePegaCategoryCountersTable(db: QueryDatabaseAdapter): Promise<void> {
-  const engine = detectEngine(db);
-  // Portable id default: PostgreSQL uses gen_random_uuid(); SQLite builds a
-  // uuid-like value from randomblob(); MySQL uses UUID().
-  const idDefault =
-    engine === 'postgresql' ? "gen_random_uuid()::text"
-      : engine === 'mysql' ? "(UUID())"
-        : "(lower(hex(randomblob(16))))";
-  const nowDefault = engine === 'postgresql' ? 'NOW()' : "(datetime('now'))";
+export async function ensurePegaCategoryCountersTable(db: DatabaseAdapter): Promise<void> {
+  const isPg = db.getEngine() === 'postgresql';
+  // PG: gen_random_uuid() (pgcrypto/pg13+); SQLite: 32-char random hex.
+  // (The previous UUID-formatting expression had unbalanced parentheses and
+  // broke with `near "||": syntax error` — keep the default simple and valid.)
+  const idDefault = isPg
+    ? `DEFAULT gen_random_uuid()::text`
+    : `DEFAULT (lower(hex(randomblob(16))))`;
+  const nowDefault = isPg ? `now()` : `(datetime('now'))`;
 
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS pega_category_counters (
-      id TEXT PRIMARY KEY DEFAULT ${idDefault},
+      id TEXT PRIMARY KEY ${idDefault},
       rule_type TEXT NOT NULL,
       count INTEGER NOT NULL DEFAULT 0,
       last_updated TEXT NOT NULL DEFAULT ${nowDefault},

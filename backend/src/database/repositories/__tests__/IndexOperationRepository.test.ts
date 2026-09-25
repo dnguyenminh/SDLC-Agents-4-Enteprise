@@ -1,13 +1,18 @@
 /**
  * Unit tests for IndexOperationRepository — CRUD + lifecycle queries against a
- * real in-memory SQLite adapter (via makeTestAdapter). Covers tenant isolation,
- * progress/status updates, supersede, stale/interrupted lookups, and terminal GC.
+ * real in-memory SQLite adapter (via SqliteAdapter, the production adapter).
+ * Covers tenant isolation, progress/status updates, supersede, stale/interrupted
+ * lookups, and terminal GC.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
 import { IndexOperationRepository } from '../IndexOperationRepository.js';
-import { makeTestAdapter } from '../../__tests__/test-adapter.js';
+import {
+  makeSqliteTestDb,
+  adapterFromSqlite,
+  type SqliteTestDb,
+} from '../../__tests__/sqlite-test-adapter.js';
+import type { DatabaseAdapter } from '../../adapters/DatabaseAdapter.js';
 
 const SCHEMA = `
 CREATE TABLE index_operations (
@@ -25,21 +30,25 @@ CREATE TABLE index_operations (
 );
 `;
 
-let db: Database.Database;
+let db: SqliteTestDb;
+let adapter: DatabaseAdapter;
 let repo: IndexOperationRepository;
 
-beforeEach(() => {
-  db = new Database(':memory:');
-  db.exec(SCHEMA);
-  repo = new IndexOperationRepository(makeTestAdapter(db));
+beforeEach(async () => {
+  db = await makeSqliteTestDb();
+  adapter = adapterFromSqlite(db.adapter);
+  adapter.exec(SCHEMA);
+  repo = new IndexOperationRepository(adapter);
 });
 
-afterEach(() => db.close());
+afterEach(async () => {
+  await db.close();
+});
 
 describe('IndexOperationRepository', () => {
   it('create inserts a row with server defaults', async () => {
     await repo.create({ user_id: 'u1', project_id: 'p1', status: 'running' });
-    const row = db.prepare('SELECT * FROM index_operations').get() as Record<string, unknown>;
+    const row = adapter.get('SELECT * FROM index_operations');
     expect(row.user_id).toBe('u1');
     expect(row.project_id).toBe('p1');
     expect(row.status).toBe('running');
@@ -59,7 +68,7 @@ describe('IndexOperationRepository', () => {
       total: 10,
       current_file: 'src/a.ts',
     });
-    const row = db.prepare('SELECT * FROM index_operations WHERE id=?').get('op-1') as Record<string, unknown>;
+    const row = adapter.get('SELECT * FROM index_operations WHERE id=?', ['op-1']);
     expect(row.phase).toBe('indexing');
     expect(row.current).toBe(5);
     expect(row.total).toBe(10);
@@ -69,7 +78,7 @@ describe('IndexOperationRepository', () => {
   it('updateProgress patches only provided fields', async () => {
     await repo.create({ id: 'op-2', user_id: 'u1', project_id: 'p1', status: 'running' });
     await repo.updateProgress('op-2', { current: 3, total: 9 });
-    const row = db.prepare('SELECT * FROM index_operations WHERE id=?').get('op-2') as Record<string, unknown>;
+    const row = adapter.get('SELECT * FROM index_operations WHERE id=?', ['op-2']);
     expect(row.current).toBe(3);
     expect(row.total).toBe(9);
     expect(row.phase).toBe('scanning'); // unchanged
@@ -78,14 +87,14 @@ describe('IndexOperationRepository', () => {
   it('updateProgress no-op when no fields supplied', async () => {
     await repo.create({ id: 'op-3', user_id: 'u1', project_id: 'p1', status: 'running' });
     await repo.updateProgress('op-3', {});
-    const row = db.prepare('SELECT * FROM index_operations WHERE id=?').get('op-3') as Record<string, unknown>;
+    const row = adapter.get('SELECT * FROM index_operations WHERE id=?', ['op-3']);
     expect(row.phase).toBe('scanning');
   });
 
   it('updateStatus transitions the record', async () => {
     await repo.create({ id: 'op-4', user_id: 'u1', project_id: 'p1', status: 'running' });
     await repo.updateStatus('op-4', 'completed');
-    const row = db.prepare('SELECT * FROM index_operations WHERE id=?').get('op-4') as Record<string, unknown>;
+    const row = adapter.get('SELECT * FROM index_operations WHERE id=?', ['op-4']);
     expect(row.status).toBe('completed');
   });
 
@@ -95,7 +104,7 @@ describe('IndexOperationRepository', () => {
     await repo.create({ id: 'op-7', user_id: 'u1', project_id: 'p1', status: 'completed' });
     const n = await repo.supersedeActive('u1', 'p1');
     expect(n).toBe(2);
-    const rows = db.prepare('SELECT id, status FROM index_operations').all() as Record<string, unknown>[];
+    const rows = adapter.all<{ id: string; status: string }>('SELECT id, status FROM index_operations');
     const byId = Object.fromEntries(rows.map((r) => [r.id, r.status]));
     expect(byId['op-5']).toBe('superseded');
     expect(byId['op-6']).toBe('superseded');
@@ -107,7 +116,7 @@ describe('IndexOperationRepository', () => {
     await repo.create({ id: 'op-9', user_id: 'u2', project_id: 'p1', status: 'running' });
     const n = await repo.supersedeActive('u1', 'p1');
     expect(n).toBe(1);
-    const other = db.prepare('SELECT status FROM index_operations WHERE id=?').get('op-9') as Record<string, unknown>;
+    const other = adapter.get('SELECT status FROM index_operations WHERE id=?', ['op-9']);
     expect(other.status).toBe('running');
   });
 
@@ -128,8 +137,9 @@ describe('IndexOperationRepository', () => {
   it('findStaleRunning returns only running records older than threshold', async () => {
     await repo.create({ id: 'op-13', user_id: 'u1', project_id: 'p1', status: 'running' });
     // Force an old updated_at.
-    db.prepare("UPDATE index_operations SET updated_at = ? WHERE id='op-13'").run(
-      new Date(Date.now() - 120 * 1000).toISOString(),
+    adapter.run(
+      "UPDATE index_operations SET updated_at = ? WHERE id=?",
+      [new Date(Date.now() - 120 * 1000).toISOString(), 'op-13'],
     );
     await repo.create({ id: 'op-14', user_id: 'u1', project_id: 'p1', status: 'running' });
     const stale = await repo.findStaleRunning(60);
@@ -146,14 +156,15 @@ describe('IndexOperationRepository', () => {
 
   it('deleteTerminalOlderThan removes only terminal records past retention', async () => {
     await repo.create({ id: 'op-17', user_id: 'u1', project_id: 'p1', status: 'completed' });
-    db.prepare("UPDATE index_operations SET updated_at = ? WHERE id='op-17'").run(
-      new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+    adapter.run(
+      "UPDATE index_operations SET updated_at = ? WHERE id=?",
+      [new Date(Date.now() - 2 * 3600 * 1000).toISOString(), 'op-17'],
     );
     await repo.create({ id: 'op-18', user_id: 'u1', project_id: 'p1', status: 'completed' });
     await repo.create({ id: 'op-19', user_id: 'u1', project_id: 'p1', status: 'running' });
     const n = await repo.deleteTerminalOlderThan(1);
     expect(n).toBe(1); // only op-17 is terminal AND older than 1h
-    const remaining = db.prepare('SELECT id FROM index_operations').all() as Record<string, unknown>[];
+    const remaining = adapter.all<{ id: string }>('SELECT id FROM index_operations');
     expect(remaining.map((r) => r.id).sort()).toEqual(['op-18', 'op-19']);
   });
 });

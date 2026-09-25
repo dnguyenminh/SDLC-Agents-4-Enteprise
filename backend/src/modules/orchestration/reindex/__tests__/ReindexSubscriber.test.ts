@@ -4,13 +4,12 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import pino from 'pino';
-import type Database from 'better-sqlite3';
-import { makeTempDb, type TempDb } from '../../../../__tests__/sa4e-testkit.js';
+import { SqliteAdapter } from '../../../../database/adapters/SqliteAdapter.js';
+import { SCHEMA_V1 } from '../../../../engine/db/schema.js';
 import { ReindexActionMapper } from '../ReindexActionMapper.js';
 import { PerServerTaskQueue } from '../PerServerTaskQueue.js';
 import { ReindexService } from '../ReindexService.js';
 import { ReindexSubscriber } from '../ReindexSubscriber.js';
-import { SqliteDbAdapter } from '../../../memory/task-queue/SqliteDbAdapter.js';
 import { FakeEmbedder, FakeEventSource, FakeToolSource } from './reindex-fakes.js';
 
 const silent = pino({ level: 'silent' });
@@ -79,10 +78,15 @@ describe('ReindexSubscriber', () => {
 });
 
 describe('ReindexSubscriber — service-integrated (UT-24/25/26)', () => {
-  let tmp: TempDb;
-  let db: Database.Database;
-  beforeEach(() => { tmp = makeTempDb(); db = tmp.dbManager.getDb(); });
-  afterEach(() => tmp.close());
+  let adapter: SqliteAdapter;
+  beforeEach(async () => {
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    await adapter.exec(SCHEMA_V1);
+  });
+  afterEach(async () => {
+    await adapter.disconnect();
+  });
 
   it('UT-24: memory not ready → skip + warn, no throw', async () => {
     const warn = vi.fn();
@@ -102,13 +106,13 @@ describe('ReindexSubscriber — service-integrated (UT-24/25/26)', () => {
     const src = new FakeToolSource();
     src.setTools('S', ['t1']);
     src.setConnected('S', false); // client manager says NOT connected
-    const service = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, silent);
+    const service = new ReindexService(() => adapter, new FakeEmbedder(), src, silent);
     const source = new FakeEventSource();
     const sub = new ReindexSubscriber(source, service, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
     sub.start();
     source.emit('S', 'connected');
     await sub.settle('S');
-    const count = (db.prepare('SELECT COUNT(*) c FROM mcp_tools WHERE server = ?').get('S') as any).c;
+    const count = (await adapter.get<{ c: number }>('SELECT COUNT(*) c FROM mcp_tools WHERE server = ?', ['S']))?.c ?? 0;
     expect(count).toBe(0);
   });
 
@@ -119,10 +123,10 @@ describe('ReindexSubscriber — service-integrated (UT-24/25/26)', () => {
     src.setConnected('S', true);
     const now = vi.spyOn(Date, 'now');
     now.mockReturnValueOnce(0).mockReturnValue(6000); // start=0, end=6000ms
-    const service = new ReindexService(() => new SqliteDbAdapter(db), new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
+    const service = new ReindexService(() => adapter, new FakeEmbedder(), src, { info: vi.fn(), warn } as any);
     await service.reindexConnected('S');
     now.mockRestore();
-    const count = (db.prepare('SELECT COUNT(*) c FROM mcp_tools WHERE server = ?').get('S') as any).c;
+    const count = (await adapter.get<{ c: number }>('SELECT COUNT(*) c FROM mcp_tools WHERE server = ?', ['S']))?.c ?? 0;
     expect(count).toBe(1);
     expect(warn).toHaveBeenCalledWith(
       expect.objectContaining({ server: 'S' }),

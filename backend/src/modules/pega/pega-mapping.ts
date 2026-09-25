@@ -37,7 +37,7 @@ const EMPTY_SEGMENT = '-';
 function seg(value: string | undefined | null): string {
   const v = (value ?? '').toString().trim();
   if (!v) return EMPTY_SEGMENT;
-  return v.replace(/[:/]/g, '_'); // ':' and '/' are separators — never allow inside a segment
+  return v.replace(/[:/!]/g, '_').replace(/\s+/g, '_'); // sanitize separators
 }
 
 /**
@@ -112,13 +112,52 @@ export function parseFqn(fqn: string): {
  * pyRuleName → pyActivityName → pyModelName → pyFlowName → pyLabel.
  */
 export function resolveRuleNameField(ruleJson: Record<string, unknown>): string {
+  const sanitize = (v: string) => v.replace(/[:/!]/g, '_').replace(/\s+/g, '_');
   const r = ruleJson as Record<string, unknown>;
-  return String(
+  const name = String(
     r.pyRuleName
     || r.pyActivityName
     || r.pyModelName
     || r.pyFlowName
+    || r.pyServiceName
+    || r.pyName
+    || (r as any).pxInsName
     || r.pyLabel
+    || r.pyTableName
+    || r.pyColumnName
+    || r.pyPropertyName
+    || r.pyDBName
     || '',
-  );
+  ).trim();
+  if (name) return sanitize(name);
+  // Fallback for Data-Admin rules lacking a conventional name field.
+  const insKey = String(r.insKey ?? r.pzInsKey ?? '').trim();
+  if (insKey) {
+    const firstSpace = insKey.indexOf(' ');
+    if (firstSpace > 0 && firstSpace < insKey.length - 1) {
+      const candidate = insKey.slice(firstSpace + 1).trim();
+      if (candidate) return sanitize(candidate);
+    }
+    const parts = insKey.split(/[/!]/).filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) return sanitize(last);
+  }
+  return '';
+}
+
+/**
+ * Resolve the canonical class name from a Pega rule JSON object.
+ *
+ * Many instance-level Data-Admin rule types (Operator-AccessGroup, AuthService,
+ * Calendar, Organization, ServicePackage, Requestor, ...) carry NO pyClassName —
+ * they are not "applied to" another class; they ARE their own class. For these the
+ * class IS pxObjClass. Using this single fallback everywhere an FQN/virtual path is
+ * built keeps identity CONSISTENT (INV: same rule → same FQN at write and at
+ * checksum-dedup), and stops these rules from being dropped as symbol_skip.
+ *
+ * @returns pyClassName when present, else pxObjClass, else ''.
+ */
+export function resolveClassNameField(ruleJson: Record<string, unknown>): string {
+  const r = ruleJson as Record<string, unknown>;
+  return String(r.pyClassName || r.pxObjClass || '').trim();
 }

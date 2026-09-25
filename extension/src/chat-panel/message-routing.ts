@@ -4,7 +4,7 @@
 
 import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
-import { LangGraphEngine } from "../langgraph/engine/langgraph-engine";
+import { PiWorkflowAdapter } from "../pi-workflow";
 import { ChatExtToWebviewMessage, AutopilotMode } from "./message-protocol";
 import { SDLCPhase } from "../langgraph/core/state";
 
@@ -43,7 +43,7 @@ export function buildEnrichedText(text: string, context?: Array<{ type: string; 
 export async function routeUserMessage(
   text: string,
   enrichedText: string,
-  getEngine: () => LangGraphEngine,
+  getEngine: () => PiWorkflowAdapter,
   sendToWebview: (msg: ChatExtToWebviewMessage) => void,
   onTurnComplete?: () => void
 ): Promise<void> {
@@ -100,7 +100,7 @@ export async function routeUserMessage(
   sendToWebview({ type: "chat:workingStatus", working: false });
 }
 
-async function handleDirectCommand(command: string, getEngine: () => LangGraphEngine, sendToWebview: (msg: ChatExtToWebviewMessage) => void): Promise<void> {
+async function handleDirectCommand(command: string, getEngine: () => PiWorkflowAdapter, sendToWebview: (msg: ChatExtToWebviewMessage) => void): Promise<void> {
   switch (command) {
     case "status": {
       const nodes = getEngine().getCurrentNodeStates();

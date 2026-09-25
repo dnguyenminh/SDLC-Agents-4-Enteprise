@@ -22,7 +22,7 @@ export function extractTrigger(
   const sobject = objectNode ? getNodeText(objectNode, source) : 'Unknown';
   const events = extractTriggerEvents(triggerNode, source);
   symbols.push({
-    name, kind: 'class', filePath,
+    name, kind: 'trigger', filePath,
     startLine: range.startLine, endLine: range.endLine,
     signature: `trigger ${name} on ${sobject} (${events.join(', ')})`,
     modifiers: ['trigger'], isExported: true,

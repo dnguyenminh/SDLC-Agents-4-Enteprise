@@ -19,6 +19,11 @@ export interface RuleSetRuleSummary {
   pyRuleSetVersion: string;
   /** Optional display label */
   pyLabel?: string;
+  /** SA4E-241: rule change timestamps (basic fields, used for the checksum). */
+  pxUpdateDateTime?: string;
+  pxSaveDateTime?: string;
+  /** SA4E-241: checksum for incremental skip (extension-computed, NT-2). */
+  checksum?: string;
 }
 
 /** Item shape compatible with fetchRulesInParallel */
@@ -27,6 +32,8 @@ export interface CrawlPlanItem {
   pxObjClass: string;
   pyClassName: string;
   pyRuleName: string;
+  /** SA4E-241: checksum for incremental delta skip (NT-3). */
+  checksum?: string;
 }
 
 /**
@@ -39,6 +46,7 @@ export function summaryToCrawlItem(summary: RuleSetRuleSummary): CrawlPlanItem {
     pxObjClass: summary.pxObjClass,
     pyClassName: summary.pyClassName,
     pyRuleName: summary.pyRuleName,
+    checksum: summary.checksum, // SA4E-241: carried through for delta skip
   };
 }
 

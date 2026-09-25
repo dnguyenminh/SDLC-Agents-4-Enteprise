@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { SqliteDbAdapter } from '../task-queue/SqliteDbAdapter.js';
 import { TierConsolidationService } from '../consolidation/service.js';
 
@@ -27,9 +27,10 @@ CREATE TABLE IF NOT EXISTS consolidation_log (
 );
 `;
 
-function makeService(): { svc: TierConsolidationService; db: Database.Database } {
-  const db = new Database(':memory:');
-  db.exec(SCHEMA);
+async function makeService(): Promise<{ svc: TierConsolidationService; db: SqliteAdapter }> {
+  const db = new SqliteAdapter(':memory:');
+  await db.connect();
+  await db.exec(SCHEMA);
   const adapter = new SqliteDbAdapter(db);
   const svc = new TierConsolidationService(adapter, {
     workingToEpisodicMinHours: 0,
@@ -45,10 +46,10 @@ function makeService(): { svc: TierConsolidationService; db: Database.Database }
 
 describe('TierConsolidationService', () => {
   let svc: TierConsolidationService;
-  let db: Database.Database;
+  let db: SqliteAdapter;
 
-  beforeEach(() => { const m = makeService(); svc = m.svc; db = m.db; });
-  afterEach(() => { db.close(); });
+  beforeEach(async () => { const m = await makeService(); svc = m.svc; db = m.db; });
+  afterEach(async () => { await db.disconnect(); });
 
   function insert(overrides: Record<string, unknown> = {}): number {
     const cols = ['content', 'summary', 'type', 'tier', 'access_count', 'quality_score', 'structured_map', 'archived', 'expires_at', 'last_accessed_at'];
@@ -68,7 +69,7 @@ describe('TierConsolidationService', () => {
     const r = await svc.runConsolidation(false, 'EPISODIC');
     expect(r.promoted).toBe(1);
     expect(r.demoted).toBe(0);
-    const row = db.prepare('SELECT tier FROM knowledge_entries WHERE id = 1').get() as any;
+    const row = await db.get<any>('SELECT tier FROM knowledge_entries WHERE id = 1');
     expect(row.tier).toBe('EPISODIC');
   });
 
@@ -76,7 +77,7 @@ describe('TierConsolidationService', () => {
     insert({ tier: 'WORKING', access_count: 5, quality_score: 60 });
     const r = await svc.runConsolidation(true, 'EPISODIC');
     expect(r.promoted).toBe(1);
-    const row = db.prepare('SELECT tier FROM knowledge_entries WHERE id = 1').get() as any;
+    const row = await db.get<any>('SELECT tier FROM knowledge_entries WHERE id = 1');
     expect(row.tier).toBe('WORKING');
   });
 
@@ -84,7 +85,7 @@ describe('TierConsolidationService', () => {
     insert({ tier: 'EPISODIC', access_count: 15, quality_score: 80, structured_map: '{"steps":[{"tool":"test"}]}' });
     const r = await svc.runConsolidation(false);
     expect(r.promoted).toBe(1);
-    const row = db.prepare('SELECT tier FROM knowledge_entries WHERE id = 1').get() as any;
+    const row = await db.get<any>('SELECT tier FROM knowledge_entries WHERE id = 1');
     expect(row.tier).toBe('SEMANTIC');
   });
 
@@ -98,14 +99,14 @@ describe('TierConsolidationService', () => {
     insert({ tier: 'SEMANTIC', expires_at: '2020-01-01' });
     const r = await svc.runConsolidation(false);
     expect(r.expired).toBe(1);
-    const row = db.prepare('SELECT archived FROM knowledge_entries WHERE id = 1').get() as any;
+    const row = await db.get<any>('SELECT archived FROM knowledge_entries WHERE id = 1');
     expect(row.archived).toBe(1);
   });
 
   it('logs consolidation to consolidation_log', async () => {
     insert({ tier: 'WORKING', access_count: 5, quality_score: 60 });
     await svc.runConsolidation(false, 'EPISODIC');
-    const log = db.prepare('SELECT * FROM consolidation_log').all() as any[];
+    const log = await db.all<any>('SELECT * FROM consolidation_log');
     expect(log).toHaveLength(1);
     expect(log[0].entry_id).toBe(1);
     expect(log[0].from_tier).toBe('WORKING');
@@ -116,7 +117,7 @@ describe('TierConsolidationService', () => {
     insert({ tier: 'WORKING', access_count: 20, quality_score: 90, structured_map: '{"key":"val"}' });
     const r = await svc.runConsolidation(false);
     expect(r.promoted).toBe(2);
-    const row = db.prepare('SELECT tier FROM knowledge_entries WHERE id = 1').get() as any;
+    const row = await db.get<any>('SELECT tier FROM knowledge_entries WHERE id = 1');
     expect(row.tier).toBe('SEMANTIC');
   });
 
@@ -145,7 +146,7 @@ describe('TierConsolidationService', () => {
     insert({ tier: 'EPISODIC', access_count: 15, quality_score: 80, structured_map: '{"x":"y"}' });
     const r = await svc.runConsolidation(false, 'WORKING');
     expect(r.promoted).toBe(0);
-    const row2 = db.prepare('SELECT tier FROM knowledge_entries WHERE id = 2').get() as any;
+    const row2 = await db.get<any>('SELECT tier FROM knowledge_entries WHERE id = 2');
     expect(row2.tier).toBe('EPISODIC');
   });
 });

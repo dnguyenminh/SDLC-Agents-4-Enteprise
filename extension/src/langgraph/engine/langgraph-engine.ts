@@ -35,6 +35,11 @@ import {
 
 type CompiledGraph = Awaited<ReturnType<typeof buildPipelineGraph>>;
 
+/**
+ * @deprecated Deprecated as part of SA4E-289 / SA4E-297 (Option C Pi SDK Migration).
+ * Replaced by PiWorkflowAdapter and PiWorkflowEngine in `src/pi-workflow/`.
+ * Disconnected from active runtime (ChatPanelProvider and ChatEngineAdapter now use PiWorkflowAdapter).
+ */
 export class LangGraphEngine {
   private graph: CompiledGraph | null = null;
   private checkpointer: RemoteCheckpointer;

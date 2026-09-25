@@ -1,10 +1,9 @@
 ﻿/**
- * SQLite Adapter — wraps better-sqlite3 with DatabaseAdapter interface.
- * Default adapter for fresh installations. Zero overhead.
+ * SQLite Adapter — wraps sql.js with DatabaseAdapter interface.
+ * Pure JS, no native bindings. Uses sql.js for in-memory/file SQLite.
  * Implements: SA4E-33, BR-1
  */
 
-import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
 import type {
@@ -16,29 +15,158 @@ import type {
 } from './DatabaseAdapter.js';
 import { normalizeSqlitePlaceholders } from './sqlite-placeholders.js';
 
+const sqlite3InitModule = (await import('@sqlite.org/sqlite-wasm')).default;
+const sqlite3 = await sqlite3InitModule();
+
 export class SqliteAdapter implements DatabaseAdapter {
-  private db: Database.Database | null = null;
+  private db: any = null;
   private connected = false;
+  private dirty = false;
+  /**
+   * Root-cause fix for sibling-adapter divergence: sqlite-wasm keeps a
+   * private in-memory DB per `new DB()` instance, so N adapters on the same
+   * host file each saw a different database (migrations visible on one,
+   * `no such table` on the others). File-backed adapters now share a single
+   * live DB per resolved path for the process lifetime (refcounted).
+   * `:memory:` adapters stay fully isolated (unit tests rely on it).
+   */
+  private static shared: Map<string, { db: any; refs: number; dirty: boolean }> = new Map();
+  private sharedKey: string | null = null;
 
   constructor(private readonly dbPath: string, private readonly nativeBinding?: string) {}
 
-  async connect(): Promise<void> {
-    const dir = path.dirname(this.dbPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+  private markDirty(): void {
+    this.dirty = true;
+    if (this.sharedKey) {
+      const entry = SqliteAdapter.shared.get(this.sharedKey);
+      if (entry) entry.dirty = true;
     }
-    this.db = this.nativeBinding
-      ? new Database(this.dbPath, { nativeBinding: this.nativeBinding })
-      : new Database(this.dbPath);
-    this.db.pragma('journal_mode = WAL');
-    this.db.pragma('foreign_keys = ON');
-    this.connected = true;
+  }
+
+  async connect(): Promise<void> {
+    if (this.connected && this.db) return;
+    try {
+      const useFile = this.dbPath !== ':memory:' && this.dbPath !== '';
+      if (useFile) {
+        const dir = path.dirname(this.dbPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      }
+      // Shared-DB fast path: another adapter already owns the live DB for
+      // this file — reuse it so every consumer sees the same tables/rows.
+      const useShared = useFile;
+      if (useShared) {
+        const existing = SqliteAdapter.shared.get(this.dbPath);
+        if (existing) {
+          this.db = existing.db;
+          this.sharedKey = this.dbPath;
+          existing.refs++;
+          this.connected = true;
+          return;
+        }
+      }
+      // Root cause of SQLITE_CANTOPEN on Linux CI: @sqlite.org/sqlite-wasm in
+      // Node.js only supports in-memory databases (see its README). Host file
+      // paths are NOT visible inside the WASM MEMFS virtual FS, so
+      // `new DB(hostPath)` throws CANTOPEN whenever the path contains
+      // directories missing from MEMFS (always on POSIX; on Windows the
+      // backslashes accidentally collapse into a single flat MEMFS name, so it
+      // "works" but the data never reaches the host disk). Open :memory: and
+      // import the persisted host file (written by disconnect() via
+      // sqlite3_js_db_export) with sqlite3_deserialize instead.
+      this.db = new sqlite3.oo1.DB(':memory:');
+      let deserialized = false;
+      if (useFile && fs.existsSync(this.dbPath) && fs.statSync(this.dbPath).size > 0) {
+        this.importHostFile(this.dbPath);
+        deserialized = true;
+      }
+      if (useShared) {
+        SqliteAdapter.shared.set(this.dbPath, { db: this.db, refs: 1, dirty: false });
+        this.sharedKey = this.dbPath;
+      }
+      // SA4E-262 fix: WAL is a file-system journal mode. On the WASM in-memory /
+      // deserialized DB it attempts to create WAL files inside MEMFS and throws
+      // SQLITE_CANTOPEN. Skip it — durability for host-file DBs is provided by
+      // the sqlite3_js_db_export in disconnect().
+      if (!deserialized) {
+        this.db.exec("PRAGMA journal_mode = WAL;");
+      }
+      this.db.exec("PRAGMA foreign_keys = ON;");
+      this.connected = true;
+    } catch (e) {
+      this.connected = false;
+      this.db = null;
+      throw e;
+    }
+  }
+
+  /**
+   * Load a previously exported host DB file into the live in-memory database.
+   * Uses sqlite3_deserialize with FREEONCLOSE so SQLite takes ownership of the
+   * WASM buffer (freed automatically on close). On failure the buffer is freed
+   * manually and a descriptive error is thrown (fail fast — never boot on a
+   * silently empty database).
+   */
+  private importHostFile(dbPath: string): void {
+    const data = new Uint8Array(fs.readFileSync(dbPath));
+    // SA4E-262 fix: a host file written in WAL mode carries write/read version
+    // bytes 18/19 = 2. Deserializing such an image into the WASM in-memory DB
+    // makes every statement demand the -wal/-shm files, which do not exist in
+    // MEMFS -> SQLITE_CANTOPEN (server crash on first admin/config request).
+    // Patch the in-memory copy to legacy mode (1/1) — safe because a WAL image
+    // without a sidecar -wal file is self-contained (no pending transactions).
+    if (data.length > 19 && data[18] === 2 && data[19] === 2) {
+      data[18] = 1;
+      data[19] = 1;
+    }
+    const capi = sqlite3.capi;
+    const pData = sqlite3.wasm.allocFromTypedArray(data);
+    let owned = false;
+    try {
+      const rc = capi.sqlite3_deserialize(
+        this.db.pointer,
+        'main',
+        pData,
+        data.length,
+        data.length,
+        capi.SQLITE_DESERIALIZE_FREEONCLOSE | capi.SQLITE_DESERIALIZE_RESIZEABLE,
+      );
+      if (rc !== 0) {
+        throw new Error(`sqlite3_deserialize failed for ${dbPath} (rc=${rc})`);
+      }
+      owned = true;
+    } finally {
+      if (!owned) {
+        sqlite3.wasm.dealloc(pData);
+      }
+    }
   }
 
   async disconnect(): Promise<void> {
     if (this.db) {
-      this.db.close();
+      const entry = this.sharedKey ? SqliteAdapter.shared.get(this.sharedKey) : undefined;
+      // The shared live object is always current, so export when any holder
+      // dirtied it — one export persists everyone's changes.
+      if (this.dbPath !== ':memory:' && this.dbPath !== '' && (this.dirty || entry?.dirty)) {
+        const data = sqlite3.capi.sqlite3_js_db_export(this.db, 'main');
+        fs.writeFileSync(this.dbPath, Buffer.from(data));
+        this.dirty = false;
+        if (entry) entry.dirty = false;
+      }
+      if (entry && this.sharedKey) {
+        entry.refs--;
+        // Last holder closes the shared DB; a later connect re-imports
+        // from the exported host file, preserving persistence semantics.
+        if (entry.refs <= 0) {
+          this.db.close();
+          SqliteAdapter.shared.delete(this.sharedKey);
+        }
+      } else {
+        this.db.close();
+      }
       this.db = null;
+      this.sharedKey = null;
       this.connected = false;
     }
   }
@@ -51,53 +179,126 @@ export class SqliteAdapter implements DatabaseAdapter {
     if (!this.connected || !this.db) {
       return { connected: false, engine: 'sqlite' };
     }
-    const stats = fs.statSync(this.dbPath);
+    let sizeBytes: number | undefined;
+    if (this.dbPath !== ':memory:' && this.dbPath !== '' && fs.existsSync(this.dbPath)) {
+      sizeBytes = fs.statSync(this.dbPath).size;
+    }
     return {
       connected: true,
       engine: 'sqlite',
       version: 'SQLite 3.x',
-      details: { path: this.dbPath, sizeBytes: stats.size },
+      details: { path: this.dbPath, sizeBytes },
     };
+  }
+
+  private execInternal(sql: string, params?: unknown[]) {
+    const normalized = normalizeSqlitePlaceholders(sql);
+    this.markDirty();
+    const db = this.getDb();
+    if (params && params.length > 0) {
+      const stmt = db.prepare(normalized);
+      stmt.bind(params);
+      while (stmt.step()) { /* step to exhaust */ }
+      const changes = db.changes();
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      const lastInsertRowid = Number(rows[0]?.id ?? 0);
+      stmt.finalize?.();
+      return { changes, lastInsertRowid };
+    } else {
+      db.exec(normalized);
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      return { changes: db.changes(), lastInsertRowid: Number(rows[0]?.id ?? 0) };
+    }
   }
 
   run(sql: string, params?: unknown[]): RunResult {
-    const stmt = this.getDb().prepare(normalizeSqlitePlaceholders(sql));
-    const result = params ? stmt.run(...params) : stmt.run();
-    return { changes: result.changes, lastInsertRowid: result.lastInsertRowid };
+    const normalized = normalizeSqlitePlaceholders(sql);
+    this.markDirty();
+    const db = this.getDb();
+    if (params && params.length) {
+      const stmt = db.prepare(normalized);
+      stmt.bind(params);
+      while (stmt.step()) { /* step to exhaust */ }
+      const changes = db.changes();
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      const lastInsertRowid = Number(rows[0]?.id ?? 0);
+      stmt.finalize?.();
+      return { changes, lastInsertRowid };
+    } else {
+      db.exec(normalized);
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      return { changes: db.changes(), lastInsertRowid: Number(rows[0]?.id ?? 0) };
+    }
   }
 
   get<T = unknown>(sql: string, params?: unknown[]): T | undefined {
-    const stmt = this.getDb().prepare(normalizeSqlitePlaceholders(sql));
-    return (params ? stmt.get(...params) : stmt.get()) as T | undefined;
+    const normalized = normalizeSqlitePlaceholders(sql);
+    const opts = params && params.length ? { bind: params, rowMode: 'object' } : { rowMode: 'object' };
+    const rows = this.getDb().exec(normalized, opts) as any[];
+    return rows?.[0] as T | undefined;
   }
 
   all<T = unknown>(sql: string, params?: unknown[]): T[] {
-    const stmt = this.getDb().prepare(normalizeSqlitePlaceholders(sql));
-    return (params ? stmt.all(...params) : stmt.all()) as T[];
+    const normalized = normalizeSqlitePlaceholders(sql);
+    const opts = params && params.length ? { bind: params, rowMode: 'object' } : { rowMode: 'object' };
+    const rows = this.getDb().exec(normalized, opts) as any[];
+    return rows as T[];
   }
 
   exec(sql: string): void {
-    this.getDb().exec(sql);
+    this.markDirty();
+    try {
+      this.getDb().exec(normalizeSqlitePlaceholders(sql));
+    } catch (e: any) {
+      const msg = String(e?.message ?? e);
+      if (msg.includes('duplicate column') || msg.includes('duplicate index') || msg.includes('table') && msg.includes('already exists')) {
+        return;
+      }
+      throw e;
+    }
   }
 
   transaction<T>(fn: () => T): T {
-    return this.getDb().transaction(fn)();
+    this.markDirty();
+    this.db.exec('BEGIN TRANSACTION;');
+    try {
+      const result = fn();
+      this.db.exec('COMMIT;');
+      return result;
+    } catch (e) {
+      this.db.exec('ROLLBACK;');
+      throw e;
+    }
   }
 
   prepare(sql: string): PreparedStatement {
-    const stmt = this.getDb().prepare(normalizeSqlitePlaceholders(sql));
+    const normalized = normalizeSqlitePlaceholders(sql);
+    const db = this.getDb();
     return {
       run: (...params: unknown[]) => {
-        const r = stmt.run(...params);
-        return { changes: r.changes, lastInsertRowid: r.lastInsertRowid };
+        this.markDirty();
+        const stmt = db.prepare(normalized);
+        if (params.length > 0) stmt.bind(params);
+        while (stmt.step()) { /* step to exhaust */ }
+        const changes = db.changes();
+        const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+        const lastInsertRowid = Number(rows[0]?.id ?? 0);
+        stmt.finalize?.();
+        return { changes, lastInsertRowid };
       },
-      get: <T>(...params: unknown[]) => stmt.get(...params) as T | undefined,
-      all: <T>(...params: unknown[]) => stmt.all(...params) as T[],
+      get: <T>(...params: unknown[]) => {
+        const opts = params.length > 0 ? { bind: params, rowMode: 'object' as const } : { rowMode: 'object' as const };
+        const rows = db.exec(normalized, opts) as any[];
+        return rows?.[0] as T | undefined;
+      },
+      all: <T>(...params: unknown[]) => {
+        const opts = params.length > 0 ? { bind: params, rowMode: 'object' as const } : { rowMode: 'object' as const };
+        const rows = db.exec(normalized, opts) as any[];
+        return rows as T[];
+      },
     };
   }
 
-
-  // SA4E-50: Async variants — SQLite is sync so we delegate immediately.
   async runAsync(sql: string, params?: unknown[]): Promise<RunResult> { return this.run(sql, params); }
   async getAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T | undefined> { return this.get<T>(sql, params); }
   async allAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> { return this.all<T>(sql, params); }
@@ -105,6 +306,12 @@ export class SqliteAdapter implements DatabaseAdapter {
   async transactionAsync<T>(fn: () => Promise<T>): Promise<T> { return fn(); }
   getEngine(): DatabaseEngine {
     return 'sqlite';
+  }
+
+  pragma(sql: string): any[] {
+    const pragmaSql = sql.trim().toUpperCase().startsWith('PRAGMA') ? sql : `PRAGMA ${sql}`;
+    const rows = this.all(pragmaSql);
+    return rows as any[];
   }
 
   async getVersion(): Promise<string> {
@@ -124,13 +331,8 @@ export class SqliteAdapter implements DatabaseAdapter {
     return row?.cnt ?? 0;
   }
 
-  getRawDb(): Database.Database {
-    return this.getDb();
-  }
-
-  private getDb(): Database.Database {
+  private getDb(): any {
     if (!this.db) throw new Error('SQLite not connected');
     return this.db;
   }
 }
-

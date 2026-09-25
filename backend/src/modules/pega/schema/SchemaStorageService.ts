@@ -63,10 +63,18 @@ export class SchemaStorageService implements ISchemaStorageService {
   /** Find schema by ruleType. Returns null if not found. */
   async find(ruleType: string): Promise<EnrichedSchema | null> {
     const source = `${SOURCE_PREFIX}${ruleType}`;
-    const row = await this.db.getAsync<{ content: string }>(
-      `SELECT content FROM knowledge_entries WHERE type = 'PEGA_SCHEMA_ENRICHED' AND source = ? LIMIT 1`,
-      [source],
-    );
+    let row;
+    try {
+      row = await this.db.getAsync<{ content: string }>(
+        `SELECT content FROM knowledge_entries WHERE type = 'PEGA_SCHEMA_ENRICHED' AND source = ? LIMIT 1`,
+        [source],
+      );
+    } catch (err) {
+      // Fresh DBs may not have knowledge_entries in this adapter's view yet
+      // (snapshot semantics) — treat as "not found" (route → 404), not 500.
+      this.logger.debug({ err, ruleType }, '[schema-store] Find failed (treating as not found)');
+      return null;
+    }
 
     if (!row?.content) return null;
 

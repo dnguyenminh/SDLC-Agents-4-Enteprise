@@ -1,0 +1,63 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="start" value="Start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+<mxGeometry x="40" y="40" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="build" value="Build Authorize URL&#xa;github.com/login/oauth/authorize&#xa;scope read:user user:email&#xa;state CSRF" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+<mxGeometry x="240" y="40" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="redirect" value="Redirect User to GitHub" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+<mxGeometry x="480" y="40" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="callback" value="GitHub Callback&#xa;code + state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+<mxGeometry x="720" y="40" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="verifyState" value="Verify state&#xa;assertState (storedState)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+<mxGeometry x="480" y="200" width="180" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="exchange" value="Exchange code for&#xa;access_token&#xa;POST /login/oauth/access_token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+<mxGeometry x="240" y="200" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="fetch" value="GET /user&#xa;GET /user/emails&#xa;Select primary verified email" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+<mxGeometry x="480" y="360" width="180" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="normalize" value="Normalize Profile&#xa;provider=github&#xa;externalSubjectId&#xa;emailVerified" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+<mxGeometry x="720" y="360" width="180" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="jit" value="JIT Provisioning&#xa;JitProvisioningService.provision&#xa;create/link user" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+<mxGeometry x="480" y="520" width="180" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="end" value="End" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+<mxGeometry x="480" y="680" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="start" target="build" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="build" target="redirect" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="redirect" target="callback" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="callback" target="verifyState" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="verifyState" target="exchange" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e6" edge="1" parent="1" source="exchange" target="fetch" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e7" edge="1" parent="1" source="fetch" target="normalize" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e8" edge="1" parent="1" source="normalize" target="jit" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e9" edge="1" parent="1" source="jit" target="end" style="endArrow=block;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

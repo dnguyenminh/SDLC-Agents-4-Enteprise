@@ -7,7 +7,7 @@ description: Fallback HTTP protocol for MCP when native MCP is disabled
 When MCP is disabled at the organization level:
 - Use `Invoke-RestMethod` to call the local HTTP endpoint
 - Protocol: JSON-RPC 2.0
-- Read the MCP URL from `.kiro/settings/mcp.json`
+- Read the MCP URL from `opencode.json`
 
 ### JSON-RPC Request Format
 ```powershell
@@ -35,3 +35,4 @@ Invoke-RestMethod -Uri "http://localhost:9181/mcp" -Method Post -Body $body -Con
 - Only when native MCP tools are unavailable
 - Check native MCP first with `find_tools`
 - Fall back to HTTP if no results after 3 query variations
+

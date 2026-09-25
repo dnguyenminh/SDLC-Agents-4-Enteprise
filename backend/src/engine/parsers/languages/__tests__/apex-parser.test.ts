@@ -55,7 +55,7 @@ describe('ApexParser', () => {
       const source = readFixture('SimpleClass.cls');
       const result = parser.parse(source, 'SimpleClass.cls');
 
-      const cls = result.symbols.find(s => s.kind === 'class');
+      const cls = result.symbols.find(s => s.kind === 'apex_class');
       assert.ok(cls, 'Should find class symbol');
       assert.equal(cls.name, 'SimpleClass');
       assert.ok(cls.modifiers?.includes('public'));
@@ -76,7 +76,7 @@ describe('ApexParser', () => {
       const source = readFixture('ClassWithMethods.cls');
       const result = parser.parse(source, 'ClassWithMethods.cls');
 
-      const cls = result.symbols.find(s => s.kind === 'class');
+      const cls = result.symbols.find(s => s.kind === 'apex_class');
       assert.ok(cls, 'Should find class');
       assert.equal(cls.name, 'AccountService');
 

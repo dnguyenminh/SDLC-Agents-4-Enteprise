@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "code-intelligence": {
+      "url": "http://127.0.0.1:9181/mcp",
+      "autoApprove": [
+        "mem_ingest",
+        "execute_dynamic_tool",
+        "find_tools",
+        "toggle_tool",
+        "mem_search",
+        "drawio_auto_layout",
+        "orchestration_status",
+        "code_search",
+        "code_symbols",
+        "code_context",
+        "code_modules",
+        "code_index_status",
+        "stream_write_file",
+        "mem_search",
+        "mem_ingest",
+        "mem_ingest_file",
+        "mem_get",
+        "mem_delete",
+        "mem_list",
+        "mem_graph",
+        "mem_status",
+        "mem_consolidate",
+        "mem_audit",
+        "mem_sessions",
+        "find_tools",
+        "find_tools",
+        "find_tools",
+        "execute_dynamic_tool",
+        "orchestration_status",
+        "mem_admin",
+        "mem_tags",
+        "mem_templates",
+        "mem_lifecycle",
+        "mem_scoring",
+        "mem_crud",
+        "mem_discover",
+        "mem_admin",
+        "mem_scoring",
+        "mem_tags",
+        "agent_log",
+        "drawio_auto_layout",
+        "drawio_auto_layout",
+        "drawio_auto_layout",
+        "drawio_auto_layout",
+        "drawio_export_png",
+        "drawio_export_png"
+      ],
+      "transportType": "httpStream",
+      "disabled": false,
+      "disabledTools": [],
+      "command": "npx",
+      "args": [
+        "tsx",
+        "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\index.ts"
+      ],
+      "cwd": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
+      "env": {
+        "CODE_INTEL_PORT": "9186",
+        "CODE_INTEL_WORKSPACE": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
+        "CODE_INTEL_VIEWER_PORT": "3200",
+        "FORCE_RESTART": "15"
+      }
+    }
+  }
+}

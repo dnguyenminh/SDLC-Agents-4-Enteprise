@@ -1,0 +1,38 @@
+<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="actor1" value="Developer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="40" y="40" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="actor2" value="Extension" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="40" y="140" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="system" value="KB Ingestion System" style="swimlane;startSize=30;fillColor=#fff2cc;html=1;" vertex="1" parent="1">
+<mxGeometry x="250" y="40" width="400" height="280" as="geometry"/>
+</mxCell>
+<mxCell id="uc1" value="Ingest Source Code" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="80" y="60" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc2" value="Ingest Documents" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="80" y="160" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc3" value="Sync Code Symbols" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="260" y="60" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc4" value="Surface Error Details" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="260" y="160" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="actor1" target="uc1" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="actor1" target="uc4" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="actor2" target="uc1" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="actor2" target="uc2" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="actor2" target="uc3" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root></mxGraphModel>

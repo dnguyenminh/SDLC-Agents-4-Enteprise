@@ -39,12 +39,38 @@ export interface UploadResult {
 
 export class IndexerHttpClient {
     private tokenRefresher?: () => Promise<string | undefined>;
+    private onTokenRefreshed?: (token: string) => void;
+    private lastRefreshedToken?: string;
+    private static outputChannel?: vscode.OutputChannel;
 
     constructor(private readonly backendUrl: string) {}
+
+    static getIndexerOutput(): vscode.OutputChannel {
+        if (!IndexerHttpClient.outputChannel) {
+            IndexerHttpClient.outputChannel = vscode.window.createOutputChannel("Kiro Indexer");
+        }
+        return IndexerHttpClient.outputChannel;
+    }
 
     /** SA4E-99: Set token refresher callback — called on 401 to get a fresh token. */
     setTokenRefresher(refresher: () => Promise<string | undefined>): void {
         this.tokenRefresher = refresher;
+    }
+    /**
+     * SA4E-300 GAP 3: Subscribe to refreshed tokens so long-lived callers
+     * (IndexingService) can update their stored token. Optional — does not
+     * change existing call signatures.
+     */
+    setOnTokenRefreshed(cb: (token: string) => void): void {
+        this.onTokenRefreshed = cb;
+    }
+    /** SA4E-300 GAP 3: Last token obtained via refresh (undefined if never refreshed). */
+    getCurrentToken(): string | undefined {
+        return this.lastRefreshedToken;
+    }
+    private notifyTokenRefreshed(token: string): void {
+        this.lastRefreshedToken = token;
+        try { this.onTokenRefreshed?.(token); } catch { /* non-fatal */ }
     }
     /** Expose backend base URL for other callers. */
     getBaseUrl(): string { return this.backendUrl; }
@@ -57,6 +83,7 @@ export class IndexerHttpClient {
         const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
         statusBar.show();
         const start = Date.now();
+        let lastProgress: any = null;
         try {
             while (Date.now() - start < maxWaitMs) {
                 await new Promise(r => setTimeout(r, 2000));
@@ -77,6 +104,7 @@ export class IndexerHttpClient {
                 if (!ok) { statusBar.text = "$(sync~spin) Indexing..."; statusBar.tooltip = "Code Intelligence: Indexing workspace..."; continue; }
                 try {
                     const progress = JSON.parse(body);
+                    lastProgress = progress;
                     const status = progress.status;
                     if (status === 'idle' || progress.phase === 'idle') {
                         statusBar.text = "$(check) Index complete";
@@ -122,6 +150,9 @@ export class IndexerHttpClient {
                 } catch { statusBar.text = "$(sync~spin) Indexing..."; statusBar.tooltip = "Code Intelligence: Processing..."; }
             }
             statusBar.text = "$(warning) Index timeout";
+            if (lastProgress) {
+                IndexerHttpClient.getIndexerOutput().appendLine(`[Indexer] Index timeout at ${lastProgress.percentage || 0}% — phase ${lastProgress.phase}, status ${lastProgress.status}`);
+            }
             setTimeout(() => statusBar.dispose(), 5000);
         } catch { statusBar.dispose(); }
     }
@@ -135,7 +166,8 @@ export class IndexerHttpClient {
         let ingested = 0;
         let errors = 0;
         const unconvertible: UnconvertibleEntry[] = [];
-        const channel = vscode.window.createOutputChannel("Kiro Doc Indexer");
+        // SA4E-300 GAP 3: reuse singleton channel (was a fresh "Kiro Doc Indexer" per call)
+        const channel = IndexerHttpClient.getIndexerOutput();
         const batchSize = 20;
 
         for (let i = 0; i < docs.length; i += batchSize) {
@@ -185,9 +217,15 @@ export class IndexerHttpClient {
 
     /** SA4E-99: Trigger backend to ingest documents from Temp folder into KB. */
     private async triggerDocumentIngest(token?: string): Promise<void> {
-        try {
-            await this.httpPostWithDetail(`${this.backendUrl}/api/index/ingest-docs`, {}, token);
-        } catch { /* non-fatal */ }
+        const result = await this.httpPostWithDetail(`${this.backendUrl}/api/index/ingest-docs`, {}, token);
+        if (!result.ok) {
+            const channel = IndexerHttpClient.getIndexerOutput();
+            channel.appendLine(`⚠️ Document ingest failed: ${result.error} (status ${result.status})`);
+            if (result.details) channel.appendLine(`   Details: ${result.details}`);
+            if (result.action) channel.appendLine(`   Action: ${result.action}`);
+            // Log error but do not abort batch ingest; surface to user via Output channel
+            return;
+        }
     }
 
     async uploadSourceFiles(
@@ -212,7 +250,7 @@ export class IndexerHttpClient {
         const incrementPerBatch = 100 / totalBatches;
 
         // Create output channel for detailed error reporting
-        const channel = vscode.window.createOutputChannel("Kiro Indexer");
+        const channel = IndexerHttpClient.getIndexerOutput();
 
         // Upload project code first (high priority)
         for (let i = 0; i < totalFiles; i += batchSize) {
@@ -250,12 +288,16 @@ export class IndexerHttpClient {
                 const freshToken = await this.tokenRefresher();
                 if (freshToken) {
                     token = freshToken;
+                    // SA4E-300 GAP 3: propagate the refreshed token to subscribers
+                    this.notifyTokenRefreshed(freshToken);
                     const retry = await this.sendBatchWithRetry(url, { files: entries }, token, 2);
                     if (retry.ok) { uploaded += batch.length; }
                     else {
                         errors += batch.length;
                         channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} FAILED after token refresh`);
-                        channel.appendLine(`   Error: ${retry.error}`);
+                        channel.appendLine(`   Error: ${retry.error} | Status: ${retry.status}`);
+                        if (retry.details) channel.appendLine(`   Details: ${retry.details}`);
+                        if (retry.action) channel.appendLine(`   Action: ${retry.action}`);
                         channel.show(true);
                     }
                 } else {
@@ -267,6 +309,8 @@ export class IndexerHttpClient {
                 errors += batch.length;
                 channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} FAILED (${batch.length} files)`);
                 channel.appendLine(`   Error: ${result.error} | Status: ${result.status}`);
+                if (result.details) channel.appendLine(`   Details: ${result.details}`);
+                if (result.action) channel.appendLine(`   Action: ${result.action}`);
                 channel.show(true);
             }
         }
@@ -307,8 +351,8 @@ export class IndexerHttpClient {
      */
     private async sendBatchWithRetry(
         url: string, payload: unknown, token: string | undefined, maxRetries: number,
-    ): Promise<{ ok: boolean; error: string; status: number }> {
-        let lastResult = { ok: false, error: 'no attempt', status: 0 };
+    ): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number }> {
+        let lastResult: { ok: boolean; error: string; details?: string; action?: string; status: number } = { ok: false, error: 'no attempt', status: 0 };
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             if (attempt > 0) {
                 // Exponential backoff: 2s, 4s, 8s (longer to allow server recovery)
@@ -347,11 +391,20 @@ export class IndexerHttpClient {
                 body: JSON.stringify(payload),
                 signal: AbortSignal.timeout(60000),
             });
-            if (!response.ok) { return null; }
-            const result = await response.json() as any;
-            const text = result?.result?.content?.[0]?.text;
-            return typeof text === "string" ? text : null;
-        } catch {
+            if (!response.ok) {
+                IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] syncCodeSymbols failed with status ${response.status}`);
+                return null;
+            }
+            const text = await response.text();
+            try {
+                const result = JSON.parse(text) as any;
+                const content = result?.result?.content?.[0]?.text;
+                return typeof content === "string" ? content : text;
+            } catch {
+                return text;
+            }
+        } catch (err) {
+            IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] syncCodeSymbols failed: ${(err as Error).message}`);
             return null;
         }
     }
@@ -368,7 +421,7 @@ export class IndexerHttpClient {
                 return Buffer.from(raw).toString("utf-8");
             }
         } catch (err) {
-          console.warn(`[IndexerHttpClient] readFileContent failed for '${relPath}': ${(err as Error).message}`);
+          IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] readFileContent failed for '${relPath}': ${(err as Error).message}`);
         }
         return undefined;
     }
@@ -387,6 +440,8 @@ export class IndexerHttpClient {
         // Token likely expired mid-operation — refresh once and retry.
         const freshToken = await this.tokenRefresher();
         if (!freshToken) { return { ok: false, body: first.body }; }
+        // SA4E-300 GAP 3: propagate refreshed token outward
+        this.notifyTokenRefreshed(freshToken);
         const retry = await this.httpPostJsonOnce(url, payload, freshToken);
         return { ok: retry.status >= 200 && retry.status < 300, body: retry.body };
     }
@@ -404,7 +459,7 @@ export class IndexerHttpClient {
             const body = await response.text();
             return { status: response.status, body };
         } catch (err) {
-            console.debug(`[IndexerHttpClient] httpPostJson failed (non-fatal): ${(err as Error).message}`);
+            IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] httpPostJson failed (non-fatal): ${(err as Error).message}`);
             return { status: 0, body: "" };
         }
     }
@@ -418,16 +473,20 @@ export class IndexerHttpClient {
     }
 
     /** POST with detailed error info for user-facing error reporting. */
-    private async httpPostWithDetail(url: string, payload: unknown, token: string | undefined): Promise<{ ok: boolean; error: string; status: number }> {
+    private async httpPostWithDetail(url: string, payload: unknown, token: string | undefined): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number }> {
         const headers = await this.buildHeaders(token);
         try {
             const result = await utilHttpPostJson<any>(url, payload, { headers, timeoutMs: 60000 });
             return { ok: true, error: "", status: 200 };
         } catch (err: any) {
             const status = err?.statusCode || err?.status || 0;
-            const msg = err?.message || String(err);
-            if (status === 401) return { ok: false, error: "Unauthorized", status: 401 };
-            return { ok: false, error: msg.slice(0, 200), status };
+            const body = err?.body || {};
+            const errorMsg = body?.error || err?.message || String(err);
+            const details = body?.details;
+            const action = body?.action;
+            if (status === 401) return { ok: false, error: "Unauthorized", details, action, status: 401 };
+            // SA4E-300 GAP 3: widened from 200 → 500 chars so important details survive
+            return { ok: false, error: String(errorMsg).slice(0, 500), details, action, status };
         }
     }
 
@@ -482,6 +541,8 @@ export class IndexerHttpClient {
         // Token likely expired — refresh once and retry with the fresh token.
         const freshToken = await this.tokenRefresher();
         if (!freshToken) { return { ok: false, body: first.body }; }
+        // SA4E-300 GAP 3: propagate refreshed token outward
+        this.notifyTokenRefreshed(freshToken);
         const retry = await this.httpGetOnce(url, freshToken);
         return { ok: retry.status === 200, body: retry.body };
     }
@@ -498,7 +559,7 @@ export class IndexerHttpClient {
             const body = await response.text();
             return { status: response.status, body };
         } catch (err) {
-            console.debug(`[IndexerHttpClient] httpGet failed (non-fatal): ${(err as Error).message}`);
+            IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] httpGet failed (non-fatal): ${(err as Error).message}`);
             return { status: 0, body: "" };
         }
     }
@@ -526,7 +587,7 @@ export function parseIngestResponse(responseBody: string, fallbackFile: string):
             return { ingested: true };
         }
     } catch (err) {
-      console.debug(`[IndexerHttpClient] response parse failed, trying legacy (non-fatal): ${(err as Error).message}`);
+      IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] response parse failed, trying legacy (non-fatal): ${(err as Error).message}`);
     }
 
     const legacy = parseLegacyMarker(responseBody, fallbackFile);

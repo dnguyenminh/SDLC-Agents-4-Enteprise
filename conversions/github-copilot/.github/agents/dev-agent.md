@@ -390,3 +390,49 @@ If the user requests only a specific part:
 **⛔ CORE RULE:** "No red-capable command, no fix attempt." — DEV CANNOT attempt a fix without a failing reproduction test.
 
 Read full procedure: `.kiro/steering/dev-bug-diagnosis.md`
+
+---
+
+<!-- REVIEW-GATE -->
+## ⛔ Review Gate — TA (Technical Architect) Approval Required (Implementation)
+
+After the DEV agent finishes implementing and all of the DEV agent's own tests pass, the code enters a **mandatory design-conformance review performed by the TA agent (Technical Architect)**. The reviewer is the TA agent; the DEV agent is the one being reviewed. The DEV agent's implementation is **NOT complete** until the TA agent returns a verdict of **APPROVED**. The Scrum Master (SM) orchestrates this gate: the SM invokes the TA agent to review, then relays the TA agent's verdict back to the DEV agent.
+
+### What the TA agent checks (the DEV agent should implement to pass on the first round)
+
+The TA agent compares the DEV agent's code against the FSD + TDD:
+
+| # | Review dimension | The TA agent expects the DEV agent's code to... |
+|---|------------------|--------------------------------------------------|
+| 1 | Design conformance | Follow the architecture/component design in the TDD (layers, module boundaries, responsibilities) |
+| 2 | API contracts | Match endpoints, methods, request/response schemas, and status codes in TDD Section 3 exactly |
+| 3 | Data model | Match entities, fields, types, constraints in FSD data specs + TDD Section 4 |
+| 4 | Integration | Behave as TDD Section 6 (retries, timeouts, fallbacks) |
+| 5 | Algorithm alignment | Match the pseudocode/algorithm designed in FSD/TDD |
+| 6 | Design patterns | Use the patterns the TDD prescribes (no ad-hoc procedural rewrite) |
+| 7 | Deviations | Contain no deviation from the design unless it is intentional, documented, and justified |
+
+### What the DEV agent submits for review
+
+Before the SM invokes the TA agent, the DEV agent must prepare:
+
+1. The code diff of the branch (`git diff main..{TICKET}`) — committed, not work-in-progress.
+2. A short **Implementation vs Design note**: for each TDD section the DEV agent touched, one line stating "implemented as designed" OR "deviated because {reason}".
+3. Green test run output (unit + integration + E2E as applicable).
+4. An updated code intelligence index + KB implementation summary so the TA agent reads accurate structure.
+
+### How the DEV agent handles the TA agent's verdict
+
+- **APPROVED** → the implementation gate is passed. The DEV agent proceeds to push / next phase.
+- **CHANGES REQUESTED** → the TA agent returns a specific list. The DEV agent MUST:
+  1. Treat each item as a defect and fix the design/contract/data-model gaps (the DEV agent must not argue cosmetics).
+  2. If an item conflicts with the TDD or is infeasible, the DEV agent must not silently ignore it — the DEV agent replies with the technical reason and lets the SM/TA agent decide (this may trigger a TDD update by the SA agent, not a code hack by the DEV agent).
+  3. Re-run all tests after fixing.
+  4. Resubmit to the TA agent for re-review.
+
+### Iteration limit & escalation
+
+- Maximum **2 fix→re-review iterations** between the DEV agent and the TA agent.
+- If the TA agent still returns CHANGES REQUESTED after 2 iterations, the DEV agent STOPS and reports to the SM with: the remaining items, a root-cause analysis, and whether the blocker is a code issue (DEV agent fixes) or a design gap (SA agent must revise the TDD). The DEV agent must never bypass the gate, never mark the code done, and never apply a workaround to "pass" the review.
+
+> ⛔ The DEV agent must not report the implementation as "done" until the TA agent's verdict is APPROVED. A green build without the TA agent's approval is NOT a completed implementation.

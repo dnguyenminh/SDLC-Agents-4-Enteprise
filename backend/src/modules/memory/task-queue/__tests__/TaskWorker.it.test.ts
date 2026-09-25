@@ -3,7 +3,7 @@
  * Full pipeline integration with in-memory SQLite and mocked LLM.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../../database/adapters/SqliteAdapter.js';
 import { SqliteDbAdapter } from '../SqliteDbAdapter.js';
 import { MemoryEngine } from '../../engine/index.js';
 import { MEMORY_SCHEMA } from '../../schema/index.js';
@@ -37,17 +37,16 @@ const PENDING_TASKS_SCHEMA = `
   CREATE INDEX IF NOT EXISTS idx_pending_tasks_entry_id ON pending_tasks(entry_id);
 `;
 
-function createTestDb(): Database.Database {
-  const db = new Database(':memory:');
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  db.exec(MEMORY_SCHEMA);
-  db.exec(PENDING_TASKS_SCHEMA);
+async function createTestDb(): Promise<SqliteAdapter> {
+  const db = new SqliteAdapter(':memory:');
+  await db.connect();
+  await db.exec(MEMORY_SCHEMA);
+  await db.exec(PENDING_TASKS_SCHEMA);
   // SA4E-79: Apply enrichment status columns (migration 007)
   // Default to 'pending' in test context so TaskWorker processes them
-  db.exec(`ALTER TABLE knowledge_entries ADD COLUMN enrichment_status TEXT NOT NULL DEFAULT 'pending'`);
-  db.exec(`ALTER TABLE knowledge_entries ADD COLUMN enriched_by TEXT DEFAULT NULL`);
-  db.exec(`ALTER TABLE knowledge_entries ADD COLUMN enriched_at TEXT DEFAULT NULL`);
+  await db.exec(`ALTER TABLE knowledge_entries ADD COLUMN enrichment_status TEXT NOT NULL DEFAULT 'pending'`);
+  await db.exec(`ALTER TABLE knowledge_entries ADD COLUMN enriched_by TEXT DEFAULT NULL`);
+  await db.exec(`ALTER TABLE knowledge_entries ADD COLUMN enriched_at TEXT DEFAULT NULL`);
   return db;
 }
 
@@ -70,16 +69,16 @@ const testConfig = {
 };
 
 describe('TaskWorker Integration Tests', () => {
-  let db: Database.Database;
+  let db: SqliteAdapter;
   let adapter: SqliteDbAdapter;
   let engine: MemoryEngine;
   let llm: LLMService;
   let analyzer: TagAnalyzerService;
   let worker: TaskWorker;
 
-  beforeEach(() => {
-    db = createTestDb();
-    adapter = new SqliteDbAdapter(db);
+  beforeEach(async () => {
+    db = await createTestDb();
+    adapter = new SqliteDbAdapter(db as any);
     engine = new MemoryEngine(adapter);
     engine.startSession('test');
     llm = new LLMService({ provider: 'ollama', model: 'test-model', maxTokens: 2048 });
@@ -105,7 +104,8 @@ describe('TaskWorker Integration Tests', () => {
         source: '/doc.md',
         tags: '',
       });
-      expect(db.prepare('SELECT structured_map FROM knowledge_entries WHERE id = ?').get(id)).toBeTruthy();
+      const row = await db.get('SELECT structured_map FROM knowledge_entries WHERE id = ?', [id]);
+      expect(row).toBeTruthy();
 
       const repo = new PendingTaskRepository(adapter);
       await repo.create({
@@ -223,7 +223,7 @@ describe('TaskWorker Integration Tests', () => {
         tier: 'WORKING',
         tags: '',
       });
-      db.prepare('UPDATE knowledge_entries SET structured_map = ? WHERE id = ?').run('{}', id);
+      await db.run('UPDATE knowledge_entries SET structured_map = ? WHERE id = ?', ['{}', id]);
 
       const repo = new PendingTaskRepository(adapter);
       const taskId = await repo.create({

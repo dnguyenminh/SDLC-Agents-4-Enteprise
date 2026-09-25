@@ -7,11 +7,14 @@ import { Hono } from 'hono';
 import type { Context } from 'hono';
 import type { Logger } from 'pino';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import { loadConfig } from '../../config/index.js';
 import { requireProjectId } from '../../engine/query/code-intel-isolation.js';
 import { validateSession } from '../../admin/db/sessions.js';
+import { getUserPermissions } from '../../admin/admin-db.js';
+import { verifyJwtToken, allowedProjectsFromClaims } from '../middleware/jwt-auth.js';
 import {
   handleFullIndex, handleFileEvents, handleCancel, handleProgress,
 } from './api-index-decoupled.js';
@@ -40,22 +43,101 @@ function resolveRequestScope(c: Context): IndexScope {
 /** Extract userId from Bearer token (non-fatal — returns '' if unauthenticated). */
 // NOTE: resolveUserId kept for backward compatibility but auth is now enforced at route level
 
+/**
+ * SA4E-300 GAP 1: Sanitize a single path segment (userId/projectId) before
+ * joining it into a filesystem path. Strips every char outside [A-Za-z0-9._-];
+ * falls back when the result is empty or '.'/'..'.
+ */
+export function sanitizePathSegment(segment: string | undefined, fallback: string): string {
+  const cleaned = (segment ?? '').replace(/[^A-Za-z0-9._-]/g, '');
+  if (!cleaned || cleaned === '.' || cleaned === '..') return fallback;
+  return cleaned;
+}
+
+/**
+ * SA4E-300 GAP 1: Cross-platform temp base — prefers config.indexTempDir
+ * (CODE_INTEL_INDEX_TEMP_DIR or os.tmpdir()/CodeIntel), keeps the
+ * {userId}/{projectId}/{subdir} structure with sanitized segments.
+ */
+export function resolveIndexTempBase(
+  userId: string | undefined,
+  projectId: string | undefined,
+  subdir: string,
+): string {
+  let base: string | undefined;
+  try {
+    base = loadConfig().indexTempDir;
+  } catch {
+    base = undefined;
+  }
+  if (!base) base = process.env.CODE_INTEL_INDEX_TEMP_DIR || path.join(os.tmpdir(), 'CodeIntel');
+  const safeUser = sanitizePathSegment(userId, 'local-dev');
+  const safeProject = sanitizePathSegment(projectId, 'default');
+  return path.join(base, safeUser, safeProject, subdir);
+}
+
+/**
+ * SA4E-300 GAP 1: Resolve a client-supplied relative path safely under tempBase.
+ * Returns the absolute target path, or null when the input is unsafe/escaping.
+ * Catches absolute, '..' traversal (incl. backslash + percent-encoded), drive
+ * letters, null bytes, and verifies path.relative stays inside tempBase.
+ */
+export function resolveSafeTargetPath(tempBase: string, rawPath: string): string | null {
+  if (!rawPath || typeof rawPath !== 'string') return null;
+  if (rawPath.includes('\0')) return null;
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(rawPath);
+  } catch {
+    decoded = rawPath;
+  }
+  // Reject Windows drive-absolute on any platform (C:\, C:/)
+  if (/^[A-Za-z]:[/\\]/.test(decoded) || /^[A-Za-z]:[/\\]/.test(rawPath)) return null;
+  if (/^[/\\]/.test(decoded) || /^[/\\]/.test(rawPath)) return null;
+  const normalized = path.normalize(decoded);
+  if (path.isAbsolute(normalized)) return null;
+  const normalizedRaw = path.normalize(rawPath);
+  if (path.isAbsolute(normalizedRaw)) return null;
+  if (normalized.split(/[/\\]/).includes('..')) return null;
+  if (normalizedRaw.split(/[/\\]/).includes('..')) return null;
+  if (decoded.split(/[/\\]/).includes('..')) return null;
+  const targetPath = path.join(tempBase, normalized);
+  const rel = path.relative(tempBase, targetPath);
+  if (!rel) return null;
+  if (rel === '..' || rel.startsWith(`..${path.sep}`) || rel.startsWith('../') || rel.startsWith('..\\')) return null;
+  if (path.isAbsolute(rel)) return null;
+  return targetPath;
+}
+
 /** Phase: write files to disk under the workspace, rejecting unsafe paths. */
-function writeFilesPhase(userId: string, projectId: string, files: SourceFile[]): { written: number; rejected: string[] } {
+function writeFilesPhase(userId: string, projectId: string, files: SourceFile[]): { written: number; rejected: string[]; rejectedReasons: { file: string; code: string; message: string }[] } {
   const rejected: string[] = [];
+  const rejectedReasons: { file: string; code: string; message: string }[] = [];
   let written = 0;
-  // SA4E-99: Consistent temp structure — Temp/{userId}/{projectId}/batch-docs/
-  const tempBase = path.join('C:\\projects\\kiro\\Temp', userId || 'local-dev', projectId, 'batch-docs');
+  // SA4E-300 GAP 1: cross-platform temp base Temp/{userId}/{projectId}/batch-docs/
+  const tempBase = resolveIndexTempBase(userId, projectId, 'batch-docs');
   fs.mkdirSync(tempBase, { recursive: true });
   for (const file of files) {
-    const targetPath = path.join(tempBase, file.path);
+    const targetPath = resolveSafeTargetPath(tempBase, file.path);
+    if (!targetPath) {
+      rejected.push(file.path);
+      rejectedReasons.push({ file: file.path, code: 'EACCES', message: 'Unsafe path: must be a relative path staying within the temp directory' });
+      continue;
+    }
     try {
       fs.mkdirSync(path.dirname(targetPath), { recursive: true });
       fs.writeFileSync(targetPath, file.content, 'utf-8');
       written++;
-    } catch { rejected.push(file.path); }
+    } catch (err: any) {
+      rejected.push(file.path);
+      rejectedReasons.push({
+        file: file.path,
+        code: err?.code || 'UNKNOWN',
+        message: err?.message || String(err)
+      });
+    }
   }
-  return { written, rejected };
+  return { written, rejected, rejectedReasons };
 }
 
 
@@ -68,14 +150,73 @@ async function requireAuth(c: Context): Promise<{ userId: string } | null> {
   return session ?? null;
 }
 
+/**
+ * SA4E-300 SEC High #1 (BOLA) + High #2 (missing RBAC on sync-pega-rules).
+ * Authorization gates reusing EXISTING infra only (no new framework):
+ * - Global RBAC via getUserPermissions — same source as AdminContext.requirePermission
+ *   (server/routes/admin/context.ts); permission IDs from admin types: KB_WRITE is the
+ *   gate used by all KB write routes (kb-tags.ts, kb-operations.ts), GRAPH_MAINTAIN is
+ *   the gate used by populate-edges (admin/kb-graph.ts:104).
+ * - Tenant binding via verifyJwtToken + allowedProjectsFromClaims — same pattern as
+ *   verifyProjectBinding SEC-03 (server/routes/tools.ts): when the caller presents a
+ *   valid JWT carrying pid/pids grants, the requested project must be inside the grant.
+ * NOTE (fallback, PO risk-accept): there is NO project-membership table for opaque
+ * admin session tokens (users ↔ access_groups only), so session principals cannot be
+ * bound per-project. For them the global permission gate below is the enforced
+ * boundary; cross-project writes by a permissioned session user remain possible and
+ * must be risk-accepted or closed by adding per-project membership later.
+ * Returns a 403 JSON response when denied, or null when allowed.
+ */
+async function requireIndexPermission(
+  c: Context, userId: string, permissionId: string, logger: Logger,
+): Promise<Response | null> {
+  let has = false;
+  try {
+    const perms = await getUserPermissions(userId);
+    has = perms.some((p: any) => p.permissionId === permissionId);
+  } catch (err) {
+    // Fail closed: DB error must not grant access.
+    logger.warn({ err, userId, permissionId }, '[index] permission lookup failed — denying');
+    return c.json({ error: 'Forbidden', details: 'Unable to verify permissions', action: 'Retry or contact an administrator' }, 403);
+  }
+  if (!has) {
+    logger.warn({ userId, permissionId }, '[index] missing required permission — rejected');
+    return c.json({ error: 'Forbidden', details: `Missing required permission: ${permissionId}`, action: 'Contact an administrator to grant access' }, 403);
+  }
+  return null;
+}
+
+/**
+ * SA4E-300 SEC High #1 (BOLA): bind the requested projectId to the caller's JWT
+ * project grants (tools.ts SEC-03 pattern). Opaque session tokens carry no
+ * per-project grant → allowed here (global permission gate still applies, see above).
+ * Returns a 403 JSON response when the project is outside the grant, else null.
+ */
+async function verifyIndexProjectBinding(
+  c: Context, projectId: string, logger: Logger,
+): Promise<Response | null> {
+  const auth = c.req.header('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!token) return null;
+  const { valid, payload } = await verifyJwtToken(token);
+  if (!valid || !payload) return null; // opaque/admin-session token → no per-tenant grant
+  const granted = allowedProjectsFromClaims(payload);
+  if (granted.length === 0) return null; // JWT without project claim → no grant to enforce
+  if (projectId && !granted.includes(projectId)) {
+    logger.warn({ projectId, sub: (payload as any)?.sub }, '[index] project outside principal grant — rejected');
+    return c.json({ error: 'Forbidden', details: `No access to project '${projectId}'`, action: 'Use an authorized project' }, 403);
+  }
+  return null;
+}
+
 /** Register the /api/index/* routes on the given app. */
 export function registerIndexRoutes(app: Hono, registry: ModuleRegistry, logger: Logger): void {
   app.post('/api/index/source', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     // SA4E-99: Backpressure — reject with 429 if too many concurrent requests
     if (activeIndexRequests >= INDEX_CONCURRENCY_LIMIT) {
-      return c.json({ error: 'Server busy', retryAfter: 2 }, 429);
+      return c.json({ error: 'Server busy', details: `Active index requests >= ${INDEX_CONCURRENCY_LIMIT}`, action: 'Retry after 2 seconds', retryAfter: 2 }, 429);
     }
     activeIndexRequests++;
     try {
@@ -86,46 +227,46 @@ export function registerIndexRoutes(app: Hono, registry: ModuleRegistry, logger:
   });
   app.post('/api/index/document', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     return handleIndexDocument(c, logger, session.userId);
   });
   app.post('/api/index/documents', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     return handleIndexDocuments(c, logger, session.userId);
   });
 
   // SA4E-78: Decoupled indexer endpoints
   app.post('/api/index/full', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     return handleFullIndex(c, registry, logger);
   });
   app.post('/api/index/file-events', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     return handleFileEvents(c, registry, logger);
   });
   // SA4E-99: Ingest documents from Temp folder into KB
   app.post('/api/index/ingest-docs', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     return handleIngestDocsFromTemp(c, registry, logger, session.userId);
   });
   // SA4E-209: Sync Pega rules to KB (graph projection)
   app.post('/api/index/sync-pega-rules', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
-    return handleSyncPegaRules(c, registry, logger);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
+    return handleSyncPegaRules(c, registry, logger, session.userId);
   });
   app.post('/api/index/cancel', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     return handleCancel(c, registry, logger);
   });
   app.get('/api/index/progress', async (c) => {
     const session = await requireAuth(c);
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+    if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     return handleProgress(c, registry, logger);
   });
 }
@@ -134,17 +275,23 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
   try {
     const body = await c.req.json() as { files: SourceFile[] };
     const { files } = body;
-    if (!files || !Array.isArray(files)) return c.json({ error: 'files array required' }, 400);
+    if (!files || !Array.isArray(files)) return c.json({ error: 'files array required', details: 'Request body must contain files array', action: 'Provide files array in request body' }, 400);
     const scope = resolveRequestScope(c);
+    // SA4E-300 SEC High #1 (BOLA): global write gate + tenant binding.
+    const forbidden = await requireIndexPermission(c, userId, 'KB_WRITE', logger);
+    if (forbidden) return forbidden;
+    const bindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
+    if (bindingDenied) return bindingDenied;
 
-    // SA4E-99: Write to temp dir OUTSIDE workspace to avoid triggering Kiro file watcher
-    // Structure: Temp/{userId}/{projectId}/source/files...
-    const tempBase = path.join('C:\\projects\\kiro\\Temp', userId || 'local-dev', scope.projectId, 'source');
+    // SA4E-300 GAP 1: Write to temp dir OUTSIDE workspace to avoid triggering Kiro file watcher
+    // Structure: {indexTempDir}/{userId}/{projectId}/source/files...
+    const tempBase = resolveIndexTempBase(userId, scope.projectId, 'source');
     const wsBasename = path.basename(scope.workspace);
     fs.mkdirSync(tempBase, { recursive: true });
 
     const written: string[] = [];
     const rejected: string[] = [];
+    const rejectedReasons: { file: string; code: string; message: string }[] = [];
 
     for (const file of files) {
       let filePath = file.path;
@@ -152,15 +299,31 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
       if (filePath.startsWith(wsBasename + '/') || filePath.startsWith(wsBasename + '\\')) {
         filePath = filePath.substring(wsBasename.length + 1);
       }
-      const targetPath = path.join(tempBase, filePath);
+      const targetPath = resolveSafeTargetPath(tempBase, filePath);
+      if (!targetPath) {
+        rejected.push(filePath);
+        rejectedReasons.push({ file: filePath, code: 'EACCES', message: 'Unsafe path: must be a relative path staying within the temp directory' });
+        continue;
+      }
       try {
         fs.mkdirSync(path.dirname(targetPath), { recursive: true });
         fs.writeFileSync(targetPath, file.content, 'utf-8');
         written.push(filePath);
-      } catch { rejected.push(filePath); }
+      } catch (err: any) {
+        rejected.push(filePath);
+        rejectedReasons.push({
+          file: filePath,
+          code: err?.code || 'UNKNOWN',
+          message: err?.message || String(err)
+        });
+      }
     }
 
-    return c.json({ written: written.length, skipped: 0, rejected, deps: [], projectId: scope.projectId });
+    if (rejectedReasons.length > 0) {
+      logger.warn({ rejectedReasons, projectId: scope.projectId }, '[index] rejected files');
+    }
+
+    return c.json({ written: written.length, skipped: 0, rejected, rejectedReasons, deps: [], projectId: scope.projectId });
   } catch (err: any) {
     return indexError(c, err, logger, 'Error processing source batch');
   }
@@ -170,16 +333,24 @@ async function handleIndexDocument(c: Context, logger: Logger, userId = '') {
   try {
     const body = await c.req.json() as { path: string; content: string };
     const { path: relPath, content } = body;
-    if (!relPath || !content) return c.json({ error: 'path and content required' }, 400);
+    if (!relPath || !content) return c.json({ error: 'path and content required', details: 'Both path and content must be provided', action: 'Include path and content in request body' }, 400);
     const scope = resolveRequestScope(c);
-    // SA4E-99: Consistent temp structure — Temp/{userId}/{projectId}/documents/
-    const tempBase = path.join('C:\\projects\\kiro\\Temp', userId || 'local-dev', scope.projectId, 'documents');
+    // SA4E-300 SEC High #1 (BOLA): global write gate + tenant binding.
+    const docForbidden = await requireIndexPermission(c, userId, 'KB_WRITE', logger);
+    if (docForbidden) return docForbidden;
+    const docBindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
+    if (docBindingDenied) return docBindingDenied;
+    // SA4E-300 GAP 1: Consistent temp structure — {indexTempDir}/{userId}/{projectId}/documents/
+    const tempBase = resolveIndexTempBase(userId, scope.projectId, 'documents');
     const wsBasename = path.basename(scope.workspace);
     let filePath = relPath;
     if (filePath.startsWith(wsBasename + '/') || filePath.startsWith(wsBasename + '\\')) {
       filePath = filePath.substring(wsBasename.length + 1);
     }
-    const targetPath = path.join(tempBase, filePath);
+    const targetPath = resolveSafeTargetPath(tempBase, filePath);
+    if (!targetPath) {
+      return c.json({ error: 'Unsafe path', details: 'Path must be a relative path staying within the temp directory (no absolute paths or .. traversal)', action: 'Provide safe relative path' }, 400);
+    }
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
     fs.writeFileSync(targetPath, content, 'utf-8');
     return c.json({ success: true });
@@ -192,11 +363,18 @@ async function handleIndexDocuments(c: Context, logger: Logger, userId = '') {
   try {
     const body = await c.req.json() as { files: SourceFile[] };
     const { files } = body;
-    if (!files || !Array.isArray(files)) return c.json({ error: 'files array required' }, 400);
+    if (!files || !Array.isArray(files)) return c.json({ error: 'files array required', details: 'Request body must contain files array', action: 'Provide files array in request body' }, 400);
     const scope = resolveRequestScope(c);
-    const { written, rejected } = writeFilesPhase(userId, scope.projectId, files);
-    if (rejected.length > 0) logger.warn({ rejected, projectId: scope.projectId }, '[index] rejected unsafe paths');
-    return c.json({ indexed: written, rejected });
+    // SA4E-300 SEC High #1 (BOLA): global write gate + tenant binding.
+    const docsForbidden = await requireIndexPermission(c, userId, 'KB_WRITE', logger);
+    if (docsForbidden) return docsForbidden;
+    const docsBindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
+    if (docsBindingDenied) return docsBindingDenied;
+    const { written, rejected, rejectedReasons } = writeFilesPhase(userId, scope.projectId, files);
+    if (rejectedReasons.length > 0) {
+      logger.warn({ rejectedReasons, projectId: scope.projectId }, '[index] rejected unsafe paths');
+    }
+    return c.json({ indexed: written, rejected, rejectedReasons });
   } catch (err: any) {
     return indexError(c, err, logger, 'Error writing documents batch');
   }
@@ -209,7 +387,13 @@ async function handleIndexDocuments(c: Context, logger: Logger, userId = '') {
 async function handleIngestDocsFromTemp(c: Context, registry: ModuleRegistry, logger: Logger, userId: string) {
   try {
     const scope = resolveRequestScope(c);
-    const tempBase = path.join('C:\\projects\\kiro\\Temp', userId, scope.projectId, 'batch-docs');
+    // SA4E-300 SEC High #1 (BOLA): global write gate + tenant binding.
+    const ingestForbidden = await requireIndexPermission(c, userId, 'KB_WRITE', logger);
+    if (ingestForbidden) return ingestForbidden;
+    const ingestBindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
+    if (ingestBindingDenied) return ingestBindingDenied;
+    // SA4E-300 GAP 1: sanitized cross-platform base {indexTempDir}/{userId}/{projectId}/batch-docs/
+    const tempBase = resolveIndexTempBase(userId, scope.projectId, 'batch-docs');
 
     if (!fs.existsSync(tempBase)) {
       return c.json({ ingested: 0, message: 'No documents in Temp folder' });
@@ -229,46 +413,57 @@ async function handleIngestDocsFromTemp(c: Context, registry: ModuleRegistry, lo
     // Ingest each file via mem_ingest_file handler
     const mem = registry.getModule('memory') as any;
     if (!mem || mem.status !== 'ready') {
-      return c.json({ error: 'Memory module not ready' }, 503);
+      return c.json({ error: 'Memory module not ready', details: 'Memory service is initializing', action: 'Retry after a short delay' }, 503);
     }
     const dispatcher = mem.getDispatcher();
     let ingested = 0;
     let errors = 0;
+    const failedFiles: { file: string; reason: string }[] = [];
 
     for (const filePath of files) {
       const relPath = path.relative(tempBase, filePath).replace(/\\/g, '/');
       try {
         const content = fs.readFileSync(filePath, 'utf-8');
         await dispatcher.dispatch('mem_ingest_file', {
-          file_path: relPath,
-          content,
+          file_path: filePath,
+          content_base64: Buffer.from(content, 'utf-8').toString('base64'),
           type: 'CONTEXT',
           scope: 'PROJECT',
         });
         ingested++;
-      } catch (err) {
+      } catch (err: any) {
         errors++;
+        const reason = err?.message || String(err);
+        failedFiles.push({ file: relPath, reason });
         logger.warn({ err, file: relPath }, '[ingest-docs] Failed to ingest document');
       }
     }
 
     logger.info({ ingested, errors, total: files.length }, '[ingest-docs] Document ingest complete');
-    return c.json({ ingested, errors, total: files.length });
+    return c.json({ ingested, errors, total: files.length, failedFiles });
   } catch (err: any) {
     return indexError(c, err, logger, 'Error ingesting documents from Temp');
   }
 }
 
 /** SA4E-209: Trigger async Pega rules sync — returns 202 immediately, runs in background. */
-async function handleSyncPegaRules(c: Context, registry: ModuleRegistry, logger: Logger) {
+async function handleSyncPegaRules(c: Context, registry: ModuleRegistry, logger: Logger, userId = '') {
   try {
     const body = await c.req.json<{ projectId?: string }>();
     if (!body.projectId) {
-      return c.json({ error: 'projectId is required', action: 'Include projectId in request body' }, 400);
+      // SA4E-300 GAP 2: full {error, details, action} shape (keep 400)
+      return c.json({ error: 'projectId is required', details: 'Request body must contain a non-empty projectId field', action: 'Include projectId in request body' }, 400);
     }
+    // SA4E-300 SEC High #2: same gate as populate-edges (GRAPH_MAINTAIN, kb-graph.ts:104).
+    const syncForbidden = await requireIndexPermission(c, userId, 'GRAPH_MAINTAIN', logger);
+    if (syncForbidden) return syncForbidden;
+    // SA4E-300 SEC High #1 (BOLA): body.projectId must be inside the caller's JWT grant.
+    const syncBindingDenied = await verifyIndexProjectBinding(c, body.projectId, logger);
+    if (syncBindingDenied) return syncBindingDenied;
     const memModule = registry.getModule('memory') as any;
     if (!memModule || memModule.status !== 'ready') {
-      return c.json({ error: 'Memory module not ready', action: 'Wait for server initialization' }, 503);
+      // SA4E-300 GAP 2: full {error, details, action} shape (keep 503)
+      return c.json({ error: 'Memory module not ready', details: 'Memory service is initializing or unavailable; sync cannot start yet', action: 'Wait for server initialization' }, 503);
     }
     // Fire-and-forget: run sync in background, report via progress polling
     const service = new PegaService(memModule.getEngine());
@@ -286,16 +481,31 @@ async function handleSyncPegaRules(c: Context, registry: ModuleRegistry, logger:
       projectId: body.projectId,
     }, 202);
   } catch (err: any) {
-    logger.error({ err }, '[sync-pega-rules] Failed to start');
-    return c.json({ error: 'Pega sync failed', details: err.message }, 500);
+    // SA4E-300 GAP 2: route 500 through centralized indexError (keeps {error, details, action})
+    return indexError(c, err, logger, '[sync-pega-rules] Failed to start');
   }
 }
 
 /** Map errors to responses — PROJECT_REQUIRED → 400, everything else → 500. */
-function indexError(c: Context, err: any, logger: Logger, context: string) {
+export function indexError(c: Context, err: any, logger: Logger, context: string) {
   if (String(err?.message).startsWith('PROJECT_REQUIRED')) {
-    return c.json({ error: 'X-Project-Id required for indexing' }, 400);
+    const details = String(err?.message).slice(0,2000);
+    return c.json({ error: 'X-Project-Id required for indexing', details, action: 'Provide X-Project-Id header' }, 400);
   }
-  logger.error({ err }, context);
-  return c.json({ error: 'Internal error' }, 500);
+  let details = err?.message ? String(err.message) : String(err);
+  if (details.length > 2000) details = details.slice(0,2000);
+  const code = err?.code ? String(err.code) : undefined;
+  let errorMsg = 'Internal error';
+  let action = 'Retry';
+  if (code === 'ENOSPC') {
+    errorMsg = 'Disk full';
+    action = 'Free up disk space';
+  } else if (code === 'EACCES') {
+    errorMsg = 'Permission denied';
+    action = 'Check file permissions';
+  } else if (err?.status) {
+    errorMsg = `Request failed with status ${err.status}`;
+  }
+  logger.error({ err, code, context }, context);
+  return c.json({ error: errorMsg, details, action }, 500);
 }

@@ -14,7 +14,7 @@ import type { WebviewMessage, ExtensionMessage } from '../types';
 import type { IChatEngineAdapter } from './IChatEngineAdapter';
 import type { IStreamProtocolAdapter, EngineStreamEvent } from './IStreamProtocolAdapter';
 import type { ISessionManager } from './ISessionManager';
-import type { LangGraphEngine } from '../../langgraph/engine/langgraph-engine';
+import type { PiWorkflowAdapter } from '../../pi-workflow';
 import type { ChatExtToWebviewMessage } from '../../chat-panel/message-protocol';
 import type { ToolApprovalGate } from './ToolApprovalGate';
 import type { CommandPatternMatcher } from './CommandPatternMatcher';
@@ -27,7 +27,7 @@ import type { IDiffTracker } from '../diff/IDiffTracker';
 export interface ChatEngineAdapterDeps {
   router: IMessageRouter;
   bridge: IPostMessageBridge;
-  engine: LangGraphEngine;
+  engine: PiWorkflowAdapter;
   streamAdapter: IStreamProtocolAdapter;
   contextManager: IContextManager;
   toolHandler: IToolHandler;

@@ -1,0 +1,11 @@
+test_case_id,kind,expected_node_type,expected_http_code,description
+UT-01,apex_class,APEX_CLASS,,Valid mapping for apex_class
+UT-02,flow,FLOW,,Valid mapping for flow
+UT-03,sf_object,SF_OBJECT,,Valid mapping for sf_object
+UT-04,lwc_component,LWC_COMPONENT,,Valid mapping for lwc_component
+UT-05,pega_rule_obj_flow,RULE_OBJ_FLOW,,Pega prefix derivation
+UT-06,unknown_xyz,CODE_ENTITY,,Unknown kind fallback
+PBT-01,apex_class,APEX_CLASS,,Property based mapping
+PBT-02,random_string_xyz,CODE_ENTITY,,Property based unknown fallback
+E2E-API-02,7b11cdc169de,APEX_CLASS;FLOW;SF_OBJECT;LWC_COMPONENT,200,Graph query returns multiple types
+E2E-API-06,pega-test-001,RULE_OBJ_FLOW,200,Backward compatibility check

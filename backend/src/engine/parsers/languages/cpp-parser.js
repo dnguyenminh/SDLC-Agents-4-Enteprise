@@ -1,0 +1,17 @@
+import { GenericTreeSitterParser } from './generic-tree-sitter-parser.js';
+
+const CPP_NODE_MAP = {
+  function: ['function_definition'],
+  class: ['class_specifier'],
+  struct: ['struct_specifier'],
+  enum: ['enum_specifier'],
+  type: ['type_alias_declaration'],
+  variable: ['init_declarator'],
+  property: ['field_declaration']
+};
+
+export default class CppParser extends GenericTreeSitterParser {
+  constructor(parser, langId, nodeMap, skipScopeNodes) {
+    super(parser, langId, CPP_NODE_MAP, skipScopeNodes);
+  }
+}

@@ -28,6 +28,8 @@ export const EnrichmentStatusResponseSchema = z.object({
   maxConcurrency: z.number().int().min(1).optional(),
   /** Tasks currently in PROCESSING state (live parallelism). */
   activeConcurrency: z.number().int().min(0).optional(),
+  activeTasks: z.array(z.object({ source: z.string() })).optional(),
+  recentFailures: z.array(z.object({ symbolName: z.string(), error: z.string(), taskId: z.number() })).optional(),
 });
 
 export type EnrichmentStatusResponse = z.infer<typeof EnrichmentStatusResponseSchema>;

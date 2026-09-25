@@ -10,6 +10,7 @@ import { WebviewPanelManager } from "./webview-panel-manager";
 import { KiroTreeViewProvider } from "./sidebar/tree-view-provider";
 import { writeBundledMcpConfig } from "./mcp-injector";
 import { ConfigWatcher } from "./config-watcher";
+import { getBackendUrl, DEFAULT_BACKEND_URL } from "./config/backend-url";
 import { KbEventBus } from "./kb-event-bus";
 import { DiagnosticsFeedService } from "./langgraph/diagnostics/diagnostics-feed-service";
 import { ChatPanelProvider } from "./chat-panel/chat-panel-provider";
@@ -52,6 +53,24 @@ let sessionLifecycle: SessionLifecycleEmitter | undefined;
 let _projectId = "";
 export function getProjectId(): string { return _projectId; }
 export function setProjectId(id: string): void { _projectId = id; }
+
+/**
+ * SA4E-241 SEC-01: Require a resolved project identity — fail-closed.
+ * The projectId is derived from the authenticated Pega application context
+ * (setProjectId). We MUST NOT fall back to a shared default like 'PegaCollProj'
+ * (cross-tenant leak). Callers that need a scope must have run context resolution
+ * first (fetchAndSavePegaContext / catalog indexer).
+ * @throws Error when no project identity has been resolved yet.
+ */
+export function requireProjectId(): string {
+  if (!_projectId) {
+    throw new Error(
+      "No project identity resolved. Run 'Fetch Pega App Context' (or index) first — " +
+      "SA4E-241 forbids a hard-coded default project (SEC-01).",
+    );
+  }
+  return _projectId;
+}
 
 /** SA4E-99: Enrichment service accessor for IndexingService cross-module call. */
 export function getEnrichmentService(): { pollNow(): void } | null { return null; }
@@ -156,7 +175,13 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   context.subscriptions.push(outputChannel);
 
   const mcpConfig = vscode.workspace.getConfiguration("kiroSdlc");
-  const backendUrl = mcpConfig.get<string>("backend.url") || "http://127.0.0.1:48721";
+  let backendUrl: string;
+  try {
+    backendUrl = getBackendUrl();
+  } catch (err: any) {
+    console.warn(`[Security] backend.url validation failed at activate: ${err?.message} — falling back to loopback default`);
+    backendUrl = DEFAULT_BACKEND_URL;
+  }
 
   authManager = new AuthManager(context.secrets, backendUrl);
   await authManager.initialize();
@@ -202,6 +227,23 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   context.subscriptions.push(
     vscode.commands.registerCommand("kiroSdlc.openAgenticChat", () => {
       openAgenticChat(context, workspaceRoot, chatPanelProvider);
+    })
+  );
+
+  // SA4E-320: apply a new backend.url at runtime — no extension reload needed.
+  // AuthManager + RemoteBackendClient captured the URL at activation, so a Save
+  // in Settings previously only took effect after "Reload Window". This listener
+  // re-points every long-lived consumer and reconnects.
+  const buildKbHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = { "X-Project-Id": getProjectId() };
+    const token = authManager?.getTokenSync();
+    if (token) { headers["Authorization"] = `Bearer ${token}`; }
+    return headers;
+  };
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (!event.affectsConfiguration("kiroSdlc.backend.url")) { return; }
+      applyBackendUrlChange(outputChannel, buildKbHeaders);
     })
   );
 
@@ -286,6 +328,36 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
         }
       })
     );
+    // SA4E-157: Show enrichment failures details command
+    context.subscriptions.push(
+      vscode.commands.registerCommand('sa4e.showEnrichmentFailures', async () => {
+        try {
+          const status = await enrichmentService.pollNow();
+          if (!status) {
+            vscode.window.showErrorMessage('Cannot reach backend for enrichment status.');
+            return;
+          }
+          const output = vscode.window.createOutputChannel('Kiro Enrichment Failures');
+          output.clear();
+          output.appendLine(`Enrichment state: ${status.state}`);
+          output.appendLine(`Total: ${status.totalRules}, Completed: ${status.completedRules}, Failed: ${status.failedRules}`);
+          output.appendLine('');
+          if (status.recentFailures && status.recentFailures.length > 0) {
+            output.appendLine(JSON.stringify(status.recentFailures, null, 2));
+          } else {
+            output.appendLine('No recent failures recorded.');
+          }
+          output.show(true);
+          vscode.window.showInformationMessage('Enrichment failures logged to Output > Kiro Enrichment Failures', 'Retry Failed').then((selection) => {
+            if (selection === 'Retry Failed') {
+              vscode.commands.executeCommand('sa4e.retryFailedEnrichment');
+            }
+          });
+        } catch (err: any) {
+          vscode.window.showErrorMessage(`Failed to fetch failures: ${err.message}`);
+        }
+      })
+    );
   } catch (err) {
     outputChannel.appendLine(`[EnrichmentStatus] Init failed: ${(err as Error).message}`);
   }
@@ -305,7 +377,12 @@ function setupAuthStateHandlers(): void {
     statusBarManager?.setAuthState(state);
     if (state === "AUTHENTICATED") {
       wasAuthenticated = true;
-      treeProvider?.setAuthenticated(true, "admin");
+      // Resolve the REAL signed-in user (password or SSO) from the backend
+      // instead of hardcoding "admin". Set a neutral label first, then refine.
+      treeProvider?.setAuthenticated(true, "");
+      authManager?.fetchCurrentUsername().then((name) => {
+        if (authManager?.isAuthenticated) { treeProvider?.setAuthenticated(true, name); }
+      });
       panelManager?.notifyAllPanels({ type: "serverStatus", status: "connected" });
     } else if (state === "UNAUTHENTICATED") {
       treeProvider?.setAuthenticated(false);
@@ -322,6 +399,33 @@ function setupAuthStateHandlers(): void {
       }
     }
   });
+}
+
+/**
+ * Re-point every long-lived backend consumer at the newly-saved backend.url
+ * and reconnect, so a Settings change applies without an extension reload
+ * (SA4E-320). Validation failures fall back to the loopback default (fail-safe,
+ * same policy as activation). Safe to call repeatedly (updates are no-ops when
+ * the URL is unchanged).
+ */
+function applyBackendUrlChange(
+  outputChannel: vscode.OutputChannel,
+  buildKbHeaders: () => Record<string, string>
+): void {
+  let backendUrl: string;
+  try {
+    backendUrl = getBackendUrl();
+  } catch (err: any) {
+    console.warn(`[Security] backend.url validation failed on change: ${err?.message} — falling back to loopback default`);
+    backendUrl = DEFAULT_BACKEND_URL;
+  }
+  outputChannel.appendLine(`[Kiro] backend.url changed → ${backendUrl}. Applying without reload...`);
+  authManager?.updateBaseUrl(backendUrl);
+  sessionManager?.updateClient(new KnowledgeClient(backendUrl, { getHeaders: buildKbHeaders }));
+  // Reconnect the backend client last (async) so it picks up the new URL + token.
+  mcpManager?.updateBackendUrl(backendUrl)
+    .then(() => treeProvider?.refresh())
+    .catch((err) => outputChannel.appendLine(`[Kiro] Backend reconnect after URL change failed: ${(err as Error).message}`));
 }
 
 function setupTreeView(context: vscode.ExtensionContext): void {

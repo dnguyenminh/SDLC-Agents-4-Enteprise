@@ -1,0 +1,49 @@
+<mxGraphModel dx="1100" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="500" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000" vertex="1" parent="1">
+      <mxGeometry x="40" y="170" width="24" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="empty" value="Empty" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8cc;strokeColor=#82b366;fontSize=13;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="120" y="150" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="fetching" value="Fetching" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="320" y="150" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="fresh" value="Fresh (TTL 1h)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="520" y="150" width="150" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="stale" value="Stale (TTL expired)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="740" y="150" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="refreshing" value="Refreshing (kid miss → refresh once)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="520" y="320" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="t0" value="init" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="start" target="empty">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="t1" value="first lookup" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="empty" target="fetching">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="t2" value="JWKS fetched" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="fetching" target="fresh">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="t3" value="fetchedAt + TTL elapsed" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="fresh" target="stale">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="t4" value="lookup" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0.5;exitY=1;entryX=1;entryY=0.5" edge="1" parent="1" source="stale" target="refreshing">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="t5" value="refresh OK → Fresh" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0;exitY=0.5;entryX=0.5;entryY=1" edge="1" parent="1" source="refreshing" target="fresh">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="t6" value="kid found (cache hit)" style="html=1;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0;exitY=0.5;entryX=0.5;entryY=0;dashed=1" edge="1" parent="1" source="fresh" target="refreshing">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="595" y="250"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

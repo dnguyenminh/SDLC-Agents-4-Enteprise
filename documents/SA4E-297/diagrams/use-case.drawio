@@ -1,0 +1,15 @@
+<mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="boundary" value="Pi SDK Migration Testing" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="760" height="400" as="geometry"/></mxCell>
+<mxCell id="actor1" value="QA Engineer" style="shape=mxgraph.flowchart.annotation_2;verticalLabelPosition=bottom;html=1;" vertex="1" parent="boundary"><mxGeometry x="60" y="80" width="100" height="80" as="geometry"/></mxCell>
+<mxCell id="actor2" value="Developer" style="shape=mxgraph.flowchart.annotation_2;verticalLabelPosition=bottom;html=1;" vertex="1" parent="boundary"><mxGeometry x="60" y="200" width="100" height="80" as="geometry"/></mxCell>
+<mxCell id="actor3" value="QA Lead" style="shape=mxgraph.flowchart.annotation_2;verticalLabelPosition=bottom;html=1;" vertex="1" parent="boundary"><mxGeometry x="60" y="320" width="100" height="80" as="geometry"/></mxCell>
+<mxCell id="uc1" value="Execute Unit Tests" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="boundary"><mxGeometry x="260" y="60" width="140" height="80" as="geometry"/></mxCell>
+<mxCell id="uc2" value="Execute Integration Tests" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="boundary"><mxGeometry x="460" y="60" width="140" height="80" as="geometry"/></mxCell>
+<mxCell id="uc3" value="Deprecate LangGraph Code" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="boundary"><mxGeometry x="260" y="180" width="140" height="80" as="geometry"/></mxCell>
+<mxCell id="uc4" value="QA Sign-off" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="boundary"><mxGeometry x="460" y="180" width="140" height="80" as="geometry"/></mxCell>
+<mxCell id="e1" edge="1" parent="boundary" source="actor1" target="uc1" style="edgeStyle=orthogonalEdgeStyle;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e2" edge="1" parent="boundary" source="actor1" target="uc2" style="edgeStyle=orthogonalEdgeStyle;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e3" edge="1" parent="boundary" source="actor2" target="uc3" style="edgeStyle=orthogonalEdgeStyle;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e4" edge="1" parent="boundary" source="actor3" target="uc4" style="edgeStyle=orthogonalEdgeStyle;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e5" edge="1" parent="boundary" source="actor1" target="uc4" style="edgeStyle=orthogonalEdgeStyle;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root></mxGraphModel>

@@ -34,6 +34,7 @@ import { ReindexSubscriber } from '../../src/modules/orchestration/reindex/Reind
 import { PerServerTaskQueue } from '../../src/modules/orchestration/reindex/PerServerTaskQueue.js';
 import { ReindexActionMapper } from '../../src/modules/orchestration/reindex/ReindexActionMapper.js';
 import { FakeToolSource, FakeEventSource } from '../../src/modules/orchestration/reindex/__tests__/reindex-fakes.js';
+import { MemoryToolSearchService } from '../../src/modules/orchestration/MemoryToolSearchService.js';
 import type { IEmbedder } from '../../src/modules/orchestration/reindex/models/ports.js';
 
 const silent = pino({ level: 'silent' });
@@ -74,6 +75,9 @@ async function harness(embedder: IEmbedder): Promise<E2EHarness> {
   registry.register(new StubModule('memory', [def('mem_admin', 'memory')], handlers, ctx.engine, 'ready'));
   const orch = new OrchestrationModule(silentLogger(), registry);
   await orch.initialize();
+  // Wire the same read path production uses (index.ts): find_tools must query
+  // the SAME adapter the reindex writer persists to, otherwise it returns [].
+  orch.setToolSearchService(new MemoryToolSearchService(ctx.engine.getAdapter(), silent));
   registry.register(orch);
   const mcp = await connectMcp(registry);
   const src = new FakeToolSource();

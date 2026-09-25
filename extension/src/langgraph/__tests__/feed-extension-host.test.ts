@@ -46,6 +46,13 @@ vi.mock("vscode", () => ({
   },
   DiagnosticSeverity: { Error: 0, Warning: 1, Information: 2, Hint: 3 },
   Disposable: class { dispose() {} },
+  TreeItem: class { constructor(public label: string) {} },
+  TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 },
+}));
+
+vi.mock("../../extension", () => ({
+  getProjectId: vi.fn(() => "test-project"),
+  setProjectId: vi.fn(),
 }));
 
 vi.mock("../../chat-panel/ChatHtmlBuilder", () => ({

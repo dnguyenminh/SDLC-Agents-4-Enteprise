@@ -59,11 +59,12 @@ export function createKbApiRoutes(registry: ModuleRegistry, logger: Logger): Hon
   });
 
   api.post('/code/search', async (c) => {
+    const ctx = c.get('projectContext');
     const body = await c.req.json();
     const handler = registry.getToolHandlers().get('code_search');
     if (!handler) return c.json({ data: null, error: { code: 'NOT_FOUND', message: 'Not available' } }, 404);
     try {
-      const result = await handler(body);
+      const result = await handler(stampScope(body, ctx));
       return c.json({ data: result, error: null });
     } catch (e: any) {
       logger.error({ err: e }, 'code/search failed');
@@ -72,11 +73,12 @@ export function createKbApiRoutes(registry: ModuleRegistry, logger: Logger): Hon
   });
 
   api.post('/context/curated', async (c) => {
+    const ctx = c.get('projectContext');
     const body = await c.req.json();
     const handler = registry.getToolHandlers().get('get_curated_context');
     if (!handler) return c.json({ data: null, error: { code: 'NOT_FOUND', message: 'Not available' } }, 404);
     try {
-      const result = await handler(body);
+      const result = await handler(stampScope(body, ctx));
       return c.json({ data: result, error: null });
     } catch (e: any) {
       logger.error({ err: e }, 'context/curated failed');
@@ -155,7 +157,7 @@ export function createToolsApiRoutes(registry: ModuleRegistry, logger: Logger): 
     const handler = registry.getToolHandlers().get(toolName);
     if (!handler) return c.json({ data: null, error: { code: 'NOT_FOUND', message: `Tool ${toolName} not found` } }, 404);
     try {
-      const result = await handler({ ...args, _projectContext: ctx });
+      const result = await handler(stampScope(args, ctx));
       return c.json({ data: result, error: null });
     } catch (e: any) {
       logger.error({ err: e, tool: toolName }, 'tools/execute failed');
@@ -164,4 +166,31 @@ export function createToolsApiRoutes(registry: ModuleRegistry, logger: Logger): 
   });
 
   return api;
+}
+
+/**
+ * Stamp trusted tenant scope onto tool arguments (SA4E-41).
+ *
+ * Code-intel tools and QueryLayer scope filters read the canonical `__projectId`
+ * (and `__userId`) keys and are fail-closed when they are absent — which
+ * previously made scoped reads like code_search return "No results found".
+ * Stamping only `_projectContext` (the memory-decorator form) was insufficient.
+ *
+ * SEC-02: client-supplied reserved keys are stripped first so callers can never
+ * spoof a tenant; trusted values from the authenticated projectContext win.
+ */
+function stampScope(
+  args: Record<string, unknown>,
+  ctx: { projectId?: string; userId?: string; workspaceId?: string } | undefined,
+): Record<string, unknown> {
+  const clean = { ...args };
+  delete clean.__projectId;
+  delete clean.__userId;
+  delete clean.__workspaceRoot;
+  if (!ctx) return clean;
+  clean._projectContext = ctx;
+  if (ctx.projectId) clean.__projectId = ctx.projectId;
+  if (ctx.userId) clean.__userId = ctx.userId;
+  if (ctx.workspaceId) clean.__workspaceRoot = ctx.workspaceId;
+  return clean;
 }

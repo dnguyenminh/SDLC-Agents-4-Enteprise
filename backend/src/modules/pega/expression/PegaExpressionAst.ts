@@ -1,13 +1,26 @@
-import type { PegaClipboardContext } from './PegaClipboardContext.js';
+/**
+ * PegaExpressionAst.ts — Runtime value model + builtin function registry for Pega
+ * expression evaluation.
+ *
+ * NOTE: The self-evaluating OOP AST node classes that formerly lived here (PropertyRefNode,
+ * FunctionCallNode, BinaryOpNode, ...) were removed. Parsing now produces the POC ExprNode
+ * data model (expression/pega-expr/nodes.ts) and evaluation is done by ExprNodeEvaluator.
+ * This file retains only the runtime primitives that both the evaluator and the decision
+ * layer depend on: PegValue (tagged runtime value), PegaBuiltinFunctions (whitelisted
+ * function implementations), and PegExpressionError.
+ */
 
+/** Runtime value tag for an evaluated expression result. */
 export type ValueType = 'Text' | 'Number' | 'Boolean' | 'Null' | 'Page' | 'PageList';
 
+/** A tagged runtime value produced by evaluating an expression. */
 export class PegValue {
   constructor(
     public readonly type: ValueType,
     public readonly value: unknown,
   ) {}
 
+  /** Coerce to display text. Null -> "", numbers/booleans stringified. */
   get text(): string {
     if (this.type === 'Null') return '';
     if (this.type === 'Number') return String(this.value);
@@ -15,6 +28,7 @@ export class PegValue {
     return String(this.value ?? '');
   }
 
+  /** Coerce to a number (text is parsed; non-numeric -> 0). */
   get number(): number {
     if (this.type === 'Number') return this.value as number;
     if (this.type === 'Text') {
@@ -24,6 +38,7 @@ export class PegValue {
     return 0;
   }
 
+  /** Coerce to boolean (Pega truthiness: non-empty/non-zero/non-null). */
   get boolean(): boolean {
     if (this.type === 'Boolean') return this.value as boolean;
     if (this.type === 'Null') return false;
@@ -35,11 +50,14 @@ export class PegValue {
   static number(v: number): PegValue { return new PegValue('Number', v); }
   static bool(v: boolean): PegValue { return new PegValue('Boolean', v); }
   static null(): PegValue { return new PegValue('Null', null); }
-  static page(name: string, ctx: PegaClipboardContext): PegValue { return new PegValue('Page', { name, ctx }); }
+  static page(name: string, ctx: unknown): PegValue { return new PegValue('Page', { name, ctx }); }
   static pageList(items: PegValue[]): PegValue { return new PegValue('PageList', items); }
 }
 
-/** Whitelisted builtin function registry, keyed by canonical name (`@round`, `@Lib.fn`, ...). */
+/**
+ * Whitelisted builtin Pega functions. Deny-by-default: `call` throws for any name not in
+ * the map. Keys include the leading '@' (e.g. '@upper'); callers rebuild that canonical key.
+ */
 export class PegaBuiltinFunctions {
   private static whitelist = new Map<string, (args: PegValue[]) => PegValue>([
     ['@round', (args) => {
@@ -64,10 +82,17 @@ export class PegaBuiltinFunctions {
     ['@Index', (args) => PegValue.number(args[0].text.indexOf(args[1].text))],
   ]);
 
+  /** True if a function name (with leading '@') is whitelisted. */
   static isWhitelisted(name: string): boolean {
     return this.whitelist.has(name);
   }
 
+  /**
+   * Invoke a whitelisted builtin.
+   * @param name Canonical function key (with leading '@')
+   * @param args Evaluated argument values
+   * @throws PegExpressionError if the function is not whitelisted
+   */
   static call(name: string, args: PegValue[]): PegValue {
     const fn = this.whitelist.get(name);
     if (!fn) {
@@ -77,6 +102,7 @@ export class PegaBuiltinFunctions {
   }
 }
 
+/** Error raised during expression evaluation, carrying a machine-readable code. */
 export class PegExpressionError extends Error {
   constructor(
     message: string,

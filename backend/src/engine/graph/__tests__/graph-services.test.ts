@@ -5,7 +5,7 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import Database from 'better-sqlite3';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
 import { SymbolResolver } from '../symbol-resolver.js';
 import { CallGraphService } from '../call-graph-service.js';
@@ -16,16 +16,17 @@ import { ImpactAnalysisService } from '../impact-analysis-service.js';
 import { GraphTraverser } from '../traverser.js';
 import { GraphRepository } from '../graph-repository.js';
 
-let db: Database.Database;
+let db: SqliteAdapter;
 
-function setupTestDb(): Database.Database {
-  const testDb = new Database(':memory:');
-  testDb.pragma('journal_mode = WAL');
-  testDb.pragma('foreign_keys = ON');
+async function setupTestDb(): Promise<SqliteAdapter> {
+  const testDb = new SqliteAdapter(':memory:');
+  await testDb.connect();
+  await testDb.exec(`PRAGMA journal_mode = WAL;`);
+  await testDb.exec(`PRAGMA foreign_keys = ON;`);
 
   // Create schema
   // SA4E-41: tables carry project_id (default 'test_proj') so scoped queries resolve.
-  testDb.exec(`
+  await testDb.exec(`
     CREATE TABLE files (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       project_id TEXT NOT NULL DEFAULT 'test_proj',
@@ -88,7 +89,7 @@ function setupTestDb(): Database.Database {
 
   // Insert test data
   // Files
-  testDb.exec(`
+  await testDb.exec(`
     INSERT INTO files (id, path, relative_path, language, content_hash, size_bytes) VALUES
       (1, '/project/src/service.ts', 'src/service.ts', 'typescript', 'hash1', 1000),
       (2, '/project/src/controller.ts', 'src/controller.ts', 'typescript', 'hash2', 800),
@@ -99,7 +100,7 @@ function setupTestDb(): Database.Database {
   `);
 
   // Symbols
-  testDb.exec(`
+  await testDb.exec(`
     INSERT INTO symbols (id, file_id, name, kind, start_line, end_line, parent_symbol_id, is_exported, file_path) VALUES
       (1, 1, 'UserService', 'class', 5, 50, NULL, 1, 'src/service.ts'),
       (2, 1, 'getUser', 'method', 10, 20, 1, 1, 'src/service.ts'),
@@ -117,7 +118,7 @@ function setupTestDb(): Database.Database {
   `);
 
   // Relationships: calls
-  testDb.exec(`
+  await testDb.exec(`
     INSERT INTO relationships (source_symbol_id, target_symbol, target_symbol_id, kind, file_path, line) VALUES
       (5, 'getUser', 2, 'calls', 'src/controller.ts', 12),
       (6, 'createUser', 3, 'calls', 'src/controller.ts', 30),
@@ -127,7 +128,7 @@ function setupTestDb(): Database.Database {
   `);
 
   // Relationships: imports
-  testDb.exec(`
+  await testDb.exec(`
     INSERT INTO relationships (source_symbol_id, target_symbol, target_symbol_id, kind, file_path, line) VALUES
       (4, './service', NULL, 'imports', 'src/controller.ts', 1),
       (1, './repository', NULL, 'imports', 'src/service.ts', 1),
@@ -136,7 +137,7 @@ function setupTestDb(): Database.Database {
   `);
 
   // Relationships: implements
-  testDb.exec(`
+  await testDb.exec(`
     INSERT INTO relationships (source_symbol_id, target_symbol, target_symbol_id, kind, file_path, line) VALUES
       (1, 'IUserService', 12, 'implements', 'src/service.ts', 5);
   `);
@@ -145,8 +146,8 @@ function setupTestDb(): Database.Database {
 }
 
 describe('SymbolResolver', () => {
-  before(() => { db = setupTestDb(); });
-  after(() => { db.close(); });
+  before(async () => { db = await setupTestDb(); });
+  after(async () => { await db.disconnect(); });
 
   it('resolves exact symbol name', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');
@@ -178,8 +179,8 @@ describe('SymbolResolver', () => {
 });
 
 describe('CallGraphService', () => {
-  before(() => { db = setupTestDb(); });
-  after(() => { db.close(); });
+  before(async () => { db = await setupTestDb(); });
+  after(async () => { await db.disconnect(); });
 
   it('finds direct callers of a method', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
@@ -242,8 +243,8 @@ describe('CallGraphService', () => {
 });
 
 describe('FileResolver', () => {
-  before(() => { db = setupTestDb(); });
-  after(() => { db.close(); });
+  before(async () => { db = await setupTestDb(); });
+  after(async () => { await db.disconnect(); });
 
   it('resolves exact relative path', () => {
     const resolver = new FileResolver(new SqliteDbAdapter(db), '/project', 'test_proj');
@@ -271,8 +272,8 @@ describe('FileResolver', () => {
 });
 
 describe('DependencyGraphService', () => {
-  before(() => { db = setupTestDb(); });
-  after(() => { db.close(); });
+  before(async () => { db = await setupTestDb(); });
+  after(async () => { await db.disconnect(); });
 
   it('finds outgoing dependencies', () => {
     const fileResolver = new FileResolver(new SqliteDbAdapter(db), '/project', 'test_proj');
@@ -302,8 +303,8 @@ describe('DependencyGraphService', () => {
 });
 
 describe('TestDetector', () => {
-  before(() => { db = setupTestDb(); });
-  after(() => { db.close(); });
+  before(async () => { db = await setupTestDb(); });
+  after(async () => { await db.disconnect(); });
 
   it('identifies test files by path pattern', () => {
     const detector = new TestDetector(new SqliteDbAdapter(db), 'test_proj');
@@ -330,8 +331,8 @@ describe('TestDetector', () => {
 });
 
 describe('ImpactAnalysisService', () => {
-  before(() => { db = setupTestDb(); });
-  after(() => { db.close(); });
+  before(async () => { db = await setupTestDb(); });
+  after(async () => { await db.disconnect(); });
 
   it('analyzes impact of modifying a method', async () => {
     const graphRepo = new GraphRepository(new SqliteDbAdapter(db), 'test_proj');
@@ -384,8 +385,8 @@ describe('ImpactAnalysisService', () => {
 });
 
 describe('GraphTraverser', () => {
-  before(() => { db = setupTestDb(); });
-  after(() => { db.close(); });
+  before(async () => { db = await setupTestDb(); });
+  after(async () => { await db.disconnect(); });
 
   it('resolves a start node', async () => {
     const resolver = new SymbolResolver(new SqliteDbAdapter(db), 'test_proj');

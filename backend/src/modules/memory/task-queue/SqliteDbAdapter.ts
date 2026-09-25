@@ -5,7 +5,6 @@
  * fulfilling the async contract so admin/db layer works with both SQLite and PG.
  */
 
-import type Database from 'better-sqlite3';
 import type {
   DatabaseAdapter,
   DatabaseEngine,
@@ -15,7 +14,7 @@ import type {
 } from '../../../database/adapters/DatabaseAdapter.js';
 
 export class SqliteDbAdapter implements DatabaseAdapter {
-  constructor(private readonly db: Database.Database) {}
+  constructor(private readonly db: any) {}
 
   async connect(): Promise<void> { /* already connected */ }
   async disconnect(): Promise<void> { /* managed externally */ }

@@ -1,0 +1,11 @@
+test_case_id,backend_url,allow_insecure_remote,expected_result,description
+TC-16,http://remote.server.internal:48721,true,ACCEPT,getAllowInsecureRemote=true; getBackendUrl returns remote; resolveKbBaseUrl returns remote; new KnowledgeClient no throw + [Security] WARNING warn emitted
+TC-17,http://remote.server.internal:48721,false,REJECT,[Security] Insecure backend URL rejected from getBackendUrl and KnowledgeClient constructor
+TC-17,http://remote.server.internal:48721,(deleted),REJECT,[Security] Insecure backend URL rejected — missing flag fails closed
+TC-12,http://remote.server.internal:48721,false,FALSE_FLAG,getAllowInsecureRemote()=false
+TC-12,http://remote.server.internal:48721,(deleted),FALSE_FLAG,getAllowInsecureRemote()=false on missing key
+TC-12,http://remote.server.internal:48721,"true",FALSE_FLAG,String truthy does not enable bypass — strict === true required
+TC-18,http://remote.server.internal:48721,false,FALLBACK_LOOPBACK,resolveKbBaseUrl returns http://127.0.0.1:48721 without throwing
+TC-04,http://127.0.0.1:48721,false,ACCEPT,KnowledgeClient loopback never throws with flag off
+TC-04,http://localhost:9999,true,ACCEPT,KnowledgeClient loopback never throws with flag on
+TC-11,ftp://remote.server.internal:21,true,REJECT,[Security] Invalid backend URL protocol — KnowledgeClient with bypass ON

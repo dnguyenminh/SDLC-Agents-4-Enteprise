@@ -1,0 +1,45 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="actor-admin" value="Admin User" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="40" y="200" width="100" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="actor-service" value="Ingestion Service" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="40" y="350" width="100" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="system" value="Knowledge Graph System" style="swimlane;startSize=40;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="240" y="120" width="500" height="400" as="geometry"/>
+</mxCell>
+<mxCell id="uc-ingest" value="Ingest Entry" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="80" y="100" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc-node" value="Create Node" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="280" y="100" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc-edge" value="Create Edge" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="480" y="100" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc-match" value="Match Nodes" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="180" y="240" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc-persist" value="Persist Edge" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="system">
+<mxGeometry x="380" y="240" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="actor-admin" target="uc-ingest" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="actor-service" target="uc-node" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="actor-service" target="uc-match" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="uc-match" target="uc-edge" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="uc-edge" target="uc-persist" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

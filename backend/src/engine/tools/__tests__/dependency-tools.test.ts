@@ -4,8 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { SqliteDbAdapter } from '../../../modules/memory/task-queue/SqliteDbAdapter.js';
+import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
 import { DEPENDENCY_TOOL_DEFINITIONS, handleCodeDependencies } from '../dependency-tools.js';
 
 const PID = 'proj_dep';
@@ -26,28 +25,28 @@ describe('DEPENDENCY_TOOL_DEFINITIONS', () => {
 });
 
 describe('handleCodeDependencies — validation', () => {
-  let db: Database.Database;
-  beforeEach(() => { db = seedDb(); });
-  afterEach(() => { db.close(); });
+  let adapter: SqliteAdapter;
+  beforeEach(async () => { adapter = await seedDb(); });
+  afterEach(async () => { if (adapter.isConnected()) await adapter.disconnect(); });
 
   it('returns an error JSON when file is missing', async () => {
-    const out = await handleCodeDependencies({}, new SqliteDbAdapter(db), '/ws', PID);
+    const out = await handleCodeDependencies({}, adapter, '/ws', PID);
     expect(JSON.parse(out).error).toContain('"file" is required');
   });
 
   it('reports when the file is not indexed', async () => {
-    const out = await handleCodeDependencies({ file: 'files/missing.ts' }, new SqliteDbAdapter(db), '/ws', PID);
+    const out = await handleCodeDependencies({ file: 'files/missing.ts' }, adapter, '/ws', PID);
     expect(out).toBe('File "files/missing.ts" not found in index. Make sure the file has been indexed.');
   });
 });
 
 describe('handleCodeDependencies — outgoing traversal', () => {
-  let db: Database.Database;
-  beforeEach(() => { db = seedDb(); });
-  afterEach(() => { db.close(); });
+  let adapter: SqliteAdapter;
+  beforeEach(async () => { adapter = await seedDb(); });
+  afterEach(async () => { if (adapter.isConnected()) await adapter.disconnect(); });
 
   it('returns a tree of imported files', async () => {
-    const out = await handleCodeDependencies({ file: 'files/a.ts' }, new SqliteDbAdapter(db), '/ws', PID);
+    const out = await handleCodeDependencies({ file: 'files/a.ts' }, adapter, '/ws', PID);
     const parsed = JSON.parse(out);
     expect(parsed.root).toBe('files/a.ts');
     expect(parsed.tree.file).toBe('files/a.ts');
@@ -58,7 +57,7 @@ describe('handleCodeDependencies — outgoing traversal', () => {
   });
 
   it('excludes external dependencies by default', async () => {
-    const out = await handleCodeDependencies({ file: 'files/a.ts' }, new SqliteDbAdapter(db), '/ws', PID);
+    const out = await handleCodeDependencies({ file: 'files/a.ts' }, adapter, '/ws', PID);
     const parsed = JSON.parse(out);
     const files = parsed.tree.children.map((c: { file: string }) => c.file);
     expect(files).toContain('files/b.ts');
@@ -68,7 +67,7 @@ describe('handleCodeDependencies — outgoing traversal', () => {
   it('includes external dependencies when requested', async () => {
     const out = await handleCodeDependencies(
       { file: 'files/a.ts', include_external: true },
-      new SqliteDbAdapter(db), '/ws', PID,
+      adapter, '/ws', PID,
     );
     const parsed = JSON.parse(out);
     const files = parsed.tree.children.map((c: { file: string }) => c.file);
@@ -80,7 +79,7 @@ describe('handleCodeDependencies — outgoing traversal', () => {
   it('supports the flat output format', async () => {
     const out = await handleCodeDependencies(
       { file: 'files/a.ts', format: 'flat' },
-      new SqliteDbAdapter(db), '/ws', PID,
+      adapter, '/ws', PID,
     );
     const parsed = JSON.parse(out);
     expect(parsed.dependencies).toBeDefined();
@@ -90,14 +89,14 @@ describe('handleCodeDependencies — outgoing traversal', () => {
 });
 
 describe('handleCodeDependencies — incoming traversal', () => {
-  let db: Database.Database;
-  beforeEach(() => { db = seedDb(); });
-  afterEach(() => { db.close(); });
+  let adapter: SqliteAdapter;
+  beforeEach(async () => { adapter = await seedDb(); });
+  afterEach(async () => { if (adapter.isConnected()) await adapter.disconnect(); });
 
   it('finds files that import the target', async () => {
     const out = await handleCodeDependencies(
       { file: 'files/b.ts', direction: 'incoming' },
-      new SqliteDbAdapter(db), '/ws', PID,
+      adapter, '/ws', PID,
     );
     const parsed = JSON.parse(out);
     expect(parsed.root).toBe('files/b.ts');
@@ -106,25 +105,25 @@ describe('handleCodeDependencies — incoming traversal', () => {
   });
 
   it('returns a no-dependency message when nothing imports the file', async () => {
-    db.prepare("INSERT INTO files (project_id, path, relative_path) VALUES (?, '/x.ts', 'files/x.ts')").run(PID);
+    adapter.run("INSERT INTO files (project_id, path, relative_path) VALUES (?, '/x.ts', 'files/x.ts')", [PID]);
     const out = await handleCodeDependencies(
       { file: 'x.ts', direction: 'incoming' },
-      new SqliteDbAdapter(db), '/ws', PID,
+      adapter, '/ws', PID,
     );
-    // Roots are canonicalized, so only the "no dependencies" branch fires here.
     expect(out).toBe('No incoming dependencies found for "files/x.ts"');
   });
 });
 
-function seedDb(): Database.Database {
-  const db = new Database(':memory:');
-  db.exec(SCHEMA);
+async function seedDb(): Promise<SqliteAdapter> {
+  const adapter = new SqliteAdapter(':memory:');
+  await adapter.connect();
+  adapter.exec(SCHEMA);
   for (const rel of ['files/a.ts', 'files/b.ts', 'files/c.ts']) {
-    db.prepare('INSERT INTO files (project_id, path, relative_path) VALUES (?, ?, ?)').run(PID, `/${rel}`, rel);
+    adapter.run('INSERT INTO files (project_id, path, relative_path) VALUES (?, ?, ?)', [PID, `/${rel}`, rel]);
   }
-  db.prepare(`INSERT INTO relationships (project_id, source_symbol_id, target_symbol, kind, file_path, line)
-              VALUES (?, 0, './b', 'imports', 'files/a.ts', 1)`).run(PID);
-  db.prepare(`INSERT INTO relationships (project_id, source_symbol_id, target_symbol, kind, file_path, line)
-              VALUES (?, 0, 'lodash', 'imports', 'files/a.ts', 2)`).run(PID);
-  return db;
+  adapter.run(`INSERT INTO relationships (project_id, source_symbol_id, target_symbol, kind, file_path, line)
+              VALUES (?, 0, './b', 'imports', 'files/a.ts', 1)`, [PID]);
+  adapter.run(`INSERT INTO relationships (project_id, source_symbol_id, target_symbol, kind, file_path, line)
+              VALUES (?, 0, 'lodash', 'imports', 'files/a.ts', 2)`, [PID]);
+  return adapter;
 }

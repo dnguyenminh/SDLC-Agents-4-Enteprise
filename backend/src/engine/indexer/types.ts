@@ -61,6 +61,12 @@ export interface ProgressEvent {
   elapsedMs: number;
   /** Checksum skip stats (nullable on cold-path fallback). */
   checksumStats: ChecksumStats | null;
+  error?: {
+    message: string;
+    stack?: string;
+    phase?: ProgressPhase;
+    file?: string;
+  };
 }
 
 /** Result summary returned from the file-events endpoint. */

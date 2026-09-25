@@ -55,3 +55,8 @@ Naming: `{DOC}-v{version}-{TICKET}.docx`
 - Do NOT loop same phase — file exists + content → move forward
 - Each sub-agent max 2 invocations per document
 - Detect placeholder docs (<100 chars) → treat as not created
+
+## Cross-Agent Review Gates
+
+- **Test Cases (Phase 4):** After QA produces the STC, the ba-agent reviews it. QA's test planning is done ONLY after the BA returns APPROVED.
+- **Implementation (Phase 5):** After DEV implements, the ta-agent reviews the code for design conformance. The implementation is done ONLY after the TA returns APPROVED.

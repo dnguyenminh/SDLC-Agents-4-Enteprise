@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+ <diagram name="Approval">
+  <mxGraphModel>
+   <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="win" value="Approval Panel Webview" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+     <mxGeometry x="60" y="40" width="700" height="450" as="geometry"/>
+    </mxCell>
+    <mxCell id="header" value="Approval Requests – Pi Workflow" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+     <mxGeometry x="80" y="70" width="660" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="list" value="Queue&#10;• create_checkpoint – Session SA4E-289 – Pending&#10;• tool_use_123 – Agent PiAgent – Pending" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+     <mxGeometry x="80" y="130" width="660" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="detail" value="Detail&#10;Tool: create_checkpoint&#10;Parameters: {threadId, state}&#10;Risk: Low&#10;Audit ID: ADAPTER-001" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f9f9f9;" vertex="1" parent="1">
+     <mxGeometry x="80" y="270" width="660" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="actions" value="[Approve] [Reject] [Request Info]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f4ff;" vertex="1" parent="1">
+     <mxGeometry x="80" y="390" width="660" height="50" as="geometry"/>
+    </mxCell>
+   </root>
+  </mxGraphModel>
+ </diagram>
+</mxfile>

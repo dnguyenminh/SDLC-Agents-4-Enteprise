@@ -21,7 +21,11 @@ export type EnrichmentStrategy =
   | 'CLASS_SUMMARY'
   | 'FUNCTION_SUMMARY'
   | 'TAG_EXTRACTION'
-  | 'PEGA_SUMMARY';
+  | 'PEGA_SUMMARY'
+  // Salesforce declarative metadata (fields, objects, LWC/Aura components, flows,
+  // properties). These have no code body — summary is grounded on name + signature
+  // + parent + file path. No pseudo code (they are declarations, not logic).
+  | 'METADATA_SUMMARY';
 
 /** Context assembled for LLM prompt generation. */
 export interface SymbolContext {
@@ -39,6 +43,10 @@ export interface SymbolContext {
   pegaRuleset?: string;
   /** Enriched schema context (describes important fields for this rule type). */
   schemaContext?: string;
+  /** Parent symbol name (e.g. owning object for a field). */
+  parentSymbol?: string;
+  /** Relative file path — grounds metadata summaries (component/field/object type). */
+  filePath?: string;
 }
 
 /** Payload stored in pending_tasks for CODE_ENRICHMENT tasks. */

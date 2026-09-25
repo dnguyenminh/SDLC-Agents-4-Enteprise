@@ -1,0 +1,80 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <mxCell id="title" value="Use Case Diagram — Incremental Indexing Pega Rule Catalog (SA4E-241)" style="text;html=1;fontSize=14;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="330" y="10" width="740" height="30" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="dev" value="Developer / Người dùng&#10;(chạy Index Source Code)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="80" y="360" width="60" height="110" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="pega" value="Pega Platform&#10;(Rule Catalog Export API)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1240" y="200" width="60" height="110" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="backend" value="Backend&#10;(Code Intelligence)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1240" y="560" width="60" height="110" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="boundary" value="Extension (VS Code / Kiro Plugin)" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=11;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="360" y="90" width="640" height="700" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="uc1" value="UC-01&#10;Tính checksum rule&#10;(save-time based)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary">
+      <mxGeometry x="60" y="60" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="uc2" value="UC-02&#10;So checksum &amp; xác định&#10;delta (mới/đổi/không đổi)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary">
+      <mxGeometry x="60" y="180" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="uc3" value="UC-03&#10;Skip rule không đổi&#10;trước khi fetch" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary">
+      <mxGeometry x="60" y="300" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="uc4" value="UC-04&#10;Fetch &amp; index rule delta" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="boundary">
+      <mxGeometry x="360" y="180" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="uc5" value="UC-05&#10;Lưu / tra trạng thái&#10;đã-index (checksum)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="boundary">
+      <mxGeometry x="360" y="440" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="uc6" value="UC-06&#10;Index code non-Pega&#10;(git-based, không phá vỡ)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="boundary">
+      <mxGeometry x="60" y="440" width="200" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="a1" value="" style="endArrow=none;html=1;" edge="1" parent="1" source="dev" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a2" value="" style="endArrow=none;html=1;" edge="1" parent="1" source="dev" target="uc6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a3" value="Export CSV + checksum" style="endArrow=open;html=1;dashed=1;fontSize=9;" edge="1" parent="1" source="uc4" target="pega">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a4" value="Lưu/so content_hash" style="endArrow=open;html=1;dashed=1;fontSize=9;" edge="1" parent="1" source="uc5" target="backend">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="i1" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=9;" edge="1" parent="1" source="uc2" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="i2" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=9;" edge="1" parent="1" source="uc3" target="uc2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="i3" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=9;" edge="1" parent="1" source="uc3" target="uc5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="i4" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=9;" edge="1" parent="1" source="uc4" target="uc3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="i5" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;html=1;dashed=1;fontSize=9;" edge="1" parent="1" source="uc4" target="uc5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

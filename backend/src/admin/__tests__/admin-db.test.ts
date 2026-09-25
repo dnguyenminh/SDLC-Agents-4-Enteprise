@@ -33,7 +33,15 @@ import {
   checkPromotionCooldown,
   searchKbEntries,
   getAdminDb,
+  initAdapters,
 } from '../admin-db.js';
+
+// Await shared DB init (schema + admin seed) before any test touches the DB —
+// getDbAdapter() inits fire-and-forget, so getUserByUsername('admin') would
+// otherwise race seeding and return null.
+beforeAll(async () => {
+  await initAdapters();
+});
 
 // ============================================================
 // 1. Password Hashing (sync — no change needed)

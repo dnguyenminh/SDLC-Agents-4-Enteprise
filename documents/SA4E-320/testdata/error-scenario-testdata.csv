@@ -1,0 +1,5 @@
+test_case_id,scenario,precondition_action,expected_result,description
+X-01,TC-21 Toggle OFF with stored remote HTTP URL,Flag ON + saved http://remote.server.internal:48721 → uncheck bypass → trigger getBackendUrl consumer (sidebar/panel),[Security] Insecure backend URL rejected surfaced — no outbound HTTP; fail-closed availability degradation OI-5,UC-04 EF-1 / FSD §9 scenario 6
+X-02,TC-23 Persistence failure on toggle,Made .vscode/settings.json read-only → check bypass checkbox → Save remote HTTP,Checkbox optimistic; no user-facing error (OI-9 known); stored value unchanged; Save still rejected [Security] Insecure backend URL rejected,UC-01 EF-1 / FSD §9 scenario 4 fail-closed
+X-03,TC-02 Rejection before network,Flag OFF + remote HTTP + click Test Connection,No network request made; failure result shown instead of Saved,UC-04 main flow step 7
+X-04,TC-05 Warning on every validation,Flag ON + remote HTTP + click Save URL three times,console.warn emitted on each of the three validations — never throttled to once,BR-03 audit trail

@@ -1,0 +1,33 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="KB Graph Webview" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+      <mxGeometry x="200" y="80" width="400" height="400" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="LegendWindow.svelte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+      <mxGeometry x="230" y="140" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="MinimapController.svelte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+      <mxGeometry x="400" y="140" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="FilterPanel.svelte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+      <mxGeometry x="230" y="240" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="FilterSearchInput.svelte" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+      <mxGeometry x="400" y="240" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="GraphRenderer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+      <mxGeometry x="230" y="340" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="Svelte Stores" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1">
+      <mxGeometry x="400" y="340" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="Backend API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;" vertex="1" parent="1">
+      <mxGeometry x="520" y="520" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" edge="1" parent="1" source="2" target="9">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

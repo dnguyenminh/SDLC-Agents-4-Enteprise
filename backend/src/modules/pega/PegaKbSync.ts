@@ -59,7 +59,15 @@ export async function syncAllIndexedRules(
   // SA4E-106: Project this project's Pega symbols as code graph nodes
   await projectPegaCodeGraph(memoryEngine, projectId);
 
-  logger.debug({ projectId, symbols: rows.length }, 'Pega symbols synced (graph projection only)');
+  // SA4E-237 (GD5): resolve staged references now that ALL symbols exist. Non-fatal.
+  try {
+    const { runResolutionPass } = await import('./resolve/PegaResolutionPass.js');
+    await runResolutionPass(memoryEngine.getAdapter(), projectId, logger);
+  } catch (err) {
+    logger.warn({ err, projectId }, 'Pega resolution pass failed (non-fatal)');
+  }
+
+  logger.debug({ projectId, symbols: rows.length }, 'Pega symbols synced (graph + resolution)');
   return result;
 }
 

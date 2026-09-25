@@ -1,0 +1,15 @@
+<mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="start" value="Developer starts ingest" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="300" y="40" width="140" height="60" as="geometry"/></mxCell>
+<mxCell id="ext1" value="Extension: Call /api/index/source" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="280" y="140" width="180" height="60" as="geometry"/></mxCell>
+<mxCell id="be1" value="Backend: Validate request" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="280" y="240" width="180" height="60" as="geometry"/></mxCell>
+<mxCell id="be2" value="Backend: Process files" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="520" y="240" width="180" height="60" as="geometry"/></mxCell>
+<mxCell id="kb1" value="KB: Store symbols/docs" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="280" y="340" width="180" height="60" as="geometry"/></mxCell>
+<mxCell id="be3" value="Backend: Return error details" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="520" y="340" width="180" height="60" as="geometry"/></mxCell>
+<mxCell id="ext2" value="Extension: Show details in Output" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="280" y="440" width="180" height="60" as="geometry"/></mxCell>
+<mxCell id="e1" edge="1" parent="1" source="start" target="ext1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e2" edge="1" parent="1" source="ext1" target="be1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e3" edge="1" parent="1" source="be1" target="be2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e4" edge="1" parent="1" source="be2" target="kb1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e5" edge="1" parent="1" source="be2" target="be3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e6" edge="1" parent="1" source="be3" target="ext2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root></mxGraphModel>
