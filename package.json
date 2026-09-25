@@ -19,6 +19,7 @@
     "url": "git+https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise.git"
   },
   "overrides": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.21.5"
   }
 }
+
