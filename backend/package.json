@@ -1,6 +1,6 @@
 {
   "name": "sdlc-agent-4-enterprise-server",
-  "version": "1.43.0",
+  "version": "1.44.0",
   "description": "Code Intelligence MCP Server — multi-agent SDLC pipeline with semantic memory, code graph, and draw.io integration",
   "main": "dist/index.js",
   "bin": {
@@ -21,6 +21,7 @@
     "lint": "npx eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix",
     "lint:lines": "bash ../scripts/check-line-count.sh",
+    "pega:generate": "node scripts/pega-generate-parser.mjs",
     "check:ci": "npm run lint && npm run lint:lines && npm run build && npm run test:unit",
     "prepare": "node -e \"process.exit(0)\""
   },
@@ -52,7 +53,6 @@
     "ajv-formats": "^3.0.1",
     "antlr4": "^4.13.2",
     "bcrypt": "^6.0.0",
-    "better-sqlite3": "^13.0.3",
     "chokidar": "^5.0.0",
     "dockerode": "^5.0.1",
     "elkjs": "^0.9.3",

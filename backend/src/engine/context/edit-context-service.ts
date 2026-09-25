@@ -64,7 +64,7 @@ export class EditContextService {
     }
 
     const source = readSymbolSource(symbol, this.workspace);
-    const signature = getSignature(symbol, this.adapter);
+    const signature = await getSignature(symbol, this.adapter);
 
     const [callers, tests, gitHistory, siblings] = await Promise.all([
       include_callers ? getCallerContext(symbol, caller_depth, this.callGraph, this.workspace) : Promise.resolve(null),

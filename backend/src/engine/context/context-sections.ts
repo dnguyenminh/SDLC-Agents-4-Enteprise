@@ -7,7 +7,7 @@ import { GitService } from './git-service.js';
 import { SectionDef } from './intent-strategies.js';
 import { AIContextResponse } from './types.js';
 
-export function fetchSection(
+export async function fetchSection(
   section: SectionDef,
   symbol: ResolvedSymbol,
   callerDepth: number,
@@ -16,21 +16,21 @@ export function fetchSection(
   resolver: SymbolResolver,
   gitService: GitService,
   workspace: string
-): any {
+): Promise<any> {
   try {
     switch (section.name) {
-      case 'source': return fetchSource(symbol, workspace, db);
-      case 'callers': return fetchCallers(symbol, callerDepth, section.format, callGraph);
-      case 'callees': return fetchCallees(symbol, callerDepth, callGraph);
-      case 'siblings': return fetchSiblings(symbol, db);
-      case 'imports': return fetchImports(symbol, db);
-      case 'tests': return fetchRelatedTests(symbol, db);
-      case 'type_definitions': return fetchTypeDefinitions(symbol, db);
-      case 'doc_comment': return fetchDocComment(symbol, db);
-      case 'error_patterns': return fetchErrorPatterns(symbol, db, workspace);
+      case 'source': return await fetchSource(symbol, workspace, db);
+      case 'callers': return await fetchCallers(symbol, callerDepth, section.format, callGraph);
+      case 'callees': return await fetchCallees(symbol, callerDepth, callGraph);
+      case 'siblings': return await fetchSiblings(symbol, db);
+      case 'imports': return await fetchImports(symbol, db);
+      case 'tests': return await fetchRelatedTests(symbol, db);
+      case 'type_definitions': return await fetchTypeDefinitions(symbol, db);
+      case 'doc_comment': return await fetchDocComment(symbol, db);
+      case 'error_patterns': return await fetchErrorPatterns(symbol, db, workspace);
       case 'recent_changes': return fetchRecentChanges(symbol, gitService);
-      case 'test_patterns': return fetchTestPatterns(symbol, db);
-      case 'mocks_needed': return fetchMocksNeeded(symbol, callGraph);
+      case 'test_patterns': return await fetchTestPatterns(symbol, db);
+      case 'mocks_needed': return await fetchMocksNeeded(symbol, callGraph);
       default: return null;
     }
   } catch {
@@ -38,19 +38,19 @@ export function fetchSection(
   }
 }
 
-export function getSymbolEndLine(symbol: ResolvedSymbol, db: DatabaseAdapter): number | null {
-  const row = db.prepare(`SELECT end_line FROM symbols WHERE id = ?`).get(symbol.id) as { end_line: number } | undefined;
+export async function getSymbolEndLine(symbol: ResolvedSymbol, db: DatabaseAdapter): Promise<number | null> {
+  const row = await db.getAsync<{ end_line: number }>(`SELECT end_line FROM symbols WHERE id = ?`, [symbol.id]);
   return row?.end_line || null;
 }
 
-export function fetchSource(symbol: ResolvedSymbol, workspace: string, db: DatabaseAdapter): string | null {
+export async function fetchSource(symbol: ResolvedSymbol, workspace: string, db: DatabaseAdapter): Promise<string | null> {
   try {
     const fullPath = path.resolve(workspace, symbol.filePath);
     if (!fs.existsSync(fullPath)) return null;
     const content = fs.readFileSync(fullPath, 'utf-8');
     const lines = content.split('\n');
     const startLine = symbol.line - 1;
-    const endLine = getSymbolEndLine(symbol, db) || startLine + 50;
+    const endLine = (await getSymbolEndLine(symbol, db)) || startLine + 50;
     return lines.slice(startLine, endLine).join('\n');
   } catch {
     return null;
@@ -76,7 +76,7 @@ export async function fetchCallees(symbol: ResolvedSymbol, depth: number, callGr
   }));
 }
 
-export function fetchSiblings(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
+export async function fetchSiblings(symbol: ResolvedSymbol, db: DatabaseAdapter): Promise<any> {
   const query = symbol.parentSymbolId
     ? `SELECT name, kind, signature, start_line as line FROM symbols WHERE parent_symbol_id = ? AND id != ? ORDER BY start_line`
     : `SELECT s.name, s.kind, s.signature, s.start_line as line FROM symbols s JOIN files f ON s.file_id = f.id WHERE f.relative_path = ? AND s.parent_symbol_id IS NULL AND s.id != ? ORDER BY s.start_line`;
@@ -85,54 +85,54 @@ export function fetchSiblings(symbol: ResolvedSymbol, db: DatabaseAdapter): any 
     ? [symbol.parentSymbolId, symbol.id]
     : [symbol.filePath, symbol.id];
 
-  const rows = db.prepare(query).all(...params) as any[];
+  const rows = await db.allAsync<any>(query, params);
   if (rows.length === 0) return null;
   return rows.map(r => ({ name: r.name, kind: r.kind, signature: r.signature, line: r.line }));
 }
 
-export function fetchImports(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
-  const rows = db.prepare(`
+export async function fetchImports(symbol: ResolvedSymbol, db: DatabaseAdapter): Promise<any> {
+  const rows = await db.allAsync<any>(`
     SELECT DISTINCT r.target_symbol as name, r.file_path
     FROM relationships r
     WHERE r.source_symbol_id = ? AND r.kind = 'imports'
-  `).all(symbol.id) as any[];
+  `, [symbol.id]);
   if (rows.length === 0) return null;
   return rows.map(r => r.name);
 }
 
-export function fetchRelatedTests(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
-  const rows = db.prepare(`
+export async function fetchRelatedTests(symbol: ResolvedSymbol, db: DatabaseAdapter): Promise<any> {
+  const rows = await db.allAsync<any>(`
     SELECT DISTINCT f.relative_path as file_path
     FROM relationships r
     JOIN files f ON r.file_path = f.relative_path
     WHERE r.target_symbol LIKE ?
     AND (f.relative_path LIKE '%test%' OR f.relative_path LIKE '%spec%')
     LIMIT 5
-  `).all(`%${symbol.name}%`) as any[];
+  `, [`%${symbol.name}%`]);
   if (rows.length === 0) return null;
   return rows.map(r => r.file_path);
 }
 
-export function fetchTypeDefinitions(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
-  const rows = db.prepare(`
+export async function fetchTypeDefinitions(symbol: ResolvedSymbol, db: DatabaseAdapter): Promise<any> {
+  const rows = await db.allAsync<any>(`
     SELECT DISTINCT s.name, s.kind, s.signature, f.relative_path as file
     FROM relationships r
     JOIN symbols s ON s.id = r.target_symbol_id
     JOIN files f ON s.file_id = f.id
     WHERE r.source_symbol_id = ? AND s.kind IN ('interface', 'type_alias', 'enum', 'class')
     LIMIT 10
-  `).all(symbol.id) as any[];
+  `, [symbol.id]);
   if (rows.length === 0) return null;
   return rows;
 }
 
-export function fetchDocComment(symbol: ResolvedSymbol, db: DatabaseAdapter): string | null {
-  const row = db.prepare(`SELECT doc_comment FROM symbols WHERE id = ?`).get(symbol.id) as { doc_comment: string | null } | undefined;
+export async function fetchDocComment(symbol: ResolvedSymbol, db: DatabaseAdapter): Promise<string | null> {
+  const row = await db.getAsync<{ doc_comment: string | null }>(`SELECT doc_comment FROM symbols WHERE id = ?`, [symbol.id]);
   return row?.doc_comment || null;
 }
 
-export function fetchErrorPatterns(symbol: ResolvedSymbol, db: DatabaseAdapter, workspace: string): any {
-  const source = fetchSource(symbol, workspace, db);
+export async function fetchErrorPatterns(symbol: ResolvedSymbol, db: DatabaseAdapter, workspace: string): Promise<any> {
+  const source = await fetchSource(symbol, workspace, db);
   if (!source) return null;
   const patterns: any[] = [];
   const lines = source.split('\n');
@@ -150,8 +150,8 @@ export function fetchRecentChanges(symbol: ResolvedSymbol, gitService: GitServic
   return commits.length > 0 ? commits : null;
 }
 
-export function fetchTestPatterns(symbol: ResolvedSymbol, db: DatabaseAdapter): any {
-  const rows = db.prepare(`
+export async function fetchTestPatterns(symbol: ResolvedSymbol, db: DatabaseAdapter): Promise<any> {
+  const rows = await db.allAsync<any>(`
     SELECT DISTINCT s.name, s.signature
     FROM symbols s
     JOIN files f ON s.file_id = f.id
@@ -159,7 +159,7 @@ export function fetchTestPatterns(symbol: ResolvedSymbol, db: DatabaseAdapter): 
     AND s.kind = 'function'
     AND f.module = (SELECT module FROM files WHERE relative_path = ?)
     LIMIT 10
-  `).all(symbol.filePath) as any[];
+  `, [symbol.filePath]);
   if (rows.length === 0) return null;
   return rows.map(r => r.name);
 }

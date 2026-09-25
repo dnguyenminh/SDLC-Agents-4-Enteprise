@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { IndexerHttpClient } from "./IndexerHttpClient";
+import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET } from "./WorkspaceScopeResolver";
 
 export interface IndexOptions {
     code: boolean;
@@ -229,9 +230,12 @@ export class IndexingService {
         root: string, report: ProgressReporter, secrets: vscode.SecretStorage,
     ): Promise<string | null> {
         try {
+            await ensureMigrated(secrets);
             const config = vscode.workspace.getConfiguration("kiroSdlc");
             const username = config.get<string>("pegaUsername", "");
-            const password = (await secrets.get("kiroSdlc.pegaPassword")) || "";
+            const wsHash = getWsHash();
+            const pwKey = wsHash ? secretKey("pega", wsHash)! : LEGACY_SECRET.pega;
+            const password = (await secrets.get(pwKey)) || "";
             if (!username || !password) {
                 return "⚠️ Pega Schema: credentials not configured (set pegaUsername + password in settings)";
             }

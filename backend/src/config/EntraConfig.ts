@@ -193,7 +193,8 @@ export async function loadEntraConfigAsync(env: NodeJS.ProcessEnv = process.env)
   try {
     const { getAdminDb } = await import('../admin/admin-db.js');
     const db = getAdminDb();
-    const row = await db.getAsync('SELECT * FROM sso_providers WHERE provider_type = ? AND enabled = 1 ORDER BY updated_at DESC LIMIT 1', ['entra']);
+    const row = await db.getAsync<{ tenant_id: string; client_id: string; client_secret: string; redirect_uri: string; scopes: string }>(
+      'SELECT * FROM sso_providers WHERE provider_type = ? AND enabled = 1 ORDER BY updated_at DESC LIMIT 1', ['entra']);
     if (row) {
       // redirect_uri optional in the row: derive the default callback when empty
       // so it always matches the backend /auth/entra/callback endpoint.

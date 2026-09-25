@@ -36,13 +36,23 @@ export class AuthManager implements vscode.Disposable {
 
   constructor(
     private readonly secrets: vscode.SecretStorage,
-    private readonly baseUrl: string
+    private baseUrl: string
   ) {
     this.refreshTimer = new TokenRefreshTimer(this);
   }
 
   get currentState(): AuthState {
     return this.state;
+  }
+
+  /**
+   * Point auth at a new backend URL without an extension reload (SA4E-320).
+   * All subsequent auth calls (login, refresh, /me) use the new base URL.
+   * No-op when the URL is unchanged.
+   * @param url New backend base URL (trailing slash already stripped by caller).
+   */
+  updateBaseUrl(url: string): void {
+    this.baseUrl = url;
   }
 
   get isAuthenticated(): boolean {

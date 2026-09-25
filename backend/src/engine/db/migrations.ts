@@ -1,19 +1,19 @@
 /**
  * Migration runner — sequential, versioned schema migrations.
  * Each migration is applied once and tracked in schema_version table.
- * SA4E-53: Uses SyncDatabaseAdapter instead of raw better-sqlite3.
+ * SA4E-53: Uses QueryDatabaseAdapter instead of raw better-sqlite3.
  */
 
 import pino from 'pino';
-import type { SyncDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SCHEMA_V1 } from './schema.js';
 import { applyMigrationV5 } from './migration-v5.js';
 
 const logger = pino({ name: 'migrations' });
 
-function applyMemorySchema(db: SyncDatabaseAdapter): void {
+async function applyMemorySchema(db: QueryDatabaseAdapter): Promise<void> {
   try {
-    db.exec(SCHEMA_V1);
+    await db.execAsync(SCHEMA_V1);
   } catch (err) {
     logger.error({ err }, '[migrations] Memory schema error (graceful):');
   }
@@ -40,9 +40,9 @@ const MIGRATIONS: Migration[] = [
 ];
 
 /** Get current schema version from database. */
-export function getCurrentVersion(db: SyncDatabaseAdapter): number {
+export async function getCurrentVersion(db: QueryDatabaseAdapter): Promise<number> {
   try {
-    const row = db.get<{ v: number | null }>(
+    const row = await db.getAsync<{ v: number | null }>(
       'SELECT MAX(version) as v FROM schema_version',
     );
     return row?.v ?? 0;
@@ -52,14 +52,14 @@ export function getCurrentVersion(db: SyncDatabaseAdapter): number {
 }
 
 /** Run all pending migrations sequentially. */
-export function runMigrations(db: SyncDatabaseAdapter, legacyProjectId: string = 'default'): void {
+export async function runMigrations(db: QueryDatabaseAdapter, legacyProjectId: string = 'default'): Promise<void> {
   // Idempotent memory schema execution
-  applyMemorySchema(db);
+  await applyMemorySchema(db);
 
   // SA4E-42 (PT-01): additive `server` column on mcp_tools.
-  migrateAddMcpToolsServerColumn(db);
+  await migrateAddMcpToolsServerColumn(db);
 
-  const current = getCurrentVersion(db);
+  const current = await getCurrentVersion(db);
   const pending = MIGRATIONS.filter(m => m.version > current);
 
   if (pending.length === 0 && current >= 5) {
@@ -69,18 +69,18 @@ export function runMigrations(db: SyncDatabaseAdapter, legacyProjectId: string =
 
   for (const migration of pending) {
     logger.error(`[migrations] Applying v${migration.version}: ${migration.description}`);
-    applyMigration(db, migration);
+    await applyMigration(db, migration);
   }
 
   // Always run V2 column migration (idempotent)
   if (current < 2) {
-    applyMigrationV2(db);
+    await applyMigrationV2(db);
   }
 
   // Run V3 graph migrations (KSA-145/153/169) — idempotent
   if (current < 3) {
     try {
-      applyGraphMigrationsSync(db);
+      await applyGraphMigrationsSync(db);
     } catch (err) {
       logger.error({ err }, '[migrations] V3 graph migration error (graceful):');
     }
@@ -88,12 +88,12 @@ export function runMigrations(db: SyncDatabaseAdapter, legacyProjectId: string =
 
   // Run V4 memory table recreation
   if (current < 4) {
-    applyMigrationV4(db);
+    await applyMigrationV4(db);
   }
 
   // Run V5 multi-tenant isolation (SA4E-41)
   if (current < 5) {
-    applyMigrationV5(db, legacyProjectId);
+    await applyMigrationV5(db, legacyProjectId);
   }
 }
 
@@ -101,16 +101,16 @@ export function runMigrations(db: SyncDatabaseAdapter, legacyProjectId: string =
  * SA4E-42 — add the `server` scoping column to `mcp_tools` for existing DBs.
  * Uses column existence probe instead of a swallow-all catch.
  */
-export function migrateAddMcpToolsServerColumn(db: SyncDatabaseAdapter): void {
-  const existing = getExistingColumns(db, 'mcp_tools');
+export async function migrateAddMcpToolsServerColumn(db: QueryDatabaseAdapter): Promise<void> {
+  const existing = await getExistingColumns(db, 'mcp_tools');
   if (!existing.has('server')) {
-    db.exec('ALTER TABLE mcp_tools ADD COLUMN server TEXT');
+    await db.execAsync('ALTER TABLE mcp_tools ADD COLUMN server TEXT');
     logger.error('[migrations] SA4E-42: added mcp_tools.server column');
   }
-  db.exec('CREATE INDEX IF NOT EXISTS idx_mcp_tools_server ON mcp_tools(server)');
+  await db.execAsync('CREATE INDEX IF NOT EXISTS idx_mcp_tools_server ON mcp_tools(server)');
 }
 
-function applyMigrationV4(db: SyncDatabaseAdapter): void {
+async function applyMigrationV4(db: QueryDatabaseAdapter): Promise<void> {
   try {
     const memoryTables = [
       'knowledge_entries', 'knowledge_vectors', 'knowledge_graph_edges',
@@ -121,40 +121,40 @@ function applyMigrationV4(db: SyncDatabaseAdapter): void {
       'search_log', 'popular_queries', 'knowledge_fts',
     ];
 
-    db.exec('PRAGMA foreign_keys=OFF;');
+    await db.execAsync('PRAGMA foreign_keys=OFF;');
     for (const table of memoryTables) {
-      db.exec(`DROP TABLE IF EXISTS ${table};`);
+      await db.execAsync(`DROP TABLE IF EXISTS ${table};`);
     }
-    db.exec('PRAGMA foreign_keys=ON;');
+    await db.execAsync('PRAGMA foreign_keys=ON;');
 
-    applyMemorySchema(db);
-    db.run('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [4]);
+    await applyMemorySchema(db);
+    await db.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [4]);
     logger.error('[migrations] V4: Memory tables dropped and recreated');
   } catch (err) {
     logger.error({ err }, `[migrations] V4 error:`);
   }
 }
 
-function applyMigration(db: SyncDatabaseAdapter, migration: Migration): void {
-  db.exec(migration.sql);
-  db.run('INSERT INTO schema_version (version) VALUES (?)', [migration.version]);
+async function applyMigration(db: QueryDatabaseAdapter, migration: Migration): Promise<void> {
+  await db.execAsync(migration.sql);
+  await db.runAsync('INSERT INTO schema_version (version) VALUES (?)', [migration.version]);
   logger.error(`[migrations] v${migration.version} applied`);
 }
 
 /** Migration V2 — Add pattern metadata columns to modules table. */
-function applyMigrationV2(db: SyncDatabaseAdapter): void {
+async function applyMigrationV2(db: QueryDatabaseAdapter): Promise<void> {
   try {
-    const existing = getExistingColumns(db, 'modules');
+    const existing = await getExistingColumns(db, 'modules');
     let added = 0;
 
     for (const col of MIGRATION_V2_COLUMNS) {
       if (!existing.has(col)) {
-        db.exec(`ALTER TABLE modules ADD COLUMN ${col} TEXT DEFAULT NULL`);
+        await db.execAsync(`ALTER TABLE modules ADD COLUMN ${col} TEXT DEFAULT NULL`);
         added++;
       }
     }
 
-    db.run('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [2]);
+    await db.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [2]);
     logger.error(`[migrations] V2: Added ${added} pattern columns`);
   } catch (err) {
     logger.error({ err }, `[migrations] V2 error (graceful degradation):`);
@@ -162,16 +162,16 @@ function applyMigrationV2(db: SyncDatabaseAdapter): void {
 }
 
 /** Get set of column names for a table via pragma_table_info. */
-function getExistingColumns(db: SyncDatabaseAdapter, table: string): Set<string> {
-  const rows = db.all<{ name: string }>(`SELECT name FROM pragma_table_info('${table}')`);
+async function getExistingColumns(db: QueryDatabaseAdapter, table: string): Promise<Set<string>> {
+  const rows = await db.allAsync<{ name: string }>(`SELECT name FROM pragma_table_info('${table}')`);
   return new Set(rows.map(r => r.name));
 }
 
-function applyGraphMigrationsSync(db: SyncDatabaseAdapter): void {
+async function applyGraphMigrationsSync(db: QueryDatabaseAdapter): Promise<void> {
   logger.error('[migrations] Running graph schema migrations (SQLite sync)...');
 
   // 1. Add enhanced columns to symbols
-  const existing = getExistingColumns(db, 'symbols');
+  const existing = await getExistingColumns(db, 'symbols');
   let added = 0;
   for (const col of [
     { name: 'parameters', type: 'TEXT' },
@@ -186,7 +186,7 @@ function applyGraphMigrationsSync(db: SyncDatabaseAdapter): void {
   ]) {
     if (!existing.has(col.name)) {
       try {
-        db.exec(`ALTER TABLE symbols ADD COLUMN ${col.name} ${col.type}`);
+        await db.execAsync(`ALTER TABLE symbols ADD COLUMN ${col.name} ${col.type}`);
         added++;
       } catch { /* Column may already exist */ }
     }
@@ -195,14 +195,14 @@ function applyGraphMigrationsSync(db: SyncDatabaseAdapter): void {
   if (added > 0) {
     logger.error(`[migrations] Added ${added} enhanced symbol columns`);
     try {
-      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id)');
-      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_exported ON symbols(is_exported)');
-      db.exec('CREATE INDEX IF NOT EXISTS idx_sym_file_kind ON symbols(file_id, kind)');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id)');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_sym_exported ON symbols(is_exported)');
+      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_sym_file_kind ON symbols(file_id, kind)');
     } catch { /* Indexes may already exist */ }
   }
 
   // 2. Create relationships table
-  db.exec(`
+  await db.execAsync(`
 CREATE TABLE IF NOT EXISTS relationships (
     id INTEGER PRIMARY KEY,
     source_symbol_id INTEGER NOT NULL,
@@ -222,7 +222,7 @@ CREATE INDEX IF NOT EXISTS idx_rel_file ON relationships(file_path);
   logger.error('[migrations] Relationships table ready');
 
   // 3. Create file_index table
-  db.exec(`
+  await db.execAsync(`
 CREATE TABLE IF NOT EXISTS file_index (
     path TEXT PRIMARY KEY,
     mtime INTEGER NOT NULL,
@@ -236,7 +236,7 @@ CREATE INDEX IF NOT EXISTS idx_file_index_hash ON file_index(content_hash);
   logger.error('[migrations] File index table ready');
 
   // 4. Create graph_meta table
-  db.exec(`
+  await db.execAsync(`
 CREATE TABLE IF NOT EXISTS graph_meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -249,7 +249,7 @@ INSERT OR IGNORE INTO graph_meta (key, value) VALUES ('total_edges', '0');
   logger.error('[migrations] Graph metadata table ready');
 
   // 5. Create body_embeddings table
-  db.exec(`
+  await db.execAsync(`
 CREATE TABLE IF NOT EXISTS body_embeddings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     symbol_id INTEGER NOT NULL,
@@ -265,6 +265,6 @@ CREATE INDEX IF NOT EXISTS idx_body_embeddings_symbol ON body_embeddings(symbol_
   logger.error('[migrations] Body embeddings table ready');
 
   // 6. Update schema version
-  db.run('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [3]);
+  await db.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [3]);
   logger.error('[migrations] Schema version set to 3 (sync)');
 }

@@ -5,30 +5,30 @@
  * - files/modules are RECREATED (composite UNIQUE constraint change).
  * - symbols/embeddings/relationships/body_embeddings use additive ALTER ADD COLUMN.
  * Idempotent: each step checks pragma_table_info before acting.
- * SA4E-53: Uses SyncDatabaseAdapter instead of raw better-sqlite3.
+ * SA4E-53: Uses QueryDatabaseAdapter instead of raw better-sqlite3.
  */
 
-import type { SyncDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'migration-v5' });
 
 /** Get set of column names for a table via pragma_table_info. */
-function columns(db: SyncDatabaseAdapter, table: string): Set<string> {
-  const rows = db.all<{ name: string }>(`SELECT name FROM pragma_table_info('${table}')`);
+async function columns(db: QueryDatabaseAdapter, table: string): Promise<Set<string>> {
+  const rows = await db.allAsync<{ name: string }>(`SELECT name FROM pragma_table_info('${table}')`);
   return new Set(rows.map(r => r.name));
 }
 
-function hasProjectId(db: SyncDatabaseAdapter, table: string): boolean {
-  return columns(db, table).has('project_id');
+async function hasProjectId(db: QueryDatabaseAdapter, table: string): Promise<boolean> {
+  return (await columns(db, table)).has('project_id');
 }
 
 /** Recreate `files` with UNIQUE(project_id, path); preserves id for FK integrity. */
-function recreateFiles(db: SyncDatabaseAdapter, legacyProjectId: string): void {
-  const cols = columns(db, 'files');
+async function recreateFiles(db: QueryDatabaseAdapter, legacyProjectId: string): Promise<void> {
+  const cols = await columns(db, 'files');
   if (cols.has('project_id') && cols.has('file_created_at')) return;
 
-  db.exec(`CREATE TABLE files_new (
+  await db.execAsync(`CREATE TABLE files_new (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id TEXT NOT NULL,
     path TEXT NOT NULL,
@@ -46,21 +46,21 @@ function recreateFiles(db: SyncDatabaseAdapter, legacyProjectId: string): void {
   );`);
   // Copy existing data, map columns if present
   if (cols.has('project_id') && cols.has('file_created_at')) {
-    db.run(
+    await db.runAsync(
       `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
           content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
         SELECT id, project_id, path, relative_path, language, module,
           content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version FROM files`,
     );
   } else if (cols.has('project_id')) {
-    db.run(
+    await db.runAsync(
       `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
           content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
         SELECT id, project_id, path, relative_path, language, module,
           content_hash, size_bytes, last_indexed, line_count, NULL, NULL, NULL FROM files`,
     );
   } else {
-    db.run(
+    await db.runAsync(
       `INSERT INTO files_new (id, project_id, path, relative_path, language, module,
           content_hash, size_bytes, last_indexed, line_count, file_created_at, file_author, file_version)
         SELECT id, ?, path, relative_path, language, module,
@@ -68,16 +68,16 @@ function recreateFiles(db: SyncDatabaseAdapter, legacyProjectId: string): void {
       [legacyProjectId],
     );
   }
-  db.exec('DROP TABLE files; ALTER TABLE files_new RENAME TO files;');
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_files_path ON files(relative_path);
+  await db.execAsync('DROP TABLE files; ALTER TABLE files_new RENAME TO files;');
+  await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_files_path ON files(relative_path);
     CREATE INDEX IF NOT EXISTS idx_files_module ON files(module);
     CREATE INDEX IF NOT EXISTS idx_files_language ON files(language);`);
 }
 
 /** Recreate `modules` with UNIQUE(project_id, name); preserves all pattern columns. */
-function recreateModules(db: SyncDatabaseAdapter, legacyProjectId: string): void {
-  if (hasProjectId(db, 'modules')) return;
-  db.exec(`CREATE TABLE modules_new (
+async function recreateModules(db: QueryDatabaseAdapter, legacyProjectId: string): Promise<void> {
+  if (await hasProjectId(db, 'modules')) return;
+  await db.execAsync(`CREATE TABLE modules_new (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id TEXT NOT NULL,
     name TEXT NOT NULL,
@@ -94,7 +94,7 @@ function recreateModules(db: SyncDatabaseAdapter, legacyProjectId: string): void
     purpose TEXT DEFAULT NULL,
     UNIQUE(project_id, name)
   );`);
-  db.run(
+  await db.runAsync(
     `INSERT INTO modules_new (id, project_id, name, root_path, language, description,
         file_count, symbol_count, di_style, error_handling, naming_convention,
         logging_framework, testing_framework, purpose)
@@ -103,36 +103,36 @@ function recreateModules(db: SyncDatabaseAdapter, legacyProjectId: string): void
         logging_framework, testing_framework, purpose FROM modules`,
     [legacyProjectId],
   );
-  db.exec('DROP TABLE modules; ALTER TABLE modules_new RENAME TO modules;');
+  await db.execAsync('DROP TABLE modules; ALTER TABLE modules_new RENAME TO modules;');
 }
 
 /** Additively add project_id to a table (FTS-safe for symbols). */
-function addProjectIdColumn(db: SyncDatabaseAdapter, table: string): void {
-  if (hasProjectId(db, table)) return;
-  db.exec(`ALTER TABLE ${table} ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
+async function addProjectIdColumn(db: QueryDatabaseAdapter, table: string): Promise<void> {
+  if (await hasProjectId(db, table)) return;
+  await db.execAsync(`ALTER TABLE ${table} ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
 }
 
 /** Backfill scope from each row's parent; orphans fall back to legacyProjectId. */
-function backfillScopes(db: SyncDatabaseAdapter, legacy: string): void {
-  db.run(
+async function backfillScopes(db: QueryDatabaseAdapter, legacy: string): Promise<void> {
+  await db.runAsync(
     `UPDATE symbols SET project_id =
       COALESCE((SELECT f.project_id FROM files f WHERE f.id = symbols.file_id), ?)
     WHERE project_id = ''`,
     [legacy],
   );
-  db.run(
+  await db.runAsync(
     `UPDATE relationships SET project_id =
       COALESCE((SELECT s.project_id FROM symbols s WHERE s.id = relationships.source_symbol_id), ?)
     WHERE project_id = ''`,
     [legacy],
   );
-  db.run(
+  await db.runAsync(
     `UPDATE body_embeddings SET project_id =
       COALESCE((SELECT s.project_id FROM symbols s WHERE s.id = body_embeddings.symbol_id), ?)
     WHERE project_id = ''`,
     [legacy],
   );
-  db.run(
+  await db.runAsync(
     `UPDATE embeddings SET project_id = COALESCE(
       (SELECT s.project_id FROM symbols s WHERE s.id = embeddings.symbol_id),
       (SELECT f.project_id FROM files f WHERE f.id = embeddings.file_id), ?)
@@ -142,8 +142,8 @@ function backfillScopes(db: SyncDatabaseAdapter, legacy: string): void {
 }
 
 /** Create per-tenant scope indexes (idempotent). */
-function createScopeIndexes(db: SyncDatabaseAdapter): void {
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_symbols_project    ON symbols(project_id);
+async function createScopeIndexes(db: QueryDatabaseAdapter): Promise<void> {
+  await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_symbols_project    ON symbols(project_id);
     CREATE INDEX IF NOT EXISTS idx_symbols_proj_kind  ON symbols(project_id, kind);
     CREATE INDEX IF NOT EXISTS idx_files_project      ON files(project_id);
     CREATE INDEX IF NOT EXISTS idx_modules_project    ON modules(project_id);
@@ -154,23 +154,23 @@ function createScopeIndexes(db: SyncDatabaseAdapter): void {
  * Apply V5 multi-tenant migration. `legacyProjectId` is the booting workspace's
  * derived project id; existing rows are backfilled to it. Idempotent + fail-safe.
  */
-export function applyMigrationV5(db: SyncDatabaseAdapter, legacyProjectId: string): void {
+export async function applyMigrationV5(db: QueryDatabaseAdapter, legacyProjectId: string): Promise<void> {
   const legacy = legacyProjectId || 'default';
   try {
-    db.exec('PRAGMA foreign_keys=OFF;');
-    recreateFiles(db, legacy);
-    recreateModules(db, legacy);
+    await db.execAsync('PRAGMA foreign_keys=OFF;');
+    await recreateFiles(db, legacy);
+    await recreateModules(db, legacy);
     for (const t of ['symbols', 'embeddings', 'relationships', 'body_embeddings']) {
-      addProjectIdColumn(db, t);
+      await addProjectIdColumn(db, t);
     }
-    backfillScopes(db, legacy);
-    createScopeIndexes(db);
-    db.run('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [5]);
+    await backfillScopes(db, legacy);
+    await createScopeIndexes(db);
+    await db.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [5]);
     logger.info(`[migrations] V5: multi-tenant project_id applied (legacy=${legacy})`);
   } catch (err) {
     logger.error({ err }, '[migrations] V5 error:');
     throw err;
   } finally {
-    db.exec('PRAGMA foreign_keys=ON;');
+    await db.execAsync('PRAGMA foreign_keys=ON;');
   }
 }
