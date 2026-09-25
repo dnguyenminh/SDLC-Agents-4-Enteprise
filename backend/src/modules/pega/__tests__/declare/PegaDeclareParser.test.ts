@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PegaDeclareParser } from '../../declare/PegaDeclareParser.js';
 import { PegaClipboardContext } from '../../expression/PegaClipboardContext.js';
+import { ExprNodeEvaluator } from '../../expression/ExprNodeEvaluator.js';
 
 describe('PegaDeclareParser', () => {
   const parser = new PegaDeclareParser();
@@ -33,7 +34,7 @@ describe('PegaDeclareParser', () => {
       expect(typed.declareType).toBe('Declare-Expression');
     });
 
-    it('parses expression string into actual ExpressionAstNode with PegaExpressionParser', () => {
+    it('parses expression string into an ExprNode with the ANTLR ExpressionParser', () => {
       const json = {
         pxObjClass: 'Rule-Declare-Expressions',
         pyClassName: 'Work-Cover-Jira',
@@ -44,7 +45,7 @@ describe('PegaDeclareParser', () => {
 
       const typed = parser.parseDeclareExpression(json);
       expect(typed.expressionAst).toBeDefined();
-      expect(typed.expressionAst!.nodeType).toBe('BinaryOp');
+      expect(typed.expressionAst!.kind).toBe('BinaryOp');
       // Verify it evaluates correctly
       const ctx = new PegaClipboardContext({
         pyWorkPage: {
@@ -52,7 +53,7 @@ describe('PegaDeclareParser', () => {
           pyLastName: { type: 'Text', value: 'Doe' },
         },
       });
-      const result = typed.expressionAst!.evaluate(ctx);
+      const result = new ExprNodeEvaluator().eval(typed.expressionAst!, ctx);
       expect(result.boolean).toBe(true);
     });
 

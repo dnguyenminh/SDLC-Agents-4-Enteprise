@@ -73,7 +73,9 @@ describe('PegaExpressionEvaluator', () => {
   });
 
   it('evaluates .NOT. operator', () => {
-    const r = evaluator.evaluate('.NOT. .Count = 5', context);
+    // Pega follows Java precedence: unary ! binds tighter than comparison,
+    // so the comparison must be parenthesized to negate its result.
+    const r = evaluator.evaluate('.NOT. (.Count = 5)', context);
     expect(r.value.boolean).toBe(true);
   });
 

@@ -1,51 +1,37 @@
-import { PegaExpressionParser } from './PegaExpressionParser.js';
+import { ExpressionParser } from './ExpressionParser.js';
+import { ExprNodeEvaluator } from './ExprNodeEvaluator.js';
 import { PegaClipboardContext } from './PegaClipboardContext.js';
 import { PegValue } from './PegaExpressionAst.js';
-import type { ExpressionAstNode } from './PegaExpressionAst.js';
+import type { ExprNode } from './expressionTypes.js';
 
 export interface EvaluationResult {
   value: PegValue;
   trace: string[];
 }
 
+/**
+ * Facade over the ANTLR expression pipeline: parse to an ExprNode tree, then
+ * evaluate it with the stateless ExprNodeEvaluator. Parsing never throws —
+ * syntax failures surface as a PARSE_ERROR PegExpressionError at evaluation time.
+ */
 export class PegaExpressionEvaluator {
-  private parser = new PegaExpressionParser();
+  private nodeEvaluator = new ExprNodeEvaluator();
 
   evaluate(
     expression: string,
     clipboard: PegaClipboardContext,
     collectTrace: boolean = false,
   ): EvaluationResult {
-    const ast = this.parser.parse(expression);
-    const trace: string[] = [];
-    const value = this.evaluateNode(ast, clipboard, trace, collectTrace, 0);
-    return { value, trace };
+    return this.evaluateWithAst(ExpressionParser.parseExpression(expression), clipboard, collectTrace);
   }
 
   evaluateWithAst(
-    ast: ExpressionAstNode,
+    ast: ExprNode,
     clipboard: PegaClipboardContext,
     collectTrace: boolean = false,
   ): EvaluationResult {
-    const trace: string[] = [];
-    const value = this.evaluateNode(ast, clipboard, trace, collectTrace, 0);
+    const value = this.nodeEvaluator.eval(ast, clipboard);
+    const trace = collectTrace ? [`[${ast.kind}] -> ${value.text} (${value.type})`] : [];
     return { value, trace };
-  }
-
-  private evaluateNode(
-    node: ExpressionAstNode,
-    context: PegaClipboardContext,
-    trace: string[],
-    collectTrace: boolean,
-    depth: number,
-  ): PegValue {
-    if (depth > 100) {
-      throw new Error('Expression evaluation exceeded max depth of 100');
-    }
-    const value = node.evaluate(context);
-    if (collectTrace) {
-      trace.push('[' + node.nodeType + '] -> ' + value.text + ' (' + value.type + ')');
-    }
-    return value;
   }
 }

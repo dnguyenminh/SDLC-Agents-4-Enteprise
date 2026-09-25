@@ -8,13 +8,13 @@
  * only the language it recognizes (a factual interface) is shared.
  *
  * Operator precedence, tightest to loosest (matches observed Pega behaviour):
- *   unary (- + !)          prefix
+ *   unary (- + ! .NOT. .ISNULL) prefix
  *   * / %                  multiplicative
  *   + -                    additive (+ doubles as string concat)
  *   < > <= >=              relational
  *   == != <> ^= ~= =       equality / like
- *   &&                     logical and
- *   ||                     logical or
+ *   && / .AND.             logical and
+ *   || / .OR.              logical or
  *   ?:                     ternary (right-associative)
  *
  * Alternatives are labelled (# Label) so the generated visitor can map each to a
@@ -33,13 +33,13 @@ expr
     | constant                                             # ConstExpr
     | '(' expr ')'                                         # ParenExpr
     | PLACEHOLDER                                          # PlaceholderExpr
-    | op=('-' | '+' | '!' | '=') expr                      # UnaryExpr
+    | op=('-' | '+' | '!' | '=' | PEGA_NOT | PEGA_ISNULL) expr # UnaryExpr
     | expr op=('*' | '/' | '%') expr                       # MulExpr
     | expr op=('+' | '-') expr                             # AddExpr
     | expr op=('<' | '>' | '<=' | '>=') expr               # RelExpr
     | expr op=('==' | '!=' | '<>' | '^=' | '~=' | '=') expr # EqExpr
-    | expr '&&' expr                                       # AndExpr
-    | expr '||' expr                                       # OrExpr
+    | expr op=('&&' | PEGA_AND) expr                       # AndExpr
+    | expr op=('||' | PEGA_OR) expr                        # OrExpr
     | <assoc=right> expr '?' expr ':' expr                 # TernaryExpr
     ;
 
@@ -113,11 +113,15 @@ FUZZY   : '~=' ;
 AND     : '&&' ;
 OR      : '||' ;
 
-LPAREN  : '(' ;
-RPAREN  : ')' ;
-LBRACK  : '[' ;
-RBRACK  : ']' ;
-DOT     : '.' ;
+LPAREN   : '(' ;
+RPAREN   : ')' ;
+LBRACK   : '[' ;
+RBRACK   : ']' ;
+PEGA_AND : '.AND.' ;
+PEGA_OR  : '.OR.' ;
+PEGA_NOT : '.NOT.' ;
+PEGA_ISNULL : '.ISNULL' ;
+DOT      : '.' ;
 COMMA   : ',' ;
 AT      : '@' ;
 COLON   : ':' ;

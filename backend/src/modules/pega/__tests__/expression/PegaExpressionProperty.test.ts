@@ -1,264 +1,150 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { PegaExpressionLexer } from '../../expression/PegaExpressionLexer.js';
-import { PegaExpressionParser } from '../../expression/PegaExpressionParser.js';
+import { ExpressionParser } from '../../expression/ExpressionParser.js';
 import { PegaExpressionEvaluator } from '../../expression/PegaExpressionEvaluator.js';
 import { PegaClipboardContext } from '../../expression/PegaClipboardContext.js';
-import {
-  PropertyRefNode,
-  NumberLiteralNode,
-  StringLiteralNode,
-  BooleanLiteralNode,
+import type {
   BinaryOpNode,
-  UnaryOpNode,
+  ConstantNode,
+  ExprNode,
   FunctionCallNode,
-} from '../../expression/PegaExpressionAst.js';
+  ReferenceNode,
+  UnaryOpNode,
+} from '../../expression/expressionTypes.js';
 
 const isSimpleString = (s: string): boolean =>
   !s.includes('"') && !s.includes("'") && !s.includes('\\') && !s.includes('\n') && !s.includes('\t');
 
-const isValidIdentifier = (s: string): boolean => /^[a-zA-Z_]\w*$/.test(s);
+// `true`/`false` lex as TRUE/FALSE constants, so they cannot be bare identifiers.
+const RESERVED = new Set(['true', 'false']);
+const isValidIdentifier = (s: string): boolean => /^[a-zA-Z_]\w*$/.test(s) && !RESERVED.has(s);
 
 const evaluator = new PegaExpressionEvaluator();
-const parser = new PegaExpressionParser();
 
-describe('Lexer properties', () => {
+/** ANTLR entry point: never throws, always returns a node (ErrorExpr on failure). */
+const parse = (src: string): ExprNode => ExpressionParser.parseExpression(src);
 
-  it('produces NUMBER tokens for numeric input with consistent parseFloat values', () => {
-    fc.assert(fc.property(
-      fc.integer({ min: -999999, max: 999999 }).filter(n => n !== 0),
-      (n) => {
-        const lexer = new PegaExpressionLexer(String(n));
-        const tokens = lexer.tokenize();
-        expect(tokens[0].type).toBe('NUMBER');
-        expect(parseFloat(tokens[0].value)).toBe(n);
-        expect(tokens[tokens.length - 1].type).toBe('EOF');
-        expect(tokens.length).toBe(2);
-      }
-    ));
+describe('Parser properties (ANTLR)', () => {
+
+  it('never throws for arbitrary input', () => {
+    fc.assert(fc.property(fc.string({ maxLength: 40 }), (src) => {
+      expect(() => parse(src)).not.toThrow();
+    }));
   });
 
-  it('produces NUMBER tokens for decimal input with consistent parseFloat values', () => {
-    fc.assert(fc.property(
-      fc.integer({ min: 0, max: 9999 }),
-      fc.integer({ min: 0, max: 9999 }),
-      (int, frac) => {
-        const str = `${int}.${String(frac).padStart(1, '0')}`;
-        const n = parseFloat(str);
-        const lexer = new PegaExpressionLexer(str);
-        const tokens = lexer.tokenize();
-        expect(tokens[0].type).toBe('NUMBER');
-        expect(parseFloat(tokens[0].value)).toBeCloseTo(n, 5);
-        expect(tokens[0].value).toBe(str);
-      }
-    ));
-  });
-
-  it('produces STRING tokens for string literals with preserved value', () => {
-    fc.assert(fc.property(
-      fc.string({ minLength: 0, maxLength: 15 }).filter(isSimpleString),
-      (s) => {
-        const lexer = new PegaExpressionLexer(`"${s}"`);
-        const tokens = lexer.tokenize();
-        expect(tokens[0].type).toBe('STRING');
-        expect(tokens[0].value).toBe(s);
-        expect(tokens[tokens.length - 1].type).toBe('EOF');
-      }
-    ));
-  });
-
-  it('produces DOT and IDENTIFIER tokens for property references with correct name', () => {
-    fc.assert(fc.property(
-      fc.string({ minLength: 1, maxLength: 20 }).filter(isValidIdentifier),
-      (name) => {
-        const lexer = new PegaExpressionLexer(`.${name}`);
-        const tokens = lexer.tokenize();
-        expect(tokens[0].type).toBe('DOT');
-        expect(tokens[1].type).toBe('IDENTIFIER');
-        expect(tokens[1].value).toBe(name);
-        expect(tokens[tokens.length - 1].type).toBe('EOF');
-      }
-    ));
-  });
-
-  it('recognizes keyword tokens .AND. .OR. .NOT. .ISNULL with correct types', () => {
-    const keywordPairs: [string, string][] = [
-      ['.AND.', 'AND'],
-      ['.OR.', 'OR'],
-      ['.NOT.', 'NOT'],
-      ['.ISNULL', 'ISNULL'],
-    ];
-    fc.assert(fc.property(
-      fc.constantFrom(...keywordPairs),
-      ([keyword, expectedType]) => {
-        const lexer = new PegaExpressionLexer(keyword);
-        const tokens = lexer.tokenize();
-        expect(tokens[0].type).toBe(expectedType);
-        expect(tokens[0].value).toBe(keyword);
-        expect(tokens[tokens.length - 1].type).toBe('EOF');
-      }
-    ));
-  });
-
-  it('recognizes comparison operators = <> > < >= <= with correct types', () => {
-    const operatorPairs: [string, string][] = [
-      ['=', 'EQ'],
-      ['<>', 'NEQ'],
-      ['>', 'GT'],
-      ['<', 'LT'],
-      ['>=', 'GTE'],
-      ['<=', 'LTE'],
-    ];
-    fc.assert(fc.property(
-      fc.constantFrom(...operatorPairs),
-      ([op, expectedType]) => {
-        const lexer = new PegaExpressionLexer(`.a ${op} .b`);
-        const tokens = lexer.tokenize();
-        const opToken = tokens.find(t => t.type === expectedType);
-        expect(opToken).toBeDefined();
-        expect(opToken!.type).toBe(expectedType);
-      }
-    ));
-  });
-
-  it('recognizes true and false as IDENTIFIER tokens', () => {
-    fc.assert(fc.property(
-      fc.constantFrom('true', 'false'),
-      (s) => {
-        const lexer = new PegaExpressionLexer(s);
-        const tokens = lexer.tokenize();
-        expect(tokens[0].type).toBe('IDENTIFIER');
-        expect(tokens[0].value).toBe(s);
-        expect(tokens[tokens.length - 1].type).toBe('EOF');
-      }
-    ));
-  });
-
-  it('tokenizes FUNCTION tokens with @ prefix preserved', () => {
+  it('parses .identifier to a relative Reference with one segment', () => {
     fc.assert(fc.property(
       fc.string({ minLength: 1, maxLength: 15 }).filter(isValidIdentifier),
       (name) => {
-        const lexer = new PegaExpressionLexer(`@${name}()`);
-        const tokens = lexer.tokenize();
-        expect(tokens[0].type).toBe('FUNCTION');
-        expect(tokens[0].value).toBe(`@${name}`);
-      }
-    ));
-  });
-});
-
-describe('Parser properties', () => {
-
-  it('parses .identifier to PropertyRefNode with correct parts', () => {
-    fc.assert(fc.property(
-      fc.string({ minLength: 1, maxLength: 15 }).filter(isValidIdentifier),
-      (name) => {
-        const ast = parser.parse(`.${name}`);
-        expect(ast).toBeInstanceOf(PropertyRefNode);
-        expect((ast as PropertyRefNode).parts).toEqual([name]);
+        const ast = parse(`.${name}`);
+        expect(ast.kind).toBe('Reference');
+        const ref = ast as ReferenceNode;
+        expect(ref.scope).toBe('relative');
+        expect(ref.segments.map(s => s.name)).toEqual([name]);
       }
     ));
   });
 
-  it('parses chained property ref .a.b.c to PropertyRefNode with all parts', () => {
+  it('parses chained property ref .a.b.c to a Reference with all segments', () => {
     fc.assert(fc.property(
       fc.array(fc.string({ minLength: 1, maxLength: 8 }).filter(isValidIdentifier), { minLength: 2, maxLength: 5 }),
       (parts) => {
-        const expr = '.' + parts.join('.');
-        const ast = parser.parse(expr);
-        expect(ast).toBeInstanceOf(PropertyRefNode);
-        expect((ast as PropertyRefNode).parts).toEqual(parts);
+        const ast = parse('.' + parts.join('.'));
+        expect(ast.kind).toBe('Reference');
+        expect((ast as ReferenceNode).segments.map(s => s.name)).toEqual(parts);
       }
     ));
   });
 
-  it('parses number literal to NumberLiteralNode with correct value', () => {
-    fc.assert(fc.property(
-      fc.nat({ max: 999999 }),
-      (n) => {
-        const ast = parser.parse(String(n));
-        expect(ast).toBeInstanceOf(NumberLiteralNode);
-        expect((ast as NumberLiteralNode).value).toBe(n);
-      }
-    ));
+  it('parses number literal to an INTEGER Constant with correct value', () => {
+    fc.assert(fc.property(fc.nat({ max: 999999 }), (n) => {
+      const ast = parse(String(n));
+      expect(ast.kind).toBe('Constant');
+      const c = ast as ConstantNode;
+      expect(c.type).toBe('INTEGER');
+      expect(c.value).toBe(n);
+    }));
   });
 
-  it('parses string literal to StringLiteralNode with correct value', () => {
+  it('parses string literal to a QUOTED_STRING Constant with unquoted value', () => {
     fc.assert(fc.property(
       fc.string({ minLength: 0, maxLength: 10 }).filter(isSimpleString),
       (s) => {
-        const ast = parser.parse(`"${s}"`);
-        expect(ast).toBeInstanceOf(StringLiteralNode);
-        expect((ast as StringLiteralNode).value).toBe(s);
+        const ast = parse(`"${s}"`);
+        expect(ast.kind).toBe('Constant');
+        const c = ast as ConstantNode;
+        expect(c.type).toBe('QUOTED_STRING');
+        expect(c.value).toBe(s);
       }
     ));
   });
 
-  it('parses boolean literals true and false to BooleanLiteralNode', () => {
-    fc.assert(fc.property(
-      fc.boolean(),
-      (b) => {
-        const ast = parser.parse(String(b));
-        expect(ast).toBeInstanceOf(BooleanLiteralNode);
-        expect((ast as BooleanLiteralNode).value).toBe(b);
-      }
-    ));
+  it('parses boolean literals to TRUE/FALSE Constants', () => {
+    fc.assert(fc.property(fc.boolean(), (b) => {
+      const ast = parse(String(b));
+      expect(ast.kind).toBe('Constant');
+      expect((ast as ConstantNode).type).toBe(b ? 'TRUE' : 'FALSE');
+    }));
   });
 
-  it('parses comparison .a = .b to BinaryOpNode with EQ operator', () => {
+  it('parses comparison .a = .b to a BinaryOp with = on two References', () => {
     fc.assert(fc.property(
       fc.string({ minLength: 1, maxLength: 10 }).filter(isValidIdentifier),
       fc.string({ minLength: 1, maxLength: 10 }).filter(isValidIdentifier),
       (left, right) => {
-        const ast = parser.parse(`.${left} = .${right}`);
-        expect(ast).toBeInstanceOf(BinaryOpNode);
-        expect((ast as BinaryOpNode).operator).toBe('EQ');
-        expect((ast as BinaryOpNode).left).toBeInstanceOf(PropertyRefNode);
-        expect((ast as BinaryOpNode).right).toBeInstanceOf(PropertyRefNode);
+        const ast = parse(`.${left} = .${right}`);
+        expect(ast.kind).toBe('BinaryOp');
+        const bin = ast as BinaryOpNode;
+        expect(bin.op).toBe('=');
+        expect(bin.left.kind).toBe('Reference');
+        expect(bin.right.kind).toBe('Reference');
       }
     ));
   });
 
-  it('parses .NOT. .a > 5 with NOT binding around comparison', () => {
-    const ast = parser.parse('.NOT. .Amount > 5');
-    expect(ast).toBeInstanceOf(UnaryOpNode);
-    const unary = ast as UnaryOpNode;
-    expect(unary.operator).toBe('NOT');
-    expect(unary.operand).toBeInstanceOf(BinaryOpNode);
-    const binary = unary.operand as BinaryOpNode;
-    expect(binary.operator).toBe('GT');
-    expect(binary.left).toBeInstanceOf(PropertyRefNode);
-    expect((binary.left as PropertyRefNode).parts).toEqual(['Amount']);
-    expect(binary.right).toBeInstanceOf(NumberLiteralNode);
-    expect((binary.right as NumberLiteralNode).value).toBe(5);
+  it('parses .NOT. .a > 5 with unary binding tighter than comparison (Java precedence)', () => {
+    const ast = parse('.NOT. .Amount > 5');
+    expect(ast.kind).toBe('BinaryOp');
+    const bin = ast as BinaryOpNode;
+    expect(bin.op).toBe('>');
+    expect(bin.left.kind).toBe('UnaryOp');
+    expect((bin.left as UnaryOpNode).op).toBe('!');
+    expect(bin.right.kind).toBe('Constant');
+    expect((bin.right as ConstantNode).value).toBe(5);
   });
 
-  it('parses parenthesized expression maintaining structure', () => {
-    const withoutParens = parser.parse('.Amount > 5 .AND. .Priority = "High"');
-    const withParens = parser.parse('.Amount > 5 .AND. (.Priority = "High")');
-    expect(withoutParens).toBeInstanceOf(BinaryOpNode);
-    expect(withParens).toBeInstanceOf(BinaryOpNode);
-    const b1 = withoutParens as BinaryOpNode;
-    const b2 = withParens as BinaryOpNode;
-    expect(b1.operator).toBe('AND');
-    expect(b2.operator).toBe('AND');
-    expect(b1.left).toBeInstanceOf(BinaryOpNode);
-    expect(b2.left).toBeInstanceOf(BinaryOpNode);
-    expect(b1.right).toBeInstanceOf(BinaryOpNode);
-    expect(b2.right).toBeInstanceOf(BinaryOpNode);
+  it('parses .AND./.OR./.NOT./.ISNULL Pega keywords without producing ErrorExpr', () => {
+    const forms = ['.a .AND. .b', '.a .OR. .b', '.NOT. .a', '.ISNULL .a'];
+    for (const src of forms) {
+      expect(parse(src).kind).not.toBe('ErrorExpr');
+    }
   });
 
-  it('parses function call @name(...) to FunctionCallNode with correct name', () => {
+  it('parses parenthesized expression maintaining BinaryOp structure', () => {
+    const withoutParens = parse('.Amount > 5 .AND. .Priority = "High"');
+    const withParens = parse('.Amount > 5 .AND. (.Priority = "High")');
+    for (const ast of [withoutParens, withParens]) {
+      expect(ast.kind).toBe('BinaryOp');
+      const b = ast as BinaryOpNode;
+      expect(b.op).toBe('&&');
+      expect(b.left.kind).toBe('BinaryOp');
+      expect(b.right.kind).toBe('BinaryOp');
+    }
+  });
+
+  it('parses function call @name(...) to a FunctionCall with correct name and arity', () => {
     fc.assert(fc.property(
       fc.string({ minLength: 1, maxLength: 12 }).filter(isValidIdentifier),
       fc.array(fc.nat({ max: 99 }), { minLength: 0, maxLength: 4 }),
       (name, args) => {
         const argStr = args.length > 0 ? args.map(String).join(', ') : '';
-        const expr = `@${name}(${argStr})`;
-        const ast = parser.parse(expr);
-        expect(ast).toBeInstanceOf(FunctionCallNode);
-        expect((ast as FunctionCallNode).name).toBe(`@${name}`);
-        expect((ast as FunctionCallNode).args.length).toBe(args.length);
+        const ast = parse(`@${name}(${argStr})`);
+        expect(ast.kind).toBe('FunctionCall');
+        const fn = ast as FunctionCallNode;
+        expect(fn.name).toBe(name);
+        expect(fn.library).toBeNull();
+        expect(fn.ruleset).toBeNull();
+        expect(fn.args.length).toBe(args.length);
       }
     ));
   });

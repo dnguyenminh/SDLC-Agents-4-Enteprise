@@ -1,4 +1,4 @@
-import { PegaExpressionParser } from './PegaExpressionParser.js';
+import { ExpressionParser } from './ExpressionParser.js';
 import { PegaClipboardContext } from './PegaClipboardContext.js';
 import { PegaExpressionEvaluator } from './PegaExpressionEvaluator.js';
 
@@ -23,7 +23,6 @@ export interface ConstraintRule {
 
 export class PegaConstraintEvaluator {
   private evaluator = new PegaExpressionEvaluator();
-  private parser = new PegaExpressionParser();
 
   evaluateConstraints(
     constraints: ConstraintRule[],
@@ -33,37 +32,35 @@ export class PegaConstraintEvaluator {
 
     for (const constraint of constraints) {
       if (constraint.enabled === false) continue;
-
-      try {
-        const ast = this.parser.parse(constraint.expression);
-        const result = this.evaluator.evaluateWithAst(ast, clipboard, false);
-        const passed = result.value.boolean;
-
-        if (!passed) {
-          const actualValue = this.resolveActualValue(constraint.targetProperty, clipboard);
-          violations.push({
-            propertyName: constraint.targetProperty,
-            expectedExpression: constraint.expression,
-            actualValue,
-            message: constraint.label
-              ? `Constraint '${constraint.label}' failed: ${constraint.expression}`
-              : `Constraint on '${constraint.targetProperty}' failed: ${constraint.expression}. Actual: ${actualValue}`,
-          });
-        }
-      } catch (err) {
-        violations.push({
-          propertyName: constraint.targetProperty,
-          expectedExpression: constraint.expression,
-          actualValue: 'ERROR',
-          message: `Constraint evaluation error: ${(err as Error).message}`,
-        });
-      }
+      violations.push(...this.evaluateOne(constraint, clipboard));
     }
 
-    return {
-      passed: violations.length === 0,
-      violations,
-    };
+    return { passed: violations.length === 0, violations };
+  }
+
+  private evaluateOne(constraint: ConstraintRule, clipboard: PegaClipboardContext): ConstraintViolation[] {
+    try {
+      const ast = ExpressionParser.parseExpression(constraint.expression);
+      const result = this.evaluator.evaluateWithAst(ast, clipboard, false);
+      if (result.value.boolean) return [];
+
+      const actualValue = this.resolveActualValue(constraint.targetProperty, clipboard);
+      return [{
+        propertyName: constraint.targetProperty,
+        expectedExpression: constraint.expression,
+        actualValue,
+        message: constraint.label
+          ? `Constraint '${constraint.label}' failed: ${constraint.expression}`
+          : `Constraint on '${constraint.targetProperty}' failed: ${constraint.expression}. Actual: ${actualValue}`,
+      }];
+    } catch (err) {
+      return [{
+        propertyName: constraint.targetProperty,
+        expectedExpression: constraint.expression,
+        actualValue: 'ERROR',
+        message: `Constraint evaluation error: ${(err as Error).message}`,
+      }];
+    }
   }
 
   private resolveActualValue(propertyName: string, clipboard: PegaClipboardContext): string {
@@ -74,7 +71,7 @@ export class PegaConstraintEvaluator {
         .filter(Boolean);
       if (parts.length === 0) return 'undefined';
 
-      const ast = this.parser.parse(`.${parts.join('.')}`);
+      const ast = ExpressionParser.parseExpression(`.${parts.join('.')}`);
       const result = this.evaluator.evaluateWithAst(ast, clipboard, false);
       return result.value.text;
     } catch {

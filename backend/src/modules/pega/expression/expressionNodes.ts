@@ -6,11 +6,10 @@
  * and are re-exported here so consumers have a single import surface.
  *
  * Every node is a plain object (JSON-serializable) tagged with `kind`, so the whole AST
- * can be emitted to JSON for review. This shape runs in parallel to the existing
- * hand-written parser (removal is GD2).
+ * can be emitted to JSON for review. These nodes are produced by the ANTLR-based
+ * ExpressionParser (the hand-written parser was removed in GD2 / SA4E-234).
  */
 import {
-  ConstantType,
   type ConstantTypeValue,
   type BinaryOpNode,
   type ConstantNode,

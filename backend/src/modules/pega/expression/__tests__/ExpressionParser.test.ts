@@ -9,11 +9,14 @@
  * Runs in parallel to the existing hand-written parser (removal is GD2).
  */
 import { describe, expect, it } from 'vitest';
-import { parseExpression } from '../ExpressionParser.js';
+import { ExpressionParser } from '../ExpressionParser.js';
 import { exprToString } from './expressionEmit.js';
 import type {
   BinaryOpNode, ConstantNode, ExprNode, FunctionCallNode, ReferenceNode, TernaryNode, UnaryOpNode,
 } from '../expressionNodes.js';
+
+/** Parse a Pega expression into the ANTLR-built ExprNode model. */
+const parse = (src: string): ExprNode => ExpressionParser.parseExpression(src);
 
 /** 13 real-world samples taken from the HRv2 rule set. */
 const SAMPLES: string[] = [
@@ -34,7 +37,7 @@ const SAMPLES: string[] = [
 
 describe('SA4E-233 parseExpression — real-world samples', () => {
   it.each(SAMPLES)('parses without error: %s', (src) => {
-    expect(parseExpression(src).kind).not.toBe('ErrorExpr');
+    expect(parse(src).kind).not.toBe('ErrorExpr');
   });
 });
 
@@ -48,109 +51,117 @@ const asFunc = (n: ExprNode): FunctionCallNode => n as FunctionCallNode;
 
 describe('SA4E-233 parseExpression — numeric literal disambiguation', () => {
   it('INT 26', () => {
-    const a = asConst(parseExpression('26'));
+    const a = asConst(parse('26'));
     expect(a.kind === 'Constant' && a.type === 'INTEGER' && a.value === 26).toBe(true);
   });
   it('DOUBLE 1.5', () => {
-    const a = asConst(parseExpression('1.5'));
+    const a = asConst(parse('1.5'));
     expect(a.kind === 'Constant' && a.type === 'DOUBLE' && a.value === 1.5).toBe(true);
   });
   it('leading-dot double .5', () => {
-    const a = asBinary(parseExpression('.5 + 1'));
+    const a = asBinary(parse('.5 + 1'));
     expect(a.kind === 'BinaryOp' && asConst(a.left).type === 'DOUBLE').toBe(true);
   });
   it('LONG 100L', () => {
-    const a = asConst(parseExpression('100L'));
+    const a = asConst(parse('100L'));
     expect(a.kind === 'Constant' && a.type === 'LONG').toBe(true);
   });
   it('exponent 1e3', () => {
-    const a = asConst(parseExpression('1e3'));
+    const a = asConst(parse('1e3'));
     expect(a.kind === 'Constant' && a.type === 'DOUBLE').toBe(true);
   });
 });
 
 describe('SA4E-233 parseExpression — reference vs double disambiguation', () => {
   it('relative .Employee', () => {
-    const a = asRef(parseExpression('.Employee'));
+    const a = asRef(parse('.Employee'));
     expect(a.kind === 'Reference' && a.scope === 'relative' && a.segments[0].name === 'Employee').toBe(true);
   });
   it('three segments .a.b.c', () => {
-    expect(asRef(parseExpression('.a.b.c')).segments.length).toBe(3);
+    expect(asRef(parse('.a.b.c')).segments.length).toBe(3);
   });
 });
 
 describe('SA4E-233 parseExpression — operator precedence', () => {
   it('1 + 2*3 => +(1, *(2,3))', () => {
-    const a = asBinary(parseExpression('1 + 2 * 3'));
+    const a = asBinary(parse('1 + 2 * 3'));
     expect(a.op === '+' && asBinary(a.right).op === '*').toBe(true);
   });
   it('and of two relationals', () => {
-    const a = asBinary(parseExpression('a > 1 && b < 2'));
+    const a = asBinary(parse('a > 1 && b < 2'));
     expect(a.op === '&&' && asBinary(a.left).op === '>' && asBinary(a.right).op === '<').toBe(true);
   });
   it('|| of two &&', () => {
-    const a = asBinary(parseExpression('a && b || c && d'));
+    const a = asBinary(parse('a && b || c && d'));
     expect(a.op === '||' && asBinary(a.left).op === '&&' && asBinary(a.right).op === '&&').toBe(true);
   });
   it('ternary right-assoc', () => {
-    const a = asTernary(parseExpression('a ? b : c ? d : e'));
+    const a = asTernary(parse('a ? b : c ? d : e'));
     expect(a.kind === 'Ternary' && a.whenFalse.kind === 'Ternary').toBe(true);
   });
   it('unary not', () => {
-    const a = asUnary(parseExpression('!.flag'));
+    const a = asUnary(parse('!.flag'));
     expect(a.kind === 'UnaryOp' && a.op === '!').toBe(true);
   });
   it('unary minus binds tighter than +', () => {
-    const a = asBinary(parseExpression('-.x + 1'));
+    const a = asBinary(parse('-.x + 1'));
     expect(a.op === '+' && a.left.kind === 'UnaryOp').toBe(true);
+  });
+  it('unary .NOT. binds tighter than comparison (Java precedence)', () => {
+    const a = asBinary(parse('.NOT. .Amount > 5'));
+    expect(a.op === '>' && a.left.kind === 'UnaryOp').toBe(true);
+  });
+  it('.AND./.OR. Pega keywords map to &&/||', () => {
+    const a = asBinary(parse('.a .AND. .b .OR. .c'));
+    expect(a.op === '||' && asBinary(a.left).op === '&&').toBe(true);
   });
 });
 
 describe('SA4E-233 parseExpression — function forms', () => {
   it('@foo()', () => {
-    const a = asFunc(parseExpression('@foo()'));
+    const a = asFunc(parse('@foo()'));
     expect(a.kind === 'FunctionCall' && a.library === null && a.ruleset === null && a.args.length === 0).toBe(true);
   });
   it('@Lib.foo(1)', () => {
-    const a = asFunc(parseExpression('@Lib.foo(1)'));
+    const a = asFunc(parse('@Lib.foo(1)'));
     expect(a.library === 'Lib' && a.name === 'foo' && a.args.length === 1).toBe(true);
   });
   it('@(RS-A:Lib).foo(.x, 2)', () => {
-    const a = asFunc(parseExpression('@(RS-A:Lib).foo(.x, 2)'));
+    const a = asFunc(parse('@(RS-A:Lib).foo(.x, 2)'));
     expect(a.ruleset === 'RS-A' && a.library === 'Lib' && a.args.length === 2).toBe(true);
   });
 });
 
 describe('SA4E-233 parseExpression — subscripts', () => {
   it('index subscript', () => {
-    expect(asRef(parseExpression('.list(1)')).segments[0].subscript?.subType).toBe('index');
+    expect(asRef(parse('.list(1)')).segments[0].subscript?.subType).toBe('index');
   });
   it('expr subscript', () => {
-    expect(asRef(parseExpression('.list(.i + 1)')).segments[0].subscript?.subType).toBe('expr');
+    expect(asRef(parse('.list(.i + 1)')).segments[0].subscript?.subType).toBe('expr');
   });
   it('append subscript', () => {
-    expect(asRef(parseExpression('.list()')).segments[0].subscript?.subType).toBe('append');
+    expect(asRef(parse('.list()')).segments[0].subscript?.subType).toBe('append');
   });
   it('symbolic subscript', () => {
-    expect(asRef(parseExpression('.g(<APPEND>)')).segments[0].subscript?.subType).toBe('symbolic');
+    expect(asRef(parse('.g(<APPEND>)')).segments[0].subscript?.subType).toBe('symbolic');
   });
 });
 
 describe('SA4E-233 parseExpression — data page + legacy + placeholders', () => {
   it('paramPage ref', () => {
-    const a = asRef(parseExpression('D_Page[ID:.x].pxResults'));
+    const a = asRef(parse('D_Page[ID:.x].pxResults'));
     expect(a.scope === 'paramPage' && a.pageParams?.[0].key === 'ID' && a.segments[0].name === 'pxResults').toBe(true);
   });
   it('unary = prefix (legacy when)', () => {
-    const a = asUnary(parseExpression('= (@(Pega-RULES:ExpressionEvaluators).compareTwoValues(.Employee.Salary, ">", 0))'));
+    const a = asUnary(parse('= (@(Pega-RULES:ExpressionEvaluators).compareTwoValues(.Employee.Salary, ">", 0))'));
     expect(a.kind === 'UnaryOp' && a.op === '=' && a.operand.kind === 'FunctionCall').toBe(true);
   });
   it('placeholder args', () => {
-    const a = asFunc(parseExpression('@(Pega-RULES:ExpressionEvaluators).compareTwoValues({lValue}, "{comparator}", {rValue})'));
+    const a = asFunc(parse('@(Pega-RULES:ExpressionEvaluators).compareTwoValues({lValue}, "{comparator}", {rValue})'));
     expect(a.kind === 'FunctionCall' && a.args[0].kind === 'Placeholder' && (a.args[0] as { name: string }).name === 'lValue').toBe(true);
   });
   it('bare placeholder', () => {
-    const a = parseExpression('{lValue}');
+    const a = parse('{lValue}');
     expect(a.kind === 'Placeholder' && (a as { name: string }).name === 'lValue').toBe(true);
   });
 });
@@ -162,8 +173,8 @@ describe('SA4E-233 parseExpression — round-trip stability', () => {
     'a && b || c',
   ];
   it.each(roundTrip)('parse→render→parse is stable: %s', (src) => {
-    const once = exprToString(parseExpression(src));
-    const twice = exprToString(parseExpression(once));
+    const once = exprToString(parse(src));
+    const twice = exprToString(parse(once));
     expect(once).toBe(twice);
   });
 });

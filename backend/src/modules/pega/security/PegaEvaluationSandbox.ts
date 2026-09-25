@@ -1,4 +1,3 @@
-import { PegaExpressionParser } from '../expression/PegaExpressionParser.js';
 import { PegaExpressionEvaluator } from '../expression/PegaExpressionEvaluator.js';
 import { PegaClipboardContext } from '../expression/PegaClipboardContext.js';
 import { PegaExpressionValidator } from './PegaExpressionValidator.js';
@@ -24,7 +23,6 @@ export interface SandboxEvaluationRequest {
 }
 
 export class PegaEvaluationSandbox {
-  private parser = new PegaExpressionParser();
   private evaluator = new PegaExpressionEvaluator();
   private validator = new PegaExpressionValidator();
   private config: SandboxConfig;

@@ -1,4 +1,3 @@
-import { PegaExpressionParser } from './PegaExpressionParser.js';
 import { PegaClipboardContext } from './PegaClipboardContext.js';
 import { PegaExpressionEvaluator } from './PegaExpressionEvaluator.js';
 
@@ -9,7 +8,6 @@ export interface WhenConditionResult {
 
 export class PegaWhenEvaluator {
   private evaluator = new PegaExpressionEvaluator();
-  private parser = new PegaExpressionParser();
 
   evaluateWhen(
     whenExpression: string,

@@ -15,7 +15,8 @@
 
 import type { IPegaRuleParserStrategy, ParseResult } from '../strategies/IPegaRuleParserStrategy.js';
 import type { UnresolvedDependency } from '../models.js';
-import { PegaExpressionParser } from '../expression/PegaExpressionParser.js';
+import { ExpressionParser } from '../expression/ExpressionParser.js';
+import type { ExprNode } from '../expression/expressionTypes.js';
 import type {
   PegaDeclareExpression,
   PegaDeclareOnChange,
@@ -48,8 +49,6 @@ const DECLARE_RULE_CLASSES = new Set([
 ]);
 
 export class PegaDeclareParser implements IPegaRuleParserStrategy {
-  private expressionParser = new PegaExpressionParser();
-
   public supports(pxObjClass: string): boolean {
     return DECLARE_RULE_CLASSES.has(pxObjClass);
   }
@@ -138,20 +137,13 @@ export class PegaDeclareParser implements IPegaRuleParserStrategy {
 
   /**
    * Parse a Declare Expression rule.
-   * Uses the PegaExpressionParser (WP1) to build an AST from the expression string.
+   * Uses the ANTLR ExpressionParser (WP1) to build an ExprNode AST from the expression string.
    */
   public parseDeclareExpression(json: Record<string, unknown>): PegaDeclareExpression {
     const targetProperty = (json.pyProperty as string) || (json.pxResult as string) || '';
     const expression = (json.pyExpression as string) || '';
 
-    let expressionAst = undefined;
-    if (expression) {
-      try {
-        expressionAst = this.expressionParser.parse(expression);
-      } catch {
-        // If expression fails to parse, continue without AST
-      }
-    }
+    const expressionAst = expression ? this.buildExpressionAst(expression) : undefined;
 
     return {
       pxObjClass: 'Rule-Declare-Expressions',
@@ -162,6 +154,12 @@ export class PegaDeclareParser implements IPegaRuleParserStrategy {
       expression,
       expressionAst,
     };
+  }
+
+  /** Build an ExprNode AST, or undefined when the expression does not parse. */
+  private buildExpressionAst(expression: string): ExprNode | undefined {
+    const ast = ExpressionParser.parseExpression(expression);
+    return ast.kind === 'ErrorExpr' ? undefined : ast;
   }
 
   /**
