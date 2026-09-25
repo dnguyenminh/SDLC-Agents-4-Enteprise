@@ -90,10 +90,11 @@ function buildRunCommand(runtime: string, file: string, args: string[]): string 
 function buildInstallCommand(manager: string, packages: string[], flags?: string): string {
   const pkgs = packages.join(' ');
   switch (manager) {
-    case 'npm':
+    case 'npm': {
       const npmFlags = flags ? flags + ' ' : '';
       const optimizeFlags = '--no-audit --no-fund ';
       return `npm install ${optimizeFlags}${npmFlags}${pkgs}`.trim();
+    }
     case 'pip':
       return `pip install ${pkgs}`.trim();
     case 'apt':

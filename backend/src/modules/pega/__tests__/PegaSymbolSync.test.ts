@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import crypto from 'crypto';
 import { syncRuleToSymbols, PEGA_DUAL_WRITE, MissingChecksumError } from '../PegaSymbolSync.js';
 
 describe('PegaSymbolSync', () => {
@@ -180,7 +181,7 @@ describe('PegaSymbolSync', () => {
       expect(params).toBeDefined();
       expect(params![4]).toBe(clientChecksum); // content_hash column
       // MUST NOT be the legacy full-JSON sha256.
-      const fullJson = require('crypto').createHash('sha256').update(JSON.stringify(rule)).digest('hex');
+      const fullJson = crypto.createHash('sha256').update(JSON.stringify(rule)).digest('hex');
       expect(params![4]).not.toBe(fullJson);
     });
 

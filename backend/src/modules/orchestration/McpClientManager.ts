@@ -111,7 +111,7 @@ export class McpClientManager {
 
   async connectServer(name: string, config: ServerConfig): Promise<void> {
     if (config.disabled || name === 'code-intelligence') return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const transport = createTransport(name, config) as any;
     const client = new Client({ name: 'code-intel-orchestrator', version: '1.0.0' }, { capabilities: {} });
     await Promise.race([
