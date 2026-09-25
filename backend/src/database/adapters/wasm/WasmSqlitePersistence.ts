@@ -76,10 +76,10 @@ export class WasmSqlitePersistence {
     this.flushing = true;
     if (this.flushTimer) { clearTimeout(this.flushTimer); this.flushTimer = null; }
     try {
-      const bytes = this.sqlite3.capi.sqlite3_js_db_export(this.db);
-      const dir = path.dirname(this.dbPath);
-      try { await fsp.mkdir(dir, { recursive: true }); }
-      catch (e: any) { if (e.code !== 'EEXIST' && e.code !== 'ENOENT' && e.code !== 'EPERM') throw e; }
+    const bytes = this.sqlite3.capi.sqlite3_js_db_export(this.db);
+    const dir = path.dirname(this.dbPath);
+    try { await fsp.mkdir(dir, { recursive: true }); }
+    catch (e: any) { if (e.code !== 'EEXIST' && e.code !== 'ENOENT' && e.code !== 'EPERM') throw e; }
       const tmp = `${this.dbPath}.tmp-${process.pid}-${Date.now()}`;
       try { await fsp.writeFile(tmp, Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)); }
       catch (e: any) { if (e.code === 'ENOENT' || e.code === 'EPERM') return; throw e; }

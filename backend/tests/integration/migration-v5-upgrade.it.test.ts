@@ -19,12 +19,12 @@ import { runMigrations, getCurrentVersion } from '../../src/engine/db/migrations
 async function seedV5DbWithoutServerColumn() {
   const adapter = new SqliteAdapter(':memory:');
   await adapter.connect();
-  adapter.exec(`CREATE TABLE schema_version (
+  await adapter.execAsync(`CREATE TABLE schema_version (
     version INTEGER PRIMARY KEY,
     applied_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`);
   // Legacy mcp_tools shape as left by pre-SA4E-42 installs — NO `server` column.
-  adapter.exec(`CREATE TABLE mcp_tools (
+  await adapter.execAsync(`CREATE TABLE mcp_tools (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL,
@@ -32,14 +32,15 @@ async function seedV5DbWithoutServerColumn() {
     category TEXT,
     vector BLOB
   )`);
-  adapter.run('INSERT INTO mcp_tools (name, description, schema_json, category) VALUES (?,?,?,?)', ['mem_search', 'core tool', '{}', 'memory']);
+  await adapter.runAsync('INSERT INTO mcp_tools (name, description, schema_json, category) VALUES (?,?,?,?)', ['mem_search', 'core tool', '{}', 'memory']);
   // Mark the DB as fully migrated to v5 (SA4E-41 end-state).
-  adapter.run('INSERT INTO schema_version (version) VALUES (?)', [5]);
+  await adapter.runAsync('INSERT INTO schema_version (version) VALUES (?)', [5]);
   return adapter;
 }
 
-function columns(adapter, table: string): string[] {
-  return adapter.all(`SELECT name FROM pragma_table_info('${table}')`).map((r: any) => r.name);
+async function columns(adapter: any, table: string): Promise<string[]> {
+  const rows = await adapter.allAsync(`SELECT name FROM pragma_table_info('${table}')`);
+  return rows.map((r: any) => r.name);
 }
 
 describe('SA4E-42 PT-01 — v5 upgrade path adds mcp_tools.server', () => {
@@ -47,14 +48,14 @@ describe('SA4E-42 PT-01 — v5 upgrade path adds mcp_tools.server', () => {
     const adapter = await seedV5DbWithoutServerColumn();
     try {
       expect(await getCurrentVersion(adapter)).toBe(5); // precondition: already at v5
-      expect(columns(adapter, 'mcp_tools')).not.toContain('server'); // precondition: legacy shape
+      expect(await columns(adapter, 'mcp_tools')).not.toContain('server'); // precondition: legacy shape
 
       await runMigrations(adapter); // full entry point — must NOT early-return past the additive migration
 
       // The additive `server` column must now exist (else startup INSERT crashes).
-      expect(columns(adapter, 'mcp_tools')).toContain('server');
+      expect(await columns(adapter, 'mcp_tools')).toContain('server');
       // The scoped-delete index must exist.
-      const idx = adapter.get("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_mcp_tools_server'");
+      const idx = await adapter.getAsync("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_mcp_tools_server'");
       expect(idx).toBeDefined();
     } finally {
       await adapter.disconnect();
@@ -66,13 +67,13 @@ describe('SA4E-42 PT-01 — v5 upgrade path adds mcp_tools.server', () => {
     try {
       await runMigrations(adapter);
       // Mirrors index.ts tool ingest — this is the statement that crashed pre-fix.
-      expect(() =>
-        adapter.run(
+      await expect(async () => {
+        await adapter.runAsync(
           'INSERT INTO mcp_tools (name, description, schema_json, category, server, vector) VALUES (?,?,?,?,?,?)',
           ['jira_search', 'proxied', '{}', 'atlassian', 'atlassian', null],
-        ),
-      ).not.toThrow();
-      const row = adapter.get('SELECT server FROM mcp_tools WHERE name = ?', ['jira_search']) as any;
+        );
+      }).not.toThrow();
+      const row = await adapter.getAsync('SELECT server FROM mcp_tools WHERE name = ?', ['jira_search']) as any;
       expect(row.server).toBe('atlassian');
     } finally {
       await adapter.disconnect();
