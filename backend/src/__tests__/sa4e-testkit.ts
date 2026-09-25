@@ -25,6 +25,7 @@ export interface TempDb {
 /** Create a fresh temp file-backed SQLite DB with full SCHEMA_V1 applied. */
 export async function makeTempDb(): Promise<TempDb> {
   DatabaseManager.sharedAdapter = null;
+  DatabaseManager.sharedReady = null;
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e18-'));
   const dbPath = path.join(tmpDir, 'index.db');
   const dbManager = new DatabaseManager(dbPath);

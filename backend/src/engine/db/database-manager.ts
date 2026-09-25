@@ -11,7 +11,7 @@ import * as path from 'path';
 import pino from 'pino';
 import { runMigrations } from './migrations.js';
 import { WasmDbSyncAdapter } from '../../database/adapters/wasm/WasmDbSyncAdapter.js';
-import { WasmSqliteAdapter } from '../../database/adapters/wasm/SqliteWasmAdapter.js';
+import { SqliteWasmAdapter } from '../../database/adapters/wasm/SqliteWasmAdapter.js';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 
 const logger = pino({ name: 'database-manager' });
