@@ -73,7 +73,7 @@ export const AI_CONTEXT_TOOL_DEFINITIONS = [
 ];
 
 /** Handle get_ai_context tool call. */
-export function handleGetAIContext(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
+export async function handleGetAIContext(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): Promise<string> {
   const resolver = new SymbolResolver(adapter, projectId);
   const graphRepo = new GraphRepository(adapter, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
@@ -86,12 +86,12 @@ export function handleGetAIContext(args: Record<string, unknown>, adapter: Datab
     caller_depth: (args.caller_depth as number) || 1
   };
 
-  const result = executeSync(() => service.getContext(params));
+  const result = await service.getContext(params);
   return JSON.stringify(result, null, 2);
 }
 
 /** Handle get_edit_context tool call. */
-export function handleGetEditContext(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): string {
+export async function handleGetEditContext(args: Record<string, unknown>, adapter: DatabaseAdapter, workspace: string, projectId?: string): Promise<string> {
   const resolver = new SymbolResolver(adapter, projectId);
   const graphRepo = new GraphRepository(adapter, projectId);
   const callGraph = new CallGraphService(graphRepo, resolver);
@@ -108,18 +108,18 @@ export function handleGetEditContext(args: Record<string, unknown>, adapter: Dat
     caller_depth: (args.caller_depth as number) || 1
   };
 
-  const result = executeSync(() => service.getContext(params));
+  const result = await service.getContext(params);
   return JSON.stringify(result, null, 2);
 }
 
 /** Handle get_curated_context tool call. */
-export function handleGetCuratedContext(
+export async function handleGetCuratedContext(
   args: Record<string, unknown>,
   adapter: DatabaseAdapter,
   workspace: string,
   dbManager: DatabaseManager | null,
   projectId?: string
-): string {
+): Promise<string> {
   const resolver = new SymbolResolver(adapter, projectId);
   const traverser = new GraphTraverser(adapter, resolver, workspace, projectId);
   const queryLayer = new QueryLayer(adapter);
@@ -135,19 +135,6 @@ export function handleGetCuratedContext(
     projectId
   };
 
-  const result = executeSync(() => service.getContext(params));
+  const result = await service.getContext(params);
   return JSON.stringify(result, null, 2);
-}
-
-/**
- * Execute an async function synchronously.
- * Works because better-sqlite3 is synchronous — the async wrappers
- * resolve immediately without actual I/O waiting.
- */
-function executeSync<T>(fn: () => Promise<T>): T {
-  let result: T | undefined;
-  let error: Error | undefined;
-  fn().then(r => { result = r; }).catch(e => { error = e; });
-  if (error) throw error;
-  return result as T;
 }

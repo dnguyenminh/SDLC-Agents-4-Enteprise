@@ -5,8 +5,8 @@
  */
 
 import * as crypto from 'crypto';
-import Database from 'better-sqlite3';
 import type { QueryDatabaseAdapter } from '../database/adapters/DatabaseAdapter.js';
+import { SqliteWasmAdapter } from '../database/adapters/wasm/SqliteWasmAdapter.js';
 import { KNOWLEDGE_SCHEMA } from './schema.js';
 import type {
   Thread, Message, Checkpoint, ToolExecution, Artifact,
@@ -28,19 +28,12 @@ export class KnowledgeDb {
 
   /**
    * Create an in-memory KnowledgeDb for testing.
-   * Uses better-sqlite3 :memory: with sync-to-async wrapper.
+   * Uses the wasm SQLite adapter (:memory:) — async because wasm init is async.
    */
-  static createInMemory(): KnowledgeDb {
-    const raw = new Database(':memory:');
-    raw.pragma('journal_mode = WAL');
-    const adapter: QueryDatabaseAdapter = {
-      async runAsync(sql, params?) { const s = raw.prepare(sql); const r = params ? s.run(...params) : s.run(); return { changes: r.changes, lastInsertRowid: r.lastInsertRowid }; },
-      async getAsync<T>(sql: string, params?: unknown[]) { const s = raw.prepare(sql); return (params ? s.get(...params) : s.get()) as T | undefined; },
-      async allAsync<T>(sql: string, params?: unknown[]) { const s = raw.prepare(sql); return (params ? s.all(...params) : s.all()) as T[]; },
-      async execAsync(sql) { raw.exec(sql); },
-      async transactionAsync<T>(fn: () => Promise<T>) { return fn(); },
-    };
-    raw.exec(KNOWLEDGE_SCHEMA);
+  static async createInMemory(): Promise<KnowledgeDb> {
+    const adapter = new SqliteWasmAdapter(':memory:');
+    await adapter.connect();
+    await adapter.execAsync(KNOWLEDGE_SCHEMA);
     return new KnowledgeDb(adapter);
   }
 

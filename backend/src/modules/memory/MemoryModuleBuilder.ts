@@ -86,7 +86,7 @@ export class MemoryModuleBuilder {
         dbManager = injectd.dbManager;
       } else {
         dbManager = new DatabaseManager(dbPath);
-        dbManager.initialize();
+        await dbManager.initialize();
       }
       this.mod.setDbManager(dbManager);
     }

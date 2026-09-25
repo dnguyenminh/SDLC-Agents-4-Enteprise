@@ -1,24 +1,26 @@
 /**
  * admin/db/schema.ts — Admin schema initialization and seed data.
- * SA4E-53: Accepts DatabaseAdapter (sync interface) instead of raw better-sqlite3.
+ * SA4E-53: Accepts DatabaseAdapter instead of raw better-sqlite3.
+ * Async: uses QueryDatabaseAdapter (execAsync/getAsync/runAsync) so it works on
+ * the wasm SQLite engine (async-only) as well as PostgreSQL/MySQL.
  */
 
 import * as crypto from 'crypto';
 import { hashPassword } from './password.js';
-import type { SyncDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 
 /** Initialize admin schema tables (idempotent CREATE IF NOT EXISTS). */
-export function initSchema(db: SyncDatabaseAdapter): void {
-  db.exec(ADMIN_SCHEMA_SQL);
+export async function initSchema(db: QueryDatabaseAdapter): Promise<void> {
+  await db.execAsync(ADMIN_SCHEMA_SQL);
 
   // Idempotent migration: add project_id to graph_nodes for existing DBs
   try {
-    db.exec(`ALTER TABLE graph_nodes ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
+    await db.execAsync(`ALTER TABLE graph_nodes ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
   } catch (err) { console.debug('[schema] column already exists :', (err as Error).message); }
-  db.exec(`CREATE INDEX IF NOT EXISTS idx_graph_nodes_project ON graph_nodes(project_id)`);
+  await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_graph_nodes_project ON graph_nodes(project_id)`);
 
   // SA4E-50: project_registry — workspace → projectId mapping
-  db.exec(`
+  await db.execAsync(`
     CREATE TABLE IF NOT EXISTS project_registry (
       project_id TEXT PRIMARY KEY,
       display_name TEXT NOT NULL DEFAULT '',
@@ -30,95 +32,70 @@ export function initSchema(db: SyncDatabaseAdapter): void {
 
   // Idempotent migration: add created_by to project_registry
   try {
-    db.exec(`ALTER TABLE project_registry ADD COLUMN created_by TEXT NOT NULL DEFAULT ''`);
+    await db.execAsync(`ALTER TABLE project_registry ADD COLUMN created_by TEXT NOT NULL DEFAULT ''`);
   } catch (err) { console.debug('[schema] column already exists :', (err as Error).message); }
 }
 
 /** Seed default access groups and admin user. */
-export function seedDefaults(db: SyncDatabaseAdapter): void {
-  const groupExists = db.get<Record<string, unknown>>(
+export async function seedDefaults(db: QueryDatabaseAdapter): Promise<void> {
+  const groupExists = await db.getAsync<Record<string, unknown>>(
     'SELECT 1 FROM access_groups WHERE access_group_id = ?', ['grp-admin'],
   );
   if (!groupExists) {
-    seedAccessGroups(db);
+    await seedAccessGroups(db);
   }
 
-  const userExists = db.get<Record<string, unknown>>(
+  const userExists = await db.getAsync<Record<string, unknown>>(
     'SELECT 1 FROM users WHERE username = ?', ['admin'],
   );
   if (!userExists) {
-    seedAdminUser(db);
+    await seedAdminUser(db);
   }
 }
 
-function seedAccessGroups(db: SyncDatabaseAdapter): void {
+/** Insert one access group plus its permission rows. */
+async function seedGroup(
+  db: QueryDatabaseAdapter, groupId: string, name: string, isSystem: 0 | 1, perms: string[],
+): Promise<void> {
   const now = new Date().toISOString();
-  db.run(
+  await db.runAsync(
     `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
-     VALUES (?, ?, 1, ?, ?)`,
-    ['grp-admin', 'Administrators', now, now],
+     VALUES (?, ?, ?, ?, ?)`,
+    [groupId, name, isSystem, now, now],
   );
+  for (const perm of perms) {
+    await db.runAsync(
+      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
+      [groupId, perm, '{}'],
+    );
+  }
+}
 
-  const allPerms = [
+async function seedAccessGroups(db: QueryDatabaseAdapter): Promise<void> {
+  await seedGroup(db, 'grp-admin', 'Administrators', 1, [
     'DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'KB_PROMOTE', 'KB_IMPORT_EXPORT',
     'MCP_ACCESS', 'MCP_MANAGE', 'USER_MANAGE', 'RBAC_MANAGE', 'CONFIG_EDIT',
     'SEARCH_EXPLORE', 'AUDIT_VIEW', 'GRAPH_VIEW', 'ANALYTICS_VIEW',
-  ];
-  for (const perm of allPerms) {
-    db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
-      ['grp-admin', perm, '{}'],
-    );
-  }
-
-  db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
-     VALUES (?, ?, 0, ?, ?)`,
-    ['grp-dev', 'Developers', now, now],
-  );
-  const devPerms = ['DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'MCP_ACCESS', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW'];
-  for (const perm of devPerms) {
-    db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
-      ['grp-dev', perm, '{}'],
-    );
-  }
-
-  db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
-     VALUES (?, ?, 0, ?, ?)`,
-    ['grp-viewer', 'Viewers', now, now],
-  );
-  const viewerPerms = ['DASHBOARD_VIEW', 'KB_READ', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW'];
-  for (const perm of viewerPerms) {
-    db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
-      ['grp-viewer', perm, '{}'],
-    );
-  }
-
-  db.run(
-    `INSERT INTO access_groups (access_group_id, access_group_name, is_system_group, created_at, updated_at)
-     VALUES (?, ?, 0, ?, ?)`,
-    ['grp-mcp-ops', 'MCP Operators', now, now],
-  );
-  const mcpPerms = ['DASHBOARD_VIEW', 'MCP_ACCESS', 'MCP_MANAGE'];
-  for (const perm of mcpPerms) {
-    db.run(
-      'INSERT INTO group_permissions (access_group_id, permission_id, role_data) VALUES (?, ?, ?)',
-      ['grp-mcp-ops', perm, '{}'],
-    );
-  }
+  ]);
+  await seedGroup(db, 'grp-dev', 'Developers', 0, [
+    'DASHBOARD_VIEW', 'KB_READ', 'KB_WRITE', 'MCP_ACCESS', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW',
+  ]);
+  await seedGroup(db, 'grp-viewer', 'Viewers', 0, [
+    'DASHBOARD_VIEW', 'KB_READ', 'SEARCH_EXPLORE', 'GRAPH_VIEW', 'ANALYTICS_VIEW',
+  ]);
+  await seedGroup(db, 'grp-mcp-ops', 'MCP Operators', 0, [
+    'DASHBOARD_VIEW', 'MCP_ACCESS', 'MCP_MANAGE',
+  ]);
 }
 
-function seedAdminUser(db: SyncDatabaseAdapter): void {
+async function seedAdminUser(db: QueryDatabaseAdapter): Promise<void> {
   const now = new Date().toISOString();
   const envPassword = process.env.ADMIN_INITIAL_PASSWORD;
   const initialPassword = envPassword && envPassword.length >= 12
     ? envPassword
     : crypto.randomBytes(18).toString('base64url');
   const hash = hashPassword(initialPassword);
-  db.run(
+  await db.runAsync(
     `INSERT INTO users (user_id, username, email, password_hash, status, access_group_id, force_password_change, created_at)
      VALUES (?, ?, ?, ?, 'ACTIVE', 'grp-admin', 1, ?)`,
     ['user-admin-001', 'admin', 'admin@localhost', hash, now],

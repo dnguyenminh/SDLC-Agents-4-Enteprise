@@ -12,7 +12,7 @@ import { loadConfig, getWorkspacePath } from '../../config/index.js';
 import { initSchema, seedDefaults } from './schema.js';
 import { hashPassword, verifyPassword, generateToken } from './password.js';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
-import { SqliteAdapter } from '../../database/adapters/SqliteAdapter.js';
+import { SqliteWasmAdapter } from '../../database/adapters/wasm/SqliteWasmAdapter.js';
 import { DatabaseAdapterFactory } from '../../database/factory/DatabaseAdapterFactory.js';
 import { DatabaseConfigService } from '../../database/config/DatabaseConfigService.js';
 
@@ -54,22 +54,37 @@ export function getActiveDbConfig() {
   } catch { return { engine: 'sqlite' as const, dbPath: DB_PATH }; }
 }
 
-let sqliteAdapter: SqliteAdapter | null = null;
+let sqliteAdapter: SqliteWasmAdapter | null = null;
+let sqliteReady: Promise<void> | null = null;
 
 /**
- * Get or create the unified SQLite adapter (singleton).
- * Handles directory creation, WAL mode, and schema initialization.
- * Note: SqliteAdapter.connect() is synchronous internally (just wraps sync calls).
+ * Get or create the unified SQLite (wasm) adapter singleton (instance only).
+ * The instance is created synchronously; connection + schema init happen
+ * asynchronously in {@link ensureUnifiedSqliteReady} (awaited by initAdapters()
+ * at startup). Callers that run after startup receive a connected adapter.
  */
-function getUnifiedSqliteAdapter(): SqliteAdapter {
+function getUnifiedSqliteAdapter(): SqliteWasmAdapter {
   if (!sqliteAdapter) {
-    sqliteAdapter = new SqliteAdapter(DB_PATH);
-    // SqliteAdapter.connect() is sync internally — safe to call eagerly
-    void sqliteAdapter.connect();
-    initSchema(sqliteAdapter);
-    seedDefaults(sqliteAdapter);
+    sqliteAdapter = new SqliteWasmAdapter(DB_PATH);
   }
   return sqliteAdapter;
+}
+
+/**
+ * Connect the wasm SQLite adapter and initialize the admin schema.
+ * Idempotent: the underlying connect + schema work runs exactly once.
+ * MUST be awaited at startup (via initAdapters()) before modules use the DB.
+ */
+async function ensureUnifiedSqliteReady(): Promise<void> {
+  const adapter = getUnifiedSqliteAdapter();
+  if (!sqliteReady) {
+    sqliteReady = (async () => {
+      await adapter.connect();
+      await initSchema(adapter);
+      await seedDefaults(adapter);
+    })();
+  }
+  return sqliteReady;
 }
 
 // --- DatabaseAdapter layer (multi-DB support) ---
@@ -85,7 +100,14 @@ export function getDbAdapter(): DatabaseAdapter {
   if (!dbAdapter) {
     const engine = getActiveEngine();
     if (engine === 'sqlite') {
+      // Instance is created sync; connection/schema are established by
+      // initAdapters() -> ensureUnifiedSqliteReady() at startup.
       dbAdapter = getUnifiedSqliteAdapter();
+      // Best-effort connect if someone resolves the adapter before startup
+      // finished (guarded callers check isConnected()).
+      void ensureUnifiedSqliteReady().catch((err) => {
+        logger.error({ err }, '[admin] Failed to init unified SQLite adapter');
+      });
     } else {
       const configService = new DatabaseConfigService(DATA_DIR);
       const activeConfig = configService.getActiveConfig();
@@ -109,7 +131,10 @@ export function getDbAdapter(): DatabaseAdapter {
 export async function initAdapters(): Promise<void> {
   const engine = getActiveEngine();
   if (engine === 'sqlite') {
-    getDbAdapter();
+    // Create instance + await wasm connect + schema init/seed.
+    dbAdapter = getUnifiedSqliteAdapter();
+    await ensureUnifiedSqliteReady();
+    logger.info({ engine }, '[admin] SQLite (wasm) adapter connected and ready');
     return;
   }
 
@@ -125,17 +150,9 @@ export async function initAdapters(): Promise<void> {
 /** Reset cached DB instance and adapter (used after DB switch/migration) */
 export function resetAdminDb(): void {
   dbAdapter = null;
+  sqliteReady = null;
   if (sqliteAdapter) {
     void sqliteAdapter.disconnect();
     sqliteAdapter = null;
   }
-}
-
-/**
- * Get the raw better-sqlite3 Database instance.
- * @deprecated Use getDbAdapter() for new code. Kept for backward compat with tests.
- */
-export function getAdminDb(): import('better-sqlite3').Database {
-  const adapter = getUnifiedSqliteAdapter();
-  return adapter.getRawDb();
 }

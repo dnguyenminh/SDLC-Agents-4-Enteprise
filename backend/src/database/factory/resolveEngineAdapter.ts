@@ -8,7 +8,7 @@
 import type { DatabaseAdapter } from '../adapters/DatabaseAdapter.js';
 import { DatabaseAdapterFactory } from './DatabaseAdapterFactory.js';
 import { DatabaseConfigService } from '../config/DatabaseConfigService.js';
-import { SqliteAdapter } from '../adapters/SqliteAdapter.js';
+import { SqliteWasmAdapter } from '../adapters/wasm/SqliteWasmAdapter.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'resolve-engine-adapter' });
@@ -28,8 +28,8 @@ export async function resolveEngineAdapter(dataDir: string, dbPath: string): Pro
     const activeConfig = configService.getActiveConfig();
 
     if (activeConfig.engine === 'sqlite') {
-      logger.info('[engine-adapter] Active engine: sqlite — using SqliteAdapter');
-      const adapter = new SqliteAdapter(dbPath);
+      logger.info('[engine-adapter] Active engine: sqlite — using SqliteWasmAdapter');
+      const adapter = new SqliteWasmAdapter(dbPath);
       await adapter.connect();
       return adapter;
     }
@@ -43,7 +43,7 @@ export async function resolveEngineAdapter(dataDir: string, dbPath: string): Pro
   } catch (err) {
     // Fallback to SQLite if config read or connect fails
     logger.warn({ err }, '[engine-adapter] Failed to connect target DB — falling back to SQLite');
-    const fallback = new SqliteAdapter(dbPath);
+    const fallback = new SqliteWasmAdapter(dbPath);
     await fallback.connect();
     return fallback;
   }
