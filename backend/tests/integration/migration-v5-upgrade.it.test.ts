@@ -46,10 +46,10 @@ describe('SA4E-42 PT-01 — v5 upgrade path adds mcp_tools.server', () => {
   it('BUG-SA4E-42: runMigrations on an existing v5 DB adds server column + index', async () => {
     const adapter = await seedV5DbWithoutServerColumn();
     try {
-      expect(getCurrentVersion(adapter)).toBe(5); // precondition: already at v5
+      expect(await getCurrentVersion(adapter)).toBe(5); // precondition: already at v5
       expect(columns(adapter, 'mcp_tools')).not.toContain('server'); // precondition: legacy shape
 
-      runMigrations(adapter); // full entry point — must NOT early-return past the additive migration
+      await runMigrations(adapter); // full entry point — must NOT early-return past the additive migration
 
       // The additive `server` column must now exist (else startup INSERT crashes).
       expect(columns(adapter, 'mcp_tools')).toContain('server');
@@ -64,7 +64,7 @@ describe('SA4E-42 PT-01 — v5 upgrade path adds mcp_tools.server', () => {
   it('BUG-SA4E-42: startup-style scoped INSERT succeeds after v5 upgrade', async () => {
     const adapter = await seedV5DbWithoutServerColumn();
     try {
-      runMigrations(adapter);
+      await runMigrations(adapter);
       // Mirrors index.ts tool ingest — this is the statement that crashed pre-fix.
       expect(() =>
         adapter.run(

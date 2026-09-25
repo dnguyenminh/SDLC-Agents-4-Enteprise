@@ -260,7 +260,7 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
   let ctx: TempDb;
 
   beforeEach(async () => {
-    ctx = makeTempDb();
+    ctx = await makeTempDb();
     // Seed data
     await ctx.engine.insert({ content: 'A pattern', summary: 'proj-A', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'u1', project_id: 'app-A' });
     await ctx.engine.insert({ content: 'B pattern', summary: 'proj-B', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'u1', project_id: 'app-B' });

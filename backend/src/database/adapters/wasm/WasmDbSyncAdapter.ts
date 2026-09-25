@@ -4,11 +4,17 @@ import type { RunResult, PreparedStatement } from '../../DatabaseAdapter.js';
 export class WasmDbSyncAdapter {
   constructor(private readonly db: Database) {}
 
+  private getLastInsertRowid(): number {
+    const rows = this.db.exec({ sql: 'SELECT last_insert_rowid() as id', rowMode: 'object', returnValue: 'resultRows' }) as any[];
+    return Number(rows?.[0]?.id ?? 0);
+  }
+
   prepare(sql: string): PreparedStatement {
     return {
       run: (...params: unknown[]): RunResult => {
         this.db.exec({ sql, bind: params as any[] });
-        return { changes: (this.db as any).changes(), lastInsertRowid: 0 };
+        const lastInsertRowid = this.getLastInsertRowid();
+        return { changes: (this.db as any).changes(), lastInsertRowid };
       },
       get: <T = unknown>(...params: unknown[]): T | undefined => {
         const rows = this.db.exec({ sql, bind: params as any[], rowMode: 'object', returnValue: 'resultRows' }) as T[];
@@ -22,7 +28,8 @@ export class WasmDbSyncAdapter {
 
   run(sql: string, params?: unknown[]): RunResult {
     this.db.exec({ sql, bind: params as any[] });
-    return { changes: this.db.changes(), lastInsertRowid: 0 };
+    const lastInsertRowid = this.getLastInsertRowid();
+    return { changes: this.db.changes(), lastInsertRowid };
   }
 
   get<T = unknown>(sql: string, params?: unknown[]): T | undefined {

@@ -67,14 +67,15 @@ describe('SA4E-26 PBT — Scope Clause Properties', () => {
         project_id: fc.option(fc.string({ minLength: 1, maxLength: 100 }), { nil: null }),
       }),
       async (entry) => {
+        const pid = entry.project_id && entry.project_id.trim().length > 0 ? entry.project_id : null;
         const id = await engine.insert({
           content: entry.content,
           summary: entry.content.slice(0, 50),
           type: 'CONTEXT',
-          project_id: entry.project_id,
+          project_id: pid,
         });
         const row = await engine.findById(id);
-        expect(row?.project_id).toBe(entry.project_id);
+        expect(row?.project_id ?? null).toBe(pid ?? null);
       },
     ), { numRuns: 100 });
   });

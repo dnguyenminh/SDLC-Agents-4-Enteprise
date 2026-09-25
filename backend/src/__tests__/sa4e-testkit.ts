@@ -19,7 +19,7 @@ export interface TempDb {
   dbManager: DatabaseManager;
   engine: MemoryEngine;
   tmpDir: string;
-  close(): void;
+  close(): Promise<void>;
 }
 
 /** Create a fresh temp file-backed SQLite DB with full SCHEMA_V1 applied. */
@@ -36,8 +36,8 @@ export async function makeTempDb(): Promise<TempDb> {
     dbManager,
     engine,
     tmpDir,
-    close() {
-      dbManager.close();
+    async close() {
+      await dbManager.close();
       DatabaseManager.sharedAdapter = null;
       fs.rmSync(tmpDir, { recursive: true, force: true });
     },
