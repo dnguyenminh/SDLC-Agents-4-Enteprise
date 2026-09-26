@@ -8,7 +8,7 @@ const buildOptions = {
   entryPoints: ['src/extension.ts'],
   bundle: true,
   outfile: 'out/extension.js',
-  external: ['vscode', 'onnxruntime-node', '/bundled/*', './mcp/devtools/*'],
+  external: ['vscode', 'onnxruntime-node', '/bundled/*', './mcp/devtools/*', 'filetomarkdown'],
   alias: {
     // Native optional module from @vscode/proxy-agent — unused by us (CA cert
     // loading disabled). Stubbed so the bundle stays self-contained at runtime.
