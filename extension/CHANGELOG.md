@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.45.0] - 2026-09-26
+
+### Added
+- **PegaStreamIngester authentication** — accepts an optional auth manager and sends `Authorization: Bearer` on ingest-stream, job-poll and ingest-rule requests; indexing services auth headers updated.
+
+### Removed
+- **NativeAddonManager** — existed only to download better-sqlite3 native binaries; the backend now runs on `@sqlite.org/sqlite-wasm` (no native bindings). Removed `native-addon-manager.ts`, `addon-download-helpers.ts`, `platform-detector.ts` and `resources/release-manifest.json`.
+
 ## [1.38.0] - 2026-08-25
 
 ### Added
