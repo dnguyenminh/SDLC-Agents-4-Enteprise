@@ -3,7 +3,7 @@ import { WorkspaceRootResolver } from '../workspace-root-resolver';
 import { PiSessionFactory } from '../session-factory';
 
 describe('PiSessionFactory integration', () => {
-  it('uses resolver output as cwd', () => {
+  it('uses resolver output as cwd', async () => {
     const resolver = { resolve: () => '/fallback' } as any;
     const factory = new PiSessionFactory(resolver);
 
@@ -14,7 +14,7 @@ describe('PiSessionFactory integration', () => {
       createAgentSession: (cfg: any) => ({ sessionId: 'test', cfg }),
     };
 
-    const result = factory.createSession(sdk as any);
+    const result = await factory.createSession(sdk as any);
     expect(result.session.sessionId).toBe('test');
     expect(result.session.cfg.cwd).toBe('/fallback');
   });
