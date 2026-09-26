@@ -61,6 +61,8 @@ beforeAll(async () => {
   } catch (err) {
     throw new Error(`Server not running at ${BASE_URL}. Start with "npm run dev".\n${err}`);
   }
+  // Give ensureEngineIndexSchema a moment to finish creating FTS tables
+  await new Promise(r => setTimeout(r, 2000));
 
   // Authenticate to get JWT/session token for protected MCP endpoints
   const loginRes = await fetch(`${API_URL}/auth/login`, {
