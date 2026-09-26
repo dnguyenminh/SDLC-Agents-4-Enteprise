@@ -1,0 +1,4 @@
+test_case_id,username,password,role,expected_http_code,description
+TC-602,admin,admin123,ADMINISTRATOR,200,Valid admin login
+TC-602,guest,guest123,READER,403,Read-only user cannot toggle
+TC-602,, , ,401,Unauthenticated access
