@@ -16,20 +16,20 @@ describe('MemoryToolDispatcher sync_code & live status', () => {
   let queryLayer: QueryLayer;
   let dispatcher: MemoryToolDispatcher;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     (DatabaseManager as any).sharedDb = null;
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ksa-mem-test-'));
     dbPath = path.join(tmpDir, 'index.db');
     dbManager = new DatabaseManager(dbPath);
-    dbManager.initialize();
+    await dbManager.initialize();
 
     engine = new MemoryEngine(new SqliteDbAdapter(dbManager.getDb()));
     queryLayer = new QueryLayer(new SqliteDbAdapter(dbManager.getDb()));
     dispatcher = new MemoryToolDispatcher(engine, tmpDir, queryLayer);
   });
 
-  afterEach(() => {
-    dbManager.close();
+  afterEach(async () => {
+    await dbManager.close();
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 

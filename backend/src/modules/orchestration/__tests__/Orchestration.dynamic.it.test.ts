@@ -56,7 +56,7 @@ describe('execute_dynamic_tool scope propagation', () => {
   let seen: Record<string, unknown> | undefined;
 
   beforeEach(async () => {
-    ctx = makeTempDb();
+    ctx = await makeTempDb();
     seen = undefined;
     const registry = new ModuleRegistry(silentLogger());
     const handlers = new Map();
@@ -72,7 +72,7 @@ describe('execute_dynamic_tool scope propagation', () => {
     // projectContext → MCP handler stamps __projectId/__userId on the OUTER args.
     harness = await connectMcp(registry, { projectId: '7b11cdc169de', userId: 'mcp-client' });
   });
-  afterEach(async () => { await harness.close(); ctx.close(); });
+  afterEach(async () => { await harness.close(); await ctx.close(); });
 
   it('forwards __projectId/__userId into the nested tool arguments', async () => {
     await harness.client.callTool({

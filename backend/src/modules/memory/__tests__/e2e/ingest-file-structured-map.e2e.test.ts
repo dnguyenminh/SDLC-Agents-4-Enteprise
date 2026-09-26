@@ -121,7 +121,7 @@ describe('E2E-API: File Ingest → Entry Creation', () => {
     expect(parsed.entries).toBe(1);
 
     // Verify entries by querying DB directly
-    const matched = getEntriesBySource(ctx, 'plain.txt');
+    const matched = await getEntriesBySource(ctx, 'plain.txt');
     expect(matched.length).toBe(1);
     expect(matched[0].structured_map).toBe('{}');
     // Content should be full 5000 chars (not truncated at 2000)
