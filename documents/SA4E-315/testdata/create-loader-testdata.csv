@@ -1,0 +1,6 @@
+test_case_id,cwd,agentDir,expected_http_code,expected_result,description
+TC-001,C:\workspace\SA4E-254,C:\Users\ASUS\.pi\agent,200,Loader created,Valid initialization
+TC-101,/invalid/path,C:\Users\ASUS\.pi\agent,200,Warning logged,Invalid cwd fallback
+TC-102,C:\workspace\SA4E-254,/invalid/agent,200,Warning logged,Invalid agentDir
+TC-401,,C:\Users\ASUS\.pi\agent,200,Warning logged,Empty cwd
+TC-402,C:\workspace\SA4E-254,,200,Warning logged,Empty agentDir

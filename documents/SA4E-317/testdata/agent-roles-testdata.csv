@@ -1,0 +1,6 @@
+test_case_id,agent_role,prompt_mode,expected_http_code,expected_result,description
+TC-001,BA,append,200,Prompt contains BA steering,Valid append mode for BA
+TC-002,DEV,replace,200,Prompt equals DEV steering only,Valid replace mode for DEV
+TC-101,SA,append,200,Prompt contains SA steering,Alternative agent role SA
+TC-201,INVALID_ROLE,append,400,Validation error,Invalid agent role rejected
+TC-401,,append,400,Validation error,Empty agent role rejected

@@ -9,6 +9,7 @@ import { Hono } from 'hono';
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import { registerIndexRoutes } from './api-index.js';
+import { createPackagesRoutes } from '../../modules/packages/routes/packages.js';
 
 export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
   const app = new Hono();
@@ -88,6 +89,9 @@ export function createApiRoute(registry: ModuleRegistry, logger: Logger): Hono {
 
   // POST /api/index/* — source/document indexing (path-safe + tenant-scoped)
   registerIndexRoutes(app, registry, logger);
+
+  // Packages config routes
+  app.route('/', createPackagesRoutes());
 
   return app;
 }

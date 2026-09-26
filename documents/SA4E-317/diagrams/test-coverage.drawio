@@ -1,0 +1,39 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="2" value="Test Coverage Overview" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;" vertex="1" parent="1">
+<mxGeometry x="320" y="40" width="210" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="3" value="Requirements x Test Levels" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+<mxGeometry x="120" y="120" width="610" height="320" as="geometry"/>
+</mxCell>
+<mxCell id="4" value="UC-01 Configure System Prompt" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="140" y="140" width="200" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="5" value="UC-02 Load Project Skills" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="140" y="180" width="200" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="6" value="UC-03 Prompt Override Control" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="140" y="220" width="200" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="7" value="PBT" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="380" y="140" width="60" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="8" value="UT" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="470" y="140" width="60" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="9" value="IT" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="560" y="140" width="60" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="10" value="E2E-API" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="650" y="140" width="70" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="11" value="Coverage: Green=Covered" style="text;html=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+<mxGeometry x="140" y="300" width="200" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="4" target="7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

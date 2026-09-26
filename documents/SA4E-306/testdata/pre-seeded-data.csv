@@ -1,0 +1,8 @@
+id,packageId,packageName,version,enabled,status,description
+pkg-001,pi-mcp-adapter,Pi MCP Adapter,1.0.0,true,installed,Core package for MCP
+pkg-002,pi-web-access,Pi Web Access,1.0.0,true,installed,Core package for web
+pkg-003,@juicesharp/rpiv-todo,RPIV Todo,0.9.1,true,installed,Task management
+pkg-004,@juicesharp/rpiv-ask-user-question,RPIV Ask User Question,0.9.1,true,installed,Question flow
+pkg-005,pi-lens,Pi Lens,1.2.0,true,installed,Analysis lens
+pkg-006,context-mode,Context Mode,1.0.0,true,installed,Context handling
+pkg-007,pi-subagents,Pi Subagents,1.0.0,true,installed,Subagent support
