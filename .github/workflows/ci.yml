@@ -105,6 +105,21 @@ jobs:
       - run: npm run build --workspace=backend
         working-directory: .
 
+      - name: Start code-intel MCP server
+        run: |
+          nohup npx tsx backend/src/index.ts > /tmp/code-intel.log 2>&1 &
+          echo $! > /tmp/code-intel.pid
+          sleep 10
+          # Wait for health
+          for i in {1..30}; do
+            curl -s http://localhost:48721/health && break || sleep 2;
+          done
+        working-directory: .
+        env:
+          CODE_INTEL_PORT: 9181
+          ADMIN_INITIAL_PASSWORD: test-admin-pw-01
+          NODE_ENV: test
+
       - run: npm run test:e2e-api --workspace=backend
         working-directory: .
         continue-on-error: true
