@@ -41,7 +41,7 @@ export class DialectHelper {
   /** Check column existence — cross-engine SQL. */
   columnExistsQuery(table: string): string {
     if (this.engine === 'sqlite') {
-      return `SELECT name FROM pragma_table_info('${table}')`;
+      return `PRAGMA table_info('${table}')`;
     }
     return `SELECT column_name as name FROM information_schema.columns WHERE table_name = '${table}'`;
   }
