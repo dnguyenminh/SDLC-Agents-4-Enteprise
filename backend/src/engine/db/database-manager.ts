@@ -1,7 +1,7 @@
-﻿/**
+/**
  * DatabaseManager — SQLite lifecycle management for the indexing engine.
  * Handles open (wasm), migrations, and graceful close.
- * Migrated off better-sqlite3: uses SqliteWasmAdapter (@sqlite.org/sqlite-wasm).
+ * Uses SqliteWasmAdapter (@sqlite.org/sqlite-wasm).
  * The wasm adapter is in-memory in Node and persists to disk by serializing the
  * whole DB, so native-binding resolution and VACUUM-based backups are gone.
  */

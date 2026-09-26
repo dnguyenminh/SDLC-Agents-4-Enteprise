@@ -3,7 +3,7 @@
  * SA4E-45: getDbAdapter() enables PostgreSQL/MySQL support.
  * SA4E-49: Consolidated into single unified DB file (index.db).
  * SA4E-234: SQLite backed by @sqlite.org/sqlite-wasm (SqliteWasmAdapter) — no
- * native better-sqlite3. The wasm adapter is async-only, so connect + schema
+ * native bindings. The wasm adapter is async-only, so connect + schema
  * init happen in initAdapters() (awaited at startup) via a shared init promise.
  */
 

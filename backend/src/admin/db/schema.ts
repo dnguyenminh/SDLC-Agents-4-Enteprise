@@ -1,6 +1,6 @@
 /**
  * admin/db/schema.ts — Admin schema initialization and seed data.
- * SA4E-53: Accepts DatabaseAdapter (sync interface) instead of raw better-sqlite3.
+ * SA4E-53: Accepts DatabaseAdapter (sync interface) instead of a raw Database handle.
  * Multi-engine: uses async adapter API + per-engine DDL/DML so it runs on both
  * SQLite and PostgreSQL (PostgresAdapter throws on the sync exec/get/run methods).
  */

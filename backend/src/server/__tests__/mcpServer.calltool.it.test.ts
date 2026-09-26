@@ -1,6 +1,6 @@
 /**
  * IT-02 — CallTool success increments tool_usage; error result not counted.
- * Real getMcpServer + in-process Client + real temp SQLite (better-sqlite3).
+ * Real getMcpServer + in-process Client + real temp SQLite DB (wasm).
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

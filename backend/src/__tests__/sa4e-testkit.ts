@@ -1,6 +1,6 @@
 /**
  * SA4E-18 test kit — shared helpers for Tool Visibility Tiers tests.
- * Provides temp SQLite DB (real better-sqlite3) and a lightweight stub module.
+ * Provides a temp SQLite DB (wasm) and a lightweight stub module.
  */
 
 import { DatabaseManager } from '../engine/db/database-manager.js';

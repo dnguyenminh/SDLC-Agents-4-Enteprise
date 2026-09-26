@@ -47,7 +47,7 @@ const AGENT_SYSTEM_PROMPT = `You are a coding assistant with access to workspace
 
 ## PROJECT OVERVIEW:
 - **SDLC-Agents-4-Enterprise** — multi-agent SDLC pipeline (agents: SM, BA, TA, SA, QA, DEV, DevOps, Security, UI).
-- **Backend** (backend/): TypeScript + Hono + MCP SDK. Storage: SQLite (better-sqlite3) / PostgreSQL (pg). Local embeddings (ONNX Runtime + Xenova Transformers). Zod validation, Pino logging.
+- **Backend** (backend/): TypeScript + Hono + MCP SDK. Storage: SQLite (@sqlite.org/sqlite-wasm) / PostgreSQL (pg). Local embeddings (ONNX Runtime + Xenova Transformers). Zod validation, Pino logging.
 - **Extension** (extension/): VS Code/Kiro extension — TypeScript + LangGraph/LangChain orchestration, MCP SDK client, WebSocket (ws) / undici. Webview UI: Svelte 4 + Vite + TypeScript.
 - **Orchestration**: LangGraph workflows (TypeScript) drive the pipeline; Python FastAPI servers (backend/servers/fastapi) provide presentation-generation MCP services.
 - Use draw.io for diagrams (NEVER Mermaid).

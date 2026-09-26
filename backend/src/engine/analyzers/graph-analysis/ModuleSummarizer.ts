@@ -35,8 +35,8 @@ export class ModuleSummarizer {
       const hotPathAnalyzer = new HotPathAnalyzer(this.graphLoader);
       const deadImportDetector = new DeadImportDetector(this.adapter, this.projectId);
 
-      const circularDeps = circularDetector.detect({ module: mod.name });
-      const hotPaths = hotPathAnalyzer.analyze({ module: mod.name, limit: 5 });
+      const circularDeps = await circularDetector.detect({ module: mod.name });
+      const hotPaths = await hotPathAnalyzer.analyze({ module: mod.name, limit: 5 });
       const deadImports = await deadImportDetector.detect({ module: mod.name });
       const avgComplexity = await this.getAvgComplexity(mod.name);
 

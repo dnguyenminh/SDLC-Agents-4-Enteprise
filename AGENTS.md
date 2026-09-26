@@ -13,7 +13,7 @@ Multi-agent SDLC pipeline with specialized agents (BA, TA, SA, QA, DEV, DevOps, 
 7. **Self-Learning** — KB first, ingest after
 
 ## Architecture
-- **Backend** (`backend/`): TypeScript + Hono + MCP SDK — Code Intelligence MCP server (Streamable HTTP, default port 48721). Storage: SQLite (`better-sqlite3`, default) / PostgreSQL (`pg`). Local embeddings (ONNX Runtime + Xenova Transformers), draw.io layout (ELK.js), AST parsing (web-tree-sitter), Zod validation, Pino logging.
+- **Backend** (`backend/`): TypeScript + Hono + MCP SDK — Code Intelligence MCP server (Streamable HTTP, default port 48721). Storage: SQLite (`@sqlite.org/sqlite-wasm`, default) / PostgreSQL (`pg`). Local embeddings (ONNX Runtime + Xenova Transformers), draw.io layout (ELK.js), AST parsing (web-tree-sitter), Zod validation, Pino logging.
 - **Extension** (`extension/`): VS Code/Kiro extension — TypeScript + LangGraph/LangChain agent orchestration, MCP SDK client, Anthropic SDK, WebSocket (`ws`) / `undici` with `@vscode/proxy-agent` proxy. Webview UI: Svelte 4 + Vite + TypeScript.
 - **Orchestration**: LangGraph workflows (TypeScript, extension) drive the agent pipeline; Python FastAPI servers (`backend/servers/fastapi`, incl. `mcp_server.py`) provide presentation-generation MCP services.
 - **Docs**: documents/{TICKET}/ with STATUS.json

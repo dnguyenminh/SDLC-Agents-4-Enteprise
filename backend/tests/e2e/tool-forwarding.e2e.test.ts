@@ -49,6 +49,15 @@ async function callTool(toolName: string, args: Record<string, unknown> = {}): P
     signal: AbortSignal.timeout(30000),
   });
   const data = await res.json();
+  if (data.isError) {
+    const errText = Array.isArray(data.content)
+      ? data.content.map((c: any) => c?.text).filter(Boolean).join(' | ')
+      : '';
+    console.error(
+      `[E2E ToolError] ${toolName} status=${res.status} args=${JSON.stringify(args)} ` +
+        `error=${errText || JSON.stringify(data)}`,
+    );
+  }
   return { status: res.status, data };
 }
 
@@ -135,9 +144,9 @@ describe('E2E — Code Intel Tools', () => {
   it('find_hot_paths', async () => { const r = await callTool('find_hot_paths', { limit: 5 }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
   it('find_dead_imports', async () => { const r = await callTool('find_dead_imports', { file: 'index.ts' }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
   it('module_summary', async () => { const r = await callTool('module_summary', { name: 'memory' }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
-  it('get_ai_context', async () => { const r = await callTool('get_ai_context', { query: 'auth', limit: 5 }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
-  it('get_edit_context', async () => { const r = await callTool('get_edit_context', { file: 'extension.ts', line: 20 }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
-  it('get_curated_context', async () => { const r = await callTool('get_curated_context', { task: 'implement auth', limit: 5 }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
+  it('get_ai_context', async () => { const r = await callTool('get_ai_context', { symbol: 'activate', intent: 'explain' }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
+  it('get_edit_context', async () => { const r = await callTool('get_edit_context', { symbol: 'extension.ts:20' }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
+  it('get_curated_context', async () => { const r = await callTool('get_curated_context', { query: 'implement auth' }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
   it('find_duplicates', async () => { const r = await callTool('find_duplicates', {}); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
   it('find_dead_code', async () => { const r = await callTool('find_dead_code', { limit: 5 }); expect(r.status).toBe(200); expect(r.data.isError).toBe(false); });
 });

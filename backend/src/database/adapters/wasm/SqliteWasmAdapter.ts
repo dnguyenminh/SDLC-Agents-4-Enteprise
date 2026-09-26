@@ -1,7 +1,7 @@
 /**
  * SqliteWasmAdapter — SQLite engine backed by @sqlite.org/sqlite-wasm.
  *
- * Replaces the native better-sqlite3 adapter. Runs an in-memory wasm SQLite DB
+ * Replaces the previous native adapter. Runs an in-memory wasm SQLite DB
  * and persists to disk by serializing/deserializing the whole database
  * (sqlite-wasm has no OPFS/file VFS under Node). Async-first: sync SQL methods
  * throw "Use xxxAsync", mirroring PostgresAdapter, because wasm init is async.
@@ -16,6 +16,7 @@ import { normalizeSqlitePlaceholders } from '../sqlite-placeholders.js';
 import { getSqlite3 } from './wasmModule.js';
 import { WasmSqlitePersistence } from './WasmSqlitePersistence.js';
 import type { Sqlite3Static, Database, BindingSpec } from './wasmTypes.js';
+import * as path from 'path';
 
 /** SQL bind params must be a flat array of primitive-ish values. */
 type Params = unknown[] | undefined;
@@ -26,22 +27,66 @@ export class SqliteWasmAdapter implements DatabaseAdapter {
   private persistence: WasmSqlitePersistence | null = null;
   private connected = false;
   private inTransaction = false;
+  /**
+   * Root-cause fix for sibling-adapter divergence: each `new SqliteWasmAdapter()`
+   * opened a private in-memory DB, so N adapters on the same host file each saw
+   * a different database (migrations visible on one, `no such table` on the
+   * others). File-backed adapters now share a single live DB per resolved path
+   * for the process lifetime (refcounted). `:memory:` adapters stay isolated
+   * (unit tests rely on it).
+   */
+  private static shared: Map<string, { db: Database; persistence: WasmSqlitePersistence; refs: number }> = new Map();
+  private sharedKey: string | null = null;
 
   constructor(private readonly dbPath: string) {}
 
   async connect(): Promise<void> {
     if (this.connected) return;
     this.sqlite3 = await getSqlite3();
+    const key = this.dbPath === ':memory:' || this.dbPath === '' ? null : path.resolve(this.dbPath);
+    // Shared-DB fast path: another adapter already owns the live DB for
+    // this file — reuse it so every consumer sees the same tables/rows.
+    if (key) {
+      const existing = SqliteWasmAdapter.shared.get(key);
+      if (existing) {
+        this.db = existing.db;
+        this.persistence = existing.persistence;
+        this.sharedKey = key;
+        existing.refs++;
+        this.connected = true;
+        return;
+      }
+    }
     // Always open an in-memory DB; disk state (if any) is deserialized in.
     this.db = new this.sqlite3.oo1.DB(':memory:', 'c');
     this.persistence = new WasmSqlitePersistence(this.sqlite3, this.db, this.dbPath);
     this.persistence.loadFromDisk();
     // WAL is irrelevant for in-memory; enforce FK integrity like the old adapter.
     this.db.exec('PRAGMA foreign_keys = ON');
+    if (key) {
+      SqliteWasmAdapter.shared.set(key, { db: this.db, persistence: this.persistence, refs: 1 });
+      this.sharedKey = key;
+    }
     this.connected = true;
   }
 
   async disconnect(): Promise<void> {
+    if (this.sharedKey) {
+      const entry = SqliteWasmAdapter.shared.get(this.sharedKey);
+      if (entry) {
+        entry.refs--;
+        if (entry.refs <= 0) {
+          await entry.persistence.flush();
+          entry.db.close();
+          SqliteWasmAdapter.shared.delete(this.sharedKey);
+        }
+      }
+      this.sharedKey = null;
+      this.db = null;
+      this.persistence = null;
+      this.connected = false;
+      return;
+    }
     if (this.persistence) await this.persistence.flush();
     if (this.db) { this.db.close(); this.db = null; }
     this.persistence = null;
@@ -72,7 +117,10 @@ export class SqliteWasmAdapter implements DatabaseAdapter {
     const db = this.getDb();
     db.exec({ sql: normalizeSqlitePlaceholders(sql), bind: this.bind(params) });
     const changes = db.changes();
-    const lastInsertRowid = this.sqlite3!.capi.sqlite3_last_insert_rowid(db);
+    // sqlite3_last_insert_rowid returns i64 → BigInt in JS. Convert to Number
+    // so downstream JSON.stringify(payload) never throws
+    // "Do not know how to serialize a BigInt" (matches old adapter behaviour).
+    const lastInsertRowid = Number(this.sqlite3!.capi.sqlite3_last_insert_rowid(db));
     this.markDirty();
     return { changes, lastInsertRowid };
   }

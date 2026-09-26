@@ -15,7 +15,6 @@ describe('IT-05: tool_usage schema idempotency', () => {
    it('creates tool_usage with expected columns and preserves data on re-apply', async () => {
      const cols = await ctx.dbManager.getAdapter().allAsync('PRAGMA table_info(tool_usage)') as any[];
      const byName = Object.fromEntries(cols.map(c => [c.name, c]));
-    const byName = Object.fromEntries(cols.map(c => [c.name, c]));
     expect(byName['tool_name']).toBeDefined();
     expect(byName['tool_name'].pk).toBe(1);
     expect(byName['call_count'].notnull).toBe(1);

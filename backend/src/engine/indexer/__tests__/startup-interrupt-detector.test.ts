@@ -6,7 +6,7 @@
  * actual detection→update flow plus graceful degradation on DB error (EF-04).
  *
  * Uses SqliteAdapter (production SQLite adapter, in-memory) so tests no longer
- * depend on native better-sqlite3.
+ * depend on native bindings.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';

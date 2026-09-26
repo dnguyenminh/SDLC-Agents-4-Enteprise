@@ -164,7 +164,7 @@ backend/
 |-------|-----------|
 | Runtime | Node.js >= 18 |
 | HTTP Framework | Hono (lightweight, TypeScript-first) |
-| Database | better-sqlite3 (WAL mode, FTS5 full-text search) |
+| Database | @sqlite.org/sqlite-wasm (FTS5 full-text search) |
 | Embeddings | onnxruntime-node + paraphrase-multilingual-MiniLM-L12-v2 |
 | AST Parsing | web-tree-sitter (multi-language) |
 | File Watching | chokidar |

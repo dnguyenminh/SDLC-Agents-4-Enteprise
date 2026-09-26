@@ -5,7 +5,7 @@
  * - files/modules are RECREATED (composite UNIQUE constraint change).
  * - symbols/embeddings/relationships/body_embeddings use additive ALTER ADD COLUMN.
  * Idempotent: each step checks pragma_table_info before acting.
- * SA4E-53: Uses QueryDatabaseAdapter instead of raw better-sqlite3.
+ * SA4E-53: Uses QueryDatabaseAdapter instead of a raw Database handle.
  */
 
 import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';

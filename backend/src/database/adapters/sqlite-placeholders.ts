@@ -1,6 +1,6 @@
 /**
  * SQLite placeholder normalization.
- * better-sqlite3 treats `$1`/`$2` as *named* parameters, so array binding
+ * Some SQLite drivers treat `$1`/`$2` as *named* parameters, so array binding
  * (stmt.run(...params)) throws "Too many parameter values were provided".
  * Cross-engine SQL often uses `$n` (PostgreSQL style). Normalize them to `?`
  * so array binding works on SQLite too.

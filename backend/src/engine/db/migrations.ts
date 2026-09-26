@@ -1,7 +1,7 @@
 /**
  * Migration runner — sequential, versioned schema migrations.
  * Each migration is applied once and tracked in schema_version table.
- * SA4E-53: Uses QueryDatabaseAdapter instead of raw better-sqlite3.
+ * SA4E-53: Uses QueryDatabaseAdapter instead of a raw Database handle.
  */
 
 import pino from 'pino';

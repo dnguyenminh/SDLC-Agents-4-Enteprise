@@ -1,6 +1,6 @@
 /**
  * UT-06..09 — MemoryEngine.incrementToolUsage / getToolUsage (SA4E-18).
- * Uses a real temp SQLite DB (better-sqlite3) with full schema applied.
+ * Uses a real temp SQLite DB (wasm) with full schema applied.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

@@ -4,7 +4,7 @@
  * progress events and background runs can be simulated deterministically.
  *
  * Uses SqliteAdapter (production SQLite adapter, in-memory) so tests no longer
- * depend on native better-sqlite3.
+ * depend on native bindings.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
