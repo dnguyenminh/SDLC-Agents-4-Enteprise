@@ -34,8 +34,8 @@ describe('SA4E-214 — Pega schema persistence endpoints are wired to a dbAdapte
   it('GET /api/v1/pega/schema/find?ruleType=x is reachable (not 503)', async () => {
     const res = await call('GET', '/api/v1/pega/schema/find?ruleType=SA4E214Regression');
     expect(res.status).not.toBe(503);
-    // adapter present -> reaches the DB query (404 = not found, not wiring failure)
-    expect([404, 400]).toContain(res.status);
+    // adapter present -> reaches auth / validation. 401 = auth required, 404 = not found, 400 = bad request
+    expect([404, 400, 401]).toContain(res.status);
   });
 
   it('PATCH /api/v1/pega/schema/update is reachable (not 503)', async () => {

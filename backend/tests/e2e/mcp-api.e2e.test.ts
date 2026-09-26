@@ -21,6 +21,7 @@ async function authFetch(path: string, init: RequestInit = {}): Promise<Response
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      'X-Project-Id': 'test-project',
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...((init.headers as Record<string, string>) || {}),
     },
