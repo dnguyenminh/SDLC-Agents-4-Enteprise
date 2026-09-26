@@ -101,13 +101,14 @@ describe('SA4E-27 UT — buildReadFilter', () => {
     expect(clause).toContain("scope = 'SHARED'");
     expect(clause).not.toContain("scope = 'USER'");
     expect(clause).toContain("scope = 'WORKSPACE'");
+    expect(clause).toContain("scope = 'PROJECT'");
     expect(clause).toContain('project_id = ?');
     expect(clause).not.toContain('project_id IS NULL');
     expect(clause).toContain("scope = 'WORKSPACE'");
     expect(clause).toContain('user_id = ?');
     expect(clause).toContain('kb_shared_grants');
-    // SA4E-31: params include userId + projectId for WORKSPACE, + projectId for SHARED
-    expect(params).toEqual(['user-1', 'app-A', 'app-A']);
+    // SA4E-31 + SA4E-331: params include userId + projectId for WORKSPACE, projectId for PROJECT, + projectId for SHARED
+    expect(params).toEqual(['user-1', 'app-A', 'app-A', 'app-A']);
   });
 
   it('UT-02: without projectId (empty string) fails closed (SA4E-31)', () => {

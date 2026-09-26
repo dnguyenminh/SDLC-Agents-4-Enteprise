@@ -27,7 +27,7 @@ import { createErrorHandler } from './middleware/error-handler.js';
 import { rateLimiter, loadPersistedRateLimitCap } from './middleware/rate-limiter.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { apiKeyAuth } from './middleware/api-key-auth.js';
-import { jwtAuth } from './middleware/jwt-auth.js';
+import { jwtAuth, jwtAuthStrict } from './middleware/jwt-auth.js';
 import { createKbApiRoutes, createToolsApiRoutes } from './routes/kb-api.js';
 import { createRateLimitConfigRoutes } from './routes/rate-limit-config-routes.js';
 import { createPegaApiRoutes } from './routes/pega-api.js';
@@ -98,7 +98,16 @@ export class HttpServer {
     // SA4E-241 SEC-01: bind identity to the whole Pega route group (mounted at
     // /api/v1/pega/*). projectId is derived from the authenticated identity
     // (X-Project-Id / JWT pid), never from the request body (fail-closed).
-    app.use('/api/v1/pega/*', jwtAuth);
+    // Require login session for all Pega APIs except login itself.
+    app.use('/api/v1/pega/*', jwtAuthStrict);
+    // Enforce login session for all /api/v1/* endpoints except login itself
+    app.use('/api/v1/*', async (c, next) => {
+      const path = c.req.path;
+      if (path === '/api/v1/auth/login' || path.startsWith('/api/v1/auth/login/')) {
+        return next();
+      }
+      return jwtAuthStrict(c, next);
+    });
     // SA4E-241 SEC-08: per-identity rate limit on the Pega group (defense-in-depth).
     app.use('/api/v1/pega/*', rateLimiter);
     app.onError(createErrorHandler(this.logger));

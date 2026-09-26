@@ -121,7 +121,7 @@ describe('SA4E-26 UT — buildScopeClause & buildScopeParams', () => {
 
   it('UT-05: buildScopeParams with projectId returns [userId, projectId, projectId, projectId] (SA4E-31)', () => {
     const params = engine.buildScopeParams({ userId: 'user-1', projectId: 'app-A' });
-    expect(params).toEqual(['user-1', 'app-A', 'app-A']);
+    expect(params).toEqual(['user-1', 'app-A', 'app-A', 'app-A']);
   });
 
   it('UT-06: buildScopeParams without projectId returns [] (fail closed, SA4E-31)', () => {

@@ -14,6 +14,10 @@ export async function handleSearch(engine: MemoryEngine, scopeCtx: ScopeContext 
   const scope = a.scope as string | undefined;
   const scopeCtxResolved = scope === 'all' ? undefined : scopeCtx;
   const limit = (a.limit as number) ?? 10;
+  // SA4E-331: fail closed if no scope context for PROJECT isolation
+  if (!scopeCtxResolved?.projectId) {
+    return `No knowledge found for "${query}"`;
+  }
   const results = await engine.search(query, limit, a.tier as string, undefined, scopeCtxResolved);
   await engine.auditLog('SEARCH');
   for (const r of results) await engine.recordAccess(r.entry.id);
