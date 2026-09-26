@@ -196,7 +196,7 @@ export class HttpServer {
         fetch: this.app.fetch,
         port: this.port,
         hostname: this.host,
-      }, (info) => {
+      }, async (info) => {
         this._isRunning = true;
         this.logger.info({ port: info.port, host: this.host }, 'Backend server started');
         // Apply any admin-persisted rate-limit cap (non-blocking; survives restart).
@@ -205,31 +205,22 @@ export class HttpServer {
         });
         // SA4E-101: bootstrap persistent index-status tables, then mark stale
         // running ops as interrupted, then start the cleanup scheduler.
-        // All non-blocking — failures degrade gracefully (EF-04).
-        // Root-cause fix: sibling sqlite-wasm adapters each own a private
-        // in-memory DB, so the adapter serving tools may miss index tables
-        // created by database-manager's migration run. Re-apply canonical
-        // SCHEMA_V1 (idempotent) before anything queries files/symbols.
-        ensureEngineIndexSchema()
-          .then(() => ensureSa4e101Tables())
-          .then(() => runStartupInterruptDetection())
-          // SA4E-300: one-time idempotent cleanup of orphan CODE_ENRICHMENT tasks
-          // left by the removed graph-sync enrichment path (Path A).
-          .then(() => ensureSa4e300Cleanup())
-          // SA4E-302: ensure unique index for graph_edges ON CONFLICT
-          .then(() => ensureSa4e302UniqueGraphEdges())
-          // SA4E-303: drop unused edge tables
-          .then(() => ensureSa4e303DropUnusedTables())
-          .then(() => {
-            this.cleanupScheduler = new CleanupScheduler();
-            this.cleanupScheduler.start();
-          })
-          .catch((err) => {
-            this.logger.error(
-              { err },
-              '[startup] SA4E-101 persistence init failed — progress will not survive restart',
-            );
-          });
+        // Ensure schema is ready before marking server as fully started to avoid E2E race.
+        try {
+          await ensureEngineIndexSchema();
+          await ensureSa4e101Tables();
+          await runStartupInterruptDetection();
+          await ensureSa4e300Cleanup();
+          await ensureSa4e302UniqueGraphEdges();
+          await ensureSa4e303DropUnusedTables();
+          this.cleanupScheduler = new CleanupScheduler();
+          this.cleanupScheduler.start();
+        } catch (err) {
+          this.logger.error(
+            { err },
+            '[startup] SA4E-101 persistence init failed — progress will not survive restart',
+          );
+        }
         resolve();
       });
     });
