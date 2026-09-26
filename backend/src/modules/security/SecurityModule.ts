@@ -88,7 +88,7 @@ export class SecurityModule implements IModule {
     const repository = new GateGuardRepository(adapter);
     await repository.ensureSchema();
     const service = new GateGuardService(repository, this.logger);
-    service.loadPatterns();
+    await service.loadPatterns();
     this.gateGuardHandler = new GateGuardToolHandler(service, this.logger);
   }
 

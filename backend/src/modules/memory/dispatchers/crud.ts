@@ -378,7 +378,9 @@ const CRUD_ACTIONS: Record<string, CrudActionFn> = {
     const id = a.id as number;
     if (!id) return 'Error: id required';
     const raw = await engine.findById(id);
-    const e = scopeCtx ? validateReadAccess(scopeCtx as ProjectContext, raw) : raw;
+    // SA4E-331: Fail closed if no scope context — prevents project isolation bypass
+    if (!scopeCtx) return `Not found: ${id}`;
+    const e = validateReadAccess(scopeCtx as ProjectContext, raw);
     if (!e) return `Not found: ${id}`;
     await engine.recordAccess(id);
     return `#${e.id} [${e.type}] ${e.summary}\nTier: ${e.tier} | Scope: ${e.scope ?? 'USER'} | Tags: ${e.tags}\n${e.content}`;

@@ -1,8 +1,10 @@
 /**
  * admin/db/core.ts — Central database access layer (unified single DB).
- * SA4E-45: getDbAdapter() / getDbAdapter() enable PostgreSQL/MySQL support.
+ * SA4E-45: getDbAdapter() enables PostgreSQL/MySQL support.
  * SA4E-49: Consolidated into single unified DB file (index.db).
- * SA4E-53: Removed raw better-sqlite3 import; uses SqliteAdapter for creation.
+ * SA4E-234: SQLite backed by @sqlite.org/sqlite-wasm (SqliteWasmAdapter) — no
+ * native bindings. The wasm adapter is async-only, so connect + schema
+ * init happen in initAdapters() (awaited at startup) via a shared init promise.
  */
 
 import * as path from 'path';
@@ -12,7 +14,7 @@ import { loadConfig, getWorkspacePath } from '../../config/index.js';
 import { initSchema, seedDefaults } from './schema.js';
 import { hashPassword, verifyPassword, generateToken } from './password.js';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
-import { SqliteAdapter } from '../../database/adapters/SqliteAdapter.js';
+import { SqliteWasmAdapter } from '../../database/adapters/wasm/SqliteWasmAdapter.js';
 import { DatabaseAdapterFactory } from '../../database/factory/DatabaseAdapterFactory.js';
 import { DatabaseConfigService } from '../../database/config/DatabaseConfigService.js';
 
@@ -64,22 +66,40 @@ export function getActiveDbConfig() {
   } catch { return { engine: 'sqlite' as const, dbPath: DB_PATH }; }
 }
 
-let sqliteAdapter: SqliteAdapter | null = null;
+let sqliteAdapter: SqliteWasmAdapter | null = null;
+// Single shared init promise — initAdapters() awaits this same promise so no
+// caller (server boot, tests) can race schema creation / admin seeding.
+let sqliteReady: Promise<void> | null = null;
 
 /**
- * Get or create the unified SQLite adapter (singleton).
- * Handles directory creation, WAL mode, and schema initialization.
- * Note: SqliteAdapter.connect() is synchronous internally (just wraps sync calls).
+ * Get or create the unified SQLite (wasm) adapter singleton (instance only).
+ * The instance is created synchronously; connection + schema init happen
+ * asynchronously in {@link ensureUnifiedSqliteReady} (awaited by initAdapters()
+ * at startup). Callers that run after startup receive a connected adapter.
  */
-function getUnifiedSqliteAdapter(): SqliteAdapter {
+function getUnifiedSqliteAdapter(): SqliteWasmAdapter {
   if (!sqliteAdapter) {
-    sqliteAdapter = new SqliteAdapter(DB_PATH);
-    // SqliteAdapter.connect() is sync internally — safe to call eagerly
-    void sqliteAdapter.connect();
-    initSchema(sqliteAdapter);
-    seedDefaults(sqliteAdapter);
+    sqliteAdapter = new SqliteWasmAdapter(DB_PATH);
   }
   return sqliteAdapter;
+}
+
+/**
+ * Connect the wasm SQLite adapter and initialize the admin schema.
+ * Idempotent: the underlying connect + schema work runs exactly once via the
+ * shared sqliteReady promise. MUST be awaited at startup (via initAdapters()).
+ * The connect rejection is chained into sqliteReady so a failure surfaces to the
+ * awaiting caller instead of becoming an unhandled rejection (SA4E-262).
+ */
+function ensureUnifiedSqliteReady(): Promise<void> {
+  const adapter = getUnifiedSqliteAdapter();
+  if (!sqliteReady) {
+    sqliteReady = adapter.connect()
+      .then(() => initSchema(adapter))
+      .then(() => seedDefaults(adapter))
+      .catch((err) => { logger.error({ err }, '[admin] SQLite (wasm) schema init failed'); throw err; });
+  }
+  return sqliteReady;
 }
 
 // --- DatabaseAdapter layer (multi-DB support) ---
@@ -95,7 +115,14 @@ export function getDbAdapter(): DatabaseAdapter {
   if (!dbAdapter) {
     const engine = getActiveEngine();
     if (engine === 'sqlite') {
+      // Instance is created sync; connection/schema are established by
+      // initAdapters() -> ensureUnifiedSqliteReady() at startup. Guarded callers
+      // check isConnected(); the init rejection is logged (and rethrown into
+      // sqliteReady so initAdapters() sees it).
       dbAdapter = getUnifiedSqliteAdapter();
+      void ensureUnifiedSqliteReady().catch((err) => {
+        logger.error({ err }, '[admin] Failed to init unified SQLite adapter');
+      });
     } else {
       const configService = new DatabaseConfigService(DATA_DIR);
       const activeConfig = configService.getActiveConfig();
@@ -108,18 +135,20 @@ export function getDbAdapter(): DatabaseAdapter {
   return dbAdapter;
 }
 
-
-
 /**
  * Initialize DB adapter and await connection.
  * MUST be called at startup BEFORE any module initialization.
- * For SQLite: instant (sync). For PostgreSQL/MySQL: awaits pool connection.
+ * For SQLite (wasm): awaits connect + schema init/seed. For PostgreSQL/MySQL:
+ * awaits pool connection + schema init/seed.
  * @throws Error if connection fails (server should not start)
  */
 export async function initAdapters(): Promise<void> {
   const engine = getActiveEngine();
   if (engine === 'sqlite') {
-    getDbAdapter();
+    // Create instance + await wasm connect + schema init/seed (shared promise).
+    dbAdapter = getUnifiedSqliteAdapter();
+    await ensureUnifiedSqliteReady();
+    logger.info({ engine }, '[admin] SQLite (wasm) adapter connected and ready');
     return;
   }
 
@@ -131,8 +160,8 @@ export async function initAdapters(): Promise<void> {
 
   // Initialize schema and seed defaults for PostgreSQL/MySQL
   try {
-    initSchema(adapter);
-    seedDefaults(adapter);
+    await initSchema(adapter);
+    await seedDefaults(adapter);
   } catch (err) {
     logger.error({ err }, '[admin] Failed to init schema/seed defaults');
   }
@@ -143,6 +172,7 @@ export async function initAdapters(): Promise<void> {
 /** Reset cached DB instance and adapter (used after DB switch/migration) */
 export function resetAdminDb(): void {
   dbAdapter = null;
+  sqliteReady = null;
   if (sqliteAdapter) {
     void sqliteAdapter.disconnect();
     sqliteAdapter = null;
@@ -150,11 +180,11 @@ export function resetAdminDb(): void {
 }
 
 /**
- * Get the raw DB instance.
- * @deprecated Use getDbAdapter() for new code. Kept for backward compat with tests.
+ * Get the unified DatabaseAdapter (backward-compat alias).
+ * @deprecated Use getDbAdapter() for new code. Kept for tests.
+ * SA4E-262: delegates to getDbAdapter() to honor the unified-DB contract and
+ * avoid force-initializing SQLite when the active engine is PostgreSQL.
  */
-export function getAdminDb(): any {
-  const adapter = getUnifiedSqliteAdapter();
-  // getRawDb removed; return adapter directly for compat
-  return adapter as any;
+export function getAdminDb(): DatabaseAdapter {
+  return getDbAdapter();
 }

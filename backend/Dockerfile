@@ -4,7 +4,7 @@ FROM node:22-alpine AS base
 
 WORKDIR /app
 
-# Install dependencies for native modules (better-sqlite3, onnxruntime-node)
+# Install dependencies for native modules (onnxruntime-node)
 RUN apk add --no-cache python3 make g++ git
 
 # --- Dependencies stage ---

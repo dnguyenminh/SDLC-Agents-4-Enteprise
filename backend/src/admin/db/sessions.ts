@@ -15,6 +15,7 @@ interface SessionRow {
   token: string;
   device: string;
   ip_address: string;
+  user_agent_hash: string;
   login_at: string;
   expires_at: string;
   is_active: number;
@@ -35,6 +36,7 @@ export async function createSession(
   userId: string,
   device?: string,
   ip?: string,
+  userAgentHash?: string,
 ): Promise<Session & { token: string }> {
   const adapter = getDbAdapter();
   const sessionId = 'sess-' + crypto.randomUUID().slice(0, 8);
@@ -43,9 +45,9 @@ export async function createSession(
   const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
   await adapter.runAsync(
-    `INSERT INTO sessions (session_id, user_id, token, device, ip_address, login_at, expires_at, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-    [sessionId, userId, token, device || '', ip || '', now.toISOString(), expires.toISOString()],
+    `INSERT INTO sessions (session_id, user_id, token, device, ip_address, user_agent_hash, login_at, expires_at, is_active)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+    [sessionId, userId, token, device || '', ip || '', userAgentHash || '', now.toISOString(), expires.toISOString()],
   );
 
   return {
@@ -64,14 +66,18 @@ export async function createSession(
  */
 export async function validateSession(
   token: string,
+  currentUserAgentHash?: string,
 ): Promise<{ userId: string; username: string; accessGroupId: string } | null> {
   const adapter = getDbAdapter();
   const row = await adapter.getAsync<SessionUserRow>(
-    `SELECT s.user_id, s.expires_at, s.is_active, u.username, u.access_group_id, u.status
+    `SELECT s.user_id, s.expires_at, s.is_active, s.user_agent_hash, u.username, u.access_group_id, u.status
      FROM sessions s JOIN users u ON s.user_id = u.user_id
      WHERE s.token = ?`,
     [token],
   );
+  if (currentUserAgentHash && row?.user_agent_hash && row.user_agent_hash !== currentUserAgentHash) {
+    return null;
+  }
 
   if (!row) return null;
   if (!row.is_active) return null;
@@ -111,16 +117,18 @@ export async function invalidateUserSessions(userId: string): Promise<number> {
  */
 export async function refreshSession(
   token: string,
+  currentUserAgentHash?: string,
 ): Promise<{ token: string; expiresAt: string } | null> {
   const adapter = getDbAdapter();
-  const row = await adapter.getAsync<Pick<SessionUserRow, 'user_id' | 'expires_at' | 'is_active' | 'status'>>(
-    `SELECT s.user_id, s.expires_at, s.is_active, u.status
+  const row = await adapter.getAsync<Pick<SessionUserRow, 'user_id' | 'expires_at' | 'is_active' | 'status' | 'user_agent_hash'>>(
+    `SELECT s.user_id, s.expires_at, s.is_active, s.user_agent_hash, u.status
      FROM sessions s JOIN users u ON s.user_id = u.user_id
      WHERE s.token = ?`,
     [token],
   );
 
   if (!row || !row.is_active || row.status !== 'ACTIVE') return null;
+  if (currentUserAgentHash && row.user_agent_hash && row.user_agent_hash !== currentUserAgentHash) return null;
   if (new Date(row.expires_at) < new Date()) {
     await adapter.runAsync('UPDATE sessions SET is_active = 0 WHERE token = ?', [token]);
     return null;

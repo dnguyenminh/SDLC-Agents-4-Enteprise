@@ -9,7 +9,7 @@
  *   like/fuzzy:  ^=  ~=               (string contains / case-insensitive equality)
  *   relational:  >  <  >=  <=
  *   arithmetic:  +  -  *  /  %        (+ doubles as string concat when non-numeric)
- *   unary:       !  -  +
+ *   unary:       !  -  +  .ISNULL        (.ISNULL yields Boolean: value is Null)
  */
 
 import { PegValue, PegExpressionError } from './PegaExpressionAst.js';
@@ -74,7 +74,7 @@ function applyModulo(l: PegValue, r: PegValue): PegValue {
 
 /**
  * Apply a unary prefix operator to an evaluated operand.
- * @param op Unary operator lexeme ('!', '-', '+', '=')
+ * @param op Unary operator lexeme ('!', '-', '+', '=', 'ISNULL')
  * @param v Operand value
  * @returns Result value
  * @throws PegExpressionError for an unsupported operator
@@ -85,6 +85,7 @@ export function applyUnaryOp(op: string, v: PegValue): PegValue {
     case '-': return PegValue.number(-v.number);
     case '+': return PegValue.number(v.number);
     case '=': return v; // leading '=' prefix (Pega formula marker) — value unchanged
+    case 'ISNULL': return PegValue.bool(v.type === 'Null'); // '.ISNULL' Pega keyword
     default:
       throw new PegExpressionError(`Unsupported unary operator '${op}'`, 'UNSUPPORTED_OPERATOR');
   }

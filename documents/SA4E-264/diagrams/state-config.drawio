@@ -1,0 +1,33 @@
+<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="360" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="s0" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="40" y="150" width="24" height="24" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="s1" value="Missing&#10;(SSO_ENABLED=true,&#10;required vars absent)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#dae8cc;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="120" y="120" width="170" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="s2" value="Validating&#10;(zod parse, no network I/O)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="360" y="120" width="170" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="s3" value="Valid&#10;(boot continues,&#10;EntraConfig typed)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="610" y="40" width="170" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="s4" value="Invalid&#10;(field-level FATAL log,&#10;secret ***REDACTED***)&#10;→ process.exit(1)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=40;fillColor=#dae8cc;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="610" y="210" width="170" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t1" value="start" style="html=1;endArrow=block;" edge="1" parent="1" source="s0" target="s1">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t2" value="loadConfig()" style="html=1;endArrow=block;" edge="1" parent="1" source="s1" target="s2">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t3" value="parse OK&#10;(SSO off → boot local-only)" style="html=1;endArrow=block;" edge="1" parent="1" source="s2" target="s3">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t4" value="ZodError&#10;(missing / invalid GUID /&#10;non-HTTPS / bad scopes)" style="html=1;endArrow=block;" edge="1" parent="1" source="s2" target="s4">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

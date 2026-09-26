@@ -33,7 +33,7 @@ describe('SalesforceMetaParser — part 2', () => {
       const source = readFixture('LookupField.field-meta.xml');
       const result = parser.parse(source, 'force-app/main/default/objects/Case/fields/LookupField.field-meta.xml');
 
-      const field = result.symbols.find(s => s.kind === 'property');
+      const field = result.symbols.find(s => s.kind === 'sf_field');
       assert.ok(field, 'Should find field symbol');
       assert.equal(field.name, 'LookupField');
       assert.equal(field.returnType, 'Lookup');
@@ -43,7 +43,7 @@ describe('SalesforceMetaParser — part 2', () => {
       const source = readFixture('LookupField.field-meta.xml');
       const result = parser.parse(source, 'force-app/main/default/objects/Case/fields/LookupField.field-meta.xml');
 
-      const field = result.symbols.find(s => s.kind === 'property');
+      const field = result.symbols.find(s => s.kind === 'sf_field');
       assert.equal(field?.parentName, 'Case');
     });
 
@@ -63,7 +63,7 @@ describe('SalesforceMetaParser — part 2', () => {
       const source = readFixture('LWCMeta.js-meta.xml');
       const result = parser.parse(source, 'force-app/main/default/lwc/LWCMeta/LWCMeta.js-meta.xml');
 
-      const component = result.symbols.find(s => s.kind === 'class');
+      const component = result.symbols.find(s => s.kind === 'lwc_component');
       assert.ok(component, 'Should find LWC component');
       assert.equal(component.name, 'LWCMeta');
       assert.ok(component.signature?.includes('LWC'));
@@ -133,13 +133,13 @@ describe('SalesforceMetaParser — part 2', () => {
 
     it('regression: legacy 5 meta types still parse (TC-10)', () => {
       let r = parser.parse(readFixture('SimpleFlow.flow-meta.xml'), 'flows/SimpleFlow.flow-meta.xml');
-      assert.ok(r.symbols.find(s => s.kind === 'class'), 'flow should parse');
+      assert.ok(r.symbols.find(s => s.kind === 'flow'), 'flow should parse');
       r = parser.parse(readFixture('CustomObject.object-meta.xml'), 'objects/O.object-meta.xml');
-      assert.ok(r.symbols.find(s => s.kind === 'class'), 'object should parse');
+      assert.ok(r.symbols.find(s => s.kind === 'sf_object'), 'object should parse');
       r = parser.parse(readFixture('LookupField.field-meta.xml'), 'objects/Case/fields/L.field-meta.xml');
-      assert.ok(r.symbols.find(s => s.kind === 'property'), 'field should parse');
+      assert.ok(r.symbols.find(s => s.kind === 'sf_field'), 'field should parse');
       r = parser.parse(readFixture('LWCMeta.js-meta.xml'), 'lwc/L/L.js-meta.xml');
-      assert.ok(r.symbols.find(s => s.kind === 'class'), 'js-meta should parse');
+      assert.ok(r.symbols.find(s => s.kind === 'lwc_component'), 'js-meta should parse');
     });
 
     it('degrades gracefully on malformed XML for new types', () => {

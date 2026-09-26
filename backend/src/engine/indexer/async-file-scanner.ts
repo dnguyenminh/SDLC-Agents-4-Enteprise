@@ -78,7 +78,7 @@ async function processFile(
 
   const ext = path.extname(fullPath).toLowerCase();
   const validExt = config.includeExtensions.includes(ext)
-    || ext === '.kts' || language === 'salesforce-meta';
+    || ext === '.kts' || language === 'salesforce-meta' || ext === '.jsp';
   if (!validExt) return null;
 
   try {

@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { IndexerHttpClient } from "./IndexerHttpClient";
+import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET } from "./WorkspaceScopeResolver";
 
 export interface IndexOptions {
     code: boolean;
@@ -229,9 +230,12 @@ export class IndexingService {
         root: string, report: ProgressReporter, secrets: vscode.SecretStorage,
     ): Promise<string | null> {
         try {
+            await ensureMigrated(secrets);
             const config = vscode.workspace.getConfiguration("kiroSdlc");
             const username = config.get<string>("pegaUsername", "");
-            const password = (await secrets.get("kiroSdlc.pegaPassword")) || "";
+            const wsHash = getWsHash();
+            const pwKey = wsHash ? secretKey("pega", wsHash)! : LEGACY_SECRET.pega;
+            const password = (await secrets.get(pwKey)) || "";
             if (!username || !password) {
                 return "⚠️ Pega Schema: credentials not configured (set pegaUsername + password in settings)";
             }
@@ -259,7 +263,7 @@ export class IndexingService {
         if (useCatalog && secrets) {
             try {
                 const { PegaCatalogIndexer } = await import("./PegaCatalogIndexer");
-                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this));
+                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.token || '' });
                 const result = await catalogIndexer.run(root, report, secrets);
                 if (result) {
                     return `🏛️ Pega (catalog): "${result.appName}" — ${result.catalogRules} rules in catalog, ingested ${result.totalIngested}`;
@@ -273,7 +277,7 @@ export class IndexingService {
         // Fallback path: BFS crawl (enumeration + relative discovery).
         try {
             const { PegaProjectIndexer } = await import("./PegaProjectIndexer");
-            const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this));
+            const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.token || '' });
             return await indexer.run(root, report, secrets);
         } catch (err: any) {
             this.log(`[Pega Indexer] ❌ Fatal error: ${err.message}`);

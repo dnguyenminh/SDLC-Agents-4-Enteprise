@@ -89,8 +89,13 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
       backendRootItem.iconPath = new vscode.ThemeIcon("globe");
       backendRootItem.description = backendUrl;
 
+      // While the real username is being resolved (empty), show a neutral
+      // "Logged in" label instead of a dangling "Logged in as ".
+      const authLabel = this.isAuthenticated
+        ? (this.username ? `Logged in as ${this.username}` : "Logged in")
+        : "Login Required";
       const authItem = new KiroTreeItem(
-        this.isAuthenticated ? `Logged in as ${this.username}` : "Login Required",
+        authLabel,
         vscode.TreeItemCollapsibleState.None
       );
       authItem.iconPath = new vscode.ThemeIcon(this.isAuthenticated ? "account" : "key");

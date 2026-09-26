@@ -66,7 +66,7 @@ SDLC Agents 4 Enterprise là một **multi-agent pipeline** tự động hoá to
 │  │  Database Layer (Strategy Pattern)                                            │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │  │
 │  │  │ SqliteAdapter │  │PostgresAdapt │  │ MysqlAdapter │  │ DatabaseConfig   │  │  │
-│  │  │ better-sqlite3│  │ pg Pool      │  │ mysql2 Pool  │  │ Service (AES-256 │  │  │
+│  │  │ sqlite-wasm │  │ pg Pool      │  │ mysql2 Pool  │  │ Service (AES-256 │  │  │
 │  │  │ WAL + FTS5   │  │ async        │  │ sync wrapper │  │ encrypted creds) │  │  │
 │  │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────────┘  │  │
 │  │  MigrationService: batch copy 500 rows/cycle, SSE progress, rollback           │  │

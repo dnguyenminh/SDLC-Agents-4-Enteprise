@@ -62,11 +62,70 @@ export function extractClassMembers(
     switch (member.type) {
       case 'method_definition':
         extractMethod(member, source, filePath, className, symbols); break;
+      // TypeScript grammar class members.
       case 'public_field_definition':
       case 'property_definition':
-        extractProperty(member, source, filePath, className, symbols); break;
+        extractClassField(member, source, filePath, className, symbols); break;
+      // JavaScript grammar class field (e.g. LWC `@api recordId;` or arrow-function
+      // handlers `handleClick = (e) => {...}`). tree-sitter-javascript names these
+      // `field_definition`, which the TS-only cases above do not match — without this
+      // branch all LWC class fields are silently dropped.
+      case 'field_definition':
+        extractClassField(member, source, filePath, className, symbols); break;
     }
   }
+}
+
+/**
+ * Classify a class field. Fields whose value is a function expression
+ * (arrow/function) are behavioural members → `method`; everything else
+ * (reactive/`@api`/`@track`/plain data fields) → `property`.
+ * Handles both TS (`public_field_definition`/`property_definition`) and
+ * JS (`field_definition`) node shapes.
+ */
+function extractClassField(
+  node: SyntaxNode, source: string, filePath: string,
+  className: string, symbols: ExtractedSymbol[],
+): void {
+  const value = getNamedChild(node, 'arrow_function')
+    ?? getNamedChild(node, 'function_expression')
+    ?? getNamedChild(node, 'function');
+  if (value) {
+    extractFieldMethod(node, value, source, filePath, className, symbols);
+  } else {
+    extractProperty(node, source, filePath, className, symbols);
+  }
+}
+
+/**
+ * Emit a `method` symbol for a function-valued class field (e.g. an LWC arrow
+ * handler `handleClick = (e) => {...}`). The name comes from the field node, but
+ * params/return/async/complexity are read from the nested function value node
+ * because that is where `formal_parameters` and the body live.
+ */
+function extractFieldMethod(
+  fieldNode: SyntaxNode, valueNode: SyntaxNode, source: string,
+  filePath: string, className: string, symbols: ExtractedSymbol[],
+): void {
+  const nameNode = getNamedChild(fieldNode, 'property_identifier') ?? getNamedChild(fieldNode, 'identifier');
+  if (!nameNode) return;
+  const name = getNodeText(nameNode, source);
+  const range = getNodeRange(fieldNode);
+  const params = extractParameters(valueNode, source);
+  const returnType = extractReturnType(valueNode, source);
+  const isAsync = hasModifier(valueNode, source, 'async');
+  const docComment = extractDocComment(fieldNode, source);
+  const modifiers = extractModifiers(fieldNode, source);
+  const decorators = extractDecorators(fieldNode, source);
+  symbols.push({
+    name, kind: 'method', filePath,
+    startLine: range.startLine, endLine: range.endLine,
+    signature: buildFunctionSignature(name, params, returnType, isAsync),
+    parameters: params, returnType, isAsync, parentName: className,
+    docComment, complexity: calculateComplexity(valueNode),
+    modifiers: modifiers.length > 0 ? modifiers : undefined,
+    decorators: decorators.length > 0 ? decorators : undefined,
+  });
 }
 
 export function extractMethod(

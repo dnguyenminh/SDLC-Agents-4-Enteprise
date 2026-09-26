@@ -16,8 +16,8 @@ describe('SA4E-26 PBT — Scope Clause Properties', () => {
   let ctx: TempDb;
   let engine: MemoryEngine;
 
-  beforeEach(() => { ctx = makeTempDb(); engine = ctx.engine; });
-  afterEach(() => ctx.close());
+  beforeEach(async () => { ctx = await makeTempDb(); engine = ctx.engine; });
+  afterEach(async () => { await ctx.close(); });
 
   it('PBT-01: Scope clause with projectId includes SHARED visibility (SA4E-31)', () => {
     fc.assert(fc.property(
@@ -67,14 +67,15 @@ describe('SA4E-26 PBT — Scope Clause Properties', () => {
         project_id: fc.option(fc.string({ minLength: 1, maxLength: 100 }), { nil: null }),
       }),
       async (entry) => {
+        const pid = entry.project_id && entry.project_id.trim().length > 0 ? entry.project_id : null;
         const id = await engine.insert({
           content: entry.content,
           summary: entry.content.slice(0, 50),
           type: 'CONTEXT',
-          project_id: entry.project_id,
+          project_id: pid,
         });
         const row = await engine.findById(id);
-        expect(row?.project_id).toBe(entry.project_id);
+        expect(row?.project_id ?? null).toBe(pid ?? null);
       },
     ), { numRuns: 100 });
   });
@@ -86,8 +87,8 @@ describe('SA4E-26 UT — buildScopeClause & buildScopeParams', () => {
   let ctx: TempDb;
   let engine: MemoryEngine;
 
-  beforeEach(() => { ctx = makeTempDb(); engine = ctx.engine; });
-  afterEach(() => ctx.close());
+  beforeEach(async () => { ctx = await makeTempDb(); engine = ctx.engine; });
+  afterEach(async () => { await ctx.close(); });
 
   it('UT-01: buildScopeClause with projectId returns strict per-workspace clause (SA4E-31)', () => {
     const clause = engine.buildScopeClause({ userId: 'user-1', projectId: 'app-A' });
@@ -120,7 +121,7 @@ describe('SA4E-26 UT — buildScopeClause & buildScopeParams', () => {
 
   it('UT-05: buildScopeParams with projectId returns [userId, projectId, projectId, projectId] (SA4E-31)', () => {
     const params = engine.buildScopeParams({ userId: 'user-1', projectId: 'app-A' });
-    expect(params).toEqual(['user-1', 'app-A', 'app-A']);
+    expect(params).toEqual(['user-1', 'app-A', 'app-A', 'app-A']);
   });
 
   it('UT-06: buildScopeParams without projectId returns [] (fail closed, SA4E-31)', () => {
@@ -211,8 +212,8 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
   let ctx: TempDb;
   let engine: MemoryEngine;
 
-  beforeEach(() => {
-    ctx = makeTempDb();
+  beforeEach(async () => {
+    ctx = await makeTempDb();
     engine = ctx.engine;
     // Seed data matching STP 6.1
     engine.insert({ content: 'Project A pattern', summary: 'seed-1', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'user-1', project_id: 'app-A' });
@@ -223,7 +224,7 @@ describe('SA4E-26 IT — Project Isolation with Real SQLite', () => {
     engine.insert({ content: 'Other user pattern', summary: 'seed-6', type: 'CONTEXT', scope: 'USER', user_id: 'user-2', project_id: 'app-A' });
     engine.insert({ content: 'Project A second pattern', summary: 'seed-7', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'user-2', project_id: 'app-A' });
   });
-  afterEach(() => ctx.close());
+  afterEach(async () => { await ctx.close(); });
 
   it('IT-01: Search with projectId filters PROJECT entries (SA4E-31: NULL no longer leaks)', async () => {
     const results = await engine.search('pattern', 20, undefined, undefined, { userId: 'user-1', projectId: 'app-A' });

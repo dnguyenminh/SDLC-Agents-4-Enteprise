@@ -78,38 +78,38 @@ describe('SA4E-41 Migration V5', () => {
     if (adapter.isConnected()) await adapter.disconnect(); 
   });
 
-  it('adds project_id to all code-intel tables', () => {
-    applyMigrationV5(adapter as any, LEGACY);
+  it('adds project_id to all code-intel tables', async () => {
+    await applyMigrationV5(adapter as any, LEGACY);
     for (const t of ['files', 'symbols', 'modules', 'embeddings', 'relationships', 'body_embeddings']) {
       expect(columnNames(adapter, t)).toContain('project_id');
     }
   });
 
-  it('backfills every row to the legacy project id', () => {
-    applyMigrationV5(adapter as any, LEGACY);
+  it('backfills every row to the legacy project id', async () => {
+    await applyMigrationV5(adapter as any, LEGACY);
     const distinct = (t: string) => adapter.all<{ project_id: string }>(`SELECT DISTINCT project_id FROM ${t}`);
     for (const t of ['files', 'symbols', 'modules', 'relationships', 'body_embeddings', 'embeddings']) {
       expect(distinct(t)).toEqual([{ project_id: LEGACY }]);
     }
   });
 
-  it('preserves row counts and FTS still returns results', () => {
-    applyMigrationV5(adapter as any, LEGACY);
+  it('preserves row counts and FTS still returns results', async () => {
+    await applyMigrationV5(adapter as any, LEGACY);
     expect(adapter.get<{c:number}>('SELECT COUNT(*) as c FROM files')?.c).toBe(2);
     expect(adapter.get<{c:number}>('SELECT COUNT(*) as c FROM symbols')?.c).toBe(2);
     const fts = adapter.all<any>(`SELECT s.name FROM symbols_fts JOIN symbols s ON symbols_fts.rowid = s.id WHERE symbols_fts MATCH 'doAuth'`);
     expect(fts.map(r => r.name)).toContain('doAuth');
   });
 
-  it('bumps schema_version to 5 and is idempotent', () => {
-    applyMigrationV5(adapter as any, LEGACY);
+  it('bumps schema_version to 5 and is idempotent', async () => {
+    await applyMigrationV5(adapter as any, LEGACY);
     expect(adapter.get<{v:number}>('SELECT MAX(version) as v FROM schema_version')?.v).toBe(5);
-    expect(() => applyMigrationV5(adapter as any, LEGACY)).not.toThrow();
+    await expect(applyMigrationV5(adapter as any, LEGACY)).resolves.not.toThrow();
     expect(adapter.get<{c:number}>('SELECT COUNT(*) as c FROM symbols')?.c).toBe(2);
   });
 
-  it('enforces composite UNIQUE(project_id, path) on files', () => {
-    applyMigrationV5(adapter as any, LEGACY);
+  it('enforces composite UNIQUE(project_id, path) on files', async () => {
+    await applyMigrationV5(adapter as any, LEGACY);
     expect(() => adapter.run(`INSERT INTO files (project_id, path, relative_path, language, content_hash, size_bytes) VALUES ('other', '/w/src/a.ts', 'src/a.ts', 'typescript', 'h', 1)`)).not.toThrow();
     expect(() => adapter.run(`INSERT INTO files (project_id, path, relative_path, language, content_hash, size_bytes) VALUES (?, '/w/src/a.ts', 'src/a.ts', 'typescript', 'h', 1)`, [LEGACY])).toThrow();
   });

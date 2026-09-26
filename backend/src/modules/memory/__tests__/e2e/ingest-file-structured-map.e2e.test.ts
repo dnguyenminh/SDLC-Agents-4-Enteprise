@@ -20,23 +20,22 @@ import { handleIngestFile } from '../../dispatchers/crud.js';
 import { makeTempDb, type TempDb } from '../../../../__tests__/sa4e-testkit.js';
 
 /** Query entries directly from DB (avoids FTS search which may not index immediately). */
-function getEntriesBySource(ctx: TempDb, sourceSuffix: string): any[] {
-  const db = ctx.dbManager.getDb();
-  const stmt = db.prepare('SELECT * FROM knowledge_entries WHERE source LIKE ? ORDER BY id');
-  return stmt.all(`%${sourceSuffix}`);
+async function getEntriesBySource(ctx: TempDb, sourceSuffix: string): Promise<any[]> {
+  const rows = await ctx.dbManager.getAdapter().allAsync(`SELECT * FROM knowledge_entries WHERE source LIKE ? ORDER BY id`, [`%${sourceSuffix}`]);
+  return rows;
 }
 
 describe('E2E-API: File Ingest → Entry Creation', () => {
   let ctx: TempDb;
   let tmpDir: string;
 
-  beforeEach(() => {
-    ctx = makeTempDb();
+  beforeEach(async () => {
+    ctx = await makeTempDb();
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e47-e2e-'));
   });
 
-  afterEach(() => {
-    ctx.close();
+  afterEach(async () => {
+    await ctx.close();
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -65,7 +64,7 @@ describe('E2E-API: File Ingest → Entry Creation', () => {
     expect(parsed.entries).toBe(3);
 
     // Verify entries exist with structured_map default
-    const matched = getEntriesBySource(ctx, 'test.md');
+    const matched = await getEntriesBySource(ctx, 'test.md');
     expect(matched.length).toBe(3);
 
     for (const entry of matched) {
@@ -84,7 +83,7 @@ describe('E2E-API: File Ingest → Entry Creation', () => {
     expect(parsed.status).toBe('ingested');
     expect(parsed.entries).toBe(2);
 
-    const matched = getEntriesBySource(ctx, 'test.md');
+    const matched = await getEntriesBySource(ctx, 'test.md');
     expect(matched.length).toBe(2);
 
     // Each entry has default structured_map = '{}'
@@ -105,7 +104,7 @@ describe('E2E-API: File Ingest → Entry Creation', () => {
     expect(parsed.entries).toBe(1);
 
     // Entry created with default structured_map
-    const matched = getEntriesBySource(ctx, 'test.md');
+    const matched = await getEntriesBySource(ctx, 'test.md');
     expect(matched.length).toBe(1);
     expect(matched[0].structured_map).toBe('{}');
   });
@@ -122,7 +121,7 @@ describe('E2E-API: File Ingest → Entry Creation', () => {
     expect(parsed.entries).toBe(1);
 
     // Verify entries by querying DB directly
-    const matched = getEntriesBySource(ctx, 'plain.txt');
+    const matched = await getEntriesBySource(ctx, 'plain.txt');
     expect(matched.length).toBe(1);
     expect(matched[0].structured_map).toBe('{}');
     // Content should be full 5000 chars (not truncated at 2000)

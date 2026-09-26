@@ -4,7 +4,7 @@
  */
 
 import type { DatabaseAdapter, DatabaseEngine } from '../adapters/DatabaseAdapter.js';
-import { SqliteAdapter } from '../adapters/SqliteAdapter.js';
+import { SqliteWasmAdapter } from '../adapters/wasm/SqliteWasmAdapter.js';
 import { PostgresAdapter, type PostgresConfig } from '../adapters/PostgresAdapter.js';
 import { MysqlAdapter, type MysqlConfig } from '../adapters/MysqlAdapter.js';
 
@@ -25,7 +25,7 @@ export class DatabaseAdapterFactory {
     switch (config.engine) {
       case 'sqlite':
         if (!config.dbPath) throw new Error('SQLite requires dbPath');
-        return new SqliteAdapter(config.dbPath);
+        return new SqliteWasmAdapter(config.dbPath);
 
       case 'postgresql':
         return new PostgresAdapter({

@@ -34,6 +34,7 @@ import { ReindexSubscriber } from '../../src/modules/orchestration/reindex/Reind
 import { PerServerTaskQueue } from '../../src/modules/orchestration/reindex/PerServerTaskQueue.js';
 import { ReindexActionMapper } from '../../src/modules/orchestration/reindex/ReindexActionMapper.js';
 import { FakeToolSource, FakeEventSource } from '../../src/modules/orchestration/reindex/__tests__/reindex-fakes.js';
+import { MemoryToolSearchService } from '../../src/modules/orchestration/MemoryToolSearchService.js';
 import type { IEmbedder } from '../../src/modules/orchestration/reindex/models/ports.js';
 
 const silent = pino({ level: 'silent' });
@@ -59,7 +60,7 @@ interface E2EHarness {
 
 function buildReindex(ctx: TempDb, src: FakeToolSource, embedder: IEmbedder) {
   const source = new FakeEventSource();
-  const svc = new ReindexService(() => ctx.engine.getDb(), embedder, src, silent);
+  const svc = new ReindexService(() => ctx.dbManager.getAdapter(), embedder, src, silent);
   const sub = new ReindexSubscriber(source, svc, new PerServerTaskQueue(silent, 0), new ReindexActionMapper(), silent, 0);
   sub.start();
   return { source, sub };
@@ -68,12 +69,15 @@ function buildReindex(ctx: TempDb, src: FakeToolSource, embedder: IEmbedder) {
 async function harness(embedder: IEmbedder): Promise<E2EHarness> {
   // Isolate workspace so OrchestrationModule does not load the real orchestration.json.
   process.env.CODE_INTEL_WORKSPACE = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e42-e2e-'));
-  const ctx = makeTempDb();
+  const ctx = await makeTempDb();
   const registry = new ModuleRegistry(silentLogger());
   const handlers = new Map([['mem_admin', okHandler]]);
   registry.register(new StubModule('memory', [def('mem_admin', 'memory')], handlers, ctx.engine, 'ready'));
   const orch = new OrchestrationModule(silentLogger(), registry);
   await orch.initialize();
+  // Wire the same read path production uses (index.ts): find_tools must query
+  // the SAME adapter the reindex writer persists to, otherwise it returns [].
+  orch.setToolSearchService(new MemoryToolSearchService(ctx.engine.getAdapter(), silent));
   registry.register(orch);
   const mcp = await connectMcp(registry);
   const src = new FakeToolSource();

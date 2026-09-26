@@ -35,7 +35,12 @@ interface IndexOperation {
   startedAt: Date;
   abortController: AbortController;
   checksumStats: ChecksumStats;
-  error?: string;
+  error?: {
+    message: string;
+    stack?: string;
+    phase?: ProgressPhase;
+    file?: string;
+  };
 }
 
 /** Result of startOrReplace — surfaces whether a previous op was cancelled. */
@@ -233,7 +238,13 @@ export class IndexOperationManager {
       .catch((err: unknown) => {
         op.status = 'failed';
         op.phase = 'error';
-        op.error = String(err);
+        const msg = err instanceof Error ? err.message : String(err);
+        op.error = {
+          message: msg,
+          stack: err instanceof Error ? err.stack?.split('\n').slice(0,5).join('\n') : undefined,
+          phase: op.phase,
+          file: op.currentFile,
+        };
         this.opRepo.updateStatus(op.operationId, 'failed').catch(() => undefined);
       })
       .finally(() => {
@@ -318,6 +329,7 @@ export class IndexOperationManager {
       startedAt: op.startedAt.toISOString(),
       elapsedMs: elapsed,
       checksumStats: op.checksumStats,
+      error: op.error,
     };
   }
 

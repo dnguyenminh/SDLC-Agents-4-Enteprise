@@ -22,7 +22,7 @@ Chứa code dùng chung, KHÔNG phụ thuộc server-specific libraries:
 
 ### shared module database layer (`shared/src/db/`)
 Chứa implementations cần database libraries:
-- **SQLite/PostgreSQL implementations** — `KBRepositoryImpl.ts` (dùng better-sqlite3 / pg)
+- **SQLite/PostgreSQL implementations** — `KBRepositoryImpl.ts` (dùng SQLite driver / pg)
 - **Bất kỳ code nào dùng** `fs`, `child_process`, hoặc Node-specific dependencies
 
 ### server module (`server/src/`)

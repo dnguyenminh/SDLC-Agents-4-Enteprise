@@ -45,6 +45,15 @@ export async function storeResults(
       ]);
       symbolIds.set(sym.name, info.lastInsertRowid as number);
     }
+    // SA4E-104: JSP fallback — if parser returned no symbols for .jsp files,
+    // create minimal jsp_page symbol to prevent complete symbol loss
+    if (filePath.toLowerCase().endsWith('.jsp') && (!result.symbols || result.symbols.length === 0)) {
+      const name = filePath.split(/[\\/]\.jsp$/i).pop() || filePath;
+      await adapter.runAsync(insertSymSql, [
+        projectId, fileId, name, 'jsp_page', '', 1, 1, null, null, null,
+      ]);
+      symbolIds.set(name, 0);
+    }
     // SA4E-104: Store relationships without try/catch — let errors propagate.
     // If a relationship INSERT fails, entire tx rolls back (symbols re-inserted next cycle).
     const insertRelSql = 'INSERT INTO relationships (project_id, source_symbol_id, target_symbol, target_symbol_id, kind, file_path, line, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
@@ -60,6 +69,20 @@ export async function storeResults(
     }
   });
   return symbolIds;
+}
+
+export async function storeJspFallback(
+  adapter: DatabaseAdapter, filePath: string, projectId: string,
+): Promise<void> {
+  await adapter.transactionAsync(async () => {
+    const fileId = await findScopedFileId(adapter, filePath, projectId);
+    if (!fileId) return;
+    const insertSymSql = 'INSERT INTO symbols (project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const name = filePath.split(/[\\/]\.jsp$/i).pop();
+    await adapter.runAsync(insertSymSql, [
+      projectId, fileId, name, 'jsp_page', '', 1, 1, null, null, null,
+    ]);
+  });
 }
 
 export async function storeRegexResults(
@@ -87,7 +110,13 @@ export async function extractAndStoreBodies(
 ): Promise<void> {
   try {
     const lines = source.split('\n');
-    const functionKinds = new Set(['function', 'method', 'arrow_function', 'generator', 'function_declaration']);
+    // Store bodies for function-like AND class-like kinds so LLM enrichment can
+    // generate pseudo code for classes (JS class, Apex class, interface, enum) too.
+    const bodyKinds = new Set([
+      'function', 'method', 'arrow_function', 'generator', 'function_declaration',
+      'constructor', 'trigger',
+      'class', 'apex_class', 'interface', 'enum',
+    ]);
     const minBodyLines = 3;
     // SA4E-104 debug: log symbolIds state
     const validIds = Array.from(symbolIds.values()).filter(v => v > 0);
@@ -103,7 +132,7 @@ export async function extractAndStoreBodies(
       ['embedding', 'token_count'],
     );
     for (const sym of result.symbols) {
-      if (!functionKinds.has(sym.kind)) continue;
+      if (!bodyKinds.has(sym.kind)) continue;
       const symbolId = symbolIds.get(sym.name);
       if (!symbolId) continue;
       const bodyLines = lines.slice(sym.startLine - 1, sym.endLine);

@@ -1,0 +1,39 @@
+<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1120" pageHeight="450" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="t" value="Component Design — Entra Config Layer (backend/src/config/EntraConfig.ts)" style="text;html=1;fontSize=15;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="30" y="10" width="640" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cin" value="process.env&#10;9 env vars&#10;(SSO_ENABLED + 8 ENTRA_*)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="30" y="150" width="150" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c1" value="loadEntraConfig()&#10;──────────────────&#10;• gate SSO_ENABLED (envBool)&#10;• missing check → ERR-01 (full list)&#10;• safeParse → ERR-02..04&#10;• derived defaults (4 field)&#10;• return surface {ssoEnabled, config}" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+      <mxGeometry x="230" y="110" width="250" height="160" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c2" value="EntraConfigSchema (zod)&#10;──────────────────&#10;• tenantId: GUID | common|organizations|consumers&#10;• clientId: GUID regex&#10;• clientSecret: trim, min 8 chars&#10;• redirectUri: https | http://localhost(:port), no fragment&#10;• authority / issuer / jwksUri: httpsUrl optional&#10;• scopes: split → SCOPE_TOKEN_REGEX, min 1&#10;• superRefine: issuer ≠ tenant-derived → FAIL (BR-04)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+      <mxGeometry x="530" y="55" width="310" height="200" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c3" value="EntraConfigError&#10;──────────────────&#10;• custom Error, field-level issues đã flatten&#10;• secret ***REDACTED*** mọi path&#10;• → main().catch → FATAL [config] → process.exit(1)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=10;" vertex="1" parent="1">
+      <mxGeometry x="530" y="320" width="310" height="110" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cout" value="EntraConfig (interface)&#10;typed 8 field — consumers S3/S4&#10;đọc qua UnifiedConfig.entra" style="rounded=1;whiteSpace=wrap;html=1;arcSize=20;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="900" y="100" width="190" height="100" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="k1" value="reads (chỉ config/*)" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="cin" target="c1">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="k2" value="safeParse (collect-all)" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="c1" target="c2">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="k3" value="surface {ssoEnabled, config}" style="html=1;endArrow=block;fontSize=10;" edge="1" parent="1" source="c2" target="cout">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="k4" value="throw ERR-01 (missing)" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1" source="c1" target="c3">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="k5" value="ZodError (ERR-02..04)" style="html=1;endArrow=block;dashed=1;fontSize=10;" edge="1" parent="1" source="c2" target="c3">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

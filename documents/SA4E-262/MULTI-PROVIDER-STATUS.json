@@ -1,0 +1,34 @@
+{
+  "epic": "SA4E-262",
+  "workstream": "multi-provider-sso",
+  "pipelineMode": "L3-Unattended",
+  "currentPhase": "ready_for_uat",
+  "lastUpdated": "2026-09-21",
+  "humanGate": "UAT — awaiting user acceptance (SM stopped here per L3 policy)",
+  "regressionBaseline": "157 backend + 38 extension SSO/auth tests pass",
+  "stories": {
+    "SA4E-307": { "summary": "Strategy abstraction + registry + Entra refactor", "phase": "done", "taReview": "APPROVED", "jiraStatus": "To Do (pending UAT transition)" },
+    "SA4E-308": { "summary": "Google SSO (OIDC + PKCE)", "phase": "done", "taReview": "APPROVED", "note": "B1/B2 fixed (test + generic route)" },
+    "SA4E-309": { "summary": "GitHub SSO (OAuth2 non-OIDC)", "phase": "done", "taReview": "APPROVED", "note": "userinfo /user + /user/emails" },
+    "SA4E-310": { "summary": "Extension UI provider selection", "phase": "done", "note": "loginEntra→loginSso generalized; dynamic provider buttons" },
+    "SA4E-311": { "summary": "Security multi-provider hardening", "phase": "done", "securityReview": "PASS with conditions — 0 Critical", "sec01": "FIXED (no auto-link SSO→LOCAL)", "quickWins": ["SEC-03","SEC-04","SEC-05","SEC-09"] },
+    "SA4E-312": { "summary": "QA STP/STC + docs", "phase": "done", "baReview": "APPROVED", "rtmCoverage": "100% traceability (23/23 AC); ~83% automated; 4 manual/UAT ACs" }
+  },
+  "qualityGates": {
+    "ta_review_307": "APPROVED",
+    "ta_review_308_309": "CHANGES_REQUESTED → fixed → PASS",
+    "security_review": "PASS (0 Critical, SEC-01 High fixed)",
+    "ba_review_stc": "APPROVED (1 non-blocking rec: cross-provider same-email UAT case)"
+  },
+  "artifacts": [
+    "documents/SA4E-262/MULTI-PROVIDER-SSO-PLAN.md",
+    "documents/SA4E-262/SECURITY-REVIEW-multi-provider.md",
+    "documents/SA4E-262/STP-multi-provider.md",
+    "documents/SA4E-262/STC-multi-provider.md",
+    "documents/SA4E-262/AUTH-SSO-multi-provider.md"
+  ],
+  "uatManualCases": ["M-1 Google live login","M-2 GitHub live login","M-3 Entra live regression","M-4/M-5 UI render+interactive","M-6 session rotation","M-7 expired/forged token","M-8 SEC-01 user-facing","M-9 standards review","M-10 deploy security config","M-11 (rec) cross-provider same-email"],
+  "notMerged": true,
+  "notPushed": true,
+  "notes": "Code on working tree (chưa commit/push — chờ user). L3 dừng ở UAT gate: user cần nghiệm thu M-1..M-11 với live IdP trước khi transition Jira sang bước tiếp và merge/deploy."
+}

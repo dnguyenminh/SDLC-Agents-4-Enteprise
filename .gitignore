@@ -56,7 +56,11 @@ coverage/
 # dev server log (keep untracked)
 /backend/dev-server.log
 /backend/*.log
-/backend/.code-intel/database.json
+
+# Local code-intel state (per-machine config, db, caches — never commit)
+/backend/.code-intel/
+# ...but keep the example config template in the repo
+!/backend/.code-intel/database.example.json
 
 # Secrets / env (SA4E-241 — never commit real credentials)
 .env

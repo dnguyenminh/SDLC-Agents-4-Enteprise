@@ -39,6 +39,10 @@ export function buildReadFilter(ctx: ProjectContext, tableAlias?: string): Scope
     params.push(ctx.projectId);
   }
 
+  // PROJECT: project-scoped entries visible to project members
+  conditions.push(`(${p}scope = 'PROJECT' AND ${p}project_id = ?)`);
+  params.push(ctx.projectId);
+
   // SHARED: company-wide, visible only if this project is granted access
   conditions.push(`(${p}scope = 'SHARED' AND EXISTS (SELECT 1 FROM kb_shared_grants g WHERE g.project_id = ?))`);
   params.push(ctx.projectId);

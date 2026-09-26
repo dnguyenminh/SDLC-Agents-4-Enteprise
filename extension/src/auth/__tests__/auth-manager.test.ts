@@ -191,4 +191,51 @@ describe("AuthManager", () => {
     expect(states).toEqual(["AUTHENTICATING", "AUTHENTICATED", "AUTHENTICATING", "AUTHENTICATED"]);
     expect(await auth.getLastUsername()).toBe("user2");
   });
+
+  describe("listSsoProviders", () => {
+    it("returns enabled providers from /auth/sso/providers", async () => {
+      const providers = [
+        { provider_id: "google-1", provider_type: "google", name: "Google", login_ui_html: "" },
+        { provider_id: "github-1", provider_type: "github", name: "GitHub", login_ui_html: "" },
+      ];
+      fetchMock.mockResolvedValue(okJson({ providers }));
+      const result = await auth.listSsoProviders();
+      expect(fetchMock).toHaveBeenCalledWith("http://backend:48721/auth/sso/providers");
+      expect(result).toEqual(providers);
+    });
+
+    it("filters out malformed entries missing provider_type", async () => {
+      fetchMock.mockResolvedValue(okJson({ providers: [
+        { provider_id: "ok", provider_type: "google", name: "Google" },
+        { provider_id: "bad", name: "NoType" },
+      ] }));
+      const result = await auth.listSsoProviders();
+      expect(result).toHaveLength(1);
+      expect(result[0].provider_type).toBe("google");
+    });
+
+    it("returns [] on non-ok response (non-fatal)", async () => {
+      fetchMock.mockResolvedValue({ ok: false, status: 500 } as unknown as Response);
+      expect(await auth.listSsoProviders()).toEqual([]);
+    });
+
+    it("returns [] on network error (non-fatal)", async () => {
+      fetchMock.mockRejectedValue(new Error("offline"));
+      expect(await auth.listSsoProviders()).toEqual([]);
+    });
+  });
+
+  describe("loginSso", () => {
+    it("rejects an invalid provider key without changing state", async () => {
+      await expect(auth.loginSso("bad/provider")).rejects.toThrow(AuthError);
+      expect(auth.currentState).toBe("UNAUTHENTICATED");
+    });
+
+    it("loginEntra delegates to loginSso('entra')", async () => {
+      // Spy on loginSso to confirm the alias forwards the provider key.
+      const spy = vi.spyOn(auth, "loginSso").mockResolvedValue();
+      await auth.loginEntra();
+      expect(spy).toHaveBeenCalledWith("entra");
+    });
+  });
 });

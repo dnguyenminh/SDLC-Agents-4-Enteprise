@@ -18,7 +18,7 @@ export interface ITokenProvider {
  */
 export function buildBackendAuthHeaders(authManager?: ITokenProvider): Record<string, string> {
   const headers: Record<string, string> = {};
-  const token = authManager?.getTokenSync();
+  const token = authManager?.getTokenSync() ?? (globalThis as any).__authTokenProvider?.();
   if (token) { headers["Authorization"] = `Bearer ${token}`; }
   const projectId = getProjectId();
   if (projectId) { headers["X-Project-Id"] = projectId; }

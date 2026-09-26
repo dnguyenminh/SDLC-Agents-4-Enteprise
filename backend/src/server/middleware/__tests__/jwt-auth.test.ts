@@ -128,7 +128,7 @@ describe('jwtAuth (standard mode)', () => {
     const { c, set } = makeContext(headers);
     const next = vi.fn();
     await jwtAuth(c, next);
-    expect(mockValidateSession).toHaveBeenCalledWith('abc123');
+    expect(mockValidateSession).toHaveBeenCalledWith('abc123', undefined);
     expect(set.mock.calls[0][1].userId).toBe('admin-7');
     expect(set.mock.calls[0][1].projectId).toBe('proj-3');
   });

@@ -45,11 +45,11 @@ describe('SalesforceMetaParser', () => {
   });
 
   describe('parse — SimpleFlow.flow-meta.xml', () => {
-    it('should extract flow as class symbol', () => {
+    it('should extract flow as flow symbol', () => {
       const source = readFixture('SimpleFlow.flow-meta.xml');
       const result = parser.parse(source, 'force-app/main/default/flows/SimpleFlow.flow-meta.xml');
 
-      const flow = result.symbols.find(s => s.kind === 'class');
+      const flow = result.symbols.find(s => s.kind === 'flow');
       assert.ok(flow, 'Should find flow symbol');
       assert.equal(flow.name, 'SimpleFlow');
       assert.ok(flow.signature?.includes('AutoLaunchedFlow'));
@@ -103,21 +103,21 @@ describe('SalesforceMetaParser', () => {
   });
 
   describe('parse — CustomObject.object-meta.xml', () => {
-    it('should extract object as class symbol', () => {
+    it('should extract object as sf_object symbol', () => {
       const source = readFixture('CustomObject.object-meta.xml');
       const result = parser.parse(source, 'objects/MyObject__c/MyObject__c.object-meta.xml');
 
-      const obj = result.symbols.find(s => s.kind === 'class');
+      const obj = result.symbols.find(s => s.kind === 'sf_object');
       assert.ok(obj, 'Should find object symbol');
       assert.equal(obj.name, 'MyObject__c');
       assert.ok(obj.modifiers?.includes('custom-object'));
     });
 
-    it('should extract fields as properties', () => {
+    it('should extract fields as sf_field', () => {
       const source = readFixture('CustomObject.object-meta.xml');
       const result = parser.parse(source, 'objects/MyObject__c/MyObject__c.object-meta.xml');
 
-      const fields = result.symbols.filter(s => s.kind === 'property');
+      const fields = result.symbols.filter(s => s.kind === 'sf_field');
       assert.ok(fields.length >= 3, 'Should find at least 3 fields');
 
       const statusField = fields.find(f => f.name === 'Status__c');

@@ -1,0 +1,81 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Business Flow - SA4E-269 S6 Unified Auth via single UserRepository" style="text;html=1;align=center;verticalAlign=middle;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="280" y="8" width="600" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_client" value="Client" style="swimlane;horizontal=0;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="50" width="1060" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_routes" value="Unified Auth Routes" style="swimlane;horizontal=0;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="190" width="1060" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_repo" value="UserRepository" style="swimlane;horizontal=0;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="330" width="1060" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane_session" value="Session-Audit" style="swimlane;horizontal=0;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="440" width="1060" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1" value="Login: submit credentials&#10;(email | username)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane_client">
+      <mxGeometry x="90" y="20" width="190" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2" value="Register: submit&#10;email + password" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane_client">
+      <mxGeometry x="90" y="85" width="190" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3" value="Receive session token;&#10;call logout / refresh / me" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane_client">
+      <mxGeometry x="850" y="45" width="180" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="a1" value="POST /auth/login —&#10;resolve identifier&#10;(email primary, username fallback)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane_routes">
+      <mxGeometry x="350" y="15" width="210" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="a2" value="POST /auth/register —&#10;validate email + password&#10;(min 6 chars)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane_routes">
+      <mxGeometry x="350" y="80" width="210" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="a3" value="Unified handlers:&#10;logout / refresh / me&#10;(zero route-level SQL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane_routes">
+      <mxGeometry x="630" y="40" width="190" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" value="findByEmail / findByUsername&#10;(single lookup)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane_repo">
+      <mxGeometry x="630" y="10" width="220" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2" value="create user&#10;(single INSERT)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane_repo">
+      <mxGeometry x="630" y="60" width="220" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" value="Issue opaque session&#10;+ audit (login / register)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="lane_session">
+      <mxGeometry x="630" y="10" width="220" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2" value="Validate / rotate / invalidate&#10;+ audit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="lane_session">
+      <mxGeometry x="630" y="60" width="220" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="c1" target="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="c2" target="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="a1" target="r1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="a2" target="r2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" edge="1" parent="1" source="r1" target="s1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" edge="1" parent="1" source="r2" target="s1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="session token" edge="1" parent="1" source="s1" target="c3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" edge="1" parent="1" source="c3" target="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="validate / rotate" edge="1" parent="1" source="a3" target="s2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" value="&#171;include&#187;" edge="1" parent="1" source="a3" target="r1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;fontSize=9;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

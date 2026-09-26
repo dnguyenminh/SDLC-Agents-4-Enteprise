@@ -40,8 +40,8 @@ export class GateGuardService {
   ) {}
 
   /** Initialize cache with default + custom patterns */
-  loadPatterns(projectId?: string): void {
-    const customPatterns = this.repository.getPatterns(projectId);
+  async loadPatterns(projectId?: string): Promise<void> {
+    const customPatterns = await this.repository.getPatterns(projectId);
     const allPatterns = [...DEFAULT_PATTERNS, ...customPatterns];
     this.compiledPatterns = allPatterns
       .map(p => this.compilePattern(p))
@@ -50,15 +50,15 @@ export class GateGuardService {
   }
 
   /** BR-1201/BR-1203: Evaluate a command against the denylist. < 50ms target. */
-  evaluate(command: string, agent?: string, projectId?: string): EvalResult {
+  async evaluate(command: string, agent?: string, projectId?: string): Promise<EvalResult> {
     const start = performance.now();
-    if (!this.cacheValid) this.loadPatterns(projectId);
+    if (!this.cacheValid) await this.loadPatterns(projectId);
 
     for (const { pattern, regex } of this.compiledPatterns) {
       if (regex.test(command)) {
         const hash = this.generateOverrideHash(command);
         const latencyMs = Math.round(performance.now() - start);
-        this.logAudit(command, agent, pattern.regex, 'blocked', projectId);
+        await this.logAudit(command, agent, pattern.regex, 'blocked', projectId);
         return {
           action: 'blocked',
           patternMatched: pattern.regex,
@@ -84,30 +84,30 @@ export class GateGuardService {
   }
 
   /** BR-1205: Add custom denylist pattern with ReDoS validation (SEC-05) */
-  addPattern(regex: string, description: string, projectId?: string): DenyPattern {
+  async addPattern(regex: string, description: string, projectId?: string): Promise<DenyPattern> {
     this.validateNotReDoS(regex);
     const id = `custom-${++this.customPatternSeq}`;
     const pattern: DenyPattern = { id, regex, description, isDefault: false, projectId };
-    this.repository.addPattern(pattern);
+    await this.repository.addPattern(pattern);
     this.invalidateCache();
     return pattern;
   }
 
   /** Remove a custom pattern — defaults cannot be removed */
-  removePattern(patternId: string): boolean {
-    const removed = this.repository.removePattern(patternId);
+  async removePattern(patternId: string): Promise<boolean> {
+    const removed = await this.repository.removePattern(patternId);
     if (removed) this.invalidateCache();
     return removed;
   }
 
   /** List all patterns (default + custom) */
-  listPatterns(projectId?: string): DenyPattern[] {
-    const custom = this.repository.getPatterns(projectId);
+  async listPatterns(projectId?: string): Promise<DenyPattern[]> {
+    const custom = await this.repository.getPatterns(projectId);
     return [...DEFAULT_PATTERNS, ...custom];
   }
 
   /** Query audit log */
-  getAuditLog(projectId?: string, limit?: number, actionFilter?: GateGuardAction): AuditEntry[] {
+  async getAuditLog(projectId?: string, limit?: number, actionFilter?: GateGuardAction): Promise<AuditEntry[]> {
     return this.repository.queryAudit(projectId, limit, actionFilter);
   }
 
@@ -146,12 +146,12 @@ const elapsed = performance.now() - start;
     return createHash('sha256').update(command).digest('hex').slice(0, 12);
   }
 
-  private logAudit(
+  private async logAudit(
     command: string, agent: string | undefined,
     patternMatched: string, action: GateGuardAction, projectId?: string,
-  ): void {
+  ): Promise<void> {
     try {
-      this.repository.insertAudit({ command, agent, patternMatched, action, projectId });
+      await this.repository.insertAudit({ command, agent, patternMatched, action, projectId });
     } catch (err) {
       this.logger.error({ err }, 'Failed to write GateGuard audit entry');
     }

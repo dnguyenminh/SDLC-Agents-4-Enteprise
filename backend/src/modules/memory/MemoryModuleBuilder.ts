@@ -86,9 +86,20 @@ export class MemoryModuleBuilder {
         dbManager = injectd.dbManager;
       } else {
         dbManager = new DatabaseManager(dbPath);
-        dbManager.initialize();
+        await dbManager.initialize();
       }
       this.mod.setDbManager(dbManager);
+    }
+
+    // Ensure base memory tables exist in THIS adapter's view before versioned
+    // migrations. SqliteAdapter works on an in-memory snapshot of the host
+    // file, so tables created elsewhere (native driver) may not be visible
+    // here on fresh DBs — migrate001 then failed with "no such table:
+    // knowledge_entries", leaving the memory module in error and /health
+    // at 503 forever (E2E setup timeout). Idempotent (IF NOT EXISTS).
+    if (this.memAdapter.getEngine() === 'sqlite') {
+      const { MEMORY_SCHEMA } = await import('./schema/index.js');
+      await this.memAdapter.execAsync(MEMORY_SCHEMA);
     }
 
     // Run versioned migrations via DatabaseAdapter

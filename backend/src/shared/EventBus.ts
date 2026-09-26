@@ -74,4 +74,6 @@ export const Events = {
   TASK_WORKER_CONFIG_CHANGED: 'taskworker:config:changed',
   /** Emitted when admin saves a rate-limit config change — payload: { section, key, value } */
   RATE_LIMIT_CONFIG_CHANGED: 'ratelimit:config:changed',
+  /** Emitted when admin saves an auth config change — payload: { section, key, value } */
+  AUTH_CONFIG_CHANGED: 'auth:config:changed',
 } as const;

@@ -27,6 +27,7 @@ export class PegaProjectIndexer {
         private readonly httpClient: IndexerHttpClient,
         private readonly outputChannel: vscode.OutputChannel | undefined,
         private readonly log: (msg: string) => void,
+        private readonly authManager?: { getTokenSync(): string },
     ) {}
 
     async run(root: string, report: ProgressReporter, secrets?: vscode.SecretStorage): Promise<string | null> {
@@ -113,7 +114,7 @@ export class PegaProjectIndexer {
         try {
             const { DataTableResolver } = await import("./DataTableResolver");
             const { PegaStreamIngester } = await import("./PegaStreamIngester");
-            const ingester = new PegaStreamIngester(pegaClient.getBackendUrlPublic());
+            const ingester = new PegaStreamIngester(pegaClient.getBackendUrlPublic(), this.authManager);
             const resolver = new DataTableResolver(pegaClient, ingester, this.log);
             return await resolver.resolve(projectId, root, report);
         } catch (err: any) {
@@ -344,7 +345,7 @@ export class PegaProjectIndexer {
         }
 
         const { PegaStreamIngester } = await import("./PegaStreamIngester");
-        const ingester = new PegaStreamIngester(pegaClient.getBackendUrlPublic());
+        const ingester = new PegaStreamIngester(pegaClient.getBackendUrlPublic(), this.authManager);
         const visited = crawlSet.map((c: any) => c.insKey);
         const res = await ingester.streamIngest(rules, projectId, checksums, versions, visited, this.log);
         return { kb: res.totalKbEntriesInDb || 0, graph: res.totalGraphNodesInDb || 0 };

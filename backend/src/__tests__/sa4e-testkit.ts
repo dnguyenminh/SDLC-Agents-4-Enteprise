@@ -1,6 +1,6 @@
 /**
  * SA4E-18 test kit — shared helpers for Tool Visibility Tiers tests.
- * Provides temp SQLite DB (real better-sqlite3) and a lightweight stub module.
+ * Provides a temp SQLite DB (wasm) and a lightweight stub module.
  */
 
 import { DatabaseManager } from '../engine/db/database-manager.js';
@@ -19,23 +19,25 @@ export interface TempDb {
   dbManager: DatabaseManager;
   engine: MemoryEngine;
   tmpDir: string;
-  close(): void;
+  close(): Promise<void>;
 }
 
 /** Create a fresh temp file-backed SQLite DB with full SCHEMA_V1 applied. */
-export function makeTempDb(): TempDb {
+export async function makeTempDb(): Promise<TempDb> {
   DatabaseManager.sharedAdapter = null;
+  DatabaseManager.sharedReady = null;
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e18-'));
   const dbPath = path.join(tmpDir, 'index.db');
   const dbManager = new DatabaseManager(dbPath);
-  dbManager.initialize();
+  await dbManager.initialize();
+  const adapter = dbManager.getAdapter();
   const engine = new MemoryEngine(new SqliteDbAdapter(dbManager.getDb()));
   return {
     dbManager,
     engine,
     tmpDir,
-    close() {
-      dbManager.close();
+    async close() {
+      await dbManager.close();
       DatabaseManager.sharedAdapter = null;
       fs.rmSync(tmpDir, { recursive: true, force: true });
     },
@@ -87,8 +89,11 @@ export interface McpHarness {
 }
 
 /** Wire a real getMcpServer(registry) to a Client over linked in-memory transports. */
-export async function connectMcp(registry: ModuleRegistry): Promise<McpHarness> {
-  const server = getMcpServer(registry, silentLogger());
+export async function connectMcp(
+  registry: ModuleRegistry,
+  projectContext?: { projectId: string; userId?: string },
+): Promise<McpHarness> {
+  const server = getMcpServer(registry, silentLogger(), projectContext);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'sa4e18-test-client', version: '1.0.0' });
   await Promise.all([

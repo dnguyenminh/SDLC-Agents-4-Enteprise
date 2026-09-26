@@ -22,67 +22,112 @@ export interface CodeEdgeStrategy {
   extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]>;
 }
 
-/** Extracts IMPORTS edges from code_dependencies table. */
-export class ImportsEdgeStrategy implements CodeEdgeStrategy {
+/** Extracts CONTAINS edges from file → symbol (file membership) for symbols without parent_symbol, e.g., LWC_COMPONENT. */
+export class FileContainsSymbolStrategy implements CodeEdgeStrategy {
   async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
-    const rows = await indexAdapter.allAsync<{ source_file_id: number; target_file_id: number }>(
-      `SELECT cd.source_file_id, cd.target_file_id
-       FROM code_dependencies cd
-       JOIN files f ON cd.source_file_id = f.id
-       WHERE f.project_id = ? AND cd.target_file_id IS NOT NULL`,
+    // LWC/Aura components live in .js-meta.xml while code lives in .js/.cmp files.
+    // Match by directory: component symbol and symbols sharing same directory.
+    const rows = await indexAdapter.allAsync<{ child_id: number; parent_id: number; comp_path: string; sym_path: string }>(
+      `SELECT s1.id AS child_id, s2.id AS parent_id, cf.relative_path AS comp_path, sf.relative_path AS sym_path
+       FROM symbols s2
+       JOIN files cf ON cf.id = s2.file_id
+       JOIN files sf ON sf.project_id = cf.project_id
+       JOIN symbols s1 ON s1.file_id = sf.id AND s1.project_id = s2.project_id
+       WHERE s2.project_id = ?
+         AND s2.kind IN ('lwc_component','aura_component')
+         AND s1.parent_symbol IS NULL
+         AND s1.id <> s2.id`,
       [projectId],
     );
-    return rows.map(r => ({
-      source: `code:${r.source_file_id}`,
-      target: `code:${r.target_file_id}`,
-      label: 'IMPORTS',
-      weight: 0.8,
-    }));
+    const edges: CodeGraphEdge[] = [];
+    const seen = new Set<string>();
+    for (const r of rows) {
+      const compDir = r.comp_path.replace(/\\/g, '/').substring(0, r.comp_path.lastIndexOf('/'));
+      const symDir = r.sym_path.replace(/\\/g, '/').substring(0, r.sym_path.lastIndexOf('/'));
+      if (compDir && symDir && compDir === symDir) {
+        const key = `${r.parent_id}-${r.child_id}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          edges.push({ source: `code:${r.parent_id}`, target: `code:${r.child_id}`, label: 'CONTAINS', weight: 0.4 });
+        }
+      }
+    }
+    return edges;
   }
 }
 
-/** Extracts CALLS edges from code_call_graph table. */
-export class CallsEdgeStrategy implements CodeEdgeStrategy {
-  async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
-    const rows = await indexAdapter.allAsync<{ caller_id: number; callee_id: number }>(
-      `SELECT cg.caller_symbol_id AS caller_id, cg.callee_symbol_id AS callee_id
-       FROM code_call_graph cg
-       JOIN symbols s ON cg.caller_symbol_id = s.id
-       WHERE s.project_id = ?`,
-      [projectId],
-    );
-    return rows.map(r => ({
-      source: `code:${r.caller_id}`,
-      target: `code:${r.callee_id}`,
-      label: 'CALLS',
-      weight: 0.7,
-    }));
-  }
-}
-
-/** Extracts EXTENDS edges from class inheritance (parent_symbol_id). */
-export class ExtendsEdgeStrategy implements CodeEdgeStrategy {
+/** Extracts CONTAINS edges from parent_symbol → child symbols (membership). */
+export class MembershipEdgeStrategy implements CodeEdgeStrategy {
   async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
     const rows = await indexAdapter.allAsync<{ child_id: number; parent_id: number }>(
-      `SELECT s.id AS child_id, s.parent_symbol_id AS parent_id
-       FROM symbols s
-       WHERE s.project_id = ? AND s.parent_symbol_id IS NOT NULL`,
+      `SELECT DISTINCT child.id AS child_id, parent.id AS parent_id
+       FROM symbols child
+       JOIN symbols parent
+         ON parent.name = child.parent_symbol
+        AND parent.project_id = child.project_id
+       WHERE child.project_id = ?
+         AND child.parent_symbol IS NOT NULL`,
       [projectId],
     );
     return rows.map(r => ({
-      source: `code:${r.child_id}`,
-      target: `code:${r.parent_id}`,
-      label: 'EXTENDS',
-      weight: 0.9,
+      source: `code:${r.parent_id}`,
+      target: `code:${r.child_id}`,
+      label: 'CONTAINS',
+      weight: 0.5,
     }));
+  }
+}
+
+/** Extracts edges from relationships table — source of truth for tree-sitter indexer. */
+export class RelationshipsEdgeStrategy implements CodeEdgeStrategy {
+  async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
+    // Join with symbols to resolve target_symbol_id on-the-fly when NULL
+    // Only resolve by name for inherits/implements to avoid fan-out on calls
+    const rows = await indexAdapter.allAsync<{ source_symbol_id: number; target_symbol_id: number | null; resolved_id: number | null; kind: string }>(
+      `SELECT r.source_symbol_id,
+              r.target_symbol_id,
+              s.id AS resolved_id,
+              r.kind
+       FROM relationships r
+       LEFT JOIN symbols s ON s.name = r.target_symbol AND s.project_id = r.project_id
+       WHERE r.project_id = ?
+         AND (
+           r.target_symbol_id IS NOT NULL
+           OR (r.target_symbol_id IS NULL AND r.kind IN ('inherits','implements') AND s.id IS NOT NULL)
+         )`,
+      [projectId],
+    );
+    return rows.map(r => {
+      const targetId = r.target_symbol_id ?? r.resolved_id!;
+      const label = r.kind.toUpperCase();
+      const weight = this.weightForKind(r.kind);
+      return {
+        source: `code:${r.source_symbol_id}`,
+        target: `code:${targetId}`,
+        label,
+        weight,
+      };
+    });
+  }
+
+  private weightForKind(kind: string): number {
+    switch (kind.toLowerCase()) {
+      case 'calls': return 0.7;
+      case 'inherits': return 0.9;
+      case 'implements': return 0.85;
+      case 'imports': return 0.8;
+      case 'decorates': return 0.6;
+      case 'uses': return 0.5;
+      default: return 0.5;
+    }
   }
 }
 
 /** Registry of all code-edge strategies. */
 const CODE_EDGE_STRATEGIES: CodeEdgeStrategy[] = [
-  new ImportsEdgeStrategy(),
-  new CallsEdgeStrategy(),
-  new ExtendsEdgeStrategy(),
+  new MembershipEdgeStrategy(),
+  new FileContainsSymbolStrategy(),
+  new RelationshipsEdgeStrategy(),
 ];
 
 /**

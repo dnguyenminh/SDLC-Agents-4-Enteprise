@@ -53,7 +53,7 @@ export class GateGuardRepository {
         )`
       );
     } else {
-      this.adapter.exec(
+      await this.adapter.execAsync(
         `CREATE TABLE IF NOT EXISTS gateguard_audit (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           timestamp TEXT NOT NULL DEFAULT (datetime('now')),
@@ -66,13 +66,13 @@ export class GateGuardRepository {
           context_json TEXT
         )`
       );
-      this.adapter.exec(
+      await this.adapter.execAsync(
         'CREATE INDEX IF NOT EXISTS idx_gateguard_audit_time ON gateguard_audit(timestamp DESC)'
       );
-      this.adapter.exec(
+      await this.adapter.execAsync(
         'CREATE INDEX IF NOT EXISTS idx_gateguard_audit_project ON gateguard_audit(project_id, timestamp DESC)'
       );
-      this.adapter.exec(
+      await this.adapter.execAsync(
         `CREATE TABLE IF NOT EXISTS gateguard_denylist (
           id TEXT PRIMARY KEY,
           regex TEXT NOT NULL,
@@ -85,8 +85,8 @@ export class GateGuardRepository {
   }
 
   /** BR-1204: Append-only audit insert — never update or delete */
-  insertAudit(params: InsertAuditParams): void {
-this.adapter.run(
+  async insertAudit(params: InsertAuditParams): Promise<void> {
+    await this.adapter.runAsync(
       'INSERT INTO gateguard_audit' +
       ' (command, agent, pattern_matched, action, override_by, project_id, context_json)' +
       ' VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -103,7 +103,7 @@ this.adapter.run(
   }
 
   /** Query audit entries with optional filters */
-  queryAudit(projectId?: string, limit = 50, actionFilter?: GateGuardAction): AuditEntry[] {
+  async queryAudit(projectId?: string, limit = 50, actionFilter?: GateGuardAction): Promise<AuditEntry[]> {
     let sql = 'SELECT * FROM gateguard_audit WHERE 1=1';
     const params: unknown[] = [];
 
@@ -118,25 +118,25 @@ this.adapter.run(
     sql += ' ORDER BY timestamp DESC LIMIT ?';
     params.push(limit);
 
-    const rows = this.adapter.all<Record<string, unknown>>(sql, params);
+    const rows = await this.adapter.allAsync<Record<string, unknown>>(sql, params);
     return rows.map(mapAuditRow);
   }
 
   /** Load all custom denylist patterns for a project */
-  getPatterns(projectId?: string): DenyPattern[] {
+  async getPatterns(projectId?: string): Promise<DenyPattern[]> {
     let sql = 'SELECT * FROM gateguard_denylist WHERE 1=1';
     const params: unknown[] = [];
     if (projectId) {
       sql += ' AND (project_id = ? OR project_id IS NULL)';
       params.push(projectId);
     }
-    const rows = this.adapter.all<Record<string, unknown>>(sql, params);
+    const rows = await this.adapter.allAsync<Record<string, unknown>>(sql, params);
     return rows.map(mapPatternRow);
   }
 
   /** Add a custom denylist pattern */
-  addPattern(pattern: DenyPattern): void {
-this.adapter.run(
+  async addPattern(pattern: DenyPattern): Promise<void> {
+    await this.adapter.runAsync(
       'INSERT INTO gateguard_denylist (id, regex, description, is_default, project_id)' +
       ' VALUES (?, ?, ?, ?, ?)',
       [pattern.id, pattern.regex, pattern.description, pattern.isDefault ? 1 : 0, pattern.projectId ?? null],
@@ -144,8 +144,8 @@ this.adapter.run(
   }
 
   /** Remove a custom denylist pattern by ID — cannot remove defaults */
-  removePattern(patternId: string): boolean {
-    const result = this.adapter.run(
+  async removePattern(patternId: string): Promise<boolean> {
+    const result = await this.adapter.runAsync(
       'DELETE FROM gateguard_denylist WHERE id = ? AND is_default = 0',
       [patternId],
     );

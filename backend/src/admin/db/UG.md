@@ -76,14 +76,12 @@ Database engine is configured in `.code-intel/database.json`:
 
 If you have custom admin queries using direct SQLite:
 
-**Before:**
+**Before (legacy — library removed):**
 ```typescript
-import Database from 'better-sqlite3';
 import { getIndexDbPath } from './core.js';
 
-const db = new Database(getIndexDbPath());
-const rows = db.prepare('SELECT * FROM knowledge_entries').all();
-db.close();
+// Legacy direct-DB code (pre-migration) is no longer supported.
+const rows = /* use the adapter API below */;
 ```
 
 **After:**
@@ -121,7 +119,7 @@ const rows = adapter.all('SELECT * FROM knowledge_entries');
 
 ## Backward Compatibility
 
-- `getAdminDb()` still returns the raw `better-sqlite3` Database instance
+- `getAdminDb()` still returns the underlying DatabaseAdapter (deprecated — prefer `getDbAdapter()`)
 - `getIndexDbPath()` still returns the SQLite file path
 - `getActiveEngine()` / `getActiveDbConfig()` unchanged
 - All existing callers of admin-db barrel exports work without modification

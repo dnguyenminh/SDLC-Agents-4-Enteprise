@@ -5,7 +5,8 @@
  */
 
 import * as vscode from "vscode";
-import { SECRET_KEYS } from "../models";
+import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET, type SecretBase } from "./WorkspaceScopeResolver";
+import { assertWorkspaceTrusted } from "./WorkspaceTrustGuard";
 import type { CredentialResponse } from "./AtlassianTypes";
 
 /** Atlassian connection configuration */
@@ -29,23 +30,50 @@ export interface AtlassianTestResult {
 export class AtlassianCredentialService {
   constructor(private readonly secrets: vscode.SecretStorage) {}
 
-  /** Persist Atlassian config to SecretStorage after URL validation. */
+  /** Persist Atlassian config to workspace-namespaced secrets after validation. */
   async saveConfig(config: AtlassianConfig): Promise<void> {
+    const wsHash = getWsHash();
+    if (!wsHash) {
+      throw new Error("No workspace folder open — open a folder to configure per-workspace Atlassian credentials.");
+    }
+    await ensureMigrated(this.secrets);
     this.validateUrl(config.baseUrl);
-    await this.secrets.store(SECRET_KEYS.atlassianBaseUrl, config.baseUrl);
-    await this.secrets.store(SECRET_KEYS.atlassianEmail, config.email);
-    await this.secrets.store(SECRET_KEYS.atlassianToken, config.apiToken);
-    await this.storeConnectionType(config.connectionType);
+    if (!(config.email || "").trim() || !(config.apiToken || "").trim()) {
+      throw new Error("Atlassian email/API token must not be empty.");
+    }
+    try {
+      await this.secrets.store(secretKey("atlassianBaseUrl", wsHash)!, config.baseUrl);
+      await this.secrets.store(secretKey("atlassianEmail", wsHash)!, config.email);
+      await this.secrets.store(secretKey("atlassianToken", wsHash)!, config.apiToken);
+      await this.storeConnectionType(config.connectionType);
+    } catch (err: any) {
+      throw new Error(`Failed to save Atlassian config: ${err.message} (password/token may not be saved — retry).`);
+    }
   }
 
-  /** Read Atlassian config from SecretStorage. Returns null if incomplete. */
+  /** Read Atlassian config from workspace secrets. Returns null if incomplete. */
   async getConfig(): Promise<AtlassianConfig | null> {
-    const baseUrl = await this.secrets.get(SECRET_KEYS.atlassianBaseUrl);
-    const email = await this.secrets.get(SECRET_KEYS.atlassianEmail);
-    const apiToken = await this.secrets.get(SECRET_KEYS.atlassianToken);
+    await ensureMigrated(this.secrets);
+    const wsHash = getWsHash();
+    const baseUrl = await this.readSecret(wsHash, "atlassianBaseUrl");
+    const email = await this.readSecret(wsHash, "atlassianEmail");
+    const apiToken = await this.readSecret(wsHash, "atlassianToken");
     if (!baseUrl || !email || !apiToken) { return null; }
     const connectionType = await this.readConnectionType();
     return { baseUrl, email, apiToken, connectionType };
+  }
+
+  /** OI-8: explicit clear of the workspace triple; marker stays. */
+  async clearConfig(): Promise<void> {
+    const wsHash = getWsHash();
+    if (!wsHash) {
+      throw new Error("No workspace folder open — open a folder to configure per-workspace Atlassian credentials.");
+    }
+    await this.secrets.delete(secretKey("atlassianBaseUrl", wsHash)!);
+    await this.secrets.delete(secretKey("atlassianEmail", wsHash)!);
+    await this.secrets.delete(secretKey("atlassianToken", wsHash)!);
+    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    await config.update("atlassianConnectionType", undefined, vscode.ConfigurationTarget.Workspace);
   }
 
   /** Test connection by calling GET /rest/api/2/myself with Basic auth. */
@@ -59,6 +87,10 @@ export class AtlassianCredentialService {
 
   /** Build IPC credential response for a child server request. */
   async handleCredentialRequest(requestId: string): Promise<CredentialResponse> {
+    // SA4E-323 SEC-01: never release credentials to a child server (which uses
+    // the workspace-committable connection settings for its requests) while the
+    // workspace is untrusted.
+    assertWorkspaceTrusted();
     const config = await this.getConfig();
     if (!config) {
       throw new Error("Atlassian credentials not configured in extension.");
@@ -90,7 +122,7 @@ export class AtlassianCredentialService {
 
   private async storeConnectionType(type: "cloud" | "server"): Promise<void> {
     const config = vscode.workspace.getConfiguration("kiroSdlc");
-    await config.update("atlassianConnectionType", type, vscode.ConfigurationTarget.Global);
+    await config.update("atlassianConnectionType", type, vscode.ConfigurationTarget.Workspace);
   }
 
   private async readConnectionType(): Promise<"cloud" | "server"> {
@@ -99,7 +131,18 @@ export class AtlassianCredentialService {
     return val === "server" ? "server" : "cloud";
   }
 
+  /** Read a workspace secret; null scope falls back to the legacy flat key. */
+  private async readSecret(wsHash: string | null, base: SecretBase): Promise<string | undefined> {
+    try {
+      const key = wsHash ? secretKey(base, wsHash)! : LEGACY_SECRET[base];
+      return await this.secrets.get(key);
+    } catch { return undefined; }
+  }
+
   private async performMyselfRequest(config: AtlassianConfig): Promise<AtlassianTestResult> {
+    // SA4E-323 SEC-01: block the credential-bearing connectivity test while the
+    // workspace is untrusted (atlassianConnectionType is workspace-committable).
+    assertWorkspaceTrusted();
     const url = `${config.baseUrl.replace(/\/+$/, "")}/rest/api/2/myself`;
     const token = Buffer.from(`${config.email}:${config.apiToken}`).toString("base64");
     try {

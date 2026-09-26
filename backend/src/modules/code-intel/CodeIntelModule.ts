@@ -52,7 +52,7 @@ export class CodeIntelModule implements IModule {
       // For PostgreSQL: schema is managed via scripts/run-migrations.ts
       if (this.adapter.getEngine() === 'sqlite') {
         this.dbManager = new DatabaseManager(config.dbPath, config.projectId);
-        this.dbManager.initialize();
+        await this.dbManager.initialize();
       }
 
       this.queryLayer = new QueryLayer(this.adapter);
@@ -71,7 +71,7 @@ export class CodeIntelModule implements IModule {
   async shutdown(): Promise<void> {
     this.logger.info('Shutting down code intelligence module');
     if (this.indexer) this.indexer.stop();
-    if (this.dbManager) this.dbManager.close();
+    if (this.dbManager) await this.dbManager.close();
     this._status = 'stopped';
   }
 

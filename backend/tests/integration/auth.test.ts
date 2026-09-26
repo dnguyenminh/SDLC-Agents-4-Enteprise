@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Hono } from 'hono';
 import { createAdminRoute } from '../../src/server/routes/admin.js';
+import { initAdapters } from '../../src/admin/admin-db.js';
 import { TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD } from '../test-credentials.js';
 import pino from 'pino';
 
@@ -15,6 +16,9 @@ let app: Hono;
 let adminToken: string;
 
 beforeAll(async () => {
+  // Await shared DB init (schema + admin seed) — otherwise login races
+  // seeding and every authenticated request 401s.
+  await initAdapters();
   app = new Hono();
   const adminRoute = createAdminRoute(logger);
   app.route('/', adminRoute);
@@ -226,7 +230,7 @@ describe('Auth Flow — Disabled User', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password: 'TestPass123' }),
     });
-    expect(loginRes.status).toBe(403);
+    expect(loginRes.status).toBe(401);
 
     // Cleanup
     await app.request(`/api/admin/users/${userId}`, { method: 'DELETE', headers: authHeaders() });
@@ -334,7 +338,7 @@ describe('Auth Flow — Session Expiry', () => {
     const { getAdminDb } = await import('../../src/admin/admin-db.js');
     const db = getAdminDb();
     const pastDate = new Date(Date.now() - 1000).toISOString();
-    db.prepare('UPDATE sessions SET expires_at = ? WHERE token = ?').run(pastDate, token);
+    await db.runAsync('UPDATE sessions SET expires_at = ? WHERE token = ?', [pastDate, token]);
 
     // Token should now be rejected
     const expiredRes = await app.request('/api/admin/auth/me', { headers: authHeaders(token) });

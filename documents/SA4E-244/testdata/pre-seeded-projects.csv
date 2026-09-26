@@ -1,0 +1,13 @@
+test_case_id,project_id,display_name,workspace_path,expected_label,expected_tooltip,expected_http_code,description
+TC-001,3e268111b055,Pega Workspace Alpha,/workspaces/pega-alpha,Pega Workspace Alpha,3e268111b055 - /workspaces/pega-alpha,200,Valid name present
+TC-002,3e268111b055,Pega Workspace Alpha,/workspaces/pega-alpha,Pega Workspace Alpha,3e268111b055 - /workspaces/pega-alpha,200,Tooltip verification
+TC-003,ALL,,,"All (Shared)","All (Shared)",200,All Shared option unchanged
+TC-004,3e268111b055,Pega Workspace Alpha,/workspaces/pega-alpha,Pega Workspace Alpha,3e268111b055 - /workspaces/pega-alpha,200,Selection behavior unchanged
+TC-100,a68914cd9c49,,/workspaces/team-b,team-b,a68914cd9c49 - /workspaces/team-b,200,Fallback to workspace_path basename
+TC-101,22b039993db3,,,22b039993db,22b039993db3 - ,200,Fallback to project_id slice
+TC-200,error-test,,,error-test,Error,<error>,500,API fetch fails
+TC-201,white-space-test,   ,/workspaces/ws,ws,white-space-test - /workspaces/ws,200,Whitespace name treated as missing
+TC-400,ws-test,   ,/workspaces/ws,ws,ws-test - /workspaces/ws,200,Whitespace only name
+TC-401,long-name-test,"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",/workspaces/long,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,long-name-test - /workspaces/long,200,Very long display_name
+TC-700,3e268111b055,Pega Workspace Alpha,/workspaces/pega-alpha,Pega Workspace Alpha,3e268111b055 - /workspaces/pega-alpha,200,API schema validation
+TC-701,user-own-123,User Project,/workspaces/user,User Project,user-own-123 - /workspaces/user,200,RBAC filter

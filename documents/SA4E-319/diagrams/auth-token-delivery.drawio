@@ -1,0 +1,66 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- Title -->
+    <mxCell id="title" value="SA4E-319 — Auth Token Delivery (Initial Panel Open)" style="text;html=1;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="700" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Participant header boxes -->
+    <mxCell id="h1" value="User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="130" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="AuthManager&#10;(SSOT — ext host)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="BasePanel&#10;(webview host)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="panel-html&#10;iframe wrapper" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="820" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="SPA index.html&#10;(consumer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1080" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h6" value="Backend API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1340" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- Lifelines -->
+    <mxCell id="l1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="125" y="100" as="sourcePoint"/><mxPoint x="125" y="1030" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="375" y="100" as="sourcePoint"/><mxPoint x="375" y="1030" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="635" y="100" as="sourcePoint"/><mxPoint x="635" y="1030" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="895" y="100" as="sourcePoint"/><mxPoint x="895" y="1030" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1155" y="100" as="sourcePoint"/><mxPoint x="1155" y="1030" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1415" y="100" as="sourcePoint"/><mxPoint x="1415" y="1030" as="targetPoint"/></mxGeometry></mxCell>
+
+    <!-- Messages -->
+    <mxCell id="m1" value="1. Login (password / SSO)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="125" y="140" as="sourcePoint"/><mxPoint x="375" y="140" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m2" value="2. store token in SecretStorage + cachedToken (SSOT)" style="html=1;verticalAlign=bottom;endArrow=none;dashed=1;fontSize=9;strokeColor=#82b366;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="375" y="185" as="sourcePoint"/><mxPoint x="375" y="185" as="targetPoint"/><Array as="points"><mxPoint x="460" y="175"/><mxPoint x="460" y="195"/></Array></mxGeometry></mxCell>
+
+    <mxCell id="m3" value="3. Open KB panel (Graph/Tags/Quality/Analytics/Dashboard/Workflow)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="125" y="230" as="sourcePoint"/><mxPoint x="635" y="230" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m4" value="4. getIframeHtml(): authTokenProvider() = getTokenSync()" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="635" y="275" as="sourcePoint"/><mxPoint x="375" y="275" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m5" value="5. token string" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="375" y="315" as="sourcePoint"/><mxPoint x="635" y="315" as="targetPoint"/></mxGeometry></mxCell>
+
+    <mxCell id="m6" value="6. build iframe src: /admin?embed=true&amp;page=X&amp;sso_token=&lt;t&gt; (UNIFIED KEY)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;strokeColor=#82b366;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="635" y="360" as="sourcePoint"/><mxPoint x="895" y="360" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m7" value="7. iframe loads src" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="895" y="405" as="sourcePoint"/><mxPoint x="1155" y="405" as="targetPoint"/></mxGeometry></mxCell>
+
+    <mxCell id="m8" value="8. __ssoBootstrap: read sso_token → localStorage.admin_token; strip param" style="html=1;verticalAlign=bottom;endArrow=none;fontSize=9;strokeColor=#d6b656;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1155" y="450" as="sourcePoint"/><mxPoint x="1155" y="450" as="targetPoint"/><Array as="points"><mxPoint x="1260" y="440"/><mxPoint x="1260" y="460"/></Array></mxGeometry></mxCell>
+    <mxCell id="m9" value="9. GET /api/admin/profile (Bearer token)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1155" y="500" as="sourcePoint"/><mxPoint x="1415" y="500" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m10" value="10. user + permissions" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1415" y="540" as="sourcePoint"/><mxPoint x="1155" y="540" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m11" value="11. store admin_user; await __ssoBootstrap before App mount" style="html=1;verticalAlign=bottom;endArrow=none;fontSize=9;strokeColor=#d6b656;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1155" y="585" as="sourcePoint"/><mxPoint x="1155" y="585" as="targetPoint"/><Array as="points"><mxPoint x="1260" y="575"/><mxPoint x="1260" y="595"/></Array></mxGeometry></mxCell>
+    <mxCell id="m12" value="12. App(): loggedIn = !!localStorage.admin_token → TRUE → render page" style="html=1;verticalAlign=bottom;endArrow=none;fontSize=9;strokeColor=#82b366;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1155" y="635" as="sourcePoint"/><mxPoint x="1155" y="635" as="targetPoint"/><Array as="points"><mxPoint x="1260" y="625"/><mxPoint x="1260" y="645"/></Array></mxGeometry></mxCell>
+
+    <!-- Note about backup channel -->
+    <mxCell id="note1" value="Backup / defense-in-depth: BasePanel also posts token_refreshed right after&#10;panel creation. SPA listener (see refresh flow) writes admin_token even if&#10;URL bootstrap is skipped. Both paths converge on localStorage.admin_token." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="540" y="690" width="620" height="70" as="geometry"/>
+    </mxCell>
+
+    <!-- SSOT legend -->
+    <mxCell id="legend" value="Single Source of Truth = AuthManager.cachedToken (extension host).&#10;All reads flow through authTokenProvider = getTokenSync().&#10;SPA localStorage.admin_token is a DERIVED replica, never an origin." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="790" width="640" height="80" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

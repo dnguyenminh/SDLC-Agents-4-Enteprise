@@ -33,7 +33,15 @@ import {
   checkPromotionCooldown,
   searchKbEntries,
   getAdminDb,
+  initAdapters,
 } from '../admin-db.js';
+
+// Await shared DB init (schema + admin seed) before any test touches the DB —
+// getDbAdapter() inits fire-and-forget, so getUserByUsername('admin') would
+// otherwise race seeding and return null.
+beforeAll(async () => {
+  await initAdapters();
+});
 
 // ============================================================
 // 1. Password Hashing (sync — no change needed)
@@ -125,9 +133,9 @@ describe('Session Management', () => {
     const db = getAdminDb();
     const token = 'expired-token-test-' + Date.now();
     const pastDate = new Date(Date.now() - 1000).toISOString();
-    db.prepare(`INSERT INTO sessions (session_id, user_id, token, device, ip_address, login_at, expires_at, is_active)
-      VALUES (?, ?, ?, '', '', ?, ?, 1)`).run(
-      'sess-expired-' + Date.now(), testUserId, token, pastDate, pastDate
+    await db.runAsync(`INSERT INTO sessions (session_id, user_id, token, device, ip_address, login_at, expires_at, is_active)
+      VALUES (?, ?, ?, '', '', ?, ?, 1)`,
+      ['sess-expired-' + Date.now(), testUserId, token, pastDate, pastDate]
     );
     const result = await validateSession(token);
     expect(result).toBeNull();

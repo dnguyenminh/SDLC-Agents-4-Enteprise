@@ -1,0 +1,1 @@
+{"ticket": "SA4E-243", "summary": "KB Scope Auto-Detection based on VCS presence and branch for Extension ingest", "issueType": "Story", "currentPhase": "requirements", "autonomyLevel": "L3", "phases": {"requirements": {"status": "done", "file": "BRD.md", "version": "1.1"}}}

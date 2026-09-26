@@ -112,24 +112,28 @@ export function getDefaultModel(provider: string): string {
 /**
  * Fetch the model list from an Anthropic-compatible gateway (`{baseUrl}/v1/models`).
  * `baseUrl` is the configured gateway base URL (e.g. http://127.0.0.1:8990/anthropic).
+ * `authHeader` — optional Authorization header; gateways requiring auth return
+ * 401 on /v1/models without a key (SA4E-289 PI-GATEWAY-MODEL-FIX: fetch WITH the key).
  * Returns the parsed model entries, or null on any failure so the caller can
  * fall back to the static catalog.
  */
-export async function fetchGatewayModels(baseUrl: string): Promise<ChatModelEntry[] | null> {
+export async function fetchGatewayModels(baseUrl: string, authHeader?: string): Promise<ChatModelEntry[] | null> {
   if (!baseUrl) {
     return null;
   }
   const cleanBase = baseUrl.replace(/\/$/, "");
   // If base URL already ends with /v1, don't double it
-  const modelsUrl = cleanBase.endsWith("/v1") 
+  const modelsUrl = cleanBase.endsWith("/v1")
     ? `${cleanBase}/models`
     : `${cleanBase}/v1/models`;
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (authHeader) { headers["Authorization"] = authHeader; }
     const response = await fetch(modelsUrl, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers,
       signal: controller.signal,
     });
     clearTimeout(timeout);

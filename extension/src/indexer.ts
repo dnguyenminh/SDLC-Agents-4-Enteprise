@@ -6,13 +6,10 @@ import * as vscode from "vscode";
 import { IndexingService, IndexOptions } from "./services/IndexingService";
 import { IndexerHttpClient } from "./services/IndexerHttpClient";
 import { detectSfdxProject, countSalesforceMetadata } from "./sf-indexer";
+import { getBackendUrl, DEFAULT_BACKEND_URL } from "./config/backend-url";
 
 export { IndexingService } from "./services/IndexingService";
 export { IndexerHttpClient } from "./services/IndexerHttpClient";
-
-function getBackendUrl(): string {
-    return vscode.workspace.getConfiguration("kiroSdlc").get<string>("backend.url") || "http://127.0.0.1:48721";
-}
 
 /**
  * Resolve workspace root for indexing. Uses the already-configured target
@@ -73,7 +70,14 @@ function getIndexingOutputChannel(): vscode.OutputChannel {
 }
 
 function createService(tokenRefresher?: () => Promise<string | undefined>): IndexingService {
-    const client = new IndexerHttpClient(getBackendUrl());
+    let backendUrl: string;
+    try {
+        backendUrl = getBackendUrl();
+    } catch (err: any) {
+        console.warn(`[Security] backend.url validation failed at createService: ${err?.message} — falling back to loopback default`);
+        backendUrl = DEFAULT_BACKEND_URL;
+    }
+    const client = new IndexerHttpClient(backendUrl);
     if (tokenRefresher) { client.setTokenRefresher(tokenRefresher); }
     const service = new IndexingService(client, getIndexingOutputChannel());
     // SA4E-300 GAP 4: wire the same refresher into the service so

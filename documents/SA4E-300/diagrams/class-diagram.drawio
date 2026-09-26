@@ -1,0 +1,15 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="httpClient" value="IndexerHttpClient&#xa;- backendUrl: string&#xa;- httpPostWithDetail(url,payload,token): {ok,error,status}" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="40" y="80" width="200" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="svc" value="IndexingService&#xa;- httpClient: IndexerHttpClient&#xa;- triggerDocumentIngest(token)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="300" y="80" width="200" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="api" value="api-index.ts&#xa;- indexError(c,err,logger): Response&#xa;- handleIndexSource(c,registry,logger)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="560" y="80" width="200" height="100" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

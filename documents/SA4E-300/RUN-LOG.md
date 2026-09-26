@@ -137,3 +137,10 @@
 - security-agent: SECURITY-REVIEW (3.7, CONDITIONAL PASS) + SECURITY-ASSESSMENT (5.7, PASS WITH CONDITIONS) + PENTEST-REPORT (6.3, CONDITIONAL PASS). Moi: npm audit that (backend 2 vulns, extension 8 vulns, transitive) -> DevOps fix co kiem soat.
 - qa-agent: TEST-REPORT addendum Round 4 (359->446 dong, ingest KB 43 entries). Metrics: automated 66/66 (27 ext + 39 backend), STC 15/20, open BUG 0, open High 0. BUG-002 chot CLOSED. Verdict: PASS WITH CONDITIONS — Ready for staging, NOT production.
 - Con mo: 5 NOT_RUN staging, membership risk-accept, UAT.
+
+### 2026-09-22 — SM Coordinate Team Review (BLOCKED — no delegation + no Jira tools)
+- Step 0 Bootstrap: `find_tools` không có native trong session → bootstrap qua HTTP. Wrapper :9181 UP nhưng DEGRADED (chỉ 1 local tool qua tools/list; find_tools "jira" chỉ trả code/mem tools). Backend :48721 UP (SSE). orchestration_status: 2 child servers connected = markitdown(1), markdown-exporter-local(6). ⛔ KHÔNG có atlassian/Jira child server → không fetch/transition/đọc comment Jira được.
+- ⛔ Session KHÔNG có tool `invokeSubAgent` → SM không thể delegate cho devops-agent/security-agent/review agents. Theo role-boundaries + loop-constraints, SM KHÔNG tự làm việc của agent khác.
+- Verify tài liệu hiện có: BRD/FSD/TDD/STP/STC/TEST-REPORT/UG đủ. STATUS.json currentPhase=deployment, testing=done. TEST-REPORT verdict PASS (Round 3), BUG-001 & BUG-002 CLOSED, còn 5 STC NOT_RUN (cần live backend fixture + VS Code host).
+- Thiếu artifacts trước deploy: SECURITY-REVIEW (3.7), SECURITY-ASSESSMENT (5.7), PENTEST-REPORT (6.3), DPG (7), SECURITY-DEPLOY-REVIEW (6.7), RLN.
+- Kết quả: HARD STOP. Không invoke được agent nào, không transition Jira. Báo cáo user, chờ hướng dẫn. Không fabricate kết quả review.

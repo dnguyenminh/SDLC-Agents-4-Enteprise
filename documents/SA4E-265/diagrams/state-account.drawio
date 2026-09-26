@@ -1,0 +1,73 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="start1" value="" style="ellipse;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="40" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="preS2" value="&lt;b&gt;PRE_S2_SCHEMA&lt;/b&gt;&lt;br/&gt;users: password_hash NOT NULL&lt;br/&gt;no account_type / external_*" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="140" y="70" width="250" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="local" value="&lt;b&gt;LOCAL&lt;/b&gt;&lt;br/&gt;account_type='LOCAL'&lt;br/&gt;password_hash set, external_* NULL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="140" y="230" width="250" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="linked" value="&lt;b&gt;LOCAL_LINKED (derived)&lt;/b&gt;&lt;br/&gt;account_type stays 'LOCAL'&lt;br/&gt;external identity filled by S5 link" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="140" y="390" width="270" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="start2" value="" style="ellipse;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="560" y="80" width="40" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sso" value="&lt;b&gt;SSO&lt;/b&gt;&lt;br/&gt;account_type='SSO', password_hash NULL&lt;br/&gt;external identity set (BR-03)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="230" width="250" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="terminated" value="account deleted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="560" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="note1" value="&lt;b&gt;BR-01:&lt;/b&gt; only LOCAL | SSO — NO HYBRID&lt;br/&gt;&lt;b&gt;BR-02:&lt;/b&gt; unique (external_provider, external_subject_id)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="460" y="680" width="340" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="DB initialized (pre-S2 build)" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.9;entryDx=0;entryDy=0;" edge="1" parent="1" source="start1" target="preS2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="80" y="190"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="S2 migration: backfill account_type='LOCAL'" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="preS2" target="local">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="S5 verified link (email_verified=true)" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="local" target="linked">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="S5 JIT: first SSO login creates user (no password_hash)" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="start2" target="sso">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="FORBIDDEN: no type change / no HYBRID (BR-01)" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="linked" target="sso">
+      <mxGeometry x="-0.5" relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="960" y="430"/>
+          <mxPoint x="960" y="270"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="deleteUser()" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="sso" target="terminated">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="deleteUser()" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=classic;endFill=1;fontSize=9;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" parent="1" source="linked" target="terminated">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="540" y="450"/>
+          <mxPoint x="540" y="578"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="deleteUser()" style="edgeStyle=orthogonalEdgeStyle;html=1;rounded=1;endArrow=classic;endFill=1;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.7;entryDx=0;entryDy=0;" edge="1" parent="1" source="local" target="terminated">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="70" y="270"/>
+          <mxPoint x="70" y="602"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

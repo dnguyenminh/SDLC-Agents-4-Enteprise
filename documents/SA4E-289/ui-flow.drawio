@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-09-16T00:00:00.000Z" agent="Mozilla/5.0" version="24.9.0" etag="SA4E-289">
+ <diagram name="UI Flow" id="SA4E-289-ui">
+  <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+   <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="start" value="VS Code Webview" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+     <mxGeometry x="320" y="40" width="180" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="dashboard" value="Dashboard / Worklist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+     <mxGeometry x="120" y="180" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="chat" value="Agent Chat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+     <mxGeometry x="320" y="180" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="approval" value="Approval Panel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1">
+     <mxGeometry x="520" y="180" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="settings" value="Settings Pi Provider" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+     <mxGeometry x="320" y="320" width="180" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="edge1" edge="1" parent="1" source="start" target="dashboard">
+     <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="edge2" edge="1" parent="1" source="start" target="chat">
+     <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="edge3" edge="1" parent="1" source="start" target="approval">
+     <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="edge4" edge="1" parent="1" source="start" target="settings">
+     <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+   </root>
+  </mxGraphModel>
+ </diagram>
+</mxfile>

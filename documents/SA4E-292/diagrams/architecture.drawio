@@ -1,0 +1,42 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-292: Phase Router — Architecture Overview" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="500" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="user" value="User / Ticket Input" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="100" y="200" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="router" value="Phase Router&#10;phase-router.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="300" y="200" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="executor" value="PiAgent Executor&#10;pi-agent-executor.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="500" y="200" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="state" value="State Adapter&#10;state-adapter.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="300" y="320" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="checkpointer" value="RemoteCheckpointer" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="500" y="320" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="llm" value="Pi SDK LLM" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="700" y="200" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="user" target="router" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="router" target="executor" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="router" target="llm" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="router" target="state" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" edge="1" parent="1" source="state" target="checkpointer" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

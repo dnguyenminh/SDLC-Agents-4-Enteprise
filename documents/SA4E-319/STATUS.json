@@ -1,0 +1,28 @@
+{
+  "ticket": "SA4E-319",
+  "issueType": "Bug",
+  "currentPhase": "design",
+  "architecturePattern": "plugin",
+  "autonomyLevel": "L2",
+  "mode": "bug-fix",
+  "rootCause": "Split-brain auth: query param key mismatch (extension sends 'token', backend SPA reads 'sso_token') + 3 unsynced token stores (SecretStorage/cachedToken, localStorage.admin_token, URL bridge).",
+  "chosenFix": "Single source of truth: extension host owns token, deliver into SPA via consistent postMessage token_refreshed channel; SPA listener writes localStorage.admin_token + flips loggedIn for both initial load and silent refresh.",
+  "phases": {
+    "requirements": { "status": "skipped", "reason": "Bug fix — root cause pre-investigated by context-gatherer" },
+    "specification": { "status": "skipped" },
+    "design": { "status": "in_progress", "agent": "sa-agent", "startedAt": "2025-01-27" },
+    "ta_review": { "status": "not_started" },
+    "implementation": { "status": "not_started" },
+    "testing": { "status": "not_started" }
+  },
+  "affectedFiles": [
+    "extension/src/panels/panel-html.ts",
+    "backend/src/viewer/admin/index.html",
+    "extension/src/panels/graph-panel.ts",
+    "extension/src/panels/base-panel.ts",
+    "extension/src/auth/AuthManager.ts"
+  ],
+  "affectedPages": ["Graph", "Tags", "Quality", "Analytics", "Dashboard", "Workflow"],
+  "circuitBreaker": {},
+  "lastUpdated": "2025-01-27"
+}

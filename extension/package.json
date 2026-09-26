@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.40.2",
+  "version": "1.45.0",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -12,6 +12,18 @@
   "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.85.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true,
+      "restrictedConfigurations": [
+        "kiroSdlc.backend.allowInsecureRemote",
+        "kiroSdlc.backend.url",
+        "kiroSdlc.pegaEndpoint",
+        "kiroSdlc.pegaUsername",
+        "kiroSdlc.atlassianConnectionType"
+      ]
+    }
   },
   "categories": [
     "Other",
@@ -188,6 +200,11 @@
           "default": "http://127.0.0.1:48721",
           "description": "Remote Kiro backend server URL"
         },
+        "kiroSdlc.backend.allowInsecureRemote": {
+          "type": "boolean",
+          "default": false,
+          "description": "Bypass the HTTPS requirement for remote (non-loopback) backend server URLs. When enabled, HTTP remote URLs are accepted but traffic is unencrypted — credentials and data can be intercepted. Only enable on trusted private networks."
+        },
         "kiroSdlc.backend.ssoEnabled": {
           "type": "boolean",
           "default": false,
@@ -289,6 +306,14 @@
           "type": "string",
           "default": "",
           "description": "Override model for the selected provider"
+        },
+        "kiroSdlc.llmFallbackModels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Ordered list of fallback model ids the Pi chat retries on when the primary model fails with a transient gateway/upstream error (HTTP 5xx, timeout, or provider bootstrap failures like the Devin 'bridge sandbox' error). Tried in order after the primary; non-retryable errors (4xx/auth/bad request) do NOT trigger fallback. Example for an OmniRoute gateway: `[\"auto/best-coding\", \"agy/claude-sonnet-4-6\", \"auto/best-free\"]`."
         },
         "kiroSdlc.anthropicBaseUrl": {
           "type": "string",
@@ -468,6 +493,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
+    "@earendil-works/pi-agent-core": "0.80.10",
     "@langchain/core": "^1.2.0",
     "@langchain/langgraph": "^1.4.4",
     "@modelcontextprotocol/sdk": "^1.29.0",

@@ -1,6 +1,6 @@
 /**
  * UT-06..09 — MemoryEngine.incrementToolUsage / getToolUsage (SA4E-18).
- * Uses a real temp SQLite DB (better-sqlite3) with full schema applied.
+ * Uses a real temp SQLite DB (wasm) with full schema applied.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -8,8 +8,8 @@ import { makeTempDb, type TempDb } from '../../../__tests__/sa4e-testkit.js';
 
 describe('MemoryEngine tool usage', () => {
   let ctx: TempDb;
-  beforeEach(() => { ctx = makeTempDb(); });
-  afterEach(() => ctx.close());
+  beforeEach(async () => { ctx = await makeTempDb(); });
+  afterEach(async () => { await ctx.close(); });
 
   it('UT-06: first call inserts row with call_count = 1', async () => {
     await ctx.engine.incrementToolUsage('mem_search');

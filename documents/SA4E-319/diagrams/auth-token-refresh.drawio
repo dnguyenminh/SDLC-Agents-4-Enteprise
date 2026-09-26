@@ -1,0 +1,55 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <mxCell id="title" value="SA4E-319 — Silent Token Refresh (401 → refresh → re-deliver to iframe)" style="text;html=1;fontSize=16;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="820" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Participants -->
+    <mxCell id="h1" value="SPA index.html&#10;(api() fetch)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="Backend API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="panel-html&#10;iframe wrapper" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="580" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="BasePanel&#10;(webview host)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="840" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="AuthManager&#10;(SSOT — ext host)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1100" y="60" width="150" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- Lifelines -->
+    <mxCell id="l1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="135" y="100" as="sourcePoint"/><mxPoint x="135" y="930" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="395" y="100" as="sourcePoint"/><mxPoint x="395" y="930" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="655" y="100" as="sourcePoint"/><mxPoint x="655" y="930" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="915" y="100" as="sourcePoint"/><mxPoint x="915" y="930" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="l5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1175" y="100" as="sourcePoint"/><mxPoint x="1175" y="930" as="targetPoint"/></mxGeometry></mxCell>
+
+    <!-- Messages -->
+    <mxCell id="m1" value="1. api('/stats') with expired Bearer token" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="135" y="140" as="sourcePoint"/><mxPoint x="395" y="140" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m2" value="2. 401 Unauthorized" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="395" y="180" as="sourcePoint"/><mxPoint x="135" y="180" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m3" value="3. remove admin_token; parent.postMessage({type:'auth_error'})" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="135" y="220" as="sourcePoint"/><mxPoint x="655" y="220" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m4" value="4. iframe wrapper relays auth_error to VS Code host" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="655" y="260" as="sourcePoint"/><mxPoint x="915" y="260" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m5" value="5. cmd kiroSdlc.refreshToken → refreshToken()" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="915" y="300" as="sourcePoint"/><mxPoint x="1175" y="300" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m6" value="6. POST /api/auth/refresh → new token; update cachedToken (SSOT)" style="html=1;verticalAlign=bottom;endArrow=none;fontSize=9;strokeColor=#82b366;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1175" y="345" as="sourcePoint"/><mxPoint x="1175" y="345" as="targetPoint"/><Array as="points"><mxPoint x="1280" y="335"/><mxPoint x="1280" y="355"/></Array></mxGeometry></mxCell>
+    <mxCell id="m7" value="7. onTokenRefreshed.fire(newToken) + getTokenSync()" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#82b366;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1175" y="390" as="sourcePoint"/><mxPoint x="915" y="390" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m8" value="8. postMessage({type:'token_refreshed', token}) to iframe wrapper" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="915" y="430" as="sourcePoint"/><mxPoint x="655" y="430" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m9" value="9. relay token_refreshed into iframe.contentWindow" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="655" y="470" as="sourcePoint"/><mxPoint x="135" y="470" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m10" value="10. NEW listener: write localStorage.admin_token; setLoggedIn(true); retry" style="html=1;verticalAlign=bottom;endArrow=none;fontSize=9;strokeColor=#d6b656;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="135" y="515" as="sourcePoint"/><mxPoint x="135" y="515" as="targetPoint"/><Array as="points"><mxPoint x="240" y="505"/><mxPoint x="240" y="525"/></Array></mxGeometry></mxCell>
+    <mxCell id="m11" value="11. api('/stats') retried with fresh Bearer token" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;strokeColor=#82b366;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="135" y="560" as="sourcePoint"/><mxPoint x="395" y="560" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="m12" value="12. 200 OK — page stays mounted, no login screen flash" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#82b366;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="395" y="600" as="sourcePoint"/><mxPoint x="135" y="600" as="targetPoint"/></mxGeometry></mxCell>
+
+    <mxCell id="note1" value="Proactive path: TokenRefreshTimer calls refreshToken() before expiry → step 6 onward runs&#10;without a preceding 401. The token_refreshed broadcast is the SAME channel, so the 6 open&#10;panels each receive the new token. No panel reload; page state preserved." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;align=left;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="60" y="660" width="700" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="note2" value="Convergence: admin_token is only ever written by (a) __ssoBootstrap from unified sso_token param,&#10;or (b) the token_refreshed listener. Both derive from AuthManager.cachedToken. No independent origin." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="750" width="700" height="60" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

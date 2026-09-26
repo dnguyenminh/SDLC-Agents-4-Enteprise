@@ -3,7 +3,7 @@
  * batch preload, upsert (SQLite INSERT OR REPLACE), and chunked deletion.
  *
  * Uses SqliteAdapter (production SQLite adapter, in-memory) so tests exercise
- * the same code path as production without depending on native better-sqlite3.
+ * the same code path as production without depending on native bindings.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

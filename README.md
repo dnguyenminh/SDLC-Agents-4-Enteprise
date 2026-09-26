@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.41.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.44.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,43 @@ MIT
 ---
 
 ## Changelog
+
+### v1.45.0 (2026-09-26)
+
+- **SA4E-234: Backend storage off better-sqlite3 → @sqlite.org/sqlite-wasm** — Async-first `DatabaseAdapter` everywhere; dead admin Express portal, `MemoryDb`, `DiskBackedSet` and native-binding resolver removed; taskWorker concurrency cap raised 8→64. Root-cause fixes from the wasm migration: `SqliteWasmAdapter` now shares one live in-memory DB per resolved file path (refcounted) so sibling adapters stop diverging (`no such table` in E2E); `runAsync` converts BigInt `lastInsertRowid` to Number (fixes `mem_ingest` JSON-serialize crash); graph-analysis stack (`GraphLoader` → `CircularDepDetector`/`HotPathAnalyzer`/`RelatedTestFinder`/`ModuleSummarizer`) fully async; `HttpServer.start` awaits schema bootstrap before serving. All better-sqlite3 remnants purged (dead shim, broken debug scripts, obsolete extension NativeAddonManager + release manifest, stale docs/comments).
+- **SA4E-233/232: ANTLR-based Pega expression parser** — hand-written parser removed, callers migrated to ANTLR `ExprNodeEvaluator`; `ISNULL` unary operator added to `ExprOperators`.
+- **SA4E-331: Cross-project memory isolation** — PROJECT scope filter + dispatcher updates; E2E tool forwarding now sends `X-Project-Id` (fail-closed reads respected).
+- **Extension** — `PegaStreamIngester` accepts an auth manager and sends `Authorization: Bearer` on ingest-stream/job-poll/ingest-rule; indexing services auth headers updated.
+- **CI** — E2E global setup boots the server on a dynamic port (no manual code-intel server start). All suites verified green locally before release: backend unit 284 files / 3079 tests, e2e-api 173/173, extension compile & tests.
+
+### v1.44.0 (2026-09-23)
+
+- **SA4E-320: Opt-in HTTPS bypass for remote backend** — New workspace-scoped setting `kiroSdlc.backend.allowInsecureRemote` (default off) lets users accept an HTTP remote backend URL on trusted private networks, with an explicit MITM warning; enforcement stays on by default (SEC-289-03). Backend URL changes now apply at runtime without an extension reload. Security hardening: `restrictedConfigurations` + workspace-trust gate block untrusted-repo abuse; Pega endpoint HTTPS enforcement (SEC-02).
+- **SA4E-323: Per-workspace isolation for Pega/Atlassian settings** — Connection settings are isolated per workspace (secrets namespaced in the OS keychain), with a one-time migration of legacy global values. Internal refactor split `PegaHttpClient` and `SettingsMessageHandler` into focused ≤200-LOC modules.
+
+### v1.43.0 (2026-09-22)
+
+- **SA4E-262: Multi-provider SSO (Entra ID / Google / GitHub)** — Strategy-pattern SSO unified on a single source of truth (`sso_providers` table). Entra email verification now uses Microsoft's `xms_edov` claim (Entra omits standard `email_verified`); loopback (native-client) SSO sessions are no longer User-Agent-bound so the extension's `/api/admin/auth/me` works; the extension login screen renders provider buttons dynamically from `/auth/sso/providers` (no hardcoded Microsoft button); the sidebar shows the real signed-in user (password or SSO) instead of a hardcoded "admin". JIT provisioning rejections now return `403 provisioning_rejected` with a clear reason. Added SSO provider configuration guide.
+
+### v1.42.3 (2026-09-11)
+
+- **SA4E-257: Wire DB-backed MCP server config to McpClientManager** — `McpServerConfigRepository` reads `mcp_servers` table, `McpClientManager.initializeAll` loads enabled servers from DB with real-time connect/reconnect/disconnect hooks on CRUD, transport normalization `streamable-http → httpStream`, mock logs removed. Tests pass, no regression SA4E-215.
+
+### v1.42.2 (2026-09-10)
+
+- **Tenant scope stamping for tool execution** — `/api/tools/execute` and `/api/code/search` now stamp the trusted tenant scope onto tool arguments using the canonical `__projectId`/`__userId` keys (not only `_projectContext`). Code-intel tools read `__projectId` and are fail-closed when absent, which previously made `code_search` return "No results found". Covers the MCP call path (`mcpServer`) and the KB API route. Added regression tests (`tools-execute-scope`, orchestration dynamic IT, mcpServer calltool IT).
+- **KB Graph edges (LWC dir-based)** — `FileContainsSymbolStrategy` now matches LWC/Aura component symbols to their code symbols by component **directory** (component lives in `.js-meta.xml`, code in `.js`), so LWC_COMPONENT nodes are no longer isolated (131/132 connected). Remaining isolated nodes are legitimate standalone entities (single-file metadata components).
+- **Indexer/query hardening** — graph `migrator` idempotency additions, `query-layer` scope resolution, `indexing-engine` fixes.
+
+### v1.42.0 (2026-09-08)
+
+- **Multi-language tree-sitter parsers** — Real AST symbol extraction wired for C, C++, C#, PHP, Ruby, Scala, Swift and Kotlin (grammars bundled + copied to `dist` on build), plus a regex fallback for the same set. A shared `GenericTreeSitterParser` drives per-language node maps (`skipScopeNodes` moved to `grammar-config.json` and propagated to parsers). Symbol-kind fixes: correct name resolution for struct/enum (`type_identifier`), promote `method_declaration`/function-in-class to `method`, separate `variable`/`property`/`constant`, and dedupe symbols by name+kind+startLine.
+- **Salesforce indexing** — SFDX projects now index Apex, LWC (`.js` + minimal `.html` template extractor), Aura, Visualforce and `*-meta.xml`; extension source-upload glob extended for SFDX; `CODE_KINDS` extended so Salesforce entities project into the KB Graph.
+- **KB Graph edges** — Edge extraction rewritten to read from the `relationships` table (the tree-sitter source of truth) instead of the empty legacy tables. New `MembershipEdgeStrategy` (CONTAINS: class → members) and `FileContainsSymbolStrategy` (LWC component → file symbols); inherits/implements resolve-by-name (fan-out on `calls` avoided). Auto-heal job (`ensure-sa4e-301`) backfills edges for projects with none; unused `code_dependencies`/`code_call_graph` tables dropped; unique index ensured for idempotent edge inserts.
+- **KB Graph renderer** — Continuous budget-driven LOD replaces the discrete FAR/MID/CLOSE modes: a reusable `InstancedMesh` renders the nearest `detailBudget` nodes with pixel-accurate sphere scaling, edges show when detail is active, and labels are budget-limited. Interactive minimap (zoom/rotate/pan/span), bottom-left legend with Excel-style filter, and draggable resizable legend window.
+- **Enrichment dedup** — Removed the duplicate enrichment-queue path from graph-sync; `CodeEnrichmentTaskCreator` is now the single source with a PENDING/PROCESSING dedup guard; orphan `CODE_ENRICHMENT` tasks (`entry_id=0`/`project_id NULL`) cleaned on boot.
+- **Indexing status UX** — Index status bar item opens a real "Kiro Indexer" output channel on click, distinguishes "backend unreachable" from in-progress, and stops swallowing trigger/poll errors.
+- **Platform & CI** — Standardized on Node.js 22 LTS, upgraded GitHub Actions checkout/setup-node, and fixed rolldown native-binding install in CI.
 
 ### v1.41.1 (2026-09-06)
 

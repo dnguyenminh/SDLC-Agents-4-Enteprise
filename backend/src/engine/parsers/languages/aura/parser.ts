@@ -30,6 +30,9 @@ export default class AuraParser implements ILanguageParser {
         { attr: 'extends', kind: 'inherits' },
       ],
     });
+    if (ext === '.cmp' && symbols.length > 0) {
+      symbols.forEach(s => { s.kind = 'aura_component'; });
+    }
     return { symbols, relationships, errors: [] };
   }
 }

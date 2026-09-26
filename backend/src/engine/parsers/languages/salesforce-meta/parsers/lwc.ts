@@ -8,7 +8,7 @@ export function parseLWCMeta(
   const componentName = nameFromPath(filePath);
   const lineCount = source.split('\n').length;
   const isExposed = extractXmlValues(source, 'isExposed')[0] === 'true';
-  symbols.push({ name: componentName, kind: 'class', filePath, startLine: 1, endLine: lineCount, signature: `LWC: ${componentName}`, modifiers: isExposed ? ['exposed'] : [], isExported: isExposed });
+  symbols.push({ name: componentName, kind: 'lwc_component', filePath, startLine: 1, endLine: lineCount, signature: `LWC: ${componentName}`, modifiers: isExposed ? ['exposed'] : [], isExported: isExposed });
   const datasources = extractXmlValues(source, 'datasource');
   for (const ds of datasources) {
     if (ds) relationships.push({ sourceSymbol: componentName, targetSymbol: ds, kind: 'wire' as RelationshipKind, filePath, line: 1, metadata: { type: 'datasource' } });

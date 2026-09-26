@@ -14,7 +14,7 @@ const sharedRules = {
 };
 
 export default tseslint.config(
-  { ignores: ['dist/', 'node_modules/', '.code-intel/', '*.bak', 'minimal.js', 'test-*.ts', 'src/viewer/', 'src/admin/', 'src/modules/pega/expression/pega-expr/generated/'] },
+  { ignores: ['dist/', 'node_modules/', '.code-intel/', '*.bak', 'minimal.js', 'test-*.ts', 'src/viewer/', 'src/admin/', 'src/modules/pega/expression/generated/', 'src/modules/pega/expression/pega-expr/generated/'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

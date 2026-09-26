@@ -72,6 +72,12 @@ export interface LlmProvider {
   getContextWindow(): number;
 
   /**
+   * Eagerly detect context window size (e.g. from local server /v1/models).
+   * Optional — providers that support dynamic detection implement this.
+   */
+  detectContextWindow?(): Promise<void | number>;
+
+  /**
    * Chat with tool calling support. Returns structured response.
    * Optional — providers that don't support tools leave this undefined.
    */

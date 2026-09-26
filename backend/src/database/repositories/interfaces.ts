@@ -37,6 +37,19 @@ export interface IUserRepository {
 }
 
 /**
+ * Auth user repository — unified auth entry (SA4E-269).
+ * Email primary, username fallback.
+ */
+export interface IAuthUserRepository extends IUserRepository {
+  findByEmail(email: string): Promise<any | null>;
+  findByUsername(username: string): Promise<any | null>;
+  findById(userId: string): Promise<any | null>;
+  createUser(params: { email: string; username?: string; passwordHash: string; accountType?: string; accessGroupId?: string }): Promise<any>;
+  verifyCredentials(identifier: string, password: string): Promise<any | null>;
+}
+
+
+/**
  * Symbol data access — code symbol count queries.
  * Implements: UC-02, BR-02
  */

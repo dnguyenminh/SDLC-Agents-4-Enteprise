@@ -131,6 +131,8 @@ async function buildStatusResponse(taskWorker: TaskWorker, projectId: string | n
     estimatedCompletion,
     currentFile: progress?.file ?? null,
     lastPollAt: stats.lastPollAt,
+    maxConcurrency: taskWorker.getConcurrency(),
+    activeConcurrency: stats.processing,
     activeTasks: await getActiveTasks(repo, projectId ?? undefined),
     recentFailures: await getRecentFailures(repo),
   };
@@ -162,7 +164,8 @@ async function getActiveTasks(
   projectId?: string,
 ): Promise<Array<{ source: string }>> {
   try {
-    const tasks = await repo.listProcessing(5, projectId);
+    // Show enough rows to cover higher concurrency configs (was 5).
+    const tasks = await repo.listProcessing(64, projectId);
     return tasks.map((t) => ({ source: t.source }));
   } catch {
     return [];

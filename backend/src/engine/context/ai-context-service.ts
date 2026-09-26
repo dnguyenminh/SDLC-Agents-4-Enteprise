@@ -56,7 +56,7 @@ export class AIContextService {
         continue;
       }
 
-      const content = fetchSection(section, targetSymbol, caller_depth, this.adapter, this.callGraph, this.resolver, this.gitService, this.workspace);
+      const content = await fetchSection(section, targetSymbol, caller_depth, this.adapter, this.callGraph, this.resolver, this.gitService, this.workspace);
       if (content == null) {
         continue;
       }

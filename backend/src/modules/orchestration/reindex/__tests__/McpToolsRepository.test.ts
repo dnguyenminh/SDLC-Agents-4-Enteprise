@@ -1,5 +1,5 @@
 /**
- * SA4E-42 UT-11..19 — McpToolsRepository scoped SQL over a real better-sqlite3 DB.
+ * SA4E-42 UT-11..19 — McpToolsRepository scoped SQL over a real SQLite DB (wasm).
  * Covers upsert idempotency, scoped prune/delete, empty-set guard, F-01 collision,
  * F-04 large-set fallback, and F-06 parameterized prune.
  */

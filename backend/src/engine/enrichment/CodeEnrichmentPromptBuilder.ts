@@ -27,7 +27,14 @@ export class CodeEnrichmentPromptBuilder {
       case 'FUNCTION_SUMMARY': return this.buildFunctionSummary(context);
       case 'TAG_EXTRACTION': return this.buildTagExtraction(context);
       case 'PEGA_SUMMARY': return this.buildPegaSummary(context);
+      case 'METADATA_SUMMARY': return this.buildMetadataSummary(context);
     }
+  }
+
+  private buildMetadataSummary(ctx: SymbolContext): LLMMessage[] {
+    const system = this.metadataSystemPrompt();
+    const user = this.buildMetadataUserPrompt(ctx);
+    return [{ role: 'system', content: system }, { role: 'user', content: user }];
   }
 
   private buildClassSummary(ctx: SymbolContext): LLMMessage[] {
@@ -55,10 +62,41 @@ export class CodeEnrichmentPromptBuilder {
   }
 
   private classSystemPrompt(): string {
-    return `You are a code analyst. Summarize the given class/interface/enum.
-Return JSON only: {"summary":"<1-3 sentences>","tags":["category:value",...]}
+    return `You are a code analyst. Summarize the given class/interface/enum and produce pseudo code describing its structure and responsibilities.
+Return JSON only: {"summary":"<1-3 sentences>","pseudo_code":"<structured pseudo code>","tags":["category:value",...]}
 Valid tag categories: ${VALID_TAG_CATEGORIES.join(', ')}
-Tag values: lowercase, alphanumeric + hyphens only.`;
+Tag values: lowercase, alphanumeric + hyphens only.
+CRITICAL pseudo_code format rules:
+- Describe the class shape: key fields/properties, and each public method's purpose (one line each).
+- Use \\n for line breaks; indent nested blocks with 2 spaces.
+- Use CLASS/END CLASS, METHOD/END METHOD keywords. Do NOT invent logic that is not implied by the signature/members.
+- Max 2000 chars.
+Example: "CLASS OrderService\\n  FIELD repository\\n  METHOD placeOrder(order)\\n    validate then persist and return id\\n  END METHOD\\nEND CLASS"`;
+  }
+
+  private metadataSystemPrompt(): string {
+    return `You are a Salesforce metadata analyst. Summarize the purpose of the given declarative metadata element (custom field, custom object, LWC/Aura component, Flow, or component property).
+Return JSON only: {"summary":"<1-2 sentences>","tags":["category:value",...]}
+Valid tag categories: ${VALID_TAG_CATEGORIES.join(', ')}
+Tag values: lowercase, alphanumeric + hyphens only.
+GROUNDING RULES (accuracy over completeness):
+- Base the summary STRICTLY on the provided name, signature, type, parent, and file path. Do NOT invent field values, business rules, or behavior that are not implied.
+- For a field: describe what it stores and on which object, inferred from name + data type + parent object.
+- For an object: describe what entity it represents.
+- For an LWC/Aura component: describe its likely UI responsibility inferred from its name.
+- For a Flow: describe its automation purpose inferred from its name.
+- For a property: describe what value it holds on its parent, inferred from name + type.
+- If the name is opaque and nothing can be inferred, say so briefly rather than guessing.
+Do NOT produce pseudo code — these are declarations, not procedural logic.`;
+  }
+
+  private buildMetadataUserPrompt(ctx: SymbolContext): string {
+    const parts = [`[${ctx.kind}] ${ctx.name}`];
+    if (ctx.signature) parts.push(`Signature: ${ctx.signature}`);
+    if (ctx.parentSymbol) parts.push(`Parent: ${ctx.parentSymbol}`);
+    if (ctx.filePath) parts.push(`File: ${ctx.filePath}`);
+    if (ctx.docComment) parts.push(`Documentation: ${ctx.docComment}`);
+    return parts.join('\n');
   }
 
   private functionSystemPrompt(): string {
@@ -110,6 +148,11 @@ FORMAT:
     if (ctx.docComment) parts.push(`Documentation: ${ctx.docComment}`);
     if (ctx.childMembers?.length) {
       parts.push(`Members: ${ctx.childMembers.slice(0, 20).join(', ')}`);
+    }
+    // Include class body so the LLM can produce grounded pseudo code (not just from signature).
+    if (ctx.bodyText) {
+      const truncated = this.truncateToTokens(ctx.bodyText, MAX_BODY_TOKENS);
+      parts.push(`Body:\n${truncated}`);
     }
     return parts.join('\n');
   }

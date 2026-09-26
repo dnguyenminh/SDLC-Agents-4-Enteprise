@@ -1,0 +1,15 @@
+{
+  "ticket": "SA4E-308",
+  "currentPhase": "requirements",
+  "note": "Full rewrite of all documents based on actual code review (SSO strategy layer)",
+  "phases": {
+    "requirements": { "status": "in_progress", "file": "BRD.md", "version": 2, "startedAt": "2026-09-22T00:00:00Z", "note": "rewrite" },
+    "specification": { "status": "pending", "file": "FSD.md", "version": null },
+    "design": { "status": "pending", "file": "TDD.md", "version": null },
+    "test_planning": { "status": "pending" },
+    "implementation": { "status": "not_started" },
+    "testing": { "status": "not_started" },
+    "deployment": { "status": "not_started" }
+  },
+  "lastUpdated": "2026-09-22T00:00:00Z"
+}

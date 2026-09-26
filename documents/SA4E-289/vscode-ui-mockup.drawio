@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-09-16T00:00:00.000Z" agent="Mozilla/5.0" version="24.9.0" etag="SA4E-289">
+ <diagram name="VS Code UI" id="vscode-ui">
+  <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+   <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="vscode" value="VS Code / Kiro Window" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
+     <mxGeometry x="40" y="40" width="740" height="520" as="geometry"/>
+    </mxCell>
+    <mxCell id="activity" value="Activity Bar" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2d2d2d;" vertex="1" parent="1">
+     <mxGeometry x="60" y="80" width="40" height="440" as="geometry"/>
+    </mxCell>
+    <mxCell id="sidebar" value="Sidebar – SDLC Agents" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3f3f3;" vertex="1" parent="1">
+     <mxGeometry x="120" y="80" width="180" height="440" as="geometry"/>
+    </mxCell>
+    <mxCell id="editor" value="Editor Area" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;" vertex="1" parent="1">
+     <mxGeometry x="320" y="80" width="420" height="320" as="geometry"/>
+    </mxCell>
+    <mxCell id="panel" value="Webview Panel – Pi Workflow UI&#10;• Dashboard / Worklist&#10;• Agent Chat&#10;• Approval Panel" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f4ff;" vertex="1" parent="1">
+     <mxGeometry x="320" y="420" width="420" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="status" value="Status Bar – Pi Workflow Status" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2d2d2d;" vertex="1" parent="1">
+     <mxGeometry x="60" y="540" width="700" height="20" as="geometry"/>
+    </mxCell>
+   </root>
+  </mxGraphModel>
+ </diagram>
+</mxfile>

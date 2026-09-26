@@ -10,6 +10,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import type { ToolDefinition } from '../../types/tool.js';
 import type { ServerConfig } from './McpConfigService.js';
 import type { HealthCheckConfig, ServerStatusEntry, ServerStateChangeCallback, Unsubscribe } from './types/health.js';
+import { McpServerConfigRepository } from './McpServerConfigRepository.js';
 import { PRODUCTION_HEALTH_CONFIG } from './types/health.js';
 import { ConnectionStateTracker } from './health/ConnectionStateTracker.js';
 import { HealthMonitor } from './health/HealthMonitor.js';
@@ -50,32 +51,57 @@ export class McpClientManager {
     const dataDir = process.env.CODE_INTEL_DATA_DIR || '.code-intel';
     const configPath = path.resolve(workspace, dataDir, 'orchestration.json');
 
-    if (!fs.existsSync(configPath)) {
-      this.logger.info({ configPath }, 'No orchestration.json found, skipping child servers');
-      return;
-    }
-
-    let config: { mcpServers: Record<string, ServerConfig> };
-    try {
-      const raw = fs.readFileSync(configPath, 'utf-8');
-      config = JSON.parse(raw);
-    } catch (err) {
-      this.logger.error({ err, configPath }, 'Failed to read orchestration.json');
-      return;
-    }
-
-    const servers = Object.entries(config.mcpServers || {});
-    this.logger.info({ count: servers.length }, 'Connecting child MCP servers');
-
-    for (const [name, serverConfig] of servers) {
+    if (fs.existsSync(configPath)) {
       try {
-        await this.connectServer(name, serverConfig);
+        const raw = fs.readFileSync(configPath, 'utf-8');
+        const config = JSON.parse(raw) as { mcpServers: Record<string, ServerConfig> };
+        const servers = Object.entries(config.mcpServers || {});
+        this.logger.info({ count: servers.length, source: 'file' }, 'Connecting child MCP servers from orchestration.json');
+        for (const [name, serverConfig] of servers) {
+          try {
+            await this.connectServer(name, serverConfig);
+          } catch (err) {
+            this.logger.error({ err, server: name }, 'Failed to connect child server (will retry via health monitor)');
+            if (!this.stateTracker.getState(name)) this.stateTracker.register(name);
+            this.serverConfigs.set(name, serverConfig);
+          }
+        }
       } catch (err) {
-        this.logger.error({ err, server: name }, 'Failed to connect child server (will retry via health monitor)');
-        // Register so health monitor can attempt reconnect later
-        if (!this.stateTracker.getState(name)) this.stateTracker.register(name);
-        this.serverConfigs.set(name, serverConfig);
+        this.logger.error({ err, configPath }, 'Failed to read orchestration.json');
       }
+    } else {
+      this.logger.info({ configPath }, 'No orchestration.json found, skipping child servers');
+    }
+
+    await this.loadDbServers();
+  }
+
+  private normalizeTransportType(config: ServerConfig): ServerConfig {
+    const type = config.type || config.transportType;
+    if (type === 'streamable-http') {
+      return { ...config, type: 'httpStream', transportType: 'httpStream' };
+    }
+    return config;
+  }
+
+  private async loadDbServers(): Promise<void> {
+    try {
+      const servers = await McpServerConfigRepository.listEnabledServers();
+      this.logger.info({ count: servers.length, source: 'db' }, 'Connecting child MCP servers from DB');
+      for (const cfg of servers) {
+        const name = cfg.name;
+        if (name === 'code-intelligence' || name === 'code-intel') continue;
+        try {
+          const normalized = this.normalizeTransportType(cfg);
+          await this.connectServer(name, normalized);
+        } catch (err) {
+          this.logger.error({ err, server: name }, 'Failed to connect DB server (will retry via health monitor)');
+          if (!this.stateTracker.getState(name)) this.stateTracker.register(name);
+          this.serverConfigs.set(name, cfg);
+        }
+      }
+    } catch (err) {
+      this.logger.warn({ err }, 'Failed to load DB servers, continuing startup');
     }
   }
 

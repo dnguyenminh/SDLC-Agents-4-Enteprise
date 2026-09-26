@@ -140,7 +140,21 @@ async function processCodeSymbols(
 ): Promise<void> {
   try {
     const adapter = getDbAdapter();
-    const INCLUDE_KINDS = ['function', 'class', 'interface', 'method', 'type', 'enum', 'constructor'];
+    // Skip quietly when the symbols table is missing (fresh/empty DB) instead
+    // of logging a scary SQLITE_ERROR — the next sync will pick it up.
+    try {
+      const engine = adapter.getEngine();
+      const check = engine === 'postgresql'
+        ? await adapter.allAsync(`SELECT table_name FROM information_schema.tables WHERE table_name = $1`, ['symbols'])
+        : await adapter.allAsync(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, ['symbols']);
+      if (check.length === 0) {
+        logger.debug('symbols table missing — skipping code symbol collection');
+        return;
+      }
+    } catch {
+      return;
+    }
+    const INCLUDE_KINDS = ['function', 'class', 'interface', 'method', 'type', 'enum', 'constructor', 'file'];
     const placeholders = INCLUDE_KINDS.map(() => '?').join(',');
     const rows = await adapter.allAsync<any>(
       `SELECT s.id, s.name, s.kind, f.path as file_path, f.language

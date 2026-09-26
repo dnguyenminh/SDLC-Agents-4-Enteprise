@@ -71,6 +71,24 @@ Verdict: {Approve / Approve with conditions / Reject}
 - **Approve with conditions** → QA fixes → re-verify → proceed
 - **Reject** → QA redo → re-review (max 2 iterations)
 
+### Step 4b.5: BA Reviews Test Cases (MANDATORY — QA done only after BA approves)
+
+**Sau khi SM review pass, BA PHẢI review STC để xác nhận test cases phản ánh đúng business requirements. QA chỉ hoàn thành việc khi BA agent đồng ý.**
+
+1. Invoke BA to review Test Cases (STC + STP). BA reads BRD/FSD from KB and checks:
+   1. Business coverage — Mọi User Story và Acceptance Criteria trong BRD đều có test case tương ứng?
+   2. Business rules — Mọi BR-XX trong FSD đều được test?
+   3. Đúng ý nghĩa nghiệp vụ — Expected results phản ánh đúng hành vi business mong đợi?
+   4. Edge cases nghiệp vụ — Các luồng exception/alternative quan trọng đã được cover?
+   5. Không thiếu, không thừa — Không bỏ sót requirement, không test ngoài scope.
+   BA returns verdict: **APPROVED** or **CHANGES REQUESTED** (with the list of gaps).
+
+2. Handle BA verdict:
+   - **APPROVED** → proceed to finalize
+   - **CHANGES REQUESTED** → invoke QA to fix STC/STP theo danh sách gap từ BA → re-invoke BA to re-review (max 2 iterations)
+
+3. ⛔ **QA test planning KHÔNG được đánh dấu done cho tới khi BA verdict = APPROVED.** Nếu sau 2 iterations vẫn CHANGES REQUESTED → report user.
+
 ### Step 4c: Fix Issues (if any)
 
 ```

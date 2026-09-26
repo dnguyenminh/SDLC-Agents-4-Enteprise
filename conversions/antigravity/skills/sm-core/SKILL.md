@@ -3,7 +3,6 @@ name: sm-core
 description: SM Core Orchestrator
 ---
 
-
 # SM Core Orchestrator
 
 ## Identity
@@ -93,8 +92,7 @@ Template: look for `template:path/to/file.md` in input. Default templates:
 | Phase | Name | Agent | Output | Prerequisites |
 |-------|------|-------|--------|---------------|
 | 1 | Requirements | ba-agent | BRD.md | Jira ticket exists |
-| 2 | Specification | ba-agent + ta-agent | FSD.md | BRD.md exists |
-| 2.5 | UI Design | ui-agent | Wireframes | FSD.md with UI specs |
+| 2 | Specification | ba-agent + ui-agent + ta-agent | FSD.md (incl. BA-approved UI mockups for UI tickets) | BRD.md exists |
 | 3 | Design | sa-agent | TDD.md | FSD.md exists |
 | 3.5 | Feedback Loop | ba↔sa | FSD fix + TDD update | DISCREPANCY.md exists |
 | 3.7 | Security Design Review | security-agent | SECURITY-REVIEW.md | TDD.md exists |
@@ -599,5 +597,4 @@ When user input contains:
 - "chạy L3", "L3 mode", "unattended" → set autonomyLevel = "L3"
 - "switch L1", "L1", "report only" → set autonomyLevel = "L1"
 - "L2", "assisted", or no level specified → set autonomyLevel = "L2"
-
 

@@ -7,13 +7,13 @@ export function parseObject(
 ): void {
   const objectName = nameFromPath(filePath);
   const lineCount = source.split('\n').length;
-  symbols.push({ name: objectName, kind: 'class', filePath, startLine: 1, endLine: lineCount, signature: `CustomObject: ${objectName}`, modifiers: ['custom-object'], isExported: true });
+  symbols.push({ name: objectName, kind: 'sf_object', filePath, startLine: 1, endLine: lineCount, signature: `CustomObject: ${objectName}`, modifiers: ['custom-object'], isExported: true });
   const fields = extractXmlBlocks(source, 'fields');
   for (const block of fields) {
     const fieldName = extractXmlValues(block, 'fullName')[0];
     const fieldType = extractXmlValues(block, 'type')[0] ?? 'Text';
     if (fieldName) {
-      symbols.push({ name: fieldName, kind: 'property', filePath, startLine: 1, endLine: 1, signature: `${fieldName}: ${fieldType}`, parentName: objectName, returnType: fieldType, isExported: true });
+      symbols.push({ name: fieldName, kind: 'sf_field', filePath, startLine: 1, endLine: 1, signature: `${fieldName}: ${fieldType}`, parentName: objectName, returnType: fieldType, isExported: true });
       if (fieldType === 'Lookup' || fieldType === 'MasterDetail') {
         const referenceTo = extractXmlValues(block, 'referenceTo')[0];
         if (referenceTo) relationships.push({ sourceSymbol: objectName, targetSymbol: referenceTo, kind: 'uses', filePath, line: 1, metadata: { relationType: fieldType } });
