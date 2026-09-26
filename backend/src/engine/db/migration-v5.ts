@@ -26,7 +26,7 @@ async function hasProjectId(db: QueryDatabaseAdapter, table: string): Promise<bo
 /** Recreate `files` with UNIQUE(project_id, path); preserves id for FK integrity. */
 async function recreateFiles(db: QueryDatabaseAdapter, legacyProjectId: string): Promise<void> {
   const cols = await columns(db, 'files');
-  if (cols.has('project_id') && cols.has('file_created_at')) return;
+  if (cols.has('project_id')) return;
 
   await db.execAsync(`CREATE TABLE files_new (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
