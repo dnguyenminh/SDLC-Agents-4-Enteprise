@@ -10,9 +10,11 @@ import type { PegaHttpCore } from "./PegaHttpCore";
 async function postBackend(
   core: PegaHttpCore, path: string, body: Record<string, unknown>,
 ): Promise<{ res: Response; json: any }> {
+  const { buildBackendAuthHeaders } = await import("../../utils/backend-auth-headers");
+  const headers = { ...buildBackendAuthHeaders(), "Content-Type": "application/json" };
   const res = await fetch(`${core.getBackendUrl()}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   });
   const json = res.ok ? await res.json() : undefined;

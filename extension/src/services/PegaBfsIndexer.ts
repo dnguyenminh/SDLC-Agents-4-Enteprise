@@ -102,8 +102,9 @@ export class PegaBfsIndexer {
     private readonly log: LogFn,
     private readonly schemaOrchestrator?: ISchemaOrchestrator,
     private readonly resilient = false,
+    private readonly authManager?: { getTokenSync(): string },
   ) {
-    this.ingester = new PegaStreamIngester(backendUrl);
+    this.ingester = new PegaStreamIngester(backendUrl, authManager);
   }
 
   /**

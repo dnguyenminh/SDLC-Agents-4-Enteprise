@@ -201,6 +201,8 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
 
   BasePanel.authTokenProvider = () => authManager?.getTokenSync() || "";
 
+  (globalThis as any).__authTokenProvider = () => authManager?.getTokenSync() || "";
+
   setupAuthStateHandlers();
   setupTreeView(context);
 

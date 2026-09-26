@@ -41,6 +41,7 @@ export class PegaCatalogIndexer {
     private readonly httpClient: IndexerHttpClient,
     private readonly outputChannel: vscode.OutputChannel | undefined,
     private readonly log: LogFn,
+    private readonly authManager?: { getTokenSync(): string },
   ) {}
 
   /**
@@ -97,7 +98,7 @@ export class PegaCatalogIndexer {
 
     // 6: reuse BFS indexer to fetch content + ingest (+ discover relatives)
     // resilient=true: a lone 5xx on one rule must not discard the full catalog list.
-    const bfs = new PegaBfsIndexer(pegaClient, backendUrl, this.outputChannel, this.log, undefined, true);
+    const bfs = new PegaBfsIndexer(pegaClient, backendUrl, this.outputChannel, this.log, undefined, true, this.authManager);
     const dedupSet = createPegaDedupSet(root, "catalog-indexer");
     try {
       const bfsResult = await bfs.run(projectId, toFetch, dedupSet, report, root);
