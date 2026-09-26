@@ -220,27 +220,27 @@ export class SqliteAdapter implements DatabaseAdapter {
       stmt.bind(params);
       while (stmt.step()) { /* step to exhaust */ }
       const changes = db.changes();
-      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object', returnValue: 'resultRows' }) as any;
       const lastInsertRowid = Number(rows[0]?.id ?? 0);
       stmt.finalize?.();
       return { changes, lastInsertRowid };
     } else {
       db.exec(normalized);
-      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object' }) as any;
+      const rows = db.exec('SELECT last_insert_rowid() as id', { rowMode: 'object', returnValue: 'resultRows' }) as any;
       return { changes: db.changes(), lastInsertRowid: Number(rows[0]?.id ?? 0) };
     }
   }
 
   get<T = unknown>(sql: string, params?: unknown[]): T | undefined {
     const normalized = normalizeSqlitePlaceholders(sql);
-    const opts = params && params.length ? { bind: params, rowMode: 'object' } : { rowMode: 'object' };
+    const opts = params && params.length ? { bind: params, rowMode: 'object', returnValue: 'resultRows' } : { rowMode: 'object', returnValue: 'resultRows' };
     const rows = this.getDb().exec(normalized, opts) as any[];
     return rows?.[0] as T | undefined;
   }
 
   all<T = unknown>(sql: string, params?: unknown[]): T[] {
     const normalized = normalizeSqlitePlaceholders(sql);
-    const opts = params && params.length ? { bind: params, rowMode: 'object' } : { rowMode: 'object' };
+    const opts = params && params.length ? { bind: params, rowMode: 'object', returnValue: 'resultRows' } : { rowMode: 'object', returnValue: 'resultRows' };
     const rows = this.getDb().exec(normalized, opts) as any[];
     return rows as T[];
   }
