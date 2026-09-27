@@ -26,18 +26,6 @@ vi.mock('fs', async (importOriginal) => {
 
 // Import after mocks
 import { McpBridge, McpToolTimeoutError } from '../core/mcp-bridge';
-import { BaseNode } from '../core/base-node';
-import type { PipelineState } from '../core/state';
-import { StreamHandler } from '../core/stream-handler';
-
-// Create a dummy subclass to test abstract BaseNode's protected discoverTools
-class MockNode extends BaseNode {
-  constructor(bridge: McpBridge) {
-    super('test-node', bridge, new StreamHandler());
-  }
-  async execute(state: PipelineState): Promise<Partial<PipelineState>> { return {}; }
-  public testDiscoverTools(query: string) { return this.discoverTools(query); }
-}
 
 describe('McpBridge & Payload Interceptors', () => {
   let mcpManagerMock: any;
@@ -238,60 +226,4 @@ describe('McpBridge & Payload Interceptors', () => {
     });
   });
 
-  describe('Schema Rewrite (discoverTools)', () => {
-    it('TC-01: Should append _as_path to schema properties containing base64', async () => {
-      const mockNode = new MockNode(bridge);
-      const mockBackendTools = [{
-        name: 'drawio_export_png',
-        inputSchema: {
-          properties: { xml_content: { type: 'string' }, image_base64: { type: 'string' } },
-          required: ['xml_content', 'image_base64']
-        }
-      }];
-      mcpManagerMock.invokeTool.mockResolvedValue(JSON.stringify(mockBackendTools));
-
-      const schemaStr = await mockNode.testDiscoverTools('drawio');
-      const rewrittenTools = JSON.parse(schemaStr);
-      
-      const props = rewrittenTools[0].inputSchema.properties;
-      expect(props.image_base64).toBeUndefined();
-      expect(props.image_base64_as_path).toBeDefined();
-      expect(rewrittenTools[0].inputSchema.required).toContain('image_base64_as_path');
-    });
-
-    it('TC-13: Should safely rewrite if required array is missing', async () => {
-      const mockNode = new MockNode(bridge);
-      const mockBackendTools = [{
-        name: 'tool_no_required',
-        inputSchema: { properties: { doc_base64: { type: 'string' } } }
-      }];
-      mcpManagerMock.invokeTool.mockResolvedValue(JSON.stringify(mockBackendTools));
-
-      const schemaStr = await mockNode.testDiscoverTools('test');
-      const rewrittenTools = JSON.parse(schemaStr);
-      
-      expect(rewrittenTools[0].inputSchema.properties.doc_base64_as_path).toBeDefined();
-      expect(rewrittenTools[0].inputSchema.required).toBeUndefined(); // Did not crash
-    });
-
-    it('TC-14: Should handle Multiple Base64 Keys in Schema', async () => {
-      const mockNode = new MockNode(bridge);
-      const mockBackendTools = [{
-        name: 'tool_multi',
-        inputSchema: {
-          properties: { img1_base64: { type: 'string' }, img2_base64: { type: 'string' } },
-          required: ['img1_base64']
-        }
-      }];
-      mcpManagerMock.invokeTool.mockResolvedValue(JSON.stringify(mockBackendTools));
-
-      const schemaStr = await mockNode.testDiscoverTools('test');
-      const rewrittenTools = JSON.parse(schemaStr);
-      
-      const props = rewrittenTools[0].inputSchema.properties;
-      expect(props.img1_base64_as_path).toBeDefined();
-      expect(props.img2_base64_as_path).toBeDefined();
-      expect(rewrittenTools[0].inputSchema.required).toContain('img1_base64_as_path');
-    });
-  });
 });

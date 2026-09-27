@@ -6,7 +6,7 @@ import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
 import { PiWorkflowAdapter } from "../pi-workflow";
 import { ChatExtToWebviewMessage, AutopilotMode } from "./message-protocol";
-import { SDLCPhase } from "../langgraph/core/state";
+import { SDLCPhase } from "../langgraph/core/state-types";
 
 /** Pattern matching for ticket-based commands */
 const TICKET_PATTERN = /^([A-Z]+-\d+)\s+(.+)$/;

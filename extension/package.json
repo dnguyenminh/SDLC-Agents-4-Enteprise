@@ -21,7 +21,11 @@
         "kiroSdlc.backend.url",
         "kiroSdlc.pegaEndpoint",
         "kiroSdlc.pegaUsername",
-        "kiroSdlc.atlassianConnectionType"
+        "kiroSdlc.atlassianConnectionType",
+        "kiroSdlc.anthropicBaseUrl",
+        "kiroSdlc.openaiBaseUrl",
+        "kiroSdlc.ollamaUrl",
+        "kiroSdlc.lmstudioBaseUrl"
       ]
     }
   },
@@ -460,7 +464,6 @@
     "gen-checksums": "node scripts/gen-checksums.js",
     "test": "vitest run",
     "test:unit": "vitest run",
-    "test:integration": "vitest run src/langgraph/__tests__/chat-graph-diagnostics.integration.test.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:watch": "vitest watch",
     "lint": "npx eslint src/ --ext .ts",
@@ -494,8 +497,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
     "@earendil-works/pi-agent-core": "0.80.10",
-    "@langchain/core": "^1.2.0",
-    "@langchain/langgraph": "^1.4.4",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@puppeteer/browsers": "^3.2.3",
     "@types/ws": "^8.18.1",

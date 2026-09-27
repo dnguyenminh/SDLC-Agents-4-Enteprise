@@ -75,15 +75,10 @@ import {
   injectSteering, injectDynamicSteering, appendConditionalSteering,
 } from "../steering-loader";
 import { matchFileMatchRules } from "../file-match";
-import { captureFileMatchSteering } from "../post-tool-use";
 import {
   markFileMatchLoaded, activateManualRules, getActiveManualRules, clearWorkspaceSession,
   toActiveSteeringRules, fromActiveSteeringRules,
 } from "../session-store";
-import { mergeActiveSteeringRules } from "../../core/state";
-import { createExecuteToolsNode } from "../../subgraphs/chat-graph-nodes";
-import { executeChat } from "../../engine/engine-chat-handler";
-import { StreamHandler } from "../../core/stream-handler";
 import { clearRuleCache } from "../rule-cache";
 
 let tmpRoot: string;
@@ -221,24 +216,6 @@ describe("SA4E-187 — TC-04 dedupe cache per workspace (F-05)", () => {
     expect(getActiveManualRules("wsA")).toHaveLength(1);
     expect(getActiveManualRules("nope")).toHaveLength(0);
   });
-
-  it("capture dedupes repeated reads in the same session but not across workspaces", async () => {
-    writeRule("ts.md", "inclusion: fileMatch\nfileMatchPattern: **/*.ts", "TS guidance");
-    const args = { path: "src/a.ts" };
-    expect(await captureFileMatchSteering("read_file", args, tmpRoot)).toHaveLength(1);
-    expect(await captureFileMatchSteering("read_file", args, tmpRoot)).toHaveLength(0);
-
-    const otherRoot = path.join(os.tmpdir(), "sa4e187-other-ws");
-    mocks.addDir(path.join(otherRoot, ".code-intel", "steering"));
-    mocks.addFile(path.join(otherRoot, ".code-intel", "steering", "ts.md"), "---\ninclusion: fileMatch\nfileMatchPattern: **/*.ts\n---\nOther ws\n", 100);
-    expect(await captureFileMatchSteering("read_file", args, otherRoot)).toHaveLength(1);
-  });
-
-  it("non-trigger tools and failing tools never capture", async () => {
-    writeRule("ts.md", "inclusion: fileMatch\nfileMatchPattern: **/*", "Any");
-    expect(await captureFileMatchSteering("list_directory", { path: "." }, tmpRoot)).toEqual([]);
-    expect(await captureFileMatchSteering("read_file", {}, tmpRoot)).toEqual([]);
-  });
 });
 
 describe("SA4E-187 — injection merge keeps trust boundaries (F-04)", () => {
@@ -282,79 +259,3 @@ describe("SA4E-187 — injection merge keeps trust boundaries (F-04)", () => {
   });
 });
 
-describe("SA4E-187 — activeSteeringRules channel reducer (F-06)", () => {
-  it("merges by id without lost updates or duplicates", () => {
-    const existing = [{ id: "a", title: "A", content: "1" }];
-    const update = [{ id: "b", title: "B", content: "2" }, { id: "a", title: "A", content: "1-updated" }];
-    const merged = mergeActiveSteeringRules(existing, update);
-    expect(merged).toHaveLength(2);
-    expect(merged.find(r => r.id === "a")?.content).toBe("1-updated");
-    expect(merged.find(r => r.id === "b")?.title).toBe("B");
-  });
-});
-
-describe("SA4E-187 — execute_tools wiring (TC-02 integration)", () => {
-  function makeState(calls: Array<{ id: string; name: string; arguments: Record<string, unknown> }>): any {
-    return { currentStreamId: "stream-it", toolCalls: calls, agentIterations: 0 };
-  }
-
-  it("successful read_file loads matching fileMatch rule into state", async () => {
-    writeRule("ts.md", "inclusion: fileMatch\nfileMatchPattern: **/*.ts", "TS guidance");
-    mocks.addFile(path.join(tmpRoot, "src", "a.ts"), "export {};", 100);
-    const node = createExecuteToolsNode(undefined, new StreamHandler(() => {}), undefined, tmpRoot);
-
-    const result = await node(makeState([{ id: "tc1", name: "read_file", arguments: { path: "src/a.ts" } }]));
-
-    expect(result.activeSteeringRules).toHaveLength(1);
-    expect(result.activeSteeringRules[0].id).toBe(".code-intel/steering/ts.md");
-    expect(result.toolResults[0].content).toContain("export {};");
-  });
-
-  it("dedupe: second read of same file does not re-inject", async () => {
-    writeRule("ts.md", "inclusion: fileMatch\nfileMatchPattern: **/*.ts", "TS guidance");
-    mocks.addFile(path.join(tmpRoot, "src", "a.ts"), "export {};", 100);
-    const node = createExecuteToolsNode(undefined, new StreamHandler(() => {}), undefined, tmpRoot);
-
-    await node(makeState([{ id: "tc1", name: "read_file", arguments: { path: "src/a.ts" } }]));
-    const second = await node(makeState([{ id: "tc2", name: "read_file", arguments: { path: "src/a.ts" } }]));
-    expect(second.activeSteeringRules).toBeUndefined();
-  });
-
-  it("write_file also triggers capture; list_directory does not", async () => {
-    writeRule("ts.md", "inclusion: fileMatch\nfileMatchPattern: **/*.ts", "TS guidance");
-    const node = createExecuteToolsNode(undefined, new StreamHandler(() => {}), undefined, tmpRoot);
-
-    const writeResult = await node(makeState([{ id: "tc3", name: "write_file", arguments: { path: "src/b.ts", content: "ok" } }]));
-    expect(writeResult.activeSteeringRules).toHaveLength(1);
-
-    const listResult = await node(makeState([{ id: "tc4", name: "list_directory", arguments: { path: "." } }]));
-    expect(listResult.activeSteeringRules).toBeUndefined();
-  });
-});
-
-describe("SA4E-187 — TC-01 manual trigger reaches next chat turn", () => {
-  it("executeChat seeds initialState with activated manual rules", async () => {
-    const manual: any = { filePath: ".code-intel/steering/guide.md", meta: { inclusion: "manual", title: "Guide" }, content: "Guide body" };
-    activateManualRules(tmpRoot, [manual]);
-
-    const capturedStates: any[] = [];
-    const graph = { invoke: vi.fn(async (state: unknown) => { capturedStates.push(state); return { agentOutputs: [] }; }) };
-    await executeChat(
-      "hello", "tab-1", new Map(), graph as any, new StreamHandler(() => {}), () => {},
-      "",
-      toActiveSteeringRules(getActiveManualRules(tmpRoot)),
-    );
-
-    expect(graph.invoke).toHaveBeenCalledTimes(1);
-    const seeded = capturedStates[0].activeSteeringRules;
-    expect(seeded).toHaveLength(1);
-    expect(seeded[0]).toMatchObject({ id: ".code-intel/steering/guide.md", title: "Guide", content: "Guide body" });
-  });
-
-  it("no active manual rules -> no steering field in initial state", async () => {
-    const capturedStates: any[] = [];
-    const graph = { invoke: vi.fn(async (state: unknown) => { capturedStates.push(state); return {}; }) };
-    await executeChat("hi", "tab-2", new Map(), graph as any, new StreamHandler(() => {}), () => {});
-    expect(capturedStates[0].activeSteeringRules).toBeUndefined();
-  });
-});
