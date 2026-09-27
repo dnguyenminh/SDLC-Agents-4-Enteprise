@@ -31,6 +31,11 @@ export default tseslint.config(
   },
   // Option B (BR-32): intra-legacy imports stay lint-clean until phased deletion.
   { files: ['src/langgraph/**/*.ts'], rules: { 'no-restricted-imports': 'off' } },
+  // SA4E-332 scope-narrow (SM decision 2026-09-27): Workflow Graph UI panel yielded to
+  // SA4E-289 decommission (merge-first). panels/workflow-panel.ts keeps its legacy
+  // ../langgraph/workflow/workflow-graph-data import until SA4E-289 deletes both files.
+  // Temporary allowlist — DO NOT extend; all other panels import from src/mcp/...
+  { files: ['src/panels/workflow-panel.ts'], rules: { 'no-restricted-imports': 'off' } },
   // OPEN-03: tests ARE gated (no blanket __tests__ ignore above).
   { files: ['src/**/__tests__/**/*.ts', 'tests/**/*.ts'], rules: { 'no-restricted-imports': ['error', { patterns: langgraphFreezePatterns }] } },
 );

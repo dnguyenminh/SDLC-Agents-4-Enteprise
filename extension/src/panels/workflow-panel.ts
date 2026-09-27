@@ -8,7 +8,7 @@ import * as vscode from "vscode";
 import { WebviewToExtMessage } from "../types";
 import { IServerManager } from "../types/server-types";
 import { BasePanel } from "./base-panel";
-import { SDLC_GRAPH_DEFINITION } from "./workflow-graph-data";
+import { SDLC_GRAPH_DEFINITION } from "../langgraph/workflow/workflow-graph-data";
 
 export class WorkflowPanel extends BasePanel {
   constructor(mcpManager: IServerManager, extensionUri: vscode.Uri) {
