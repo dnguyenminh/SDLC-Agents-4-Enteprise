@@ -53,8 +53,18 @@ describe('faithfulness rubric', () => {
     expect(result.score).toBeLessThanOrEqual(1);
   });
 
-  it('citations contribute path tokens to grounding', () => {
+  // SEC-328-01 — path tokens are excluded from grounding: a planted file name
+  // alone (e.g. `aws-credentials-guide.ts`) must NOT ground a claim.
+  it('path-only citations do not ground a claim (SEC-328-01)', () => {
     const result = computeFaithfulness('See chat models.', [{ path: 'chat-models.ts' }]);
+    expect(result.score).toBe(0);
+    expect(result.issues[0]).toContain('Ungrounded claim');
+  });
+
+  it('grounding uses only source excerpts, not paths (SEC-328-01 adversarial)', () => {
+    // A hostile path alone cannot ground; the excerpt must carry the tokens.
+    const sources = [{ path: 'aws-credentials-guide.ts', excerpt: 'the api costs 99 dollars per month' }];
+    const result = computeFaithfulness('The API costs 99 dollars per month.', sources);
     expect(result.score).toBe(1);
   });
 });

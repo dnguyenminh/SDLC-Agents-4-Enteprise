@@ -55,6 +55,43 @@ describe('HallucinationGrader', () => {
     expect(result.score).toBe(0);
   });
 
+  // SEC-328-04 — strict GradeResult shape validation (fail-closed)
+  it('SEC-328-04: non-object grader output → score 0', async () => {
+    const grader = new HallucinationGrader(() => '0.9 looks valid' as any);
+    const result = await grader.grade('answer', SOURCES);
+    expect(result.score).toBe(0);
+    expect(result.issues[0]).toContain('invalid grader output');
+  });
+
+  it('SEC-328-04: array-shaped grader output → score 0', async () => {
+    const grader = new HallucinationGrader(() => [{ score: 0.9, issues: [] }] as any);
+    const result = await grader.grade('answer', SOURCES);
+    expect(result.score).toBe(0);
+    expect(result.issues[0]).toContain('invalid grader output');
+  });
+
+  it('SEC-328-04: non-numeric score in shape → score 0', async () => {
+    const grader = new HallucinationGrader(() => ({ score: '0.9', issues: [] }) as any);
+    const result = await grader.grade('answer', SOURCES);
+    expect(result.score).toBe(0);
+    expect(result.issues[0]).toContain('invalid grader output');
+  });
+
+  it('SEC-328-04: non-string issues element → score 0 (shape abuse)', async () => {
+    const grader = new HallucinationGrader(() => ({ score: 0.9, issues: [42] }) as any);
+    const result = await grader.grade('answer', SOURCES);
+    expect(result.score).toBe(0);
+    expect(result.issues[0]).toContain('invalid grader output');
+  });
+
+  it('SEC-328-04: hostile grader issues[] is capped (memory amplification guard)', async () => {
+    const huge = Array.from({ length: 5000 }, (_, i) => `issue-${i}`);
+    const grader = new HallucinationGrader(() => ({ score: 0.5, issues: huge }));
+    const result = await grader.grade('answer', SOURCES);
+    expect(result.score).toBe(0.5);
+    expect(result.issues.length).toBeLessThanOrEqual(100);
+  });
+
   it('clamps and rounds out-of-range scores', async () => {
     const grader = new HallucinationGrader(() => ({ score: 1.5, issues: [] }) as any);
     const result = await grader.grade('answer', SOURCES);

@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MapReduceOrchestrator } from '../map-reduce-orchestrator';
 import { TaskDecomposer } from '../../task-decomposer';
+import { resetSharedCircuitBreaker } from '../circuit-breaker';
 import type { Batch, PartialSummary, SubAgentClient, SubAgentResponse } from '../types';
 
 function files(count: number): string[] {
@@ -42,6 +43,10 @@ function orchestrator(subAgent: SubAgentClient, config = {}) {
 }
 
 describe('MapReduceOrchestrator', () => {
+  beforeEach(() => {
+    resetSharedCircuitBreaker();
+  });
+
   it('TC-001/TC-701: decomposer feeds map workers with batches of 20', async () => {
     const subAgent = trackedSubAgent();
     const result = await orchestrator(subAgent).run('explain architecture', files(100));

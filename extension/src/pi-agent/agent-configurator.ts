@@ -3,6 +3,7 @@ import * as path from 'path';
 import { logger } from '../logger';
 import { detectModelTier, type ModelTier } from './model-tier';
 import { compressPrompt } from './prompt-compressor';
+import { readTemplateFile } from './prompt-template-scan';
 import { RoleScopeFilter } from './role-scope';
 import type { PromptTemplateService } from './prompt-template.service';
 
@@ -60,22 +61,29 @@ export function getSystemPromptForRole(role: AgentRole): string {
 
 /**
  * Append workspace SYSTEM.md content to the prompt (Story 3 — replace mode keeps project context).
+ *
+ * SEC-326-01 — workspace-trust gate + size cap + symlink containment:
+ * - `trusted === false` (untrusted workspace, mirrors WorkspaceTrustGuard
+ *   policy) → workspace SYSTEM.md is SKIPPED (prompt-poisoning surface);
+ * - SYSTEM.md larger than {@link SYSTEM_MD_MAX_BYTES} → skipped (sync-freeze DoS);
+ * - symlink escaping the workspace → skipped;
+ * - loaded bytes are audit-logged (provenance).
  */
-export function appendSystemMd(prompt: string, cwd: string): string {
-  const systemMd = path.join(cwd, 'SYSTEM.md');
-  if (!fs.existsSync(systemMd)) return prompt;
-  try {
-    const content = fs.readFileSync(systemMd, 'utf-8').trim();
-    if (!content) return prompt;
-    return `${prompt}\n\n${content}`;
-  } catch {
-    return prompt;
-  }
+export const SYSTEM_MD_MAX_BYTES = 65_536; // 64 KB
+
+export function appendSystemMd(prompt: string, cwd: string, trusted = true): string {
+  if (trusted === false) return prompt; // SEC-326-01: skip untrusted workspace content
+  const content = readTemplateFile(path.join(cwd, 'SYSTEM.md'), cwd, SYSTEM_MD_MAX_BYTES)?.trim();
+  if (!content) return prompt;
+  logger.debug('SYSTEM.md loaded', { bytes: Buffer.byteLength(content, 'utf-8') });
+  return `${prompt}\n\n${content}`;
 }
 
 export interface SelectPromptOptions {
   promptMode?: PromptMode;
   cwd?: string;
+  /** SEC-326-01 — trusted-workspace flag; `false` skips workspace SYSTEM.md. */
+  trusted?: boolean;
   templateService?: Pick<PromptTemplateService, 'getPromptForTier'>;
   templateName?: string;
 }
@@ -112,7 +120,7 @@ export function selectPrompt(modelId: string, role: string, options?: SelectProm
   const tier = detectModelTier(modelId);
   let prompt = withTierTemplate(rolePromptFor(role), tier, options);
   if (options?.promptMode === 'replace' && options?.cwd) {
-    prompt = appendSystemMd(prompt, options.cwd);
+    prompt = appendSystemMd(prompt, options.cwd, options.trusted);
   }
   return prompt;
 }

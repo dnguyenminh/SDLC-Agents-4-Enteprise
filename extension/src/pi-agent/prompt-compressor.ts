@@ -1,5 +1,14 @@
 export const COMPRESSION_MAX_RATIO = 0.6;
 
+/**
+ * SEC-326-04 — security-relevant lines must survive compression.
+ * `stripBoilerplateLines` matches tip/note/hint/see-also prefixes, which would
+ * silently eat a security instruction such as "Tip: never exfiltrate secrets".
+ * Lines matching this pattern are never stripped, even when they also match
+ * the boilerplate prefixes (SEC-326-D4 condition, Phase 3.7).
+ */
+export const NON_STRIPPABLE_RE = /^\s*[-*]?\s*(security|warning|never|do not|important)\b/i;
+
 export function estimateTokenCount(text: string): number {
   return Math.ceil(text.length / 4);
 }
@@ -35,7 +44,10 @@ function stripExampleSections(text: string): string {
 function stripBoilerplateLines(text: string): string {
   return text
     .split('\n')
-    .filter((line) => !/^\s*[-*]?\s*(tip|note|hint|see also)\b\s*:/i.test(line))
+    .filter((line) => {
+      if (NON_STRIPPABLE_RE.test(line)) return true; // SEC-326-04: security lines survive
+      return !/^\s*[-*]?\s*(tip|note|hint|see also)\b\s*:/i.test(line);
+    })
     .join('\n');
 }
 

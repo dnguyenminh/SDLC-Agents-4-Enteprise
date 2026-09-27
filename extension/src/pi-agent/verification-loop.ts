@@ -31,6 +31,9 @@ interface Attempt {
   score: number;
 }
 
+/** SEC-328-04 — regenerate output cap: a hostile regenerate cannot flood memory/metrics. */
+export const MAX_REGENERATED_ANSWER_CHARS = 200_000;
+
 /**
  * Small models are unreliable at self-verification → direct routing + external grader.
  * Medium/large/unknown tiers keep the in-loop verify.
@@ -81,7 +84,10 @@ export class VerificationLoop {
     let current = first;
     let attempts = 1;
     while (best.score < this.grader.threshold && attempts <= this.config.maxRetries && this.deps.regenerate) {
-      current = await this.grade(await this.deps.regenerate(current.answer), sources);
+      // SEC-328-04: validate regenerate output (type + length) before grading it
+      const next = await this.deps.regenerate(current.answer);
+      if (typeof next !== 'string' || next.length > MAX_REGENERATED_ANSWER_CHARS) break;
+      current = await this.grade(next, sources);
       if (current.score > best.score) best = current;
       attempts += 1;
     }

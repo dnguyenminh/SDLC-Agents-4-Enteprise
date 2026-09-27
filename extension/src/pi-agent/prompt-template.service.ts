@@ -3,7 +3,14 @@ import * as path from 'path';
 import * as os from 'os';
 import { compressPrompt, estimateTokenCount } from './prompt-compressor';
 import { preferredVariantForTier, type ModelTier, type PromptVariant } from './model-tier';
-import { PromptTemplateError, collectTemplateFiles, validateTemplateName, type TemplateFileInfo } from './prompt-template-scan';
+import {
+  MAX_TEMPLATE_FILE_BYTES,
+  PromptTemplateError,
+  collectTemplateFiles,
+  readTemplateFile,
+  validateTemplateName,
+  type TemplateFileInfo,
+} from './prompt-template-scan';
 import { logger } from '../logger';
 
 export { PromptTemplateError } from './prompt-template-scan';
@@ -17,25 +24,47 @@ export interface PromptTemplate {
   loaded?: boolean;
 }
 
+/**
+ * SEC-326-01 — workspace-trust gate (mirrors WorkspaceTrustGuard policy:
+ * only an explicit `false` is untrusted). When untrusted, workspace-local
+ * templates (`.pi/prompts` inside cwd) are SKIPPED — they are a
+ * system-prompt-poisoning surface in untrusted repos. agentDir source is kept.
+ */
+export interface PromptTemplateServiceOptions {
+  trusted?: boolean;
+}
+
 export class PromptTemplateService {
   private readonly cwd: string;
   private readonly agentDir: string;
+  private readonly trusted: boolean;
   private templates: PromptTemplate[] = [];
 
-  constructor(cwd: string, agentDir?: string) {
+  constructor(cwd: string, agentDir?: string, options?: PromptTemplateServiceOptions) {
     this.cwd = cwd;
     this.agentDir = agentDir ?? path.join(os.homedir(), '.pi', 'agent');
+    this.trusted = options?.trusted !== false; // SEC-326-01: explicit false → untrusted
   }
 
   private templateSources(): string[] {
-    return [path.join(this.cwd, '.pi', 'prompts'), path.join(this.agentDir, 'prompts')];
+    // SEC-326-01: skip workspace-local source when the workspace is untrusted
+    const sources = this.trusted ? [path.join(this.cwd, '.pi', 'prompts')] : [];
+    sources.push(path.join(this.agentDir, 'prompts'));
+    return sources;
   }
 
   discover(promptsOverride?: PromptTemplate[]): void {
     const discovered: PromptTemplate[] = [];
-    for (const { file, name, variant } of collectTemplateFiles(this.templateSources())) {
-      try {
-        const content = fs.readFileSync(file, 'utf-8');
+    for (const source of this.templateSources()) {
+      for (const { file, name, variant } of collectTemplateFiles([source])) {
+        // SEC-326-02: stat-first size cap before any synchronous read;
+        // SEC-326-01: symlink containment against the template's source dir
+        const content = readTemplateFile(file, source);
+        if (content === null) {
+          logger.warn('Template skipped (size cap / symlink containment / unreadable)', { name, file, maxBytes: MAX_TEMPLATE_FILE_BYTES });
+          continue;
+        }
+        logger.debug('Template loaded', { name, variant, bytes: Buffer.byteLength(content, 'utf-8') });
         discovered.push({
           templateName: name,
           templatePath: file,
@@ -44,8 +73,6 @@ export class PromptTemplateService {
           tokenCount: estimateTokenCount(content),
           loaded: true,
         });
-      } catch {
-        // log and continue
       }
     }
 
@@ -58,7 +85,9 @@ export class PromptTemplateService {
             continue;
           }
           discovered.push({ ...t, variant: t.variant ?? 'full', loaded: true });
-        } catch {}
+        } catch {
+          logger.debug('Template override skipped', { name: t.templateName });
+        }
       }
     }
 
@@ -134,7 +163,11 @@ export class PromptTemplateService {
 
   private loadPromptContent(tpl: PromptTemplate): PromptTemplate {
     if (tpl.loaded) return tpl;
-    const content = fs.readFileSync(tpl.templatePath, 'utf-8');
+    // SEC-326-02: stat-first size cap; SEC-326-01: containment vs its own dir
+    const content = readTemplateFile(tpl.templatePath, path.dirname(tpl.templatePath));
+    if (content === null) {
+      throw new PromptTemplateError(`Template '${tpl.templateName}' unreadable (missing, oversized, or outside workspace)`);
+    }
     tpl.promptContent = content;
     tpl.tokenCount = estimateTokenCount(content);
     tpl.loaded = true;

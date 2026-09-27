@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { VerificationLoop } from '../verification-loop';
+import { VerificationLoop, MAX_REGENERATED_ANSWER_CHARS } from '../verification-loop';
 import { HallucinationGrader } from '../hallucination-grader';
 import type { SourceCitation, GradeResult } from '../faithfulness';
 
@@ -126,6 +126,37 @@ describe('VerificationLoop', () => {
     const loop = new VerificationLoop(grader, { regenerate, config: { maxRetries: 2 } });
     const result = await loop.verify(HALLUCINATED, SOURCES, 'large');
     expect(result.attempts).toBe(3);
+    expect(result.verified).toBe(true);
+  });
+
+  // SEC-328-04 — regenerate output validated (type + length) before grading
+  it('SEC-328-04: regenerate returning non-string breaks the retry loop', async () => {
+    const regenerate = vi.fn(async () => 12345 as unknown as string);
+    const { grader, gradeSpy } = graderReturning([0.3]);
+    const loop = new VerificationLoop(grader, { regenerate });
+    const result = await loop.verify(HALLUCINATED, SOURCES, 'large');
+    expect(gradeSpy).toHaveBeenCalledTimes(1); // invalid output never graded
+    expect(result.attempts).toBe(1);
+    expect(result.verified).toBe(false);
+    expect(result.revisedAnswer).toBe(HALLUCINATED); // best (original) retained
+  });
+
+  it('SEC-328-04: regenerate returning oversized text breaks the retry loop', async () => {
+    const regenerate = vi.fn(async () => 'x'.repeat(MAX_REGENERATED_ANSWER_CHARS + 1));
+    const { grader, gradeSpy } = graderReturning([0.3]);
+    const loop = new VerificationLoop(grader, { regenerate });
+    const result = await loop.verify(HALLUCINATED, SOURCES, 'large');
+    expect(gradeSpy).toHaveBeenCalledTimes(1); // oversized output never graded
+    expect(result.attempts).toBe(1);
+    expect(result.verified).toBe(false);
+  });
+
+  it('SEC-328-04: regenerate output within the cap is graded normally', async () => {
+    const regenerate = vi.fn(async () => GROUNDED);
+    const { grader, gradeSpy } = graderReturning([0.3, 0.95]);
+    const loop = new VerificationLoop(grader, { regenerate });
+    const result = await loop.verify(HALLUCINATED, SOURCES, 'large');
+    expect(gradeSpy).toHaveBeenCalledTimes(2);
     expect(result.verified).toBe(true);
   });
 });

@@ -23,6 +23,12 @@ export interface EscalationDecision {
 export interface RoutingSessionState {
   modelId: string;
   escalationCount: number;
+  /**
+   * SEC-329-01 — trusted structured confidence from the model API's metadata
+   * side-channel. NEVER extract this from the answer text (self-certification
+   * risk — SECURITY-ASSESSMENT.md SEC-329-01). Undefined → heuristic only.
+   */
+  declaredConfidence?: number;
 }
 
 export class ModelRouter {
@@ -46,7 +52,10 @@ export class ModelRouter {
   }
 
   shouldEscalate(answer: string, state: RoutingSessionState): EscalationDecision {
-    const confidence = this.scorer.score(answer);
+    // SEC-329-01: confidence comes from the trusted metadata channel
+    // (state.declaredConfidence) or the answer heuristic — answer-embedded
+    // `confidence: N` text is never trusted.
+    const confidence = this.scorer.score(answer, { declaredConfidence: state.declaredConfidence });
     const belowThreshold = confidence < this.policy.confidenceThreshold;
     const budgetLeft = state.escalationCount < this.policy.maxEscalationsPerSession;
     const escalate = belowThreshold && budgetLeft;

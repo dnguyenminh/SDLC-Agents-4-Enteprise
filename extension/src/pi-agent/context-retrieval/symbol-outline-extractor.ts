@@ -7,9 +7,17 @@ export interface IContentReader {
   readHead(filePath: string, maxLines: number): string;
 }
 
+/** SEC-325-D3: hard size cap before any file read — a multi-GB file (legit or
+ * hostile workspace) must never be read whole into the extension host. */
+export const MAX_READ_BYTES = 1_048_576;
+
 export class FsContentReader implements IContentReader {
+  // SEC-325-D3: stat-first + 1 MB cap + line-limited read — only bounded heads
+  // reach disclosure; whole-file reads previously froze the extension host.
   readHead(filePath: string, maxLines: number): string {
     try {
+      const stat = fs.statSync(filePath);
+      if (!stat.isFile() || stat.size > MAX_READ_BYTES) return '';
       const content = fs.readFileSync(filePath, 'utf-8');
       return content.split('\n').slice(0, maxLines).join('\n');
     } catch {

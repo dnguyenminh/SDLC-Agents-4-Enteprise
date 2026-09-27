@@ -1,5 +1,6 @@
 import { logger } from '../logger';
 import { QueryRouter } from './query-router';
+import { MAX_QUERY_CHARS } from './query-router';
 import type { QueryIntent } from './query-router';
 import { FsDirLister, isExcludedPath } from './context-retrieval/file-exclusion-filter';
 import { filterContainedCandidates } from './context-retrieval/path-containment';
@@ -123,6 +124,11 @@ export class ContextRetriever {
 function validateQuery(query: string): string {
   if (typeof query !== 'string' || query.trim().length === 0) {
     throw new RetrievalValidationError('Query must be a non-empty string');
+  }
+  // SEC-325-D4: hard cap on query length — oversized queries (user paste or
+  // LLM/tool-derived in later epic phases) fail closed before classification.
+  if (query.length > MAX_QUERY_CHARS) {
+    throw new RetrievalValidationError(`Query exceeds ${MAX_QUERY_CHARS} chars`);
   }
   return query.trim();
 }

@@ -1,7 +1,7 @@
 import { logger } from '../../logger';
 import { withTimeout } from '../async-timeout';
 import { sleep } from '../context-retrieval/search-provider';
-import { CircuitBreaker } from './circuit-breaker';
+import { CircuitBreaker, getSharedCircuitBreaker } from './circuit-breaker';
 import { pLimit } from './p-limit';
 import type { TaskDecomposer } from '../task-decomposer';
 import type {
@@ -11,7 +11,7 @@ import type {
   PartialSummary,
   SubAgentClient,
 } from './types';
-import { DEFAULT_MAP_REDUCE_CONFIG } from './types';
+import { DEFAULT_MAP_REDUCE_CONFIG, SUMMARY_CHARS_PER_TOKEN, sanitizeSubAgentResponse } from './types';
 
 export interface MapReduceOrchestratorDeps {
   subAgent: SubAgentClient;
@@ -30,10 +30,15 @@ interface BatchOutcome {
 export class MapReduceOrchestrator {
   private readonly config: MapReduceConfig;
   private readonly breaker: CircuitBreaker;
+  private readonly maxSummaryChars: number;
 
   constructor(private readonly deps: MapReduceOrchestratorDeps) {
     this.config = { ...DEFAULT_MAP_REDUCE_CONFIG, ...deps.config };
-    this.breaker = deps.breaker ?? new CircuitBreaker({ threshold: 3, cooldownMs: 60_000 });
+    // SEC-327-01: default to the shared session-scoped breaker — state persists
+    // across queries and orchestrator re-instantiations (per-instance breakers
+    // reset every query, voiding cross-query DoS protection).
+    this.breaker = deps.breaker ?? getSharedCircuitBreaker();
+    this.maxSummaryChars = this.config.subAgentTokenCap * SUMMARY_CHARS_PER_TOKEN;
   }
 
   async run(query: string, files: string[]): Promise<MapReduceResult> {
@@ -86,14 +91,12 @@ export class MapReduceOrchestrator {
         `Batch ${batch.id} timed out after ${this.config.batchTimeoutMs}ms`
       );
       this.breaker.recordSuccess();
+      // SEC-327-02: boundary validation — sub-agent output is untrusted
+      // (LLM-backed); validate shape before it reaches the reduce prompt,
+      // session context, or metrics.
       return {
         batchId: batch.id,
-        partial: {
-          batchId: batch.id,
-          summary: response.summary,
-          tokens: response.tokens,
-          confidence: response.confidence,
-        },
+        partial: sanitizeSubAgentResponse(batch.id, response, this.maxSummaryChars),
       };
     } catch (err) {
       this.breaker.recordFailure();

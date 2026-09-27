@@ -33,9 +33,14 @@ function significantTokens(text: string): string[] {
   return tokenize(text).filter((t) => t.length > 1 && !STOPWORDS.has(t));
 }
 
+/**
+ * SEC-328-01 — only source *excerpt* tokens count toward grounding.
+ * `path` tokens are deliberately excluded: a planted file name such as
+ * `aws-credentials-guide.ts` could otherwise ground arbitrary claims by
+ * path-name alone (gameable rubric — SECURITY-ASSESSMENT.md SEC-328-01).
+ */
 function sourceTokenSet(sources: SourceCitation[]): Set<string> {
-  const text = sources.map((s) => `${s.path} ${s.excerpt ?? ''}`).join(' ');
-  return new Set(tokenize(text));
+  return new Set(tokenize(sources.map((s) => s.excerpt ?? '').join(' ')));
 }
 
 function isClaimGrounded(claim: string, sourceTokens: Set<string>): boolean {
@@ -52,7 +57,11 @@ function round2(value: number): number {
 /**
  * Deterministic faithfulness rubric (OI-328-01):
  * score = grounded claims / total claims, grounded when >=60% of
- * significant tokens appear in the cited sources.
+ * significant tokens appear in the cited sources' EXCERPTS (path tokens
+ * excluded — SEC-328-01).
+ *
+ * NOTE (SEC-328-D1): `verified` is a support-coverage signal, NOT entailment
+ * ("coverage, not truth") — callers must not use it as a security decision.
  */
 export function computeFaithfulness(answer: string, sources: SourceCitation[]): GradeResult {
   const claims = splitClaims(answer);

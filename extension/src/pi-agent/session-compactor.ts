@@ -1,5 +1,12 @@
 import { logger } from '../logger';
 import { BudgetCalculator } from '../mcp/context-budget';
+import { formatSummaryMessage, Summarizer } from './summarizer';
+
+export {
+  formatSummaryMessage,
+  Summarizer,
+  sanitizeSummaryField,
+} from './summarizer';
 
 export const COMPACT_USAGE_THRESHOLD = 0.95;
 export const WARN_USAGE_THRESHOLD = 0.85;
@@ -13,6 +20,15 @@ export interface SessionMessage {
   content: string;
   toolName?: string;
 }
+
+/**
+ * SEC-330-02 — usage unit contract is a FRACTION in [0, 1]
+ * (compact ≥ 0.95 / warn ≥ 0.85), NOT the percent scale (95/85) used by
+ * `context-budget.ts` / ContextUsageTracker. A percent-scale caller used to
+ * hit `compact` on every turn — compaction-trigger abuse / context DoS.
+ * Use {@link normalizeUsageToFraction} in the wiring adapter when the only
+ * signal available is a percentage.
+ */
 
 export interface CompactionSummary {
   intent: string;
@@ -41,50 +57,34 @@ export interface CompactionResult {
   truncated: boolean;
 }
 
+/**
+ * SEC-330-02 — percent→fraction normalizer for the wiring adapter.
+ * Percent-scale signals (0-100) are divided by 100; anything outside both
+ * scales (negative, non-finite) returns 0 so the caller never triggers
+ * compaction on garbage input.
+ */
+export function normalizeUsageToFraction(percent: number | undefined | null): number {
+  if (typeof percent !== 'number' || !Number.isFinite(percent) || percent < 0) {
+    return 0;
+  }
+  return percent > 100 ? 1 : percent / 100;
+}
+
 export class SessionMonitor {
   static shouldCompact(usage: number): CompactionAction {
-    if (typeof usage !== 'number' || !Number.isFinite(usage)) {
+    if (typeof usage !== 'number' || !Number.isFinite(usage) || usage < 0) {
       return 'none';
+    }
+    if (usage > 1) {
+      // SEC-330-02: percent-scale misuse — reject compaction (trigger abuse guard)
+      logger.warn('shouldCompact: usage > 1 — percent-scale misuse? (contract: fraction in [0,1])', { usage });
+      return 'warn';
     }
     if (usage >= COMPACT_USAGE_THRESHOLD) {
       return 'compact';
     }
     return usage >= WARN_USAGE_THRESHOLD ? 'warn' : 'none';
   }
-}
-
-export class Summarizer {
-  summarize(messages: SessionMessage[], previous?: CompactionSummary): CompactionSummary {
-    const firstUser = messages.find((m) => m.role === 'user');
-    const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant');
-    const tools = new Set<string>(previous?.toolsUsed ?? []);
-    Summarizer.collectToolNames(messages, tools);
-    return {
-      intent: previous?.intent || Summarizer.truncate(firstUser?.content, 150),
-      toolsUsed: Array.from(tools),
-      lastResponse: Summarizer.truncate(lastAssistant?.content ?? previous?.lastResponse ?? '', 250),
-    };
-  }
-
-  static collectToolNames(messages: SessionMessage[], into: Set<string>): void {
-    for (const message of messages) {
-      if (message.toolName) {
-        into.add(message.toolName);
-      }
-    }
-  }
-
-  static truncate(text: string | undefined, max: number): string {
-    const trimmed = (text ?? '').trim();
-    return trimmed.length <= max ? trimmed : `${trimmed.slice(0, max)}…`;
-  }
-}
-
-export function formatSummaryMessage(summary: CompactionSummary): SessionMessage {
-  return {
-    role: 'system',
-    content: `[compaction] intent: ${summary.intent} | tools: ${summary.toolsUsed.join(',')} | lastResponse: ${summary.lastResponse}`,
-  };
 }
 
 export class SessionCompactor {

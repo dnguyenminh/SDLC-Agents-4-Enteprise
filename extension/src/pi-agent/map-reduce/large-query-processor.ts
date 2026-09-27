@@ -4,6 +4,7 @@ import type { ContextFile, RetrievalResult } from '../context-retrieval/types';
 import { TokenCounter } from '../context-retrieval/token-counter';
 import type { QueryIntent } from '../query-router';
 import type { FileScanner } from '../context-retrieval/file-scanner';
+import { getSharedCircuitBreaker } from './circuit-breaker';
 import type { MapReduceConfig } from './types';
 import { DEFAULT_MAP_REDUCE_CONFIG } from './types';
 import type { MapReduceOrchestrator } from './map-reduce-orchestrator';
@@ -23,6 +24,10 @@ export class LargeQueryProcessor {
   private readonly config: MapReduceConfig;
   private readonly minFiles: number;
   private readonly counter = new TokenCounter();
+  // SEC-327-01: shared session-scoped breaker — the same instance the
+  // orchestrator consults by default, so failure state persists across queries
+  // and orchestrator re-instantiations instead of resetting per query.
+  private readonly breaker = getSharedCircuitBreaker();
 
   constructor(private readonly deps: LargeQueryProcessorDeps) {
     this.config = { ...DEFAULT_MAP_REDUCE_CONFIG, ...deps.config };
@@ -31,6 +36,12 @@ export class LargeQueryProcessor {
 
   async process(query: string, intent: QueryIntent): Promise<RetrievalResult | null> {
     if (!LARGE_QUERY_INTENTS.includes(intent)) return null;
+    if (!this.breaker.canProceed()) {
+      // SEC-327-01: fast-fail before scanning/decomposing — a persistent
+      // sub-agent outage must not pay the full fan-out cost on every query.
+      logger.warn('Map-reduce skipped: circuit breaker open (sub-agent outage)');
+      return null;
+    }
     const files = this.deps.scanner.listSourceFiles(this.deps.rootDir, {
       maxFiles: this.config.maxFiles,
     });
