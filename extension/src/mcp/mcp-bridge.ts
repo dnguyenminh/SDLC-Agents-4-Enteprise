@@ -7,10 +7,10 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { McpServerManager } from "../../mcp-server-manager";
-import { IServerManager } from "../../types/server-types";
-import { McpServerNotRunningError } from "../../types";
-import type { McpToolDefinition } from "../vscode/tool-registry";
+import { McpServerManager } from "../mcp-server-manager";
+import { IServerManager } from "../types/server-types";
+import { McpServerNotRunningError } from "../types";
+import type { McpToolDefinition } from "./mcp-types";
 
 /** Default tool call timeout (60s per TDD Section 3.3) */
 const DEFAULT_TOOL_TIMEOUT_MS = 60_000;

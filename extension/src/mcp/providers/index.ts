@@ -6,7 +6,7 @@
  */
 
 import * as vscode from "vscode";
-import type { LlmProvider, LlmProviderType } from "../core/llm-provider";
+import type { LlmProvider, LlmProviderType } from "../llm-provider";
 import { getProviderDef, PROVIDER_REGISTRY } from "./provider-registry";
 import { PROVIDER_BASE_URL_KEYS } from "../../models/LlmProviderConfig";
 

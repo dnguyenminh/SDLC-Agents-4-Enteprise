@@ -25,7 +25,7 @@ vi.mock('fs', async (importOriginal) => {
 });
 
 // Import after mocks
-import { McpBridge, McpToolTimeoutError } from '../core/mcp-bridge';
+import { McpBridge, McpToolTimeoutError } from '../mcp-bridge';
 
 describe('McpBridge & Payload Interceptors', () => {
   let mcpManagerMock: any;

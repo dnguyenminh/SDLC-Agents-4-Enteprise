@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SessionConfigurator } from '../session-configurator';
-import { ContextBudgetError } from '../context-budget';
+import { ContextBudgetError } from '../../mcp/context-budget';
 
 vi.mock('../../logger', () => ({
   logger: {

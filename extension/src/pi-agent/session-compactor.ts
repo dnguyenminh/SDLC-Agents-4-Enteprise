@@ -1,5 +1,5 @@
 import { logger } from '../logger';
-import { BudgetCalculator } from './context-budget';
+import { BudgetCalculator } from '../mcp/context-budget';
 
 export const COMPACT_USAGE_THRESHOLD = 0.95;
 export const WARN_USAGE_THRESHOLD = 0.85;

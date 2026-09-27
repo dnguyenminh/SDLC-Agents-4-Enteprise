@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createExecuteHandler, TOOLS, bridgeRequiresApproval } from '../mcp-bridge-extension';
 import { TOOL_ALLOWLIST, isAllowedBridgeTool, validateParams } from '../tool-definitions';
-import { McpWrapperClient } from '../mcp-wrapper-client';
+import type { McpBridge } from '../../../mcp/mcp-bridge';
 
 describe('MCP Bridge Extension', () => {
   describe('Tool Registration', () => {
@@ -28,28 +28,28 @@ describe('MCP Bridge Extension', () => {
   });
 
   describe('Execute Handler', () => {
-    let mockMcpClient: McpWrapperClient;
+    let mockBridge: McpBridge;
     let executeHandler: ReturnType<typeof createExecuteHandler>;
 
     beforeEach(() => {
-      mockMcpClient = {
-        callMcpWrapper: vi.fn(),
+      mockBridge = {
+        callTool: vi.fn(),
       } as any;
       
       const schema = {
         required: ['issue_key'],
       };
       
-      executeHandler = createExecuteHandler(mockMcpClient, 'jira_get_issue', schema);
+      executeHandler = createExecuteHandler(mockBridge, 'jira_get_issue', schema);
     });
 
     it('STC: TC-002 - should call MCP wrapper with valid params', async () => {
       const mockResult = { key: 'SA4E-316', summary: 'Test' };
-      (mockMcpClient.callMcpWrapper as any).mockResolvedValue(mockResult);
+      (mockBridge.callTool as any).mockResolvedValue(mockResult);
 
       const result = await executeHandler('test-id', { issue_key: 'SA4E-316' });
 
-      expect(mockMcpClient.callMcpWrapper).toHaveBeenCalledWith('jira_get_issue', { issue_key: 'SA4E-316' });
+      expect(mockBridge.callTool).toHaveBeenCalledWith('jira_get_issue', { issue_key: 'SA4E-316' });
       expect(result.content[0].type).toBe('text');
       expect(result.content[0].text).toContain('SA4E-316');
       expect(result.details?.success).toBe(true);
@@ -58,13 +58,13 @@ describe('MCP Bridge Extension', () => {
     it('STC: TC-101 - should return validation error for invalid params', async () => {
       const result = await executeHandler('test-id', {});
 
-      expect(mockMcpClient.callMcpWrapper).not.toHaveBeenCalled();
+      expect(mockBridge.callTool).not.toHaveBeenCalled();
       expect(result.content[0].text).toContain('Validation failed');
       expect(result.details?.error).toBe('validation');
     });
 
     it('STC: TC-102 - should return structured error when MCP unreachable', async () => {
-      (mockMcpClient.callMcpWrapper as any).mockRejectedValue(new Error('MCP wrapper unavailable'));
+      (mockBridge.callTool as any).mockRejectedValue(new Error('MCP wrapper unavailable'));
 
       const result = await executeHandler('test-id', { issue_key: 'SA4E-316' });
 
@@ -74,7 +74,7 @@ describe('MCP Bridge Extension', () => {
     });
 
     it('STC: TC-303 - should return content array with type text', async () => {
-      (mockMcpClient.callMcpWrapper as any).mockResolvedValue({ ok: true });
+      (mockBridge.callTool as any).mockResolvedValue({ ok: true });
 
       const result = await executeHandler('test-id', { issue_key: 'SA4E-316' });
 
@@ -84,7 +84,7 @@ describe('MCP Bridge Extension', () => {
 
     it('STC: TC-304 - should propagate errors not swallow', async () => {
       const originalError = 'Original MCP error';
-      (mockMcpClient.callMcpWrapper as any).mockRejectedValue(new Error(originalError));
+      (mockBridge.callTool as any).mockRejectedValue(new Error(originalError));
 
       const result = await executeHandler('test-id', { issue_key: 'SA4E-316' });
 
@@ -94,10 +94,10 @@ describe('MCP Bridge Extension', () => {
   });
 
   describe('SEC-324-03 - bridge allowlist and dynamic-chaining deny', () => {
-    let mockMcpClient: McpWrapperClient;
+    let mockBridge: McpBridge;
 
     beforeEach(() => {
-      mockMcpClient = { callMcpWrapper: vi.fn().mockResolvedValue({ ok: true }) } as any;
+      mockBridge = { callTool: vi.fn().mockResolvedValue({ ok: true }) } as any;
     });
 
     it('allowlist contains the concrete tools but not execute_dynamic_tool', () => {
@@ -109,27 +109,27 @@ describe('MCP Bridge Extension', () => {
     });
 
     it('denies execute_dynamic_tool by default (no opt-in)', async () => {
-      const handler = createExecuteHandler(mockMcpClient, 'execute_dynamic_tool', { required: ['tool_name'] });
+      const handler = createExecuteHandler(mockBridge, 'execute_dynamic_tool', { required: ['tool_name'] });
       const result = await handler('id-1', { tool_name: 'code_search', arguments: {} });
-      expect(mockMcpClient.callMcpWrapper).not.toHaveBeenCalled();
+      expect(mockBridge.callTool).not.toHaveBeenCalled();
       expect(result.details?.error).toBe('chaining_denied');
     });
 
     it('denies non-allowlisted chained targets even with opt-in', async () => {
       const handler = createExecuteHandler(
-        mockMcpClient, 'execute_dynamic_tool', { required: ['tool_name'] }, { allowDynamicChaining: true },
+        mockBridge, 'execute_dynamic_tool', { required: ['tool_name'] }, { allowDynamicChaining: true },
       );
       const result = await handler('id-2', { tool_name: 'shell_execute', arguments: {} });
-      expect(mockMcpClient.callMcpWrapper).not.toHaveBeenCalled();
+      expect(mockBridge.callTool).not.toHaveBeenCalled();
       expect(result.details?.error).toBe('chaining_denied');
     });
 
     it('allows allowlisted chained targets with opt-in', async () => {
       const handler = createExecuteHandler(
-        mockMcpClient, 'execute_dynamic_tool', { required: ['tool_name'] }, { allowDynamicChaining: true },
+        mockBridge, 'execute_dynamic_tool', { required: ['tool_name'] }, { allowDynamicChaining: true },
       );
       const result = await handler('id-3', { tool_name: 'code_search', arguments: { query: 'x' } });
-      expect(mockMcpClient.callMcpWrapper).toHaveBeenCalledWith(
+      expect(mockBridge.callTool).toHaveBeenCalledWith(
         'execute_dynamic_tool', { tool_name: 'code_search', arguments: { query: 'x' } },
       );
       expect(result.details?.success).toBe(true);
@@ -138,12 +138,12 @@ describe('MCP Bridge Extension', () => {
     it('routes approval-gated tools through the approval hook and audits', async () => {
       const audit: any[] = [];
       const handler = createExecuteHandler(
-        mockMcpClient, 'mem_ingest', { required: ['content'] },
+        mockBridge, 'mem_ingest', { required: ['content'] },
         { approvalHook: async () => false, auditLog: (e) => audit.push(e) },
       );
       expect(bridgeRequiresApproval('mem_ingest')).toBe(true);
       const result = await handler('id-4', { content: 'hello' });
-      expect(mockMcpClient.callMcpWrapper).not.toHaveBeenCalled();
+      expect(mockBridge.callTool).not.toHaveBeenCalled();
       expect(result.details?.error).toBe('approval_denied');
       expect(audit).toEqual([{ toolName: 'mem_ingest', argKeys: ['content'], decision: 'denied' }]);
     });
@@ -151,7 +151,7 @@ describe('MCP Bridge Extension', () => {
     it('audits auto-approved read-only tools without param values', async () => {
       const audit: any[] = [];
       const handler = createExecuteHandler(
-        mockMcpClient, 'code_search', { required: ['query'] }, { auditLog: (e) => audit.push(e) },
+        mockBridge, 'code_search', { required: ['query'] }, { auditLog: (e) => audit.push(e) },
       );
       await handler('id-5', { query: 'budget' });
       expect(audit).toEqual([{ toolName: 'code_search', argKeys: ['query'], decision: 'auto-approved' }]);

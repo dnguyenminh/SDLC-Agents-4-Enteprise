@@ -5,7 +5,7 @@
  * Tool calling is optional — providers that support it implement chatWithTools.
  */
 
-import type { McpToolDefinition } from "../vscode/tool-registry";
+import type { McpToolDefinition } from "./mcp-types";
 
 export interface LlmMessage {
   role: "system" | "user" | "assistant" | "tool";

@@ -4,7 +4,7 @@ import {
   ContextBudgetError,
   MIN_RESERVE_TOKENS,
   ThresholdGate,
-} from '../context-budget';
+} from '../../mcp/context-budget';
 
 // STC: TC-002 — Context budget calculation within limit (BR-04, BR-05)
 // STC: TC-201 — Budget >95% rejects session (BR-06)

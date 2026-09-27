@@ -3,14 +3,10 @@
  * Provides tool definitions in LLM-compatible formats (Anthropic, OpenAI, Ollama).
  */
 
-import { McpBridge } from "../core/mcp-bridge";
+import { McpBridge } from "../../mcp/mcp-bridge";
+import type { McpToolDefinition } from "../../mcp/mcp-types";
 
-/** Raw MCP tool definition from tools/list response */
-export interface McpToolDefinition {
-  name: string;
-  description: string;
-  inputSchema: Record<string, unknown>;
-}
+export type { McpToolDefinition };
 
 /** Anthropic tool format */
 export interface AnthropicTool {

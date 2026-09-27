@@ -2,8 +2,8 @@
  * AnthropicProvider — KSA-210. LLM provider backed by Anthropic Messages API.
  * Extends BaseLlmProvider for shared availability check and streaming.
  */
-import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../core/llm-provider";
-import type { McpToolDefinition } from "../vscode/tool-registry";
+import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../llm-provider";
+import type { McpToolDefinition } from "../mcp-types";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { splitMessages, formatMessagesForTools } from "./anthropic-helpers";
 import { validateProviderBaseUrl } from "./provider-url-policy";

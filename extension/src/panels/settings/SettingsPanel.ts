@@ -6,7 +6,7 @@
 import * as vscode from "vscode";
 import { getNonce } from "../../mcp-server-manager";
 import { SettingsMessageHandler } from "./SettingsMessageHandler";
-import { getProvidersByCategory } from "../../langgraph/providers/provider-registry";
+import { getProvidersByCategory } from "../../mcp/providers/provider-registry";
 
 export class SettingsPanel {
   public static readonly viewType = "kiroSettingsPanel";

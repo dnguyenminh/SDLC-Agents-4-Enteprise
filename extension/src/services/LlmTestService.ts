@@ -4,7 +4,7 @@
  */
 
 import * as vscode from "vscode";
-import { createProviderByType } from "../langgraph/providers";
+import { createProviderByType } from "../mcp/providers";
 import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS } from "../models";
 
 const TEST_TIMEOUT_MS = 10000;

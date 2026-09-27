@@ -4,7 +4,7 @@
  * Extends BaseLlmProvider; overrides isAvailable() directly (file-based, not HTTP).
  */
 import * as path from "path";
-import type { LlmMessage, LlmOptions } from "../core/llm-provider";
+import type { LlmMessage, LlmOptions } from "../llm-provider";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { OnnxTokenizer } from "./onnx-tokenizer";
 

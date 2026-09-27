@@ -1,4 +1,4 @@
-import type { LlmProvider } from '../langgraph/core/llm-provider.js';
+import type { LlmProvider } from '../mcp/llm-provider';
 import { debugError } from '../debug-logger.js';
 
 export interface ContextProbeState {

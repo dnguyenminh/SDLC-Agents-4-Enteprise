@@ -16,7 +16,7 @@ import {
   ContextBudgetInputs,
   ThresholdGate,
   ThresholdResult,
-} from './context-budget';
+} from '../mcp/context-budget';
 import { ThinkingLevelMapper } from './thinking-level-mapper';
 
 export interface SessionConfigParams {

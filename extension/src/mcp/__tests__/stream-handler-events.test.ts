@@ -4,7 +4,7 @@
  * emitHumanIntervention emit correct event format.
  */
 import { describe, it, expect, vi } from "vitest";
-import { StreamHandler } from "../core/stream-handler";
+import { StreamHandler } from "../stream-handler";
 
 // --- Tests ---
 

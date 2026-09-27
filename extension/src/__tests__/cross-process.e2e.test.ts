@@ -3,7 +3,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { McpServerManager } from '../mcp-server-manager';
-import { McpBridge } from '../langgraph/core/mcp-bridge';
+import { McpBridge } from '../mcp/mcp-bridge';
 import * as vscode from 'vscode';
 
 // Mock VSCode workspace for the proxy response interceptor

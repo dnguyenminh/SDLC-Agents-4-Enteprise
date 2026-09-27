@@ -5,7 +5,8 @@
  */
 
 import { requiresApproval } from "../../chat/engine/ToolApprovalClassifier";
-import { createMcpClient, McpWrapperClient } from './mcp-wrapper-client';
+import type { IServerManager } from "../../types/server-types";
+import { McpBridge } from "../../mcp/mcp-bridge";
 import {
   DYNAMIC_TOOL_NAME,
   TOOLS,
@@ -29,6 +30,8 @@ interface PiExtensionContext {
 
 /** SEC-324-03: opt-in gate for `execute_dynamic_tool` chaining. */
 export interface BridgeOptions {
+  /** REQUIRED: server manager for the McpBridge transport (fail-closed, no URL fallback). */
+  serverManager: IServerManager;
   /** When true, the dynamic-chaining tool is registered and callable. */
   allowDynamicChaining?: boolean;
   /** Approval hook for tools needing consent; deny when it resolves false. */
@@ -90,7 +93,7 @@ async function checkApproval(
  * Create execute handler that proxies to MCP wrapper with validation and error handling
  */
 function createExecuteHandler(
-  mcpClient: McpWrapperClient,
+  bridge: McpBridge,
   toolName: string,
   parametersSchema: unknown,
   options?: BridgeOptions,
@@ -129,7 +132,7 @@ function createExecuteHandler(
     }
 
     try {
-      const result = await mcpClient.callMcpWrapper(toolName, params);
+      const result = await bridge.callTool(toolName, params);
       const text = typeof result === 'string' ? result : JSON.stringify(result);
       return {
         content: [{ type: 'text' as const, text }],
@@ -150,8 +153,12 @@ function createExecuteHandler(
  * Pi Extension entry point
  * Registers custom tools that proxy to MCP wrapper server
  */
-export default function mcpBridgeExtension({ pi }: PiExtensionContext, options?: BridgeOptions) {
-  const mcpClient = createMcpClient();
+export default function mcpBridgeExtension({ pi }: PiExtensionContext, options: BridgeOptions) {
+  // SEC-332-09: fail-closed — no hardcoded-URL fallback (legacy factory deleted).
+  if (!options?.serverManager) {
+    throw new Error("[Security] McpBridge requires IServerManager (no hardcoded fallback)");
+  }
+  const bridge = new McpBridge(options.serverManager);
   const registeredTools = new Set<string>();
 
   for (const tool of TOOLS) {
@@ -172,7 +179,7 @@ export default function mcpBridgeExtension({ pi }: PiExtensionContext, options?:
         label: tool.label,
         description: tool.description,
         parameters: tool.parameters,
-        execute: createExecuteHandler(mcpClient, tool.name, tool.parameters, options),
+        execute: createExecuteHandler(bridge, tool.name, tool.parameters, options),
       });
 
       registeredTools.add(tool.name);

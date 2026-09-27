@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
-import { KnowledgeClient, KbUnreachableError, isUuidV4, parseThreadJson, validateThreadJson, UUID_V4_REGEX } from '../../../knowledge-client';
+import { KnowledgeClient, KbUnreachableError, isUuidV4, parseThreadJson, validateThreadJson, UUID_V4_REGEX } from '../knowledge-client';
 import { startMockKbServer, type MockKbServer } from './helpers/mock-kb-server';
 
 describe('PBT-HYD-01 — thread_id UUID v4 contract', () => {
@@ -113,3 +113,4 @@ describe('KnowledgeClient — unreachable backend resilience', () => {
     expect((err as KbUnreachableError).recoverable).toBe(true);
   });
 });
+

@@ -15,7 +15,7 @@ import {
   QualityGateCheckpoint,
   ChatMessage,
   AgentOutput,
-} from "../langgraph/core/state-types";
+} from "../mcp/state-types";
 import { ContextUsagePayload } from "./context-usage-tracker";
 
 // === Context & Attachment Types ===

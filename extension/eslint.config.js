@@ -1,7 +1,15 @@
 import tseslint from 'typescript-eslint';
 
+// SA4E-332 US-04 — freeze langgraph/: Pi/shared-kernel code must not import the legacy tree.
+// Intra-legacy imports (files UNDER src/langgraph/) stay allowed until phased deletion (SA4E-289 follow-ups).
+const langgraphFreezePatterns = [
+  // Covers: ../langgraph/*, ./langgraph/*, src/langgraph/*, @/langgraph, deep core|providers|vscode/*.
+  { group: ['**/langgraph/**', '**/langgraph'], message: 'SA4E-332: langgraph/ is FROZEN — import from extension/src/mcp/... instead (see extension/src/langgraph/README.md).' },
+  { group: ['**/langgraph/**.js', '**/langgraph.js'], message: 'SA4E-332: langgraph/ is FROZEN (covers .js-suffixed imports like mcp-bridge.js) — import from extension/src/mcp/... instead.' },
+];
+
 export default tseslint.config(
-  { ignores: ['out/', 'node_modules/', 'resources/', 'mcp-server/', 'dist/', '*.vsix', '**/*.js', '**/__tests__/**'] },
+  { ignores: ['out/', 'node_modules/', 'resources/', 'mcp-server/', 'dist/', '*.vsix', '**/*.js'] },
   {
     files: ['src/**/*.ts'],
     languageOptions: {
@@ -18,6 +26,11 @@ export default tseslint.config(
       'no-undef': 'off',
       'no-redeclare': 'off',
       'no-console': 'off',
+      'no-restricted-imports': ['error', { patterns: langgraphFreezePatterns }],
     },
-  }
+  },
+  // Option B (BR-32): intra-legacy imports stay lint-clean until phased deletion.
+  { files: ['src/langgraph/**/*.ts'], rules: { 'no-restricted-imports': 'off' } },
+  // OPEN-03: tests ARE gated (no blanket __tests__ ignore above).
+  { files: ['src/**/__tests__/**/*.ts', 'tests/**/*.ts'], rules: { 'no-restricted-imports': ['error', { patterns: langgraphFreezePatterns }] } },
 );

@@ -1,0 +1,25 @@
+# Run Log — SA4E-332
+
+| # | Timestamp | Agent | Phase | Action | Result | Tokens | Duration |
+|---|-----------|-------|-------|--------|--------|--------|----------|
+| 1 | 2026-09-27 00:00 | SM | init | Khởi tạo pipeline SA4E-332 Shared kernel extraction, tạo STATUS.json, chuẩn bị Phase 1 | ✅ success | ~2k | 5s |
+| 2 | 2026-09-27 00:10 | ba-agent | requirements | Tạo BRD.md (4 stories US-01→04) + use-case/business-flow drawio+png, ingest KB 25 entries + 6 glossary | ✅ success | ~50k | 180s |
+| 3 | 2026-09-27 00:12 | SM | requirements | Verify Phase 1: BRD 36kB + 2 drawio + 2 png, STATUS requirements done, currentPhase=specification | ✅ success | ~20k | 30s |
+| 4 | 2026-09-27 00:25 | ba-agent | specification | Tạo FSD draft 60kB (UC-01→04, BR-01→35) + 4 diagrams, ingest KB 42 entries | ✅ success | ~60k | 200s |
+| 5 | 2026-09-27 00:35 | ta-agent | specification | Enrich FSD v1.1: API contracts, import map 21 hits, owner McpToolDefinition, lint snippet, 6 Open Issues, KB 46 entries | ✅ success | ~40k | 180s |
+| 6 | 2026-09-27 00:38 | SM | specification | Verify Phase 2: FSD + 6 drawio + 6 png, STATUS specification done v1.1, currentPhase=design | ✅ success | ~20k | 30s |
+| 7 | 2026-09-27 00:50 | sa-agent | design | Tạo TDD v1.0 38kB (kernel layout mcp/, McpBridgeCaller, cycle gate, lint B) + 4 diagrams + DISCREPANCY 3 items (2 High 1 Low) | ✅ success | ~70k | 220s |
+| 8 | 2026-09-27 00:55 | ba-agent | feedback_loop | Fix FSD v1.2 theo DISC-01..03 (DELETE stale test, e2e depth ../mcp, TC-MOVE-07) | ✅ success | ~30k | 120s |
+| 9 | 2026-09-27 00:58 | sa-agent | feedback_loop | Verify 3/3 fixed, TDD v1.1 FINAL, DISCREPANCY resolved | ✅ success | ~40k | 150s |
+| 10 | 2026-09-27 01:00 | SM | design | Verify Phase 3: TDD + 4 diagrams + feedback 1 vòng done, STATUS design done v1.1, currentPhase=test_planning | ✅ success | ~20k | 30s |
+| 4 | 2026-09-27 00:25 | ba-agent | specification | Tạo FSD draft 60kB (UC-01→04, BR-01→35) + 4 diagrams system/sequence/state, ingest KB 42 entries | ✅ success | ~60k | 200s |
+| 5 | 2026-09-27 00:35 | ta-agent | specification | Enrich FSD v1.1: API contracts McpBridge/McpCaller, import map 21 hits, owner McpToolDefinition (mcp-types.ts), lint snippet, 6 Open Issues, ingest KB 46 entries | ✅ success | ~40k | 180s |
+| 6 | 2026-09-27 00:38 | SM | specification | Verify Phase 2: FSD + 6 drawio + 6 png (BRD 2 + FSD 4), STATUS specification done v1.1, currentPhase=design | ✅ success | ~20k | 30s |
+| 11 | 2026-09-27 17:00 | SM | init | Chuyen L2->L3 (unattended den UAT), verify BRDv1+FSDv1.2+TDDv1.1 FINAL+DISC resolved+10 diagrams, STATUS currentPhase=security_design_review, Jira To Do, CB closed, budget 5k/500k | ✅ success | ~5k | 30s |
+| 12 | 2026-09-27 17:05 | SM | security_design_review | Attempt Phase 3.7: CB closed, budget 5k+40k OK, Task tool unavailable -> BLOCKED, no fabrication | ⛔ BLOCKED | ~2k | 10s |
+| 13 | 2026-09-27 17:20 | security-agent | security_design_review | SECURITY-REVIEW.md 466 dòng: 0 Critical / 4 High / 5 Med / 3 Low / 2 Info, CONDITIONAL PASS, ingest KB 30 entries | ⚠️ partial | ~40k | 180s |
+| 14 | 2026-09-27 17:25 | SM | security_design_review | Verify: 0 Critical → proceed Phase 4 with caution, 4 High log làm DEV requirements | ⚠️ partial | ~20k | 30s |
+| 15 | 2026-09-27 17:40 | qa-agent | test_planning | STP + STC 37 TCs (29 auto/8 manual) + 2 diagrams + 7 CSV 114 rows cover 37/37, RTM 100%, KB 41+55 entries | ✅ success | ~60k | 240s |
+| 16 | 2026-09-27 17:45 | SM | test_planning | Review 10 tiêu chí: RTM 100%, levels đủ (E2E-UI=0 by design), 4 High có SEC tests, diagrams+CSVs đủ → Approved | ✅ success | ~20k | 30s |
+| 17 | 2026-09-27 18:00 | devops-agent | deployment | Setup CI nhẹ SA4E-332: verify tsc PASS/eslint PASS/vitest 192 PASS/madge 0 cycles, grep RED pre-move by design, tạo .github/workflows/ci-sa4e-332.yml (lint+test, no deploy) | ✅ success | ~35k | 300s |
+| 18 | 2026-09-27 19:00 | dev-agent | implementation | Implement SA4E-332 trên branch SA4E-332 (từ HEAD baseline): types-first (mcp-types.ts owner duy nhất) → git mv bridge/llm/stream/state/providers/context-budget + 2 healthy tests → rewires 21 hits (depth pi-workflow/e2e dùng ../mcp đúng; TDD ../../ sai — tsc verify) → McpBridgeCaller thin adapter (structural, kernel không import pi-agent để giữ madge sạch) + BridgeOptions.serverManager fail-closed throw → XÓA wrapper+test+stale 3 files → lint option B + README FROZEN. Xử lý xung đột spec-gate (ghi chú DISC-04): workflow-graph-data.ts → panels/ (pure data, sole consumer), mock-kb-server.ts → __tests__/helpers/ (neutral, 2 consumers) để IT-02 0 files. Gates: grep 0 toàn bộ (MOVE-01/02/03/06/07, require, basenode, single-owner), tsc 0, eslint tree PASS + fixture FAIL đúng message, targeted 189/189, full 2077 passed, e2e 2 passed, madge dir-form 0 cycles (ghi chú: dir-form chỉ quét .js; per-file .ts còn 29 cycles toàn cục pre-existing của god-module extension.ts, parity topology, out-of-scope). Tạo UG.md. SEC-324-03 order + SEC-324-01/02 giữ nguyên; 4 High SEC-332 là carried debt (file ticket riêng), trong-ticket đã làm SEC-332-05/06/09/11 | ✅ success | ~90k | 900s |

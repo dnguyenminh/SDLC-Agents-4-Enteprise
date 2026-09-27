@@ -1,6 +1,7 @@
 import { logger } from '../../logger';
 import { withTimeout } from '../async-timeout';
-import { McpWrapperClient } from '../extensions/mcp-wrapper-client';
+import type { McpBridge } from '../../mcp/mcp-bridge';
+import { McpBridgeCaller } from '../../mcp/mcp-bridge-caller';
 import type { ISearchProvider, RetrievalConfig, SearchCandidate } from './types';
 
 export interface McpCaller {
@@ -131,7 +132,10 @@ export class McpSearchProvider implements ISearchProvider {
   }
 }
 
-export function createMcpSearchProvider(config: RetrievalConfig, baseUrl?: string): McpSearchProvider {
-  const caller = baseUrl ? new McpWrapperClient(baseUrl) : new McpWrapperClient();
-  return new McpSearchProvider({ caller, config });
+export function createMcpSearchProvider(config: RetrievalConfig, bridge: McpBridge): McpSearchProvider {
+  return new McpSearchProvider({ caller: new McpBridgeCaller(bridge), config });
+}
+
+export function createMcpSearchProviderFromBridge(bridge: McpBridge, config: RetrievalConfig): McpSearchProvider {
+  return new McpSearchProvider({ caller: new McpBridgeCaller(bridge), config });
 }

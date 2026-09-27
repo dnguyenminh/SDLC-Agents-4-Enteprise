@@ -101,10 +101,6 @@
         "title": "SDLC Agents: Show Enrichment Status"
       },
       {
-        "command": "kiroSdlc.openWorkflowGraph",
-        "title": "SDLC Agents: Open Workflow Graph"
-      },
-      {
         "command": "kiroSdlc.symbolSearch",
         "title": "SDLC Agents: Symbol Search"
       },
@@ -457,8 +453,8 @@
     "test:unit": "vitest run",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:watch": "vitest watch",
-    "lint": "npx eslint src/ --ext .ts",
-    "lint:fix": "npx eslint src/ --ext .ts --fix"
+    "lint": "npx eslint src/",
+    "lint:fix": "npx eslint src/ --fix"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

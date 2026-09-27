@@ -8,7 +8,7 @@ import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
 import { IServerManager } from "../types/server-types";
 import { PiWorkflowAdapter, KbRemoteCheckpointerStore } from "../pi-workflow";
-import { createLlmProvider } from "../langgraph/providers";
+import { createLlmProvider } from "../mcp/providers";
 import { MessageHandler } from "./message-handler";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage } from "./message-protocol";
 import { ContextUsageTracker } from "./context-usage-tracker";

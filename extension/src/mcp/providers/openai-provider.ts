@@ -2,8 +2,8 @@
  * OpenAIProvider — KSA-210. LLM provider using OpenAI Chat Completions API via fetch().
  * Extends BaseLlmProvider for shared availability check and streaming.
  */
-import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../core/llm-provider";
-import type { McpToolDefinition } from "../vscode/tool-registry";
+import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../llm-provider";
+import type { McpToolDefinition } from "../mcp-types";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { formatMessages, formatMessagesForTools, buildHeaders } from "./openai-helpers";
 import { validateProviderBaseUrl } from "./provider-url-policy";
