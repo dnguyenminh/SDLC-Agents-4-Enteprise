@@ -1,5 +1,3 @@
-import { agentRegistry } from "../agents/registry";
-
 interface WorkflowNode {
   id: string;
   label: string;
@@ -111,21 +109,12 @@ const EDGE_DEFS: Array<{ source: string; target: string; type: "direct" | "condi
 let cachedData: WorkflowGraphData | null = null;
 
 function buildWorkflowGraphData(): WorkflowGraphData {
-  if (cachedData && agentRegistry.isInitialized()) return cachedData;
+  if (cachedData) return cachedData;
 
   const nodes: WorkflowNode[] = [];
 
   for (const [id, meta] of Object.entries(INFRA_NODE_META)) {
     nodes.push({ id, label: meta.label, type: meta.type, phase: meta.phase });
-  }
-
-  if (agentRegistry.isInitialized()) {
-    for (const id of agentRegistry.getAllAgentIds()) {
-      const config = agentRegistry.getAgentConfig(id);
-      if (config && config.type === "agent") {
-        nodes.push({ id, label: config.label, type: "agent", phase: config.phase });
-      }
-    }
   }
 
   const edges: WorkflowEdge[] = EDGE_DEFS.map(e => ({

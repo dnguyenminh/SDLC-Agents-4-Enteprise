@@ -17,10 +17,6 @@ export type { IContextManager, ContextState } from './context';
 export { suggestPrune, computeFreedThreshold } from './context';
 export type { PrunableFile, PruneCandidate, ContextFile as ContextFileData } from './context';
 
-export { KiroAgentRegistry } from './registry';
-export type { IAgentRegistry } from './registry';
-export { parseAgentFile, deriveAgentId } from './registry';
-
 export { IpcBridge, JsonRpcClient, ServiceDiscoveryWatcher, isLocalhostEndpoint } from './ipc';
 export type { IIpcBridge, ServiceDiscovery, StatusChangeEvent, DiscoveryListener } from './ipc';
 

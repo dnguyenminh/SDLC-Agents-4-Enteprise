@@ -168,10 +168,6 @@
       {
         "command": "kiroSdlc.fetchPegaContext",
         "title": "SDLC Agents: Fetch Pega App Context"
-      },
-      {
-        "command": "kiroSdlc.loadSteeringRule",
-        "title": "SDLC Agents: Load Steering Rule (Manual Trigger)"
       }
     ],
     "viewsContainers": {
