@@ -9,7 +9,7 @@
  * These tests verify the provider no longer crashes and degrades gracefully.
  */
 import { describe, it, expect, vi } from "vitest";
-import { AnthropicProvider } from "../../mcp/providers/anthropic-provider";
+import { AnthropicProvider } from "../providers/anthropic-provider";
 
 /** Build a provider whose underlying SDK client returns a canned response. */
 function providerReturning(response: unknown): AnthropicProvider {
@@ -93,3 +93,4 @@ describe("AnthropicProvider — content guard (BUG 1)", () => {
     expect(create.mock.calls[0][0]).toMatchObject({ stream: false });
   });
 });
+

@@ -58,7 +58,7 @@ export class ChatHtmlBuilder {
   }
 
   private static welcomeHtml(): string {
-    return `<div id="welcome-state"><h3>SDLC Pipeline Agent</h3><p>Ask a question or describe a task. Use ticket keys to trigger the full pipeline.</p><div class="welcome-suggestions"><button data-cmd="KSA-XXX tao BRD">&#x1F4CB; Create BRD from ticket</button><button data-cmd="KSA-XXX tao FSD">&#x1F4D0; Create FSD from ticket</button><button data-cmd="KSA-XXX tao tai lieu day du">&#x1F4DA; Full pipeline</button><button data-cmd="status">&#x1F4CA; Show pipeline status</button><button data-cmd="resume">&#x25B6; Resume paused pipeline</button><button data-action="openWorkflowGraph">&#x1F5FA; Open Workflow Graph</button></div></div>`;
+    return `<div id="welcome-state"><h3>SDLC Pipeline Agent</h3><p>Ask a question or describe a task. Use ticket keys to trigger the full pipeline.</p><div class="welcome-suggestions"><button data-cmd="KSA-XXX tao BRD">&#x1F4CB; Create BRD from ticket</button><button data-cmd="KSA-XXX tao FSD">&#x1F4D0; Create FSD from ticket</button><button data-cmd="KSA-XXX tao tai lieu day du">&#x1F4DA; Full pipeline</button><button data-cmd="status">&#x1F4CA; Show pipeline status</button><button data-cmd="resume">&#x25B6; Resume paused pipeline</button></div></div>`;
   }
 
   private static inputAreaHtml(): string {
