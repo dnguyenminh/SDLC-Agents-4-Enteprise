@@ -273,11 +273,6 @@
           "default": true,
           "description": "Enable/disable the local MCP wrapper server on startup"
         },
-        "kiroSdlc.enableDiagnosticsFeed": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable the realtime LSP diagnostics feed into the agent loop (batched, agent-touched files only)"
-        },
         "kiroSdlc.mcpServerUrl": {
           "type": "string",
           "default": "",

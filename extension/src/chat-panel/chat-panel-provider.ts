@@ -15,7 +15,6 @@ import { ContextUsageTracker } from "./context-usage-tracker";
 import { ChatStatusManager } from "./ChatStatusManager";
 import { ChatModelManager } from "./ChatModelManager";
 import { ChatStateManager } from "./ChatStateManager";
-import { DiagnosticsFeedService } from "../langgraph/diagnostics/diagnostics-feed-service";
 
 export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Disposable {
   public static readonly viewType = "kiroChatPanel";
@@ -104,7 +103,6 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   private readonly statusManager: ChatStatusManager;
   private readonly modelManager: ChatModelManager;
   private readonly stateManager: ChatStateManager;
-  private diagnosticsFeedService: DiagnosticsFeedService | null = null;
   private diffTracker: import('../chat/diff/IDiffTracker').IDiffTracker | null = null;
 
   constructor(
@@ -118,15 +116,6 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     this.modelManager = new ChatModelManager((msg) => this.sendToWebview(msg));
     this.stateManager = new ChatStateManager(workspaceRoot, workspaceState, (msg) => this.sendToWebview(msg), () => this.getEngine());
     this.disposables.push(this.stateManager);
-  }
-
-  /** SA4E-185: Set the diagnostics feed service for the engine. */
-  setDiagnosticsFeedService(diagnosticsFeedService: DiagnosticsFeedService | undefined) {
-    this.diagnosticsFeedService = diagnosticsFeedService ?? null;
-    // Propagate to the engine so the PiWorkflowAdapter (and its consumers) see the feed.
-    if (this.engine) {
-      this.engine.setDiagnosticsFeed(diagnosticsFeedService);
-    }
   }
 
   /** SA4E-183: Set the DiffTracker for file change tracking. */
@@ -296,7 +285,6 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   dispose(): void {
     this.engine?.dispose();
-    this.diagnosticsFeedService?.dispose();
     this.disposables.forEach(d => d.dispose());
     this.disposables = [];
   }
@@ -367,16 +355,11 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
         workspaceRoot: this.workspaceRoot,
         onEvent: (msg) => this.sendToWebview(msg),
         llmProvider: this.secrets ? createLlmProvider(this.secrets) : undefined,
-        diagnosticsFeed: this.diagnosticsFeedService ?? undefined,
         checkpointerStore: new KbRemoteCheckpointerStore({
           workspaceRoot: this.workspaceRoot,
         }),
         secrets: this.secrets,
       });
-    }
-    // Keep the engine's diagnostics feed in sync with the provider's stored service.
-    if (this.diagnosticsFeedService) {
-      this.engine.setDiagnosticsFeed(this.diagnosticsFeedService);
     }
     return this.engine;
   }

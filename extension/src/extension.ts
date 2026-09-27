@@ -12,7 +12,6 @@ import { writeBundledMcpConfig } from "./mcp-injector";
 import { ConfigWatcher } from "./config-watcher";
 import { getBackendUrl, DEFAULT_BACKEND_URL } from "./config/backend-url";
 import { KbEventBus } from "./kb-event-bus";
-import { DiagnosticsFeedService } from "./langgraph/diagnostics/diagnostics-feed-service";
 import { ChatPanelProvider } from "./chat-panel/chat-panel-provider";
 import { ChatEngineAdapter, StreamProtocolAdapter, SessionManager } from "./chat";
 import { MessageRouter } from "./chat/router/MessageRouter";
@@ -249,12 +248,6 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
     })
   );
 
-  // SA4E-185: Initialize Diagnostics Feed Service
-  const diagnosticsFeedService = new DiagnosticsFeedService(workspaceRoot);
-  context.subscriptions.push(diagnosticsFeedService.start());
-  // Pass to ChatPanelProvider so it can be used by LangGraphEngine
-  chatPanelProvider.setDiagnosticsFeedService(diagnosticsFeedService);
-
   // SA4E-183: Initialize DiffTracker + SessionLifecycleEmitter
   sessionLifecycle = new SessionLifecycleEmitter();
   diffTracker = new DiffTracker(null, vscode.workspace.getConfiguration('kiroSdlc').get<boolean>('diffTracker.enabled', true));
@@ -266,13 +259,6 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   sessionLifecycle.on('session:created', () => diffTracker?.clearSession());
   context.subscriptions.push({ dispose: () => { diffTracker?.dispose(); sessionLifecycle?.dispose(); } });
   chatPanelProvider.setDiffTracker(diffTracker);
-  // Live toggle watcher (BR-9) — follows extension.ts:307 pattern (NOT ConfigWatcher)
-  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
-    if (!event.affectsConfiguration("kiroSdlc.enableDiagnosticsFeed")) { return; }
-    const enabled = vscode.workspace.getConfiguration("kiroSdlc")
-      .get<boolean>("enableDiagnosticsFeed", true);
-    diagnosticsFeedService.setEnabled(enabled);
-  }));
 
   setupConfigWatcher(context, workspaceRoot, outputChannel);
   setupMcpStatusBroadcast(workspaceRoot);
