@@ -1,0 +1,7 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-301,"large repo query (map-reduce)","Large repo query","No OOM; completes successfully",High
+TC-302,"golden dataset: map-reduce vs 1-shot large model","Golden dataset","Quality comparable to 1-shot large model",High
+TC-701,"decompose query to map workers","Query received","Map workers receive batches",High
+TC-702,"aggregate summaries to reduce","Summaries ready","Reduce produces final answer",High
+TC-703,"classify query intent","Query submitted","GLOBAL/STRUCTURAL routed to Map-Reduce",Medium
+TC-704,"process overlapping batches","Overlapping batches","Duplicates removed",Medium

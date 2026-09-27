@@ -26,6 +26,28 @@ const ONNX_MODEL_REGISTRY: OnnxModelConfig[] = [
   { id: "smollm2-360m", displayName: "SmolLM2 (360M, FP16)", files: ["model.onnx", "tokenizer.json", "tokenizer_config.json"], tokenizerFile: "tokenizer.json", modelFile: "model.onnx", contextLength: 2048 },
 ];
 
+/**
+ * SEC-324-02 — modelId allowlist (TDD §6.4): rejects `..`, `/`, `\`,
+ * absolute paths and empty ids before any filesystem access.
+ */
+export const MODEL_ID_RE = /^[a-z0-9][a-z0-9._-]*$/;
+
+/**
+ * SEC-324-02 — resolve the model directory with realpath containment.
+ * @throws when modelId is invalid or escapes the models directory.
+ */
+export function resolveModelDir(workspaceRoot: string, modelId: string): string {
+  if (!MODEL_ID_RE.test(modelId)) {
+    throw new Error(`Invalid modelId '${modelId}'`);
+  }
+  const base = path.resolve(workspaceRoot, ".code-intel", "models", "llm");
+  const dir = path.resolve(base, modelId);
+  if (dir !== base && !dir.startsWith(base + path.sep)) {
+    throw new Error(`modelId escapes models directory: '${modelId}'`);
+  }
+  return dir;
+}
+
 export class OnnxProvider extends BaseLlmProvider {
   readonly type = "ollama" as const; // kept for backward compat
   private session: any = null;
@@ -36,7 +58,8 @@ export class OnnxProvider extends BaseLlmProvider {
   constructor(workspaceRoot: string, modelId?: string) {
     super();
     this.modelId = modelId || DEFAULT_MODEL_ID;
-    this.modelDir = path.join(workspaceRoot, ".code-intel", "models", "llm", this.modelId);
+    // SEC-324-02: regex guard + realpath containment, fail closed.
+    this.modelDir = resolveModelDir(workspaceRoot, this.modelId);
     this.contextWindowTokens = MAX_CONTEXT_TOKENS;
   }
 
@@ -71,7 +94,10 @@ export class OnnxProvider extends BaseLlmProvider {
       const fs = await import("fs");
       const modelConfig = ONNX_MODEL_REGISTRY.find(m => m.id === this.modelId);
       if (!modelConfig) return false;
-      return fs.existsSync(path.join(this.modelDir, modelConfig.modelFile));
+      // SEC-324-02 (TA EF-05): check BOTH files so countTokens fast-fails
+      // instead of failing late at gate time on a missing tokenizer.json.
+      return fs.existsSync(path.join(this.modelDir, modelConfig.modelFile))
+        && fs.existsSync(path.join(this.modelDir, modelConfig.tokenizerFile));
     } catch (err) {
       console.debug("[OnnxProvider] isAvailable check failed: " + (err as Error).message);
       return false;

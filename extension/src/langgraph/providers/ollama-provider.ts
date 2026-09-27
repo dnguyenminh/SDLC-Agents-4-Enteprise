@@ -7,6 +7,7 @@ import type { LlmMessage, LlmOptions, LlmResponse } from "../core/llm-provider";
 import type { McpToolDefinition } from "../vscode/tool-registry";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { ollamaChatWithTools } from "./ollama-tools";
+import { validateProviderBaseUrl } from "./provider-url-policy";
 
 const DEFAULT_MODEL = "llama3.1";
 const DEFAULT_BASE_URL = "http://localhost:11434";
@@ -18,7 +19,8 @@ export class OllamaProvider extends BaseLlmProvider {
 
   constructor(baseUrl?: string, defaultModel?: string) {
     super();
-    this.baseUrl = (baseUrl || DEFAULT_BASE_URL).replace(/\/$/, "");
+    // SEC-324-01: validate baseUrl once, fail closed (loopback-HTTP allowed).
+    this.baseUrl = validateProviderBaseUrl((baseUrl || DEFAULT_BASE_URL).replace(/\/$/, ""));
     this.defaultModel = defaultModel || DEFAULT_MODEL;
     this.contextWindowTokens = 8192; // Conservative default for Ollama models
   }

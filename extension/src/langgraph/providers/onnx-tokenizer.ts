@@ -2,6 +2,20 @@
  * OnnxTokenizer --- simple tokenizer for ONNX models.
  */
 
+/** SEC-324-02 hardening: reject oversized/non-file tokenizer reads (DoS cap). */
+const MAX_TOKENIZER_BYTES = 100 * 1024 * 1024;
+
+/** Guard the tokenizer file before the synchronous read. */
+function assertReadableTokenizerFile(fs: typeof import("fs"), tokenizerPath: string): void {
+  if (!tokenizerPath || tokenizerPath.includes("\0")) {
+    throw new Error(`Invalid tokenizer path`);
+  }
+  const stat = fs.statSync(tokenizerPath);
+  if (!stat.isFile() || stat.size > MAX_TOKENIZER_BYTES) {
+    throw new Error(`Tokenizer file rejected (not a file or >100MB): ${tokenizerPath}`);
+  }
+}
+
 export class OnnxTokenizer {
   private vocab: Map<string, number>;
   private reverseVocab: Map<number, string>;
@@ -17,6 +31,7 @@ export class OnnxTokenizer {
 
   static async load(tokenizerPath: string): Promise<OnnxTokenizer> {
     const fs = await import("fs");
+    assertReadableTokenizerFile(fs, tokenizerPath);
     const raw = fs.readFileSync(tokenizerPath, "utf-8");
     const config = JSON.parse(raw);
     const vocab = new Map<string, number>();

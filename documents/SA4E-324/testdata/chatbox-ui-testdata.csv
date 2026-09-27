@@ -1,0 +1,18 @@
+test_case_id,tabId,model,maxTokens,countedTokens,expected_total_pct,expected_badge,expected_row,expected_toast,description
+UT-23,tabA,any,8192,59pct-tokens,,safe,,Tracker 59 safe
+UT-23,tabA,any,8192,60pct-tokens,,warning,,Boundary 60 warning distinct from gate 85
+UT-23,tabA,any,8192,80pct-tokens,,critical,,80 critical
+UT-23,tabA,any,8192,95pct-tokens,,full,,95 full
+IT-19,tabA,llama3.1,8192,mock-7-for-len16,,,"conversation=7",Non-divisible mock proves API used not len/4
+IT-19,tabA,any,8192,system-steering-mocked,,,real-countTokens-index,,3500/4000 deleted as truth
+E2E-UI-01,tabA,llama3.1,8192,4096,50%,,,"50% + 4096 / 8192",Total bar golden
+E2E-UI-02,tabA,any,8192,4000,,safe,,Band safe
+E2E-UI-02,tabA,any,8192,5500,,warning,,Band warning
+E2E-UI-02,tabA,any,8192,7000,,critical,,Band critical
+E2E-UI-02,tabA,any,8192,8000,,full,,Band full
+E2E-UI-03,tabA,phi-3-mini,2048,over-budget-4875,,,,"238% + >95% + remediation",REJECT toast
+E2E-UI-04,tabA,gpt-4o-mini,128000,115200-90pct,,,,"Budget warning >85% + session visible",WARN inline continues
+E2E-UI-05,tabA,llama3.1-to-phi-3-mini,8192-to-2048,4096,50%-to-100%,,,denominator-switch,Model switch setMaxTokens capped 100
+E2E-UI-06,tabA,any,8192,"conv2048 tools1024 steering1024",,,conv25%-tools13%,,Per-category rows round
+E2E-UI-07,tabA,any,8192,fallback-/4,,,fallback-icon-visible,,Fallback renders + icon
+E2E-UI-08,tabA,any,8192,hostile-model-string,,,MODEL?INJECT?-no-script,Sanitized fallbackFrom

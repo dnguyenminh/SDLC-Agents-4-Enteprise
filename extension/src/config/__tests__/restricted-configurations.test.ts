@@ -34,6 +34,13 @@ describe("restrictedConfigurations (SA4E-323 SEC-01)", () => {
     expect(restricted).toContain("kiroSdlc.backend.allowInsecureRemote");
   });
 
+  it("SEC-324-01: restricts LLM provider base URLs (SSRF + key exfiltration)", () => {
+    expect(restricted).toContain("kiroSdlc.anthropicBaseUrl");
+    expect(restricted).toContain("kiroSdlc.openaiBaseUrl");
+    expect(restricted).toContain("kiroSdlc.ollamaUrl");
+    expect(restricted).toContain("kiroSdlc.lmstudioBaseUrl");
+  });
+
   it("has no duplicate entries", () => {
     expect(new Set(restricted).size).toBe(restricted.length);
   });

@@ -1,0 +1,6 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-401,"request prompt with zero templates","No templates","Graceful empty response",Medium
+TC-403,"request prompt with tier=unknown","Tier unknown","Fallback to full variant",Medium
+TC-702,"request template via prompt-template.service","Service running","Compressed/full variant returned per tier",High
+TC-703,"detect tier for configured model","Model configured","Correct variant selected",Medium
+TC-704,"call /template endpoint","/template endpoint","Prompt injected; no preload",Medium

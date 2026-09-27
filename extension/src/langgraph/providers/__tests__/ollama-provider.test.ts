@@ -170,3 +170,21 @@ describe("OllamaProvider — chatWithTools", () => {
     expect(res.toolCalls?.[0]).toMatchObject({ name: "read_file", arguments: { path: "a.ts" } });
   });
 });
+
+describe("OllamaProvider — SEC-324-01 baseUrl validation", () => {
+  it("accepts the default loopback and HTTPS remote base URLs", () => {
+    expect(() => new OllamaProvider()).not.toThrow();
+    expect(() => new OllamaProvider("http://localhost:1234")).not.toThrow();
+    expect(() => new OllamaProvider("https://ollama.corp.example.com")).not.toThrow();
+  });
+
+  it("rejects non-loopback plain HTTP", () => {
+    expect(() => new OllamaProvider("http://ollama.corp.example.com")).toThrow(
+      /Insecure backend URL rejected/,
+    );
+  });
+
+  it("rejects non-http(s) schemes", () => {
+    expect(() => new OllamaProvider("file:///tmp/ollama")).toThrow();
+  });
+});

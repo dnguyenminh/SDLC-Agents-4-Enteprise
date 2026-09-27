@@ -1,0 +1,22 @@
+test_case_id,provider,endpoint,mocked_request,mocked_response,expected_counts,expected_window,expected_calls,description
+IT-01,anthropic,POST /v1/messages/count_tokens,"{model:claude-sonnet-4-latest messages:[{role:user content:hello}]}","{input_tokens:7}",7,,1-sub-call,Anthropic hello to 7
+IT-01,anthropic,POST /v1/messages/count_tokens,"{content:hi}","{input_tokens:3}",3,,1-sub-call,Anthropic hi to 3
+IT-01,anthropic,POST /v1/messages/count_tokens,"{content:empty}","no-http",0,,0-calls,Empty no HTTP
+IT-01,anthropic,GET /v1/models,headers-x-api-key-anthropic-version,"{data:[{id:claude-sonnet-4-latest context_window:200000}]}",,200000,1-call,Window 200000 replaces ctor constant
+IT-02,openai-local,POST /tokenize,"{model:qwen2.5-coder input:[sys tools]}","{tokens:[[12 34 56] [78 90]]}","[3 2]",,1-POST,Local tokenize lengths
+IT-02,openai-local,POST /tokenize,alt-shape,"{data:[{length:3} {length:2}]}","[3 2]",,1-POST,Alt shape accepted
+IT-02,openai-local,GET /models,GET,"{data:[{id:qwen2.5-coder context_length:32768}]}",,32768,1-call,Precedence context_length over meta.n_ctx
+UT-25,openai-cloud,js-tiktoken-local,"encode(hello) cl100k_base","[2]",[2],,0-http,Cloud offline encode hello to 2
+UT-25,openai-cloud,js-tiktoken-local,"encode(empty)","0",[0],,0-http,Cloud empty 0
+IT-03,openai-cloud,js-tiktoken,unknown-model-xyz,fallback-plus-warn,/4+warn,,,Unknown model fallback never dry-run
+IT-04,ollama,POST /api/show,"{name:llama3.1}","{model_info:{context_length:8192}}",,8192,1-call,Show primary field
+IT-04,ollama,POST /api/show,alias-only,"{model_info:{llama.context_length:8192}}",,8192,1-call,Alias accepted
+IT-04,ollama,POST /api/tokenize,present,per-text-lengths,exact,,1-call,Preferred exact path
+IT-04,ollama,POST /api/chat-dryrun,SEP-joined prompt_eval_count:42,apportioned,conservative-true,,1-dryrun,Dry-run approximate flagged conservative
+IT-05,onnx,tokenizer.json-encode,hello-vocab-123,[encode-len],real,,0-http,Real encode not split heuristic
+IT-10,onnx,tokenizer.json-missing,ENOENT,throw-Tokenizer-file-missing-never-heuristic,,,0-read-outside, Missing throws isAvailable false
+IT-11,onnx,tokenizer.json-corrupt,SyntaxError,error-log-corrupt-no-fabricated-window,,,,Corrupt error no fabricated window
+E2E-API-04,anthropic,count_tokens-E2E,"[hello hi empty]-real-fetch","[7 3 0]",[7 3 0],,2-POST-1-logical,E2E order preserved
+E2E-API-05,openai,models-plus-tokenize-E2E,precedence-fixtures,32768-then-8192,,precedence,,E2E precedence + auto-detect local-model
+E2E-API-06,ollama,show-E2E,alias-8192 + dryrun-42,conservative,,,E2E alias + flag
+E2E-API-07,onnx,file-E2E-valid-missing-corrupt,3-fixtures,valid-counts + 2-errors,,,,E2E all three file states

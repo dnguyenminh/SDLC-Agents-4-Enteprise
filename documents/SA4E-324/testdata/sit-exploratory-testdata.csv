@@ -1,0 +1,7 @@
+test_case_id,charter,fixture,oracle,evidence,description
+SIT-01,blocking-overlay-timing,"throttle-Fast-3G + mock-800ms-local + mock-2000ms-cloud","overlay<=200ms no-freeze perceived<3s button-disabled",evidence/SIT-01-overlay.png,Visual timing only
+SIT-02,responsive-layout-eyeball,70pct-fixture + widths-320-768-1440 + zoom200,legible-no-overlap-contrast,evidence/SIT-02-widths.png,Human eyes layout
+SIT-03,vietnamese-corpus-judgment,corpus-50sent + HF-reference-counts,±15pct-each + >20pct-flag + 3-outliers-notes,evidence/SIT-03-corpus.png,Corpus judgment NFR-11
+SIT-04,streaming-drift-judgment,5-scripted-sessions-mocked-usage,±10pct-95pct + cause-note,evidence/SIT-04-drift.png,Drift judgment NFR-10
+SIT-05,hostile-settings-exploratory,"evil-baseUrls + __proto__-yaml + 2MB-file + truncate-midsession","ignored + unpolluted + capped + kept-good + warn + 0-evil-hits",evidence/SIT-05-settings.png,SEC-01/06 manual
+SIT-06,prompt-injection-chaining-exploratory,"poisoned-jira-result + social-engineering-admin-approved","no-autochain approval-gate single-approve-audit",evidence/SIT-06-injection.png,SEC-03 manual

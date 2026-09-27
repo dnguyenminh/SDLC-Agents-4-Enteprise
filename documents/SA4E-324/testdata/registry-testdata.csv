@@ -1,0 +1,19 @@
+test_case_id,modelId,contextWindow,maxOutput,thinkingMap_low,thinkingMap_med,thinkingMap_high,operation,expected_valid,expected_warn,description
+PBT-04,fuzz-random,-5..300000,-5..300000,-5..300000,-5..300000,-5..300000,validate,iff-BR01-BR03-BR09,warn-on-reject,Property: validate true iff all invariants hold
+UT-01,phi-3-mini,2048,512,128,256,512,get,valid,,Exact seed verified
+UT-01,smollm2-360m,1024,256,64,128,256,get,valid-enforced-1024,,1024 enforced NOT 2048
+UT-02,bad-0,0,512,128,256,512,add,false,warn-contextWindow,Reject window 0
+UT-02,bad-neg,-100,512,128,256,512,add,false,warn-contextWindow,Reject negative window
+UT-03,bad-cap,2048,3000,128,256,512,add,false,warn-maxOutput,Reject maxOutput>window (mirrors model-registry.test.ts:45)
+UT-03,bad-zero,2048,0,0,0,0,add,false,warn-maxOutput,Reject zero maxOutput
+UT-04,phi-3-mini,4096,1024,256,512,1024,add-duplicate,false,warn-duplicate,Duplicate rejected original kept 2048/512
+UT-05,unknown-model-x,,,,,resolve,fallback-gpt-4o-mini,"warn-Model not found using default",Unknown falls back with fallbackFrom
+UT-05,,0,0,0,0,0,resolve-empty-string,fallback-gpt-4o-mini,warn,Empty string falls back
+UT-06,anything,,,,,resolve-empty-registry,throw-not-found-and-default-unavailable,,Both missing throws before budgeting
+UT-24,smollm2-360m,1024,256,64,128,256,assert-enforced,false-on-2048,none,2048 value FAILs assertion (must be 1024)
+UT-24,smollm2-360m,2048,512,128,256,512,assert-physical-max-only,rejected-as-denominator,,ONNX 2048 is physical-max only NOT gate denominator
+PBT-04,bulk-100-random,,,,,bulk-add,count-accepted-only,warn-per-reject,100 random inserts duplicates rejected registry usable
+UT-05,MODEL-INJECT-NEWLINE,,,,,resolve-sanitize,fallback + sanitized-fallbackFrom,warn,Hostile model string sanitize downstream E2E-UI-08
+UT-01,catalog-shared-phi-3-mini,2048,512,128,256,512,shared-ID-check,exact-match,,Catalog vs registry shared ID exact match (DISC-06)
+UT-01,catalog-only-claude-opus-4-8,,,,,shared-ID-check,out-of-gate-scope,unknown-to-default,Catalog-only IDs out of gate scope
+UT-24,phi-3-mini-vs-smollm2,,,,,fail-safe-both,REJECT-on-default-system,,Both 2k-tier REJECT default 7500 system

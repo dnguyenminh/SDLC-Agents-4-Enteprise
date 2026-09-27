@@ -1,0 +1,19 @@
+test_case_id,provider,texts,api_mode,expected_counts,expected_warn,expected_http_calls,description
+PBT-01,any,random-0..8-elems-0..500chars,success-mocked,order-length-empty0,no-warn,per-provider-logical,Property order length preserved 100 runs seed 32401
+PBT-01,any,"[""hello"" """" ""xin chào Việt Nam""]",success-mocked,"length-3 index1-0",no-warn,1-logical,Golden batch shape FSD11
+PBT-02,any,random-1..2000chars,forced-fail,ceil-len-4-empty0,1-warn-per-batch,0-success,Property fallback determinism
+UT-19,base,empty-string,,0,,,fallbackCount empty 0
+UT-19,base,aaaaaaa-7chars,,2,,,ceil 7/4=2 single site
+UT-19,base,hello-world-test-16chars,,4,,,ceil 16/4=4
+UT-20,base,empty-array,,[],no-log,0-calls,Cheap path no timer
+UT-20,base,single-empty-string,,[0],no-log,0-calls,Empty index no HTTP
+IT-06,all-4,"[""hello""""vietnamese""tools-json""]",success-mocked,order-4-empty0-BR17,none,openai1-anthropic1logical,Batch 1 logical call mocked return not constant
+IT-07,anthropic,"[""hello world test 16chars"""" ]",hung-fetch-timeout-50ms,"[4 0]",warn-timeout-or-failed + provider-model,aborted,Timeout fallback BOTH value AND warn BR18
+IT-08,anthropic,secret-bearing-history,401-then-healthy,/4-then-success,warn-no-key-material,1-fail-then-success,401 fallback not cached
+IT-08,openai,any,403-then-healthy,/4-then-success,warn-no-key,,403 same
+IT-08,anthropic,any,429-retry-after-1,retry-once-then-fallback,warn,,429 single retry
+IT-09,ollama,window-only,404-unknown-model,keep-8192,warn-keeping-default-8192,,404 keep default + warn not debug
+IT-09,openai,window-only,connection-refused,keep-stale,warn,,Refused keep stale safe
+E2E-API-08,anthropic,countTokens-E2E,missing-key-throw-before-http,throw-0-http,none,0-calls,Missing key 0 HTTP ensureClient
+E2E-API-08,anthropic,gate-401-E2E,401-fallback-clean,no-key-in-mock-logs,,401 E2E no key leak
+E2E-API-04,anthropic,batch-E2E-order,success,order-match-server-log,,,Server log order matches

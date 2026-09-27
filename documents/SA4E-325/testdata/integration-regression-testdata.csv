@@ -1,0 +1,9 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-701,"call ContextRetriever with query topK","code_search up","code_search called with query; topK files returned",High
+TC-702,"create session after retrieval completes","Retrieval completes","Session receives contextFiles",High
+TC-703,"count tokens on context files","Context files ready","Accurate token count; progressive disclosure triggered",High
+TC-704,"submit query for intent routing","Query submitted","Intent correct; ContextRetriever strategy matched",Medium
+TC-705,"retrieve on repo with excluded dirs","Repo with excluded dirs","Excluded paths never appear in contextFiles",Medium
+TC-706,"retrieval with search timeout","Search timeout","Summary tree used as fallback",Medium
+TC-801,"create session with ContextRetriever disabled","ContextRetriever disabled","Session works as before (no regression)",Medium
+TC-802,"retrieve on 1000 files","Previous baseline","Retrieval <500ms",Medium

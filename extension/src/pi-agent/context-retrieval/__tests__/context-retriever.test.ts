@@ -85,11 +85,32 @@ describe('ContextRetriever.retrieve', () => {
     const provider = fakeProvider(
       Array.from({ length: 20 }, (_, i) => candidate(i, path.join(tmpDir, `file${i}.ts`)))
     );
-    const result = await retriever(provider).retrieve('review auth flow');
+    // SEC-325-D1: absolute candidates must live under rootDir to stay contained.
+    const result = await retriever(provider, { rootDir: tmpDir }).retrieve('review auth flow');
 
     expect(result.totalTokens).toBeLessThanOrEqual(6000);
     expect(result.tier).toBe('chunk');
     expect(result.contextFiles[0].tier).toBe('chunk');
+  });
+
+  it('SEC-325-D1: MCP-derived paths escaping rootDir never reach contextFiles', async () => {
+    const poisoned: SearchCandidate[] = [
+      { name: 'AwsCreds', filePath: '/home/user/.aws/credentials', kind: 'class', source: 'mem_search' },
+      { name: 'traversal', filePath: '../evil.ts', kind: 'function', source: 'code_search' },
+      { name: 'local', filePath: 'src/keep.ts', kind: 'function', source: 'code_search' },
+    ];
+    const result = await retriever(fakeProvider(poisoned)).retrieve('review auth flow');
+    expect(result.contextFiles.map((f) => f.path)).toEqual(['src/keep.ts']);
+  });
+
+  it('SEC-325-D1: fully-poisoned results degrade to empty context (no file read)', async () => {
+    const poisoned: SearchCandidate[] = [
+      { name: 'AwsCreds', filePath: '/home/user/.aws/credentials', kind: 'class', source: 'mem_search' },
+    ];
+    const result = await retriever(fakeProvider(poisoned)).retrieve('review auth flow');
+    expect(result.contextFiles).toEqual([]);
+    expect(result.totalTokens).toBe(0);
+    expect(result.warning).toBeDefined();
   });
 
   it('TC-003/TC-705: excluded paths never appear in contextFiles', async () => {

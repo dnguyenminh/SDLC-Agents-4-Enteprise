@@ -34,6 +34,7 @@ function makeModelProvider(modelId = "phi-3-mini"): { dir: string; provider: Onn
   const modelDir = path.join(dir, ".code-intel", "models", "llm", modelId);
   fs.mkdirSync(modelDir, { recursive: true });
   fs.writeFileSync(path.join(modelDir, "model.onnx"), "fake-model");
+  fs.writeFileSync(path.join(modelDir, "tokenizer.json"), JSON.stringify({ model: { vocab: { a: 1 } } }));
   return { dir, provider: new OnnxProvider(dir, modelId) };
 }
 
@@ -71,8 +72,50 @@ describe("OnnxProvider — isAvailable", () => {
     await expect(provider.isAvailable()).resolves.toBe(false);
   });
 
+  it("reports unavailable when tokenizer.json is missing (SEC-324-02)", async () => {
+    const dir = mkTmp();
+    const modelDir = path.join(dir, ".code-intel", "models", "llm", "phi-3-mini");
+    fs.mkdirSync(modelDir, { recursive: true });
+    fs.writeFileSync(path.join(modelDir, "model.onnx"), "fake-model");
+    const provider = new OnnxProvider(dir, "phi-3-mini");
+    await expect(provider.isAvailable()).resolves.toBe(false);
+  });
+
   it("defaults to a 2048-token context window", () => {
     expect(makeModelProvider().provider.getContextWindow()).toBe(2048);
+  });
+});
+
+describe("OnnxProvider — SEC-324-02 modelId traversal guard", () => {
+  it("rejects path traversal ids at construction", () => {
+    const dir = mkTmp();
+    expect(() => new OnnxProvider(dir, "../evil")).toThrow(/Invalid modelId/);
+    expect(() => new OnnxProvider(dir, "../../.ssh/id_rsa")).toThrow(/Invalid modelId/);
+    expect(() => new OnnxProvider(dir, "a/b")).toThrow(/Invalid modelId/);
+    expect(() => new OnnxProvider(dir, "/absolute/path")).toThrow(/Invalid modelId/);
+  });
+
+  it("rejects empty, uppercase, and separator ids", () => {
+    const dir = mkTmp();
+    expect(() => new OnnxProvider(dir, "")).not.toThrow(); // empty falls back to default
+    expect(() => new OnnxProvider(dir, "Phi-3-Mini")).toThrow(/Invalid modelId/);
+    expect(() => new OnnxProvider(dir, "model\\evil")).toThrow(/Invalid modelId/);
+    expect(() => new OnnxProvider(dir, "..")).toThrow(/Invalid modelId/);
+  });
+
+  it("accepts registry ids with dots, hyphens, underscores", () => {
+    const dir = mkTmp();
+    expect(() => new OnnxProvider(dir, "phi-3-mini")).not.toThrow();
+    expect(() => new OnnxProvider(dir, "smollm2-360m")).not.toThrow();
+  });
+
+  it("resolveModelDir contains the model dir under the models base", async () => {
+    const { default: pathMod } = await import("path");
+    const { resolveModelDir } = await import("../onnx-provider");
+    const dir = mkTmp();
+    const resolved = resolveModelDir(dir, "phi-3-mini");
+    const base = pathMod.resolve(dir, ".code-intel", "models", "llm");
+    expect(resolved.startsWith(base + pathMod.sep)).toBe(true);
   });
 });
 

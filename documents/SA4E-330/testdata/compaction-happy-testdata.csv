@@ -1,0 +1,4 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-001,"Monitor session","Session usage >=95%","Auto-compact triggered",High
+TC-002,"Monitor session","Session usage >=85%","Warning issued",High
+TC-003,"Compact session","Compaction triggered","Intent/tools/last response summarized",High

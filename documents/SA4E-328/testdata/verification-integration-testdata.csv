@@ -1,0 +1,5 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-701,"Post execute_tools","Tools executed","Verification loop invoked",High
+TC-702,"Grader invoked","Loop active","Score returned",High
+TC-703,"Route model","Small vs large model","Correct verification strategy applied",Medium
+TC-704,"Retry triggered","Low faithfulness","New answer generated",Medium

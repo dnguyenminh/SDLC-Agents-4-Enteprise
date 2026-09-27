@@ -92,15 +92,15 @@ describe("AnthropicProvider — chat request shaping", () => {
   });
 
   it("passes apiKey 'not-needed' and baseURL for custom gateways without a key", async () => {
-    const provider = new AnthropicProvider(() => Promise.resolve(undefined), "http://gateway:1234");
+    const provider = new AnthropicProvider(() => Promise.resolve(undefined), "https://gateway:1234");
     await provider.chat([{ role: "user", content: "hi" }]);
-    expect(clientOf(provider).opts).toEqual({ baseURL: "http://gateway:1234", apiKey: "not-needed" });
+    expect(clientOf(provider).opts).toEqual({ baseURL: "https://gateway:1234", apiKey: "not-needed" });
   });
 
   it("strips trailing slashes from the base URL", async () => {
-    const provider = new AnthropicProvider(() => Promise.resolve("k"), "http://gateway:1234/");
+    const provider = new AnthropicProvider(() => Promise.resolve("k"), "https://gateway:1234/");
     await provider.chat([{ role: "user", content: "hi" }]);
-    expect(clientOf(provider).opts.baseURL).toBe("http://gateway:1234");
+    expect(clientOf(provider).opts.baseURL).toBe("https://gateway:1234");
   });
 
   it("parses text blocks from the response content array", async () => {
@@ -251,5 +251,28 @@ describe("AnthropicProvider — availability", () => {
   it("reports unavailable when the health fetch rejects", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("down"); }));
     await expect(new AnthropicProvider(() => Promise.resolve("key")).isAvailable()).resolves.toBe(false);
+  });
+});
+
+describe("AnthropicProvider — SEC-324-01 baseUrl validation", () => {
+  it("accepts the default and loopback-HTTP base URLs", () => {
+    expect(() => new AnthropicProvider(() => Promise.resolve("k"))).not.toThrow();
+    expect(() => new AnthropicProvider(() => Promise.resolve("k"), "http://localhost:11434")).not.toThrow();
+    expect(() => new AnthropicProvider(() => Promise.resolve("k"), "https://gateway.example.com")).not.toThrow();
+  });
+
+  it("rejects non-loopback plain HTTP (key-exfiltration sink)", () => {
+    expect(() => new AnthropicProvider(() => Promise.resolve("k"), "http://gateway:1234")).toThrow(
+      /Insecure backend URL rejected/,
+    );
+  });
+
+  it("rejects non-http(s) schemes", () => {
+    expect(() => new AnthropicProvider(() => Promise.resolve("k"), "file:///etc/passwd")).toThrow();
+    expect(() => new AnthropicProvider(() => Promise.resolve("k"), "ftp://localhost:21")).toThrow();
+  });
+
+  it("rejects cloud-metadata SSRF targets over plain HTTP", () => {
+    expect(() => new AnthropicProvider(() => Promise.resolve("k"), "http://169.254.169.254")).toThrow();
   });
 });

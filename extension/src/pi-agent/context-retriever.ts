@@ -2,6 +2,7 @@ import { logger } from '../logger';
 import { QueryRouter } from './query-router';
 import type { QueryIntent } from './query-router';
 import { FsDirLister, isExcludedPath } from './context-retrieval/file-exclusion-filter';
+import { filterContainedCandidates } from './context-retrieval/path-containment';
 import { ProgressiveDisclosureManager } from './context-retrieval/progressive-disclosure';
 import { Ranker } from './context-retrieval/ranker';
 import { SummaryTreeBuilder } from './context-retrieval/summary-tree';
@@ -78,10 +79,13 @@ export class ContextRetriever {
     try {
       const candidates = (await this.deps.searchProvider.search(query, topK)).slice(0, topK);
       const allowed = candidates.filter((candidate) => !isExcludedPath(candidate.filePath));
-      if (allowed.length === 0) {
+      // SEC-325-D1: MCP-derived paths are untrusted — canonicalize (realpath)
+      // and reject anything escaping rootDir before any file read.
+      const contained = filterContainedCandidates(allowed, this.deps.rootDir);
+      if (contained.length === 0) {
         return this.emptyResult(query, intent, 'No search results found');
       }
-      const ranked = this.ranker.rankSymbols(allowed, query);
+      const ranked = this.ranker.rankSymbols(contained, query);
       const plan = this.disclosure.disclose(ranked);
       return {
         query,

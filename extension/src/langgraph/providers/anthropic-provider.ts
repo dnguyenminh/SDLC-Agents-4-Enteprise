@@ -6,6 +6,7 @@ import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../core/l
 import type { McpToolDefinition } from "../vscode/tool-registry";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { splitMessages, formatMessagesForTools } from "./anthropic-helpers";
+import { validateProviderBaseUrl } from "./provider-url-policy";
 
 const ANTHROPIC_SECRET_KEY = "kiroSdlc.anthropicApiKey";
 const DEFAULT_MODEL = "claude-sonnet-4-latest";
@@ -22,7 +23,8 @@ export class AnthropicProvider extends BaseLlmProvider {
   constructor(getApiKey: () => Promise<string | undefined>, baseUrl?: string, defaultModel?: string) {
     super();
     this.getApiKey = getApiKey;
-    this.baseUrl = (baseUrl || DEFAULT_BASE_URL).replace(/\/$/, "");
+    // SEC-324-01: validate baseUrl once, fail closed (SSRF + key exfiltration).
+    this.baseUrl = validateProviderBaseUrl((baseUrl || DEFAULT_BASE_URL).replace(/\/$/, ""));
     this.defaultModel = defaultModel || DEFAULT_MODEL;
     this.contextWindowTokens = 200000; // Claude models have 200K context
   }

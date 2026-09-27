@@ -1,0 +1,8 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-301,"retrieve with topK=25","Request with topK=25","topK capped to 20 or error returned (BR-1)",High
+TC-302,"retrieve context on large repo","Large repo","Token count<=6000 (BR-2)",High
+TC-303,"retrieval on 1000-file repo","Repo 1000 files","Tokens<=6000 and relevant files present (BR-3)",High
+TC-401,"topK=0","Request topK=0","Validation error",Medium
+TC-402,"empty query string """"","Empty query string","Validation error or empty result",Medium
+TC-403,"read directory with 10000 files (paginated)","Directory with 10000 files","Full directory NOT loaded; pagination applied",Medium
+TC-404,"retrieve with path .GIT","Path .GIT",".GIT excluded or handled per exclusion rule",Low

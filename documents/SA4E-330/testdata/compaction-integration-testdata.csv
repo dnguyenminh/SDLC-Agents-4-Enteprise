@@ -1,0 +1,5 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-701,"Monitor usage","Session usage high","Compaction triggered at threshold",High
+TC-702,"Summarize","Compaction triggered","Intent/tools/last response condensed",High
+TC-703,"Run harness","Golden dataset","Metrics computed",Medium
+TC-704,"Execute E2E","Real environment","Real E2E performed",Medium

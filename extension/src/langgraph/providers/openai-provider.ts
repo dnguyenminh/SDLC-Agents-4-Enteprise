@@ -6,6 +6,7 @@ import type { LlmMessage, LlmOptions, LlmResponse, LlmToolCall } from "../core/l
 import type { McpToolDefinition } from "../vscode/tool-registry";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { formatMessages, formatMessagesForTools, buildHeaders } from "./openai-helpers";
+import { validateProviderBaseUrl } from "./provider-url-policy";
 
 const OPENAI_SECRET_KEY = "kiroSdlc.openaiApiKey";
 const DEFAULT_MODEL = "gpt-4o";
@@ -22,7 +23,8 @@ export class OpenAIProvider extends BaseLlmProvider {
   constructor(getApiKey: () => Promise<string | undefined>, baseUrl?: string, defaultModel?: string) {
     super();
     this.getApiKey = getApiKey;
-    this.apiBase = (baseUrl || DEFAULT_API_BASE).replace(/\/$/, "");
+    // SEC-324-01: validate baseUrl once, fail closed (SSRF + key exfiltration).
+    this.apiBase = validateProviderBaseUrl((baseUrl || DEFAULT_API_BASE).replace(/\/$/, ""));
     this.defaultModel = defaultModel || DEFAULT_MODEL;
     // Set context window based on whether this is a local server (LM Studio) or cloud
     this.contextWindowTokens = this.isLocalServer() ? 8192 : 128000;

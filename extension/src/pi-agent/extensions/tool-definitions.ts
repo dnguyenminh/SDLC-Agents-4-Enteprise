@@ -79,18 +79,51 @@ export const TOOLS: ToolDefinition[] = [
 ];
 
 /**
- * Validate tool parameters against schema (basic validation)
+ * Validate tool parameters against schema (hardened per SEC-324-03).
+ * Enforces required-field presence, object shape, and per-field length caps
+ * so a compromised tool output cannot smuggle oversized payloads through.
  */
 export function validateParams(schema: any, params: Record<string, unknown>): { valid: boolean; error?: string } {
   try {
+    if (typeof params !== "object" || params === null || Array.isArray(params)) {
+      return { valid: false, error: "params must be an object" };
+    }
     const required = schema.required || [];
     for (const field of required) {
       if (!(field in params)) {
         return { valid: false, error: `Missing required field: ${field}` };
       }
     }
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value === "string" && value.length > MAX_STRING_PARAM_LENGTH) {
+        return { valid: false, error: `Field '${key}' exceeds ${MAX_STRING_PARAM_LENGTH} chars` };
+      }
+    }
     return { valid: true };
   } catch (err) {
     return { valid: false, error: (err as Error).message };
   }
+}
+
+/**
+ * SEC-324-03 — bridge allowlist. Only these concrete tools may be exposed
+ * to the Pi agent without an explicit dynamic-chaining opt-in.
+ * `execute_dynamic_tool` is deliberately absent (deny by default).
+ */
+export const DYNAMIC_TOOL_NAME = "execute_dynamic_tool";
+
+/** Concrete tools allowed on the Pi→MCP bridge path. */
+export const TOOL_ALLOWLIST: ReadonlySet<string> = new Set([
+  "jira_get_issue",
+  "mem_search",
+  "mem_ingest",
+  "code_search",
+]);
+
+/** Per-string-field cap enforced by validateParams (prompt-injection hygiene). */
+export const MAX_STRING_PARAM_LENGTH = 4000;
+
+/** True when the tool may be bridged without the dynamic-chaining opt-in. */
+export function isAllowedBridgeTool(toolName: string): boolean {
+  return TOOL_ALLOWLIST.has(toolName);
 }

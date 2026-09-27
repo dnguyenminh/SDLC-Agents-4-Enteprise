@@ -235,3 +235,22 @@ describe("OpenAIProvider — context window", () => {
     expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:1234/v1/models");
   });
 });
+
+describe("OpenAIProvider — SEC-324-01 baseUrl validation", () => {
+  it("accepts the default, loopback-HTTP, and HTTPS remote base URLs", () => {
+    expect(() => new OpenAIProvider(() => Promise.resolve("k"))).not.toThrow();
+    expect(() => new OpenAIProvider(() => Promise.resolve("k"), "http://localhost:1234/v1")).not.toThrow();
+    expect(() => new OpenAIProvider(() => Promise.resolve("k"), "https://api.openai.com/v1")).not.toThrow();
+  });
+
+  it("rejects non-loopback plain HTTP (Bearer-key exfiltration sink)", () => {
+    expect(() => new OpenAIProvider(() => Promise.resolve("k"), "http://evil.example.com/v1")).toThrow(
+      /Insecure backend URL rejected/,
+    );
+  });
+
+  it("rejects non-http(s) schemes", () => {
+    expect(() => new OpenAIProvider(() => Promise.resolve("k"), "gopher://localhost:70")).toThrow();
+    expect(() => new OpenAIProvider(() => Promise.resolve("k"), "file:///etc/hosts")).toThrow();
+  });
+});

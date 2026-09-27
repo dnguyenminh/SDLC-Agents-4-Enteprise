@@ -1,0 +1,14 @@
+test_case_id,pattern,scope,expected_hits,allowed_exception,description
+UT-27,"Math\.ceil\([^)]*\.length\s*/\s*3\.5",extension/src,0,,Old context-budget.ts:13 /3.5 deleted
+UT-27,"contextWindowTokens\s*=\s*200000",extension/src/langgraph/providers,0,,Anthropic ctor 200000 replaced by GET models
+UT-27,"contextWindowTokens\s*=\s*(8192|128000)-ternary",extension/src/langgraph/providers/openai-provider.ts,0,,OpenAI 8192/128000 ternary replaced
+UT-27,"contextWindowTokens\s*=\s*8192",extension/src/langgraph/providers/ollama-provider.ts,0,,Ollama ctor 8192 replaced (keep-on-fail tested at IT-09 not ctor)
+UT-27,"MAX_CONTEXT_TOKENS\s*=\s*2048|contextLength:\s*2048",extension/src/langgraph/providers/onnx-provider.ts,0,aligned-1024-with-comment,ONNX 2048 aligned 1024 or commented physical-vs-enforced
+UT-27,"SYSTEM_PROMPT_BASE_CHARS\s*=\s*3500|MAX_STEERING_CHARS\s*=\s*4000-as-truth",extension/src/chat-panel/chat-panel-provider.ts,0,char-caps-only-as-pretruncation-guard,3500/4000 deleted as truth
+UT-27,"\+\s*4\b-per-message-overhead",extension/src/langgraph/core/context-budget.ts,0,,+4/msg overhead deleted
+UT-27,"\.length\s*/\s*4",extension/src,0,"BaseLlmProvider.fallbackCount ONLY",Single allowed fallback site
+UT-28,"DEFAULT_SYSTEM_PROMPT_CHARS",extension/src,0,,M-05 dead constant deleted omitted=0 tokens
+UT-28,"CHARS_PER_TOKEN",extension/src,0,Base-only-removed,Chars-per-token deleted outside Base
+UT-28,"readonly type = ""ollama""-in-onnx",extension/src/langgraph/providers/onnx-provider.ts,0,,M-02 type must be onnx
+UT-28,"detectContextWindow.*Promise<void>",extension/src,0,,M-08 signature Promise<number> all providers
+IT-19,"ceil\(toolText\.length / 4\)-as-truth",extension/src/chat-panel,0,mocked-countTokens-used,Tracker heuristic migrated BR-17 non-divisible mock proof

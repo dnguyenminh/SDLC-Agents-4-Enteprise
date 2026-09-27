@@ -1,0 +1,13 @@
+test_case_id,nfr,operation,mocked_latency,measured_p95_ms,budget_ms,expected_calls,expected_result,description
+IT-20,NFR-01,countTokens-batch-4texts-7500sys,local-20ms,<300,300,1-logical-call,pass,Batch local p95
+IT-20,NFR-01,countTokens-batch-4texts-7500sys,cloud-200ms,<1500,1500,1-logical-call,pass,Batch cloud p95
+IT-20,NFR-13,gate-total-count-plus-cached-window,local,<500,500,<=2-logical,pass,Gate local p95 <=2 calls
+IT-20,NFR-13,gate-total-count-plus-cached-window,cloud,<2000,2000,<=2-logical,pass,Gate cloud p95
+IT-20,NFR-12,window-cache-hit-100x,none,<5,5,≤1-probe-per-TTL,pass,Cache hit p95
+IT-20,NFR-02,onnx-tokenizer-load-50x,once-per-process,,load-counter-1,,Load-once no per-message trips
+IT-20,NFR-13,concurrent-gates-5x-same-model,50ms-delay,,1-probe,pass,Coalescing
+SIT-03,NFR-11,vietnamese-corpus-50sent,reference-HF-tokenizers,±15%-per-sentence,,>20pct-flag-conservative,human-judgment,Corpus eyeball 3 worst outliers
+SIT-04,NFR-10,streaming-5sessions-usage-fields,mocked-message_stop-include_usage-eval_count,±10%-95pct-sessions,,,human-judgment,Drift eyeball
+SIT-01,NFR-13,overlay-timing-3G-vs-local,mock-800ms-2000ms,<3000-perceived,,,human-judgment,Blocking overlay visual
+UT-21,NFR-12,cache-TTL-unit,fake-clock,,1h-TTL,,pass,TTL logic
+UT-22,NFR-13,coalesce-unit,50ms-delay,,1-probe,,pass,Coalesce logic

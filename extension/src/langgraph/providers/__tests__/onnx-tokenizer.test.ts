@@ -50,6 +50,16 @@ describe("OnnxTokenizer.load", () => {
     const none = await OnnxTokenizer.load(writeTokenizer({ model: { vocab: { "hi": 1 } } }));
     expect(none.eosTokenId).toBe(0);
   });
+
+  it("SEC-324-02: rejects missing tokenizer files instead of leaking raw ENOENT", async () => {
+    await expect(
+      OnnxTokenizer.load(path.join(tempDir, "no-such-tokenizer.json")),
+    ).rejects.toThrow();
+  });
+
+  it("SEC-324-02: rejects null-byte paths", async () => {
+    await expect(OnnxTokenizer.load("tok\0enizer.json")).rejects.toThrow(/Invalid tokenizer path/);
+  });
 });
 
 describe("OnnxTokenizer encode/decode", () => {

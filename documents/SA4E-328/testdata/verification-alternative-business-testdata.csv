@@ -1,0 +1,5 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-101,"Execute tools","Large model active","Verify loop retained",Medium
+TC-102,"Run eval harness","Golden dataset","Metrics reported",Medium
+TC-301,"Grade answer","Hallucinated answer","Wrong fact caught, retry performed",High
+TC-302,"Evaluate","Eval run","Faithfulness on golden set reported",High
