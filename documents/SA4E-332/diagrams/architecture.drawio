@@ -1,0 +1,93 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="h0" value="SA4E-332 target: Pi -&gt; extension/src/mcp/ (shared kernel). langgraph/ FROZEN — zero inbound edges." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1060" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="a1" value="Pi Workflow (kb-client.ts, pi-workflow-adapter.ts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="250" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a2" value="Pi Agent (mcp-bridge-extension.ts, search-provider.ts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="70" width="250" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a3" value="Legacy consumers (ToolRegistry, chat panels, Settings)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="580" y="70" width="250" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a4" value="FROZEN langgraph/ island (pure graph only — zero inbound)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="850" y="70" width="250" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="k1" value="mcp-bridge.ts (moved: McpBridge + McpToolTimeoutError)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="k2" value="mcp-types.ts NEW (owns McpToolDefinition)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="220" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="k3" value="mcp-bridge-caller.ts NEW (McpBridgeCaller adapter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="k4" value="llm-provider.ts, stream-handler.ts, state-types.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="580" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="k5" value="providers/ (12 files, whole-dir mv)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="780" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="k6" value="context-budget.ts (canonical, from pi-agent)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="960" y="250" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="i1" value="IServerManager / RemoteBackendClient (invokeTool, port, status)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="420" width="250" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="i2" value="SecretStorage + kiroSdlc.* settings (keys + base URLs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="420" width="250" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="i3" value="Workspace disk (documents/tmp for _base64_file)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="580" y="420" width="250" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="i4" value="SEC-324-03 policy stays in Pi layer (unchanged)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="850" y="420" width="250" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="uses McpBridge" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="a1" target="k1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="via McpBridgeCaller" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a2" target="k3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="ToolRegistry ctor" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="a3" target="k1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="705" y="60"/>
+          <mxPoint x="20" y="60"/>
+          <mxPoint x="20" y="280"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="invokeTool + port/status" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="k1" target="i1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="getSecretKey + base URLs" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="k5" target="i2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="860" y="380"/>
+          <mxPoint x="435" y="380"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="file save" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="k1" target="i3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="160" y="365"/>
+          <mxPoint x="705" y="365"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="import type (allowed)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0.72;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="a3" target="k2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="760" y="340"/>
+          <mxPoint x="300" y="340"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

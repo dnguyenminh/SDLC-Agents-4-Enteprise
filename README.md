@@ -66,6 +66,13 @@ MIT
 
 ## Changelog
 
+### v1.46.0 (2026-09-27)
+
+- **SA4E-289 epic (Option C): LangGraph decommission + Pi SDK cutover** — Legacy LangGraph engine, steering chain, dead hooks, chat/registry and Workflow Graph UI removed; Pi SDK sessions, phase router and checkpointer adapters wired in. Shared kernel extracted to `extension/src/mcp/` (`McpBridge`, providers, `stream-handler`, domain types) so no code outside `langgraph/` imports from it (SA4E-332, lint-frozen).
+- **SA4E-324..330: small-model support wave** — `LlmProvider.countTokens()` per-provider API (Anthropic count_tokens, llama/LM Studio tokenize, Ollama prompt_eval_count, ONNX tokenizer.json; no hardcoded `len/4` estimates), context budget gate (REJECT >95%, WARN >85%), smart retrieval with workspace containment, prompt compression + role-scoped prompts, map-reduce for large repos, hallucination grader, model routing/fallback, session compaction + eval harness. Model registry covers phi-3-mini, smollm2, llama3.1, qwen-coder, lmstudio.
+- **Security** — 4 High findings fixed and verified (provider baseUrl SSRF validation + `restrictedConfigurations`, ONNX `modelId` path traversal guard, Pi→MCP bridge allowlist + approval + audit, MCP path containment); 0 Critical across SA4E-324..332. Residual Mediums tracked as follow-ups before production wiring.
+- **Tests** — 20 former `test.todo` placeholders implemented (chat/E2E-UI logic + webview features); suites green: extension unit 221 files / 2077+ tests, backend unit, e2e-api; `tsc` + `eslint` clean.
+
 ### v1.45.0 (2026-09-26)
 
 - **SA4E-234: Backend storage off better-sqlite3 → @sqlite.org/sqlite-wasm** — Async-first `DatabaseAdapter` everywhere; dead admin Express portal, `MemoryDb`, `DiskBackedSet` and native-binding resolver removed; taskWorker concurrency cap raised 8→64. Root-cause fixes from the wasm migration: `SqliteWasmAdapter` now shares one live in-memory DB per resolved file path (refcounted) so sibling adapters stop diverging (`no such table` in E2E); `runAsync` converts BigInt `lastInsertRowid` to Number (fixes `mem_ingest` JSON-serialize crash); graph-analysis stack (`GraphLoader` → `CircularDepDetector`/`HotPathAnalyzer`/`RelatedTestFinder`/`ModuleSummarizer`) fully async; `HttpServer.start` awaits schema bootstrap before serving. All better-sqlite3 remnants purged (dead shim, broken debug scripts, obsolete extension NativeAddonManager + release manifest, stale docs/comments).

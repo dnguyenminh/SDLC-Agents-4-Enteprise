@@ -1,0 +1,22 @@
+test_case_id,finding,check,scope,expected,description
+IT-05a,SEC-332-06/OPEN-03,fixture import ../langgraph/core/mcp-bridge outside src/langgraph/,npm run lint,FAILS with SA4E-332 FROZEN message,Lint freeze proven (import form)
+IT-05b,SEC-332-06/OPEN-03,fixture import ../langgraph/core/mcp-bridge.js (.js form),npm run lint,FAILS with .js FROZEN message,Lint covers .js suffix (BR-31)
+IT-05c,BR-32,fixture import inside src/langgraph/ (intra-legacy),npm run lint,PASSES (allowlist Option B),No false positive pre-deletion
+IT-05d,SEC-332-06,full npm run lint on tree (fixture removed),extension/,exit 0,Tree PASS recorded in PR
+IT-05e,OPEN-03,test-dir fixture src/**/__tests__/ importing langgraph/,npm run lint,FAILS (override carries patterns),Test dirs gated (blanket ignore narrowed)
+UT-12-scan,BR-34/35,ApiKey/token literal scan,extension/src/mcp+pi-agent+pi-workflow,0 hits,Secret hygiene (see also IT-06)
+IT-06a,BR-34,ApiKey literal scan,extension/src/mcp+pi-agent+pi-workflow,0 hits,TC-MOVE-06 secrets leg
+IT-06b,BR-35,127.0.0.1:9181 scan,extension/src (all),0 hits (only package.json default allowed),TC-MOVE-06 URL leg; wrapper deletion net gain
+IT-06c,BR-15,127.0.0.1:9181|localhost:9181 scan,pi-agent+pi-workflow+mcp,0 hits,Pi resolves via IServerManager/mcpServerPort/mcpServerUrl
+IT-06d,BR-34/15,restricted-configurations + backend-url suites,vitest,all PASS,Settings wiring intact
+IT-08a,cycle gate,grep vscode/tool-registry in extension/src/mcp/,shell,0 hits,Kernel never imports legacy registry (EF-4/EF-5)
+IT-08b,OPEN-01/SEC-332-12,madge --circular extension/src/mcp/ (npx -y madge@8.0.0),shell,0 cycles,Pinned npx; require-edges covered by IT-02 grep
+IT-08c,type owner,mcp-types.ts single definition + registry re-export,tsc+grep,1 definition; tsc 0,BR-26 shapes frozen
+IT-09a,SEC-332-09,entry without serverManager (undefined/{}),harness,throws [Security] McpBridge requires IServerManager (no hardcoded fallback),Fail-closed at wiring time (merge-blocking)
+IT-09b,SEC-332-09,grep createMcpClient|127.0.0.1:9181 in pi-agent prod,extension/src/pi-agent non-test,0 hits,No fallback path exists
+IT-09c,SEC-332-09,entry with mock serverManager (status/port/invokeTool),harness,builds McpBridge; no throw,Happy wiring path
+IT-09d,SEC-332-09,bridge on stopped-manager callTool,harness,throws McpServerNotRunningError,Fail-closed at transport too
+SIT-04a,SEC-332-03,gated tool mem_ingest with NO approvalHook,harness,observed auto-approved (documents carried fail-open),Fail-open recorded; NOT fixed in move
+SIT-04b,SEC-332-03,read production entry wiring,code review,real approvalHook at every prod call site + startup warn if missing,Entry wiring is the control
+SIT-04c,SEC-332-03,follow-up ticket filed (fail-closed or risk acceptance),jira,ticket key recorded; blocks SA4E-289 prod wiring,Tracked not waved through
+SIT-05,SEC-332-04,validateParams failure (4001-char string) then audit sink,harness,validation payload + NO audit entry observed; follow-up ticket filed,A09 gap tracked (one-line fix separate)

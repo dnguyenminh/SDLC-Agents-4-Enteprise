@@ -1,0 +1,18 @@
+test_case_id,scenario,tool_name,params_json,options_json,bridge_mock,expected_payload,expected_detail_error,description
+UT-07a,adapter passthrough,mem_search,"{""query"":""x""}","{}","callTool resolves ok",success mapping {content text details success:true},,McpBridgeCaller maps callMcpWrapper->callTool; string->unknown safe
+UT-07b,allowlisted execute,mem_search,"{""query"":""x""}","{approval granted}","callTool resolves result-str",success payload identical to pre-cutover,,TC-PI-01 happy path unchanged
+UT-07c,chaining default-deny,execute_dynamic_tool,"{""tool_name"":""mem_search""}","{allowDynamicChaining:false}",no transport call,chaining_denied payload,chaining_denied,BR-11 deny-by-default; audited denied
+UT-07d,chained target not allowlisted,execute_dynamic_tool,"{""tool_name"":""evil_tool""}","{allowDynamicChaining:true}",no transport call,chaining_denied payload,chaining_denied,Inner target must be in TOOL_ALLOWLIST
+UT-07e,approval denied,mem_ingest,"{""key"":""v""}","{approvalHook resolves false}",no transport call,approval_denied payload,approval_denied,BR-12 mem_ingest always gated; SEC-332-03 wiring
+UT-07f,validation fail,any-tool,"{""oversized"":""<4001 chars>"}","{}",no transport call,validation payload,validation,Pre-transport reject; audit gap tracked in SIT-05/SEC-332-04
+UT-07g,transport timeout,mem_search,"{""query"":""x""}","{approved}","callTool rejects McpToolTimeoutError",mcp_error 'Error invoking mem_search: ...' with cause,mcp_error,Never empty success; cause preserved
+UT-08a,code_search retry,code_search,"{""query"":""q""}","{searchTimeoutMs:5000 retryBackoffMs:50}","fail once then ok",success after 1 retry,,withRetry retry-once + backoff preserved
+UT-08b,mem_search fail-open,mem_search,"{""query"":""q""}","{}","persistently down",[] (empty array),,optional wrapper fail-open; no throw
+UT-08c,outer timeout wins,code_search,"{""query"":""q""}","{searchTimeoutMs:50}","slow bridge 500ms",outer withSearchTimeout rejection,,No double-throw; bridge timer cleared
+UT-08d,dedupe topK,code_search+mem_search,"{""query"":""q""}","{topK:3}",overlapping results,dedupe + topK slice identical,,Unchanged retrieval semantics
+E2E-API-01,drawio-convert e2e,real bridge call,,,"McpBridge(serverManager) via ../mcp/mcp-bridge",e2e PASS assertions unchanged,,TC-E2E-01; OPEN-02 direct construction accepted
+E2E-API-02,cross-process e2e,real bridge call,,,"McpBridge(serverManager) via ../mcp/mcp-bridge",e2e PASS + clean exit (unref),,TC-E2E-01; timer.unref keeps CLI exit clean
+E2E-API-03,hung Pi tool fails fast,allowlisted tool,valid params,approved,invokeTool never-resolves,mcp_error caused by McpToolTimeoutError ~60s,mcp_error,TC-PI-03/BR-14: hang becomes fail-fast; 1 audit approved
+E2E-API-04a,search retry e2e,code_search,,,fail-once bridge,success retried,,TC-PI-02 e2e leg
+E2E-API-04b,search fail-open e2e,mem_search,,,down bridge,[] fail-open,,TC-PI-02 e2e leg
+E2E-API-04c,dedupe topK e2e,mixed,,,overlapping,dedupe+topK hold,,TC-PI-02 e2e leg

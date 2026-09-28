@@ -59,14 +59,11 @@ jobs:
       - name: TC-MOVE-02 — no reverse deps (expect 0 files outside src/langgraph)
         run: |
           echo "--- from.*langgraph outside src/langgraph (must be 0 post-move) ---"
-          # Scope-narrow (SM 2026-09-27, SA4E-289 merge-first): panels/workflow-panel.ts
-          # keeps its legacy ../langgraph/workflow/workflow-graph-data import until SA4E-289
-          # deletes both files — single allowlisted exclusion.
-          if grep -rn "from.*langgraph/" extension/src --include='*.ts' | grep -v "src/langgraph/" | grep -v "src/panels/workflow-panel.ts"; then
+          if grep -rn "from.*langgraph/" extension/src --include='*.ts' | grep -v "src/langgraph/"; then
             echo "FAIL: reverse dependency langgraph -> kernel not yet cut"
             exit 1
           fi
-          echo "OK: no reverse deps (1 exclusion: src/panels/workflow-panel.ts → SA4E-289)"
+          echo "OK: no reverse deps"
 
       - name: TC-MOVE-03 + SEC-332-05 — no wrapper consumers / require langgraph
         run: |

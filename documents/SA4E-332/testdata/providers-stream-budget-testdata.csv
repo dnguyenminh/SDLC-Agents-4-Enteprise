@@ -1,0 +1,20 @@
+test_case_id,domain,input,expected_result,expected_message,description
+PBT-02a,budget,"arbitrary inputs incl NaN/negative/Infinity; >=1000 runs",conservative=true AND reserveTokens>=2000 for all invalid,,Property: conservative-on-invalid + 2000 floor
+PBT-02b,budget,usage>95%,"ThresholdGate REJECT exact shape",Session rejected: usage {pct}% >95% threshold...,REJECT shape byte-identical
+PBT-02c,budget,"usage 85-95%","ThresholdGate WARN exact shape",Budget warning: usage {pct}% >85%...,WARN shape byte-identical
+UT-09a,stream,rapid token events <50ms apart,single flush after 50ms quiet,,Debounce 50ms frozen (BR-24)
+UT-09b,stream,100 buffered messages,flush-on-overflow at 100-cap,,Buffer cap frozen
+UT-09c,stream,status/complete/error/retry/verify/strategy-switch/human-intervention,immediate flush each,,Immediate-flush events frozen
+UT-09d,stream,dispose with pending buffer,flush-on-dispose; emitDirect flush-first,,Dispose semantics frozen
+UT-10a,budget,chars=4000 window=8000,estimatedTokens~=1000 (chars/4),,CHARS_PER_TOKEN=4 frozen
+UT-10b,budget,reserve computed 500,reserveTokens=2000 + conservative=true,,MIN_RESERVE forced floor
+UT-10c,budget,usage 90%,WARN exact shape,Budget warning: usage 90% >85%...,
+UT-10d,budget,usage 97%,REJECT exact shape,Session rejected: usage 97% >95% threshold...,
+UT-11a,provider,createLlmProvider anthropic/ollama/onnx/kiro,correct special-case instances,,Factory resolution frozen (BR-21); kiro default loopback allowlisted SEC-332-07
+UT-11b,provider,"createProviderByType custom + baseUrl",openai-compatible generic with openaiBaseUrl fallback,,Generic path frozen
+UT-11c,provider,createProviderByType nope (no URL),throws Unknown provider error,Unknown LLM provider type: nope. Add it to provider-registry.ts or provide a base URL.,Exact fail-closed string
+UT-11d,provider,PROVIDER_BASE_URL_KEYS precedence check,explicit arg > provider key > llmBaseUrl > registry default,,Precedence frozen (BR-21)
+UT-12a,url-policy,"validateProviderBaseUrl ftp://evil/x + empty + non-loopback-http w/o opt-in",each throws fail-closed,[Security] Provider baseUrl must be a non-empty URL,BR-23 SSRF guard frozen
+UT-12b,url-policy,https://api.example.com + loopback with opt-in,accepted,,Legit URLs pass
+UT-12c,secrets,"getSecretKey anthropic/kiro/openai",kiroSdlc.anthropicApiKey / kiroSdlc.anthropicApiKey / kiroSdlc.openaiApiKey via SecretStorage,,Zero literals (BR-22/34)
+UT-12d,suites,restricted-configurations + backend-url + provider-url-policy suites,all PASS,,Settings-driven wiring intact

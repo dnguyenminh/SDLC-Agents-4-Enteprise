@@ -1,0 +1,67 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="b1" value="McpBridge (mcp-bridge.ts) -mcpManager: IServerManager +callTool(name, args, timeoutMs=60000) +listTools() +isAvailable()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="30" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3" value="McpToolDefinition interface (mcp-types.ts NEW) name; description; inputSchema" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="620" y="30" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="b4" value="McpBridgeCaller : McpCaller (mcp-bridge-caller.ts NEW) -bridge: McpBridge +callMcpWrapper(tool, params)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="170" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="b5" value="ToolRegistry (tool-registry.ts, STAYS) -tools cache +getTools() +toAnthropicFormat() +toOpenAIFormat()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="620" y="170" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="b6" value="LlmProvider interface (llm-provider.ts) +chat() +chatStream() +isAvailable() +chatWithTools?()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="310" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2" value="McpToolTimeoutError (mcp-bridge.ts) +toolName +timeoutMs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="620" y="310" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="b7" value="StreamHandler (stream-handler.ts) +emitToken/Status/Complete/Error +emitRetry/Verify/Switch +dispose()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="450" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="b8" value="BudgetCalculator + ThresholdGate (context-budget.ts) +calculateBudget() +evaluate(): ALLOW/WARN/REJECT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="620" y="450" width="320" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="returns listTools()" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="b1" target="b3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="delegates callTool()" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="b4" target="b1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="constructs" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.88;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="b5" target="b1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="900" y="300"/>
+          <mxPoint x="980" y="300"/>
+          <mxPoint x="980" y="600"/>
+          <mxPoint x="15" y="600"/>
+          <mxPoint x="15" y="85"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="import type" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="b5" target="b3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="chatWithTools(tools)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.27;entryDx=0;entryDy=0;" edge="1" parent="1" source="b6" target="b3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="200" y="285"/>
+          <mxPoint x="560" y="285"/>
+          <mxPoint x="560" y="60"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="thrown by callTool/listTools" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.81;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="b2" target="b1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="380" y="365"/>
+          <mxPoint x="380" y="150"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
