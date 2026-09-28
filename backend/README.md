@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.46.1-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.46.2-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/tools-66+-teal?style=for-the-badge" alt="Tools">
   <img src="https://img.shields.io/badge/node-%3E%3D18-green?style=for-the-badge" alt="Node">
 </p>
@@ -38,7 +38,7 @@ Server starts at **http://localhost:48721**. Verify it's running:
 
 ```bash
 curl http://localhost:48721/health
-# → {"status":"healthy","version":"1.46.1","uptime":5,"tools_loaded":52}
+# → {"status":"healthy","version":"1.46.2","uptime":5,"tools_loaded":52}
 ```
 
 ### Development Mode (auto-reload)
@@ -233,6 +233,7 @@ The embedding model is expected at `.code-intel/models/model.onnx`. Download it:
 
 | Version | Date | Ticket | Changes |
 |---------|------|--------|---------|
+| 1.46.2 | 2026-09-28 | — | Version sync (no backend code changes; packaging fix lives in `extension`: missing direct `yargs` dep for vendored devtools barrel). |
 | 1.46.1 | 2026-09-28 | — | Version sync patch: align `root`/`backend`/`extension` to 1.46.1; README badges + health example + changelogs updated. No runtime code changes since 1.46.0. |
 | 1.46.0 | 2026-09-27 | SA4E-289/324..332 | SA4E-289 epic (Option C): LangGraph decommission + Pi SDK cutover, shared kernel `extension/src/mcp/`. SA4E-324..330 small-model wave (`LlmProvider.countTokens()`, budget gate REJECT >95%/WARN >85%, compression, routing, compaction). Security: 4 High + 17 Medium fixed, 0 Critical. 20 test.todo implemented; suites green. |
 | 1.45.0 | 2026-09-26 | SA4E-232/233/234/331 | Storage migrated off better-sqlite3 to @sqlite.org/sqlite-wasm (async-first DatabaseAdapter; dead admin Express portal, MemoryDb, DiskBackedSet, native-binding resolver removed; taskWorker concurrency 8→64). Wasm migration root-cause fixes: SqliteWasmAdapter shares one live DB per resolved file path (refcounted — sibling adapters no longer diverge), BigInt lastInsertRowid → Number (mem_ingest crash), graph-analysis stack fully async, HttpServer.start awaits schema bootstrap. ANTLR Pega expression parser (SA4E-233, ISNULL operator). SA4E-331 cross-project memory isolation + PROJECT scope dispatcher. Extension: PegaStreamIngester auth header, NativeAddonManager removed. better-sqlite3 remnants purged. Unit 3079 ✓ · e2e 173/173 ✓. |

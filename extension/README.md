@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.46.1-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.46.2-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.46.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.46.2.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.46.1.vsix
+code --install-extension sdlc-agents-4-enterprise-1.46.2.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.46.2 (2026-09-28)
+
+- **Fix packaging: add missing direct `yargs` dependency** — Vendored chrome-devtools-mcp barrel (`src/mcp/devtools/third_party/index.js`) re-exports `yargs`/`yargs/helpers`, but `yargs` was only available transitively. The publish workflow installs `extension/` standalone, so `esbuild-production` failed with `Could not resolve "yargs"`. Declared `yargs ^17.7.2` directly (matches upstream + lockfile `17.7.3`). No runtime code changes.
 
 ### v1.46.1 (2026-09-28)
 

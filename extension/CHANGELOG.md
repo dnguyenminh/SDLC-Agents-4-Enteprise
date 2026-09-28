@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.46.2] - 2026-09-28
+
+### Fixed
+- **Packaging: add missing direct `yargs` dependency** — `src/mcp/devtools/third_party/index.js` re-exports `yargs`/`yargs/helpers` but `yargs` was only transitive; standalone extension install in the publish workflow left esbuild unable to resolve it (`esbuild-production` failed). Declared `yargs ^17.7.2` directly. No runtime code changes.
+
 ## [1.46.1] - 2026-09-28
 
 ### Changed

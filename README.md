@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.46.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.46.2.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.46.2 (2026-09-28)
+
+- **Fix packaging: add missing direct `yargs` dependency** — Vendored chrome-devtools-mcp barrel (`extension/src/mcp/devtools/third_party/index.js`) re-exports `yargs`/`yargs/helpers`, but `yargs` was only available transitively. The publish workflow installs `extension/` standalone, so `esbuild-production` failed with `Could not resolve "yargs"`. Declared `yargs ^17.7.2` directly (matches upstream + lockfile `17.7.3`). No runtime code changes.
 
 ### v1.46.1 (2026-09-28)
 

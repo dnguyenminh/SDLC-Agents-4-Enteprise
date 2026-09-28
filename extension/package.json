@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.46.1",
+  "version": "1.46.2",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -498,6 +498,7 @@
     "semver": "^7.7.4",
     "undici": "^6.21.0",
     "urlpattern-polyfill": "^10.1.0",
-    "ws": "^8.21.1"
+    "ws": "^8.21.1",
+    "yargs": "^17.7.2"
   }
 }
