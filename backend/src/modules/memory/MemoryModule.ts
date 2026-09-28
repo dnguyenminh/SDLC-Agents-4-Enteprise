@@ -139,6 +139,9 @@ export class MemoryModule implements IModule {
 
   getEngine(): MemoryEngine { return this.engine; }
 
+  /** Expose the tool dispatcher so route handlers can invoke memory tools (e.g. mem_ingest_file). */
+  getDispatcher(): MemoryToolDispatcher { return this.dispatcher; }
+
   getToolHandlers(): Map<string, ToolHandler> {
     const handlers = new Map<string, ToolHandler>();
     for (const def of MEMORY_TOOL_DEFINITIONS) {

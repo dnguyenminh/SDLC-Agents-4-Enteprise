@@ -104,12 +104,21 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     const permCheck = await ctx.requirePermission(c, user.userId, 'GRAPH_MAINTAIN');
     if (permCheck instanceof Response) return permCheck;
     const projectId = ctx.getRequestProjectId(c);
-    // BUG-002: use shared adapter + shared extractIngestEdges (no EdgeOnIngestStrategy,
-    // no ctx.db.admin). Column is `relation`, not `label`.
+    // Query knowledge_entries ONCE, reuse NodeInfo cache across all edge extractions
+    // (perf: was O(n²) per-entry queries). Engine-aware: PG uses $n + boolean;
+    // SQLite uses ? + 0/1. Column is `relation` (mapped from label).
     const adapter = getDbAdapter();
     const engine = adapter.getEngine();
-    const entries = await adapter.allAsync<any>('SELECT id, content, source, tags, project_id FROM knowledge_entries WHERE archived = 0' + (projectId ? ' AND (project_id = ? OR project_id IS NULL)' : ''), projectId ? [projectId] : []);
-    const nodes: NodeInfo[] = entries.map((e: any) => ({
+    const isPg = engine !== 'sqlite';
+    const archivedFalse = isPg ? 'archived = false' : 'archived = 0';
+    const projFilter = projectId
+      ? (isPg ? ' AND (project_id = $1 OR project_id IS NULL)' : ' AND (project_id = ? OR project_id IS NULL)')
+      : '';
+    const entries = await adapter.allAsync<{ id: number; content: string; source: string | null; tags: string | null; project_id: string | null }>(
+      `SELECT id, content, source, tags, project_id FROM knowledge_entries WHERE ${archivedFalse}${projFilter}`,
+      projectId ? [projectId] : [],
+    );
+    const nodes: NodeInfo[] = entries.map((e) => ({
       id: e.id, content: e.content || '', source: e.source ?? null, tags: e.tags ?? '',
     }));
     const mapLabelToRelation = (label: string): string => {
@@ -120,18 +129,28 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     const insertSql = engine === 'sqlite'
       ? `INSERT OR IGNORE INTO knowledge_graph_edges (source_id, target_id, relation, weight) VALUES (?, ?, ?, ?)`
       : `INSERT INTO knowledge_graph_edges (source_id, target_id, relation, weight) VALUES ($1, $2, $3, $4) ON CONFLICT (source_id, target_id, relation) DO NOTHING`;
+    const existsSql = isPg
+      ? 'SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = $1 LIMIT 1'
+      : 'SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1';
     let totalEdges = 0;
     let skippedEntries = 0;
     for (const entry of entries) {
-      const existing = await adapter.getAsync<any>('SELECT 1 FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1', [entry.id]);
+      // Idempotent: skip entries that already have outgoing edges
+      const existing = await adapter.getAsync<{ one: number }>(existsSql, [entry.id]);
       if (existing) { skippedEntries++; continue; }
-      const edgeCtx: IngestEdgeContext = { entryId: entry.id, content: entry.content || '', source: entry.source ?? null, projectId: entry.project_id };
+      const edgeCtx: IngestEdgeContext = {
+        entryId: entry.id,
+        content: entry.content || '',
+        source: entry.source,
+        tags: entry.tags ?? undefined,
+        projectId: entry.project_id,
+      };
       const edges = extractIngestEdges(edgeCtx, nodes);
       for (const edge of edges) {
         if (edge.sourceId === edge.targetId) continue;
         await adapter.runAsync(
           insertSql,
-          [edge.sourceId, edge.targetId, mapLabelToRelation(edge.label), edge.weight ?? 1]
+          [edge.sourceId, edge.targetId, mapLabelToRelation(edge.label), edge.weight ?? 1],
         );
         totalEdges++;
       }

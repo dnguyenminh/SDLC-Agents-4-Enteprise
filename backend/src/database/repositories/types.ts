@@ -11,7 +11,15 @@ export interface GraphNodeCounts {
   kb: number;
 }
 
-/** Parameters for upserting a graph node. */
+/**
+ * Parameters for upserting a graph node.
+ * `level` is a numeric elevation used for zoom filtering:
+ *   0 = macro (project / top-level entities)
+ *   1 = micro (code entities: classes, functions, methods)
+ *   2 = nano  (fine-grained details)
+ * The `graph_nodes.level` column is INTEGER in both SQLite and PostgreSQL,
+ * so string values (e.g. 'macro') would raise a type error on PostgreSQL.
+ */
 export interface UpsertNodeParams {
   entryId: string;
   label: string;
@@ -21,7 +29,7 @@ export interface UpsertNodeParams {
   x?: number;
   y?: number;
   z?: number;
-  level?: string;
+  level?: number;
   clusterId?: string;
 }
 
