@@ -11,7 +11,7 @@ export const CPP_PATTERNS: PatternDef[] = [
   { regex: /^\s*(?:template\s*<[^>]*>\s*)?class\s+(\w+)/m, kind: 'class', nameGroup: 1 },
   { regex: /^\s*namespace\s+(\w+)/m, kind: 'namespace', nameGroup: 1 },
   { regex: /^\s*struct\s+(\w+)/m, kind: 'struct', nameGroup: 1 },
-  { regex: /^\s*(?!if|for|while|switch|return|catch|do|else|delete|new|sizeof|throw|using|template|try|lock|assert)\w[\w:<>\*&~]*\s+(\w+)\s*\(/m, kind: 'function', nameGroup: 1 },
+  { regex: /^\s*(?!if|for|while|switch|return|catch|do|else|delete|new|sizeof|throw|using|template|try|lock|assert)\w[\w:<>&*~]*\s+(\w+)\s*\(/m, kind: 'function', nameGroup: 1 },
   { regex: /^\s*enum\s+(?:\w+\s+)?(\w+)/m, kind: 'enum', nameGroup: 1 },
   { regex: /^\s*using\s+(\w+)\s*=/m, kind: 'type', nameGroup: 1 },
 ];

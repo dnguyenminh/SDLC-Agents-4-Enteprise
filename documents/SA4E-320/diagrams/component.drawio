@@ -1,0 +1,77 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-320 — Component / Module Design (files &amp; responsibilities)" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="15" width="560" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="pkg" value="extension/package.json&#10;contributes.configuration&#10;kiroSdlc.backend.allowInsecureRemote&#10;type boolean — DEFAULT false (secure)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="230" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="panel" value="SettingsPanel.ts (webview shell)&#10;HTML: #allow-insecure-remote-chk +&#10;#allow-insecure-remote-warning (hidden)&#10;nonce + CSP; onDidReceiveMessage" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="60" width="250" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="js" value="settings.js (webview logic)&#10;change listener → post&#10;{ type: setAllowInsecureRemote, enabled }&#10;handleState() → restore + warning" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="60" width="270" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="handler" value="SettingsMessageHandler (message router)&#10;case setAllowInsecureRemote → coerce&#10;handleSetBackendUrl / handleTestBackend&#10;(fresh flag, validate, respond)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="260" width="250" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="pcs" value="ProviderConfigService&#10;getCurrentState():&#10;backendUrl + allowInsecureRemote&#10;(UI state assembly)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="260" width="270" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="bu" value="backend-url.ts — POLICY AUTHORITY&#10;getAllowInsecureRemote(): === true&#10;validateBackendUrl(url, options)&#10;isLoopbackHost() / getBackendUrl()&#10;DEFAULT_BACKEND_URL = 127.0.0.1:48721" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="480" width="250" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="kc" value="knowledge-client.ts&#10;resolveKbBaseUrl() → getBackendUrl()&#10;KnowledgeClient ctor forwards flag →&#10;validateBackendUrl (Finding #1 fixed)&#10;KbUnreachableError (recoverable)" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="480" width="270" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="ws" value="Workspace Settings&#10;.vscode/settings.json&#10;backend.allowInsecureRemote&#10;backend.url" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="480" width="230" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="note1" value="Also depend on getBackendUrl()/validateBackendUrl: sidebar/tree-view-provider, panel-html, RemoteConverter, graph-panel — routed through the central policy helper (BR-09)." style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="40" y="660" width="550" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1" value="declares flag" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkg" target="bu">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="155" y="445"/>
+          <mxPoint x="310" y="445"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c2" value="onDidReceiveMessage → handle(msg)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="panel" target="handler">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3" value="webview HTML" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="js" target="panel">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c4" value="sendCurrentState()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.35;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" parent="1" source="handler" target="pcs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c5" value="validate(url, flag)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="handler" target="bu">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c6" value="getBackendUrl()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.1;exitY=1;exitDx=0;exitDy=0;entryX=0.3;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="pcs" target="bu">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="667" y="450"/>
+          <mxPoint x="395" y="450"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="c7" value="imports validator API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="kc" target="bu">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c8" value="fresh read" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.35;exitDx=0;exitDy=0;entryX=1;entryY=0.35;entryDx=0;entryDy=0;" edge="1" parent="1" source="bu" target="ws">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="c9" value="persist flag (Workspace)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.77;exitDx=0;exitDy=0;entryX=0.26;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="handler" target="ws">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="100" y="360"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

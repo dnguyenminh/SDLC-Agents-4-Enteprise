@@ -1,6 +1,6 @@
 /**
  * ScopePromotionService — manages KB entry promotion pipeline.
- * SA4E-53: migrated from raw better-sqlite3 to DatabaseAdapter async API for PostgreSQL compatibility.
+ * SA4E-53: migrated from a raw sync handle to the DatabaseAdapter async API for PostgreSQL compatibility.
  */
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import { DialectHelper } from '../../../database/dialect/DialectHelper.js';

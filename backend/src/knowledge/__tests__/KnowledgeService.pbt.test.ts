@@ -16,7 +16,7 @@ const logger = pino({ level: 'silent' });
 
 describe('PBT-HYD-01 — backend thread_id always valid UUID v4', () => {
   it('holds for 500 random createThread inputs', async () => {
-    const db = KnowledgeDb.createInMemory();
+    const db = await KnowledgeDb.createInMemory();
     const service = new KnowledgeService(db, logger);
     const ctx = createProjectContext('pbt-ws', 'pbt-user');
 
@@ -39,7 +39,7 @@ describe('PBT-HYD-01 — backend thread_id always valid UUID v4', () => {
   });
 
   it('thread ids are unique across creations', async () => {
-    const db = KnowledgeDb.createInMemory();
+    const db = await KnowledgeDb.createInMemory();
     const service = new KnowledgeService(db, logger);
     const ctx = createProjectContext('pbt-ws', 'pbt-user');
     const ids = new Set<string>();
@@ -51,7 +51,7 @@ describe('PBT-HYD-01 — backend thread_id always valid UUID v4', () => {
   });
 
   it('invalid thread_id strings are rejected by accessors', async () => {
-    const db = KnowledgeDb.createInMemory();
+    const db = await KnowledgeDb.createInMemory();
     const service = new KnowledgeService(db, logger);
     const ctx = createProjectContext('pbt-ws', 'pbt-user');
     await fc.assert(

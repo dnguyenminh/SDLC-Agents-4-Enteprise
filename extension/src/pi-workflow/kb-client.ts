@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { IServerManager } from '../types/server-types.js';
-import { McpBridge } from '../langgraph/core/mcp-bridge.js';
+import { IServerManager } from '../types/server-types';
+import { McpBridge } from '../mcp/mcp-bridge';
 import { debugError, debugLog } from '../debug-logger.js';
 
 export const KbSearchResultItemSchema = z.object({

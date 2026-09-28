@@ -6,14 +6,13 @@
 
 import * as crypto from 'crypto';
 import type { QueryDatabaseAdapter } from '../database/adapters/DatabaseAdapter.js';
-import { SqliteAdapter } from '../database/adapters/SqliteAdapter.js';
+import { SqliteWasmAdapter } from '../database/adapters/wasm/SqliteWasmAdapter.js';
 import { KNOWLEDGE_SCHEMA } from './schema.js';
 import type {
   Thread, Message, Checkpoint, ToolExecution, Artifact,
   KnowledgeEvent, Agent, PendingWrite, SaveCheckpointInput, MessageInput,
 } from './models.js';
 
-import * as path from 'path';
 /** Parse JSON safely with fallback. */
 function parse<T>(raw: string | null | undefined, fallback: T): T {
   if (!raw) return fallback;
@@ -29,13 +28,13 @@ export class KnowledgeDb {
 
   /**
    * Create an in-memory KnowledgeDb for testing.
-   * Uses SqliteAdapter in-memory.
+   * Uses the wasm SQLite adapter (:memory:) — async because wasm init is async.
    */
-  static createInMemory(): KnowledgeDb {
-    const adapter = new SqliteAdapter(':memory:');
-    adapter.connect();
-    adapter.exec(KNOWLEDGE_SCHEMA);
-    return new KnowledgeDb(adapter as unknown as QueryDatabaseAdapter);
+  static async createInMemory(): Promise<KnowledgeDb> {
+    const adapter = new SqliteWasmAdapter(':memory:');
+    await adapter.connect();
+    await adapter.execAsync(KNOWLEDGE_SCHEMA);
+    return new KnowledgeDb(adapter);
   }
 
   /** Detect PostgreSQL via runtime duck-typing (composed adapters expose getEngine). */

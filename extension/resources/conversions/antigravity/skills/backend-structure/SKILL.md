@@ -106,7 +106,7 @@ Mỗi route group PHẢI nằm trong 1 file riêng tại `backend/src/server/rou
 - Test file name: `{Feature}.test.ts`
 - Dùng property-style test với `fast-check` khi cần (có trong devDependencies)
 - Fake/Spy implementations cho dependencies (không cần mocking framework phức tạp)
-- In-memory SQLite (`better-sqlite3` `:memory:`) hoặc DB mocks cho DB tests
+- In-memory SQLite (`:memory:`) hoặc DB mocks cho DB tests
 - E2E API: `vitest run --config vitest.e2e.config.ts`; E2E UI: `npx playwright test`
 
 

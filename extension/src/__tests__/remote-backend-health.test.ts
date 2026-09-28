@@ -112,3 +112,36 @@ describe("RemoteBackendClient.checkHealth() — proxy-compliant fetch", () => {
     expect(url).toBe("https://remote.server:9000/health");
   });
 });
+
+// SA4E-320 — updateBackendUrl re-points the client at a new URL without reload.
+describe("RemoteBackendClient.updateBackendUrl() — no-reload URL switch", () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+  let outputChannel: vscode.OutputChannel;
+
+  beforeEach(() => {
+    fetchMock = vi.fn().mockResolvedValue({ status: 200 });
+    vi.stubGlobal("fetch", fetchMock);
+    outputChannel = vscode.window.createOutputChannel("test") as any;
+  });
+  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+
+  it("switches health probe to the new URL after updateBackendUrl", async () => {
+    const client = new RemoteBackendClient("C:\\ws", outputChannel, undefined, "http://127.0.0.1:48721");
+    // Avoid real wrapper start during the reconnect triggered by updateBackendUrl.
+    vi.spyOn(client as any, "startWrapper").mockResolvedValue(undefined);
+
+    await client.updateBackendUrl("http://sdlc.detalvn.vn:48721");
+
+    await (client as any).checkHealth();
+    const lastUrl = fetchMock.mock.calls.at(-1)?.[0];
+    expect(lastUrl).toBe("http://sdlc.detalvn.vn:48721/health");
+    expect(client.port).toBe(48721);
+  });
+
+  it("is a no-op when the URL is unchanged (no reconnect)", async () => {
+    const client = new RemoteBackendClient("C:\\ws", outputChannel, undefined, "http://127.0.0.1:48721");
+    const reconnectSpy = vi.spyOn(client, "reconnect");
+    await client.updateBackendUrl("http://127.0.0.1:48721");
+    expect(reconnectSpy).not.toHaveBeenCalled();
+  });
+});

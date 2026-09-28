@@ -1,7 +1,7 @@
 /**
  * SqliteDbAdapter — SA4E-44, SA4E-50
- * Wraps an existing better-sqlite3 Database instance as a DatabaseAdapter.
- * SA4E-50: Async variants delegate to sync methods (SQLite is sync anyway),
+ * Wraps an existing sync SQLite Database handle (wasm oo1.DB or compatible)
+ * as a DatabaseAdapter. SA4E-50: Async variants delegate to sync methods,
  * fulfilling the async contract so admin/db layer works with both SQLite and PG.
  */
 
@@ -77,7 +77,7 @@ export class SqliteDbAdapter implements DatabaseAdapter {
   }
 
   async transactionAsync<T>(fn: () => Promise<T>): Promise<T> {
-    // SQLite transactions are sync; we run the async fn and let better-sqlite3
+    // The underlying DB's transaction is sync; we run the async fn and let it
     // handle its own sync calls within. Outer async wrapper provides PG parity.
     return fn();
   }

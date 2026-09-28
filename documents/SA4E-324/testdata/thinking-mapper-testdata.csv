@@ -1,0 +1,17 @@
+test_case_id,modelId,thinkingLevel,expected_maxTokens,expected_behavior,description
+UT-15,qwen2.5-coder,high,1024,mapped,FSD example high 1024
+UT-15,phi-3-mini,low,128,mapped,phi low
+UT-15,phi-3-mini,medium,256,mapped,phi medium
+UT-15,phi-3-mini,high,512,mapped,phi high capped at maxOutput
+UT-15,llama3.1,medium,1024,mapped,llama medium
+UT-15,gpt-4o-mini,high,16384,mapped,cloud high
+UT-16,qwen2.5-coder,ultra,throw,"Invalid thinkingLevel 'ultra'. Must be low/medium/high",M-01 fix invalid throws
+UT-16,qwen2.5-coder,empty-string,throw,throw-no-coercion,Empty throws
+UT-16,qwen2.5-coder,HIGH-uppercase,throw,throw-case-sensitive,Case sensitive
+UT-16,qwen2.5-coder,medium-space,throw,throw-trailing-space,Whitespace not trimmed
+UT-17,llama3.1,omitted-undefined,1024,default-medium,Default medium path no throw
+UT-17,any,omitted-buildSessionConfig,medium-in-config,default-medium,Config defaults medium
+UT-18,adversarial,maxOutput256-high999,reject-add,add-rejected-high-gt-maxOutput,Cap enforcement at registry
+UT-18,any,runtime-min-map-maxOutput,capped,mandatory-cap,Runtime min() cap
+E2E-API-09,qwen2.5-coder,ultra-E2E,throw-before-http,0-vendor-calls,Validation E2E 0 HTTP
+E2E-API-09,any,NaN-reserve100-E2E,clamped-2000-conservative,warn,Invalid budget E2E

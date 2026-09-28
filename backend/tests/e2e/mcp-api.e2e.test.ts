@@ -21,10 +21,29 @@ async function authFetch(path: string, init: RequestInit = {}): Promise<Response
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      'X-Project-Id': 'default',
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...((init.headers as Record<string, string>) || {}),
     },
   });
+}
+
+async function callToolJson(toolName: string, args: Record<string, unknown>): Promise<any> {
+  const res = await authFetch('/mcp/tools/call', {
+    method: 'POST',
+    body: JSON.stringify({ tool_name: toolName, arguments: args }),
+  });
+  const data = await res.json();
+  if (data.isError) {
+    const errText = Array.isArray(data.content)
+      ? data.content.map((c: any) => c?.text).filter(Boolean).join(' | ')
+      : '';
+    console.error(
+      `[E2E ToolError] ${toolName} status=${res.status} args=${JSON.stringify(args)} ` +
+        `error=${errText || JSON.stringify(data)}`,
+    );
+  }
+  return data;
 }
 
 // ============================================================
@@ -41,6 +60,8 @@ beforeAll(async () => {
         `Original error: ${err}`,
     );
   }
+  // Give ensureEngineIndexSchema a moment to finish creating FTS tables
+  await new Promise(r => setTimeout(r, 2000));
 
   // Authenticate to get JWT/session token for protected MCP endpoints
   const loginRes = await fetch(`${API_URL}/auth/login`, {
@@ -197,15 +218,9 @@ describe('E2E MCP — Memory Lifecycle', () => {
   const testContent = 'This is E2E lifecycle test content for MCP memory module';
 
   it('mem_ingest creates an entry', async () => {
-    const res = await authFetch('/mcp/tools/call', {
-      method: 'POST',
-      body: JSON.stringify({
-        tool_name: 'mem_ingest',
-        arguments: { title: testTitle, content: testContent, tags: 'e2e,test' },
-      }),
+    const data = await callToolJson('mem_ingest', {
+      title: testTitle, content: testContent, tags: 'e2e,test',
     });
-    expect(res.status).toBe(200);
-    const data = await res.json();
     expect(data.isError).toBe(false);
   });
 

@@ -18,7 +18,6 @@ import { removeBundledMcpConfig } from "../mcp-injector";
 import { registerSymbolSearch } from "../symbol-search";
 import { registerDiagnosticsProvider } from "../diagnostics-provider";
 import { registerAIContextCommands } from "../ai-context-commands";
-import { registerSteeringCommands } from "./SteeringCommands";
 import { SecurityPanel } from "../panels/security-panel";
 import { showImpactAnalysis } from "../panels/impact-panel";
 import { SettingsPanel } from "../panels/settings-panel";
@@ -58,7 +57,6 @@ export function registerCommands(context: vscode.ExtensionContext, deps: Command
     vscode.commands.registerCommand("kiroSdlc.openKbTags", () => panelManager?.openPanel("tags")),
     vscode.commands.registerCommand("kiroSdlc.openKbQuality", () => panelManager?.openPanel("quality")),
     vscode.commands.registerCommand("kiroSdlc.openKbAnalytics", () => panelManager?.openPanel("analytics")),
-    vscode.commands.registerCommand("kiroSdlc.openWorkflowGraph", () => panelManager?.openPanel("workflow")),
     vscode.commands.registerCommand("kiroSdlc.restartMcpServer", () => handleRestartServer(mcpManager)),
     vscode.commands.registerCommand("kiroSdlc.stopMcpServer", () => handleStopServer(mcpManager, workspaceRoot)),
     vscode.commands.registerCommand("kiroSdlc.openKbBrowser", () => handleOpenKbBrowser(mcpManager)),
@@ -92,8 +90,6 @@ export function registerCommands(context: vscode.ExtensionContext, deps: Command
       }
     }),
   );
-
-  registerSteeringCommands(context, workspaceRoot);
 
   if (mcpManager) {
     registerSymbolSearch(context, mcpManager);

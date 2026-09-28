@@ -44,14 +44,33 @@ export abstract class BasePanel implements IKbPanel, vscode.Disposable {
       }
     );
     this._panel.webview.html = this.getHtml(this._panel.webview);
+    // SA4E-319: the extension host (AuthManager) is the single source of truth. Tell the
+    // embedded SPA the current auth state ONCE right after load so it never (a) self-logs-in
+    // from a stale localStorage replica, nor (b) hangs on the "authenticating" placeholder.
+    //  - token present  → 'token_refreshed' (SPA applies token + fetches profile).
+    //  - token absent    → 'auth_unavailable' (SPA settles and shows the LoginPage).
+    // Both converge on the SSOT; no parallel race with the URL bootstrap (same payload path).
+    const initToken = BasePanel.authTokenProvider ? BasePanel.authTokenProvider() : '';
+    if (initToken) {
+      this._panel.webview.postMessage({ type: 'token_refreshed', token: initToken });
+    } else {
+      this._panel.webview.postMessage({ type: 'auth_unavailable' });
+    }
     this._panel.webview.onDidReceiveMessage(
       (msg: WebviewToExtMessage | { type: 'auth_error' }) => {
         if (msg.type === 'auth_error') {
-          // SA4E: Refresh token silently — do NOT reload entire webview (preserves page state)
+          // SA4E-319: silent refresh — do NOT reload the webview (preserves page state).
+          // If refresh yields a token, redeliver it. If NOT, settle the panel back to its
+          // own login screen via 'auth_unavailable' — we must NOT let a single panel 401
+          // cascade into a global host logout. The host stays as-is; only this panel
+          // reflects the missing session.
           vscode.commands.executeCommand('kiroSdlc.refreshToken').then(() => {
             const newToken = BasePanel.authTokenProvider ? BasePanel.authTokenProvider() : '';
-            if (this._panel && newToken) {
+            if (!this._panel) { return; }
+            if (newToken) {
               this._panel.webview.postMessage({ type: 'token_refreshed', token: newToken });
+            } else {
+              this._panel.webview.postMessage({ type: 'auth_unavailable' });
             }
           });
           return;

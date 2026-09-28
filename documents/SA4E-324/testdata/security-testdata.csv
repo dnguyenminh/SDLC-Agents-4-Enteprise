@@ -1,0 +1,31 @@
+test_case_id,finding,severity,payload,expected_result,expected_log,description
+UT-26,SEC-324-05+NFR-09,Medium,sk-ant-test-1234567890-configured,no-key-in-any-log-or-diagnostics,no-texts-in-logs,Zero keys unit all paths
+UT-26,SEC-324-10,Low,future-cause-err-message,redacted-cause,,Central redaction logger
+IT-16,SEC-324-01,High,http://169.254.169.254/,throw-at-construction-fail-closed,,SSRF metadata blocked
+IT-16,SEC-324-01,High,http://evil.example.com/v1,throw-fail-closed + 0-key-requests,,Evil host blocked key never sent
+IT-16,SEC-324-01,High,file:///etc/passwd,throw-non-http-scheme,,File scheme blocked
+IT-16,SEC-324-01,High,ftp://x/y,throw-non-http-scheme,,FTP blocked
+IT-16,SEC-324-01,High,http://192.168.1.10:11434,throw-non-loopback-http,,Intranet http blocked without opt-in
+IT-16,SEC-324-01,High,http://localhost:11434,pass-loopback,,Loopback allowed
+IT-16,SEC-324-01,High,https://gateway.corp.example/v1,pass-https,,Legit gateway allowed
+IT-16,SEC-324-01,High,settings.json-kiroSdlc.anthropicBaseUrl-evil-untrusted,ignored-by-restrictedConfigurations,0-evil-hits,Malicious settings.json blocked
+IT-17,SEC-324-02,High,../../../../etc/passwd,throw-Invalid-modelId-0-reads,,Traversal blocked pre-read
+IT-17,SEC-324-02,High,../secret,throw,,Parent escape blocked
+IT-17,SEC-324-02,High,/abs/path,throw,,Absolute blocked
+IT-17,SEC-324-02,High,phi-3-mini/../../secret,throw,,Nested escape blocked
+IT-17,SEC-324-02,High,phi-3-mini-valid,resolve-inside-base-load-real,,Valid loads contained
+IT-17,SEC-324-02,High,crafted-non-tokenizer-JSON-parses,vocabSize-0-unavailable-never-poisoned,,Poisoned vocab never forces ALLOW
+IT-17,SEC-324-02,High,model.onnx-only-no-tokenizer,isAvailable-false,,Both-files check TA EF-05
+IT-18,SEC-324-03,High,execute_dynamic_tool-jira_delete_issue-nonallowlisted,deny-0-mcp-calls,audit-deny,Non-allowlist denied
+IT-18,SEC-324-03,High,execute_dynamic_tool-allowlisted-no-optin,deny-by-default-opt-in-only,audit-deny,Chaining deny default
+IT-18,SEC-324-03,High,code_search-oversize-4001chars,reject-Field-exceeds-4000,,Length cap
+IT-18,SEC-324-03,High,poisoned-jira_get_issue-result-injection,no-autochain-approval-required,,Injection amplifier blocked
+E2E-API-10,SEC-324-01,High,attacker-loopback-server + evil-DNS,0-x-api-key-received,,E2E key-not-sent proof
+E2E-API-11,SEC-324-02,High,real-fs-traversal + symlink,0-outside-reads,,E2E containment proof
+E2E-API-12,SEC-324-03,High,recorded-transcript-deny + optin-allow-once,deny-then-allow-once-with-approval,audit-export,E2E deny + opt-in allow
+E2E-API-08,SEC-324-01+NFR-09,High,401-no-key-in-logs,redacted,,Auth no leak
+E2E-UI-08,SEC-324-11,Low,"MODEL-INJECT-newline-script-500chars",sanitized-?-sliced128-no-html,,Sanitization proof
+SIT-05,SEC-324-01+06,High+Medium,hostile-workspace-evil-url-proto-2MB-truncate,ignored + unpolluted + capped + kept-good + warn,,Manual hostile exploratory
+SIT-06,SEC-324-03,High,poisoned-transcript-social-engineering,no-autochain-approval-gate,,Manual injection exploratory
+UT-25,SEC-324-08,Medium,js-tiktoken-1.0.21-pinned,exact-pin-no-float,,Supply chain pin
+IT-03,SEC-324-08,Medium,npm-audit-0-vulns,pass,,Audit gate note

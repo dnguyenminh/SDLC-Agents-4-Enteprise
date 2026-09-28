@@ -133,7 +133,7 @@ export class MemoryModule implements IModule {
     if (this.promotionInterval) { clearInterval(this.promotionInterval); this.promotionInterval = null; }
     if (this.consolidationInterval) { clearInterval(this.consolidationInterval); this.consolidationInterval = null; }
     if (this.engine) this.engine.endSession();
-    if (this.dbManager) this.dbManager.close();
+    if (this.dbManager) void this.dbManager.close();
     this._status = 'stopped';
   }
 

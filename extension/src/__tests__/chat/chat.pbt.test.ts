@@ -9,7 +9,6 @@ import * as fc from 'fast-check';
 import * as crypto from 'crypto';
 import { hashBuffer } from '../../chat/tools/fileHasher';
 import { isLocalhostEndpoint } from '../../chat/ipc/serviceDiscovery';
-import { parseAgentFile } from '../../chat/registry/agentParser';
 import { detectArtifacts } from '../../chat/tools/ArtifactDetector';
 import { TokenBuffer } from '../../chat/bridge/TokenBuffer';
 import { suggestPrune, type PrunableFile } from '../../chat/context/pruningAlgorithm';
@@ -44,19 +43,6 @@ describe('PBT-CM-02: Dirty File Always Blocked', () => {
         },
       ),
       { numRuns: 500 },
-    );
-  });
-});
-
-/** PBT-REG-01: Invalid YAML never crashes parseAgentFile */
-describe('PBT-REG-01: Invalid YAML Never Crashes', () => {
-  test('arbitrary YAML content never throws', () => {
-    fc.assert(
-      fc.property(fc.string({ minLength: 0, maxLength: 5000 }), (content) => {
-        const file = `---\n${content}\n---\n# Agent`;
-        expect(() => parseAgentFile(file, '/fake/agent.md')).not.toThrow();
-      }),
-      { numRuns: 1000 },
     );
   });
 });

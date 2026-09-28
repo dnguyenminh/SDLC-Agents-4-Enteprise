@@ -15,7 +15,7 @@ import {
   QualityGateCheckpoint,
   ChatMessage,
   AgentOutput,
-} from "../langgraph/core/state";
+} from "../mcp/state-types";
 import { ContextUsagePayload } from "./context-usage-tracker";
 
 // === Context & Attachment Types ===
@@ -76,7 +76,6 @@ export type ChatWebviewToExtMessage =
   | { type: "tab:switch"; payload: { tabId: string } }
   | { type: "tab:close"; payload: { tabId: string } }
   | { type: "tab:rename"; payload: { tabId: string; newName: string } }
-  | { type: "chat:openWorkflowGraph" }
   | { type: "chat:saveState"; payload: { tabs: unknown[]; activeTabId: string } }
   | { type: "chat:selectAgent"; agentId: string | null }
   | { type: "chat:toolApproval"; toolId: string; decision: string; rememberPattern?: string }

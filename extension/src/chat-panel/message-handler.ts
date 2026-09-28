@@ -57,9 +57,6 @@ export class MessageHandler {
       case "chat:graphNodeClick":
         this.handleNodeClick(msg.nodeId);
         break;
-      case "chat:openWorkflowGraph":
-        vscode.commands.executeCommand("kiroSdlc.openWorkflowGraph");
-        break;
       case "chat:pickContext":
         if (this.onPickContext) { this.onPickContext(msg.contextType); }
         break;

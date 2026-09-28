@@ -30,6 +30,7 @@ function makeFakeTaskWorker(repo: any, statsOverride?: any): TaskWorker {
   return {
     getRepository: () => repo,
     getProgress: () => ({ file: 'src/a.ts' }),
+    getConcurrency: () => 8,
     getStats: vi.fn().mockResolvedValue(
       statsOverride ?? { pending: 1, processing: 2, completed: 3, failed: 0, isRunning: true, lastPollAt: null },
     ),
@@ -65,6 +66,8 @@ describe('createEnrichmentStatusRoutes', () => {
       expect(body.recentFailures).toEqual([
         { taskId: 2, symbolName: 'fooFn', error: 'boom' },
       ]);
+      expect(body.maxConcurrency).toBe(8);
+      expect(body.activeConcurrency).toBe(2); // stats.processing
       // No X-Project-Id → uses taskWorker.getStats(), not repo.getStatsByProject
       expect(repo.getStatsByProject).not.toHaveBeenCalled();
       expect(taskWorker.getStats).toHaveBeenCalled();

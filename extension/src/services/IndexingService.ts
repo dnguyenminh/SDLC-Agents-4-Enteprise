@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { IndexerHttpClient } from "./IndexerHttpClient";
+import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET } from "./WorkspaceScopeResolver";
 
 export interface IndexOptions {
     code: boolean;
@@ -19,21 +20,31 @@ export type ProgressReporter = vscode.Progress<{ message?: string }>;
 
 export class IndexingService {
     private statusBarItem: vscode.StatusBarItem | null = null;
-    /** Token refresh callback — set by caller to enable retry-on-401. */
-    refreshTokenFn?: () => Promise<string | undefined>;
     /** Concurrency guard — prevents overlapping indexing operations. */
     private isProcessing = false;
     /** Current auth token — captured from indexWorkspace args (AuthManager/SecretStorage). */
     private token?: string;
+    private refreshTokenFn?: () => Promise<string | undefined>;
 
     constructor(
         private readonly httpClient: IndexerHttpClient,
         private readonly outputChannel?: vscode.OutputChannel
-    ) {}
+    ) {
+        // SA4E-300 GAP 3+4: keep this.token in sync when the HTTP client
+        // refreshes the JWT internally (401 → tokenRefresher → fresh token).
+        try {
+            this.httpClient.setOnTokenRefreshed((fresh: string) => {
+                this.token = fresh;
+            });
+        } catch { /* non-fatal — older clients without the setter */ }
+    }
+
+    setRefreshTokenFn(fn: () => Promise<string | undefined>) {
+        this.refreshTokenFn = fn;
+    }
 
     private log(msg: string): void {
         if (this.outputChannel) { this.outputChannel.appendLine(msg); }
-        else { console.log(msg); }
     }
 
     /** Show indexing progress on status bar with file info and percentage. */
@@ -71,6 +82,13 @@ export class IndexingService {
         // Concurrency guard: abort if already processing
         if (this.isProcessing) {
             vscode.window.showWarningMessage("⚠️ Indexing already in progress. Please wait for it to complete.");
+            // SA4E-300 GAP 4: leave a trace in the centralized Output log as well
+            const busyMsg = "[IndexingService] Indexing already in progress — request ignored";
+            if (this.outputChannel) {
+                this.outputChannel.appendLine(busyMsg);
+            } else {
+                IndexerHttpClient.getIndexerOutput().appendLine(busyMsg);
+            }
             return ["⚠️ Aborted — indexing already in progress"];
         }
         this.isProcessing = true;
@@ -123,7 +141,7 @@ export class IndexingService {
                         const res = await this.httpClient.uploadSourceFiles(
                             { report: (v) => { report.report(v); if (v.message) this.showProgress(v.message); } },
                             token,
-                            this.refreshTokenFn,
+                            undefined,
                         );
                         results.push(res.summary);
                     }
@@ -150,9 +168,13 @@ export class IndexingService {
                         this.showProgress("Syncing code symbols to memory...");
                         report.report({ message: "Syncing code symbols to memory..." });
                         const syncResult = await this.httpClient.syncCodeSymbols();
-                        results.push(syncResult
-                            ? `✅ Code symbol sync: ${syncResult}`
-                            : "⚠️ Code symbol sync failed — run manually via mem_sync_code");
+                        if (syncResult) {
+                            results.push(`✅ Code symbol sync: ${syncResult}`);
+                        } else {
+                            const channel = IndexerHttpClient.getIndexerOutput();
+                            channel.appendLine(`Code symbol sync failed`);
+                            results.push("⚠️ Code symbol sync failed — run manually via mem_sync_code");
+                        }
                     }
                 }
                 if (options.jira && secrets) {
@@ -186,7 +208,8 @@ export class IndexingService {
                 let res = await fetch(`${backendUrl}/api/admin/taskworker/progress`, { headers: headersOf(token) });
                 if (res.status === 401 && this.refreshTokenFn) {
                     const fresh = await this.refreshTokenFn();
-                    if (fresh) { token = fresh; res = await fetch(`${backendUrl}/api/admin/taskworker/progress`, { headers: headersOf(token) }); }
+                    // SA4E-300 GAP 4: persist the refreshed token (was local-only before)
+                    if (fresh) { this.token = fresh; token = fresh; res = await fetch(`${backendUrl}/api/admin/taskworker/progress`, { headers: headersOf(token) }); }
                 }
                 if (!res.ok) { this.hideProgress(); return; }
                 const data = await res.json() as { active: boolean; file?: string; current?: number; total?: number; percent?: number };
@@ -207,9 +230,12 @@ export class IndexingService {
         root: string, report: ProgressReporter, secrets: vscode.SecretStorage,
     ): Promise<string | null> {
         try {
+            await ensureMigrated(secrets);
             const config = vscode.workspace.getConfiguration("kiroSdlc");
             const username = config.get<string>("pegaUsername", "");
-            const password = (await secrets.get("kiroSdlc.pegaPassword")) || "";
+            const wsHash = getWsHash();
+            const pwKey = wsHash ? secretKey("pega", wsHash)! : LEGACY_SECRET.pega;
+            const password = (await secrets.get(pwKey)) || "";
             if (!username || !password) {
                 return "⚠️ Pega Schema: credentials not configured (set pegaUsername + password in settings)";
             }
@@ -237,7 +263,7 @@ export class IndexingService {
         if (useCatalog && secrets) {
             try {
                 const { PegaCatalogIndexer } = await import("./PegaCatalogIndexer");
-                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this));
+                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.token || '' });
                 const result = await catalogIndexer.run(root, report, secrets);
                 if (result) {
                     return `🏛️ Pega (catalog): "${result.appName}" — ${result.catalogRules} rules in catalog, ingested ${result.totalIngested}`;
@@ -251,7 +277,7 @@ export class IndexingService {
         // Fallback path: BFS crawl (enumeration + relative discovery).
         try {
             const { PegaProjectIndexer } = await import("./PegaProjectIndexer");
-            const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this));
+            const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.token || '' });
             return await indexer.run(root, report, secrets);
         } catch (err: any) {
             this.log(`[Pega Indexer] ❌ Fatal error: ${err.message}`);

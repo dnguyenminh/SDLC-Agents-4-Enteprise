@@ -1,0 +1,5 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-101,"Set thinkingLevel","thinkingLevel set","maxTokens mapped, retry configured",Medium
+TC-102,"Submit easy query","Easy query","Stays on small model, no escalation",Medium
+TC-301,"Trigger fail","phi-3 fails","Escalates to gpt-4o-mini with log",High
+TC-302,"Process","Easy question","Remains on small model",High

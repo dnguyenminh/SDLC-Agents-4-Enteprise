@@ -1,16 +1,19 @@
 /**
  * PegaExpressionEvaluator — Evaluates a Pega expression string to a runtime PegValue.
  *
- * Parsing is delegated to the embedded POC ANTLR parser (pega-expr/parseExpression); the
- * resulting ExprNode is evaluated by ExprNodeEvaluator. This replaces the previous
- * hand-written parser + self-evaluating OOP nodes, giving a single source of truth for
- * parsing (the ANTLR grammar) and evaluation (ExprNodeEvaluator).
+ * Parsing is delegated to the module's ANTLR parser (ExpressionParser — grammar
+ * grammar/PegaExpr.g4, the single source of truth that carries the Pega keyword tokens
+ * .AND./.OR./.NOT./.ISNULL); the resulting ExprNode is evaluated by ExprNodeEvaluator.
+ * This replaces the previous hand-written parser + self-evaluating OOP nodes, giving a
+ * single source of truth for parsing (the ANTLR grammar) and evaluation
+ * (ExprNodeEvaluator). The legacy pega-expr/generated parser predates the keyword tokens
+ * and must not be used for evaluation.
  *
  * Public API is unchanged so existing callers (When/Constraint evaluators, sandbox) keep
  * working: `evaluate(string)` and `evaluateWithAst(ExprNode)` both return an EvaluationResult.
  */
 
-import { parseExpression } from './pega-expr/parser.js';
+import { ExpressionParser } from './ExpressionParser.js';
 import type { ExprNode } from './pega-expr/nodes.js';
 import { PegaClipboardContext } from './PegaClipboardContext.js';
 import { PegValue } from './PegaExpressionAst.js';
@@ -37,7 +40,7 @@ export class PegaExpressionEvaluator {
     clipboard: PegaClipboardContext,
     collectTrace: boolean = false,
   ): EvaluationResult {
-    const ast = parseExpression(expression);
+    const ast = ExpressionParser.parseExpression(expression);
     return this.evaluateWithAst(ast, clipboard, collectTrace);
   }
 

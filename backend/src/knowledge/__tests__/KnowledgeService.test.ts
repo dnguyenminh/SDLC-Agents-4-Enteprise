@@ -21,8 +21,8 @@ describe('KnowledgeService', () => {
   let db: KnowledgeDb;
   let service: KnowledgeService;
 
-  beforeEach(() => {
-    db = KnowledgeDb.createInMemory();
+  beforeEach(async () => {
+    db = await KnowledgeDb.createInMemory();
     service = new KnowledgeService(db, logger);
   });
 

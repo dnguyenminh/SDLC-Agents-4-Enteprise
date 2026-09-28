@@ -42,9 +42,9 @@ function loaderFor(reverse: AdjacencyList, resolve: (name: string, fp?: string) 
 const DEFAULT_RESOLVE = (name: string): number | null => (name === 'doThing' ? 1 : null);
 
 describe('RelatedTestFinder', () => {
-  it('finds direct and indirect tests via reverse BFS', () => {
+  it('finds direct and indirect tests via reverse BFS', async () => {
     const finder = new RelatedTestFinder(loaderFor(REVERSE, DEFAULT_RESOLVE));
-    const result = finder.find('doThing');
+    const result = await finder.find('doThing');
 
     expect(result).not.toBeNull();
     expect(result!.symbol).toEqual({ id: 1, name: 'doThing', filePath: 'src/a.ts' });
@@ -57,42 +57,42 @@ describe('RelatedTestFinder', () => {
     expect(result!.indirectTests[0].path).toEqual(['testIndirect', 'doThing', 'testA']);
   });
 
-  it('honors the filePath resolver option', () => {
+  it('honors the filePath resolver option', async () => {
     const loader = loaderFor(REVERSE, DEFAULT_RESOLVE);
     const finder = new RelatedTestFinder(loader);
-    finder.find('doThing', { filePath: 'src/' });
+    await finder.find('doThing', { filePath: 'src/' });
     expect(loader.resolveSymbolId).toHaveBeenCalledWith('doThing', 'src/');
   });
 
-  it('limits BFS expansion depth with maxDepth', () => {
+  it('limits BFS expansion depth with maxDepth', async () => {
     const finder = new RelatedTestFinder(loaderFor(DEEP_REVERSE, DEFAULT_RESOLVE));
-    const result = finder.find('doThing', { maxDepth: 1 });
+    const result = await finder.find('doThing', { maxDepth: 1 });
     expect(result!.directTests).toHaveLength(1);
     expect(result!.indirectTests.map(t => t.symbolId)).toEqual([4]);
     expect(result!.indirectTests.some(t => t.symbolId === 5)).toBe(false);
     expect(result!.totalTests).toBe(2);
   });
 
-  it('finds deeper indirect tests with default depth', () => {
+  it('finds deeper indirect tests with default depth', async () => {
     const finder = new RelatedTestFinder(loaderFor(DEEP_REVERSE, DEFAULT_RESOLVE));
-    const result = finder.find('doThing');
+    const result = await finder.find('doThing');
     expect(result!.indirectTests.map(t => t.symbolId).sort()).toEqual([4, 5]);
     expect(result!.totalTests).toBe(3);
   });
 
-  it('returns null when the symbol cannot be resolved', () => {
+  it('returns null when the symbol cannot be resolved', async () => {
     const finder = new RelatedTestFinder(loaderFor(REVERSE, () => null));
-    expect(finder.find('ghost')).toBeNull();
+    expect(await finder.find('ghost')).toBeNull();
   });
 
-  it('returns null when the resolved symbol has no info', () => {
+  it('returns null when the resolved symbol has no info', async () => {
     const finder = new RelatedTestFinder(loaderFor(REVERSE, (name) => (name === 'ghost' ? 99 : null)));
-    expect(finder.find('ghost')).toBeNull();
+    expect(await finder.find('ghost')).toBeNull();
   });
 
-  it('returns zero tests when nothing matches', () => {
+  it('returns zero tests when nothing matches', async () => {
     const finder = new RelatedTestFinder(loaderFor(new Map([[1, [3]], [3, []]]), DEFAULT_RESOLVE));
-    const result = finder.find('doThing');
+    const result = await finder.find('doThing');
     expect(result!.directTests).toEqual([]);
     expect(result!.indirectTests).toEqual([]);
     expect(result!.totalTests).toBe(0);

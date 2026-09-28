@@ -1,0 +1,1 @@
+| 2 | 2026-09-24T18:00:00+07:00 | SM | requirements | Verify Phase 1 completeness | BRD exists v1.0, diagram Business_Flow present, missing Use-Case diagram. Requirements marked completed but diagram incomplete per quality gate. | N/A |

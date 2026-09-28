@@ -13,7 +13,6 @@ export default defineConfig({
       "src/anthropic/__tests__/handlers.test.ts",
       "src/__tests__/cross-process.e2e.test.ts",
       "src/__tests__/drawio-convert.e2e.test.ts",
-      "src/langgraph/__tests__/chat-workspace-review-real-llm.test.ts",
     ],
     globals: false,
     environment: "node",

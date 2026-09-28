@@ -363,7 +363,7 @@ Client:
 | MCP Protocol | @modelcontextprotocol/sdk |
 | AI Pipeline | @langchain/langgraph |
 | LLM Provider | Anthropic SDK (primary) |
-| Database | better-sqlite3 + pg + mysql2 |
+| Database | @sqlite.org/sqlite-wasm + pg + mysql2 |
 | Vector Embeddings | ONNX Runtime + Transformers.js |
 | Code Parsing | web-tree-sitter |
 | File Watching | chokidar |

@@ -7,7 +7,7 @@ description: >
   Entry point duy nhất — user chỉ cần cung cấp Jira ticket key.
   SM biết ticket đang ở phase nào, tự resume, tự chạy feedback loops,
   và hỏi user trước khi chuyển phase lớn.
-tools: ["read", "write", "shell", "@mcp"]
+tools: ["read", "write", "shell", "@mcp", "use_subagent"]
 includeMcpJson: true
 ---
 

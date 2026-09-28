@@ -1,6 +1,6 @@
 /**
  * IT-02 — CallTool success increments tool_usage; error result not counted.
- * Real getMcpServer + in-process Client + real temp SQLite (better-sqlite3).
+ * Real getMcpServer + in-process Client + real temp SQLite DB (wasm).
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -15,7 +15,7 @@ describe('IT-02: CallTool usage counting', () => {
   let ctx: TempDb;
 
   beforeEach(async () => {
-    ctx = makeTempDb();
+    ctx = await makeTempDb();
     const registry = new ModuleRegistry(silentLogger());
     const handlers = new Map();
     handlers.set('mem_search', okHandler);
@@ -24,7 +24,7 @@ describe('IT-02: CallTool usage counting', () => {
     registry.register(new StubModule('memory', defs, handlers, ctx.engine, 'ready'));
     harness = await connectMcp(registry);
   });
-  afterEach(async () => { await harness.close(); ctx.close(); });
+  afterEach(async () => { await harness.close(); await ctx.close(); });
 
   it('success increments counter (BR-07); error result not counted (BR-12)', async () => {
     const ok = await harness.client.callTool({ name: 'mem_search', arguments: {} });
@@ -49,7 +49,7 @@ describe('CallTool project scope stamping', () => {
   let received: Record<string, unknown> | undefined;
 
   beforeEach(async () => {
-    ctx = makeTempDb();
+    ctx = await makeTempDb();
     received = undefined;
     const registry = new ModuleRegistry(silentLogger());
     const handlers = new Map();
@@ -62,7 +62,7 @@ describe('CallTool project scope stamping', () => {
     ));
     harness = await connectMcp(registry, { projectId: '7b11cdc169de', userId: 'mcp-client' });
   });
-  afterEach(async () => { await harness.close(); ctx.close(); });
+  afterEach(async () => { await harness.close(); await ctx.close(); });
 
   it('injects __projectId and __userId from projectContext into tool args', async () => {
     await harness.client.callTool({ name: 'code_search', arguments: { query: 'viewSource' } });

@@ -1,6 +1,6 @@
 /**
  * Promotion rules — criteria evaluation for KB entry scope promotion.
- * SA4E-53: migrated from raw better-sqlite3 to DatabaseAdapter async API.
+ * SA4E-53: migrated from a raw sync handle to the DatabaseAdapter async API.
  */
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import type { KBScope } from '../models.js';

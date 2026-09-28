@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.43.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.46.2-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.43.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.46.2.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.43.0.vsix
+code --install-extension sdlc-agents-4-enterprise-1.46.2.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,32 @@ MIT
 ---
 
 ## Changelog
+
+### v1.46.2 (2026-09-28)
+
+- **Fix packaging: add missing direct `yargs` dependency** — Vendored chrome-devtools-mcp barrel (`src/mcp/devtools/third_party/index.js`) re-exports `yargs`/`yargs/helpers`, but `yargs` was only available transitively. The publish workflow installs `extension/` standalone, so `esbuild-production` failed with `Could not resolve "yargs"`. Declared `yargs ^17.7.2` directly (matches upstream + lockfile `17.7.3`). No runtime code changes.
+
+### v1.46.1 (2026-09-28)
+
+- **Version sync patch** — Align `root`/`backend`/`extension` to `1.46.1`; update badges, vsix install references (`sdlc-agents-4-enterprise-1.46.1.vsix`) and changelogs. No runtime code changes since `v1.46.0`.
+
+### v1.46.0 (2026-09-27)
+
+- **SA4E-289 epic (Option C): LangGraph decommission + Pi SDK cutover** — Legacy LangGraph engine, steering chain, dead hooks, chat/registry and Workflow Graph UI removed; Pi SDK sessions, phase router and checkpointer adapters wired in. Shared kernel extracted to `extension/src/mcp/` (lint-frozen, SA4E-332).
+- **SA4E-324..330: small-model support wave** — `LlmProvider.countTokens()` per-provider API, context budget gate (REJECT >95%, WARN >85%), prompt compression, model routing/fallback, session compaction + eval harness.
+- **Security** — 4 High + 17 Medium findings fixed; 0 Critical across SA4E-324..332.
+- **Tests** — 20 former `test.todo` placeholders implemented; suites green.
+
+### v1.45.0 (2026-09-26)
+
+- **Backend storage off better-sqlite3 → @sqlite.org/sqlite-wasm** — Async-first `DatabaseAdapter`; dead admin portal and native-binding resolver removed.
+- **PegaStreamIngester authentication** — Sends `Authorization: Bearer` on ingest-stream/job-poll/ingest-rule requests.
+- **NativeAddonManager removed** — No longer needed without better-sqlite3 native binaries.
+
+### v1.44.0 (2026-09-23)
+
+- **SA4E-320: Opt-in HTTPS bypass for remote backend** — New workspace-scoped setting `kiroSdlc.backend.allowInsecureRemote` (default off) lets users accept an HTTP remote backend URL on trusted private networks, with an explicit MITM warning; HTTPS enforcement stays on by default (SEC-289-03). Backend URL changes now apply at runtime without an extension reload (AuthManager, KnowledgeClient, and the backend client re-point + reconnect on config change). Security hardening: `restrictedConfigurations` + workspace-trust gate prevent untrusted-repo abuse; Pega endpoint HTTPS enforcement (SEC-02).
+- **SA4E-323: Per-workspace isolation for Pega/Atlassian settings** — Pega/Atlassian connection settings are isolated per workspace (secrets namespaced in the OS keychain), with a one-time migration of legacy global values. Internal refactor split `PegaHttpClient` and `SettingsMessageHandler` into focused ≤200-LOC modules.
 
 ### v1.43.0 (2026-09-22)
 

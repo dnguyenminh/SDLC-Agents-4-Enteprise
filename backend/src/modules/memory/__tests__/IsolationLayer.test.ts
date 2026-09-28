@@ -101,13 +101,14 @@ describe('SA4E-27 UT — buildReadFilter', () => {
     expect(clause).toContain("scope = 'SHARED'");
     expect(clause).not.toContain("scope = 'USER'");
     expect(clause).toContain("scope = 'WORKSPACE'");
+    expect(clause).toContain("scope = 'PROJECT'");
     expect(clause).toContain('project_id = ?');
     expect(clause).not.toContain('project_id IS NULL');
     expect(clause).toContain("scope = 'WORKSPACE'");
     expect(clause).toContain('user_id = ?');
     expect(clause).toContain('kb_shared_grants');
-    // SA4E-31: params include userId + projectId for WORKSPACE, + projectId for SHARED
-    expect(params).toEqual(['user-1', 'app-A', 'app-A']);
+    // SA4E-31 + SA4E-331: params include userId + projectId for WORKSPACE, projectId for PROJECT, + projectId for SHARED
+    expect(params).toEqual(['user-1', 'app-A', 'app-A', 'app-A']);
   });
 
   it('UT-02: without projectId (empty string) fails closed (SA4E-31)', () => {
@@ -260,7 +261,7 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
   let ctx: TempDb;
 
   beforeEach(async () => {
-    ctx = makeTempDb();
+    ctx = await makeTempDb();
     // Seed data
     await ctx.engine.insert({ content: 'A pattern', summary: 'proj-A', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'u1', project_id: 'app-A' });
     await ctx.engine.insert({ content: 'B pattern', summary: 'proj-B', type: 'CONTEXT', scope: 'WORKSPACE', user_id: 'u1', project_id: 'app-B' });
@@ -269,14 +270,14 @@ describe('SA4E-27 IT — IsolationLayer with Real SQLite', () => {
     await ctx.engine.insert({ content: 'User1 pattern', summary: 'user1-priv', type: 'CONTEXT', scope: 'USER', user_id: 'u1', project_id: null });
     await ctx.engine.insert({ content: 'User2 pattern', summary: 'user2-priv', type: 'CONTEXT', scope: 'USER', user_id: 'u2', project_id: null });
   });
-  afterEach(() => ctx.close());
+  afterEach(async () => { await ctx.close(); });
 
   it('IT-01: buildReadFilter enforces strict isolation against real DB (SA4E-31)', () => {
-    ((ctx.engine.getDb() as any) as any).prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
+     ((ctx.dbManager.getDb() as any)).prepare('INSERT OR IGNORE INTO kb_shared_grants (project_id) VALUES (?)').run('app-A');
     const pCtx = createProjectContext('app-A', 'u1');
     const { clause, params } = buildReadFilter(pCtx);
     const sql = `SELECT * FROM knowledge_entries WHERE archived = 0 AND ${clause}`;
-    const rows = (ctx.engine.getDb() as any).prepare(sql).all(...params) as any[];
+    const rows = (ctx.dbManager.getDb() as any).prepare(sql).all(...params) as any[];
     const summaries = rows.map((r: any) => r.summary);
     expect(summaries).toContain('proj-A');       // WORKSPACE app-A + user u1
     expect(summaries).toContain('shared');        // SHARED granted for app-A

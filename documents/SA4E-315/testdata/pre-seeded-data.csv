@@ -1,0 +1,4 @@
+id,cwd,agentDir,status,description
+env-001,C:\workspace\SA4E-254,C:\Users\ASUS\.pi\agent,VALID,Valid workspace for happy path tests
+env-002,/invalid/path,C:\Users\ASUS\.pi\agent,INVALID_CWD,Invalid cwd for AF-1 test
+env-003,C:\workspace\SA4E-254,/invalid/agent,INVALID_AGENT,Invalid agentDir for AF-2 test

@@ -1,0 +1,150 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="a_caller" value="Developer / Extension Caller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="30" y="40" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_chat" value="Chat Panel + ContextUsageTracker (% bar)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="230" y="40" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_settings" value="SettingsManager + CredentialRef (ref-only)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="40" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_sdk" value="Pi SDK SessionManager + createAgentSession" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="710" y="40" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_config" value="SessionConfigurator.createAgentSession (budget gate)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="30" y="180" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_registry" value="ModelRegistry 9 entries + validate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="180" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_budget" value="BudgetCalculator + ThresholdGate REJECT / WARN / ALLOW" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="490" y="180" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_mapper" value="ThinkingLevelMapper (throw on invalid)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="180" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_base" value="BaseLlmProvider fallbackCount + withTimeout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="30" y="330" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_anth" value="AnthropicProvider.countTokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="330" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_openai" value="OpenAIProvider.countTokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="450" y="330" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_ollama" value="OllamaProvider.countTokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="330" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_onnx" value="OnnxProvider.countTokens type=onnx (TO-BE)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="830" y="330" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_api_anth" value="Anthropic API count_tokens + models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="470" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_api_oai" value="OpenAI-compat models + tokenize cloud js-tiktoken" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="450" y="470" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_api_oll" value="Ollama api/show + api/chat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="640" y="470" width="160" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a_file" value="tokenizer.json .code-intel/models/llm/id" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="830" y="470" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="1. createAgentSession" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_caller" target="a_config">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="2. resolveModel" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_config" target="a_registry">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="3. countTokens batch" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="a_config" target="a_base">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="4. calculateBudget" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_config" target="a_budget">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="150" y="290"/>
+          <mxPoint x="590" y="290"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="5. mapThinkingLevel" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_config" target="a_mapper">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="200" y="310"/>
+          <mxPoint x="805" y="310"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="model passthrough" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="a_settings" target="a_config">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="570" y="150"/>
+          <mxPoint x="150" y="150"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="6. create session + diagnostics" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_config" target="a_sdk">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="200" y="130"/>
+          <mxPoint x="800" y="130"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="REJECT throw" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontColor=#b85450;fontSize=9;" edge="1" parent="1" source="a_config" target="a_caller">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="80" y="120"/>
+          <mxPoint x="115" y="120"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e9" value="extends" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="a_base" target="a_anth">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="130" y="415"/>
+          <mxPoint x="340" y="415"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="a_base" target="a_openai">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="130" y="425"/>
+          <mxPoint x="530" y="425"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="a_base" target="a_ollama">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="160" y="415"/>
+          <mxPoint x="720" y="415"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e12" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="a_base" target="a_onnx">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="160" y="425"/>
+          <mxPoint x="915" y="425"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e13" value="POST count_tokens" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_anth" target="a_api_anth">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" value="POST tokenize" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_openai" target="a_api_oai">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" value="show + chat eval" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_ollama" target="a_api_oll">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e16" value="encode ids.length" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="a_onnx" target="a_file">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

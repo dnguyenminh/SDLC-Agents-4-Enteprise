@@ -1,0 +1,12 @@
+test_case_id,grep_pattern,scope,expected_hits,expected_result,description
+IT-01,langgraph/core/mcp-bridge,extension/src --include=*.ts,0,PASS,"TC-MOVE-01: old bridge path fully gone"
+IT-01,mcp-bridge\.js,extension/src --include=*.ts,0,PASS,"TC-MOVE-01: .js-suffixed variant (kb-client.ts:3 old form) gone"
+IT-01,\.\./core/mcp-bridge,extension/src --include=*.ts,0,PASS,"TC-MOVE-01: intra-legacy relative form (tool-registry.ts:6 old) gone"
+IT-02,from.*langgraph/,extension/src --include=*.ts minus src/langgraph/,0 files,PASS,"TC-MOVE-02: no reverse deps (import forms incl deep core/providers/vscode + .js)"
+IT-02,require.*langgraph,extension/src --include=*.ts minus src/langgraph/,0 hits,PASS,"SEC-332-05: require() bypass closed (providers use lazy require)"
+IT-02,langgraph/core/llm-provider(\.js)?,extension/src minus src/langgraph/,0 hits,PASS,"Type-only probes (pi-adapter-context-probe.ts:1 old form) gone"
+IT-03,mcp-wrapper-client|McpWrapperClient|createMcpClient,extension/src/pi-agent+pi-workflow non-test,0 hits,PASS,"TC-MOVE-03: no wrapper consumers remain in prod"
+IT-04,tsc -p ./ (from extension/),extension/,exit 0,PASS,"TC-MOVE-04: compile clean; EF-1 specifier-only fixes"
+IT-07,checked-in extension/tests/*.js,extension/tests/,0 files,PASS,"TC-MOVE-07/DISC-03: stale .js artifacts deleted"
+IT-07,require.*langgraph/core/base-node,extension/ all files,0 hits,PASS,"SEC-332-11: stale base-node require gone"
+IT-10,interface McpToolDefinition,extension/src --include=*.ts,exactly 1 (mcp-types.ts),PASS,"Single canonical type owner; registry holds import+re-export only"

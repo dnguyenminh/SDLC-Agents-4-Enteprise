@@ -80,7 +80,7 @@ stream_write_file(file_path="documents/SECURITY-REPORT.md", content="\n## Remedi
 Your analysis is optimized for:
 - **Language/Runtime**: TypeScript / Node.js
 - **Framework**: Hono (HTTP server, routing, middleware)
-- **Database**: SQLite (better-sqlite3) / PostgreSQL (pg)
+- **Database**: SQLite (@sqlite.org/sqlite-wasm) / PostgreSQL (pg)
 - **API Style**: REST APIs, JSON serialization (zod schemas)
 - **Protocol**: MCP (Model Context Protocol) — custom tool/agent communication
 - **Auth**: JWT, session-based, or custom token schemes
@@ -132,7 +132,7 @@ After parsing input, confirm:
 3. Check for known CVEs in critical dependencies:
    - Hono version — check for known security patches
    - zod / JSON parsing — validation vulnerabilities
-   - better-sqlite3 / pg driver — connection security
+   - SQLite / pg driver — connection security
    - JWT libraries (jsonwebtoken, jose) — algorithm confusion, key handling
    - Logging libraries (pino, winston) — injection vulnerabilities
    - Any HTTP client libraries (undici, fetch) — SSRF potential

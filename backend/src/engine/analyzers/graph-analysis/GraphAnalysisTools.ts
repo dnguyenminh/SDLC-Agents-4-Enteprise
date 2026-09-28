@@ -43,18 +43,18 @@ export const GRAPH_ANALYSIS_TOOL_DEFINITIONS = [
 export async function handleGraphAnalysisTool(name: string, args: Record<string, unknown>, adapter: DatabaseAdapter, projectId?: string): Promise<string | null> {
   const graphLoader = new GraphLoader(adapter, projectId);
   switch (name) {
-    case 'find_circular_deps': return handleCircularDeps(args, graphLoader);
-    case 'find_related_tests': return handleRelatedTests(args, graphLoader);
-    case 'find_hot_paths': return handleHotPaths(args, graphLoader);
+    case 'find_circular_deps': return await handleCircularDeps(args, graphLoader);
+    case 'find_related_tests': return await handleRelatedTests(args, graphLoader);
+    case 'find_hot_paths': return await handleHotPaths(args, graphLoader);
     case 'find_dead_imports': return await handleDeadImports(args, adapter, projectId);
     case 'module_summary': return await handleModuleSummary(args, adapter, projectId);
     default: return null;
   }
 }
 
-function handleCircularDeps(args: Record<string, unknown>, graphLoader: GraphLoader): string {
+async function handleCircularDeps(args: Record<string, unknown>, graphLoader: GraphLoader): Promise<string> {
   const detector = new CircularDepDetector(graphLoader);
-  const results = detector.detect({ module: args.module as string | undefined, maxLength: args.max_length as number | undefined });
+  const results = await detector.detect({ module: args.module as string | undefined, maxLength: args.max_length as number | undefined });
   if (results.length === 0) return 'No circular dependencies found.';
   const lines = [`Found ${results.length} circular dependencies:\n`];
   for (const dep of results) {
@@ -66,11 +66,11 @@ function handleCircularDeps(args: Record<string, unknown>, graphLoader: GraphLoa
   return lines.join('\n');
 }
 
-function handleRelatedTests(args: Record<string, unknown>, graphLoader: GraphLoader): string {
+async function handleRelatedTests(args: Record<string, unknown>, graphLoader: GraphLoader): Promise<string> {
   const symbolName = args.symbol_name as string;
   if (!symbolName) return 'Parameter "symbol_name" is required.';
   const finder = new RelatedTestFinder(graphLoader);
-  const result = finder.find(symbolName, { maxDepth: args.max_depth as number | undefined, filePath: args.file_path as string | undefined });
+  const result = await finder.find(symbolName, { maxDepth: args.max_depth as number | undefined, filePath: args.file_path as string | undefined });
   if (!result) return `Symbol "${symbolName}" not found in index.`;
   if (result.totalTests === 0) return `No tests found for "${symbolName}".`;
   const lines = [`Tests for ${result.symbol.name} (${result.symbol.filePath}):\n`, `Direct tests (${result.directTests.length}):`];
@@ -82,9 +82,9 @@ function handleRelatedTests(args: Record<string, unknown>, graphLoader: GraphLoa
   return lines.join('\n');
 }
 
-function handleHotPaths(args: Record<string, unknown>, graphLoader: GraphLoader): string {
+async function handleHotPaths(args: Record<string, unknown>, graphLoader: GraphLoader): Promise<string> {
   const analyzer = new HotPathAnalyzer(graphLoader);
-  const results = analyzer.analyze({ module: args.module as string | undefined, limit: args.limit as number | undefined, minCallers: args.min_callers as number | undefined });
+  const results = await analyzer.analyze({ module: args.module as string | undefined, limit: args.limit as number | undefined, minCallers: args.min_callers as number | undefined });
   if (results.length === 0) return 'No hot paths found (no functions with multiple callers).';
   const lines = [`Hot Paths — Top ${results.length} most-called functions:\n`];
   for (let i = 0; i < results.length; i++) {

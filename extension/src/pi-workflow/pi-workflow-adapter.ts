@@ -4,11 +4,11 @@ import { PiProvider } from './pi-provider.js';
 import type { PipelineState } from './types/pi-workflow-state.js';
 import type { IServerManager } from '../types/server-types';
 import type { ChatExtToWebviewMessage } from '../chat-panel/message-protocol';
-import { McpBridge } from '../langgraph/core/mcp-bridge';
-import { StreamHandler } from '../langgraph/core/stream-handler';
+import { McpBridge } from '../mcp/mcp-bridge';
+import { StreamHandler } from '../mcp/stream-handler';
 import { ToolApprovalGate } from '../chat/engine/ToolApprovalGate';
 import { CommandPatternMatcher } from '../chat/engine/CommandPatternMatcher';
-import type { LlmProvider } from '../langgraph/core/llm-provider';
+import type { LlmProvider } from '../mcp/llm-provider';
 import { createToolApprovalGateHandler } from './pi-workflow-gate.js';
 import { buildCredentialResolver } from './pi-provider-config-bridge.js';
 import { detectContextWindowEarlyHelper, getDetectedContextWindowHelper, type ContextProbeState } from './pi-adapter-context-probe.js';
@@ -22,7 +22,6 @@ interface AdapterOptions {
   workspaceRoot: string;
   onEvent: (msg: ChatExtToWebviewMessage) => void;
   llmProvider?: LlmProvider;
-  diagnosticsFeed?: unknown;
   checkpointerStore?: RemoteCheckpointerStore;
   secrets?: vscode.SecretStorage;
   /** DI: shared Models registry (tests inject the faux provider here). */
@@ -53,13 +52,11 @@ export class PiWorkflowAdapter {
   };
   public readonly approvalGate: ToolApprovalGate;
   public readonly commandPatternMatcher: CommandPatternMatcher;
-  public diagnosticsFeed?: unknown;
 
   constructor(opts: AdapterOptions) {
     this.onEvent = opts.onEvent;
     this.llmProvider = opts.llmProvider;
     this.secrets = opts.secrets;
-    this.diagnosticsFeed = opts.diagnosticsFeed;
     this.mcpBridge = new McpBridge(opts.mcpManager);
     this.streamHandler = new StreamHandler((msg) => this.onEvent(msg));
     this.commandPatternMatcher = new CommandPatternMatcher();
@@ -74,10 +71,6 @@ export class PiWorkflowAdapter {
       provider: opts.models ? new PiProvider() : undefined,
       models: opts.models,
     });
-  }
-
-  setDiagnosticsFeed(feed: unknown): void {
-    this.diagnosticsFeed = feed;
   }
 
   getStreamHandler(): StreamHandler {

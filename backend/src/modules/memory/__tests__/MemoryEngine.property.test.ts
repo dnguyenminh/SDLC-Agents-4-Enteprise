@@ -21,7 +21,7 @@ describe('MemoryEngine.incrementToolUsage property', () => {
   it('PBT-04: N increments yield call_count === N (60 random cases)', async () => {
     const rand = rng(999);
     for (let c = 0; c < 60; c++) {
-      const ctx = makeTempDb();
+      const ctx = await makeTempDb();
       try {
         const name = `tool_${Math.floor(rand() * 1e6).toString(36)}`;
         const n = 1 + Math.floor(rand() * 200);
@@ -31,7 +31,7 @@ describe('MemoryEngine.incrementToolUsage property', () => {
         expect(rows[0].call_count).toBe(n);
         expect(rows[0].last_called_at).toBeTruthy();
       } finally {
-        ctx.close();
+        await ctx.close();
       }
     }
   });

@@ -63,7 +63,7 @@ export default class JspParser extends GenericTreeSitterParser {
           for (let i = 0; i < node.childCount; i++) {
             walk(node.child(i));
           }
-        } catch {}
+        } catch { /* ignore: snippet extraction is best-effort */ }
       };
       walk(root);
       const javaCode = javaSnippets.join('\n');
@@ -82,7 +82,7 @@ export default class JspParser extends GenericTreeSitterParser {
             signature: ''
           });
         }
-        const methodRegex = /(public|private|protected)?\s*(static)?\s*[\w<>\[\]]+\s+([A-Za-z_]\w*)\s*\([^)]*\)\s*\{/g;
+        const methodRegex = /(public|private|protected)?\s*(static)?\s*[\w<>[\]]+\s+([A-Za-z_]\w*)\s*\([^)]*\)\s*\{/g;
         while ((m = methodRegex.exec(javaCode)) !== null) {
           symbols.push({
             name: m[3],

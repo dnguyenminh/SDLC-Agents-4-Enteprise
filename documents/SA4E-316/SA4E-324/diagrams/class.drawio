@@ -1,0 +1,27 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="n1" value="SessionConfigurator&#xa;- SUPPORTED_MODELS&#xa;+ validateModel(model)&#xa;+ buildSessionConfig(params)&#xa;+ createAgentSession(sdk,cwd,params)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="100" width="200" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="n2" value="ModelRegistryEntry&#xa;- modelId: string&#xa;- contextWindow: integer&#xa;- maxOutput: integer&#xa;- costPer1k?: float&#xa;- speed?: string" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="100" width="200" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="n3" value="BudgetCalculator&#xa;+ estimateTokens(chars)&#xa;+ calculateBudget(model,inputs)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="100" y="300" width="200" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="n4" value="ThinkingLevelMapper&#xa;+ map(modelId,level): maxTokens" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="300" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" parent="1" source="n1" target="n2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" parent="1" source="n1" target="n3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;" edge="1" parent="1" source="n1" target="n4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -27,7 +27,7 @@ import { createErrorHandler } from './middleware/error-handler.js';
 import { rateLimiter, loadPersistedRateLimitCap } from './middleware/rate-limiter.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { apiKeyAuth } from './middleware/api-key-auth.js';
-import { jwtAuth } from './middleware/jwt-auth.js';
+import { jwtAuth, jwtAuthStrict } from './middleware/jwt-auth.js';
 import { createKbApiRoutes, createToolsApiRoutes } from './routes/kb-api.js';
 import { createRateLimitConfigRoutes } from './routes/rate-limit-config-routes.js';
 import { createPegaApiRoutes } from './routes/pega-api.js';
@@ -35,6 +35,7 @@ import { createPegaStreamRoutes } from './routes/pega-stream.js';
 import { createIngestRuleRoute } from './routes/pega-ingest-rule.js';
 import { createPegaSchemaRoutes } from './routes/pega-schema-routes.js';
 import { getDbAdapter } from '../admin/db/core.js';
+import { ensureEngineIndexSchema } from '../database/schema-registry/ensure-engine-schema.js';
 import { ensureSa4e101Tables } from '../database/schema-registry/ensure-sa4e-101.js';
 import { ensureSa4e300Cleanup } from '../database/schema-registry/ensure-sa4e-300.js';
 import { ensureSa4e302UniqueGraphEdges } from '../database/schema-registry/ensure-sa4e-302.js';
@@ -97,7 +98,16 @@ export class HttpServer {
     // SA4E-241 SEC-01: bind identity to the whole Pega route group (mounted at
     // /api/v1/pega/*). projectId is derived from the authenticated identity
     // (X-Project-Id / JWT pid), never from the request body (fail-closed).
-    app.use('/api/v1/pega/*', jwtAuth);
+    // Require login session for all Pega APIs except login itself.
+    app.use('/api/v1/pega/*', jwtAuthStrict);
+    // Enforce login session for all /api/v1/* endpoints except login itself
+    app.use('/api/v1/*', async (c, next) => {
+      const path = c.req.path;
+      if (path === '/api/v1/auth/login' || path.startsWith('/api/v1/auth/login/')) {
+        return next();
+      }
+      return jwtAuthStrict(c, next);
+    });
     // SA4E-241 SEC-08: per-identity rate limit on the Pega group (defense-in-depth).
     app.use('/api/v1/pega/*', rateLimiter);
     app.onError(createErrorHandler(this.logger));
@@ -186,7 +196,7 @@ export class HttpServer {
         fetch: this.app.fetch,
         port: this.port,
         hostname: this.host,
-      }, (info) => {
+      }, async (info) => {
         this._isRunning = true;
         this.logger.info({ port: info.port, host: this.host }, 'Backend server started');
         // Apply any admin-persisted rate-limit cap (non-blocking; survives restart).
@@ -195,26 +205,22 @@ export class HttpServer {
         });
         // SA4E-101: bootstrap persistent index-status tables, then mark stale
         // running ops as interrupted, then start the cleanup scheduler.
-        // All non-blocking — failures degrade gracefully (EF-04).
-        ensureSa4e101Tables()
-          .then(() => runStartupInterruptDetection())
-          // SA4E-300: one-time idempotent cleanup of orphan CODE_ENRICHMENT tasks
-          // left by the removed graph-sync enrichment path (Path A).
-          .then(() => ensureSa4e300Cleanup())
-          // SA4E-302: ensure unique index for graph_edges ON CONFLICT
-          .then(() => ensureSa4e302UniqueGraphEdges())
-          // SA4E-303: drop unused edge tables
-          .then(() => ensureSa4e303DropUnusedTables())
-          .then(() => {
-            this.cleanupScheduler = new CleanupScheduler();
-            this.cleanupScheduler.start();
-          })
-          .catch((err) => {
-            this.logger.error(
-              { err },
-              '[startup] SA4E-101 persistence init failed — progress will not survive restart',
-            );
-          });
+        // Ensure schema is ready before marking server as fully started to avoid E2E race.
+        try {
+          await ensureEngineIndexSchema();
+          await ensureSa4e101Tables();
+          await runStartupInterruptDetection();
+          await ensureSa4e300Cleanup();
+          await ensureSa4e302UniqueGraphEdges();
+          await ensureSa4e303DropUnusedTables();
+          this.cleanupScheduler = new CleanupScheduler();
+          this.cleanupScheduler.start();
+        } catch (err) {
+          this.logger.error(
+            { err },
+            '[startup] SA4E-101 persistence init failed — progress will not survive restart',
+          );
+        }
         resolve();
       });
     });

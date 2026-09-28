@@ -1,0 +1,3 @@
+test_case_id,err_body_error,err_body_details,err_body_action,expected_ok,expected_status,description
+TC-002,DB error,ENOSPC: disk full,Free disk space,false,500,httpPostWithDetail forwards details
+TC-206,Internal error,Service unavailable,Retry later,false,500,triggerDocumentIngest propagates error

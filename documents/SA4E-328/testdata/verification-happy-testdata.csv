@@ -1,0 +1,4 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-001,"Run hallucination grader","Answer generated","Faithfulness score returned",High
+TC-002,"Grader score low","Faithfulness < threshold","Retry triggered",High
+TC-003,"Execute tools","Small model active","Direct routing + external grader used",High

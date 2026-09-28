@@ -1,0 +1,5 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-101,"Run dialogue","20-turn dialogue","No intent loss",Medium
+TC-102,"Execute harness","Eval harness configured","Real E2E not mock",Medium
+TC-301,"Run eval","Golden dataset","Small eval >80% baseline large",High
+TC-302,"Evaluate","Eval run","Faithfulness and task success reported",High

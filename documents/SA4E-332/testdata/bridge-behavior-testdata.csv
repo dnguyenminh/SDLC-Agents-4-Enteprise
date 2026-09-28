@@ -1,0 +1,20 @@
+test_case_id,tool_name,args_json,timeout_ms,mock_setup,expected_result,expected_error_message,description
+PBT-01,callTool,"{arbitrary nested objects/arrays; 10% keys end _as_path}",50,"readFileSync->ZmlsZQ== if path contains exists else throw; >=1000 runs",no *_as_path keys in output AND frozen input unchanged,,"Property: recursion incl arrays; deep-clone immutability; SEC-332-01 intact"
+PBT-03,callTool,"{random name/args}",5-200,"invokeTool never-resolves; >=500 runs",rejects McpToolTimeoutError every run,"MCP tool '{name}' timed out after {ms}ms","Property: hung transport always fails fast; timer.unref clean exit"
+UT-01,test-tool,"{}",10,invokeTool resolves after 100ms,rejects McpToolTimeoutError,MCP tool 'test-tool' timed out after 10ms,"TC-BR-01/TC-15: per-call timeout; 60s default kept"
+UT-02,listTools,,10000,"fetch OK {result:{tools:[{name:tool_a}]}} port=12345",1 tool named tool_a,,TC-BR-02/TC-16: POST 127.0.0.1:{port}/mcp tools/list via manager port
+UT-03a,listTools,,10000,fetch rejects AbortError,rejects McpToolTimeoutError,MCP tool 'tools/list' timed out after 10000ms,"TC-17: 10s list abort kept"
+UT-03b,listTools,,10000,fetch OK ok=false status=500 statusText=ISE,rejects HTTP error,HTTP 500: ISE,Unchanged passthrough
+UT-03c,listTools,,10000,"fetch OK {error:{code:-32601 message:not found}}",rejects MCP error,MCP error (-32601): not found,Unchanged passthrough
+UT-04a,t,"{""doc_as_path"":""/ws/a.txt"",""keep"":1}",60000,"existsSync=true readFileSync=ZmlsZQ==",invokeTool got {doc:ZmlsZQ== keep:1},,"_as_path read-and-replace; suffix key dropped"
+UT-04b,t,"{""nested"":{""arr"":[{""f_as_path"":""/ws/b.txt""}]}}",60000,existsSync=true,recursive replace incl arrays,,Nested recursion property (arrays)
+UT-04c,t,"{""m_as_path"":""/ws/missing.txt""}",60000,existsSync=false,key dropped + console.error + NO throw,,Drop-on-miss; never throws
+UT-04d,t,"{""e_as_path"":""/ws/dir""}",60000,readFileSync throws EISDIR,key dropped + console.error + NO throw,,Unreadable handled; TOCTOU/SEC-332-10 carried (follow-up)
+UT-05a,t,invokeTool->'{"_base64_file":"aGVsbG8=","_filename":"out.bin"}',60000,"workspace=/mock/workspace","File saved successfully to: /mock/workspace/documents/tmp/out.bin",,Save with _filename; SEC-332-02 carried byte-identical
+UT-05b,t,invokeTool->'{"_base64_file":"aGVsbG8="}',60000,workspace=/mock/workspace,File saved to output_{Date.now()}.bin,,Fallback filename path
+UT-05c,t,invokeTool->'{"_base64_file":"aGVsbG8="}',60000,workspaceFolders=[],Proxy Error: Cannot save base64 file because workspace is undefined.,No write attempted
+UT-05d,t,invokeTool->'{"_base64_file":"aGVsbG8="}',60000,writeFileSync throws ENOSPC,Proxy Error: Failed to save base64 file to disk (ENOSPC) with NO base64 leak,,Failure message leaks nothing
+UT-05e,t,invokeTool->'plain text' and '{"a":1}',60000,,returned raw/unchanged,,Non-JSON passthrough
+UT-06a,isAvailable,,,status=running,true,,No I/O no throw
+UT-06b,callTool+listTools,"{}",60000,status=stopped,throw before transport,MCP Server is not running.,Early-fail guard (Pi gain)
+UT-06c,listTools,,10000,"status=running port=null",throws McpServerNotRunningError,MCP Server is not running.,Port null-check

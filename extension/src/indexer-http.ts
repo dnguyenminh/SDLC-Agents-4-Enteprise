@@ -7,9 +7,16 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { httpPostJson } from "./utils/http-client-utils";
 import { getEffectiveScope } from "./utils/scope-detector";
+import { getBackendUrl, DEFAULT_BACKEND_URL } from "./config/backend-url";
 
-function getBackendUrl(): string | undefined {
-  return vscode.workspace.getConfiguration("kiroSdlc").get<string>("backend.url");
+/** SA4E-320: validated backend URL with fail-safe fallback — a [Security] rejection never aborts indexing. */
+function getSafeBackendUrl(): string {
+  try {
+    return getBackendUrl();
+  } catch (err: any) {
+    console.warn(`[Security] backend.url validation failed: ${err?.message} — falling back to loopback default`);
+    return DEFAULT_BACKEND_URL;
+  }
 }
 
 function getWorkspaceRoot(): string | undefined {
@@ -21,7 +28,7 @@ export async function ingestDocumentsViaHttp(
   report: vscode.Progress<{ message?: string }>,
   token?: string
 ): Promise<string> {
-  const backendUrl = getBackendUrl();
+  const backendUrl = getSafeBackendUrl();
   if (!backendUrl) return "❌ Backend URL not configured.";
   const url = `${backendUrl}/mcp/tools/call`;
   let ingested = 0;
@@ -61,7 +68,7 @@ export async function ingestDocumentsViaHttp(
 }
 
 export async function uploadDocumentFile(relPath: string, content: string, token?: string): Promise<boolean> {
-  const backendUrl = getBackendUrl();
+  const backendUrl = getSafeBackendUrl();
   if (!backendUrl) return false;
   const authHeaders: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
   return httpPostJson<unknown>(`${backendUrl}/api/index/document`, { path: relPath, content }, { headers: authHeaders })
@@ -70,7 +77,7 @@ export async function uploadDocumentFile(relPath: string, content: string, token
 }
 
 export async function uploadSourceFiles(report: vscode.Progress<{ message?: string }>, token?: string): Promise<string> {
-  const backendUrl = getBackendUrl();
+  const backendUrl = getSafeBackendUrl();
   if (!backendUrl) return "❌ Backend URL not configured.";
   const libraryExcludes = "**/{node_modules,dist,.git,build,out,.opencode,vendor,packages,bower_components,.kilo,scratch,.code-intel,.analysis}/**";
   const files = await vscode.workspace.findFiles(

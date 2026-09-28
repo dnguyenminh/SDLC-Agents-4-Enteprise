@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.43.0",
+  "version": "1.46.2",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -12,6 +12,22 @@
   "icon": "resources/icon.png",
   "engines": {
     "vscode": "^1.85.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true,
+      "restrictedConfigurations": [
+        "kiroSdlc.backend.allowInsecureRemote",
+        "kiroSdlc.backend.url",
+        "kiroSdlc.pegaEndpoint",
+        "kiroSdlc.pegaUsername",
+        "kiroSdlc.atlassianConnectionType",
+        "kiroSdlc.anthropicBaseUrl",
+        "kiroSdlc.openaiBaseUrl",
+        "kiroSdlc.ollamaUrl",
+        "kiroSdlc.lmstudioBaseUrl"
+      ]
+    }
   },
   "categories": [
     "Other",
@@ -85,10 +101,6 @@
         "title": "SDLC Agents: Show Enrichment Status"
       },
       {
-        "command": "kiroSdlc.openWorkflowGraph",
-        "title": "SDLC Agents: Open Workflow Graph"
-      },
-      {
         "command": "kiroSdlc.symbolSearch",
         "title": "SDLC Agents: Symbol Search"
       },
@@ -152,10 +164,6 @@
       {
         "command": "kiroSdlc.fetchPegaContext",
         "title": "SDLC Agents: Fetch Pega App Context"
-      },
-      {
-        "command": "kiroSdlc.loadSteeringRule",
-        "title": "SDLC Agents: Load Steering Rule (Manual Trigger)"
       }
     ],
     "viewsContainers": {
@@ -187,6 +195,11 @@
           "type": "string",
           "default": "http://127.0.0.1:48721",
           "description": "Remote Kiro backend server URL"
+        },
+        "kiroSdlc.backend.allowInsecureRemote": {
+          "type": "boolean",
+          "default": false,
+          "description": "Bypass the HTTPS requirement for remote (non-loopback) backend server URLs. When enabled, HTTP remote URLs are accepted but traffic is unencrypted — credentials and data can be intercepted. Only enable on trusted private networks."
         },
         "kiroSdlc.backend.ssoEnabled": {
           "type": "boolean",
@@ -255,11 +268,6 @@
           "type": "boolean",
           "default": true,
           "description": "Enable/disable the local MCP wrapper server on startup"
-        },
-        "kiroSdlc.enableDiagnosticsFeed": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable the realtime LSP diagnostics feed into the agent loop (batched, agent-touched files only)"
         },
         "kiroSdlc.mcpServerUrl": {
           "type": "string",
@@ -436,6 +444,7 @@
     }
   },
   "scripts": {
+    "build": "tsc -p ./",
     "vscode:prepublish": "npm run esbuild-production && npm run copy-resources && npm run gen-checksums",
     "package:debug": "npm run esbuild && vsce package --no-dependencies",
     "package:prod": "npm run esbuild-production && vsce package --no-dependencies",
@@ -448,11 +457,10 @@
     "gen-checksums": "node scripts/gen-checksums.js",
     "test": "vitest run",
     "test:unit": "vitest run",
-    "test:integration": "vitest run src/langgraph/__tests__/chat-graph-diagnostics.integration.test.ts",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:watch": "vitest watch",
-    "lint": "npx eslint src/ --ext .ts",
-    "lint:fix": "npx eslint src/ --ext .ts --fix"
+    "lint": "npx eslint src/",
+    "lint:fix": "npx eslint src/ --fix"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -465,7 +473,7 @@
     "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^2.24.0",
-    "esbuild": "^0.21.0",
+    "esbuild": "0.28.2",
     "fast-check": "^4.9.0",
     "glob": "^13.0.6",
     "globals": "^17.7.0",
@@ -482,10 +490,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
     "@earendil-works/pi-agent-core": "0.80.10",
-    "@langchain/core": "^1.2.0",
-    "@langchain/langgraph": "^1.4.4",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@puppeteer/browsers": "^2.4.0",
+    "@puppeteer/browsers": "^3.2.3",
     "@types/ws": "^8.18.1",
     "@vscode/proxy-agent": "^0.43.0",
     "ajv": "^8.17.1",
@@ -493,11 +499,11 @@
     "core-js": "^3.49.0",
     "debug": "^4.4.3",
     "diff": "^5.2.2",
-    "filetomarkdown": "^0.6.9",
-    "puppeteer-core": "^24.43.0",
+    "puppeteer-core": "^25.12.0",
     "semver": "^7.7.4",
     "undici": "^6.21.0",
     "urlpattern-polyfill": "^10.1.0",
-    "ws": "^8.21.1"
+    "ws": "^8.21.1",
+    "yargs": "^17.7.2"
   }
 }

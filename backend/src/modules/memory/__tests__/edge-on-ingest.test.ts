@@ -12,6 +12,7 @@ import {
   FilePathRefStrategy,
   ClassNameRefStrategy,
   BelongsToStrategy,
+  extractIngestEdges,
   extractAndInsertIngestEdges,
   type NodeInfo,
 } from '../engine/edge-on-ingest.js';
@@ -127,6 +128,35 @@ describe('SA4E-250 Edge-on-Ingest (integer IDs, project filter, pagination)', ()
       const strategy = new BelongsToStrategy();
       const edges = strategy.extract(
         { entryId: 99, content: 'content', source: null, projectId: 'proj1' },
+        nodes,
+      );
+      expect(edges).toHaveLength(0);
+    });
+  });
+
+  describe('extractIngestEdges (aggregator, BUG-002)', () => {
+    it('aggregates DISCUSSES edge when entry mentions another node ticket key', () => {
+      const edges = extractIngestEdges(
+        { entryId: 99, content: 'This relates to SA4E-50 implementation', projectId: 'proj1' },
+        nodes,
+      );
+      expect(edges).toHaveLength(1);
+      expect(edges[0]).toEqual({
+        sourceId: 99, targetId: 1, label: 'DISCUSSES', weight: 0.5,
+      });
+    });
+
+    it('excludes self-match', () => {
+      const edges = extractIngestEdges(
+        { entryId: 1, content: 'SA4E-50 is the current entry', projectId: 'proj1' },
+        nodes,
+      );
+      expect(edges).toHaveLength(0);
+    });
+
+    it('returns empty when nothing matches', () => {
+      const edges = extractIngestEdges(
+        { entryId: 99, content: 'plain text with no references', projectId: 'proj1' },
         nodes,
       );
       expect(edges).toHaveLength(0);

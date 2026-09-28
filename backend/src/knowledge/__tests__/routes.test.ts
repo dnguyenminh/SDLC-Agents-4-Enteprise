@@ -16,8 +16,8 @@ import { createProjectContext } from '../../modules/memory/ProjectContext.js';
 
 const logger = pino({ level: 'silent' });
 
-function makeApp(checkpointLimit = 10 * 1024 * 1024) {
-  const db = KnowledgeDb.createInMemory();
+async function makeApp(checkpointLimit = 10 * 1024 * 1024) {
+  const db = await KnowledgeDb.createInMemory();
   const service = new KnowledgeService(db, logger);
   const app = new Hono();
   app.route('/api/v1', createKnowledgeApiRoutes(service, logger, { checkpointBodyLimitBytes: checkpointLimit }));
@@ -40,14 +40,14 @@ async function createThread(app: Hono, projectId = 'ws-A') {
 
 describe('Knowledge REST API — /api/v1', () => {
   it('POST /threads returns 201 with UUID v4 thread_id (PBT-HYD-01)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { status, thread_id } = await createThread(app, 'ws-A');
     expect(status).toBe(201);
     expect(thread_id).toMatch(UUID_V4_REGEX);
   });
 
   it('POST /threads with non-object body returns 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await app.request('/api/v1/threads', {
       method: 'POST',
       headers: wsHeaders('ws-A'),
@@ -59,7 +59,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('GET /threads lists only caller workspace threads', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await createThread(app, 'ws-A');
     await createThread(app, 'ws-B');
     const res = await app.request('/api/v1/threads', { headers: wsHeaders('ws-A') });
@@ -70,7 +70,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('GET /threads/:id from another workspace returns 404, not 403 (#18)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { thread_id } = await createThread(app, 'ws-A');
     const res = await app.request(`/api/v1/threads/${thread_id}`, { headers: wsHeaders('ws-B') });
     expect(res.status).toBe(404);
@@ -79,14 +79,14 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('GET /threads/:id/messages from another workspace returns 404 (#18)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { thread_id } = await createThread(app, 'ws-A');
     const res = await app.request(`/api/v1/threads/${thread_id}/messages`, { headers: wsHeaders('ws-B') });
     expect(res.status).toBe(404);
   });
 
   it('PUT then GET checkpoint roundtrip (IT-HYD-03)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { thread_id } = await createThread(app, 'ws-A');
     const payload = {
       checkpoint: { v: 3, channel_values: { messages: [{ role: 'user', content: 'persisted' }] } },
@@ -117,7 +117,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('PUT checkpoint for a thread in another workspace returns 404 (#18)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { thread_id } = await createThread(app, 'ws-A');
     const res = await app.request(`/api/v1/threads/${thread_id}/checkpoint`, {
       method: 'PUT',
@@ -128,7 +128,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('PUT checkpoint auto-creates a thread for a never-seen UUID (LangGraph checkpointer)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const freshId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
     const res = await app.request(`/api/v1/threads/${freshId}/checkpoint`, {
       method: 'PUT',
@@ -151,7 +151,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('PUT checkpoint over body limit returns 413 (#23)', async () => {
-    const { app } = makeApp(1024); // tiny limit for fast test
+    const { app } = await makeApp(1024); // tiny limit for fast test
     const { thread_id } = await createThread(app, 'ws-A');
     const bigBody = JSON.stringify({ checkpoint: { blob: 'x'.repeat(5000) } });
     const res = await app.request(`/api/v1/threads/${thread_id}/checkpoint`, {
@@ -165,7 +165,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('GET /threads/:id/events returns event sourcing log', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { thread_id } = await createThread(app, 'ws-A');
     const res = await app.request(`/api/v1/threads/${thread_id}/events`, { headers: wsHeaders('ws-A') });
     expect(res.status).toBe(200);
@@ -175,7 +175,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('GET /threads/:id/artifacts returns artifact store', async () => {
-    const { app, service } = makeApp();
+    const { app, service } = await makeApp();
     const { thread_id } = await createThread(app, 'ws-A');
     service.addArtifact(createProjectContext('ws-A', 'u'), thread_id, {
       type: 'diagram',
@@ -190,7 +190,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('DELETE /threads/:id removes the thread', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { thread_id } = await createThread(app, 'ws-A');
     const delRes = await app.request(`/api/v1/threads/${thread_id}`, {
       method: 'DELETE',
@@ -202,7 +202,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('DELETE /threads/:id from another workspace returns 404 (#18)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { thread_id } = await createThread(app, 'ws-A');
     const res = await app.request(`/api/v1/threads/${thread_id}`, {
       method: 'DELETE',
@@ -212,7 +212,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('GET /agents returns registered agents', async () => {
-    const { app, service } = makeApp();
+    const { app, service } = await makeApp();
     service.upsertAgent({
       agent_id: 'dev-agent',
       name: 'Dev Agent',
@@ -229,7 +229,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('jwtAuth middleware is wired — anonymous mode resolves projectContext (#19)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     // No Authorization header: jwtAuth anonymous mode sets projectContext.
     // Without jwtAuth, c.get('projectContext') would be undefined → 500.
     const res = await app.request('/api/v1/threads', {
@@ -239,7 +239,7 @@ describe('Knowledge REST API — /api/v1', () => {
   });
 
   it('rateLimiter is wired — headers present (#23)', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await app.request('/api/v1/threads', { headers: wsHeaders('ws-A') });
     expect(res.status).toBe(200);
     expect(res.headers.get('X-RateLimit-Limit')).toBeTruthy();

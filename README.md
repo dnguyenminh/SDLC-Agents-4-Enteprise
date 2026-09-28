@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.43.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.46.2.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,34 @@ MIT
 ---
 
 ## Changelog
+
+### v1.46.2 (2026-09-28)
+
+- **Fix packaging: add missing direct `yargs` dependency** — Vendored chrome-devtools-mcp barrel (`extension/src/mcp/devtools/third_party/index.js`) re-exports `yargs`/`yargs/helpers`, but `yargs` was only available transitively. The publish workflow installs `extension/` standalone, so `esbuild-production` failed with `Could not resolve "yargs"`. Declared `yargs ^17.7.2` directly (matches upstream + lockfile `17.7.3`). No runtime code changes.
+
+### v1.46.1 (2026-09-28)
+
+- **Version sync patch** — Align all package versions (`root`, `backend`, `extension`) to `1.46.1`; update README badges, vsix install references (`sdlc-agents-4-enterprise-1.46.1.vsix`) and changelogs. No runtime code changes since `v1.46.0`.
+
+### v1.46.0 (2026-09-27)
+
+- **SA4E-289 epic (Option C): LangGraph decommission + Pi SDK cutover** — Legacy LangGraph engine, steering chain, dead hooks, chat/registry and Workflow Graph UI removed; Pi SDK sessions, phase router and checkpointer adapters wired in. Shared kernel extracted to `extension/src/mcp/` (`McpBridge`, providers, `stream-handler`, domain types) so no code outside `langgraph/` imports from it (SA4E-332, lint-frozen).
+- **SA4E-324..330: small-model support wave** — `LlmProvider.countTokens()` per-provider API (Anthropic count_tokens, llama/LM Studio tokenize, Ollama prompt_eval_count, ONNX tokenizer.json; no hardcoded `len/4` estimates), context budget gate (REJECT >95%, WARN >85%), smart retrieval with workspace containment, prompt compression + role-scoped prompts, map-reduce for large repos, hallucination grader, model routing/fallback, session compaction + eval harness. Model registry covers phi-3-mini, smollm2, llama3.1, qwen-coder, lmstudio.
+- **Security** — 4 High findings fixed and verified (provider baseUrl SSRF validation + `restrictedConfigurations`, ONNX `modelId` path traversal guard, Pi→MCP bridge allowlist + approval + audit, MCP path containment); 17 Medium findings fixed in Phase B hardening; `langgraph/` directory deleted entirely and Workflow Graph zombie removed (decommission complete); 0 Critical across SA4E-324..332.
+- **Tests** — 20 former `test.todo` placeholders implemented (chat/E2E-UI logic + webview features); suites green: extension unit 221 files / 2077+ tests, backend unit, e2e-api; `tsc` + `eslint` clean.
+
+### v1.45.0 (2026-09-26)
+
+- **SA4E-234: Backend storage off better-sqlite3 → @sqlite.org/sqlite-wasm** — Async-first `DatabaseAdapter` everywhere; dead admin Express portal, `MemoryDb`, `DiskBackedSet` and native-binding resolver removed; taskWorker concurrency cap raised 8→64. Root-cause fixes from the wasm migration: `SqliteWasmAdapter` now shares one live in-memory DB per resolved file path (refcounted) so sibling adapters stop diverging (`no such table` in E2E); `runAsync` converts BigInt `lastInsertRowid` to Number (fixes `mem_ingest` JSON-serialize crash); graph-analysis stack (`GraphLoader` → `CircularDepDetector`/`HotPathAnalyzer`/`RelatedTestFinder`/`ModuleSummarizer`) fully async; `HttpServer.start` awaits schema bootstrap before serving. All better-sqlite3 remnants purged (dead shim, broken debug scripts, obsolete extension NativeAddonManager + release manifest, stale docs/comments).
+- **SA4E-233/232: ANTLR-based Pega expression parser** — hand-written parser removed, callers migrated to ANTLR `ExprNodeEvaluator`; `ISNULL` unary operator added to `ExprOperators`.
+- **SA4E-331: Cross-project memory isolation** — PROJECT scope filter + dispatcher updates; E2E tool forwarding now sends `X-Project-Id` (fail-closed reads respected).
+- **Extension** — `PegaStreamIngester` accepts an auth manager and sends `Authorization: Bearer` on ingest-stream/job-poll/ingest-rule; indexing services auth headers updated.
+- **CI** — E2E global setup boots the server on a dynamic port (no manual code-intel server start). All suites verified green locally before release: backend unit 284 files / 3079 tests, e2e-api 173/173, extension compile & tests.
+
+### v1.44.0 (2026-09-23)
+
+- **SA4E-320: Opt-in HTTPS bypass for remote backend** — New workspace-scoped setting `kiroSdlc.backend.allowInsecureRemote` (default off) lets users accept an HTTP remote backend URL on trusted private networks, with an explicit MITM warning; enforcement stays on by default (SEC-289-03). Backend URL changes now apply at runtime without an extension reload. Security hardening: `restrictedConfigurations` + workspace-trust gate block untrusted-repo abuse; Pega endpoint HTTPS enforcement (SEC-02).
+- **SA4E-323: Per-workspace isolation for Pega/Atlassian settings** — Connection settings are isolated per workspace (secrets namespaced in the OS keychain), with a one-time migration of legacy global values. Internal refactor split `PegaHttpClient` and `SettingsMessageHandler` into focused ≤200-LOC modules.
 
 ### v1.43.0 (2026-09-22)
 

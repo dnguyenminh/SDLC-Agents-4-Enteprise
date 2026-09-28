@@ -1,0 +1,6 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-001,"GLOBAL query on large repo","GLOBAL query on large repo","Decomposer creates batches of 20 files; each batch processed",High
+TC-002,"process batches with small model","Batches created","Small model summarizes each batch; summaries generated",High
+TC-003,"aggregate batch summaries (reduce)","Summaries ready","Final synthesized answer returned",High
+TC-101,"process many batches concurrently","Many batches","Parallelism limit respected",Medium
+TC-102,"batch with timeout","Batch timeout","Timeout handled; partial results used",Medium

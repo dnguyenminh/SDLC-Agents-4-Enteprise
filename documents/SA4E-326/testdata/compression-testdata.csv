@@ -1,0 +1,6 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-001,"request prompt for small model tier","Small model selected","Compressed variant returned; smaller than full variant",High
+TC-101,"call /template","/template call","Prompt injected on demand (no preload)",Medium
+TC-102,"request prompt with mode=replace","mode=replace","SYSTEM.md appended",Medium
+TC-301,"prompt discovery on <100 templates","<100 templates","Discovery time <500ms (BR-1)",High
+TC-302,"execute SA4E-318 STC with compressed prompt","Small model with compressed prompt","STC passes (AC Story 1)",High

@@ -117,7 +117,7 @@ Developer khởi tạo ingest source code từ Extension. Extension gọi Backen
 3. Không còn `catch { /* silent */ }` ở `triggerDocumentIngest`, phải check `result.ok` và hiển thị warning.
 4. `syncCodeSymbols` phải trả thông tin status/body thay vì `return null`.
 
-**Data Fields (if applicable):**
+**Data Fields:**
 | Field | Type | Required | Description | Example |
 |-------|------|----------|-------------|---------|
 | error | string | Yes | Thông điệp lỗi | "Internal error" |
@@ -215,8 +215,6 @@ Developer khởi tạo ingest source code từ Extension. Extension gọi Backen
 | Performance | Không làm tăng latency đáng kể | Enrich error không thêm query |
 | Security | Không expose stack trace nhạy cảm | `details` chỉ chứa thông tin kỹ thuật an toàn |
 | Availability | Error surfacing không ảnh hưởng uptime | Chỉ thay đổi response payload |
-
-> No specific non-functional requirements identified. To be confirmed with technical team.
 
 ---
 

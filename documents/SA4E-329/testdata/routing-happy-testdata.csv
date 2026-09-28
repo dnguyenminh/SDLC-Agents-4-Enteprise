@@ -1,0 +1,4 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-001,"Submit request","User request","Routed to small model first",High
+TC-002,"Detect low confidence","Confidence low","Escalate to large model",High
+TC-003,"Check logs","Routing performed","Routing decision recorded",High

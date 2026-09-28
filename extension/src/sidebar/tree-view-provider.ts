@@ -116,7 +116,6 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
       this.createCommandItem("Tags", "kiroSdlc.openKbTags", "tag"),
       this.createCommandItem("Quality", "kiroSdlc.openKbQuality", "star"),
       this.createCommandItem("Analytics", "kiroSdlc.openKbAnalytics", "graph"),
-      this.createCommandItem("Workflow", "kiroSdlc.openWorkflowGraph", "circuit-board"),
     ];
 
     const serverSection = new KiroTreeItem("MCP Wrapper Server", vscode.TreeItemCollapsibleState.Expanded);

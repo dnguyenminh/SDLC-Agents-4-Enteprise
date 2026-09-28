@@ -76,7 +76,11 @@ export class QueryLayer {
   async searchCode(projectId: string | undefined, query: string, limit = 20): Promise<SearchResult[]> {
     const scope = buildCodeScopeFilter(projectId, 's');
     if (this.adapter.getEngine() === 'sqlite') {
-      return this.searchCodeSqlite(scope, sanitizeFtsQuery(query), limit);
+      try {
+        return await this.searchCodeSqlite(scope, sanitizeFtsQuery(query), limit);
+      } catch {
+        return [];
+      }
     }
     return this.searchCodePortable(scope, query, limit);
   }

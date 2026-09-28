@@ -1,0 +1,4 @@
+test_case_id,packageId,packageName,version,enabled,expected_http_code,expected_error_message,description
+TC-001,pi-mcp-adapter,Pi MCP Adapter,1.0.0,true,200,,Valid package view
+TC-302,,Invalid,1.0.0,true,400,PackageId must be non-empty,Empty packageId validation
+TC-401,invalid-id,Invalid Package,1.0.0,true,404,Package not found,Invalid packageId toggle

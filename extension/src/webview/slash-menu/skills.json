@@ -82,7 +82,7 @@
   {
     "id": "sqlite-patterns",
     "label": "sqlite-patterns",
-    "description": "SQLite/better-sqlite3 patterns for this project. Use when writing database queries, repositories, or migrations."
+    "description": "SQLite patterns for this project. Use when writing database queries, repositories, or migrations."
   },
   {
     "id": "svelte-webview",

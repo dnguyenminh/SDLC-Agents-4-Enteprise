@@ -28,7 +28,7 @@ export class GraphLoader {
   }
 
   /** Load the import/dependency graph as adjacency list. */
-  loadDependencyGraph(module?: string): AdjacencyList {
+  async loadDependencyGraph(module?: string): Promise<AdjacencyList> {
     const scope = buildCodeScopeFilter(this.projectId, 'relationships');
     let sql = `
       SELECT source_symbol_id, target_symbol_id
@@ -45,15 +45,15 @@ export class GraphLoader {
   }
 
   /** Load the call graph as adjacency list (caller -> callee). */
-  loadCallGraph(module?: string): AdjacencyList {
+  async loadCallGraph(module?: string): Promise<AdjacencyList> {
     const { sql, params } = this.callGraphQuery(module);
     return this.buildForwardGraph(sql, params);
   }
 
   /** Load reverse call graph (callee -> callers). */
-  loadReverseCallGraph(module?: string): AdjacencyList {
+  async loadReverseCallGraph(module?: string): Promise<AdjacencyList> {
     const { sql, params } = this.callGraphQuery(module);
-    const rows = this.adapter.all<{ source_symbol_id: number; target_symbol_id: number }>(sql, params);
+    const rows = await this.adapter.allAsync<{ source_symbol_id: number; target_symbol_id: number }>(sql, params);
     const graph: AdjacencyList = new Map();
     for (const row of rows) {
       if (!graph.has(row.target_symbol_id)) graph.set(row.target_symbol_id, []);
@@ -75,8 +75,8 @@ export class GraphLoader {
     return { sql, params };
   }
 
-  private buildForwardGraph(sql: string, params: unknown[]): AdjacencyList {
-    const rows = this.adapter.all<{ source_symbol_id: number; target_symbol_id: number }>(sql, params);
+  private async buildForwardGraph(sql: string, params: unknown[]): Promise<AdjacencyList> {
+    const rows = await this.adapter.allAsync<{ source_symbol_id: number; target_symbol_id: number }>(sql, params);
     const graph: AdjacencyList = new Map();
     for (const row of rows) {
       if (!graph.has(row.source_symbol_id)) graph.set(row.source_symbol_id, []);
@@ -87,9 +87,9 @@ export class GraphLoader {
   }
 
   /** Get symbol info by ID (tenant-scoped). */
-  getSymbolInfo(symbolId: number): SymbolInfo | null {
+  async getSymbolInfo(symbolId: number): Promise<SymbolInfo | null> {
     const scope = buildCodeScopeFilter(this.projectId, 's');
-    const row = this.adapter.get<SymbolInfo>(`
+    const row = await this.adapter.getAsync<SymbolInfo>(`
       SELECT s.id, s.name, s.kind, f.relative_path as filePath
       FROM symbols s JOIN files f ON f.id = s.file_id
       WHERE s.id = ? AND ${scope.clause}
@@ -98,11 +98,11 @@ export class GraphLoader {
   }
 
   /** Get symbol info for multiple IDs (tenant-scoped). */
-  getSymbolInfoBatch(symbolIds: number[]): Map<number, SymbolInfo> {
+  async getSymbolInfoBatch(symbolIds: number[]): Promise<Map<number, SymbolInfo>> {
     if (symbolIds.length === 0) return new Map();
     const scope = buildCodeScopeFilter(this.projectId, 's');
     const placeholders = symbolIds.map(() => '?').join(',');
-    const rows = this.adapter.all<SymbolInfo>(`
+    const rows = await this.adapter.allAsync<SymbolInfo>(`
       SELECT s.id, s.name, s.kind, f.relative_path as filePath
       FROM symbols s JOIN files f ON f.id = s.file_id
       WHERE s.id IN (${placeholders}) AND ${scope.clause}
@@ -113,13 +113,13 @@ export class GraphLoader {
   }
 
   /** Resolve a symbol name to its ID (tenant-scoped). */
-  resolveSymbolId(name: string, filePath?: string): number | null {
+  async resolveSymbolId(name: string, filePath?: string): Promise<number | null> {
     const scope = buildCodeScopeFilter(this.projectId, 's');
     let sql = `SELECT s.id FROM symbols s JOIN files f ON f.id = s.file_id WHERE s.name = ? AND ${scope.clause}`;
     const params: unknown[] = [name, ...scope.params];
     if (filePath) { sql += ' AND f.relative_path LIKE ?'; params.push(`%${filePath}%`); }
     sql += ' LIMIT 1';
-    const row = this.adapter.get<{ id: number }>(sql, params);
+    const row = await this.adapter.getAsync<{ id: number }>(sql, params);
     return row?.id ?? null;
   }
 }

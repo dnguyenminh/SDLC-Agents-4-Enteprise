@@ -53,7 +53,7 @@ export class GateGuardRepository {
         )`
       );
     } else {
-      this.adapter.exec(
+      await this.adapter.execAsync(
         `CREATE TABLE IF NOT EXISTS gateguard_audit (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           timestamp TEXT NOT NULL DEFAULT (datetime('now')),
@@ -66,13 +66,13 @@ export class GateGuardRepository {
           context_json TEXT
         )`
       );
-      this.adapter.exec(
+      await this.adapter.execAsync(
         'CREATE INDEX IF NOT EXISTS idx_gateguard_audit_time ON gateguard_audit(timestamp DESC)'
       );
-      this.adapter.exec(
+      await this.adapter.execAsync(
         'CREATE INDEX IF NOT EXISTS idx_gateguard_audit_project ON gateguard_audit(project_id, timestamp DESC)'
       );
-      this.adapter.exec(
+      await this.adapter.execAsync(
         `CREATE TABLE IF NOT EXISTS gateguard_denylist (
           id TEXT PRIMARY KEY,
           regex TEXT NOT NULL,

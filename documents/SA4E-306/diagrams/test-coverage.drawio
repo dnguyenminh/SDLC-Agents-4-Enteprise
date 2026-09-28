@@ -1,0 +1,18 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="req" value="Requirements" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;" vertex="1" parent="1">
+<mxGeometry x="100" y="100" width="200" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="levels" value="Test Levels: PBT, UT, IT, E2E-API, E2E-UI, SIT" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;" vertex="1" parent="1">
+<mxGeometry x="400" y="100" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="box1" value="UC-1, UC-2, BR-1..BR-8" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+<mxGeometry x="100" y="160" width="700" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="cover" value="Covered" style="ellipse;html=1;fillColor=#90ee90;" vertex="1" parent="1">
+<mxGeometry x="650" y="180" width="80" height="30" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

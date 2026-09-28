@@ -19,7 +19,7 @@ export function createSsoProvidersRoutes(ctx: AdminContext) {
     if (permCheck instanceof Response) return permCheck;
     try {
       const db = getAdminDb();
-      const rows = await db.allAsync('SELECT provider_id, provider_type, name, enabled, client_id, client_secret, tenant_id, redirect_uri, allowed_redirects, scopes, login_ui_html, created_at, updated_at FROM sso_providers ORDER BY provider_type');
+      const rows = await db.allAsync<Record<string, unknown>>('SELECT provider_id, provider_type, name, enabled, client_id, client_secret, tenant_id, redirect_uri, allowed_redirects, scopes, login_ui_html, created_at, updated_at FROM sso_providers ORDER BY provider_type');
       const providers = (rows || []).map((r: Record<string, unknown>) => ({ ...r, client_secret: maskSecret(r.client_secret) }));
       return c.json({ providers });
     } catch (err) {

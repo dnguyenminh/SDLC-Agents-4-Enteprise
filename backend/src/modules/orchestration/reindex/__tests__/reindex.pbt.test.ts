@@ -1,5 +1,5 @@
 /**
- * SA4E-42 PBT-01..04 — property-based tests over a real better-sqlite3 DB.
+ * SA4E-42 PBT-01..04 — property-based tests over a real SQLite DB (wasm).
  * Idempotency, scope isolation, prune convergence, and injection-safety of names.
  */
 import { describe, it, expect } from 'vitest';

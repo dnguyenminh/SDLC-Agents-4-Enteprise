@@ -1,0 +1,33 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="start" value="Start Test Planning" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="350" y="40" width="150" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="pbt" value="PBT / UT / IT" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="350" y="130" width="150" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="e2e" value="E2E-API / E2E-UI" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="350" y="220" width="150" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="sit" value="SIT Manual" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="350" y="310" width="150" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="end" value="Test Complete" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+<mxGeometry x="350" y="400" width="150" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="start" target="pbt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="pbt" target="e2e" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="e2e" target="sit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="sit" target="end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

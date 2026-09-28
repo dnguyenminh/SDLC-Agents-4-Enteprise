@@ -16,37 +16,37 @@ export class RelatedTestFinder {
   }
 
   /** Find tests related to a symbol (by name or ID). */
-  find(symbolName: string, options: { maxDepth?: number; filePath?: string } = {}): RelatedTestResult | null {
-    const symbolId = this.graphLoader.resolveSymbolId(symbolName, options.filePath);
+  async find(symbolName: string, options: { maxDepth?: number; filePath?: string } = {}): Promise<RelatedTestResult | null> {
+    const symbolId = await this.graphLoader.resolveSymbolId(symbolName, options.filePath);
     if (symbolId === null) return null;
 
-    const symbolInfo = this.graphLoader.getSymbolInfo(symbolId);
+    const symbolInfo = await this.graphLoader.getSymbolInfo(symbolId);
     if (!symbolInfo) return null;
 
     const maxDepth = options.maxDepth ?? 3;
-    const reverseGraph = this.graphLoader.loadReverseCallGraph();
-    const callerPaths = this.reverseBFS(symbolId, reverseGraph, maxDepth);
+    const reverseGraph = await this.graphLoader.loadReverseCallGraph();
+    const callerPaths = await this.reverseBFS(symbolId, reverseGraph, maxDepth);
 
     const directTests: TestReference[] = [];
     const indirectTests: TestReference[] = [];
 
     for (const caller of callerPaths) {
-      const callerInfo = this.graphLoader.getSymbolInfo(caller.symbolId);
+      const callerInfo = await this.graphLoader.getSymbolInfo(caller.symbolId);
       if (!callerInfo) continue;
 
       const isTest = this.testDetector.isTestFile(callerInfo.filePath) ||
                      this.testDetector.isTestFunction(callerInfo.name);
 
       if (isTest) {
+        const chainNames = await Promise.all(
+          caller.path.map(async (id) => (await this.graphLoader.getSymbolInfo(id))?.name ?? `${id}`),
+        );
         const ref: TestReference = {
           symbolId: caller.symbolId,
           testName: callerInfo.name,
           filePath: callerInfo.filePath,
           depth: caller.depth,
-          path: [callerInfo.name, ...caller.path.map(id => {
-            const info = this.graphLoader.getSymbolInfo(id);
-            return info?.name ?? `${id}`;
-          })],
+          path: [callerInfo.name, ...chainNames],
         };
 
         if (caller.depth === 1) {
@@ -65,7 +65,7 @@ export class RelatedTestFinder {
     };
   }
 
-  private reverseBFS(startId: number, reverseGraph: Map<number, number[]>, maxDepth: number): CallerPath[] {
+  private async reverseBFS(startId: number, reverseGraph: Map<number, number[]>, maxDepth: number): Promise<CallerPath[]> {
     const visited = new Set<number>();
     const queue: Array<{ id: number; depth: number; path: number[] }> = [
       { id: startId, depth: 0, path: [] },
@@ -81,7 +81,7 @@ export class RelatedTestFinder {
       for (const caller of callers) {
         if (visited.has(caller)) continue;
         const newPath = [...path, id];
-        const callerInfo = this.graphLoader.getSymbolInfo(caller);
+        const callerInfo = await this.graphLoader.getSymbolInfo(caller);
         results.push({
           symbolId: caller,
           symbolName: callerInfo?.name ?? `${caller}`,

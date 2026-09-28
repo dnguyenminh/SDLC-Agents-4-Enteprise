@@ -13,6 +13,8 @@ type RowAller = (sql: string, args: unknown[]) => unknown[];
 
 function makeAdapter(get?: RowGetter, all?: RowAller) {
   return {
+    getAsync: async (sql: string, args: unknown[] = []) => (get ? get(sql, args) : undefined),
+    allAsync: async (sql: string, args: unknown[] = []) => (all ? all(sql, args) : []),
     prepare: (sql: string) => ({
       get: (...args: unknown[]) => (get ? get(sql, args) : undefined),
       all: (...args: unknown[]) => (all ? all(sql, args) : []),

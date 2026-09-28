@@ -4,7 +4,7 @@
  */
 
 import * as vscode from "vscode";
-import { createLlmProvider } from "../langgraph/providers";
+import { createLlmProvider } from "../mcp/providers";
 import { IServerManager } from "../types/server-types";
 import { mapServerStatusToWebview } from "../types";
 import { ChatExtToWebviewMessage } from "./message-protocol";

@@ -51,7 +51,7 @@ export class RemoteBackendClient implements vscode.Disposable {
     private readonly workspaceFolder: string,
     private readonly outputChannel: vscode.OutputChannel,
     private readonly authManager: AuthManager | undefined,
-    private readonly backendUrl: string,
+    private backendUrl: string,
     secrets?: vscode.SecretStorage
   ) {
     this._port = extractPort(backendUrl);
@@ -107,6 +107,21 @@ export class RemoteBackendClient implements vscode.Disposable {
   async kill(): Promise<void> { await this.disconnect(); }
   async restart(): Promise<void> { await this.disconnect(); await this.connect(); }
   async reconnect(): Promise<void> { await this.disconnect(); await this.connect(); }
+
+  /**
+   * Switch to a new backend URL and reconnect, without an extension reload
+   * (SA4E-320). Updates the derived port and re-runs connect() so REST calls,
+   * health probe, and the wrapper all target the new backend. No-op when the
+   * URL is unchanged.
+   * @param url New backend base URL (trailing slash already stripped by caller).
+   */
+  async updateBackendUrl(url: string): Promise<void> {
+    if (url === this.backendUrl) { return; }
+    this.backendUrl = url;
+    this._port = extractPort(url);
+    this.outputChannel.appendLine(`[RemoteBackendClient] Backend URL changed → ${url}. Reconnecting...`);
+    await this.reconnect();
+  }
 
   dispose(): void {
     this.disconnect().catch(() => {});

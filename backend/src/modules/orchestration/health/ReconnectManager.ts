@@ -72,7 +72,7 @@ export class ReconnectManager {
 
   private async attemptReconnect(name: string, serverConfig: ServerConfig, attempt: number): Promise<void> {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const transport = createTransport(name, serverConfig) as any;
       const client = new Client({ name: 'code-intel-orchestrator', version: '1.0.0' }, { capabilities: {} });
       await Promise.race([

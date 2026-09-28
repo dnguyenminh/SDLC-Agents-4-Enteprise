@@ -1,0 +1,110 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="c_ui" value="UI LAYER: Settings Webview + Handler" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="20" y="20" width="1110" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_web" value="Settings Webview&#10;settings.js: inputs, save/test buttons, state render (presence only)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="c_ui">
+      <mxGeometry x="20" y="50" width="500" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_handler" value="SettingsMessageHandler&#10;handle() switch, sendCurrentState(), save/test/fetch handlers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="c_ui">
+      <mxGeometry x="570" y="50" width="510" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_svc" value="SERVICE LAYER: Pega / Atlassian / Scope Resolver (extension host)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="20" y="180" width="1110" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_pcs" value="ProviderConfigService&#10;getCurrentState, updatePegaConfig, updateConfig (guarded)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="c_svc">
+      <mxGeometry x="20" y="50" width="340" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_acs" value="AtlassianCredentialService&#10;saveConfig, getConfig, testConnection, handleCredentialRequest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="c_svc">
+      <mxGeometry x="380" y="50" width="360" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_wsr" value="WorkspaceScopeResolver (NEW)&#10;getWorkspaceFolder, normalizePath, getWsHash, secretKey, ensureMigrated" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="c_svc">
+      <mxGeometry x="760" y="50" width="320" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_persist" value="PERSISTENCE LAYER: VS Code Configuration + SecretStorage" style="swimlane;startSize=30;fillColor=none;strokeColor=#9673a6;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="20" y="350" width="1110" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_cfg" value="VS Code Configuration&#10;pegaEndpoint, pegaUsername, atlassianConnectionType -> Workspace target" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="c_persist">
+      <mxGeometry x="20" y="50" width="530" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_sec" value="SecretStorage (OS keychain)&#10;kiroSdlc.&lt;wsHash&gt;.pegaPassword, .atlassian.*, .migrated marker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="c_persist">
+      <mxGeometry x="570" y="50" width="510" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_cons" value="CONSUMER LAYER: HTTP clients + indexers (same-scope reads)" style="swimlane;startSize=30;fillColor=none;strokeColor=#d6b656;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="20" y="500" width="1110" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_pega" value="PegaHttpClient&#10;getAuthHeader, getPegaEndpoint, getConfiguredUsername" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="c_cons">
+      <mxGeometry x="20" y="50" width="250" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_idx" value="IndexingService&#10;runSchemaIndexer (literal fix)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="c_cons">
+      <mxGeometry x="290" y="50" width="240" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_ahc" value="AtlassianHttpClient&#10;buildRequest hot-reload per request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="c_cons">
+      <mxGeometry x="550" y="50" width="260" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_jira" value="JiraProjectIndexer + PegaRuleSetResolver&#10;credential gate, getDeveloperShortName" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="c_cons">
+      <mxGeometry x="830" y="50" width="250" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="IPC" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n_web" target="n_handler">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="Pega calls" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n_handler" target="n_pcs">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="590" y="200"/>
+          <mxPoint x="190" y="200"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="Atlassian calls" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n_handler" target="n_acs">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="700" y="170"/>
+          <mxPoint x="560" y="170"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="scope + keys" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;strokeColor=#82b366;" edge="1" parent="1" source="n_pcs" target="n_wsr">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="500" y="300"/>
+          <mxPoint x="940" y="300"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="scope + keys" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;strokeColor=#82b366;" edge="1" parent="1" source="n_acs" target="n_wsr">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="620" y="310"/>
+          <mxPoint x="920" y="310"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="Workspace writes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#9673a6;" edge="1" parent="1" source="n_pcs" target="n_cfg">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="190" y="370"/>
+          <mxPoint x="285" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="namespaced store" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#9673a6;" edge="1" parent="1" source="n_acs" target="n_sec">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="560" y="380"/>
+          <mxPoint x="835" y="380"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="per-request resolve" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;" edge="1" parent="1" source="n_pega" target="n_sec">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="145" y="490"/>
+          <mxPoint x="835" y="490"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

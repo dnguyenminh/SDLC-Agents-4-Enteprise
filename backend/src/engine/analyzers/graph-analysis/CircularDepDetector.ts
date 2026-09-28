@@ -14,8 +14,8 @@ export class CircularDepDetector {
   }
 
   /** Find all circular dependencies in the codebase. */
-  detect(options: { module?: string; maxLength?: number } = {}): CircularDep[] {
-    const graph = this.graphLoader.loadDependencyGraph(options.module);
+  async detect(options: { module?: string; maxLength?: number } = {}): Promise<CircularDep[]> {
+    const graph = await this.graphLoader.loadDependencyGraph(options.module);
     if (graph.size === 0) return [];
 
     const tarjan = new TarjanSCC();
@@ -25,7 +25,7 @@ export class CircularDepDetector {
     for (const scc of sccs) {
       if (options.maxLength && scc.length > options.maxLength) continue;
 
-      const cycle = this.extractCycleChain(scc, graph);
+      const cycle = await this.extractCycleChain(scc, graph);
       results.push({
         cycle,
         length: scc.length,
@@ -42,9 +42,9 @@ export class CircularDepDetector {
     });
   }
 
-  private extractCycleChain(scc: number[], graph: AdjacencyList): CycleChain {
+  private async extractCycleChain(scc: number[], graph: AdjacencyList): Promise<CycleChain> {
     // Get symbol info for all nodes in the SCC
-    const symbolInfos = this.graphLoader.getSymbolInfoBatch(scc);
+    const symbolInfos = await this.graphLoader.getSymbolInfoBatch(scc);
     const sccSet = new Set(scc);
 
     const nodes: CycleNode[] = [];

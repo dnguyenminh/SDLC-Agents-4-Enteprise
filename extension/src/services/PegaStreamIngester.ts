@@ -58,9 +58,11 @@ const POLL_INTERVAL_MS = 3_000;
  */
 export class PegaStreamIngester {
   private readonly backendUrl: string;
+  private readonly authManager?: { getTokenSync(): string };
 
-  constructor(backendUrl: string) {
+  constructor(backendUrl: string, authManager?: { getTokenSync(): string }) {
     this.backendUrl = backendUrl;
+    this.authManager = authManager;
   }
 
   /**
@@ -113,11 +115,15 @@ export class PegaStreamIngester {
       },
     });
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/x-ndjson', 'X-Project-Id': projectId };
+    const token = this.authManager?.getTokenSync();
+    if (token) { headers['Authorization'] = `Bearer ${token}`; }
+
     const res = await fetch(endpoint, {
       method: 'POST',
       // SA4E-241 SEC-01: send project identity so the backend scopes the write by
       // the authenticated project (not body.projectId).
-      headers: { 'Content-Type': 'application/x-ndjson', 'X-Project-Id': projectId },
+      headers,
       body: readable,
       // @ts-expect-error — Node.js fetch supports duplex for streaming uploads
       duplex: 'half',
@@ -139,11 +145,14 @@ export class PegaStreamIngester {
   /** Poll the job status endpoint until done or failed */
   private async pollUntilComplete(jobId: string, log: LogFn): Promise<StreamIngestResult> {
     const statusUrl = `${this.backendUrl}/api/v1/pega/jobs/${jobId}`;
+    const headers: Record<string, string> = {};
+    const token = this.authManager?.getTokenSync();
+    if (token) { headers['Authorization'] = `Bearer ${token}`; }
 
     while (true) {
       await this.sleep(POLL_INTERVAL_MS);
 
-      const res = await fetch(statusUrl);
+      const res = await fetch(statusUrl, { headers });
       if (!res.ok) {
         throw new Error(`Job poll failed: HTTP ${res.status}`);
       }
@@ -194,11 +203,15 @@ export class PegaStreamIngester {
     const endpoint = `${this.backendUrl}/api/v1/pega/ingest-rule`;
 
     const body = JSON.stringify({ projectId, ruleJson, checksum, version });
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', 'X-Project-Id': projectId };
+    const token = this.authManager?.getTokenSync();
+    if (token) { headers['Authorization'] = `Bearer ${token}`; }
+
     const res = await fetch(endpoint, {
       method: 'POST',
       // SA4E-241 SEC-01: send project identity for the write path (backend scopes
       // by identity, not body.projectId).
-      headers: { 'Content-Type': 'application/json', 'X-Project-Id': projectId },
+      headers,
       body,
     });
 

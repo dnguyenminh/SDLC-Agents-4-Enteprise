@@ -127,16 +127,16 @@ describe('SA4E-41 SEC-01 graph tool isolation (two tenants)', () => {
     expect(depNone.query('src/app.ts', 'outgoing', 1, true, 50).results.length).toBe(0);
   });
 
-  it('GraphLoader call graph only contains own-tenant edges', () => {
+  it('GraphLoader call graph only contains own-tenant edges', async () => {
     const edgeCount = (g: Map<number, number[]>) =>
       [...g.values()].reduce((n, arr) => n + arr.length, 0);
-    expect(edgeCount(new GraphLoader(new SqliteDbAdapter(db), PID_B).loadCallGraph())).toBe(1);
-    expect(edgeCount(new GraphLoader(new SqliteDbAdapter(db), PID_A).loadCallGraph())).toBe(1);
+    expect(edgeCount(await new GraphLoader(new SqliteDbAdapter(db), PID_B).loadCallGraph())).toBe(1);
+    expect(edgeCount(await new GraphLoader(new SqliteDbAdapter(db), PID_A).loadCallGraph())).toBe(1);
   });
 
   it('fail-closed: undefined projectId yields no graph data', async () => {
     expect((await new SymbolResolver(new SqliteDbAdapter(db), undefined).resolve('sharedFn')).length).toBe(0);
     expect((await new GraphRepository(new SqliteDbAdapter(db), undefined).findCallers('sharedFn')).length).toBe(0);
-    expect([...new GraphLoader(new SqliteDbAdapter(db), undefined).loadCallGraph().values()].length).toBe(0);
+    expect([...(await new GraphLoader(new SqliteDbAdapter(db), undefined).loadCallGraph()).values()].length).toBe(0);
   });
 });

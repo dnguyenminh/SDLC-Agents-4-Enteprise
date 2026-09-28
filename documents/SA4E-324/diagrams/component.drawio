@@ -1,0 +1,144 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="c_config" value="SessionConfigurator orchestrates resolve-budget-gate-map-create" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="430" y="40" width="260" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_registry" value="ModelRegistry get listModels validate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="190" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_budget" value="BudgetCalculator + ThresholdGate 95 REJECT 85 WARN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="190" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_mapper" value="ThinkingLevelMapper map + throw invalid" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="190" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_tracker" value="ContextUsageTracker chatbox percent payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="190" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_iface" value="LlmProvider interface + countTokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="330" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_base" value="BaseLlmProvider timeout 5s + fallback 4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="330" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_providers" value="4 providers Anthropic OpenAI Ollama ONNX" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="330" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_tok" value="OnnxTokenizer load encode decode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="740" y="330" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_sdk" value="Pi SDK SessionManager inMemory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="470" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_ext" value="SettingsManager + CredentialRef" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="260" y="470" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_log" value="logger warn error diagnostics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="500" y="470" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_catalog" value="chat-models.ts static catalog fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="740" y="470" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="d1" value="resolveModel" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_config" target="c_registry">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="450" y="150"/>
+          <mxPoint x="130" y="150"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d2" value="calculateBudget" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_config" target="c_budget">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="500" y="160"/>
+          <mxPoint x="360" y="160"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d3" value="mapThinkingLevel" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_config" target="c_mapper">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d0" value="createAgentSession" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_config" target="c_tracker">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="690" y="140"/>
+          <mxPoint x="820" y="140"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d4" value="counts via provider" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_budget" target="c_iface">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="300" y="290"/>
+          <mxPoint x="130" y="290"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d5" value="denominator" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_budget" target="c_registry">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d6" value="reads thinkingMap" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_mapper" target="c_registry">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="540" y="300"/>
+          <mxPoint x="130" y="300"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d7" value="implements" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_base" target="c_iface">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d8" value="extends" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_providers" target="c_base">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d9" value="ONNX encode" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_providers" target="c_tok">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d10" value="create session" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_config" target="c_sdk">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="440" y="170"/>
+          <mxPoint x="20" y="170"/>
+          <mxPoint x="20" y="500"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d11" value="passthrough" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_config" target="c_ext">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="520" y="180"/>
+          <mxPoint x="480" y="180"/>
+          <mxPoint x="480" y="500"/>
+          <mxPoint x="460" y="500"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d12" value="warn + error" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_config" target="c_log">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="690" y="90"/>
+          <mxPoint x="710" y="90"/>
+          <mxPoint x="710" y="500"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d13" value="maxTokens sync" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_tracker" target="c_catalog">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="880" y="250"/>
+          <mxPoint x="880" y="470"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="d14" value="counts via provider" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="c_tracker" target="c_iface">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="740" y="270"/>
+          <mxPoint x="180" y="270"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

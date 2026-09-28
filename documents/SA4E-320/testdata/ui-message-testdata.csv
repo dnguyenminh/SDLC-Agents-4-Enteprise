@@ -1,0 +1,16 @@
+test_case_id,scenario,payload_or_action,expected_result,description
+TC-07,Fresh panel render,Open Settings > Server Settings with flag unset,Checkbox #allow-insecure-remote-chk present below URL input above btn-row; label exact "Bypass HTTPS requirement for remote server"; unchecked,AC2 placement + default OFF
+TC-08,Warning toggle ON,Click checkbox #allow-insecure-remote-chk,#allow-insecure-remote-warning visible with exact ⚠️ copy and amber status-indicator warning class,AC3 warning shown when ON
+TC-08,Warning toggle OFF,Uncheck checkbox,#allow-insecure-remote-warning has hidden attribute — not visible,AC3 warning hidden when OFF
+TC-09,Restore after panel reopen,Set flag true then close and reopen Settings panel,Checkbox restored checked; warning visible from state.allowInsecureRemote,AC6 round-trip
+TC-09,Restore after window reload,Reload window with flag true in workspace,Checkbox checked + warning visible after reopening panel,Persistence survives reload
+M-01,setAllowInsecureRemote ON,"{""type"":""setAllowInsecureRemote"",""enabled"":true}",Workspace kiroSdlc.backend.allowInsecureRemote=true written immediately without Save,AC6 write path W1
+M-02,setAllowInsecureRemote OFF,"{""type"":""setAllowInsecureRemote"",""enabled"":false}",Workspace value=false,AC6 write path false
+TC-13,Toggle then immediate Save,Check bypass then instantly click Save URL with http://remote.server.internal:48721,Save accepted — config write awaited before validation (FIFO),UI-SPEC §5 ordering
+TC-13,Untoggle then immediate Save,Uncheck bypass then instantly Save remote HTTP,Save rejected [Security] Insecure backend URL rejected,Ordering fail-closed direction
+M-06,Non-boolean enabled string,"{""type"":""setAllowInsecureRemote"",""enabled"":""true""}",Persisted value=false (coerced via enabled === true),TC-15 Finding #6
+M-07,Non-boolean enabled number,"{""type"":""setAllowInsecureRemote"",""enabled"":1}",Persisted value=false,TC-15 coercion
+M-08,Non-boolean enabled object,"{""type"":""setAllowInsecureRemote"",""enabled"":{}}",Persisted value=false,TC-15 coercion
+M-09,Strict boolean enabled,"{""type"":""setAllowInsecureRemote"",""enabled"":true}",Persisted value=true,TC-15 positive path
+M-10,State without flag field,"{""type"":""state""} (no allowInsecureRemote)",handleState skips branch — checkbox unchecked; warning hidden,TC-22 UC-03 EF-1 safe fallback
+TC-15,Hand-edited string in settings.json,"kiroSdlc.backend.allowInsecureRemote = ""true"" then Save remote HTTP",Save rejected — enforcement read treats non-true as OFF,TC-15/V4 fail-closed read

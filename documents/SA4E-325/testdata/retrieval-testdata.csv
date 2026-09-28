@@ -1,0 +1,8 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-001,"query=""review auth flow"" topK=20","Query submitted; code_search available","ContextRetriever executes code_search/mem_search; contextFiles=top 20 files; tokens<6000",High
+TC-002,"retrieval on 1000-file repo","Repo with 1000 files","Three-tier progressive disclosure applied; token usage<=6000",High
+TC-003,"run ContextRetriever on repo with .git node_modules out dist","Repo contains .git node_modules",".git node_modules out dist NOT in contextFiles",Medium
+TC-101,"GLOBAL intent query","Intent classified GLOBAL","Summary-tree returned instead of per-file scan",High
+TC-102,"retrieval with code_search timeout simulated","code_search timeout simulated","Fallback to summary-tree; warning shown",Medium
+TC-201,"query with zero matches","Query with no matches","Empty contextFiles; warning logged",Medium
+TC-202,"retrieval with timeout configured","Timeout configured","Fallback to summary-tree",Medium

@@ -1,0 +1,47 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="State: kiroSdlc.backend.allowInsecureRemote (boolean, default false)" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="140" y="40" width="560" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="init" value="" style="ellipse;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="40" y="250" width="18" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="off" value="OFF (default / fail-closed)&#10;— HTTPS enforcement ON (SEC-289-03)&#10;— UI warning hidden&#10;— remote http:// rejected" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="140" y="190" width="260" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="on" value="ON (opt-in bypass active)&#10;— remote http:// accepted&#10;— UI warning visible (amber)&#10;— console.warn on every validation" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;strokeWidth=2;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="700" y="190" width="280" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-init" value="default (unset)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="init" target="off">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="t1" value="enable — checkbox ON&#10;setAllowInsecureRemote(true) persisted&#10;guard: workspace write succeeds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="off" target="on">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="550" y="140"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t2" value="disable — checkbox OFF&#10;setAllowInsecureRemote(false) persisted&#10;guard: workspace write succeeds" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="on" target="off">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="550" y="445"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note-off" value="Unset / missing / non-boolean value → treated as OFF (fail-closed, BR-10).&#10;Persistence failure → stored value unchanged → stays OFF." style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="140" y="380" width="300" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-note-off" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="off" target="note-off">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-on" value="While ON (BR-03 / BR-05): console.warn emitted on EVERY&#10;URL validation call; UI warning stays visible until disabled." style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="680" y="380" width="320" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-note-on" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="on" target="note-on">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

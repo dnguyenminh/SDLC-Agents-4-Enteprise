@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { KnowledgeClient, KbUnreachableError, isUuidV4 } from '../../../knowledge-client';
 import { SessionManager } from '../SessionManager';
-import { startMockKbServer, type MockKbServer } from '../../../langgraph/core/__tests__/helpers/mock-kb-server';
+import { startMockKbServer, type MockKbServer } from '../../../__tests__/helpers/mock-kb-server';
 
 describe('UT-HYD-03 — Thread resolution from Backend KB', () => {
   let server: MockKbServer;

@@ -1,0 +1,6 @@
+test_case_id,agent_role,prompt_mode,expected_http_code,expected_error_message,description
+TC-001,BA,append,200,,Valid append mode
+TC-002,DEV,replace,200,,Valid replace mode
+TC-103,QA,append,200,,Append adds to default
+TC-202,BA,unknown,400,PromptMode must be append or replace,Invalid prompt mode rejected
+TC-402,BA,,400,PromptMode is required,Null prompt mode rejected

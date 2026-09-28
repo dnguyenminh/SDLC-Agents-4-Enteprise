@@ -1,0 +1,7 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-002,"load prompts role=SM","User role SM","Only BRD skill visible",High
+TC-003,"load prompts role=DEV","User role DEV","Only code skill visible",High
+TC-303,"load prompts for roles SM DEV QA","Roles SM DEV QA","SM sees BRD; DEV sees code; QA sees test",High
+TC-402,"load prompts role=unknown","Role unknown","Default scope or error returned",Medium
+TC-701,"load prompt via agent-configurator","Configurator available","Role filter applied",High
+TC-705,"load prompts for multiple roles","Multiple roles","Tool list not polluted across roles",Medium

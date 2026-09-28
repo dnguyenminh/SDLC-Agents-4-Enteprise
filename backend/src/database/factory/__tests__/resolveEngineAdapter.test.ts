@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { resolveEngineAdapter } from '../resolveEngineAdapter.js';
-import { SqliteAdapter } from '../../adapters/SqliteAdapter.js';
+import { SqliteWasmAdapter } from '../../adapters/wasm/SqliteWasmAdapter.js';
 import { DatabaseAdapterFactory } from '../DatabaseAdapterFactory.js';
 
 vi.mock('../DatabaseAdapterFactory.js', () => ({
@@ -51,7 +51,7 @@ describe('resolveEngineAdapter', () => {
   it('returns a connected SqliteAdapter for the sqlite engine', async () => {
     writeConfig(sqliteConfig());
     const adapter = await resolveEngineAdapter(dataDir, ':memory:');
-    expect(adapter).toBeInstanceOf(SqliteAdapter);
+    expect(adapter).toBeInstanceOf(SqliteWasmAdapter);
     expect(adapter.isConnected()).toBe(true);
     expect(adapter.getEngine()).toBe('sqlite');
     await adapter.disconnect();
@@ -60,7 +60,7 @@ describe('resolveEngineAdapter', () => {
   it('falls back to SqliteAdapter when the config file is corrupt', async () => {
     fs.writeFileSync(path.join(dataDir, 'database.json'), '{invalid json', 'utf-8');
     const adapter = await resolveEngineAdapter(dataDir, ':memory:');
-    expect(adapter).toBeInstanceOf(SqliteAdapter);
+    expect(adapter).toBeInstanceOf(SqliteWasmAdapter);
     expect(adapter.isConnected()).toBe(true);
     await adapter.disconnect();
   });
@@ -85,7 +85,7 @@ describe('resolveEngineAdapter', () => {
       getEngine: () => 'postgresql',
     } as never);
     const adapter = await resolveEngineAdapter(dataDir, ':memory:');
-    expect(adapter).toBeInstanceOf(SqliteAdapter);
+    expect(adapter).toBeInstanceOf(SqliteWasmAdapter);
     expect(adapter.isConnected()).toBe(true);
     await adapter.disconnect();
   });

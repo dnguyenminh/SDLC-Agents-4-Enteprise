@@ -1,14 +1,14 @@
 <!--
   SA4E-85 — Root Svelte App component.
   Mount point for the Agentic Chat UI.
-  Delegates to ChatPanel which composes the full chat interface.
+  Delegates to Layout which composes the 3-pane chat interface (SA4E-305).
 -->
 <script lang="ts">
-  import ChatPanel from './components/ChatPanel.svelte';
+  import Layout from './components/Layout.svelte';
 </script>
 
 <main class="app-root">
-  <ChatPanel />
+  <Layout />
 </main>
 
 <style>

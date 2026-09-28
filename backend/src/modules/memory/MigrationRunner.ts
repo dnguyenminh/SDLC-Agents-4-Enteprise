@@ -2,7 +2,7 @@
  * MigrationRunner — versioned schema migration system.
  * Replaces fragile try/catch ALTER TABLE approach (SA4E-26).
  * Implements BR-10 through BR-15.
- * SA4E-53: Uses SyncDatabaseAdapter instead of raw better-sqlite3.
+ * SA4E-53: Uses SyncDatabaseAdapter instead of a raw Database handle.
  */
 
 import type { SyncDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';

@@ -5,6 +5,9 @@
 
 import { Hono } from 'hono';
 import { getKbEntries, getKbEntryCount } from '../../../admin/admin-db.js';
+import { getDbAdapter } from '../../../admin/db/core.js';
+import { extractIngestEdges } from '../../../modules/memory/engine/edge-on-ingest.js';
+import type { NodeInfo, IngestEdgeContext } from '../../../modules/memory/engine/edge-on-ingest.js';
 import type { AdminContext } from './context.js';
 
 export function createKbGraphRoutes(ctx: AdminContext): Hono {
@@ -101,13 +104,12 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
     const permCheck = await ctx.requirePermission(c, user.userId, 'GRAPH_MAINTAIN');
     if (permCheck instanceof Response) return permCheck;
     const projectId = ctx.getRequestProjectId(c);
-    // Use the shared ingest-edge extractor (single source of truth) instead of
-    // re-implementing strategy logic here. getDbAdapter() yields the admin adapter.
-    const { extractAndInsertIngestEdges } = await import('../../../modules/memory/engine/edge-on-ingest.js');
-    const { getDbAdapter } = await import('../../../admin/db/core.js');
+    // Query knowledge_entries ONCE, reuse NodeInfo cache across all edge extractions
+    // (perf: was O(n²) per-entry queries). Engine-aware: PG uses $n + boolean;
+    // SQLite uses ? + 0/1. Column is `relation` (mapped from label).
     const adapter = getDbAdapter();
-    // Engine-aware SQL: SQLite uses ?/0-1, PostgreSQL uses $n/boolean.
-    const isPg = adapter.getEngine() !== 'sqlite';
+    const engine = adapter.getEngine();
+    const isPg = engine !== 'sqlite';
     const archivedFalse = isPg ? 'archived = false' : 'archived = 0';
     const projFilter = projectId
       ? (isPg ? ' AND (project_id = $1 OR project_id IS NULL)' : ' AND (project_id = ? OR project_id IS NULL)')
@@ -116,24 +118,42 @@ export function createKbGraphRoutes(ctx: AdminContext): Hono {
       `SELECT id, content, source, tags, project_id FROM knowledge_entries WHERE ${archivedFalse}${projFilter}`,
       projectId ? [projectId] : [],
     );
+    const nodes: NodeInfo[] = entries.map((e) => ({
+      id: e.id, content: e.content || '', source: e.source ?? null, tags: e.tags ?? '',
+    }));
+    const mapLabelToRelation = (label: string): string => {
+      const l = label.toUpperCase();
+      if (l === 'DISCUSSES' || l === 'BELONGS_TO' || l === 'REFERENCES') return 'reference';
+      return 'reference';
+    };
+    const insertSql = engine === 'sqlite'
+      ? `INSERT OR IGNORE INTO knowledge_graph_edges (source_id, target_id, relation, weight) VALUES (?, ?, ?, ?)`
+      : `INSERT INTO knowledge_graph_edges (source_id, target_id, relation, weight) VALUES ($1, $2, $3, $4) ON CONFLICT (source_id, target_id, relation) DO NOTHING`;
+    const existsSql = isPg
+      ? 'SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = $1 LIMIT 1'
+      : 'SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1';
     let totalEdges = 0;
     let skippedEntries = 0;
     for (const entry of entries) {
       // Idempotent: skip entries that already have outgoing edges
-      const existing = await adapter.getAsync<{ one: number }>(
-        isPg
-          ? 'SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = $1 LIMIT 1'
-          : 'SELECT 1 AS one FROM knowledge_graph_edges WHERE source_id = ? LIMIT 1',
-        [entry.id],
-      );
+      const existing = await adapter.getAsync<{ one: number }>(existsSql, [entry.id]);
       if (existing) { skippedEntries++; continue; }
-      totalEdges += await extractAndInsertIngestEdges(adapter, {
+      const edgeCtx: IngestEdgeContext = {
         entryId: entry.id,
         content: entry.content || '',
         source: entry.source,
         tags: entry.tags ?? undefined,
         projectId: entry.project_id,
-      });
+      };
+      const edges = extractIngestEdges(edgeCtx, nodes);
+      for (const edge of edges) {
+        if (edge.sourceId === edge.targetId) continue;
+        await adapter.runAsync(
+          insertSql,
+          [edge.sourceId, edge.targetId, mapLabelToRelation(edge.label), edge.weight ?? 1],
+        );
+        totalEdges++;
+      }
     }
     return c.json({ status: 'ok', nodesProcessed: entries.length, skippedEntries, edgesCreated: totalEdges });
   });

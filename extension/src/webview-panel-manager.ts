@@ -19,7 +19,6 @@ import { DashboardPanel } from "./panels/dashboard-panel";
 import { TagsPanel } from "./panels/tags-panel";
 import { QualityPanel } from "./panels/quality-panel";
 import { AnalyticsPanel } from "./panels/analytics-panel";
-import { WorkflowPanel } from "./panels/workflow-panel";
 import { SecurityPanel } from "./panels/security-panel";
 import { ImpactPanel } from "./panels/impact-panel";
 import { PlanCanvasPanel } from "./panels/plan-canvas";
@@ -46,7 +45,6 @@ export class WebviewPanelManager implements IPanelManager, vscode.Disposable {
       ["tags",      () => new TagsPanel(this.mcpManager, this.extensionUri, this.eventBus)],
       ["quality",   () => new QualityPanel(this.mcpManager, this.extensionUri, this.eventBus)],
       ["analytics", () => new AnalyticsPanel(this.mcpManager, this.extensionUri, this.eventBus)],
-      ["workflow",  () => new WorkflowPanel(this.mcpManager, this.extensionUri)],
       ["security",  () => new SecurityPanel(this.mcpManager, this.extensionUri)],
       ["impact",    () => new ImpactPanel(this.mcpManager, this.extensionUri)],
       ["planCanvas", () => new PlanCanvasPanel(this.mcpManager, this.extensionUri)],

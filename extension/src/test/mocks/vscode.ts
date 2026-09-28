@@ -173,8 +173,17 @@ export const commands = {
   executeCommand: () => Promise.resolve(),
 };
 
+export enum ConfigurationTarget {
+  Global = 1,
+  Workspace = 2,
+  WorkspaceFolder = 3,
+}
+
 export const workspace = {
   workspaceFolders: [{ uri: Uri.file("/test-workspace"), name: "test", index: 0 }],
+  // Workspace Trust — default trusted so existing tests are unaffected; the
+  // SA4E-323 trust-gate tests override this to false to exercise the guard.
+  isTrusted: true,
   getConfiguration: () => ({
     get: () => undefined,
     update: () => Promise.resolve(),

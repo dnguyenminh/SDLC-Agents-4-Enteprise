@@ -13,11 +13,11 @@ export class HotPathAnalyzer {
   }
 
   /** Find hot paths (functions with most callers). */
-  analyze(options: { limit?: number; minCallers?: number; module?: string } = {}): HotPath[] {
+  async analyze(options: { limit?: number; minCallers?: number; module?: string } = {}): Promise<HotPath[]> {
     const limit = options.limit ?? 20;
     const minCallers = options.minCallers ?? 2;
 
-    const reverseGraph = this.graphLoader.loadReverseCallGraph(options.module);
+    const reverseGraph = await this.graphLoader.loadReverseCallGraph(options.module);
 
     const results: HotPath[] = [];
 
@@ -26,7 +26,7 @@ export class HotPathAnalyzer {
       if (directCallers < minCallers) continue;
 
       const transitiveCallers = this.computeTransitiveCallers(symbolId, reverseGraph);
-      const info = this.graphLoader.getSymbolInfo(symbolId);
+      const info = await this.graphLoader.getSymbolInfo(symbolId);
       if (!info) continue;
 
       results.push({

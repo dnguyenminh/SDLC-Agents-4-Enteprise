@@ -1,0 +1,6 @@
+test_case_id,skill_id,skill_source,expected_http_code,expected_result,description
+TC-003,sdlc-ba,.pi/skills,200,Skill loaded,Valid skill discovery
+TC-102,sdlc-design,.pi/skills,200,Filtered skills returned,Skills filtered by phase
+TC-203,sdlc-common,.pi/skills,200,Conflict resolved,Duplicate skill de-duplicated
+TC-304,sdlc-ba,.pi/skills,200,Skills discovered,Auto-discover from correct paths
+TC-403,,/invalid/path,200,Graceful fallback,Non-existent skills path handled

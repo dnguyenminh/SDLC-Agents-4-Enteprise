@@ -1,29 +1,35 @@
 /**
  * Migration 003: Create pending_tasks table.
  * Cross-engine: PostgreSQL + SQLite compatible.
+ * Table-existence check branches on adapter engine (no probe-then-fallback).
+ * DDL kept in the original cross-engine form (SERIAL tolerated by SQLite).
  */
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 
 export async function migrate003PendingTasks(db: DatabaseAdapter): Promise<void> {
-  // Check table existence cross-engine
+  // Check table existence on the right catalog for the active engine.
   let exists = false;
   try {
-    const pg = await db.allAsync<{ table_name: string }>(
-      `SELECT table_name FROM information_schema.tables WHERE table_name = $1`,
-      ['pending_tasks'],
-    );
-    exists = pg.length > 0;
-  } catch (err) {
-    console.debug('[migration-003] PG table introspection failed, falling back to SQLite:', (err as Error).message);
-    try {
+    if (db.getEngine() === 'postgresql') {
+      const pg = await db.allAsync<{ table_name: string }>(
+        `SELECT table_name FROM information_schema.tables WHERE table_name = $1`,
+        ['pending_tasks'],
+      );
+      exists = pg.length > 0;
+    } else {
       const lite = await db.allAsync<{ name: string }>(
         `SELECT name FROM sqlite_master WHERE type='table' AND name='pending_tasks'`,
       );
       exists = lite.length > 0;
-    } catch (err) { console.debug('[migration] DDL statement failed (expected if already applied):', (err as Error).message); }
+    }
+  } catch (err) {
+    console.debug('[migration-003] table introspection failed:', (err as Error).message);
   }
 
-  if (exists) return;
+  if (exists) {
+    console.debug('[migration-003] pending_tasks table already exists, skipping');
+    return;
+  }
 
   await db.execAsync(`
     CREATE TABLE pending_tasks (

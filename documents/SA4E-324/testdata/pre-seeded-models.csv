@@ -1,0 +1,13 @@
+test_case_id,modelId,contextWindow,maxOutput,thinking_low,thinking_medium,thinking_high,costPer1k,speed,fixture_path,expected_result,description
+UT-01,gpt-4o-mini,128000,16384,4096,8192,16384,0.00015,fast,,listed,Seed legacy cloud model
+UT-01,gpt-4o,128000,16384,4096,8192,16384,0.0025,medium,,listed,Seed legacy cloud model
+UT-01,claude-3,200000,4096,1024,2048,4096,0.003,medium,,listed,Seed legacy claude
+UT-01,claude-3-opus,200000,4096,1024,2048,4096,0.015,slow,,listed,Seed legacy opus
+UT-01,phi-3-mini,2048,512,128,256,512,0.0002,fast,.code-intel/models/llm/phi-3-mini/tokenizer.json,listed,Seed small 2k fail-safe model
+UT-24,smollm2-360m,1024,256,64,128,256,0,fast,.code-intel/models/llm/smollm2-360m/tokenizer.json,listed-enforced-1024,Enforced denominator 1024 NOT 2048 (DISC-03/D-02)
+UT-01,llama3.1,8192,2048,512,1024,2048,0,medium,,listed,Seed local 8k
+UT-01,qwen2.5-coder,32768,1024,256,512,1024,0,medium,,listed,Seed coder 32k (high maps 1024)
+UT-01,local-model,4096,1024,256,512,1024,0,medium,,listed,Seed LM Studio auto-detect
+PBT-04,phi-3-mini,2048,512,128,256,512,0.0002,fast,,property-fixture,Registry invariant property seed
+PBT-04,smollm2-360m,1024,256,64,128,256,0,fast,,property-fixture,Registry invariant property seed (1024 pinned)
+UT-01,DEFAULT_MODEL_ID,gpt-4o-mini,,,,,,,present,Default model present check

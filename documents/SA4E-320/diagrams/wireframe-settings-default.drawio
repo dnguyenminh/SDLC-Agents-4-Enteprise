@@ -1,0 +1,87 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Wireframe — Settings › Server Settings › Card &quot;Backend MCP Server&quot; — Checkbox OFF (default / secure)" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="30" width="760" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="state-badge" value="STATE: OFF (default) — warning hidden — SEC-289-03 enforced" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="340" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="panel" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="40" y="120" width="700" height="540" as="geometry"/>
+    </mxCell>
+    <mxCell id="tabbar" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="60" y="140" width="660" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="tab-general" value="General" style="text;html=1;fontSize=11;align=center;verticalAlign=middle;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="70" y="140" width="80" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="tab-server" value="Server Settings" style="text;html=1;fontSize=11;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="160" y="140" width="130" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="tab-active" value="" style="lineWidth=3;strokeColor=#007acc;html=1;" vertex="1" parent="1">
+      <mxGeometry x="160" y="173" width="130" height="3" as="geometry"/>
+    </mxCell>
+    <mxCell id="tab-misc" value="…" style="text;html=1;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="300" y="140" width="40" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="card" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=4;fillColor=#ffffff;strokeColor=#cccccc;strokeWidth=1;shadow=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="660" height="440" as="geometry"/>
+    </mxCell>
+    <mxCell id="card-h2" value="🌐 Backend MCP Server" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="84" y="216" width="400" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="card-desc" value="&lt;p class=&quot;card-desc&quot;&gt;Configure the connection to the backend MCP server.&lt;/p&gt;" style="text;html=0;fontSize=11;align=left;verticalAlign=top;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="84" y="248" width="560" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="lbl-url" value="Backend URL" style="text;html=1;fontSize=12;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="84" y="286" width="200" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="input-url" value="https://backend.example.com:48721" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;align=left;spacingLeft=8;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="84" y="310" width="450" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="checkbox-new" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
+      <mxGeometry x="84" y="366" width="18" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="checkbox-label" value="Bypass HTTPS requirement for remote server" style="text;html=1;fontSize=12;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="110" y="361" width="420" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="warning-hidden" value="⚠️ [hidden when OFF — not rendered] Traffic to a remote backend will be sent as unencrypted HTTP — credentials and data can be intercepted. Only enable on trusted private networks." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;align=left;spacingLeft=8;spacingRight=8;fontSize=11;fontColor=#999999;fontStyle=2;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="84" y="398" width="590" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="btn-save" value="Save URL" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="84" y="474" width="110" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="btn-test" value="Test Connection" style="rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="208" y="474" width="150" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="status-result" value="#backend-test-result  (.status-indicator — empty)" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;fontColor=#999999;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="84" y="530" width="400" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-card" value="Existing card (unchanged)&#10;#backend-mcp-section — Settings › Server Settings tab" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="770" y="210" width="290" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="edge-card" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="note-card" target="card">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-checkbox" value="NEW (UI-SPEC §1 / FSD §3.1.6)&#10;id: allow-insecure-remote-chk&#10;Type: native checkbox — DEFAULT OFF (unchecked)&#10;Exact label: &quot;Bypass HTTPS requirement for remote server&quot;&#10;Placed: below Backend URL, above .btn-row" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="770" y="340" width="290" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="edge-checkbox" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="note-checkbox" target="checkbox-label">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-warning" value="#allow-insecure-remote-warning — HIDDEN when OFF&#10;• attr: hidden (removed from a11y tree)&#10;• Warning shown only when checkbox ON (BR-03 / AC3)&#10;• Ghost below = placeholder position only" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;align=left;spacingLeft=6;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="770" y="450" width="290" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="edge-warning" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="note-warning" target="warning-hidden">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-buttons" value="Existing .btn-row (unchanged)&#10;Save URL / Test Connection — payloads unchanged;&#10;validation reads flag fresh (UC-02 / UC-04)" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="770" y="560" width="290" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="edge-buttons" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="note-buttons" target="btn-test">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

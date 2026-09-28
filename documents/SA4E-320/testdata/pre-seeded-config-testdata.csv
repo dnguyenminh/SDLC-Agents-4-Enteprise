@@ -1,0 +1,4 @@
+id,setting_key,value,description
+P-01,kiroSdlc.backend.allowInsecureRemote,(unset),Fresh secure default — baseline for TC-07 (checkbox OFF)
+P-02,kiroSdlc.backend.url,http://127.0.0.1:48721,Safe loopback baseline before each SIT run
+P-03,kiroSdlc.backend.allowInsecureRemote,true,Pre-state for TC-09 restore check and TC-21 ON→OFF scenario

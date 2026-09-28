@@ -132,7 +132,7 @@ After parsing, confirm:
 **Only after reading code intelligence**, if you need more detail:
 
 1. **Read build files** — Read `package.json` (root and sub-packages) to identify:
-   - Exact library versions (Hono, better-sqlite3, zod, etc.)
+   - Exact library versions (Hono, SQLite driver, zod, etc.)
    - Key dependencies not captured by code intelligence
 2. **Read application configuration** — Read `backend/.env` or `backend/src/config/` for:
    - Database connections, feature flags, caching config, external service URLs

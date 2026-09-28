@@ -1,0 +1,54 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <!-- System Boundary -->
+    <mxCell id="boundary" value="Pi Packages Management System" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="280" y="120" width="720" height="400" as="geometry"/>
+    </mxCell>
+    <!-- Actor User/Admin -->
+    <mxCell id="actor_user" value="User/Admin" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="220" width="120" height="120" as="geometry"/>
+    </mxCell>
+    <!-- Actor System -->
+    <mxCell id="actor_system" value="System" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="380" width="120" height="120" as="geometry"/>
+    </mxCell>
+    <!-- Use Case 1 -->
+    <mxCell id="uc1" value="Configure Pi packages via Settings panel" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="200" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <!-- Use Case 2 -->
+    <mxCell id="uc2" value="Pre-install 7 core Pi packages on setup" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="620" y="200" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <!-- Use Case 3 (supporting) -->
+    <mxCell id="uc3" value="Enable/Disable package" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="360" y="320" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <!-- Use Case 4 -->
+    <mxCell id="uc4" value="Persist package configuration" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="320" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <!-- Edges Actor User to UC1 -->
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="actor_user" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Edges Actor User to UC3 -->
+    <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="actor_user" target="uc3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Edge UC1 includes UC3 -->
+    <mxCell id="e3" value="includes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="uc1" target="uc3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Edge UC1 includes UC4 -->
+    <mxCell id="e4" value="includes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="uc1" target="uc4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Actor System to UC2 -->
+    <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="actor_system" target="uc2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

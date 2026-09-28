@@ -520,35 +520,92 @@ function PortalInstance({permissions,username,isActive,impersonateUserId}){
   return(<div style={{display:isActive?'flex':'none',flex:1,height:'100%'}}><div className="sidebar" style={{width:200,background:'#f8fafc',borderRight:'1px solid #e2e8f0',overflow:'auto',flexShrink:0,padding:'12px 0',position:'relative',height:'auto',color:'#1e293b'}}><div style={{padding:'6px 12px 10px',borderBottom:'1px solid #e2e8f0',marginBottom:4}}><div style={{fontSize:12,color:'#1e293b',fontWeight:600}}>{username}</div><div style={{fontSize:10,color:'#64748b'}}>{permissions.length} perms</div></div><WorkspaceSelector onProjectChange={handleProjectChange}/>{visiblePages.map(p=>(<div key={p.id} style={{padding:'7px 12px',fontSize:12,cursor:'pointer',background:page===p.id?'#dbeafe':'transparent',color:page===p.id?'#1e40af':'#475569',borderLeft:page===p.id?'3px solid #3b82f6':'3px solid transparent'}} className="nav-item" onClick={()=>{if(impersonateUserId)__impersonateUserId=impersonateUserId;else __impersonateUserId=null;setPage(p.id);}}><span style={{marginRight:6}}>{p.icon}</span>{p.label}</div>))}</div><div className="main" key={currentProjectId+'_'+page} style={{flex:1,padding:20,overflow:'auto',marginLeft:0}}><ErrorBoundary key={currentProjectId+'_'+page}>{renderPage()}</ErrorBoundary></div></div>);
 }
 
-// SSO web flow: the /auth/{provider}/callback redirects back with the session
-// token on the URL (?sso_token=...&sso_expires=...). Persist it into the same
-// localStorage keys the SPA uses for Bearer auth, then strip the params from the
-// URL so the token isn't left in history. Runs once at load, before App mounts.
+// SA4E-319: `__embedded` = the SPA is running inside the VS Code extension iframe
+// (?embed=true). In that mode the EXTENSION HOST (AuthManager) is the single source of
+// truth for auth — the SPA must NOT self-authenticate from a stale localStorage.admin_token
+// left over from a previous session. It only becomes logged-in once the host delivers a
+// token via one of the two channels below (URL sso_token bootstrap OR postMessage).
+const __embedded=__urlParams.get('embed')==='true';
+// When embedded, discard any stale replica so a previous session's token can't render
+// the graph with empty/old permissions ("Admin (0)"). The host will redeliver the token.
+if(__embedded){localStorage.removeItem('admin_token');localStorage.removeItem('admin_user');}
+
+// SA4E-319: SINGLE token-application path shared by BOTH delivery channels so they carry
+// the SAME payload (token + profile). Previously the postMessage channel wrote only
+// admin_token (no profile) → permissions empty → "Admin (0)". Now both channels write
+// admin_token AND fetch /api/admin/profile to persist admin_user (username+permissions).
+// @param tok Bearer token derived from AuthManager (SSOT).
+async function applyToken(tok){
+  if(!tok) return;
+  localStorage.setItem('admin_token',tok);
+  try{
+    const r=await fetch('/api/admin/profile',{headers:{Authorization:'Bearer '+tok}});
+    if(r.ok){const u=await r.json();localStorage.setItem('admin_user',JSON.stringify({username:u.username||'sso-user',permissions:u.permissions||[],userId:u.userId,email:u.email}));}
+    else localStorage.setItem('admin_user',JSON.stringify({username:'sso-user',permissions:[]}));
+  }catch(e){localStorage.setItem('admin_user',JSON.stringify({username:'sso-user',permissions:[]}));}
+}
+
+// SSO web flow: the /auth/{provider}/callback redirects back with the session token on
+// the URL (?sso_token=...). The extension iframe also delivers the token via the same
+// `sso_token` key (SA4E-319 unified key). Persist via applyToken, then strip the params
+// from the URL so the token isn't left in history. Runs once at load, before App mounts.
 window.__ssoBootstrap=(async function captureSsoToken(){
   try{
     const p=new URLSearchParams(window.location.search);
     const tok=p.get('sso_token');
     if(!tok) return;
-    localStorage.setItem('admin_token',tok);
     p.delete('sso_token'); p.delete('sso_expires');
     const qs=p.toString();
     window.history.replaceState({},'',window.location.pathname+(qs?'?'+qs:''));
-    // Fetch the real user + permissions so the SPA renders the right pages.
-    try{
-      const r=await fetch('/api/admin/profile',{headers:{Authorization:'Bearer '+tok}});
-      if(r.ok){const u=await r.json();localStorage.setItem('admin_user',JSON.stringify({username:u.username||'sso-user',permissions:u.permissions||[],userId:u.userId,email:u.email}));}
-      else localStorage.setItem('admin_user',JSON.stringify({username:'sso-user',permissions:[]}));
-    }catch(e){localStorage.setItem('admin_user',JSON.stringify({username:'sso-user',permissions:[]}));}
+    await applyToken(tok);
   }catch(e){}
 })();
+// SA4E-319: runtime token delivery channel. Registered at GLOBAL scope (next to
+// __ssoBootstrap), NOT inside a React useEffect, so a redelivered/refreshed token is
+// never dropped while the SPA sits on the LoginPage (App may be unmounted). Uses the
+// SAME applyToken() as bootstrap (token + profile), then flips loggedIn once persisted.
+// __authSettled marks that the host has responded so App can stop showing the pending
+// state and, if still tokenless, fall back to the login screen.
+window.addEventListener('message',function(e){
+  if(e.data&&e.data.type==='token_refreshed'&&e.data.token){
+    applyToken(e.data.token).then(function(){
+      window.__authSettled=true;
+      if(window.__onAuthRefreshed)window.__onAuthRefreshed();
+    });
+  }
+  // SA4E-319: host reports no active session → settle auth and drop to the login screen
+  // (no stale-token self-login). Ends the "authenticating" placeholder deterministically.
+  if(e.data&&e.data.type==='auth_unavailable'){
+    window.__authSettled=true;
+    if(window.__onAuthExpired)window.__onAuthExpired();
+  }
+});
 function App(){const[loggedIn,setLoggedIn]=useState(!!localStorage.getItem('admin_token'));const[forceChange,setForceChange]=useState(false);const[cpwd,setCpwd]=useState({c:'',n1:'',n2:'',err:''});
+  // SA4E-319: authVer bumps whenever a token is applied so we re-read admin_user
+  // (username + permissions) — fixes stale "Admin (0)" after a runtime token delivery.
+  const[authVer,setAuthVer]=useState(0);
   const[tabs,setTabs]=useState([]);const[activeTab,setActiveTab]=useState('admin');const[usersList,setUsersList]=useState([]);const[showAddTab,setShowAddTab]=useState(false);
   const userInfo=JSON.parse(localStorage.getItem('admin_user')||'{}');
   const realPerms=userInfo.permissions||[];
   const canCompare=realPerms.includes('RBAC_MANAGE');
-  useEffect(()=>{window.__onAuthExpired=()=>setLoggedIn(false);return()=>{window.__onAuthExpired=null;};},[]);
-  useEffect(()=>{if(!loggedIn)return;if(userInfo.forcePasswordChange)setForceChange(true);if(canCompare)api('/users?pageSize=100').then(d=>{if(d&&!d.__error)setUsersList(d.users||[]);});},[loggedIn]);
-  if(!loggedIn)return<LoginPage onLogin={()=>setLoggedIn(true)}/>;
+  useEffect(()=>{
+    window.__onAuthExpired=()=>setLoggedIn(false);
+    // Re-read admin_user (via authVer) AND flip loggedIn so tab shows real permissions.
+    window.__onAuthRefreshed=()=>{setAuthVer(v=>v+1);setLoggedIn(true);};
+    return()=>{window.__onAuthExpired=null;window.__onAuthRefreshed=null;};
+  },[]);
+  useEffect(()=>{if(!loggedIn)return;if(userInfo.forcePasswordChange)setForceChange(true);if(canCompare)api('/users?pageSize=100').then(d=>{if(d&&!d.__error)setUsersList(d.users||[]);});},[loggedIn,authVer]);
+  // SA4E-319: no-flash gate. When embedded in the extension iframe, the host is the SSOT
+  // and delivers the token asynchronously. Until it responds (__authSettled) we show a
+  // neutral "authenticating" state instead of the LoginPage — prevents the login screen
+  // flashing before the token arrives. Only fall back to LoginPage once the host settled
+  // and there is still no token (genuinely logged out).
+  if(!loggedIn){
+    if(__embedded&&!window.__authSettled&&!localStorage.getItem('admin_token')){
+      return(<div className="login-container"><div className="login-box" style={{textAlign:'center'}}><h2>Authenticating…</h2><p style={{color:'#64748b',fontSize:13}}>Đang kết nối phiên đăng nhập…</p></div></div>);
+    }
+    return<LoginPage onLogin={()=>setLoggedIn(true)}/>;
+  }
   const logout=()=>{api('/auth/logout',{method:'POST'}).finally(()=>{localStorage.removeItem('admin_token');localStorage.removeItem('admin_user');setLoggedIn(false);});};
   const doChangePwd=async()=>{if(cpwd.n1!==cpwd.n2){setCpwd(p=>({...p,err:'Mismatch'}));return;}const r=await api('/auth/change-password',{method:'POST',body:JSON.stringify({currentPassword:cpwd.c,newPassword:cpwd.n1})});if(r&&!r.__error){setForceChange(false);localStorage.setItem('admin_user',JSON.stringify({...userInfo,forcePasswordChange:false}));}else setCpwd(p=>({...p,err:r?.error||'Failed'}));};
   if(forceChange)return(<div className="login-container"><div className="login-box"><h2>Change Password</h2>{cpwd.err&&<div style={{background:'#fee2e2',color:'#991b1b',padding:8,borderRadius:6,marginBottom:8,fontSize:13}}>{cpwd.err}</div>}<input className="input" type="password" placeholder="Current" value={cpwd.c} onChange={e=>setCpwd(p=>({...p,c:e.target.value}))}/><input className="input" type="password" placeholder="New" value={cpwd.n1} onChange={e=>setCpwd(p=>({...p,n1:e.target.value}))}/><input className="input" type="password" placeholder="Confirm" value={cpwd.n2} onChange={e=>setCpwd(p=>({...p,n2:e.target.value}))}/><button className="btn btn-primary" style={{width:'100%'}} onClick={doChangePwd}>Change</button></div></div>);

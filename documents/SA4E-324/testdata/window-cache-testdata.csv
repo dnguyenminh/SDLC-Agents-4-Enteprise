@@ -1,0 +1,11 @@
+test_case_id,provider,model,scenario,expected_probes,expected_latency_ms,expected_result,description
+UT-21,openai,qwen2.5-coder,twice-in-TTL,1-probe,<5ms-hit,cached-sync,Second call cached no probe
+UT-21,any,any,advance-1h-plus-1ms,new-probe,,TTL-expiry,Expiry re-probes
+UT-21,any,model-change,new-key-probe,,invalidate-on-model-change,Key includes model
+UT-22,any,same-model,5-concurrent-50ms-delay,1-probe,,coalesced-shared-promise,No Nx probes
+UT-22,any,same-model,all-5-same-value,1-probe,,identical-values,Batches not merged across gates note
+IT-09,ollama,nope-model,404-unknown,keep-8192,,warn-not-debug,404 keep + warn upgrade M-08
+IT-09,openai,any,refused,keep-stale,,warn,Refused keep stale
+IT-09,ollama,any,tags-down fast-fail-hint,0-gate-proceed,,hint-Ollama-server-unreachable,Fast-fail message
+IT-20,any,any,cache-hit-100x-timing,≤1-probe-per-TTL,p95-<5ms,pass-NFR12,Perf cache hit budget
+IT-20,any,any,coalescing-5x,1-probe,,pass-NFR13,Perf coalescing

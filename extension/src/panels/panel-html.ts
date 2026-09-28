@@ -26,7 +26,10 @@ export function getIframeHtml(panelType: PanelType, authTokenProvider?: () => st
   // Use the centralized projectId (derived at activation)
   const projectId = getProjectId();
 
-  const src = `${backendUrl}/admin?embed=true&page=${page}&token=${encodedToken}&projectId=${encodeURIComponent(projectId)}`;
+  // SA4E-319: unified bootstrap key is `sso_token` (the key the SPA __ssoBootstrap
+  // already reads + strips from history). Using `token` here caused split-brain auth:
+  // the SPA never wrote admin_token and rendered the login screen instead of content.
+  const src = `${backendUrl}/admin?embed=true&page=${page}&sso_token=${encodedToken}&projectId=${encodeURIComponent(projectId)}`;
 
   const nonce = getNonce();
 
@@ -56,6 +59,14 @@ export function getIframeHtml(panelType: PanelType, authTokenProvider?: () => st
           const iframe = document.querySelector('iframe');
           if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: 'token_refreshed', token: event.data.token }, '*');
+          }
+        }
+        // SA4E-319: relay the "no token" signal so the embedded SPA settles auth and
+        // shows the login screen instead of hanging on the authenticating placeholder.
+        if (event.data && event.data.type === 'auth_unavailable') {
+          const iframe = document.querySelector('iframe');
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'auth_unavailable' }, '*');
           }
         }
         if (event.data && (event.data.type === 'auth_error' || event.data.status === 401)) {

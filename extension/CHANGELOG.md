@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.46.2] - 2026-09-28
+
+### Fixed
+- **Packaging: add missing direct `yargs` dependency** — `src/mcp/devtools/third_party/index.js` re-exports `yargs`/`yargs/helpers` but `yargs` was only transitive; standalone extension install in the publish workflow left esbuild unable to resolve it (`esbuild-production` failed). Declared `yargs ^17.7.2` directly. No runtime code changes.
+
+## [1.46.1] - 2026-09-28
+
+### Changed
+- **Version sync patch** — Align `root`/`backend`/`extension` to `1.46.1`; README badges, vsix references and changelogs updated. No runtime code changes since `1.46.0`.
+
+## [1.46.0] - 2026-09-27
+
+### Changed
+- **SA4E-289 epic (Option C): LangGraph decommission + Pi SDK cutover** — Legacy LangGraph engine, steering chain, dead hooks, chat/registry and Workflow Graph UI removed; Pi SDK sessions, phase router and checkpointer adapters wired in. Shared kernel extracted to `extension/src/mcp/`.
+- **SA4E-324..330: small-model support wave** — `LlmProvider.countTokens()` per-provider API, context budget gate, prompt compression, model routing/fallback, session compaction + eval harness.
+- **Security** — 4 High + 17 Medium findings fixed; 0 Critical.
+
+## [1.45.0] - 2026-09-26
+
+### Added
+- **PegaStreamIngester authentication** — accepts an optional auth manager and sends `Authorization: Bearer` on ingest-stream, job-poll and ingest-rule requests; indexing services auth headers updated.
+
+### Removed
+- **NativeAddonManager** — existed only to download better-sqlite3 native binaries; the backend now runs on `@sqlite.org/sqlite-wasm` (no native bindings). Removed `native-addon-manager.ts`, `addon-download-helpers.ts`, `platform-detector.ts` and `resources/release-manifest.json`.
+
 ## [1.38.0] - 2026-08-25
 
 ### Added

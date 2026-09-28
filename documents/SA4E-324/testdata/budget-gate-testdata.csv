@@ -1,0 +1,27 @@
+test_case_id,model,contextWindow,systemPromptChars,toolSchemaTokens,retrievalTokens,historyTokens,reserveTokens,expected_estimated,expected_percent,expected_decision,expected_pi_calls,expected_log,description
+UT-07,phi-3-mini,2048,7500,500,300,200,2000,4875,238.0,REJECT,0,error,GOLDEN fail-safe: 7500c->1875 +500+300+200+2000=4875 238pct
+PBT-03,fuzz,0..300000,rand,rand,rand,rand,rand,monotonic,monotonic,partition,,none,Property monotonic + fail-closed denominator
+PBT-05,any,any,84.9-pct,,,,,84.9-case,84.9,ALLOW,,none,Boundary 84.9 ALLOW
+PBT-05,any,any,85.0-pct,,,,,85.0-case,85.0,ALLOW,,none,Boundary 85.0 ALLOW exact
+PBT-05,any,any,85.1-pct,,,,,85.1-case,85.1,WARN,,warn,Boundary 85.1 WARN
+PBT-05,any,any,94.9-pct,,,,,94.9-case,94.9,WARN,,warn,94.9 WARN
+PBT-05,any,any,95.0-pct,,,,,95.0-case,95.0,WARN,,warn,95.0 WARN exact
+PBT-05,any,any,95.1-pct,,,,,95.1-case,95.1,REJECT,0,error,95.1 REJECT exact
+UT-08,gpt-4o-mini,128000,war-fixture,,,,,115200,90.0,WARN,1,warn,WARN golden 115200/128000=90.0 with fallbackFrom unknown-model-x
+UT-09,llama3.1,8192,small,100,100,100,2000,small-sum,<=85.0,ALLOW,1,none,ALLOW silent path
+UT-10,any,8192,NaN-tool,-50-retrieval,Infinity-history,,conservative-sum,conservative,WARN-or-ALLOW,1,warn-conservative-estimate-used,NaN negative Infinity to 0 + conservative true
+UT-11,any,8192,sys,100,100,100,1999,clamped-2000,computed,WARN-or-ALLOW,1,warn,Reserve 1999 clamped 2000 forced (mirrors context-budget.test.ts:74)
+UT-11,any,8192,sys,100,100,100,5000,5000-kept,computed,ALLOW,1,none,Reserve 5000 kept
+UT-12,any,0,sys,100,100,100,2000,sum-value,100.0,REJECT,0,error,Fail-closed window 0 to 100pct Pi-gate ONLY (not legacy)
+UT-12,any,-5,sys,100,100,100,2000,sum-value,100.0,REJECT,0,error,Negative window fail-closed
+UT-13,phi-3-mini,2048,7500,500,300,200,2000,4875,238.0,REJECT,0,error-msg-238pct-95pct-remediation,REJECT message has pct threshold remediation AC2
+UT-14,gpt-4o-mini,128000,warn-fixture,,,,,115200,90.0,WARN,1,warn,Diagnostics 7 keys 1dp golden
+PBT-06,any,any,reserve -5000..10000,,,,,max2000-input,1dp-round,,none,Property reserve clamp + 1dp rounding
+IT-12,phi-3-mini,2048,7500-real-text,500,300,200,2000,4875,238.0,REJECT,0,error,GOLDEN integration 0 Pi calls
+IT-13,gpt-4o-mini,128000,near-full,,,,,115200,90.0,WARN,1,warn,GOLDEN WARN diagnostics exact
+IT-14,llama3.1,8192,small,small,small,small,2000,small-sum,low-pct,ALLOW,1,none,ALLOW silent diagnostics
+IT-15,unknown-window,0,sys,100,100,100,2000,sum,100.0,REJECT,0,error,Unknown window fail-closed E2E
+E2E-API-01,phi-3-mini,2048,Sx7500 real,Tx2000 real,Rx1200 real,Hx800 real,2000,4875,238.0,REJECT,0,error,Full E2E real fetch texts
+E2E-API-02,gpt-4o-mini,128000,near-full-real,,,,,115200,90.0,WARN,1,warn,E2E WARN diagnostics
+E2E-API-03,llama3.1,8192,small-real,,,,,,low-pct,ALLOW,1,none,E2E ALLOW silent
+E2E-API-09,any,8192,ultra-thinking-invalid,,,,,,,throw-before-http,none,Invalid level 0 HTTP + NaN clamp case

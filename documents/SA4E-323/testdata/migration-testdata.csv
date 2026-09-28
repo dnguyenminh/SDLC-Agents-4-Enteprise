@@ -1,0 +1,23 @@
+test_case_id,folder,legacy_state,workspace_state,fault_injection,expected_result,description
+PBT-04,A,arbitrary legacy x workspace states,,none,second ensureMigrated run byte-identical no extra writes,Migration idempotency property
+PBT-05,A,legacy L per field,workspace W non-empty per field,none,every non-empty W kept; cleared fields stay cleared after re-run,Workspace-wins per-field property
+IT-07,A,"Global endpoint/username/type + 4 flat secrets seeded",empty + no marker,none,"legacy shown as A own; marker hashA set; legacy intact; all read sites work",Migration happy path
+IT-08,A,legacy seeded,"A own endpoint https://pega-a.corp.local:8443/prweb + own password; no marker",none,A values unchanged marker set,Workspace-wins full
+IT-08,A,legacy password LegacyPass-000!,A endpoint only (no password),none,endpoint kept password copied (field-level merge AF-5),Partial merge per field
+IT-09,A,legacy seeded,migrated (marker set),none,clearPegaPassword + clearConfig delete namespaced only marker stays,Explicit clear (OI-8)
+IT-09,A,legacy seeded,cleared after step above,none,re-run ensureMigrated: hasPegaPassword=false getConfig null no resurrection,Cleared stays cleared
+IT-10,A,legacy seeded,migrated marker hashA,none,A unchanged by later B migration,A stable
+IT-10,B,legacy still present,fresh no marker hashB,none,B copies legacy under hashB marker hashB set (independent),Per-workspace lazy B
+IT-11,A,legacy seeded,empty no marker,secrets.store throws on first namespaced write,"warning Could not migrate... Legacy kept; will retry on next open. marker ABSENT; hasPegaPassword=false",Migration failure retry-safe
+IT-11,A,legacy seeded,partial (config copied secret failed),heal stub then re-run,completes marker set values present,Retry succeeds
+IT-12,A,"legacy endpoint ftp://bad (invalid) + username legacy.op + password present",empty no marker,none,endpoint skipped username+password copied marker set,Invalid legacy URL skipped
+IT-12,A,legacy type banana + valid endpoint,empty no marker,none,type skipped (re-validate cloud/server) endpoint copied,Invalid legacy type skipped
+IT-16,A,migrated + configured,marker set,none,clearPegaPassword deletes hashA password only; hashB untouched flat untouched,Clear Pega namespaced only
+IT-16,A,migrated + configured,marker set,none,clearConfig deletes 3 hashA secrets + unsets Workspace type; B intact; marker stays,Clear Atlassian namespaced only
+IT-16,A,legacy seeded,cleared via clear methods,none,re-run migration resurrects nothing,Clear-then-migrate stable
+E2E-API-08,A,configured triple + password,,none,clearPegaPassword ack + state refresh hasPegaPassword=false endpoint retained,IPC clear Pega
+E2E-API-08,A,configured triple + password,,none,clearAtlassianConfig ack + refresh hasAtlassianToken=false type cloud,IPC clear Atlassian
+E2E-API-08,B,configured B,,none,getState B untouched by A clear,Cross-workspace clear isolation
+SIT-02,A,old-VSIX global config saved,old VSIX state,install fixed VSIX + open A,legacy shown as A own; keychain hashA keys + marker; legacy flats retained,Real upgrade migration A
+SIT-02,B,legacy still present,fresh B,open B after A,B copies under hashB + marker hashB; screenshot,Real per-workspace lazy B
+SIT-02,A,migrated A,change endpoint to A-specific,reopen B,B unaffected (post-migration divergence),Post-migration divergence

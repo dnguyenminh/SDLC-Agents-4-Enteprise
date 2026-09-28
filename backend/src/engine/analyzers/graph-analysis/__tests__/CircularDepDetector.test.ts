@@ -23,10 +23,10 @@ function loaderFor(graph: AdjacencyList): GraphLoader {
 }
 
 describe('CircularDepDetector', () => {
-  it('detects a two-node cycle with high severity', () => {
+  it('detects a two-node cycle with high severity', async () => {
     const graph: AdjacencyList = new Map([[1, [2]], [2, [1]]]);
     const detector = new CircularDepDetector(loaderFor(graph));
-    const result = detector.detect();
+    const result = await detector.detect();
 
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({ length: 2, severity: 'high', module: undefined });
@@ -35,46 +35,46 @@ describe('CircularDepDetector', () => {
     expect(result[0].cycle.edges.slice().sort()).toEqual(['sym1 → sym2', 'sym2 → sym1']);
   });
 
-  it('passes the module filter to the loader', () => {
+  it('passes the module filter to the loader', async () => {
     const graph: AdjacencyList = new Map([[1, [2]], [2, [1]]]);
     const loader = loaderFor(graph);
     const detector = new CircularDepDetector(loader);
-    detector.detect({ module: 'modA' });
+    await detector.detect({ module: 'modA' });
     expect(loader.loadDependencyGraph).toHaveBeenCalledWith('modA');
   });
 
-  it('returns empty for an empty graph', () => {
+  it('returns empty for an empty graph', async () => {
     const detector = new CircularDepDetector(loaderFor(new Map()));
-    expect(detector.detect()).toEqual([]);
+    expect(await detector.detect()).toEqual([]);
   });
 
-  it('filters cycles by maxLength', () => {
+  it('filters cycles by maxLength', async () => {
     const graph: AdjacencyList = new Map([[1, [2]], [2, [1]]]);
     const detector = new CircularDepDetector(loaderFor(graph));
-    expect(detector.detect({ maxLength: 1 })).toEqual([]);
+    expect(await detector.detect({ maxLength: 1 })).toEqual([]);
   });
 
-  it('classifies three-node cycles as medium', () => {
+  it('classifies three-node cycles as medium', async () => {
     const graph: AdjacencyList = new Map([[1, [2]], [2, [3]], [3, [1]]]);
-    const result = new CircularDepDetector(loaderFor(graph)).detect();
+    const result = await new CircularDepDetector(loaderFor(graph)).detect();
     expect(result).toHaveLength(1);
     expect(result[0].severity).toBe('medium');
   });
 
-  it('classifies five-node cycles as low', () => {
+  it('classifies five-node cycles as low', async () => {
     const graph: AdjacencyList = new Map([
       [1, [2]], [2, [3]], [3, [4]], [4, [5]], [5, [1]],
     ]);
-    const result = new CircularDepDetector(loaderFor(graph)).detect();
+    const result = await new CircularDepDetector(loaderFor(graph)).detect();
     expect(result).toHaveLength(1);
     expect(result[0].severity).toBe('low');
   });
 
-  it('sorts results by severity high first then length', () => {
+  it('sorts results by severity high first then length', async () => {
     const graph: AdjacencyList = new Map([
       [1, [2]], [2, [3]], [3, [1]], [4, [5]], [5, [4]],
     ]);
-    const result = new CircularDepDetector(loaderFor(graph)).detect();
+    const result = await new CircularDepDetector(loaderFor(graph)).detect();
     expect(result.map(r => r.length)).toEqual([2, 3]);
     expect(result.map(r => r.severity)).toEqual(['high', 'medium']);
   });

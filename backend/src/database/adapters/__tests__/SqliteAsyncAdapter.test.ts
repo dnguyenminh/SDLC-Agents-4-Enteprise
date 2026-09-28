@@ -1,6 +1,6 @@
 /**
  * Unit tests for SqliteAsyncAdapter — zero-overhead async wrapper over a
- * better-sqlite3 Database with no-op lifecycle methods.
+ * sync SQLite Database with no-op lifecycle methods.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

@@ -38,8 +38,8 @@ export async function resolveSymbolInput(input: string, db: DatabaseAdapter, res
   };
 }
 
-export function findSymbolAtLine(file: string, line: number, db: DatabaseAdapter): ResolvedSymbolFull | null {
-  const row = db.prepare(`
+export async function findSymbolAtLine(file: string, line: number, db: DatabaseAdapter): Promise<ResolvedSymbolFull | null> {
+  const row = await db.getAsync<ResolvedSymbolFull>(`
     SELECT s.id, s.name, s.kind, f.relative_path as filePath, s.start_line as line,
            s.end_line as endLine, s.signature, s.parent_symbol_id as parentSymbolId
     FROM symbols s
@@ -47,7 +47,7 @@ export function findSymbolAtLine(file: string, line: number, db: DatabaseAdapter
     WHERE f.relative_path LIKE ? AND s.start_line <= ? AND s.end_line >= ?
     ORDER BY (s.end_line - s.start_line) ASC
     LIMIT 1
-  `).get(`%${file}`, line, line) as ResolvedSymbolFull | undefined;
+  `, [`%${file}`, line, line]);
   return row || null;
 }
 
@@ -65,9 +65,9 @@ export function readSymbolSource(symbol: ResolvedSymbolFull, workspace: string):
   }
 }
 
-export function getSignature(symbol: ResolvedSymbolFull, db: DatabaseAdapter): string | null {
+export async function getSignature(symbol: ResolvedSymbolFull, db: DatabaseAdapter): Promise<string | null> {
   if (symbol.signature) return symbol.signature;
-  const row = db.prepare(`SELECT signature FROM symbols WHERE id = ?`).get(symbol.id) as { signature: string | null } | undefined;
+  const row = await db.getAsync<{ signature: string | null }>(`SELECT signature FROM symbols WHERE id = ?`, [symbol.id]);
   return row?.signature || null;
 }
 
@@ -151,7 +151,7 @@ export async function getSiblingContext(symbol: ResolvedSymbolFull, db: Database
     ? [symbol.parentSymbolId, symbol.id]
     : [symbol.filePath, symbol.id];
 
-  return (db.prepare(query).all(...params) as any[]).map(r => ({
+  return (await db.allAsync<any>(query, params)).map(r => ({
     name: r.name,
     kind: r.kind,
     signature: r.signature,

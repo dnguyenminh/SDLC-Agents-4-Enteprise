@@ -1,0 +1,135 @@
+name: SA4E-332 CI — Shared kernel extraction (move-as-is, no deploy)
+
+# Lightweight per-ticket CI for SA4E-332 (Shared kernel extraction — move as-is,
+# no new logic).
+#
+# Scope (TDD v1.1 + STP v1.0):
+#   - lint option B (no-restricted-imports freeze, OPEN-03 script fix)
+#   - cycle gate madge (OPEN-01, pinned npx, no new dependency)
+#   - safe order phases 0-6 (TDD Section 11) + NFR gates (STP Section 2.6)
+#   - NO deploy, NO vsix publish, NO backend jobs (extension-only ticket)
+#
+# Baseline (pre-move, 2026-09-27, verified by devops-agent):
+#   - tsc --noEmit: PASS (exit 0)
+#   - eslint (current + fixed form): PASS (exit 0, relaxed rules, __tests__ ignored)
+#   - vitest targeted 17 files / 192 tests: PASS
+#       bridge+stream+budget 35, providers 134, extensions 17, kb-client 6
+#   - madge src/mcp/: 0 cycles PASS (75 files pre-move)
+#   - grep move gates: RED pre-move by design (15 reverse-dep files, 4 old
+#     bridge paths, 15 wrapper hits, 4 hardcoded 127.0.0.1:9181) -> MUST be 0
+#     post-move. CI fails until DEV completes the move — this is intentional.
+#   - stale extension/tests/mcp-bridge.test.ts + .js: PRESENT pre-move
+#     (TC-MOVE-07 DELETE post-move).
+
+on:
+  push:
+    branches: ["SA4E-332*"]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: sa4e-332-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Gate 0 — Move-as-is static gates (grep/secret/stale, no Node needed)
+  # TC-MOVE-01/02/03/06/07 + SEC-332-05/09/11. Fails pre-move by design.
+  # ---------------------------------------------------------------------------
+  move-gates:
+    name: Move gates (grep / secret / stale)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for diff)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: TC-MOVE-01 — old bridge path gone (expect 0)
+        run: |
+          echo "--- langgraph/core/mcp-bridge refs (must be 0 post-move) ---"
+          ! grep -rn "langgraph/core/mcp-bridge" extension/src --include='*.ts' || (echo "FAIL: old bridge path still referenced" && exit 1)
+          echo "--- mcp-bridge.js spelling (must be 0 post-move) ---"
+          ! grep -rn 'mcp-bridge\.js' extension/src --include='*.ts' || (echo "FAIL: .js-suffixed bridge import remains" && exit 1)
+
+      - name: TC-MOVE-02 — no reverse deps (expect 0 files outside src/langgraph)
+        run: |
+          echo "--- from.*langgraph outside src/langgraph (must be 0 post-move) ---"
+          if grep -rn "from.*langgraph/" extension/src --include='*.ts' | grep -v "src/langgraph/"; then
+            echo "FAIL: reverse dependency langgraph -> kernel not yet cut"
+            exit 1
+          fi
+          echo "OK: no reverse deps"
+
+      - name: TC-MOVE-03 + SEC-332-05 — no wrapper consumers / require langgraph
+        run: |
+          echo "--- wrapper symbols in prod (must be 0 post-move) ---"
+          ! grep -rn 'McpWrapperClient\|createMcpClient\|mcp-wrapper-client' extension/src --include='*.ts' | grep -v '__tests__' | grep -v '\.test\.ts' || (echo "FAIL: wrapper consumer remains" && exit 1)
+          echo "--- require.*langgraph (must be 0) ---"
+          ! grep -rn 'require.*langgraph' extension/src --include='*.ts' || (echo "FAIL: require(langgraph) edge remains" && exit 1)
+
+      - name: TC-MOVE-06 — secret / URL scan (expect 0 in kernel paths)
+        run: |
+          echo "--- hardcoded 127.0.0.1:9181 in kernel+pi paths (must be 0 post-move) ---"
+          ! grep -rn '127\.0\.0\.1:9181' extension/src/mcp extension/src/pi-agent extension/src/pi-workflow --include='*.ts' || (echo "FAIL: hardcoded MCP URL in kernel/pi" && exit 1)
+          echo "--- vscode/tool-registry ref inside kernel (must be 0) ---"
+          ! grep -rn 'vscode/tool-registry' extension/src/mcp/ || (echo "FAIL: kernel still refs tool-registry" && exit 1)
+
+      - name: TC-MOVE-07 — stale .js / stale test deleted
+        run: |
+          echo "--- stale extension/tests artifacts (must NOT exist post-move) ---"
+          test ! -e extension/tests/mcp-bridge.test.ts || (echo "FAIL: stale extension/tests/mcp-bridge.test.ts still present" && exit 1)
+          test ! -e extension/tests/mcp-bridge.test.js || (echo "FAIL: stale extension/tests/mcp-bridge.test.js still present" && exit 1)
+          echo "OK: stale artifacts gone"
+
+  # ---------------------------------------------------------------------------
+  # Extension — tsc + lint (fixed form) + targeted vitest + madge
+  # TDD Section 11 phase 0/6 + STP NFR. No deploy.
+  # ---------------------------------------------------------------------------
+  extension:
+    name: Extension — tsc / lint / targeted tests / madge
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check (tsc --noEmit, TDD phase 0/6 gate)
+        run: npx tsc -p ./ --noEmit
+
+      - name: Lint (fixed form, OPEN-03 — no --ext flag)
+        # NOTE: package.json "lint" fixed in-ticket per TDD Section 7.3
+        # ("npx eslint src/"). CI uses the same fixed form directly.
+        run: npx eslint src/
+
+      - name: Unit tests — move suites (bridge/stream/budget/providers/ext/kb)
+        # 17 files / 192 tests baseline green pre-move (TDD phase 0).
+        # Post-move paths (SA4E-332): kernel suites live under src/mcp/;
+        # mcp-wrapper-client.test.ts deleted with the client (TC-MOVE-03).
+        # Assertions must stay unchanged — import-path-only diff (EF-2).
+        run: >-
+          npx vitest run
+          src/mcp/__tests__/mcp-bridge.test.ts
+          src/mcp/__tests__/stream-handler-events.test.ts
+          src/pi-agent/__tests__/context-budget.test.ts
+          src/mcp/providers/__tests__/
+          src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts
+          src/pi-workflow/__tests__/kb-client.test.ts
+
+      - name: Cycle gate (madge, OPEN-01 — pinned npx, no package.json change)
+        run: npx -y madge@8.0.0 --circular src/mcp/

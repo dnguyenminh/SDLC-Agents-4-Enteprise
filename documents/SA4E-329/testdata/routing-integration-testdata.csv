@@ -1,0 +1,5 @@
+test_case_id,input,preconditions,expected_result,priority
+TC-701,"Route request","Router active","Small model invoked",High
+TC-702,"Check confidence","Low confidence","Fallback to large triggered",High
+TC-703,"Check log","Routing performed","Decision persisted",Medium
+TC-704,"Map level","thinkingLevel set","maxTokens and retry configured",Medium

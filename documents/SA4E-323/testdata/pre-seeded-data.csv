@@ -1,0 +1,13 @@
+scope,folder_path,ws_alias,pega_endpoint,pega_username,pega_password_ref,atlassian_base_url,atlassian_email,atlassian_token_ref,atlassian_connection_type,marker,description
+workspace,C:\sdlc-test\ws-a,A,https://pega-a.corp.local:8443/prweb,op.a,PassA-123!,https://a.atlassian.net,a@corp.local,tokenA-xxx,cloud,kiroSdlc.<hashA>.migrated=1 (after first migration),Workspace A baseline — fully configured Pega + Atlassian cloud
+workspace,C:\sdlc-test\ws-b,B,https://pega-b.corp.local:8443/prweb,op.b,PassB-456!,https://b-jira.corp.local,b@corp.local,patB-yyy,server,kiroSdlc.<hashB>.migrated=1 (after first migration),Workspace B baseline — fully configured Pega + Atlassian server with DISTINCT creds from A
+workspace,C:\sdlc-test\ws-c,C,,,,,,,cloud,,Fresh workspace C — empty (E2E-UI-07 no-prefill target)
+workspace,C:\sdlc-test\ws-ro,RO,,,,,,,cloud,,Read-only .vscode/settings.json fixture (SIT-07/IT partial-save path)
+legacy-global,(Global scope — inspect().globalValue only),LEGACY,http://localhost:8080/prweb,legacy.op,LegacyPass-000!,https://legacy.atlassian.net,legacy@corp.local,legacy-token-000,server,,Pre-upgrade legacy globals + flat secrets (migration source; NEVER deleted)
+legacy-secret-flat,kiroSdlc.pegaPassword,LEGACY,,,,,,,,,Flat legacy Pega secret read-only source (SECRET_KEYS.pega verbatim)
+legacy-secret-flat,kiroSdlc.atlassian.baseUrl,LEGACY,,,,,,,,,Flat legacy Atlassian baseUrl read-only source
+legacy-secret-flat,kiroSdlc.atlassian.email,LEGACY,,,,,,,,,Flat legacy Atlassian email read-only source
+legacy-secret-flat,kiroSdlc.atlassian.apiToken,LEGACY,,,,,,,,,Flat legacy Atlassian token read-only source
+no-folder,(workspaceFolders=[]),NONE,,,,,,,,"No-folder fallback fixture (UC-6): reads legacy read-only, saves blocked"
+multi-root,"[C:\sdlc-test\ws-a, C:\sdlc-test\ws-b]",MULTI,,,,,,,,"Multi-root fixture: canonical identity is folders[0] (ws-a)"
+canary,A,CANARY-A,,,"CanaryPass-A-9z9z!",,,CanaryToken-A-7x7x!,,,"SIT-03 canaries (rotate after sweep; NEVER commit real creds)"
