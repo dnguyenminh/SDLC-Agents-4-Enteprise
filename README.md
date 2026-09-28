@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.44.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.46.1.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.46.1 (2026-09-28)
+
+- **Version sync patch** — Align all package versions (`root`, `backend`, `extension`) to `1.46.1`; update README badges, vsix install references (`sdlc-agents-4-enterprise-1.46.1.vsix`) and changelogs. No runtime code changes since `v1.46.0`.
 
 ### v1.46.0 (2026-09-27)
 

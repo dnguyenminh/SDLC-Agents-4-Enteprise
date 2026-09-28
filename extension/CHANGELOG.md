@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.46.1] - 2026-09-28
+
+### Changed
+- **Version sync patch** — Align `root`/`backend`/`extension` to `1.46.1`; README badges, vsix references and changelogs updated. No runtime code changes since `1.46.0`.
+
+## [1.46.0] - 2026-09-27
+
+### Changed
+- **SA4E-289 epic (Option C): LangGraph decommission + Pi SDK cutover** — Legacy LangGraph engine, steering chain, dead hooks, chat/registry and Workflow Graph UI removed; Pi SDK sessions, phase router and checkpointer adapters wired in. Shared kernel extracted to `extension/src/mcp/`.
+- **SA4E-324..330: small-model support wave** — `LlmProvider.countTokens()` per-provider API, context budget gate, prompt compression, model routing/fallback, session compaction + eval harness.
+- **Security** — 4 High + 17 Medium findings fixed; 0 Critical.
+
 ## [1.45.0] - 2026-09-26
 
 ### Added

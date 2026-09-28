@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.46.0",
+  "version": "1.46.1",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -439,6 +439,7 @@
     }
   },
   "scripts": {
+    "build": "tsc -p ./",
     "vscode:prepublish": "npm run esbuild-production && npm run copy-resources && npm run gen-checksums",
     "package:debug": "npm run esbuild && vsce package --no-dependencies",
     "package:prod": "npm run esbuild-production && vsce package --no-dependencies",

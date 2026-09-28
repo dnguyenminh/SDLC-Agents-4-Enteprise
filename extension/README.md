@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.44.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.46.1-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.44.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.46.1.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.44.0.vsix
+code --install-extension sdlc-agents-4-enterprise-1.46.1.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,23 @@ MIT
 ---
 
 ## Changelog
+
+### v1.46.1 (2026-09-28)
+
+- **Version sync patch** — Align `root`/`backend`/`extension` to `1.46.1`; update badges, vsix install references (`sdlc-agents-4-enterprise-1.46.1.vsix`) and changelogs. No runtime code changes since `v1.46.0`.
+
+### v1.46.0 (2026-09-27)
+
+- **SA4E-289 epic (Option C): LangGraph decommission + Pi SDK cutover** — Legacy LangGraph engine, steering chain, dead hooks, chat/registry and Workflow Graph UI removed; Pi SDK sessions, phase router and checkpointer adapters wired in. Shared kernel extracted to `extension/src/mcp/` (lint-frozen, SA4E-332).
+- **SA4E-324..330: small-model support wave** — `LlmProvider.countTokens()` per-provider API, context budget gate (REJECT >95%, WARN >85%), prompt compression, model routing/fallback, session compaction + eval harness.
+- **Security** — 4 High + 17 Medium findings fixed; 0 Critical across SA4E-324..332.
+- **Tests** — 20 former `test.todo` placeholders implemented; suites green.
+
+### v1.45.0 (2026-09-26)
+
+- **Backend storage off better-sqlite3 → @sqlite.org/sqlite-wasm** — Async-first `DatabaseAdapter`; dead admin portal and native-binding resolver removed.
+- **PegaStreamIngester authentication** — Sends `Authorization: Bearer` on ingest-stream/job-poll/ingest-rule requests.
+- **NativeAddonManager removed** — No longer needed without better-sqlite3 native binaries.
 
 ### v1.44.0 (2026-09-23)
 

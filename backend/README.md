@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.44.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.46.1-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/tools-66+-teal?style=for-the-badge" alt="Tools">
   <img src="https://img.shields.io/badge/node-%3E%3D18-green?style=for-the-badge" alt="Node">
 </p>
@@ -38,7 +38,7 @@ Server starts at **http://localhost:48721**. Verify it's running:
 
 ```bash
 curl http://localhost:48721/health
-# → {"status":"healthy","version":"1.44.0","uptime":5,"tools_loaded":52}
+# → {"status":"healthy","version":"1.46.1","uptime":5,"tools_loaded":52}
 ```
 
 ### Development Mode (auto-reload)
@@ -233,6 +233,8 @@ The embedding model is expected at `.code-intel/models/model.onnx`. Download it:
 
 | Version | Date | Ticket | Changes |
 |---------|------|--------|---------|
+| 1.46.1 | 2026-09-28 | — | Version sync patch: align `root`/`backend`/`extension` to 1.46.1; README badges + health example + changelogs updated. No runtime code changes since 1.46.0. |
+| 1.46.0 | 2026-09-27 | SA4E-289/324..332 | SA4E-289 epic (Option C): LangGraph decommission + Pi SDK cutover, shared kernel `extension/src/mcp/`. SA4E-324..330 small-model wave (`LlmProvider.countTokens()`, budget gate REJECT >95%/WARN >85%, compression, routing, compaction). Security: 4 High + 17 Medium fixed, 0 Critical. 20 test.todo implemented; suites green. |
 | 1.45.0 | 2026-09-26 | SA4E-232/233/234/331 | Storage migrated off better-sqlite3 to @sqlite.org/sqlite-wasm (async-first DatabaseAdapter; dead admin Express portal, MemoryDb, DiskBackedSet, native-binding resolver removed; taskWorker concurrency 8→64). Wasm migration root-cause fixes: SqliteWasmAdapter shares one live DB per resolved file path (refcounted — sibling adapters no longer diverge), BigInt lastInsertRowid → Number (mem_ingest crash), graph-analysis stack fully async, HttpServer.start awaits schema bootstrap. ANTLR Pega expression parser (SA4E-233, ISNULL operator). SA4E-331 cross-project memory isolation + PROJECT scope dispatcher. Extension: PegaStreamIngester auth header, NativeAddonManager removed. better-sqlite3 remnants purged. Unit 3079 ✓ · e2e 173/173 ✓. |
 | 1.44.0 | 2026-09-23 | SA4E-320/323 | Extension-side release: opt-in HTTPS bypass for remote backend (workspace-scoped `allowInsecureRemote`, runtime apply without reload, restrictedConfigurations + trust gate, Pega endpoint HTTPS enforcement); per-workspace isolation of Pega/Atlassian settings with keychain namespacing + one-time migration. No backend runtime code changes — version aligned. |
 | 1.43.0 | 2026-09-22 | SA4E-262 | Multi-provider SSO unified on `sso_providers` (Entra/Google/GitHub, Strategy pattern). Entra email verification via Microsoft `xms_edov` claim (Entra omits standard `email_verified`); loopback SSO sessions no longer User-Agent-bound so extension `/api/admin/auth/me` works; JIT provisioning rejections return `403 provisioning_rejected` with a clear reason. |
