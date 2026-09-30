@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.46.2.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.46.3.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.46.3 (2026-09-29)
+
+- **Pega catalog download: migrate resumableDownload to POST with query params** — `PegaRuleCatalogClient.downloadCatalog` now builds `?filePath=` URL; `PegaCatalogDownloader.fetchAllChunks` uses `POST`, `Range` moved to query param, `Accept: application/json`. Fixes server-side POST requirement for `/file/resumableDownload`. Tests updated.
 
 ### v1.46.2 (2026-09-28)
 
