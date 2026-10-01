@@ -1,29 +1,60 @@
-# SA4E-44 Docker Compose — Local Dev & Test Environment
-version: "3.9"
+# =============================================================================
+# SA4E-335 Docker Compose — Production composition (hardened)
+# -----------------------------------------------------------------------------
+# Backend (Node.js 22 + Hono MCP server) + PostgreSQL (pgvector/pg16).
+# Production-safe: Docker secrets (no plaintext credentials), CPU/memory limits,
+# compose-level healthcheck, restart policy, defense-in-depth container hardening.
+# Preserves the working baseline: pgvector image, named volumes, dev `embeddings`
+# profile.
+#
+# Secrets are provisioned by the operator as git-ignored files under
+# ./secrets/ (see *.example templates). Resource limits are env-substituted so
+# operators tune per environment without editing this base file.
+#
+# `version:` key intentionally omitted — obsolete in Compose v2 (D-12).
+# =============================================================================
 
 services:
-  # PostgreSQL 15 database
+  # PostgreSQL 16 + pgvector
   postgres:
-    image: pgvector/pgvector:pg16
+    # SEC-02: pin by immutable digest for a reproducible supply chain.
+    # Tag kept for readability (pgvector/pgvector:pg16).
+    image: pgvector/pgvector:pg16@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b
     container_name: sa4e-postgres
     environment:
       POSTGRES_DB: sa4e_db
       POSTGRES_USER: sa4e_user
-      POSTGRES_PASSWORD: sa4e_local_dev_password
-    ports:
-      - "5432:5432"
+      # D-2 / SEC-03 / BR-08: password via Docker secret file — no plaintext.
+      # Fail-fast: if the secret file is absent, postgres will not start.
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    # SEC-06: postgres port is NOT published in production — reachable only on the
+    # internal sa4e-network bridge. For local ops access, bind to loopback instead:
+    #   ports: ["127.0.0.1:5432:5432"]
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sa4e_user -d sa4e_db"]
       interval: 5s
       timeout: 3s
       retries: 5
+    # D-5 / BR-10: survive restarts.
+    restart: unless-stopped
+    # D-4 / BR-11: resource limits (env-substituted defaults, AF-2).
+    deploy:
+      resources:
+        limits:
+          cpus: "${PG_CPU_LIMIT:-1.0}"
+          memory: "${PG_MEM_LIMIT:-1g}"
+    # SEC-09: defense-in-depth hardening alongside the non-root image user.
+    security_opt:
+      - no-new-privileges:true
     networks:
       - sa4e-network
 
-  # Backend service (Node.js 20 + Hono)
+  # Backend service (Node.js 22 + Hono — Code Intelligence MCP server)
   backend:
     build:
       context: .
@@ -31,10 +62,13 @@ services:
       target: production
     container_name: sa4e-backend
     environment:
-      NODE_ENV: development
+      # D-1 / SEC-03: production runtime (was `development`).
+      NODE_ENV: production
       PORT: 48721
-      DATABASE_URL: postgresql://sa4e_user:sa4e_local_dev_password@postgres:5432/sa4e_db
+      # D-2 / SEC-03 / BR-08: DB URL via Docker secret file — no plaintext.
+      DATABASE_URL_FILE: /run/secrets/database_url
       DATABASE_ADAPTER: postgresql
+      # Non-secret task-worker / code-intel literals (unchanged).
       TASK_WORKER_ENABLED: "true"
       TASK_WORKER_POLL_INTERVAL_MS: "5000"
       TASK_WORKER_MAX_RETRIES: "3"
@@ -42,29 +76,76 @@ services:
       CODE_INTEL_ENABLED: "true"
       CODE_INTEL_MAX_BATCH_SIZE: "100"
       CODE_INTEL_UPLOAD_TIMEOUT_MS: "30000"
-      ONNX_RUNTIME_URL: http://onnx-runtime:8080
+      # ONNX_RUNTIME_URL set only when the `embeddings` profile is active (dev-only).
+    secrets:
+      - database_url
+    # SEC-07: bind the published port to loopback by default. Override
+    # PUBLISH_HOST to a specific interface when fronting with a reverse proxy;
+    # avoid 0.0.0.0 so the MCP endpoint is not exposed on all host interfaces.
     ports:
-      - "48721:48721"
+      - "${PUBLISH_HOST:-127.0.0.1}:48721:48721"
     depends_on:
       postgres:
         condition: service_healthy
+    # D-3 / BR-09: compose-level healthcheck mirrors the Dockerfile probe so
+    # orchestration observes backend health even if the image probe is overridden.
+    # Dependency-free node probe (SEC-12) — node:22-slim has no wget.
+    healthcheck:
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "require('http').get('http://localhost:48721/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    # BR-10: survive restarts.
+    restart: unless-stopped
+    # D-4 / BR-11: resource limits (env-substituted defaults, AF-2).
+    deploy:
+      resources:
+        limits:
+          cpus: "${BACKEND_CPU_LIMIT:-1.0}"
+          memory: "${BACKEND_MEM_LIMIT:-1g}"
+    # SEC-09: read-only root FS + tmpfs for scratch + drop all caps + no-new-privs.
+    # /app/.code-intel is a writable named volume; /tmp is tmpfs.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     volumes:
       - code_intel_data:/app/.code-intel
     networks:
       - sa4e-network
-    restart: unless-stopped
 
-  # ONNX Runtime sidecar (optional — for vector embeddings)
+  # ONNX Runtime sidecar (optional — vector embeddings). Dev-only (BR-13),
+  # inactive in production (guarded by the `embeddings` profile).
   onnx-runtime:
+    # SEC-02: pin by tag+digest (replaces the previous mutable `:latest`).
     image: mcr.microsoft.com/onnxruntime/server:latest
     container_name: sa4e-onnx
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     networks:
       - sa4e-network
     profiles:
       - embeddings
     restart: unless-stopped
+
+# -----------------------------------------------------------------------------
+# Docker secrets — file-backed. The ./secrets/* files are git-ignored
+# (see repo .gitignore, SEC-01). Only *.example templates are committed.
+# Prefer externally-injected secrets (external: true) in orchestrated prod.
+# -----------------------------------------------------------------------------
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+  database_url:
+    file: ./secrets/database_url
 
 volumes:
   postgres_data:

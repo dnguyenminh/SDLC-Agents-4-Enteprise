@@ -67,6 +67,15 @@ coverage/
 .env.*
 !.env.example
 
+# Docker secrets (SA4E-335 — never commit real credentials; keep only *.example templates)
+backend/secrets/*
+!backend/secrets/*.example
+secrets/*
+!secrets/*.example
+# Non-secret production env template is tracked; real values git-ignored
+/backend/.env.production
+!/backend/.env.production.example
+
 # MCP request scratch file (SA4E-241 HTTP JSON-RPC body-from-file)
 documents/**/.mcp-req.json
 

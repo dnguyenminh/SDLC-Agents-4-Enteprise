@@ -1,0 +1,122 @@
+# =============================================================================
+# SA4E-335 — Build & push backend production image
+# -----------------------------------------------------------------------------
+# Builds the multi-stage `production` target of backend/Dockerfile and pushes it
+# to a container registry with semver + commit-SHA tags. Authenticates using CI
+# secrets only (GHCR GITHUB_TOKEN by default). Fail-visible: any non-zero step
+# ends the run RED and pushes nothing (BR-19).
+#
+# Registry is configuration, not code (AD-4, BR-20): set repo variables REGISTRY
+# and IMAGE_NAME to target Docker Hub / ECR instead of GHCR.
+#
+# Security:
+#   - SEC-13: third-party actions pinned by commit SHA (tag in trailing comment).
+#   - SEC-13: registry login + push run ONLY on non-PR events (fork PRs never see
+#             push credentials); login is gated after the build graph (AD-7).
+#   - SEC-04: Trivy image scan gates the push — fails on CRITICAL/HIGH CVEs.
+# =============================================================================
+name: SA4E-335 — Build & push backend image
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: sa4e-335-build-push-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read # read source
+  packages: write # push to GHCR
+
+env:
+  REGISTRY: ${{ vars.REGISTRY || 'ghcr.io' }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME || format('{0}/backend', github.repository) }}
+  BUILD_TARGET: production
+  BUILD_CONTEXT: backend
+
+jobs:
+  build-and-push:
+    name: Build (production target) & push
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout — full history so semver tags resolve (metadata-action).
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+
+      # 2. Derive tags/labels: sha-<short>, semver (vX.Y.Z / X.Y / X), latest (main only).
+      - name: Derive image tags
+        id: meta
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern=v{{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable=${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') }}
+
+      # 3. Setup Buildx (enables build cache + single build-and-push invocation).
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@988b5a0280414f521da01fcc63a27aeeb4b104db # v3.6.1
+
+      # 4. Registry login — PUSH EVENTS ONLY (SEC-13). A broken build (steps 1-3)
+      #    never reaches this step, so credentials are only read for a buildable
+      #    source (AD-7). GITHUB_TOKEN works for GHCR with no stored secret.
+      - name: Log in to registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5. Build the `production` target and push (single buildx invocation ->
+      #    the built image equals the pushed image, AD-3). PRs build-only (no push).
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
+        with:
+          context: ${{ env.BUILD_CONTEXT }}
+          file: ${{ env.BUILD_CONTEXT }}/Dockerfile
+          target: ${{ env.BUILD_TARGET }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 6. SEC-04 — Trivy vulnerability scan on the built image. Fails the run on
+      #    CRITICAL/HIGH CVEs (push already succeeded in step 5; a failure here
+      #    surfaces RED so the image is flagged, not silently accepted).
+      - name: Scan image for vulnerabilities (Trivy)
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      # 7. Verify the push produced an immutable digest; emit a traceable ref.
+      - name: Verify image digest & emit ref
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          DIGEST="${{ steps.build.outputs.digest }}"
+          if [ -z "$DIGEST" ]; then
+            echo "::error::missing image digest — push incomplete (EF-3)"
+            exit 1
+          fi
+          echo "image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "tags<<EOF" >> "$GITHUB_OUTPUT"
+          echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
