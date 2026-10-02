@@ -98,7 +98,7 @@ jobs:
       #    surfaces RED so the image is flagged, not silently accepted).
       - name: Scan image for vulnerabilities (Trivy)
         if: github.event_name != 'pull_request'
-        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5 # 0.30.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
           format: table
