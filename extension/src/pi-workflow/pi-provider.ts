@@ -1,13 +1,17 @@
 import { Agent } from '@earendil-works/pi-agent-core';
-import type { AgentEvent } from '@earendil-works/pi-agent-core';
+import type { AgentEvent, BeforeToolCallContext, BeforeToolCallResult } from '@earendil-works/pi-agent-core';
+import type { SystemMessage } from '@earendil-works/pi-ai';
 import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import type { MutableModels, CredentialStore } from '@earendil-works/pi-ai';
 import { builtinModels } from '@earendil-works/pi-ai/providers/all';
 import { createGatewayProvider } from './pi-gateway-provider.js';
 import type { PiProviderConfig } from './pi-provider-config.js';
-import { mapAgentEvent, type EventCollector } from './pi-event-mapper.js';
+import { mapAgentEvent, extractToolResultText, type EventCollector } from './pi-event-mapper.js';
 import { isRetryableLlmError } from './utils/classify-llm-error.js';
+import { TurnBudgetGuard, buildStopNote, buildSteerCorrection, buildFailureSteerCorrection, buildTextSteerCorrection, splitCompletedBlocks } from './turn-budget-guard.js';
+import { ToolEventTracker } from './pi-event-mapper.js';
 import { debugLog, debugError } from '../debug-logger.js';
+import type { ToolApprovalGateHandler } from './approval-adapter.js';
 
 export * from './pi-provider-types.js';
 import type {
@@ -34,6 +38,7 @@ export class PiProvider {
   private agent?: Agent;
   private credentialResolver?: CredentialResolver;
   private credentialStore?: CredentialStore;
+  private toolApproval?: ToolApprovalGateHandler;
   private modelId?: string;
   private providerId?: string;
   /** PI-MODEL-FALLBACK: ordered fallback model ids tried when a run fails transiently. */
@@ -49,6 +54,33 @@ export class PiProvider {
   /** Bridge credentials (SecretStorage-backed) into the Agent's getApiKey. */
   setCredentialResolver(resolver: CredentialResolver): void {
     this.credentialResolver = resolver;
+  }
+
+  /** FIX J (§5d): pre-execution approval gate — set by the engine from the gate handler. */
+  setToolApproval(handler?: ToolApprovalGateHandler): void {
+    this.toolApproval = handler;
+  }
+
+  /**
+   * SDK `beforeToolCall` hook: runs AFTER tool_execution_start but BEFORE the
+   * tool body executes, so a rejection truly prevents execution (the old
+   * post-hoc ApprovalAdapter loop ran after the whole agent turn — bash had
+   * already executed, then the turn hung on an approval nobody could give).
+   * Fails CLOSED: an approval-system error blocks instead of running unguarded.
+   */
+  private async gateBeforeToolCall(context: BeforeToolCallContext): Promise<BeforeToolCallResult | undefined> {
+    if (!this.toolApproval) return undefined;
+    try {
+      const res = await this.toolApproval.requestApproval({
+        toolUseId: context.toolCall.id,
+        toolName: context.toolCall.name,
+        input: (context.args ?? {}) as Record<string, unknown>,
+      });
+      return res.approved ? undefined : { block: true, reason: res.reason || 'Tool approval required' };
+    } catch (err) {
+      debugError('[PiProvider] tool approval check failed — blocking tool call', err as Error);
+      return { block: true, reason: `Approval check failed: ${(err as Error).message}` };
+    }
   }
 
   /** FIX 2: seed the pi-ai credentials store so streamSimple's auth path resolves the key. */
@@ -185,6 +217,9 @@ export class PiProvider {
         streamFn: (model, context, options) => this.models!.streamSimple(model, context, options),
         getApiKey: this.credentialResolver,
         sessionId: config.sessionId,
+        // Fix J: gates every tool BEFORE execution (reads this.toolApproval live,
+        // so setToolApproval may be called before or after initialize).
+        beforeToolCall: (context) => this.gateBeforeToolCall(context),
       });
     } catch (err) {
       debugError('[PiProvider] Failed to initialize pi-agent-core Agent', err as Error);
@@ -229,8 +264,7 @@ export class PiProvider {
   private async runOnce(input: PiRunInput): Promise<PiRunResult> {
     const agent = this.agent!;
     if (input.tools) { agent.state.tools = input.tools; }
-    if (input.systemPrompt) { agent.state.systemPrompt = input.systemPrompt; }
-
+    if (input.systemPrompt) { applySystemPrompt(agent, input.systemPrompt); }
     const providerId = input.provider ?? this.providerId;
     const chain = this.buildRunChain(input.provider, input.model);
     // No chain (no configured model at all) → single attempt on the agent's current model.
@@ -241,7 +275,7 @@ export class PiProvider {
       const modelId = attempts[i];
       this.selectModelForAttempt(agent, providerId, modelId);
 
-      const result = await this.promptOnCurrentModel(agent, input.prompt);
+      const result = await this.promptOnCurrentModel(agent, input.prompt, input.turnBudget, input.onToolEvent);
       if (!result.errorMessage) {
         if (i > 0) { debugLog(`[PiProvider] Recovered on fallback model '${modelId}' (attempt ${i + 1}/${attempts.length}).`); }
         return result;
@@ -270,10 +304,91 @@ export class PiProvider {
    * Run a single prompt on whatever model the agent is currently set to.
    * Captures both thrown errors and Agent.state.errorMessage into errorMessage so
    * the caller can decide whether to fall back.
+   *
+   * Loop guard: a TurnBudgetGuard counts tool calls (total + per-signature
+   * repeats) and arms a wall-clock timeout. On trip it aborts the agent run;
+   * partial output is kept with an explanatory note instead of an error so
+   * the user sees results instead of a hang (UAT runaway-find loop).
    */
-  private async promptOnCurrentModel(agent: Agent, prompt: string): Promise<PiRunResult> {
+  private async promptOnCurrentModel(
+    agent: Agent,
+    prompt: string,
+    budget?: import('./turn-budget-guard.js').TurnBudget,
+    onToolEvent?: import('./pi-provider-types.js').PiRunInput['onToolEvent']
+  ): Promise<PiRunResult> {
     const collector: EventCollector = { chunks: [], toolCalls: [], text: '' };
-    const unsubscribe = agent.subscribe((event: AgentEvent) => mapAgentEvent(event, collector));
+    // Shared steer/abort effectors (never throw — event dispatch must survive).
+    const abortRun = (): void => {
+      try {
+        agent.abort();
+      } catch {
+        // Abort must never break event dispatch.
+      }
+    };
+    const steerWith = (text: string): void => {
+      try {
+        agent.steer({
+          role: 'user',
+          content: [{ type: 'text', text }],
+          timestamp: Date.now(),
+        } as never);
+      } catch {
+        // Steering must never break event dispatch.
+      }
+    };
+    const guard = new TurnBudgetGuard(TurnBudgetGuard.resolveDefaults(budget), abortRun);
+    const tracker = new ToolEventTracker();
+    // Text perseveration watch: feed newly COMPLETED assistant blocks
+    // (paragraphs/fences) to the same repeat guard (spec: response repeats).
+    let seenBlocks = 0;
+    const repeatLimit = TurnBudgetGuard.resolveDefaults(budget).maxSameToolRepeats;
+    const watchTextRepeats = () => {
+      const blocks = splitCompletedBlocks(collector.text);
+      for (let i = seenBlocks; i < blocks.length; i++) {
+        const action = guard.observeTextBlock(blocks[i]);
+        if (action === 'steer') steerWith(buildTextSteerCorrection(repeatLimit));
+        else if (action === 'abort') abortRun();
+      }
+      seenBlocks = blocks.length;
+    };
+    const unsubscribe = agent.subscribe((event: AgentEvent) => {
+      if ((event as { type?: string }).type === 'tool_execution_start') {
+        const e = event as { toolName?: string; args?: unknown };
+        let argsJson = '';
+        try {
+          argsJson = JSON.stringify(e.args ?? '');
+        } catch {
+          argsJson = String(e.args ?? '').slice(0, 300);
+        }
+        const toolName = String(e.toolName ?? '?');
+        const action = guard.observeToolCall(toolName, argsJson);
+        // First repeat: correct course mid-loop, keep the turn alive;
+        // persisted after correction: stop the turn (guard already tripped).
+        if (action === 'steer') steerWith(buildSteerCorrection(toolName, guard.stats.totalCalls));
+        else if (action === 'abort') abortRun();
+      }
+      // BUG I: repeated identical FAILURES trip the guard even when the
+      // arguments vary (signature = tool + first error line), so a model
+      // retrying a malformed command steers/aborts instead of burning the
+      // full turn timeout.
+      if (event.type === 'tool_execution_end' && event.isError) {
+        const toolName = String(event.toolName ?? '?');
+        const action = guard.observeToolFailure(toolName, extractToolResultText(event.result));
+        if (action === 'steer') steerWith(buildFailureSteerCorrection(toolName, repeatLimit));
+        else if (action === 'abort') abortRun();
+      }
+      const live = tracker.observe(event);
+      if (live && onToolEvent) {
+        try {
+          onToolEvent(live);
+        } catch {
+          // Progress display must never break the turn.
+        }
+      }
+      mapAgentEvent(event, collector);
+      watchTextRepeats();
+    });
+    guard.startTimeout();
     try {
       // Stuck-run recovery: if the SDK somehow still has an active run (previous turn crashed
       // mid-flight, abort raced), settle it BEFORE prompting — never prompt over activeRun.
@@ -283,8 +398,18 @@ export class PiProvider {
       }
       await agent.prompt(prompt);
       await agent.waitForIdle();
-      return this.collectResult(agent, collector);
+      return this.collectResult(agent, collector, guard);
     } catch (err: unknown) {
+      // Our own guard abort: partial results + note, NOT an error (turn completes).
+      if (guard.stoppedReason) {
+        // waitForIdle may still reject after abort — settle quietly.
+        try {
+          await agent.waitForIdle();
+        } catch {
+          // Ignore settle errors after a guarded abort.
+        }
+        return this.collectResult(agent, collector, guard);
+      }
       debugError('[PiProvider] run failed', err as Error);
       if (agent.state.isStreaming) {
         debugLog('[PiProvider] run failed while agent still streaming — re-settling idle.');
@@ -292,18 +417,27 @@ export class PiProvider {
       }
       return { ...this.collectResult(agent, collector), errorMessage: (err as Error).message };
     } finally {
+      guard.clear();
       unsubscribe();
     }
   }
 
   /** FIX E: snapshot the agent transcript + finalize chunks and error status. */
-  private collectResult(agent: Agent, collector: EventCollector): PiRunResult {
+  private collectResult(agent: Agent, collector: EventCollector, guard?: TurnBudgetGuard): PiRunResult {
     const errorMessage = collector.errorMessage || agent.state.errorMessage;
+    let text = collector.text;
+    if (guard?.stoppedReason) {
+      const note = buildStopNote(guard.stoppedReason, guard.stats.totalCalls);
+      text += note;
+      // Stream the note too (the adapter renders chunks, not text).
+      collector.chunks.push({ type: 'text', content: note });
+      debugLog(`[PiProvider] turn stopped early (${guard.stoppedReason}, ${guard.stats.totalCalls} tool calls)`);
+    }
     if (!collector.chunks.some(c => c.type === 'done')) {
       collector.chunks.push({ type: 'done' });
     }
     return {
-      text: collector.text,
+      text,
       toolCalls: collector.toolCalls,
       chunks: collector.chunks,
       messages: agent.state.messages.slice(),
@@ -349,4 +483,26 @@ export class PiProvider {
     this.models = undefined;
     this.initialized = false;
   }
+}
+
+/**
+ * SA4E-336: apply a per-run system prompt under pi-agent-core 0.99.1.
+ *
+ * In 0.99.1 `agent.state.systemPrompt` is READ-ONLY ("to change the prompt,
+ * append a system message with content or sections"). We therefore append a
+ * `SystemMessage` to the transcript instead of assigning the field directly.
+ * Idempotent: skip when the live prompt already equals the desired text so the
+ * same prompt is not re-appended on every turn (the transcript persists across
+ * runs). This preserves the pre-upgrade "set the prompt for this run" intent.
+ * @param agent Active pi-agent-core Agent
+ * @param prompt Desired workspace system prompt for this run
+ */
+function applySystemPrompt(agent: Agent, prompt: string): void {
+  if (agent.state.systemPrompt === prompt) return;
+  const systemMessage: SystemMessage = {
+    role: 'system',
+    content: prompt,
+    timestamp: Date.now(),
+  };
+  agent.state.messages = [...agent.state.messages, systemMessage];
 }

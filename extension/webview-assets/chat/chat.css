@@ -516,6 +516,12 @@ body {
 .message h4 { font-size: 13px; }
 .message strong { font-weight: 600; }
 .message hr { border: none; border-top: 1px solid var(--vscode-panel-border, #333); margin: 12px 0; }
+.message h5 { margin-top: 10px; margin-bottom: 4px; font-weight: 600; font-size: 12px; }
+.message table { border-collapse: collapse; margin: 8px 0; width: 100%; font-size: 12px; }
+.message th, .message td { border: 1px solid var(--vscode-panel-border, #3c3c3c); padding: 4px 8px; text-align: left; }
+.message th { background: var(--vscode-editor-lineHighlightBackground, rgba(255,255,255,0.04)); font-weight: 600; }
+.message blockquote { margin: 6px 0; padding: 4px 12px; border-left: 3px solid var(--vscode-panel-border, #3c3c3c); opacity: 0.9; }
+.message blockquote p { margin-bottom: 0; }
 
 .message.system {
   align-self: center;

@@ -1,0 +1,7 @@
+case_id,scenario,health_endpoint,http_response,within_start_period,consecutive_failures,expected_state,traces,notes
+HC-01,Normal boot,http://localhost:48721/health,200,false,0,healthy,S2-AC2/BR-09,Steady-state healthy
+HC-02,During start-period,http://localhost:48721/health,connection-refused,true,1,starting,S2-AC2/BR-09,Failures in 10s grace not counted
+HC-03,Transient blip,http://localhost:48721/health,timeout,false,2,healthy,S2-AC2/BR-09,Below retries=3 threshold stays healthy
+HC-04,Sustained failure,http://localhost:48721/health,500,false,3,unhealthy,S2-AC2/BR-09+BR-10,3 consecutive failures marks unhealthy then restart policy applies
+HC-05,DB down backend up,http://localhost:48721/health,200,false,0,healthy,S2-AC2/BR-09,Liveness independent of DB readiness
+HC-06,Wrong port,http://localhost:3000/health,connection-refused,false,3,unhealthy,S2-AC2/BR-09,Health must be on 48721 only

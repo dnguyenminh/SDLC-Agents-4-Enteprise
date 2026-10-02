@@ -1,4 +1,7 @@
 import type { AgentMessage, AgentTool } from '@earendil-works/pi-agent-core';
+import type { TurnBudget } from './turn-budget-guard.js';
+import type { ToolLiveEvent } from './pi-event-mapper.js';
+import type { ToolApprovalGateHandler } from './approval-adapter.js';
 
 export interface ToolCall {
   id: string;
@@ -23,6 +26,10 @@ export interface PiRunInput extends PiInput {
   systemPrompt?: string;
   tools?: AgentTool[];
   sessionId?: string;
+  /** Per-turn circuit breaker (tool budget + wall-clock timeout). */
+  turnBudget?: TurnBudget;
+  /** Live tool-activity callback (progress display, never blocks the turn). */
+  onToolEvent?: (event: ToolLiveEvent) => void;
 }
 
 export interface PiRunResult {
@@ -61,6 +68,8 @@ export interface IPiProvider {
   setModel(providerId: string, modelId: string): Promise<boolean>;
   resolveDefaultModel(providerId: string): string | undefined;
   setFallbackModels(providerId: string, modelIds: string[]): void;
+  /** Fix J: optional pre-execution approval gate (implemented by PiProvider). */
+  setToolApproval?(handler: ToolApprovalGateHandler): void;
   abort(): void;
   dispose(): void;
 }

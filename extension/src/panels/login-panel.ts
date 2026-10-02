@@ -25,7 +25,7 @@ export class LoginPanel implements vscode.Disposable {
     // non-empty client_id). No provider is hardcoded — including Entra — so the
     // login screen always mirrors the backend's actual configuration.
     const providers = await this.authManager.listSsoProviders();
-    this.panel = vscode.window.createWebviewPanel("kiroSdlc.login", "SDLC Agents 4 Enterprise — Login", vscode.ViewColumn.One, { enableScripts: true, retainContextWhenHidden: false });
+    this.panel = vscode.window.createWebviewPanel("sdlcAgents.login", "SDLC Agents 4 Enterprise — Login", vscode.ViewColumn.One, { enableScripts: true, retainContextWhenHidden: false });
     this.panel.webview.html = this.getHtml(lastUsername, providers);
     this.panel.webview.onDidReceiveMessage(async (msg) => {
       if (msg.type === "login") { await this.handleLogin(msg.username, msg.password); }

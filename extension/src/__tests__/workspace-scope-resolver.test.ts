@@ -74,11 +74,11 @@ describe("workspace scope", () => {
 describe("secretKey", () => {
   it("builds namespaced keys for all bases", () => {
     const h = getWsHash()!;
-    expect(secretKey("pega", h)).toBe(`kiroSdlc.${h}.pegaPassword`);
-    expect(secretKey("atlassianBaseUrl", h)).toBe(`kiroSdlc.${h}.atlassian.baseUrl`);
-    expect(secretKey("atlassianEmail", h)).toBe(`kiroSdlc.${h}.atlassian.email`);
-    expect(secretKey("atlassianToken", h)).toBe(`kiroSdlc.${h}.atlassian.apiToken`);
-    expect(migrationMarkerKey(h)).toBe(`kiroSdlc.${h}.migrated`);
+    expect(secretKey("pega", h)).toBe(`sdlcAgents.${h}.pegaPassword`);
+    expect(secretKey("atlassianBaseUrl", h)).toBe(`sdlcAgents.${h}.atlassian.baseUrl`);
+    expect(secretKey("atlassianEmail", h)).toBe(`sdlcAgents.${h}.atlassian.email`);
+    expect(secretKey("atlassianToken", h)).toBe(`sdlcAgents.${h}.atlassian.apiToken`);
+    expect(migrationMarkerKey(h)).toBe(`sdlcAgents.${h}.migrated`);
   });
 
   it("defaults to the current workspace hash", () => {
@@ -92,8 +92,8 @@ describe("ensureMigrated", () => {
     const { store, secrets } = installSecretStub({ [LEGACY_SECRET.pega]: "pw-a" });
     await ensureMigrated(secrets);
     const h = getWsHash()!;
-    expect(store.get(`kiroSdlc.${h}.pegaPassword`)).toBe("pw-a");
-    expect(store.get(`kiroSdlc.${h}.migrated`)).toBe("1");
+    expect(store.get(`sdlcAgents.${h}.pegaPassword`)).toBe("pw-a");
+    expect(store.get(`sdlcAgents.${h}.migrated`)).toBe("1");
     expect(store.get(LEGACY_SECRET.pega)).toBe("pw-a");
     const ws = vscode.ConfigurationTarget.Workspace;
     expect(cfg.updates).toContainEqual({ key: "pegaEndpoint", value: "https://a/pega", target: ws });
@@ -107,7 +107,7 @@ describe("ensureMigrated", () => {
     secrets.store.mockClear();
     await ensureMigrated(secrets);
     expect(secrets.store).not.toHaveBeenCalled();
-    expect(store.get(`kiroSdlc.${getWsHash()!}.migrated`)).toBe("1");
+    expect(store.get(`sdlcAgents.${getWsHash()!}.migrated`)).toBe("1");
   });
 
   it("workspace-wins — never overwrites existing workspace values", async () => {
@@ -117,11 +117,11 @@ describe("ensureMigrated", () => {
     });
     const h = getWsHash()!;
     const { store, secrets } = installSecretStub({
-      [`kiroSdlc.${h}.pegaPassword`]: "mine",
+      [`sdlcAgents.${h}.pegaPassword`]: "mine",
       [LEGACY_SECRET.pega]: "legacy",
     });
     await ensureMigrated(secrets);
-    expect(store.get(`kiroSdlc.${h}.pegaPassword`)).toBe("mine");
+    expect(store.get(`sdlcAgents.${h}.pegaPassword`)).toBe("mine");
   });
 
   it("skips invalid legacy values but still marks", async () => {
@@ -129,23 +129,23 @@ describe("ensureMigrated", () => {
     const { store, secrets } = installSecretStub();
     await ensureMigrated(secrets);
     const h = getWsHash()!;
-    expect(store.get(`kiroSdlc.${h}.migrated`)).toBe("1");
+    expect(store.get(`sdlcAgents.${h}.migrated`)).toBe("1");
   });
 
   it("sets no marker when a secret copy fails (retry-safe)", async () => {
     installConfigStub();
     const h = getWsHash()!;
-    const nsKey = `kiroSdlc.${h}.pegaPassword`;
+    const nsKey = `sdlcAgents.${h}.pegaPassword`;
     const { store, secrets } = installSecretStub({ [LEGACY_SECRET.pega]: "pw" }, [nsKey]);
     await ensureMigrated(secrets);
-    expect(store.get(`kiroSdlc.${h}.migrated`)).toBeUndefined();
+    expect(store.get(`sdlcAgents.${h}.migrated`)).toBeUndefined();
     expect(store.get(LEGACY_SECRET.pega)).toBe("pw");
   });
 
   it("cleared-stays-cleared — no resurrection after intentional clear", async () => {
     installConfigStub();
     const h = getWsHash()!;
-    const nsKey = `kiroSdlc.${h}.pegaPassword`;
+    const nsKey = `sdlcAgents.${h}.pegaPassword`;
     const { store, secrets } = installSecretStub({ [LEGACY_SECRET.pega]: "pw" });
     await ensureMigrated(secrets);
     expect(store.get(nsKey)).toBe("pw");
@@ -163,9 +163,9 @@ describe("ensureMigrated", () => {
     await ensureMigrated(secrets);
     const hashB = getWsHash()!;
     expect(hashB).not.toBe(hashA);
-    expect(store.get(`kiroSdlc.${hashB}.pegaPassword`)).toBe("pw");
-    expect(store.get(`kiroSdlc.${hashB}.migrated`)).toBe("1");
-    expect(store.get(`kiroSdlc.${hashA}.pegaPassword`)).toBe("pw");
+    expect(store.get(`sdlcAgents.${hashB}.pegaPassword`)).toBe("pw");
+    expect(store.get(`sdlcAgents.${hashB}.migrated`)).toBe("1");
+    expect(store.get(`sdlcAgents.${hashA}.pegaPassword`)).toBe("pw");
   });
 
   it("is a no-op without a workspace folder", async () => {

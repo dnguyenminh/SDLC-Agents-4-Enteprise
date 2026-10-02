@@ -1,0 +1,8 @@
+test_case_id,tool_name,input_shape,mode,expected_decision,pend_reason,description
+TC-113,powershell,"{""script"":""Get-ChildItem .""}",both,require-approval,zod safeParse fails (no 'command' field) → fail-secure pend; NOT empty-safe,SEC-08 — renamed field 'script'
+TC-113,powershell,"{""cmd"":""Get-ChildItem .""}",both,require-approval,no 'command' field → fail-secure pend,SEC-08 — renamed field 'cmd'
+TC-113,powershell,"{""command"":123}",both,require-approval,z.string() parse fails (wrong type) → pend,SEC-08 — wrong-type command
+TC-113,powershell,"{""args"":[""Remove-Item""]}",both,require-approval,array shape — no valid command string → pend,SEC-08 — args[] array shape
+TC-113,powershell,"{}",both,require-approval,command key absent → zod fails → NO_SAFE_MATCH_PENDED,SEC-08 — empty object
+TC-406,powershell,"null",both,require-approval,null input → deny-by-default pend,SEC-08 — null input
+TC-406,powershell,"{""command"":null}",both,require-approval,String(null ?? '') → '' → pend (TC-404 flip),SEC-08 — null command value

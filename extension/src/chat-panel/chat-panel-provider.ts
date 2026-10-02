@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ChatPanelProvider — KSA-210
  * WebviewViewProvider for the Chat Panel sidebar.
  * Delegates status, models, state to extracted managers.
@@ -17,7 +17,7 @@ import { ChatModelManager } from "./ChatModelManager";
 import { ChatStateManager } from "./ChatStateManager";
 
 export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Disposable {
-  public static readonly viewType = "kiroChatPanel";
+  public static readonly viewType = "sdlcChatPanel";
 
   private view: vscode.WebviewView | undefined;
   private engine: PiWorkflowAdapter | null = null;
@@ -103,6 +103,13 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   private readonly statusManager: ChatStatusManager;
   private readonly modelManager: ChatModelManager;
   private readonly stateManager: ChatStateManager;
+  /**
+   * Fan-out subscribers for engine messages (streaming-identity fix).
+   * The sidebar consumes via sendToWebview; the Agentic Chat panel
+   * subscribes here so engine responses actually reach it (previously
+   * handleEngineEvent had zero callers — send-only dead panel).
+   */
+  private readonly engineListeners = new Set<(msg: ChatExtToWebviewMessage) => void>();
   private diffTracker: import('../chat/diff/IDiffTracker').IDiffTracker | null = null;
 
   constructor(
@@ -317,12 +324,12 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   private onConfigChange(e: vscode.ConfigurationChangeEvent): void {
-    if (e.affectsConfiguration("kiroSdlc.llmProvider") || e.affectsConfiguration("kiroSdlc.llmModel")) {
+    if (e.affectsConfiguration("sdlcAgents.llmProvider") || e.affectsConfiguration("sdlcAgents.llmModel")) {
       if (this.engine && this.secrets) { this.engine.setLlmProvider(createLlmProvider(this.secrets)); }
       void this.modelManager.sendModels();
       void this.statusManager.sendCombinedStatus();
     }
-    if (e.affectsConfiguration("kiroSdlc.anthropicBaseUrl") || e.affectsConfiguration("kiroSdlc.openaiBaseUrl") || e.affectsConfiguration("kiroSdlc.ollamaUrl")) {
+    if (e.affectsConfiguration("sdlcAgents.anthropicBaseUrl") || e.affectsConfiguration("sdlcAgents.openaiBaseUrl") || e.affectsConfiguration("sdlcAgents.ollamaUrl")) {
       void this.statusManager.sendCombinedStatus();
     }
   }
@@ -334,6 +341,12 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       }
       this.messageBuffer = [];
     }
+  }
+
+  /** Subscribe to every engine message (sidebar stays the default sink). */
+  onEngineMessage(listener: (msg: ChatExtToWebviewMessage) => void): vscode.Disposable {
+    this.engineListeners.add(listener);
+    return { dispose: () => { this.engineListeners.delete(listener); } };
   }
 
   private sendToWebview(msg: ChatExtToWebviewMessage): void {
@@ -353,7 +366,16 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       this.engine = new PiWorkflowAdapter({
         mcpManager: this.mcpManager,
         workspaceRoot: this.workspaceRoot,
-        onEvent: (msg) => this.sendToWebview(msg),
+        onEvent: (msg) => {
+          this.sendToWebview(msg);
+          for (const listener of this.engineListeners) {
+            try {
+              listener(msg);
+            } catch {
+              // One bad subscriber must not break the sidebar.
+            }
+          }
+        },
         llmProvider: this.secrets ? createLlmProvider(this.secrets) : undefined,
         checkpointerStore: new KbRemoteCheckpointerStore({
           workspaceRoot: this.workspaceRoot,
@@ -383,7 +405,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   private async handleSetModel(model: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     try {
       await config.update("llmModel", model === "auto" ? undefined : model, vscode.ConfigurationTarget.Global);
     } catch (err) {

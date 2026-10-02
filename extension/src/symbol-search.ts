@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Symbol Search QuickPick — KSA-179
  * Provides a debounced symbol search via MCP code_search/code_symbols tools.
  * User types → debounced search → shows results with file:line → navigate on select.
@@ -30,7 +30,7 @@ export function registerSymbolSearch(
   mcpManager: IServerManager
 ): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand("kiroSdlc.symbolSearch", () =>
+    vscode.commands.registerCommand("sdlcAgents.symbolSearch", () =>
       showSymbolSearchPick(mcpManager)
     )
   );

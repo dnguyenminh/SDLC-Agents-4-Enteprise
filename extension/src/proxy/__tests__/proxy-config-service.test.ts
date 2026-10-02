@@ -85,8 +85,8 @@ describe("ProxyConfigService", () => {
 
   it("getCredentials returns stored credentials", async () => {
     secrets = makeSecrets({
-      "kiroSdlc.proxy.username": "user1",
-      "kiroSdlc.proxy.password": "pass1",
+      "sdlcAgents.proxy.username": "user1",
+      "sdlcAgents.proxy.password": "pass1",
     }).secrets;
     const service = new ProxyConfigService(secrets);
     await expect(service.getCredentials()).resolves.toEqual({
@@ -95,10 +95,26 @@ describe("ProxyConfigService", () => {
     });
   });
 
+  it("getCredentials migrates legacy kiroSdlc.proxy.* keys on read", async () => {
+    const made = makeSecrets({
+      "kiroSdlc.proxy.username": "legacy-user",
+      "kiroSdlc.proxy.password": "legacy-pass",
+    });
+    secrets = made.secrets;
+    const service = new ProxyConfigService(secrets);
+    await expect(service.getCredentials()).resolves.toEqual({
+      username: "legacy-user",
+      password: "legacy-pass",
+    });
+    // migrate-on-read copied the values forward to the new keys
+    expect(made.store.get("sdlcAgents.proxy.username")).toBe("legacy-user");
+    expect(made.store.get("sdlcAgents.proxy.password")).toBe("legacy-pass");
+  });
+
   it("getState never leaks the password", async () => {
     secrets = makeSecrets({
-      "kiroSdlc.proxy.username": "user1",
-      "kiroSdlc.proxy.password": "secret-pass",
+      "sdlcAgents.proxy.username": "user1",
+      "sdlcAgents.proxy.password": "secret-pass",
     }).secrets;
     const service = new ProxyConfigService(secrets);
     const state = await service.getState("http://detected:1", "localhost");
@@ -136,13 +152,16 @@ describe("ProxyConfigService", () => {
   it("saveCredentials stores username and password in SecretStorage", async () => {
     const service = new ProxyConfigService(secrets);
     await service.saveCredentials("user1", "pass1");
-    expect(secrets.store).toHaveBeenCalledWith("kiroSdlc.proxy.username", "user1");
-    expect(secrets.store).toHaveBeenCalledWith("kiroSdlc.proxy.password", "pass1");
+    expect(secrets.store).toHaveBeenCalledWith("sdlcAgents.proxy.username", "user1");
+    expect(secrets.store).toHaveBeenCalledWith("sdlcAgents.proxy.password", "pass1");
   });
 
   it("clearCredentials removes both secrets", async () => {
     const service = new ProxyConfigService(secrets);
     await service.clearCredentials();
+    expect(secrets.delete).toHaveBeenCalledWith("sdlcAgents.proxy.username");
+    expect(secrets.delete).toHaveBeenCalledWith("sdlcAgents.proxy.password");
+    // Legacy keys are also cleared so a stale pre-rename value cannot resurrect.
     expect(secrets.delete).toHaveBeenCalledWith("kiroSdlc.proxy.username");
     expect(secrets.delete).toHaveBeenCalledWith("kiroSdlc.proxy.password");
   });

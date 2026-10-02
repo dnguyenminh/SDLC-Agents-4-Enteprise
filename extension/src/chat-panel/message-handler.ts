@@ -13,6 +13,14 @@ export class MessageHandler {
   private currentModel: string = "auto";
   private currentMode: AutopilotMode = "autopilot";
 
+  /**
+   * Safety net (UAT): workspace-intent questions get the workspace root +
+   * top-level listing auto-attached, so the model answers correctly even
+   * when its own file-tool calling is unavailable (gateway w/o tools, etc.).
+   */
+  private static readonly WORKSPACE_INTENT =
+    /workspace|thư mục|thư mục gốc|đang đứng|cấu trúc (thư mục|project|dự án)|liệt kê|toàn bộ|toan bo|tổng thể|tong the|entire|whole|full review|review (source|code|mã nguồn|project|dùm|giùm|giúp)|đọc (file|mã|source|code)|mở file|list (files|folders|directories)|project (structure|root|path)|where am i|current (directory|folder|workspace)/i;
+
   constructor(
     private readonly getEngine: () => PiWorkflowAdapter,
     private readonly sendToWebview: (msg: ChatExtToWebviewMessage) => void,
@@ -69,6 +77,9 @@ export class MessageHandler {
         break;
       case "chat:setMode":
         this.currentMode = msg.mode;
+        // Fix J: forward to the approval gate so Autopilot auto-approves
+        // non-destructive tools instead of hanging on an invisible prompt.
+        this.getEngine().setAutopilotMode(msg.mode);
         break;
       case "chat:toolApproval":
         this.handleToolApproval((msg as any).toolId, (msg as any).decision, (msg as any).rememberPattern);
@@ -171,6 +182,32 @@ export class MessageHandler {
     return [scored[0].item];
   }
 
+  private async resolveWorkspaceContext(
+    text: string,
+    context?: Array<{ type: string; label: string; path?: string; content?: string }>
+  ): Promise<Array<{ type: string; label: string; content: string }>> {
+    if (!MessageHandler.WORKSPACE_INTENT.test(text)) return [];
+    if ((context ?? []).some((c) => c.type === "file" || c.type === "folder" || c.type === "currentFile")) {
+      return []; // user already attached explicit file context
+    }
+    const folders = vscode.workspace.workspaceFolders;
+    if (!folders || folders.length === 0) return [];
+    const root = folders[0].uri;
+    try {
+      const entries = await vscode.workspace.fs.readDirectory(root);
+      const lines = entries.slice(0, 80).map(([name, type]) =>
+        type === vscode.FileType.Directory ? `${name}/` : name
+      );
+      return [{
+        type: "workspace",
+        label: folders[0].name || "workspace",
+        content: `Workspace root: ${root.fsPath}\nTop-level entries:\n${lines.join("\n")}`,
+      }];
+    } catch {
+      return [{ type: "workspace", label: "workspace", content: `Workspace root: ${root.fsPath}` }];
+    }
+  }
+
   private async handleUserMessage(text: string, context?: Array<{ type: string; label: string; path?: string; content?: string }>): Promise<void> {
     const skillCtx = this.resolveSkillContext(text);
     const autoCtx = this.isPlainChat(text) ? this.autoResolveSkillContext(text) : [];
@@ -186,8 +223,10 @@ export class MessageHandler {
     }
     strippedText = strippedText.replace(/\s{2,}/g, " ").trim();
     const finalText = strippedText.length > 0 ? strippedText : "Please follow the provided skill instructions.";
-    const enrichedText = buildEnrichedText(finalText, mergedContext);
-    debugLog(` handleUserMessage: "${finalText.slice(0, 80)}" (context: ${mergedContext.length} items, explicitSkills: ${skillCtx.length}, autoSkills: ${autoCtx.length})`);
+    const wsCtx = await this.resolveWorkspaceContext(finalText, mergedContext);
+    const allContext = [...mergedContext, ...wsCtx];
+    const enrichedText = buildEnrichedText(finalText, allContext);
+    debugLog(` handleUserMessage: "${finalText.slice(0, 80)}" (context: ${allContext.length} items, explicitSkills: ${skillCtx.length}, autoSkills: ${autoCtx.length}, workspace: ${wsCtx.length})`);
     this.sendToWebview({ type: "chat:workingStatus", working: true, label: "Working..." });
     try {
       const engine = this.getEngine();
@@ -215,6 +254,12 @@ export class MessageHandler {
       this.getEngine().commandPatternMatcher.addPattern(rememberPattern);
     }
     gate.resolveApproval(toolId, normalizedDecision);
+    // Fix J: drop the stale "Waiting approval" label — the turn resumes now.
+    this.sendToWebview({
+      type: "chat:workingStatus",
+      working: true,
+      label: normalizedDecision === "approve" ? "Approved — running tool..." : "Rejected — continuing...",
+    });
   }
 
   private handleNodeClick(nodeId: string): void {

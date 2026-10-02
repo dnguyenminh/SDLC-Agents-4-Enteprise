@@ -2,6 +2,7 @@
  * Server management, JSON-RPC protocol, and error types.
  */
 import * as vscode from "vscode";
+import { readLlmApiKey } from "../config/llm-secret-keys";
 
 export type ServerStatus = "starting" | "running" | "crashed" | "stopped";
 
@@ -85,7 +86,7 @@ export const SERVER_CONSTANTS = {
 };
 
 export async function checkLlmAvailability(
-  secrets?: vscode.SecretStorage, configKey: string = "kiroSdlc"
+  secrets?: vscode.SecretStorage, configKey: string = "sdlcAgents"
 ): Promise<boolean> {
   const config = vscode.workspace.getConfiguration(configKey);
   const providerType = config.get<string>("llmProvider", "anthropic");
@@ -95,7 +96,7 @@ export async function checkLlmAvailability(
       try { await fetch("http://localhost:11434/api/tags", { signal: AbortSignal.timeout(2000) }); return true; }
       catch { return false; }
     case "openai": {
-      const key = secrets ? (await secrets.get("kiroSdlc.openaiApiKey")) : undefined;
+      const key = secrets ? (await readLlmApiKey(secrets, "openai")) : undefined;
       if (!key) return false;
       // health probe — intentional: any error = service unavailable
       try { await fetch("https://api.openai.com/v1/models", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(2000) }); return true; }
@@ -103,7 +104,7 @@ export async function checkLlmAvailability(
     }
     case "anthropic":
     default: {
-      const key = secrets ? (await secrets.get("kiroSdlc.anthropicApiKey")) : undefined;
+      const key = secrets ? (await readLlmApiKey(secrets, "anthropic")) : undefined;
       if (!key) return false;
       // health probe — intentional: any error = service unavailable
       try { await fetch("https://api.anthropic.com/v1/models", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(2000) }); return true; }

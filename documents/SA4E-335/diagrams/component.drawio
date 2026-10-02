@@ -1,0 +1,164 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1080" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <mxCell id="title" value="SA4E-335 — Component Design: Dockerfile multi-stage · docker-compose · GitHub Actions job graph" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1520" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== Dockerfile multi-stage swimlane ===== -->
+    <mxCell id="df_lane" value="backend/Dockerfile — multi-stage build (base: node:22-slim, proposed from alpine)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="1000" height="400" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_base" value="base&#10;node:22-slim&#10;apt: python3 make g++ git&#10;+ draw.io CLI 24.7.8, Electron/X11/xvfb (proposed)&#10;WORKDIR /app" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="30" y="50" width="220" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_deps" value="deps&#10;COPY package*.json&#10;npm ci --omit=dev&#10;→ prod node_modules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="300" y="50" width="200" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_build" value="build&#10;npm ci · COPY tsconfig+src&#10;npm run build → dist/&#10;pre-download model → TRANSFORMERS_CACHE (proposed)&#10;strip tree-sitter-jsp (proposed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="300" y="210" width="200" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_prod" value="production  ★ CI push target&#10;node:22-slim&#10;COPY --from=deps node_modules&#10;COPY --from=build dist/ + package.json&#10;non-root sa4e uid/gid 1001&#10;ENV NODE_ENV=production, PORT=48721&#10;ENV TRANSFORMERS_CACHE, SERVER_WORKSPACES_ROOT (proposed)&#10;HEALTHCHECK wget /health · EXPOSE 48721&#10;CMD node dist/index.js" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="df_lane">
+      <mxGeometry x="560" y="50" width="410" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_dev" value="development&#10;tsx watch (hot reload)&#10;non-root sa4e" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="560" y="270" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_test" value="test&#10;COPY tests + .env.test&#10;npx vitest run&#10;non-root sa4e" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="780" y="270" width="190" height="90" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_base_deps" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="df_lane" source="s_base" target="s_deps">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_base_build" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_base" target="s_build">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="140" y="280"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_deps_prod" value="COPY node_modules" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="df_lane" source="s_deps" target="s_prod">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_build_prod" value="COPY dist/ + package.json" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_build" target="s_prod">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="660" y="255"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_base_dev" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_base" target="s_dev">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="140" y="385"/><mxPoint x="610" y="385"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_base_test" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_deps" target="s_test">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="400" y="240"/><mxPoint x="875" y="240"/></Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ===== docker-compose swimlane ===== -->
+    <mxCell id="dc_lane" value="backend/docker-compose.yml — production composition" style="swimlane;startSize=30;fillColor=none;strokeColor=#9673a6;html=1;fontStyle=1;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="500" width="640" height="540" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_be" value="backend&#10;build.target=production&#10;NODE_ENV=production (fix D-1)&#10;DATABASE_URL_FILE (secret, D-2)&#10;healthcheck (compose, D-3)&#10;deploy.resources.limits (D-4)&#10;restart: unless-stopped&#10;volumes: code_intel_data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="dc_lane">
+      <mxGeometry x="30" y="50" width="270" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_pg" value="postgres&#10;pgvector/pgvector:pg16&#10;POSTGRES_PASSWORD_FILE (D-2)&#10;healthcheck: pg_isready&#10;restart: unless-stopped (D-5)&#10;deploy.resources.limits (D-4)&#10;volumes: postgres_data" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="dc_lane">
+      <mxGeometry x="340" y="50" width="270" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_onnx" value="onnx-runtime&#10;profiles: [embeddings]&#10;dev-only (D-13 guard)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="dc_lane">
+      <mxGeometry x="30" y="250" width="270" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_secrets" value="secrets:&#10;postgres_password (file)&#10;database_url (file/injected)&#10;git-ignored — no plaintext (BR-08)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="dc_lane">
+      <mxGeometry x="340" y="250" width="270" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_net" value="networks: sa4e-network (bridge)&#10;volumes: postgres_data, code_intel_data (named)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="dc_lane">
+      <mxGeometry x="30" y="370" width="580" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c_prodimg" value="consumes → Dockerfile production target" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="dc_lane">
+      <mxGeometry x="30" y="460" width="580" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_cbe_cpg" value="depends_on:&#10;service_healthy" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="dc_lane" source="c_be" target="c_pg">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_csec_cbe" value="*_FILE" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="dc_lane" source="c_secrets" target="c_be">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="320" y="295"/><mxPoint x="320" y="180"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_csec_cpg" value="POSTGRES_PASSWORD_FILE" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="dc_lane" source="c_secrets" target="c_pg">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_cbe_img" value="build" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="dc_lane" source="c_be" target="c_prodimg">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="165" y="445"/></Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ===== GitHub Actions job graph swimlane ===== -->
+    <mxCell id="ci_lane" value="GitHub Actions — build-push-backend.yml job / step graph" style="swimlane;startSize=30;fillColor=none;strokeColor=#82b366;html=1;fontStyle=1;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="720" y="500" width="840" height="540" as="geometry"/>
+    </mxCell>
+    <mxCell id="j_checkout" value="1. checkout&#10;(fetch-depth:0 for tags)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="ci_lane">
+      <mxGeometry x="30" y="50" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="j_meta" value="2. docker/metadata-action&#10;derive tags: sha-&lt;short&gt;,&#10;semver, latest(main only)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="ci_lane">
+      <mxGeometry x="30" y="150" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="j_buildx" value="3. setup-buildx&#10;(cache backend)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="ci_lane">
+      <mxGeometry x="280" y="50" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="j_login" value="4. docker/login-action&#10;creds via CI secrets&#10;(--password-stdin, masked)&#10;push jobs only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="ci_lane">
+      <mxGeometry x="280" y="150" width="180" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="j_build" value="5. build-push-action&#10;target=production&#10;context=backend/&#10;cache_from/to · single build&#10;push= (event!=PR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;fontStyle=1;" vertex="1" parent="ci_lane">
+      <mxGeometry x="530" y="50" width="200" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="j_verify" value="6. verify digest&#10;emit outputs:&#10;image-ref, image-digest, tags" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="ci_lane">
+      <mxGeometry x="530" y="200" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="j_status" value="7. report status → commit/PR&#10;green on success" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="ci_lane">
+      <mxGeometry x="530" y="320" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="j_fail" value="Any step non-zero → fail red&#10;no image pushed · secret never printed (BR-18/19)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="ci_lane">
+      <mxGeometry x="30" y="440" width="700" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_j1_j2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="ci_lane" source="j_checkout" target="j_meta">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_j1_j3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="ci_lane" source="j_checkout" target="j_buildx">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_j3_j4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="ci_lane" source="j_buildx" target="j_login">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_j4_j5" value="login ok" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="ci_lane" source="j_login" target="j_build">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_j2_j5" value="tags" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="ci_lane" source="j_meta" target="j_build">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="490" y="185"/><mxPoint x="490" y="120"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_j5_j6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="ci_lane" source="j_build" target="j_verify">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_j6_j7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="ci_lane" source="j_verify" target="j_status">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- cross-lane: production stage feeds CI build target -->
+    <mxCell id="e_prod_ci" value="CI builds this stage" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;dashed=1;fontSize=9;strokeColor=#6c8ebf;" edge="1" parent="1" source="s_prod" target="j_build">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="1310" y="490"/></Array>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="legend2" value="Legend: blue=runtime/prod stage · green=CI/build step · yellow=dev-only/tag · grey=unchanged (postgres) · red=secret/security · purple=network/volume/data · dashed=derived/cross-artifact" style="text;html=1;fontSize=10;align=left;verticalAlign=middle;fillColor=none;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1050" width="1520" height="20" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

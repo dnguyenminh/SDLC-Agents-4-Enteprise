@@ -1,0 +1,6 @@
+test_case_id,platform,workspace_root,expected_allowlist,excluded_tools,expected_result,description
+TC-008,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,read|write|edit|powershell|grep|find|ls,bash,Loadout includes powershell excludes bash — single shell tool,Happy path — session loadout on win32
+TC-313,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,read|write|edit|powershell|grep|find|ls,bash,Full allowlist matches TDD §6.2 — no dual shell,BR-14 — session loadout includes powershell
+TC-314,linux,/home/user/project,read|write|edit|bash|grep|find|ls,powershell,Loadout excludes powershell includes bash,BR-14 inverse — session loadout on non-win32
+TC-703,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,read|write|edit|powershell|grep|find|ls,bash,ensureSessionHost created with powershell loadout; cached on second call; PI_SESSION_TIMEOUT → legacy fallback,IT — session host integration
+TC-704,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,PowerShellToolCallEvent (success + failure) mapped by mapAgentEvent without error,IT — event mapper handles PS events

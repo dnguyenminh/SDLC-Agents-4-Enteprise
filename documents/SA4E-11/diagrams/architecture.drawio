@@ -1,0 +1,31 @@
+<mxfile host="app.diagrams.net" modified="2026-09-28T00:00:00.000Z" agent="SA Agent" version="1.0" etag="sa4e-11-arch">
+  <diagram name="Architecture" id="arch-1">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="user" value="External User" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="120" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="nginx" value="Nginx Reverse Proxy&#xa;TLS Termination" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="120" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="backend" value="Backend Service&#xa;Hono + TypeScript" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="280" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="postgres" value="PostgreSQL&#xa;Checkpoints" style="shape=cylinder;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="280" width="140" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="compose" value="Docker Compose" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="280" width="140" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="user" target="nginx"/>
+        <mxCell id="e2" edge="1" parent="1" source="nginx" target="backend"/>
+        <mxCell id="e3" edge="1" parent="1" source="backend" target="postgres"/>
+        <mxCell id="e4" edge="1" parent="1" source="compose" target="nginx"/>
+        <mxCell id="e5" edge="1" parent="1" source="compose" target="backend"/>
+        <mxCell id="e6" edge="1" parent="1" source="compose" target="postgres"/>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

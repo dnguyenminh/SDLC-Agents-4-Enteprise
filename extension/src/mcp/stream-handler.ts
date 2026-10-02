@@ -16,11 +16,16 @@ export class StreamHandler {
 
   constructor(private readonly emit: (msg: ChatExtToWebviewMessage) => void) {}
 
-  /** Buffer token events, flush on debounce window */
-  emitToken(nodeId: string, content: string, streamId: string | null): void {
+  /**
+   * Buffer token events, flush on debounce window.
+   * streamId is REQUIRED and must be stable for the whole turn (one turn =
+   * one stream identity: start → tokens → complete/error). Per-flush generated
+   * ids fragment one answer into many bubbles and orphan completions.
+   */
+  emitToken(nodeId: string, content: string, streamId: string): void {
     this.buffer.push({
       type: "chat:streamChunk",
-      streamId: streamId ?? `stream-${nodeId}-${Date.now()}`,
+      streamId,
       nodeId,
       eventType: "token",
       content,
@@ -37,11 +42,11 @@ export class StreamHandler {
   }
 
   /** Immediately flush on status events */
-  emitStatus(nodeId: string, status: string, streamId: string | null): void {
+  emitStatus(nodeId: string, status: string, streamId: string): void {
     this.flush(); // Flush any pending tokens first
     this.emit({
       type: "chat:streamChunk",
-      streamId: streamId ?? `stream-${nodeId}-${Date.now()}`,
+      streamId,
       nodeId,
       eventType: "status",
       content: status,
@@ -50,11 +55,11 @@ export class StreamHandler {
   }
 
   /** Immediately flush on complete events */
-  emitComplete(nodeId: string, duration: number, streamId: string | null): void {
+  emitComplete(nodeId: string, duration: number, streamId: string): void {
     this.flush();
     this.emit({
       type: "chat:streamComplete",
-      streamId: streamId ?? `stream-${nodeId}-${Date.now()}`,
+      streamId,
       nodeId,
       finalContent: `Node ${nodeId} completed in ${duration}ms`,
       metadata: { duration },
@@ -62,11 +67,11 @@ export class StreamHandler {
   }
 
   /** Immediately flush on error events */
-  emitError(nodeId: string, error: string, streamId: string | null): void {
+  emitError(nodeId: string, error: string, streamId: string): void {
     this.flush();
     this.emit({
       type: "chat:streamChunk",
-      streamId: streamId ?? `stream-${nodeId}-${Date.now()}`,
+      streamId,
       nodeId,
       eventType: "error",
       content: error,
@@ -83,12 +88,12 @@ export class StreamHandler {
     maxAttempts: number,
     delayMs: number,
     error: string,
-    streamId: string | null
+    streamId: string
   ): void {
     this.flush();
     this.emit({
       type: "chat:streamChunk",
-      streamId: streamId ?? `stream-${nodeId}-${Date.now()}`,
+      streamId,
       nodeId,
       eventType: "retry",
       content: JSON.stringify({ attempt, maxAttempts, delayMs, error }),
@@ -102,12 +107,12 @@ export class StreamHandler {
     passed: boolean,
     feedback: string | null,
     attempt: number,
-    streamId: string | null
+    streamId: string
   ): void {
     this.flush();
     this.emit({
       type: "chat:streamChunk",
-      streamId: streamId ?? `stream-${nodeId}-${Date.now()}`,
+      streamId,
       nodeId,
       eventType: "verify",
       content: JSON.stringify({ passed, feedback, attempt }),
@@ -121,12 +126,12 @@ export class StreamHandler {
     fromStrategy: string,
     toStrategy: string,
     reason: string,
-    streamId: string | null
+    streamId: string
   ): void {
     this.flush();
     this.emit({
       type: "chat:streamChunk",
-      streamId: streamId ?? `stream-${nodeId}-${Date.now()}`,
+      streamId,
       nodeId,
       eventType: "strategy_switch",
       content: JSON.stringify({ fromStrategy, toStrategy, reason }),
@@ -139,12 +144,12 @@ export class StreamHandler {
     nodeId: string,
     failedStrategies: string[],
     verifyHistory: Array<{ attempt: number; feedback: string }>,
-    streamId: string | null
+    streamId: string
   ): void {
     this.flush();
     this.emit({
       type: "chat:streamChunk",
-      streamId: streamId ?? `stream-${nodeId}-${Date.now()}`,
+      streamId,
       nodeId,
       eventType: "human_intervention_required",
       content: JSON.stringify({ failedStrategies, verifyHistory }),

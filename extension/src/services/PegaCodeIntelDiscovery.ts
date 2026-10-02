@@ -61,7 +61,7 @@ export class PegaCodeIntelDiscovery {
         }
       } catch { /* ignore malformed */ }
     }
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const appName = config.get<string>("pegaAppName", "").trim();
     const appVersion = config.get<string>("pegaAppVersion", "").trim();
     if (appName && appVersion) return { appName, appVersion };

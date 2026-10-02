@@ -10,7 +10,7 @@ export function getWorkspaceRoot(): string | undefined {
 
 export function createStatusBar(): vscode.StatusBarItem {
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  item.command = "kiroSdlc.status";
+  item.command = "sdlcAgents.status";
   item.show();
   return item;
 }
@@ -34,5 +34,5 @@ export async function checkForUpgrade(context: vscode.ExtensionContext): Promise
   if (!isUpgradeAvailable(root, context.extensionPath)) { return; }
   const manifest = loadBundledManifest(context.extensionPath);
   const action = await vscode.window.showInformationMessage(`🆕 SDLC update → v${manifest?.version || "?"}`, "Update Now", "Later");
-  if (action === "Update Now") { vscode.commands.executeCommand("kiroSdlc.update"); }
+  if (action === "Update Now") { vscode.commands.executeCommand("sdlcAgents.update"); }
 }

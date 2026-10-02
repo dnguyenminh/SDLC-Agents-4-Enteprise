@@ -16,7 +16,7 @@ export class ChatModelManager {
    * For gateway providers, attempts /v1/models first, falling back to static catalog.
    */
   async sendModels(): Promise<void> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const provider = config.get<string>("llmProvider", "anthropic");
     const anthropicBaseUrl = config.get<string>("anthropicBaseUrl", "");
 

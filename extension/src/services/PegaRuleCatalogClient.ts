@@ -90,7 +90,7 @@ export class PegaRuleCatalogClient {
    */
   async downloadCatalog(fileName: string, destDir: string): Promise<string> {
     const auth = await this.pegaClient.getAuthHeader();
-    const url = `${this.baseUrl()}/file/resumableDownload/${encodeURIComponent(fileName)}`;
+    const url = `${this.baseUrl()}/file/resumableDownload?filePath=${encodeURIComponent(fileName)}`;
     const { csvPath, zipBytes } = await downloadCatalogCsv(url, auth, destDir, this.log);
     this.log(`[Catalog] ✅ Catalog ZIP ${zipBytes} bytes → ${csvPath}`);
     return csvPath;

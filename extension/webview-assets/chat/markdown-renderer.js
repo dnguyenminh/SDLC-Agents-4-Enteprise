@@ -1,11 +1,15 @@
 /**
- * Markdown Renderer — KSA-210 + KSA-230
+ * Markdown Renderer — KSA-210 + KSA-230 (+ SA4E-33x block-aware rewrite).
  * Safe markdown-to-HTML converter with syntax highlighting.
  * No raw innerHTML of user content; sanitizes links; escapes code blocks.
+ *
+ * Block-aware: fenced code is extracted BEFORE any inline/block rule runs
+ * (so `|`/lists/headers inside code are never reinterpreted), and block
+ * elements (<pre>/<table>/<ul>/<h*>/<blockquote>) are NEVER wrapped in <p>.
  */
 
-// eslint-disable-next-line no-unused-vars
-var MarkdownRenderer = (function () {
+ // eslint-disable-next-line no-unused-vars
+ var MarkdownRenderer = (function () {
   "use strict";
 
   var SAFE_SCHEMES = ["http:", "https:", "vscode:"];
@@ -66,6 +70,9 @@ var MarkdownRenderer = (function () {
     sh: "bash",
     shell: "bash",
     powershell: "bash",
+    text: [],
+    plaintext: [],
+    txt: [],
     css: [
       { pattern: /(\/\*[\s\S]*?\*\/)/g, cls: "hljs-comment" },
       { pattern: /([.#][\w-]+)/g, cls: "hljs-selector-tag" },
@@ -116,82 +123,182 @@ var MarkdownRenderer = (function () {
 
     var html = escapeHtml(text);
 
-    // Code blocks with language
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function (_match, lang, code) {
-      var highlighted = highlightCode(code.trim(), lang);
-      var langClass = lang ? ' class="language-' + lang + '"' : "";
-      return '<pre><code' + langClass + '>' + highlighted + '</code></pre>';
+    // 1. Extract fenced code blocks FIRST — nothing else may touch their content.
+    // Tolerates ```lang immediately followed by content (no newline).
+    var fences = [];
+    html = html.replace(/```(\w*)[ \t]*\n?([\s\S]*?)```/g, function (_m, lang, code) {
+      var id = "\x00F" + fences.length + "\x00";
+      fences.push({ lang: lang || "", code: code.replace(/^\n+|\n+$/g, "") });
+      return "\n\n" + id + "\n\n";
     });
 
-    // Inline code
-    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    // 2. Extract inline code spans (single backticks, no newlines inside).
+    var inlines = [];
+    html = html.replace(/`([^`\n]+)`/g, function (_m, code) {
+      var id = "\x00I" + inlines.length + "\x00";
+      inlines.push(code);
+      return id;
+    });
 
+    // 3. Split into blocks on blank lines; render each block by shape.
+    var blocks = html.split(/\n{2,}/);
+    var out = [];
+    for (var b = 0; b < blocks.length; b++) {
+      var rendered = renderBlock(blocks[b]);
+      if (rendered) out.push(rendered);
+    }
+    html = out.join("\n");
+
+    // 4. Restore inline code.
+    html = html.replace(/\x00I(\d+)\x00/g, function (_m, n) {
+      return "<code>" + (inlines[+n] || "") + "</code>";
+    });
+
+    // 5. Restore fenced code blocks (bare, or unwrapped from <p>).
+    html = html.replace(/(?:<p>)?\x00F(\d+)\x00(?:<\/p>)?/g, function (_m, n) {
+      var fence = fences[+n] || { lang: "", code: "" };
+      var highlighted = highlightCode(fence.code, fence.lang);
+      var langClass = fence.lang ? ' class="language-' + fence.lang + '"' : "";
+      return "<pre><code" + langClass + ">" + highlighted + "</code></pre>";
+    });
+
+    return html;
+  }
+
+  // Block rendering scans line groups, so tables/lists/headers work even
+  // without a preceding blank line (models often omit it).
+  function renderBlock(block) {
+    if (!block || !block.trim()) return "";
+
+    var lines = block.split("\n");
+    var htmlOut = [];
+    var para = [];
+    function flushPara() {
+      if (para.length) {
+        htmlOut.push("<p>" + inline(para.join("\n")).replace(/\n/g, "<br/>") + "</p>");
+        para = [];
+      }
+    }
+
+    var i = 0;
+    while (i < lines.length) {
+      var line = lines[i];
+
+      // Lone fence placeholder → restored later, never inside <p>
+      if (/^\x00F\d+\x00$/.test(line)) { flushPara(); htmlOut.push(line); i++; continue; }
+
+      // Headers
+      var headerMatch = line.match(/^(#{1,4}) (.+)$/);
+      if (headerMatch) {
+        flushPara();
+        var level = headerMatch[1].length + 1; // # -> h2 ... #### -> h5
+        htmlOut.push("<h" + level + ">" + inline(headerMatch[2].trim()) + "</h" + level + ">");
+        i++;
+        continue;
+      }
+
+      // Horizontal rule
+      if (/^\s*(---|\*\*\*|___)\s*$/.test(line)) { flushPara(); htmlOut.push("<hr>"); i++; continue; }
+
+      // Tables: header row + separator row + body rows (whitespace tolerant)
+      if (isTableRow(line) && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
+        flushPara();
+        var j = i + 2;
+        while (j < lines.length && isTableRow(lines[j])) j++;
+        htmlOut.push(renderTable(lines.slice(i, j)));
+        i = j;
+        continue;
+      }
+
+      // Lists: runs of -, *, +, 1. or checkbox lines
+      if (isListLine(line)) {
+        flushPara();
+        var items = [];
+        while (i < lines.length && isListLine(lines[i])) {
+          items.push(renderListItem(lines[i]));
+          i++;
+        }
+        htmlOut.push("<ul>" + items.join("") + "</ul>");
+        continue;
+      }
+
+      // Blockquotes (escaped '>' runs)
+      if (/^\s*&gt;/.test(line)) {
+        flushPara();
+        var quoted = [];
+        while (i < lines.length && /^\s*&gt;/.test(lines[i])) {
+          quoted.push(lines[i].replace(/^\s*&gt; ?/, ""));
+          i++;
+        }
+        htmlOut.push("<blockquote>" + inline(quoted.join("\n")).replace(/\n/g, "<br/>") + "</blockquote>");
+        continue;
+      }
+
+      if (!line.trim()) { flushPara(); i++; continue; }
+      para.push(line);
+      i++;
+    }
+    flushPara();
+    return htmlOut.join("\n");
+  }
+
+  function renderListItem(line) {
+    var m = line.match(/^\s*(?:- \[x\]|- \[ \]|-|\*|\+|\d+\.)\s+(.*)$/);
+    var itemText = m ? m[1] : line.trim();
+    var cls = "";
+    if (/^\s*- \[x\]/i.test(line)) { cls = ' class="checked"'; itemText = "\u2611 " + itemText; }
+    else if (/^\s*- \[ \]/i.test(line)) { cls = ' class="unchecked"'; itemText = "\u2610 " + itemText; }
+    return "<li" + cls + ">" + inline(itemText) + "</li>";
+  }
+
+  function renderTable(tableLines) {
+    var table = "<table><thead><tr>";
+    var headers = splitRow(tableLines[0]);
+    for (var h = 0; h < headers.length; h++) table += "<th>" + inline(headers[h]) + "</th>";
+    table += "</tr></thead><tbody>";
+    for (var r = 2; r < tableLines.length; r++) {
+      var cells = splitRow(tableLines[r]);
+      table += "<tr>";
+      for (var c = 0; c < cells.length; c++) table += "<td>" + inline(cells[c]) + "</td>";
+      table += "</tr>";
+    }
+    return table + "</tbody></table>";
+  }
+
+  function isListLine(line) {
+    return /^\s*(?:- \[[ xX]\]|[-*+] |\d+\. )/.test(line);
+  }
+
+  function isTableRow(line) {
+    return /^\s*\|.*\|\s*$/.test(line);
+  }
+
+  function isTableSeparator(line) {
+    return /^\s*\|[\s:|\-]*\|[\s]*$/.test(line) && /-/.test(line);
+  }
+
+  function splitRow(line) {
+    var trimmed = line.trim().replace(/^\||\|$/g, "");
+    return trimmed.split("|").map(function (c) { return c.trim(); });
+  }
+
+  function inline(text) {
+    var s = text;
     // Bold
-    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-    // Italic
-    html = html.replace(/(?<!\w)\*(.+?)\*(?!\w)/g, "<em>$1</em>");
-    html = html.replace(/(?<!\w)_(.+?)_(?!\w)/g, "<em>$1</em>");
-
+    s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    // Italic (* and _)
+    s = s.replace(/(?<!\w)\*(.+?)\*(?!\w)/g, "<em>$1</em>");
+    s = s.replace(/(?<!\w)_(.+?)_(?!\w)/g, "<em>$1</em>");
     // Strikethrough
-    html = html.replace(/~~(.+?)~~/g, "<del>$1</del>");
-
+    s = s.replace(/~~(.+?)~~/g, "<del>$1</del>");
     // Links
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_match, label, url) {
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_m, label, url) {
       if (isSafeUrl(url)) {
         return '<a href="' + url + '" title="' + label + '">' + label + "</a>";
       }
       return label;
     });
-
-    // Headers
-    html = html.replace(/^#### (.+)$/gm, "<h5>$1</h5>");
-    html = html.replace(/^### (.+)$/gm, "<h4>$1</h4>");
-    html = html.replace(/^## (.+)$/gm, "<h3>$1</h3>");
-    html = html.replace(/^# (.+)$/gm, "<h2>$1</h2>");
-
-    // Checkbox lists
-    html = html.replace(/^- \[x\] (.+)$/gm, '<li class="checked">\u2611 $1</li>');
-    html = html.replace(/^- \[ \] (.+)$/gm, '<li class="unchecked">\u2610 $1</li>');
-
-    // Ordered lists
-    html = html.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
-
-    // Unordered lists
-    html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
-    html = html.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, function (match) {
-      return "<ul>" + match + "</ul>";
-    });
-
-    // Horizontal rule
-    html = html.replace(/^---$/gm, "<hr>");
-
-    // Blockquote
-    html = html.replace(/^&gt; (.+)$/gm, "<blockquote>$1</blockquote>");
-
-    // Tables
-    html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/gm, function (_m, header, _sep, body) {
-      var ths = header.split("|").filter(function (c) { return c.trim(); });
-      var rows = body.trim().split("\n");
-      var table = "<table><thead><tr>";
-      for (var i = 0; i < ths.length; i++) table += "<th>" + ths[i].trim() + "</th>";
-      table += "</tr></thead><tbody>";
-      for (var r = 0; r < rows.length; r++) {
-        var cells = rows[r].split("|").filter(function (c) { return c.trim(); });
-        table += "<tr>";
-        for (var ci = 0; ci < cells.length; ci++) table += "<td>" + cells[ci].trim() + "</td>";
-        table += "</tr>";
-      }
-      table += "</tbody></table>";
-      return table;
-    });
-
-    // Line breaks
-    html = html.replace(/\n\n/g, "</p><p>");
-    html = "<p>" + html + "</p>";
-    html = html.replace(/<p>\s*<\/p>/g, "");
-
-    return html;
+    return s;
   }
 
   function highlightCode(code, lang) {
@@ -199,7 +306,7 @@ var MarkdownRenderer = (function () {
 
     var rules = HIGHLIGHT_RULES[lang.toLowerCase()];
     if (typeof rules === "string") rules = HIGHLIGHT_RULES[rules];
-    if (!rules) return code;
+    if (!rules || !rules.length) return code;
 
     var tokens = [];
     var result = code;
@@ -217,7 +324,7 @@ var MarkdownRenderer = (function () {
 
     // Restore tokens
     for (var t = 0; t < tokens.length; t++) {
-      result = result.replace("\x00T" + t + "\x00",
+      result = result.split("\x00T" + t + "\x00").join(
         '<span class="' + tokens[t].cls + '">' + tokens[t].text + '</span>');
     }
 

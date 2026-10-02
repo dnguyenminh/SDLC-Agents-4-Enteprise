@@ -88,3 +88,57 @@ describe('PiProvider (SA4E-290)', () => {
     }
   });
 });
+
+describe('PiProvider Fix J — pre-execution approval gate (beforeToolCall)', () => {
+  function gateCtx(toolCall: { id: string; name: string }, args: Record<string, unknown> = {}) {
+    return { toolCall, args } as any;
+  }
+
+  it('passes through when no approval handler is wired', async () => {
+    const provider = new PiProvider();
+    const res = await (provider as any).gateBeforeToolCall(gateCtx({ id: 't1', name: 'bash' }));
+    expect(res).toBeUndefined();
+  });
+
+  it('allows approved tools (returns undefined = proceed to execution)', async () => {
+    const provider = new PiProvider();
+    provider.setToolApproval({ requestApproval: async () => ({ approved: true }) });
+    const res = await (provider as any).gateBeforeToolCall(gateCtx({ id: 't2', name: 'bash' }, { command: 'ls' }));
+    expect(res).toBeUndefined();
+  });
+
+  it('blocks rejected tools with the gate reason BEFORE execution', async () => {
+    const provider = new PiProvider();
+    provider.setToolApproval({
+      requestApproval: async (req) => ({ approved: false, reason: `denied: ${req.toolName}` }),
+    });
+    const res = await (provider as any).gateBeforeToolCall(gateCtx({ id: 't3', name: 'git_push' }));
+    expect(res).toEqual({ block: true, reason: 'denied: git_push' });
+  });
+
+  it('threads the toolUseId/input to the gate so the webview can resolve it', async () => {
+    const provider = new PiProvider();
+    const seen: any[] = [];
+    provider.setToolApproval({
+      requestApproval: async (req) => {
+        seen.push(req);
+        return { approved: true };
+      },
+    });
+    await (provider as any).gateBeforeToolCall(gateCtx({ id: 'tu-9', name: 'bash' }, { command: 'ls /tmp' }));
+    expect(seen).toEqual([{ toolUseId: 'tu-9', toolName: 'bash', input: { command: 'ls /tmp' } }]);
+  });
+
+  it('fails CLOSED when the approval check throws (never runs unguarded)', async () => {
+    const provider = new PiProvider();
+    provider.setToolApproval({
+      requestApproval: async () => {
+        throw new Error('gate exploded');
+      },
+    });
+    const res = await (provider as any).gateBeforeToolCall(gateCtx({ id: 't4', name: 'bash' }));
+    expect(res?.block).toBe(true);
+    expect(res?.reason).toContain('Approval check failed');
+    expect(res?.reason).toContain('gate exploded');
+  });
+});

@@ -10,7 +10,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createModels } from '@earendil-works/pi-ai';
 import type { MutableModels } from '@earendil-works/pi-ai';
-import { fauxProvider, fauxAssistantMessage } from '@earendil-works/pi-ai/providers/faux';
+import { fauxProvider, fauxAssistantMessage, fauxToolCall } from '@earendil-works/pi-ai/providers/faux';
+import { Type } from 'typebox';
+import type { AgentTool } from '@earendil-works/pi-agent-core';
 import { PiProvider } from '../pi-provider.js';
 
 describe('PiProvider runtime smoke (real SDK + faux model — SA4E-289)', () => {
@@ -146,6 +148,66 @@ describe('PiProvider concurrency — serialized runs (CONCURRENCY-FIX)', () => {
 
     expect(String(recovered.errorMessage ?? '')).not.toContain('already processing');
     expect(recovered.text).toContain('recovered response');
+  });
+});
+
+describe('PiProvider failure-streak guard — Bug I (real SDK + faux model)', () => {
+  let provider: PiProvider;
+  let models: MutableModels;
+  let faux: ReturnType<typeof fauxProvider>;
+
+  beforeEach(async () => {
+    process.env.NODE_ENV = 'test';
+    provider = new PiProvider();
+    models = createModels();
+    faux = fauxProvider();
+    models.setProvider(faux.provider);
+    await provider.initialize({ transportType: 'HTTP', models });
+    await provider.setModel('faux', 'faux-1');
+  });
+
+  afterEach(() => {
+    models.deleteProvider('faux');
+    provider.dispose();
+    delete process.env.NODE_ENV;
+  });
+
+  it('steers/aborts on repeated identical tool FAILURES even when the args vary', async () => {
+    // A tool that always fails the same way (the UAT `dir /b` in Git Bash).
+    const failTool = {
+      name: 'failtool',
+      label: 'Fail tool',
+      description: 'Always throws the same error',
+      parameters: Type.Object({ command: Type.String() }),
+      execute: async () => {
+        throw new Error("dir: cannot access '/b': No such file or directory");
+      },
+    } as unknown as AgentTool;
+
+    // Args differ per call → identical-args signature never trips; only the
+    // new failure signature (tool + first error line) can stop the loop.
+    faux.setResponses([
+      fauxAssistantMessage([fauxToolCall('failtool', { command: 'dir /b a' }, { id: 'tc-1' })], { stopReason: 'toolUse' }),
+      fauxAssistantMessage([fauxToolCall('failtool', { command: 'dir /b b' }, { id: 'tc-2' })], { stopReason: 'toolUse' }),
+      fauxAssistantMessage([fauxToolCall('failtool', { command: 'dir /b c' }, { id: 'tc-3' })], { stopReason: 'toolUse' }),
+      fauxAssistantMessage([fauxToolCall('failtool', { command: 'dir /b d' }, { id: 'tc-4' })], { stopReason: 'toolUse' }),
+      fauxAssistantMessage('buffered final text in case the loop continues'),
+    ]);
+
+    const result = await provider.run({
+      prompt: 'run the loop',
+      provider: 'faux',
+      model: 'faux-1',
+      tools: [failTool],
+      turnBudget: { maxSameToolRepeats: 2, timeoutMs: 30_000 },
+    });
+
+    // Guard tripped on failure repetition (steer then abort), NOT on the
+    // 120s timeout: the partial-result stop note is appended to the text.
+    expect(result.text).toContain('Stopped early');
+    expect(result.text).toContain('loop guard');
+    // The turn was stopped early — well before any 35-call budget.
+    expect(result.toolCalls.length).toBeLessThan(10);
   });
 });
 

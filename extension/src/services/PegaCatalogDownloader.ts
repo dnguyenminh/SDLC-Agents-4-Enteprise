@@ -87,9 +87,11 @@ async function fetchAllChunks(
   while (iter < MAX_CHUNKS) {
     iter++;
     const end = offset + CHUNK_BYTES - 1;
-    const res = await fetch(url, {
-      method: "GET",
-      headers: { Authorization: authHeader, Accept: "application/octet-stream", Range: `bytes=${offset}-${end}` },
+    const urlWithRange = `${url}${url.includes('?') ? '&' : '?'}Range=bytes=${offset}-${end}`;
+    const res = await fetch(urlWithRange, {
+      method: "POST",
+      headers: { Authorization: authHeader, Accept: "application/json" },
+      body: "",
     });
     if (res.status !== 206 && res.status !== 200) {
       throw new Error(`Resumable download failed: HTTP ${res.status}`);

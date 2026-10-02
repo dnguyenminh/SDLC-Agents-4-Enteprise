@@ -3,7 +3,7 @@
  * Default value provided by package.json contributes.configuration.
  * No hardcoded fallback — single source of truth is package.json default.
  * Enforces HTTPS for non-loopback URLs (SEC-289-03), with an explicit
- * opt-in bypass via kiroSdlc.backend.allowInsecureRemote (SA4E-320).
+ * opt-in bypass via sdlcAgents.backend.allowInsecureRemote (SA4E-320).
  */
 import * as vscode from "vscode";
 
@@ -95,7 +95,7 @@ export function validateBackendUrl(
 }
 
 /**
- * Read the opt-in bypass flag (kiroSdlc.backend.allowInsecureRemote) fresh
+ * Read the opt-in bypass flag (sdlcAgents.backend.allowInsecureRemote) fresh
  * from VS Code configuration. Strict `=== true` — missing/non-boolean → false
  * (fail-closed, enforcement stays ON).
  *
@@ -104,18 +104,18 @@ export function validateBackendUrl(
  * of truth so the bypass flows consistently to every consumer).
  */
 export function getAllowInsecureRemote(): boolean {
-  const config = vscode.workspace?.getConfiguration?.("kiroSdlc");
+  const config = vscode.workspace?.getConfiguration?.("sdlcAgents");
   return config?.get?.<boolean>("backend.allowInsecureRemote") === true;
 }
 
 /**
- * Get configured backend URL from kiroSdlc.backend.url setting.
- * Reads kiroSdlc.backend.allowInsecureRemote and passes it to validateBackendUrl.
+ * Get configured backend URL from sdlcAgents.backend.url setting.
+ * Reads sdlcAgents.backend.allowInsecureRemote and passes it to validateBackendUrl.
  * Uses VS Code setting default defined in package.json.
  * @returns Backend URL string with trailing slash stripped (never empty)
  */
 export function getBackendUrl(): string {
-  const config = vscode.workspace?.getConfiguration?.("kiroSdlc");
+  const config = vscode.workspace?.getConfiguration?.("sdlcAgents");
   const url = config?.get?.<string>("backend.url");
   if (!url) {
     return DEFAULT_BACKEND_URL;

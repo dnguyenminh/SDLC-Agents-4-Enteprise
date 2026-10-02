@@ -46,11 +46,11 @@ export class PegaRuleSetResolverService {
   constructor(private readonly client: PegaHttpClient) {}
 
   /**
-   * Developer short name: setting `kiroSdlc.pegaDeveloperShortName`,
+   * Developer short name: setting `sdlcAgents.pegaDeveloperShortName`,
    * fallback phần trước `@` của `pegaUsername` (vd user@org => user).
    */
   public getDeveloperShortName(): string {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const fromSetting = config.get<string>("pegaDeveloperShortName", "").trim();
     if (fromSetting) return fromSetting;
     const username = config.get<string>("pegaUsername", "").trim();

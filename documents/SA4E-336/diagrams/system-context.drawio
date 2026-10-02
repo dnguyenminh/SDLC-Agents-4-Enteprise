@@ -1,0 +1,41 @@
+<mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="sys" value="SDLC Agents — Extension (VS Code)" style="swimlane;startSize=30;fillColor=#DAE8FC;html=1;rounded=1;whiteSpace=wrap;container=1;" vertex="1" parent="1">
+  <mxGeometry x="160" y="80" width="680" height="520" as="geometry"/>
+</mxCell>
+<mxCell id="pi" value="pi-coding-agent 0.99.1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="1">
+  <mxGeometry x="80" y="120" width="140" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="ps" value="PowerShell (pwsh.exe)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+  <mxGeometry x="80" y="260" width="140" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="win" value="Windows OS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+  <mxGeometry x="80" y="400" width="140" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="kb" value="Backend Knowledge Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+  <mxGeometry x="520" y="120" width="140" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="vscode" value="VS Code IDE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFDAB9;strokeColor=#D4A373;" vertex="1" parent="1">
+  <mxGeometry x="520" y="400" width="140" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="dev" value="Developer" style="shape=mxgraph.flowchart.annotation_2;whiteSpace=wrap;html=1;fillColor=#FFC999;strokeColor=#E8A849;" vertex="1" parent="1">
+  <mxGeometry x="30" y="280" width="100" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="e1" value="npm install/upgrade" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D6B656;" edge="1" parent="1" source="pi" target="sys">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" value="createPowerShellTool" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82B366;" edge="1" parent="1" source="ps" target="sys">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" value="OS API calls" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9673A6;" edge="1" parent="1" source="win" target="sys">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" value="REST /api/v1/*" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B85450;" edge="1" parent="1" source="sys" target="kb">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" value="VS Code API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A373;" edge="1" parent="1" source="sys" target="vscode">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e6" value="triggers upgrade" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#E8A849;dashed=1;" edge="1" parent="1" source="dev" target="pi">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root></mxGraphModel>

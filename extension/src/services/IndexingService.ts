@@ -231,7 +231,7 @@ export class IndexingService {
     ): Promise<string | null> {
         try {
             await ensureMigrated(secrets);
-            const config = vscode.workspace.getConfiguration("kiroSdlc");
+            const config = vscode.workspace.getConfiguration("sdlcAgents");
             const username = config.get<string>("pegaUsername", "");
             const wsHash = getWsHash();
             const pwKey = wsHash ? secretKey("pega", wsHash)! : LEGACY_SECRET.pega;
@@ -258,7 +258,7 @@ export class IndexingService {
         root: string, report: ProgressReporter, secrets?: vscode.SecretStorage,
     ): Promise<string | null> {
         // Fast path: Rule Catalog Export (enabled by default; opt-out via setting).
-        const useCatalog = vscode.workspace.getConfiguration("kiroSdlc")
+        const useCatalog = vscode.workspace.getConfiguration("sdlcAgents")
             .get<boolean>("pega.useCatalogExport", true);
         if (useCatalog && secrets) {
             try {

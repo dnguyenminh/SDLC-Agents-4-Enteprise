@@ -5,28 +5,24 @@
 
 import * as vscode from "vscode";
 import { ChatPanelProvider } from "../chat-panel/chat-panel-provider";
-
-const LLM_SECRET_KEYS: Record<string, string> = {
-  anthropic: "kiroSdlc.anthropicApiKey",
-  openai: "kiroSdlc.openaiApiKey",
-};
+import { llmSecretKey, legacyLlmSecretKey } from "../config/llm-secret-keys";
 
 export function registerLlmCommands(
   context: vscode.ExtensionContext,
   chatPanelProvider: ChatPanelProvider
 ): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand("kiroSdlc.notifyLlmConnected", () => {
+    vscode.commands.registerCommand("sdlcAgents.notifyLlmConnected", () => {
       console.log("[LlmCommands] notifyLlmConnected fired");
       chatPanelProvider.notifyLlmStatusChanged("connected");
     }),
-    vscode.commands.registerCommand("kiroSdlc.notifyLlmDisconnected", () => {
+    vscode.commands.registerCommand("sdlcAgents.notifyLlmDisconnected", () => {
       console.log("[LlmCommands] notifyLlmDisconnected fired");
       chatPanelProvider.notifyLlmStatusChanged("disconnected");
     }),
-    vscode.commands.registerCommand("kiroSdlc.testLanguageModels", () => testLanguageModels()),
-    vscode.commands.registerCommand("kiroSdlc.setLlmApiKey", () => handleSetLlmApiKey(context)),
-    vscode.commands.registerCommand("kiroSdlc.clearLlmApiKey", () => handleClearLlmApiKey(context)),
+    vscode.commands.registerCommand("sdlcAgents.testLanguageModels", () => testLanguageModels()),
+    vscode.commands.registerCommand("sdlcAgents.setLlmApiKey", () => handleSetLlmApiKey(context)),
+    vscode.commands.registerCommand("sdlcAgents.clearLlmApiKey", () => handleClearLlmApiKey(context)),
   );
 }
 
@@ -79,33 +75,32 @@ async function sendTestChat(model: vscode.LanguageModelChat, outputCh: vscode.Ou
 }
 
 async function handleSetLlmApiKey(context: vscode.ExtensionContext): Promise<void> {
-  const config = vscode.workspace.getConfiguration("kiroSdlc");
+  const config = vscode.workspace.getConfiguration("sdlcAgents");
   const provider = config.get<string>("llmProvider", "anthropic");
   if (provider === "ollama") {
     vscode.window.showInformationMessage("Ollama does not require an API key.");
     return;
   }
-  const secretKey = LLM_SECRET_KEYS[provider];
-  if (!secretKey) { vscode.window.showErrorMessage(`Unknown provider: ${provider}`); return; }
   const apiKey = await vscode.window.showInputBox({
     prompt: `Enter API key for ${provider}`, password: true,
     placeHolder: provider === "anthropic" ? "sk-ant-..." : "sk-...",
     ignoreFocusOut: true,
   });
   if (!apiKey) { return; }
-  await context.secrets.store(secretKey, apiKey);
+  await context.secrets.store(llmSecretKey(provider), apiKey);
   vscode.window.showInformationMessage(`${provider} API key stored securely.`);
 }
 
 async function handleClearLlmApiKey(context: vscode.ExtensionContext): Promise<void> {
-  const config = vscode.workspace.getConfiguration("kiroSdlc");
+  const config = vscode.workspace.getConfiguration("sdlcAgents");
   const provider = config.get<string>("llmProvider", "anthropic");
   if (provider === "ollama") {
     vscode.window.showInformationMessage("Ollama does not use stored API keys.");
     return;
   }
-  const secretKey = LLM_SECRET_KEYS[provider];
-  if (!secretKey) { return; }
-  await context.secrets.delete(secretKey);
+  // Delete both new and legacy keys so a stale pre-rename value cannot be
+  // resurrected by migrate-on-read.
+  await context.secrets.delete(llmSecretKey(provider));
+  await context.secrets.delete(legacyLlmSecretKey(provider));
   vscode.window.showInformationMessage(`${provider} API key removed.`);
 }

@@ -20,6 +20,8 @@
   var workingText = document.getElementById("working-text");
   var cancelBtn = document.getElementById("cancel-btn");
   var followBtn = document.getElementById("follow-btn");
+  var approveBtn = document.getElementById("approve-btn");
+  var rejectBtn = document.getElementById("reject-btn");
   var stopBtn = document.getElementById("stop-btn");
   var ctxBtn = document.getElementById("ctx-btn");
   var attachBtn = document.getElementById("attach-btn");
@@ -42,6 +44,8 @@
   var messageHistory = [];
   var historyIndex = -1;
   var pendingInput = "";
+  // Fix J: tool waiting for user consent (chat:toolApprovalPending) — Approve/Reject state.
+  var pendingApproval = null;
 
   // === Tab State (KSA-240) ===
   var defaultTabId = crypto.randomUUID();
@@ -610,6 +614,27 @@
     scrollToBottom();
   });
 
+  // === Fix J: tool approval (Approve / Reject on the working bar) ===
+  function hideApprovalButtons() {
+    pendingApproval = null;
+    approveBtn.style.display = "none";
+    rejectBtn.style.display = "none";
+  }
+
+  function respondApproval(decision) {
+    if (!pendingApproval) return;
+    vscode.postMessage({ type: "chat:toolApproval", toolId: pendingApproval.toolId, decision: decision });
+    hideApprovalButtons();
+  }
+
+  approveBtn.addEventListener("click", function () {
+    respondApproval("approve");
+  });
+
+  rejectBtn.addEventListener("click", function () {
+    respondApproval("reject");
+  });
+
   // === Context Menu (#) ===
   ctxBtn.addEventListener("click", function (e) {
     e.stopPropagation();
@@ -826,6 +851,13 @@
           setGraphDone();
         }
         break;
+      case "chat:toolApprovalPending":
+        // Fix J: a tool is blocked on consent — show Approve/Reject on the bar.
+        pendingApproval = { toolId: msg.toolId, toolName: msg.toolName };
+        setWorking(true, "Waiting approval: " + msg.toolName);
+        approveBtn.style.display = "inline-flex";
+        rejectBtn.style.display = "inline-flex";
+        break;
       case "chat:nodeDetails":
         break;
       case "serverStatus":
@@ -927,6 +959,8 @@
       workingBar.classList.remove("active");
       stopBtn.style.display = "none";
       isStreaming = false;
+      // Fix J: no working bar = no approval prompt (timeout/auto-reject cleans up too).
+      hideApprovalButtons();
     }
   }
 
@@ -1041,15 +1075,10 @@
     var node = streamingNodes[msg.nodeId];
 
     if (msg.eventType === "token") {
-      // Skip pure whitespace/newline-only tokens entirely
-      var tokenContent = msg.content;
-      if (!tokenContent || !tokenContent.replace(/[\s\n\r]/g, "")) return;
-      // Trim leading whitespace from first meaningful token
-      if (!node.content) {
-        tokenContent = tokenContent.replace(/^[\s\n\r]+/, "");
-        if (!tokenContent) return;
-      }
-      node.content += tokenContent;
+      // Append verbatim — whitespace-only tokens carry markdown structure
+      // (blank lines between paragraphs, code indentation). Dropping them
+      // corrupts the final message (UAT: collapsed text, broken tables).
+      if (msg.content) node.content += msg.content;
       var contentSpan = node.el.querySelector(".stream-content");
       contentSpan.innerHTML = MarkdownRenderer.render(node.content);
       addCodeActions(contentSpan);
@@ -1469,12 +1498,21 @@
       (toolName ? toolName.textContent : "") + " - " + msg.status);
 
     // Update Response section content (KSA-281: keep Request visible)
-    if (msg.result || msg.error) {
+    // FIX F: a terminal status ALWAYS replaces "(waiting...)" — zero-output
+    // tools send no result text, so fall back instead of leaving the stub.
+    if (msg.status === "completed" || msg.status === "failed") {
+      // Fix J: the gated tool reached a terminal state (executed, blocked, or
+      // gate timed out) — drop any stale Approve/Reject for it.
+      if (pendingApproval && pendingApproval.toolId === msg.id) {
+        hideApprovalButtons();
+      }
       var resSection = block.querySelector(".tool-section-response");
       if (resSection) {
         var resContent = resSection.querySelector(".tool-section-content");
         if (resContent) {
-          resContent.textContent = msg.error || msg.result;
+          resContent.textContent =
+            msg.error || msg.result ||
+            (msg.status === "failed" ? "(failed — no output)" : "(no output)");
         }
         if (msg.status === "failed") {
           resSection.classList.add("failed");
@@ -1688,6 +1726,13 @@
     for (var i = 0; i < preBlocks.length; i++) {
       if (preBlocks[i].querySelector(".code-actions")) continue;
       var pre = preBlocks[i];
+      // Terminal output blocks (shell transcripts, listings) get Copy only —
+      // Apply/Insert on output spam every tool-heavy answer (UAT review flood).
+      var codeEl0 = pre.querySelector("code");
+      var lang0 = codeEl0 && codeEl0.className
+        ? (codeEl0.className.match(/language-(\w+)/) || [])[1] || ""
+        : "";
+      var isOutput = !lang0 || /^(shell|bash|sh|powershell|ps1|console|terminal|text|plaintext|txt|log|output)$/i.test(lang0);
       var actionsDiv = document.createElement("div");
       actionsDiv.className = "code-actions";
 
@@ -1697,18 +1742,20 @@
         navigator.clipboard.writeText(text || "");
       }));
 
-      actionsDiv.appendChild(createCodeBtn("Apply", pre, function (p) {
-        var code = p.querySelector("code");
-        var text = code ? code.textContent : p.textContent;
-        var filePath = extractFilePathFromContext(p);
-        vscode.postMessage({ type: "chat:applyCode", code: text || "", filePath: filePath || "" });
-      }));
+      if (!isOutput) {
+        actionsDiv.appendChild(createCodeBtn("Apply", pre, function (p) {
+          var code = p.querySelector("code");
+          var text = code ? code.textContent : p.textContent;
+          var filePath = extractFilePathFromContext(p);
+          vscode.postMessage({ type: "chat:applyCode", code: text || "", filePath: filePath || "" });
+        }));
 
-      actionsDiv.appendChild(createCodeBtn("Insert", pre, function (p) {
-        var code = p.querySelector("code");
-        var text = code ? code.textContent : p.textContent;
-        vscode.postMessage({ type: "chat:insertCode", code: text || "" });
-      }));
+        actionsDiv.appendChild(createCodeBtn("Insert", pre, function (p) {
+          var code = p.querySelector("code");
+          var text = code ? code.textContent : p.textContent;
+          vscode.postMessage({ type: "chat:insertCode", code: text || "" });
+        }));
+      }
 
       pre.appendChild(actionsDiv);
 

@@ -21,7 +21,7 @@ export class LlmTestService {
     providerOverride?: string,
     baseUrlOverride?: string
   ): Promise<{ success: boolean; message?: string; error?: string }> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const providerType = providerOverride || config.get<string>("llmProvider", "anthropic");
     const ollamaUrl = config.get<string>("ollamaUrl", "http://localhost:11434");
 
@@ -44,13 +44,13 @@ export class LlmTestService {
       provider.dispose();
 
       if (available) {
-        vscode.commands.executeCommand("kiroSdlc.notifyLlmConnected");
+        vscode.commands.executeCommand("sdlcAgents.notifyLlmConnected");
         return { success: true, message: `Connected to ${providerType} successfully.` };
       }
-      vscode.commands.executeCommand("kiroSdlc.notifyLlmDisconnected");
+      vscode.commands.executeCommand("sdlcAgents.notifyLlmDisconnected");
       return { success: false, error: "LLM provider is not reachable. Check your base URL." };
     } catch (err: any) {
-      vscode.commands.executeCommand("kiroSdlc.notifyLlmDisconnected");
+      vscode.commands.executeCommand("sdlcAgents.notifyLlmDisconnected");
       return { success: false, error: err.message };
     }
   }
@@ -59,7 +59,7 @@ export class LlmTestService {
    * Auto-test a provider and notify chat panel badge.
    */
   async autoTestAndNotify(provider: string): Promise<{ success: boolean; message?: string; error?: string }> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const ollamaUrl = config.get<string>("ollamaUrl", "http://localhost:11434");
 
     const baseUrlKey = PROVIDER_BASE_URL_KEYS[provider];
@@ -83,13 +83,13 @@ export class LlmTestService {
       testProvider.dispose();
 
       if (available) {
-        vscode.commands.executeCommand("kiroSdlc.notifyLlmConnected");
+        vscode.commands.executeCommand("sdlcAgents.notifyLlmConnected");
         return { success: true, message: `Connected to ${provider} successfully.` };
       }
-      vscode.commands.executeCommand("kiroSdlc.notifyLlmDisconnected");
+      vscode.commands.executeCommand("sdlcAgents.notifyLlmDisconnected");
       return { success: false, error: "LLM provider is not reachable." };
     } catch (err) {
-      vscode.commands.executeCommand("kiroSdlc.notifyLlmDisconnected");
+      vscode.commands.executeCommand("sdlcAgents.notifyLlmDisconnected");
       return { success: false, error: `Connection test failed: ${"$"}{(err as Error).message}` };
     }
   }

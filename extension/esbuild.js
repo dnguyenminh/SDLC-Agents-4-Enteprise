@@ -1,4 +1,5 @@
 const esbuild = require('esbuild');
+const { piImportMetaBanner, piImportMetaDefine } = require('./scripts/esbuild-plugins/pi-import-meta.js');
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
@@ -9,6 +10,8 @@ const buildOptions = {
   bundle: true,
   outfile: 'out/extension.js',
   external: ['vscode', 'onnxruntime-node', '/bundled/*', './mcp/devtools/*', 'filetomarkdown'],
+  banner: { js: piImportMetaBanner },
+  define: piImportMetaDefine,
   alias: {
     // Native optional module from @vscode/proxy-agent — unused by us (CA cert
     // loading disabled). Stubbed so the bundle stays self-contained at runtime.

@@ -1,11 +1,12 @@
 import { PiProvider, type IPiProvider, type CredentialResolver } from './pi-provider.js';
+import { providerRequiresApiKey, LOCAL_KEYLESS_PLACEHOLDER } from './pi-provider-config-bridge.js';
 import { PiAgentExecutor } from './pi-agent-executor.js';
 import { PhaseRouter, type Intent } from './phase-router.js';
 import { StateAdapter } from './state-adapter.js';
 import { CheckpointerAdapter, type RemoteCheckpointerStore } from './checkpointer-adapter.js';
-import { ApprovalAdapter, type ToolApprovalGateHandler } from './approval-adapter.js';
+import { createReplaySafeApprovalHandler, type ToolApprovalGateHandler } from './approval-adapter.js';
 import type { PipelineState, PiInternalState } from './types/pi-workflow-state.js';
-import type { PiAgentExecutionResult, NormalizedToolCall } from './types/executor.types.js';
+import type { PiAgentExecutionResult, ExecuteTurnInput } from './types/executor.types.js';
 import type { MutableModels } from '@earendil-works/pi-ai';
 
 export interface PiWorkflowConfig {
@@ -19,7 +20,7 @@ export interface PiWorkflowConfig {
 export interface ConfigureProviderOptions {
   credentialResolver?: CredentialResolver;
   providerId?: string;
-  /** FIX A: the RAW configured model value (kiroSdlc.llmModel, may be "" or "auto"). */
+  /** FIX A: the RAW configured model value (sdlcAgents.llmModel, may be "" or "auto"). */
   configuredModelId?: string;
   /** FIX 4: custom OpenAI-compatible gateway base URL (e.g. http://localhost:20128/v1). */
   baseUrl?: string;
@@ -40,7 +41,6 @@ export class PiWorkflowEngine {
   private router: PhaseRouter;
   private stateAdapter: StateAdapter;
   private checkpointer: CheckpointerAdapter;
-  private approvalAdapter: ApprovalAdapter;
   private initialized = false;
   /** FIX A: resolved model identity threaded to the executor (engine is UI-agnostic — adapter supplies). */
   private resolvedProviderId?: string;
@@ -54,7 +54,12 @@ export class PiWorkflowEngine {
     this.router = new PhaseRouter();
     this.stateAdapter = new StateAdapter();
     this.checkpointer = new CheckpointerAdapter(config.remoteStore);
-    this.approvalAdapter = new ApprovalAdapter(config.gateHandler);
+    // Fix J: wire the gate into the provider's PRE-execution beforeToolCall
+    // hook (replay-safe: one approval decision per toolUseId). Covers both the
+    // injected provider and the default-created one; no-op when no gate given.
+    if (config.gateHandler) {
+      this.provider.setToolApproval?.(createReplaySafeApprovalHandler(config.gateHandler));
+    }
   }
 
   async initialize(transportType: 'WebSocket' | 'HTTP' = 'HTTP'): Promise<void> {
@@ -89,12 +94,19 @@ export class PiWorkflowEngine {
     // 2. Resolve the API key ONCE — used for both seeding the credentials store
     //    and fetching the gateway's real model list (auth required).
     // No resolver (no SecretStorage) = nothing to verify — don't block (tests).
+    // Local keyless providers (lmstudio/ollama/onnx) never block on missing key.
     let credentialsPresent = true;
     let apiKey: string | undefined;
     if (opts.credentialResolver && opts.providerId) {
       apiKey = await opts.credentialResolver(opts.providerId);
       if (apiKey) {
         await p.seedCredentials(opts.providerId, apiKey);
+        credentialsPresent = true;
+      } else if (!providerRequiresApiKey(opts.providerId)) {
+        // Keyless local endpoint: seed an in-memory dummy so pi-ai auth
+        // resolution succeeds ("Provider is not configured" otherwise).
+        // LM Studio / Ollama ignore the Authorization header value.
+        await p.seedCredentials(opts.providerId, LOCAL_KEYLESS_PLACEHOLDER);
         credentialsPresent = true;
       } else {
         credentialsPresent = false;
@@ -159,45 +171,58 @@ export class PiWorkflowEngine {
   async executeTurn(
     currentState: PipelineState,
     inputMessage: string,
-    agentId: string
+    agentId: string,
+    turnOpts?: {
+      tools?: ExecuteTurnInput['tools'];
+      systemPrompt?: string;
+      /** SA4E-334 auto-compression: rewrites messages before the LLM call. */
+      contextRunner?: (
+        messages: Array<{ role: string; content: string }>
+      ) => Promise<Array<{ role: string; content: string }>>;
+      /** Loop guard: per-turn tool budget + timeout. */
+      turnBudget?: ExecuteTurnInput['turnBudget'];
+      /** Live tool-activity callback (progress display). */
+      onToolEvent?: ExecuteTurnInput['onToolEvent'];
+    }
   ): Promise<{ result: PiAgentExecutionResult; nextState: PiInternalState }> {
     const piState = this.stateAdapter.toPiState(currentState);
     // 2. Immutability fix: create new array instead of mutating currentState.chatHistory directly
-    const messages = [...(piState.chatHistory || []), { role: 'user', content: inputMessage }];
+    let messages = [...(piState.chatHistory || []), { role: 'user', content: inputMessage }];
+
+    // SA4E-334: auto-compression pipeline (billion-context `context` event).
+    // Never breaks the turn — falls back to uncompressed messages.
+    if (turnOpts?.contextRunner) {
+      try {
+        const compressed = await turnOpts.contextRunner(messages);
+        if (Array.isArray(compressed) && compressed.length > 0) messages = compressed;
+      } catch { /* keep original messages */ }
+    }
 
     // Bug 1 fix: guarantee provider initialization before the first executeTurn (PI_NOT_INITIALIZED).
     await this.ensureInitialized();
 
     // FIX A: thread the resolved provider/model identity down to the executor.
+    // SA4E-333: thread workspace tools + systemPrompt (adapter supplies per-turn).
+    // Loop guard: thread the per-turn budget the same way.
     const executionResult = await this.executor.executeTurn({
       ticketKey: piState.ticketKey,
       sessionId: piState.piSessionId,
       agentId,
       messages,
+      tools: turnOpts?.tools,
+      systemPrompt: turnOpts?.systemPrompt,
+      turnBudget: turnOpts?.turnBudget,
+      onToolEvent: turnOpts?.onToolEvent,
       provider: this.resolvedProviderId,
       model: this.resolvedModelId,
     });
 
-    const approvedToolCalls: NormalizedToolCall[] = [];
-    if (executionResult.toolCalls && executionResult.toolCalls.length > 0) {
-      for (const toolCall of executionResult.toolCalls) {
-        // 1. Tool approval check fix: enforce checking approved flag
-        const approval = await this.approvalAdapter.processToolApproval(toolCall, {
-          agentId,
-          ticketKey: piState.ticketKey
-        });
-
-        if (approval.approved) {
-          approvedToolCalls.push(approval.normalizedToolCall);
-        } else {
-          executionResult.error = executionResult.error || {
-            code: 'TOOL_APPROVAL_REJECTED',
-            message: `Tool call '${toolCall.name}' was rejected: ${approval.reason || 'User rejected'}`
-          };
-        }
-      }
-    }
-    executionResult.toolCalls = approvedToolCalls;
+    // Fix J (§5d): approval now happens PRE-execution in the provider's
+    // SDK `beforeToolCall` hook (gateHandler → createReplaySafeApprovalHandler
+    // → PiProvider.setToolApproval). The old post-turn approval loop here ran
+    // AFTER the whole agent turn — tools had already executed, and a pending
+    // bash approval hung the turn until the gate timed out (UAT "stops
+    // mid-way" blocker). toolCalls pass through untouched below.
 
     // 3. Error tracking fix: record turn errors in state.errors and mark pipelineStatus = 'ERROR'
     const errors = [...(piState.errors || [])];
@@ -212,7 +237,7 @@ export class PiWorkflowEngine {
       ...piState,
       chatHistory: executionResult.messages,
       currentAgentId: agentId,
-      toolCallCount: piState.toolCallCount + approvedToolCalls.length,
+      toolCallCount: piState.toolCallCount + (executionResult.toolCalls?.length ?? 0),
       errors,
       pipelineStatus
     };

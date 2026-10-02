@@ -98,7 +98,7 @@ export class PegaBrowserInspector {
   /** Launch Chrome with CDP and establish connection. */
   public async launch(): Promise<void> {
     const chromePath = this.config.chromePath || this.detectChromePath();
-    if (!chromePath) throw new Error("Chrome not found. Set kiroSdlc.chromePath in settings.");
+    if (!chromePath) throw new Error("Chrome not found. Set sdlcAgents.chromePath in settings.");
     this.userDataDir = path.join(os.tmpdir(), `${PROFILE_PREFIX}${Date.now()}`);
     fs.mkdirSync(this.userDataDir, { recursive: true });
 

@@ -40,29 +40,29 @@ export function registerCommands(context: vscode.ExtensionContext, deps: Command
   const { mcpManager, panelManager, authManager, treeProvider, workspaceRoot } = deps;
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("kiroSdlc.injectAll", () => handleInjectAll(context, mcpManager)),
-    vscode.commands.registerCommand("kiroSdlc.injectSelective", () => handleInjectSelective(context, mcpManager)),
-    vscode.commands.registerCommand("kiroSdlc.update", () => handleUpdate(context)),
-    vscode.commands.registerCommand("kiroSdlc.status", () => handleStatus(context)),
-    vscode.commands.registerCommand("kiroSdlc.indexWorkspace", () => handleIndexWorkspace(
+    vscode.commands.registerCommand("sdlcAgents.injectAll", () => handleInjectAll(context, mcpManager)),
+    vscode.commands.registerCommand("sdlcAgents.injectSelective", () => handleInjectSelective(context, mcpManager)),
+    vscode.commands.registerCommand("sdlcAgents.update", () => handleUpdate(context)),
+    vscode.commands.registerCommand("sdlcAgents.status", () => handleStatus(context)),
+    vscode.commands.registerCommand("sdlcAgents.indexWorkspace", () => handleIndexWorkspace(
         authManager?.getTokenSync(),
         context.secrets,
         async () => { await authManager?.refreshToken(); return authManager?.getTokenSync() || undefined; }
     )),
-    vscode.commands.registerCommand("kiroSdlc.login", () => handleLogin(context, authManager, treeProvider)),
-    vscode.commands.registerCommand("kiroSdlc.loginEntra", () => handleLoginEntra(authManager)),
-    vscode.commands.registerCommand("kiroSdlc.logout", () => handleLogout(authManager, panelManager)),
-    vscode.commands.registerCommand("kiroSdlc.openKbGraph", () => panelManager?.openPanel("graph")),
-    vscode.commands.registerCommand("kiroSdlc.openKbDashboard", () => panelManager?.openPanel("dashboard")),
-    vscode.commands.registerCommand("kiroSdlc.openKbTags", () => panelManager?.openPanel("tags")),
-    vscode.commands.registerCommand("kiroSdlc.openKbQuality", () => panelManager?.openPanel("quality")),
-    vscode.commands.registerCommand("kiroSdlc.openKbAnalytics", () => panelManager?.openPanel("analytics")),
-    vscode.commands.registerCommand("kiroSdlc.restartMcpServer", () => handleRestartServer(mcpManager)),
-    vscode.commands.registerCommand("kiroSdlc.stopMcpServer", () => handleStopServer(mcpManager, workspaceRoot)),
-    vscode.commands.registerCommand("kiroSdlc.openKbBrowser", () => handleOpenKbBrowser(mcpManager)),
-    vscode.commands.registerCommand("kiroSdlc.editConfig", () => handleEditConfig()),
-    vscode.commands.registerCommand("kiroSdlc.changeConfig", () => handleChangeConfig(mcpManager)),
-    vscode.commands.registerCommand("kiroSdlc.refreshToken", () => {
+    vscode.commands.registerCommand("sdlcAgents.login", () => handleLogin(context, authManager, treeProvider)),
+    vscode.commands.registerCommand("sdlcAgents.loginEntra", () => handleLoginEntra(authManager)),
+    vscode.commands.registerCommand("sdlcAgents.logout", () => handleLogout(authManager, panelManager)),
+    vscode.commands.registerCommand("sdlcAgents.openKbGraph", () => panelManager?.openPanel("graph")),
+    vscode.commands.registerCommand("sdlcAgents.openKbDashboard", () => panelManager?.openPanel("dashboard")),
+    vscode.commands.registerCommand("sdlcAgents.openKbTags", () => panelManager?.openPanel("tags")),
+    vscode.commands.registerCommand("sdlcAgents.openKbQuality", () => panelManager?.openPanel("quality")),
+    vscode.commands.registerCommand("sdlcAgents.openKbAnalytics", () => panelManager?.openPanel("analytics")),
+    vscode.commands.registerCommand("sdlcAgents.restartMcpServer", () => handleRestartServer(mcpManager)),
+    vscode.commands.registerCommand("sdlcAgents.stopMcpServer", () => handleStopServer(mcpManager, workspaceRoot)),
+    vscode.commands.registerCommand("sdlcAgents.openKbBrowser", () => handleOpenKbBrowser(mcpManager)),
+    vscode.commands.registerCommand("sdlcAgents.editConfig", () => handleEditConfig()),
+    vscode.commands.registerCommand("sdlcAgents.changeConfig", () => handleChangeConfig(mcpManager)),
+    vscode.commands.registerCommand("sdlcAgents.refreshToken", () => {
       if (!authManager) return Promise.resolve();
       const token = authManager.getTokenSync();
       if (!token) {
@@ -75,7 +75,7 @@ export function registerCommands(context: vscode.ExtensionContext, deps: Command
       }
       return authManager.refreshToken();
     }),
-    vscode.commands.registerCommand("kiroSdlc.fetchPegaContext", async () => {
+    vscode.commands.registerCommand("sdlcAgents.fetchPegaContext", async () => {
       const root = workspaceRoot || getWorkspaceRoot();
       if (!root) { vscode.window.showErrorMessage("No workspace folder open."); return; }
       try {
@@ -95,8 +95,8 @@ export function registerCommands(context: vscode.ExtensionContext, deps: Command
     registerSymbolSearch(context, mcpManager);
     registerDiagnosticsProvider(context, mcpManager);
     registerAIContextCommands(context, mcpManager);    context.subscriptions.push(
-      vscode.commands.registerCommand("kiroSdlc.openSecurityPanel", () => { new SecurityPanel(mcpManager, context.extensionUri).loadData(); }),
-      vscode.commands.registerCommand("kiroSdlc.impactAnalysis", () => showImpactAnalysis(mcpManager, context.extensionUri)),
+      vscode.commands.registerCommand("sdlcAgents.openSecurityPanel", () => { new SecurityPanel(mcpManager, context.extensionUri).loadData(); }),
+      vscode.commands.registerCommand("sdlcAgents.impactAnalysis", () => showImpactAnalysis(mcpManager, context.extensionUri)),
     );
   }
 
@@ -179,7 +179,7 @@ async function handleStatus(context: vscode.ExtensionContext): Promise<void> {
   if (action === "Show File Versions") {
     const ch = vscode.window.createOutputChannel("SDLC File Versions"); ch.show();
     ch.appendLine(getVersionReport(root, context.extensionPath));
-  } else if (action === "Inject Missing") { vscode.commands.executeCommand("kiroSdlc.injectSelective"); }
+  } else if (action === "Inject Missing") { vscode.commands.executeCommand("sdlcAgents.injectSelective"); }
 }
 
 async function handleOpenKbBrowser(mcpManager?: IServerManager): Promise<void> {
@@ -213,7 +213,7 @@ async function handleStopServer(mcpManager?: IServerManager, workspaceRoot?: str
 async function handleEditConfig(): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) { return; }
-  const config = vscode.workspace.getConfiguration("kiroSdlc");
+  const config = vscode.workspace.getConfiguration("sdlcAgents");
   const relPath = config.get<string>("configPath", ".code-intel/orchestration.json");
   const fullPath = path.join(root, relPath);
   if (!fs.existsSync(fullPath)) {
@@ -229,7 +229,7 @@ async function handleEditConfig(): Promise<void> {
 async function handleChangeConfig(mcpManager?: IServerManager): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) { return; }
-  const config = vscode.workspace.getConfiguration("kiroSdlc");
+  const config = vscode.workspace.getConfiguration("sdlcAgents");
   const currentRelPath = config.get<string>("configPath", ".code-intel/orchestration.json");
   const defaultUri = vscode.Uri.file(root);
   const result = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, canSelectMany: false, defaultUri, filters: { "JSON": ["json"] } });

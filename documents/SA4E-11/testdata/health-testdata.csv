@@ -1,0 +1,4 @@
+test_case_id,endpoint,db_status,expected_http_code,expected_status
+E2E-API-10,/healthz,up,200,ok
+E2E-API-11,/ready,connected,200,ready
+E2E-API-12,/ready,down,503,not_ready

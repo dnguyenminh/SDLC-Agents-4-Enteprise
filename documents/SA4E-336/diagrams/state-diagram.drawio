@@ -1,0 +1,50 @@
+<mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<mxCell id="s1" value="0.80.10 (Current)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1">
+  <mxGeometry x="260" y="40" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="s2" value="Upgrading" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="1">
+  <mxGeometry x="260" y="140" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="s3" value="0.99.1 (Target)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+  <mxGeometry x="260" y="240" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="s4" value="PowerShell Wired" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+  <mxGeometry x="260" y="340" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="s5" value="Tests Passing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+  <mxGeometry x="260" y="440" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="s6" value="UAT Verified" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B1D8B7;strokeColor=#4A7C55;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="260" y="540" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="s7" value="Rollback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="480" y="190" width="120" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="s8" value="0.80.10 (Reverted)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+  <mxGeometry x="460" y="290" width="160" height="50" as="geometry"/>
+</mxCell>
+<mxCell id="e1" value="Start Upgrade" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#000000;" edge="1" parent="1" source="s1" target="s2">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" value="Verify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#000000;" edge="1" parent="1" source="s2" target="s3">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" value="Wire PowerShell" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#000000;" edge="1" parent="1" source="s3" target="s4">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" value="Run tests" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#000000;" edge="1" parent="1" source="s4" target="s5">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" value="Pass" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#000000;" edge="1" parent="1" source="s5" target="s6">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e6" value="Fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B85450;dashed=1;" edge="1" parent="1" source="s5" target="s7">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e7" value="Revert" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B85450;" edge="1" parent="1" source="s7" target="s8">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e8" value="Retry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D6B656;dashed=1;" edge="1" parent="1" source="s7" target="s2">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root></mxGraphModel>

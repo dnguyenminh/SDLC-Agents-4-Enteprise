@@ -25,7 +25,8 @@ export interface IStreamProtocolAdapter {
 export type EngineStreamEvent =
   | StreamChunkEvent
   | StreamCompleteEvent
-  | ToolCallEvent;
+  | ToolCallEvent
+  | ToolCallUpdateEvent;
 
 /** Token/status/error chunk from chat:streamChunk */
 export interface StreamChunkEvent {
@@ -54,4 +55,13 @@ export interface ToolCallEvent {
     args: Record<string, unknown>;
     status: string;
   };
+}
+
+/** FIX F: tool progress/result from chat:toolCallUpdate — carries the output text */
+export interface ToolCallUpdateEvent {
+  type: 'chat:toolCallUpdate';
+  id: string;
+  status: 'running' | 'completed' | 'failed';
+  result?: string;
+  duration?: number;
 }

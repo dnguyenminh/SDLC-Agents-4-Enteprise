@@ -65,8 +65,10 @@ function mockFetchOnce(zipBuf: Buffer, opts?: { fileSize?: number; status?: numb
  * @param window - Decoded bytes returned per request (server may exceed the ask)
  */
 function mockFetchRanged(zipBuf: Buffer, window: number): void {
-  vi.stubGlobal("fetch", vi.fn(async (_url: string, init: { headers: Record<string, string> }) => {
-    const range = init.headers.Range ?? "bytes=0-";
+  vi.stubGlobal("fetch", vi.fn(async (url: string | URL, init: { headers?: Record<string, string> }) => {
+    const urlStr = typeof url === "string" ? url : url.toString();
+    const params = new URL(urlStr, "http://mock").searchParams;
+    const range = params.get("Range") ?? "bytes=0-";
     const start = Number(/bytes=(\d+)-/.exec(range)?.[1] ?? "0");
     const slice = zipBuf.subarray(start, Math.min(start + window, zipBuf.length));
     return {

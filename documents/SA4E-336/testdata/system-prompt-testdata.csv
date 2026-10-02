@@ -1,0 +1,8 @@
+test_case_id,platform,workspace_root,expected_fragment,expected_result,description
+TC-007,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,The shell tool is Windows PowerShell (pwsh).,Prompt contains PowerShell dialect declaration,Happy path — system prompt PowerShell dialect
+TC-007,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Use PowerShell cmdlets (Get-ChildItem/Get-Content/Test-Path) or their aliases (ls/cat/dir all work).,Prompt contains cmdlets guidance,Happy path — cmdlets guidance
+TC-007,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Windows paths work as-is (c:\... or c:/...) — no translation needed.,Prompt contains native paths guidance,Happy path — native paths guidance
+TC-007,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Workspace root: C:/projects/kiro/SDLC-Agents-4-Enterprise,Workspace root normalized to forward slashes,Happy path — root normalization
+TC-307,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,powershellToolSystemPromptContribution,Real prompt + real tool description consistent toward PowerShell cmdlets,BR-08 — PS prompt contribution active
+TC-801,linux,/home/user/project,Use forward slashes: ls not dir /b.,Non-win32 prompt still contains bash guidance,Regression — bash dialect preserved
+TC-801,linux,/home/user/project,Paths: /c/... instead of c:\...,Non-win32 prompt keeps POSIX path guidance,Regression — POSIX paths preserved

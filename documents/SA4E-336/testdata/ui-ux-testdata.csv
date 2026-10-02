@@ -1,0 +1,6 @@
+test_case_id,scenario_type,channel,input,expected_result,evidence_path,description
+TC-500,webview_render,e2e-ui,TOOL event toolName=powershell,Webview displays TOOL powershell with category shell — no hardcoded bash filter,evidence/TC-500-tool-render.png,UI — TOOL event rendering
+TC-501,approval_dialog,e2e-ui,powershell command Remove-Item -Recurse C:\temp\test,Approval dialog appears; Approve → proceeds; Reject → blocked,evidence/TC-501-approval-dialog.png,UI — approval dialog interaction
+TC-502,visual_icon,manual,Agent runs Get-ChildItem on workspace,TOOL powershell label + icon render correctly (visual),evidence/TC-502-powershell-icon.png,SIT — PowerShell icon visual
+TC-503,chat_ux,manual,Prompt: Count the .ts files under extension/src/pi-workflow,Agent executes via powershell tool with native paths — reported count matches actual,evidence/TC-503-chat-ux.png,SIT — chat UX executes not narrates
+TC-803,chat_regression,e2e-ui,Message: Read extension/package.json and summarize dependencies,Agent responds; tool events render as before; PI_MODEL_UNRESOLVED fallback intact,evidence/TC-803-chat-regression.png,Regression — existing chat features work

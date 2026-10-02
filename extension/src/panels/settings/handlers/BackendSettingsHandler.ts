@@ -20,7 +20,7 @@ export class BackendSettingsHandler {
       // own value). Untrusted repos cannot abuse this because the key is listed
       // in package.json capabilities.untrustedWorkspaces.restrictedConfigurations
       // (VS Code ignores its workspace value while the workspace is untrusted).
-      await vscode.workspace.getConfiguration("kiroSdlc")
+      await vscode.workspace.getConfiguration("sdlcAgents")
         .update("backend.url", validated, vscode.ConfigurationTarget.Workspace);
       this.postMessage({ type: "backendUrlSaved", success: true });
     } catch (err: any) {
@@ -37,7 +37,7 @@ export class BackendSettingsHandler {
     // capabilities.untrustedWorkspaces.restrictedConfigurations, so VS Code
     // ignores its workspace value while the workspace is untrusted, and the
     // trust gate blocks credential ops regardless.
-    await vscode.workspace.getConfiguration("kiroSdlc")
+    await vscode.workspace.getConfiguration("sdlcAgents")
       .update("backend.allowInsecureRemote", boolEnabled, vscode.ConfigurationTarget.Workspace);
     if (!boolEnabled) { this.revalidateStoredUrl(); }
   }
@@ -45,7 +45,7 @@ export class BackendSettingsHandler {
   /** Finding #5: surface an error if the stored URL is now invalid with bypass OFF. */
   private revalidateStoredUrl(): void {
     try {
-      const url = vscode.workspace.getConfiguration("kiroSdlc").get<string>("backend.url", "");
+      const url = vscode.workspace.getConfiguration("sdlcAgents").get<string>("backend.url", "");
       if (url) { validateBackendUrl(url, { allowInsecureRemote: false }); }
     } catch (err: any) {
       this.postMessage({
@@ -85,20 +85,20 @@ export class BackendSettingsHandler {
 
   /** Persist the local MCP wrapper server port. */
   async setMcpPort(port: number): Promise<void> {
-    await vscode.workspace.getConfiguration("kiroSdlc")
+    await vscode.workspace.getConfiguration("sdlcAgents")
       .update("mcpServerPort", port, vscode.ConfigurationTarget.Workspace);
   }
 
   /** Persist the "enable MCP wrapper on startup" flag. */
   async setEnableMcp(enabled: boolean): Promise<void> {
-    await vscode.workspace.getConfiguration("kiroSdlc")
+    await vscode.workspace.getConfiguration("sdlcAgents")
       .update("enableMcpServer", enabled, vscode.ConfigurationTarget.Workspace);
   }
 
   /** Restart the local MCP wrapper server via command. */
   async restartMcpServer(): Promise<void> {
     try {
-      await vscode.commands.executeCommand("kiroSdlc.restartMcpServer");
+      await vscode.commands.executeCommand("sdlcAgents.restartMcpServer");
       this.postMessage({ type: "mcpServerRestarted", success: true, message: "MCP wrapper server restarted successfully." });
     } catch (err: any) {
       this.postMessage({ type: "mcpServerRestarted", success: false, message: `Restart failed: ${err.message}` });

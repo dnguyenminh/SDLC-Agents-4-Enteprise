@@ -28,7 +28,7 @@ export class LlmSettingsHandler {
 
   /** Fetch and post the model list for a provider. */
   async getModels(provider: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const currentModel = config.get<string>("llmModel", "");
     const { models, selected, defaultModel } = await this.configService.getModels(provider, currentModel);
     this.postMessage({ type: "models", provider, models, selected, defaultModel });
@@ -55,11 +55,12 @@ export class LlmSettingsHandler {
     }
   }
 
-  /** Remove a stored API key. */
+  /** Remove a stored API key (new + legacy so migrate-on-read cannot resurrect it). */
   async clearApiKey(provider: string): Promise<void> {
     const secretKey = SECRET_KEYS[provider];
     if (!secretKey) { return; }
     await this.secrets.delete(secretKey);
+    await this.secrets.delete(secretKey.replace(/^sdlcAgents\./, "kiroSdlc."));
     this.postMessage({ type: "keyCleared", provider });
   }
 

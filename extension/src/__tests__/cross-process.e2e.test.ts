@@ -49,6 +49,29 @@ vi.mock('vscode', () => {
 const TEST_PORT = 9182;
 const BACKEND_DIR = path.resolve(__dirname, '../../../backend');
 const TMP_DIR = path.join(__dirname, '.tmp-cross-e2e');
+const BACKEND_DATA_DIR = path.join(__dirname, '.tmp-cross-e2e-backend-data');
+
+/**
+ * Create a fresh isolated DATA_DIR for the spawned backend. The backend reads
+ * its active DB engine from <DATA_DIR>/database.json; without isolation it can
+ * inherit machine-local state (e.g. a postgres engine with no reachable server)
+ * and exit before printing readiness. Isolation forces the sqlite default, so
+ * the E2E backend boots deterministically on any machine (SA4E-336).
+ */
+function resetBackendDataDir(): string {
+  fs.rmSync(BACKEND_DATA_DIR, { recursive: true, force: true });
+  fs.mkdirSync(BACKEND_DATA_DIR, { recursive: true });
+  return BACKEND_DATA_DIR;
+}
+
+/** Best-effort removal of the isolated DATA_DIR (never fails the suite). */
+function cleanupBackendDataDir(): void {
+  try {
+    fs.rmSync(BACKEND_DATA_DIR, { recursive: true, force: true });
+  } catch {
+    // Ignore: leftover temp data must not fail the E2E suite.
+  }
+}
 
 describe('Cross-Process E2E: Extension <-> Backend', () => {
   let backendProcess: cp.ChildProcess;

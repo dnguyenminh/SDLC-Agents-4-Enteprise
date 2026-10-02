@@ -5,7 +5,7 @@
  */
 
 import * as vscode from "vscode";
-import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET, type SecretBase } from "./WorkspaceScopeResolver";
+import { ensureMigrated, getWsHash, secretKey, readScopedSecret, type SecretBase } from "./WorkspaceScopeResolver";
 import { assertWorkspaceTrusted } from "./WorkspaceTrustGuard";
 import type { CredentialResponse } from "./AtlassianTypes";
 
@@ -72,7 +72,7 @@ export class AtlassianCredentialService {
     await this.secrets.delete(secretKey("atlassianBaseUrl", wsHash)!);
     await this.secrets.delete(secretKey("atlassianEmail", wsHash)!);
     await this.secrets.delete(secretKey("atlassianToken", wsHash)!);
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     await config.update("atlassianConnectionType", undefined, vscode.ConfigurationTarget.Workspace);
   }
 
@@ -121,22 +121,24 @@ export class AtlassianCredentialService {
   }
 
   private async storeConnectionType(type: "cloud" | "server"): Promise<void> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     await config.update("atlassianConnectionType", type, vscode.ConfigurationTarget.Workspace);
   }
 
   private async readConnectionType(): Promise<"cloud" | "server"> {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const val = config.get<string>("atlassianConnectionType", "cloud");
     return val === "server" ? "server" : "cloud";
   }
 
-  /** Read a workspace secret; null scope falls back to the legacy flat key. */
+  /**
+   * Read a workspace secret via the shared choke-point (BR-18): new key first,
+   * then legacy namespaced key, then the flat legacy key. Empty reads map to
+   * undefined so getConfig() treats a missing field as "not configured".
+   */
   private async readSecret(wsHash: string | null, base: SecretBase): Promise<string | undefined> {
-    try {
-      const key = wsHash ? secretKey(base, wsHash)! : LEGACY_SECRET[base];
-      return await this.secrets.get(key);
-    } catch { return undefined; }
+    const value = await readScopedSecret(this.secrets, base, wsHash);
+    return value || undefined;
   }
 
   private async performMyselfRequest(config: AtlassianConfig): Promise<AtlassianTestResult> {

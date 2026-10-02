@@ -1,0 +1,25 @@
+<mxfile host="app.diagrams.net" modified="2026-09-28T00:00:00.000Z" agent="SA Agent" version="1.0" etag="sa4e-11-comp">
+  <diagram name="Component" id="comp-1">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="compose" value="Docker Compose" style="swimlane;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="760" height="500" as="geometry"/>
+        </mxCell>
+        <mxCell id="postgres" value="postgres: pgvector/pg16:16&#xa;healthcheck pg_isready" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="compose">
+          <mxGeometry x="80" y="80" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="backend" value="backend&#xa;build .&#xa;port 48721&#xa;depends_on postgres" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="compose">
+          <mxGeometry x="320" y="80" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="nginx" value="nginx: nginx:alpine&#xa;ports 80,443&#xa;depends_on backend" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="compose">
+          <mxGeometry x="560" y="80" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="network" value="sa4e-network bridge" style="shape=cloud;whiteSpace=wrap;html=1;" vertex="1" parent="compose">
+          <mxGeometry x="200" y="220" width="360" height="100" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

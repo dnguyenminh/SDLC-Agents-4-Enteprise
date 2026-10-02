@@ -65,21 +65,38 @@ export function getWsHash(): string | null {
 /** Namespaced key, or null when there is no workspace (caller falls back). */
 export function secretKey(base: SecretBase, wsHash: string | null = getWsHash()): string | null {
   if (!wsHash) { return null; }
+  return `sdlcAgents.${wsHash}.${SECRET_SUFFIX[base]}`;
+}
+
+/**
+ * Legacy namespaced key using the OLD `kiroSdlc.${wsHash}.*` prefix — READ-ONLY
+ * fallback source. Workspaces migrated before the prefix rename stored secrets
+ * under this key; readScopedSecret reads it when the new key is empty. Null when
+ * no workspace is open (callers fall back to the flat LEGACY_SECRET instead).
+ * @param base Secret base to resolve.
+ * @param wsHash Workspace hash; defaults to the current workspace.
+ * @returns Legacy namespaced key, or null when no workspace is open.
+ */
+export function legacyNamespacedSecretKey(
+  base: SecretBase, wsHash: string | null = getWsHash(),
+): string | null {
+  if (!wsHash) { return null; }
   return `kiroSdlc.${wsHash}.${SECRET_SUFFIX[base]}`;
 }
 
 /** Exactly-once migration marker key for a workspace. */
 export function migrationMarkerKey(wsHash: string): string {
-  return `kiroSdlc.${wsHash}.migrated`;
+  return `sdlcAgents.${wsHash}.migrated`;
 }
 
 /**
  * Single choke-point for reading a per-workspace secret (SA4E-323, BR-18).
  *
- * Resolves the namespaced key via secretKey(); when no workspace is open
- * (wsHash null) it falls back to the READ-ONLY legacy flat key (OI-4). Any
- * SecretStorage error is swallowed to an empty string so credential reads
- * never break state load (UC-3 EF-3). No inline hash derivation elsewhere.
+ * Resolution order when a workspace is open: (1) new `sdlcAgents.${wsHash}.*`
+ * key, (2) legacy `kiroSdlc.${wsHash}.*` namespaced key (pre-rename writes),
+ * (3) flat `kiroSdlc.*` LEGACY_SECRET. When no workspace is open it reads the
+ * flat LEGACY_SECRET directly (OI-4). Any SecretStorage error is swallowed to
+ * an empty string so credential reads never break state load (UC-3 EF-3).
  *
  * @param secrets VS Code SecretStorage to read from.
  * @param base Secret base to resolve (pega / atlassian*).
@@ -92,8 +109,12 @@ export async function readScopedSecret(
   wsHash: string | null = getWsHash(),
 ): Promise<string> {
   try {
-    const key = wsHash ? secretKey(base, wsHash)! : LEGACY_SECRET[base];
-    return (await secrets.get(key)) || "";
+    if (!wsHash) { return (await secrets.get(LEGACY_SECRET[base])) || ""; }
+    const current = await secrets.get(secretKey(base, wsHash)!);
+    if (current) { return current; }
+    const legacyNs = await secrets.get(legacyNamespacedSecretKey(base, wsHash)!);
+    if (legacyNs) { return legacyNs; }
+    return (await secrets.get(LEGACY_SECRET[base])) || "";
   } catch {
     return "";
   }
@@ -106,11 +127,20 @@ function isValidFor(key: string, value: string): boolean {
   return value.length > 0;
 }
 
-/** Snapshot legacy Global config values (plain get() would return migrated values). */
+/**
+ * Snapshot legacy Global config values. Reads BOTH the pre-rename `kiroSdlc`
+ * namespace and the current `sdlcAgents` namespace (the config-namespace
+ * migration may have copied globals into `sdlcAgents`), preferring whichever
+ * global is set. Plain get() would return merged/migrated values, so inspect()
+ * globalValue is used to read the Global scope specifically.
+ */
 function readLegacyConfig(): Record<string, string | undefined> {
-  const config = vscode.workspace.getConfiguration("kiroSdlc");
+  const oldConfig = vscode.workspace.getConfiguration("kiroSdlc");
+  const newConfig = vscode.workspace.getConfiguration("sdlcAgents");
   const out: Record<string, string | undefined> = {};
-  for (const k of LEGACY_CONFIG) { out[k] = config.inspect<string>(k)?.globalValue; }
+  for (const k of LEGACY_CONFIG) {
+    out[k] = newConfig.inspect<string>(k)?.globalValue ?? oldConfig.inspect<string>(k)?.globalValue;
+  }
   return out;
 }
 
@@ -126,7 +156,7 @@ async function readSecrets(secrets: vscode.SecretStorage): Promise<Record<Secret
 
 /** Field-level config copy: workspace-wins, invalid legacy skipped. */
 async function copyConfig(legacy: Record<string, string | undefined>): Promise<boolean> {
-  const config = vscode.workspace.getConfiguration("kiroSdlc");
+  const config = vscode.workspace.getConfiguration("sdlcAgents");
   let failed = false;
   for (const k of LEGACY_CONFIG) {
     // NOTE (SA4E-323 deviation from FSD §6.3.2 comment): the workspace snapshot

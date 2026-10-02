@@ -24,15 +24,15 @@ export function registerSwapCommands(
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "kiroSdlc.swapPlatform",
+      "sdlcAgents.swapPlatform",
       () => handleSwapPlatform(workspaceRoot, detector, executor, stateManager, statusBar),
     ),
     vscode.commands.registerCommand(
-      "kiroSdlc.restoreBackup",
+      "sdlcAgents.restoreBackup",
       () => handleRestoreBackup(executor, stateManager, statusBar, detector),
     ),
     vscode.commands.registerCommand(
-      "kiroSdlc.platformStatus",
+      "sdlcAgents.platformStatus",
       () => handlePlatformStatus(detector, stateManager),
     ),
   );

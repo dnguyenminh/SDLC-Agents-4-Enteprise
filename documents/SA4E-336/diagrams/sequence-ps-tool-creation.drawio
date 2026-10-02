@@ -1,0 +1,116 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- Participant header boxes -->
+    <mxCell id="h1" value="PiCodingTools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="20" width="140" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="pi-coding-agent 0.99.1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="360" y="20" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="pwsh.exe / Windows PowerShell" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="660" y="20" width="200" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- Lifelines -->
+    <mxCell id="l1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="60" as="sourcePoint"/>
+        <mxPoint x="130" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="60" as="sourcePoint"/>
+        <mxPoint x="440" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="760" y="60" as="sourcePoint"/>
+        <mxPoint x="760" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Self message: check platform -->
+    <mxCell id="m1" value="1. Check process.platform" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="100" as="sourcePoint"/>
+        <mxPoint x="300" y="100" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1b" value="" style="html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="300" y="120" as="sourcePoint"/>
+        <mxPoint x="130" y="120" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- alt win32 fragment label -->
+    <mxCell id="alt1" value="alt [win32]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9673a6;fontSize=9;fontStyle=2;align=left;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="110" y="150" width="700" height="230" as="geometry"/>
+    </mxCell>
+
+    <!-- create PowerShell tool -->
+    <mxCell id="m2" value="2. createPowerShellTool(workspaceRoot)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="190" as="sourcePoint"/>
+        <mxPoint x="440" y="190" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <!-- resolve pwsh.exe -->
+    <mxCell id="m3" value="3. Resolve pwsh.exe" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="230" as="sourcePoint"/>
+        <mxPoint x="760" y="230" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <!-- found -->
+    <mxCell id="m4" value="4a. [found] pwsh.exe path" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="760" y="270" as="sourcePoint"/>
+        <mxPoint x="440" y="270" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <!-- fallback -->
+    <mxCell id="m5" value="4b. [not found] fallback to Windows PowerShell 5.1" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="310" as="sourcePoint"/>
+        <mxPoint x="760" y="310" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="5. powershell.exe path" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="760" y="350" as="sourcePoint"/>
+        <mxPoint x="440" y="350" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- return AgentTool powershell -->
+    <mxCell id="m7" value="6. AgentTool { name: &quot;powershell&quot; }" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="410" as="sourcePoint"/>
+        <mxPoint x="130" y="410" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- else non-win32 fragment -->
+    <mxCell id="alt2" value="else [non-win32]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#9673a6;fontSize=9;fontStyle=2;align=left;verticalAlign=top;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="110" y="440" width="700" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="m8" value="7. createBashTool(workspaceRoot)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="480" as="sourcePoint"/>
+        <mxPoint x="440" y="480" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="8. AgentTool { name: &quot;bash&quot; }" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="520" as="sourcePoint"/>
+        <mxPoint x="130" y="520" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

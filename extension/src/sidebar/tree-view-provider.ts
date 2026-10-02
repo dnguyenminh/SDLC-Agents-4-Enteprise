@@ -72,7 +72,7 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
   private getRootItems(): KiroTreeItem[] {
     // Show warning banner when KB system is inactive
     const items: KiroTreeItem[] = [];
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const backendUrl = getBackendUrl();
 
     if (this.isKbInactive()) {
@@ -82,7 +82,7 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
       );
       warningItem.iconPath = new vscode.ThemeIcon("warning", new vscode.ThemeColor("problemsWarningIcon.foreground"));
       warningItem.description = "Server not running";
-      warningItem.command = { command: "kiroSdlc.restartMcpServer", title: "Restart Server", arguments: [] };
+      warningItem.command = { command: "sdlcAgents.restartMcpServer", title: "Restart Server", arguments: [] };
       items.push(warningItem);
     } else {
       const backendRootItem = new KiroTreeItem("Backend Target", vscode.TreeItemCollapsibleState.Expanded);
@@ -100,7 +100,7 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
       );
       authItem.iconPath = new vscode.ThemeIcon(this.isAuthenticated ? "account" : "key");
       authItem.command = {
-        command: this.isAuthenticated ? "kiroSdlc.logout" : "kiroSdlc.login",
+        command: this.isAuthenticated ? "sdlcAgents.logout" : "sdlcAgents.login",
         title: this.isAuthenticated ? "Logout" : "Login",
         arguments: []
       };
@@ -111,11 +111,11 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
 
     const kbSection = new KiroTreeItem("Knowledge Base", vscode.TreeItemCollapsibleState.Expanded);
     kbSection.children = [
-      this.createCommandItem("Dashboard", "kiroSdlc.openKbDashboard", "dashboard"),
-      this.createCommandItem("Graph", "kiroSdlc.openKbGraph", "type-hierarchy"),
-      this.createCommandItem("Tags", "kiroSdlc.openKbTags", "tag"),
-      this.createCommandItem("Quality", "kiroSdlc.openKbQuality", "star"),
-      this.createCommandItem("Analytics", "kiroSdlc.openKbAnalytics", "graph"),
+      this.createCommandItem("Dashboard", "sdlcAgents.openKbDashboard", "dashboard"),
+      this.createCommandItem("Graph", "sdlcAgents.openKbGraph", "type-hierarchy"),
+      this.createCommandItem("Tags", "sdlcAgents.openKbTags", "tag"),
+      this.createCommandItem("Quality", "sdlcAgents.openKbQuality", "star"),
+      this.createCommandItem("Analytics", "sdlcAgents.openKbAnalytics", "graph"),
     ];
 
     const serverSection = new KiroTreeItem("MCP Wrapper Server", vscode.TreeItemCollapsibleState.Expanded);
@@ -127,16 +127,16 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
     statusItem.description = `Port ${mcpServerPort}`;
     
     serverChildren.push(statusItem);
-    serverChildren.push(this.createCommandItem("Edit Config", "kiroSdlc.editConfig", "json"));
-    serverChildren.push(this.createCommandItem("Change Config...", "kiroSdlc.changeConfig", "folder-opened"));
+    serverChildren.push(this.createCommandItem("Edit Config", "sdlcAgents.editConfig", "json"));
+    serverChildren.push(this.createCommandItem("Change Config...", "sdlcAgents.changeConfig", "folder-opened"));
     serverSection.children = serverChildren;
 
     const actionsSection = new KiroTreeItem("Quick Actions", vscode.TreeItemCollapsibleState.Collapsed);
     actionsSection.children = [
-      this.createCommandItem("Inject All Agents", "kiroSdlc.injectAll", "cloud-download"),
-      this.createCommandItem("Show Status", "kiroSdlc.status", "info"),
-      this.createCommandItem("Index Workspace", "kiroSdlc.indexWorkspace", "search"),
-      this.createCommandItem("Open KB in Browser", "kiroSdlc.openKbBrowser", "globe"),
+      this.createCommandItem("Inject All Agents", "sdlcAgents.injectAll", "cloud-download"),
+      this.createCommandItem("Show Status", "sdlcAgents.status", "info"),
+      this.createCommandItem("Index Workspace", "sdlcAgents.indexWorkspace", "search"),
+      this.createCommandItem("Open KB in Browser", "sdlcAgents.openKbBrowser", "globe"),
     ];
 
     items.push(kbSection, serverSection, actionsSection);

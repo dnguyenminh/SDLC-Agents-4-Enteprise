@@ -6,8 +6,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AuthManager, AuthError } from "../AuthManager";
 import type { AuthState } from "../AuthManager";
 
-const SECRET_ACCESS = "kiroSdlc.accessToken";
-const SECRET_USER = "kiroSdlc.lastUsername";
+const SECRET_ACCESS = "sdlcAgents.accessToken";
+const SECRET_USER = "sdlcAgents.lastUsername";
 
 function makeSecrets() {
   const store = new Map<string, string>();
@@ -90,6 +90,13 @@ describe("AuthManager", () => {
 
   it("getAccessToken returns null when not authenticated", async () => {
     await expect(auth.getAccessToken()).resolves.toBeNull();
+  });
+
+  it("getLastUsername migrates a legacy kiroSdlc.lastUsername on read", async () => {
+    // Seed only the pre-rename key; getLastUsername must read it AND copy it forward.
+    await secrets.store("kiroSdlc.lastUsername", "legacy-user");
+    expect(await auth.getLastUsername()).toBe("legacy-user");
+    expect(await secrets.get(SECRET_USER)).toBe("legacy-user");
   });
 
   it("getAccessToken returns token when authenticated via login", async () => {

@@ -34,16 +34,16 @@ describe("KiroTreeViewProvider", () => {
 
     it("should return KB section with 5 panel items", () => {
       const kbChildren = [
-        { label: "Dashboard", command: "kiroSdlc.openKbDashboard" },
-        { label: "Graph", command: "kiroSdlc.openKbGraph" },
-        { label: "Tags", command: "kiroSdlc.openKbTags" },
-        { label: "Quality", command: "kiroSdlc.openKbQuality" },
-        { label: "Analytics", command: "kiroSdlc.openKbAnalytics" },
+        { label: "Dashboard", command: "sdlcAgents.openKbDashboard" },
+        { label: "Graph", command: "sdlcAgents.openKbGraph" },
+        { label: "Tags", command: "sdlcAgents.openKbTags" },
+        { label: "Quality", command: "sdlcAgents.openKbQuality" },
+        { label: "Analytics", command: "sdlcAgents.openKbAnalytics" },
       ];
 
       assert.strictEqual(kbChildren.length, 5);
-      assert.strictEqual(kbChildren[0].command, "kiroSdlc.openKbDashboard");
-      assert.strictEqual(kbChildren[4].command, "kiroSdlc.openKbAnalytics");
+      assert.strictEqual(kbChildren[0].command, "sdlcAgents.openKbDashboard");
+      assert.strictEqual(kbChildren[4].command, "sdlcAgents.openKbAnalytics");
     });
 
     it("should return children of an element when element is provided", () => {
@@ -164,9 +164,9 @@ describe("KiroTreeViewProvider", () => {
 
     it("should have command property for action items", () => {
       const item = new mockVscode.TreeItem("Restart Server", mockVscode.TreeItemCollapsibleState.None);
-      item.command = { command: "kiroSdlc.restartMcpServer", title: "Restart Server" };
+      item.command = { command: "sdlcAgents.restartMcpServer", title: "Restart Server" };
 
-      assert.strictEqual(item.command.command, "kiroSdlc.restartMcpServer");
+      assert.strictEqual(item.command.command, "sdlcAgents.restartMcpServer");
     });
 
     it("should have iconPath for themed icons", () => {
@@ -194,15 +194,15 @@ describe("KiroTreeViewProvider", () => {
   describe("Quick Actions section", () => {
     it("should have Inject All command", () => {
       const actions = [
-        { label: "Inject All Agents", command: "kiroSdlc.injectAll", icon: "cloud-download" },
-        { label: "Show Status", command: "kiroSdlc.status", icon: "info" },
-        { label: "Index Workspace", command: "kiroSdlc.indexWorkspace", icon: "search" },
+        { label: "Inject All Agents", command: "sdlcAgents.injectAll", icon: "cloud-download" },
+        { label: "Show Status", command: "sdlcAgents.status", icon: "info" },
+        { label: "Index Workspace", command: "sdlcAgents.indexWorkspace", icon: "search" },
       ];
 
       assert.strictEqual(actions.length, 3);
-      assert.strictEqual(actions[0].command, "kiroSdlc.injectAll");
-      assert.strictEqual(actions[1].command, "kiroSdlc.status");
-      assert.strictEqual(actions[2].command, "kiroSdlc.indexWorkspace");
+      assert.strictEqual(actions[0].command, "sdlcAgents.injectAll");
+      assert.strictEqual(actions[1].command, "sdlcAgents.status");
+      assert.strictEqual(actions[2].command, "sdlcAgents.indexWorkspace");
     });
   });
 });

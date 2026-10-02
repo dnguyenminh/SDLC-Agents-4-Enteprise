@@ -1,0 +1,20 @@
+id,type,key,value,description
+seed-001,workspace_root,ws-root,C:\projects\kiro\SDLC-Agents-4-Enterprise,Workspace root used by all automated tests (absolute path)
+seed-002,workspace_root,ws-root-fwd,c:/projects/kiro/SDLC-Agents-4-Enterprise,Forward-slash variant for path-native tests (TC-003/TC-700)
+seed-003,platform,platform-win32,win32,Windows platform for PowerShell tool tests
+seed-004,platform,platform-linux,linux,Mocked non-win32 platform for bash regression tests (TC-002/TC-305/TC-314/TC-801)
+seed-005,platform,platform-darwin,darwin,Mocked macOS platform for AF-3 test (TC-102)
+seed-006,node_engine,node-version,v22.x,Current Node engine — satisfies engines.node of 0.99.1
+seed-007,node_engine,npm-version,10.x,npm version
+seed-008,package_version,current-version,0.80.10,Pre-upgrade pi-coding-agent version
+seed-009,package_version,target-version,0.99.1,Target version for all @earendil-works/* packages
+seed-010,package_version,pkg-list,@earendil-works/pi-coding-agent|@earendil-works/pi-agent-core|@earendil-works/pi-ai|@earendil-works/pi-tui|@earendil-works/chord|@earendil-works/pi-mcp|@earendil-works/pi-codemode,7 packages to bump in lockstep
+seed-011,tool_names,core-tools,read|write|edit|grep|find|ls,Core tools unchanged by upgrade (TC-802)
+seed-012,tool_names,shell-tool-win32,powershell,Expected shell tool name on win32
+seed-013,tool_names,shell-tool-nonwin32,bash,Expected shell tool name on non-win32
+seed-014,tool_names,session-allowlist-win32,read|write|edit|powershell|grep|find|ls,Expected session allowlist on win32 (TC-313/TC-703)
+seed-015,extension_version,extension-version,1.46.7,Extension version under test for packaging (TC-806)
+seed-016,scratch_path,scratch-dir,C:\Users\ASUS\AppData\Local\Temp\opencode\sa4e336-scratch\,Scratch path for destructive command tests — never the real repo
+seed-017,scratch_path,longpath-dir,C:\Users\ASUS\AppData\Local\Temp\opencode\sa4e336-longpath\,Temp root for >260-char long path test (TC-409)
+seed-018,executable,pwsh,pwsh (PowerShell Core 7.x; fallback Windows PowerShell 5.1),Shell executable target
+seed-019,mock_helper,platform-mock,mockPlatform('win32'|'linux'|'darwin'),Test helper per TDD §11.4 — extension/src/pi-workflow/__tests__/helpers/platform-mock.ts

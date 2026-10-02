@@ -29,7 +29,7 @@ const TEXT_EXTENSIONS = new Set([".md", ".txt", ".json", ".csv", ".yml", ".yaml"
 /** Extensions we send to backend for conversion */
 const CONVERTIBLE_EXTENSIONS = new Set([".docx", ".xlsx", ".pdf", ".pptx", ".rtf"]);
 
-const CHECKSUM_CONFIG_KEY = "kiroSdlc.jiraAttachmentChecksums";
+const CHECKSUM_CONFIG_KEY = "sdlcAgents.jiraAttachmentChecksums";
 
 export class AttachmentFetcher {
     private checksums: Record<string, AttachmentChecksum> = {};

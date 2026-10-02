@@ -1,0 +1,8 @@
+case_id,event_type,ref,branch_or_tag,commit_short_sha,push_enabled,expected_tags,notes
+TAG-01,push,refs/heads/main,main,a1b2c3d,true,"sha-a1b2c3d;latest",Merge to main applies sha + latest
+TAG-02,push,refs/tags/v1.4.0,v1.4.0,a1b2c3d,true,"sha-a1b2c3d;v1.4.0;1.4;1",Semver tag applies full semver family + sha; no latest
+TAG-03,push,refs/tags/v2.0.0,v2.0.0,ff00aa1,true,"sha-ff00aa1;v2.0.0;2.0;2",Major release tag
+TAG-04,pull_request,refs/pull/42/merge,main,bb22cc3,false,"",PR build-only; no tags pushed; no secrets
+TAG-05,push,refs/heads/feature-x,feature-x,cc33dd4,false,"",Non-main branch push does not push image (workflow filter)
+TAG-06,push,refs/tags/v1.4.1,v1.4.1,dd44ee5,true,"sha-dd44ee5;v1.4.1;1.4;1",Patch release updates 1.4 and 1 moving tags
+TAG-07,push,refs/tags/v10.0.0,v10.0.0,ee55ff6,true,"sha-ee55ff6;v10.0.0;10.0;10",Double-digit major handled correctly

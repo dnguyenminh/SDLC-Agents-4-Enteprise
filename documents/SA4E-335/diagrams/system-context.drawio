@@ -1,0 +1,69 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="dev" value="DevOps Engineer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="360" width="140" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="repo" value="Git Repository&#10;(source + Dockerfile + compose)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="260" y="60" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ci" value="GitHub Actions CI&#10;(build + tag + push)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="520" y="60" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="secrets" value="CI Secrets Store&#10;(registry credentials)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="220" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="registry" value="Container Registry&#10;(GHCR / Docker Hub / ECR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="820" y="60" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="image" value="Backend Docker Image&#10;(node:22-slim, production target,&#10;draw.io CLI, cached model)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="360" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="compose" value="Production docker-compose&#10;(secrets, limits, healthcheck,&#10;restart policy)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="360" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="backend" value="Backend Runtime&#10;(Code Intelligence MCP,&#10;non-root sa4e, PORT 48721)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="540" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="postgres" value="PostgreSQL&#10;(pgvector/pgvector:pg16,&#10;named volumes)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="540" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="reviews &amp; updates" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="dev" target="repo">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="110" y="95"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="1. triggers on merge/tag" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="repo" target="ci">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="2. reads credentials" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="secrets" target="ci">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="3. push tagged image" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="ci" target="registry">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="4. pull image" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="registry" target="image">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="5. run via" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="compose" target="image">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="6. starts" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="compose" target="backend">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="7. connects (SQL)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="backend" target="postgres">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="operates" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="dev" target="compose">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="110" y="580"/>
+          <mxPoint x="480" y="580"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

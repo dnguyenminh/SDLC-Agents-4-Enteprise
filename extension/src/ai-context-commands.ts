@@ -1,7 +1,7 @@
-﻿/**
+/**
  * AI Context Commands — KSA-177
  * Commands to get AI context for symbol at cursor and copy to clipboard.
- * Commands: kiroSdlc.getAIContext, kiroSdlc.getEditContext
+ * Commands: sdlcAgents.getAIContext, sdlcAgents.getEditContext
  */
 
 import * as vscode from "vscode";
@@ -17,10 +17,10 @@ export function registerAIContextCommands(
   mcpManager: IServerManager
 ): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand("kiroSdlc.getAIContext", () =>
+    vscode.commands.registerCommand("sdlcAgents.getAIContext", () =>
       getContextForCursor(mcpManager, "get_ai_context")
     ),
-    vscode.commands.registerCommand("kiroSdlc.getEditContext", () =>
+    vscode.commands.registerCommand("sdlcAgents.getEditContext", () =>
       getContextForCursor(mcpManager, "get_edit_context")
     )
   );

@@ -11,6 +11,25 @@ export interface ToolApprovalGateHandler {
   }): Promise<{ approved: boolean; reason?: string; modifiedInput?: Record<string, unknown> }>;
 }
 
+/**
+ * Fix J: wraps a gate handler with ApprovalAdapter's single-use protection
+ * (SEC-289-02 replay guard) so the provider's pre-execution `beforeToolCall`
+ * hook can consume it directly. One approval decision per toolUseId.
+ */
+export function createReplaySafeApprovalHandler(gateHandler: ToolApprovalGateHandler): ToolApprovalGateHandler {
+  const adapter = new ApprovalAdapter(gateHandler);
+  return {
+    async requestApproval(req) {
+      const result = await adapter.processToolApproval({
+        id: req.toolUseId,
+        name: req.toolName,
+        arguments: req.input,
+      });
+      return { approved: result.approved, reason: result.reason };
+    },
+  };
+}
+
 export class ApprovalAdapter {
   /** SEC-289-02: consumed tool-use IDs — each approval is single-use to prevent replay. */
   private readonly consumedApprovals = new Set<string>();

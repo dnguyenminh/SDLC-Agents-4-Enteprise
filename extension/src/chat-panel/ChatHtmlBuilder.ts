@@ -54,7 +54,7 @@ export class ChatHtmlBuilder {
   }
 
   private static warningsHtml(): string {
-    return `<div class="context-full-warning" id="context-full-warning"><span>Context window is full.</span><span class="new-tab-link" id="full-new-tab">Start new tab</span></div><div class="context-toast" id="context-toast"><span id="toast-text">Context usage at 95%</span><button class="toast-dismiss" id="toast-dismiss">&times;</button></div><div id="working-bar"><span class="working-label"><span id="working-text">Working...</span></span><div class="working-actions"><button id="cancel-btn" title="Cancel">Cancel</button><button id="follow-btn" title="Follow output">Follow &#x1F441;</button></div></div>`;
+    return `<div class="context-full-warning" id="context-full-warning"><span>Context window is full.</span><span class="new-tab-link" id="full-new-tab">Start new tab</span></div><div class="context-toast" id="context-toast"><span id="toast-text">Context usage at 95%</span><button class="toast-dismiss" id="toast-dismiss">&times;</button></div><div id="working-bar"><span class="working-label"><span id="working-text">Working...</span></span><div class="working-actions"><button id="approve-btn" title="Approve this tool" style="display:none;">Approve</button><button id="reject-btn" title="Reject this tool" style="display:none;">Reject</button><button id="cancel-btn" title="Cancel">Cancel</button><button id="follow-btn" title="Follow output">Follow &#x1F441;</button></div></div>`;
   }
 
   private static welcomeHtml(): string {

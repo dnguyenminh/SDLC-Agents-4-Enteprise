@@ -11,6 +11,29 @@ const TEST_WRAPPER_PORT = 9184;
 const BACKEND_DIR = path.resolve(__dirname, '../../../backend');
 const WORKSPACE_DIR = path.resolve(__dirname, '../../../');
 const DIAGRAMS_DIR = path.join(WORKSPACE_DIR, 'documents/SA4E-124/diagrams');
+const BACKEND_DATA_DIR = path.join(__dirname, '.tmp-e2e-drawio-backend-data');
+
+/**
+ * Create a fresh isolated DATA_DIR for the spawned backend. The backend reads
+ * its active DB engine from <DATA_DIR>/database.json; without isolation it can
+ * inherit machine-local state (e.g. a postgres engine with no reachable server)
+ * and exit before printing readiness. Isolation forces the sqlite default, so
+ * the E2E backend boots deterministically on any machine (SA4E-336).
+ */
+function resetBackendDataDir(): string {
+  fs.rmSync(BACKEND_DATA_DIR, { recursive: true, force: true });
+  fs.mkdirSync(BACKEND_DATA_DIR, { recursive: true });
+  return BACKEND_DATA_DIR;
+}
+
+/** Best-effort removal of the isolated DATA_DIR (never fails the suite). */
+function cleanupBackendDataDir(): void {
+  try {
+    fs.rmSync(BACKEND_DATA_DIR, { recursive: true, force: true });
+  } catch {
+    // Ignore: leftover temp data must not fail the E2E suite.
+  }
+}
 
 // Mock VSCode workspace for the proxy response interceptor
 const mockWorkspaceFolders = [{ uri: { fsPath: WORKSPACE_DIR } }];
@@ -59,11 +82,17 @@ describe('E2E: Convert Drawio Files', () => {
 
   beforeAll(async () => {
     console.log(`[E2E] Starting local backend via tsx on port ${TEST_PORT}...`);
+    const backendDataDir = resetBackendDataDir();
     backendProcess = cp.fork(path.resolve(BACKEND_DIR, '..', 'node_modules', 'tsx', 'dist', 'cli.mjs'), ['src/index.ts'], {
       cwd: BACKEND_DIR,
       execPath: 'node',
       stdio: 'pipe',
-      env: { ...process.env, CODE_INTEL_PORT: TEST_PORT.toString(), CODE_INTEL_WORKSPACE: WORKSPACE_DIR }
+      env: {
+        ...process.env,
+        CODE_INTEL_PORT: TEST_PORT.toString(),
+        CODE_INTEL_WORKSPACE: WORKSPACE_DIR,
+        CODE_INTEL_DATA_DIR: backendDataDir
+      }
     });
 
     // Wait for the backend to log "Backend MCP Server ready"
@@ -121,11 +150,14 @@ describe('E2E: Convert Drawio Files', () => {
     console.log(`[E2E] Connected!`);
   }, 65000); // Allow up to 65s for startup
 
-  afterAll(() => {
+  afterAll(async () => {
     console.log(`[E2E] Tearing down backend server...`);
     if (backendProcess) {
       backendProcess.kill('SIGTERM');
+      // Give the killed process a moment to release sqlite file locks (win32).
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
+    cleanupBackendDataDir();
   });
 
   it('Should convert all .drawio files in documents/SA4E-124/diagrams', async () => {

@@ -1,0 +1,5 @@
+test_case_id,checkpoint_id,workflow_id,payload,expected_http_code,description
+E2E-API-06,550e8400-e29b-41d4-a716-446655440000,wf_12345,"{""step"":""1""}",201,Valid checkpoint creation
+E2E-API-06,invalid-uuid,wf_12345,"{""step"":""1""}",400,Invalid UUID format
+E2E-API-07,550e8400-e29b-41d4-a716-446655440000,wf_12345,"{""step"":""1""}",200,Read existing checkpoint
+E2E-API-08,550e8400-e29b-41d4-a716-446655440001,wf_12346,"{""migrated"":true}",201,Migration from JSON

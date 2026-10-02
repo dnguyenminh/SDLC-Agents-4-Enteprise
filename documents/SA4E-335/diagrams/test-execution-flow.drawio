@@ -1,0 +1,167 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1200" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <mxCell id="title" value="SA4E-335 — Test Execution Flow (fail-visible gates, dependency order)" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1320" height="30" as="geometry"/>
+    </mxCell>
+
+    <!-- Start -->
+    <mxCell id="start" value="START&#10;Artifacts ready&#10;(Dockerfile · compose · workflow · docs)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="540" y="70" width="300" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- G1 Config -->
+    <mxCell id="g1" value="L1 — Config / Static Validation&#10;hadolint · compose config · actionlint&#10;TC-CFG-01..07 · TC-CI-LINT-01,02" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="180" width="340" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d1" value="Pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="190" width="110" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- G2 Build -->
+    <mxCell id="g2" value="L2 — Build&#10;docker buildx build --target production&#10;TC-BUILD-01..05" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="300" width="340" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d2" value="Pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="310" width="110" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- G3 Smoke -->
+    <mxCell id="g3" value="L4 — Smoke / Container&#10;start · /health 200 @48721 · non-root sa4e · offline&#10;TC-SMOKE-01..05" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="420" width="340" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d3" value="Pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="430" width="110" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- G4 Integration -->
+    <mxCell id="g4" value="L3 — Integration&#10;compose up (secret files) · DB · volume persistence · fail-fast&#10;TC-INT-01..06" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="540" width="340" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d4" value="Pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="550" width="110" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- G5 CI pipeline -->
+    <mxCell id="g5" value="L5 — CI Pipeline E2E&#10;trigger → build → tag → login → push → report (PR=build-only)&#10;TC-CI-01..07" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="660" width="340" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d5" value="Pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="670" width="110" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- G6 Security -->
+    <mxCell id="g6" value="L6 — Security / SIT&#10;secret-leak · layer scan · CVE · .gitignore · non-root&#10;TC-SEC-01..06" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="780" width="340" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d6" value="Pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="790" width="110" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- Docs -->
+    <mxCell id="g7" value="Doc Verification&#10;TC-DOC-01..06" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="900" width="340" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- Exit criteria met -->
+    <mxCell id="done" value="EXIT CRITERIA MET&#10;100% AC coverage · all High pass&#10;no secret leak · green CI dry-run" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="520" y="1010" width="340" height="70" as="geometry"/>
+    </mxCell>
+
+    <!-- Defect box (right lane, failure path) -->
+    <mxCell id="defect" value="RAISE DEFECT&#10;stop progression · log to QA&#10;return to DevOps (fail-visible, BR-19)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1120" y="470" width="240" height="90" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== Edges: happy path ===== -->
+    <mxCell id="es" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="start" target="g1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="eg1d1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="g1" target="d1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ed1g2" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="d1" target="g2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="975" y="280"/><mxPoint x="690" y="280"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eg2d2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="g2" target="d2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ed2g3" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="d2" target="g3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="975" y="400"/><mxPoint x="690" y="400"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eg3d3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="g3" target="d3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ed3g4" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="d3" target="g4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="975" y="520"/><mxPoint x="690" y="520"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eg4d4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="g4" target="d4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ed4g5" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="d4" target="g5">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="975" y="640"/><mxPoint x="690" y="640"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eg5d5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="g5" target="d5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ed5g6" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="d5" target="g6">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="975" y="760"/><mxPoint x="690" y="760"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eg6d6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="g6" target="d6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ed6g7" value="Yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="1" source="d6" target="g7">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="975" y="880"/><mxPoint x="690" y="880"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="eg7done" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="g7" target="done">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== Edges: failure path to defect ===== -->
+    <mxCell id="f1" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;fontSize=9;" edge="1" parent="1" source="d1" target="defect">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="1240" y="220"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="f2" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;fontSize=9;" edge="1" parent="1" source="d2" target="defect">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="1240" y="340"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="f3" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;fontSize=9;" edge="1" parent="1" source="d3" target="defect">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="1240" y="460"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="f4" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;fontSize=9;" edge="1" parent="1" source="d4" target="defect">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="1240" y="580"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="f5" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;fontSize=9;" edge="1" parent="1" source="d5" target="defect">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="1240" y="700"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="f6" value="No" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;strokeColor=#b85450;fontSize=9;" edge="1" parent="1" source="d6" target="defect">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="1240" y="820"/></Array>
+      </mxGeometry>
+    </mxCell>
+
+  </root>
+</mxGraphModel>

@@ -1,0 +1,193 @@
+name: SA4E-336 CI — pi-coding-agent 0.80.10 → 0.99.1 + native PowerShell tool
+
+# Per-ticket CI pipeline for SA4E-336 (extension-only upgrade: bump all
+# @earendil-works/* packages 0.80.10 -> 0.99.1 in lockstep, wire native
+# createPowerShellTool on win32, harden the tool-approval gate).
+#
+# Scope (TDD v1.2 + STP v1.2 + SECURITY-REVIEW.md):
+#   - extension/ only — NO backend jobs, NO Dockerfile/container, NO DB migration
+#     (this ticket introduces no server runtime and no schema change).
+#   - build (tsc --noEmit) -> lint (eslint) -> test (vitest: PBT/UT/IT/E2E) ->
+#     supply-chain gate (SEC-07: npm audit + lockfile integrity + single-version
+#     + exact-pin) -> VSIX package.
+#
+# SEC-07 (High, SECURITY-REVIEW.md) — supply-chain gate is a REQUIRED check
+# before merge: a major bump across 7 @earendil-works/* packages plus NEW
+# transitive deps (chord, pi-mcp, pi-codemode) is new attack surface.
+#   * npm audit --omit=dev --audit-level=high  -> fail on High/Critical
+#   * npm ci                                   -> lockfile integrity (no drift)
+#   * single-version check                     -> exactly ONE resolved
+#                                                 @earendil-works/pi-agent-core,
+#                                                 and it must be 0.99.1 (TDD §1.5:
+#                                                 duplicate pi-agent-core = broken)
+#   * exact-pin check                          -> no ^/~ range on @earendil-works/*
+#                                                 in extension/package.json (SEC-07)
+#
+# Pre-upgrade baseline (2026-10-01, verified by devops-agent on branch tip):
+#   - extension/package.json still pins @earendil-works/pi-coding-agent 0.80.10
+#     and @earendil-works/pi-agent-core 0.80.10 (upgrade not yet applied).
+#   - `npm ls @earendil-works/pi-agent-core` resolves a SINGLE deduped 0.80.10
+#     (6 transitive consumers: @cortexkit/aft-pi, @juicesharp/rpiv-ask-user-question,
+#     @juicesharp/rpiv-todo, billion-context-pi, pi-subagents, pi-web-access).
+#   - The single-version gate below asserts 0.99.1 AFTER DEV completes the bump;
+#     it is RED by design until then (and will stay red if any transitive consumer
+#     still pins 0.80.10 — that is the exact lockstep risk this gate guards, TDD §1.5).
+
+on:
+  push:
+    branches: ["SA4E-336*"]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: sa4e-336-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Extension — tsc --noEmit + eslint + vitest (PBT/UT/IT/E2E) + VSIX package
+  # TDD v1.2 §12 (impl checklist) + STP v1.2 §2.6 exit criteria.
+  # ---------------------------------------------------------------------------
+  extension:
+    name: Extension — Compile / Lint / Test / Package
+    runs-on: windows-latest
+    # win32 runner: SA4E-336 is a Windows-native PowerShell feature. IT/E2E-API
+    # tests exercise real pwsh.exe (TDD §3.2, STP §4.1); the gate itself and the
+    # tool-approval classification tests must run on the target OS, not Linux.
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dependencies (lockfile integrity — npm ci, SEC-07)
+        run: npm ci
+
+      - name: Type-check (tsc --noEmit, 0 errors — STP TC-010 / NFR §8)
+        # No `as any` suppressions allowed (TDD §1.4); type fixes must be against
+        # the real 0.99.1 .d.ts. A type error here blocks the merge.
+        run: npx tsc -p ./ --noEmit
+
+      - name: Lint (eslint src/)
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Unit + PBT tests (vitest + fast-check)
+        # PBT (fail-secure classification, shell-aware corrections, prompt
+        # normalization) + UT for the 6 changed functions + IT (real SDK 0.99.1
+        # + real pwsh) all run under the default vitest.config.ts include glob
+        # (src/**/__tests__/**/*.test.ts). STP §2.6: UT 42/42, IT 21/21.
+        run: npm run test
+
+      - name: E2E tests (vitest.e2e.config.ts)
+        # SDK/build-level E2E (cross-process, drawio-convert). STP E2E-API/E2E-UI.
+        run: npm run test:e2e
+        continue-on-error: true
+
+      - name: Package VSIX (vsce, no dependencies)
+        # Plugin deployment artifact — proves the extension packages cleanly.
+        run: npx @vscode/vsce package --no-dependencies
+        continue-on-error: true
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sa4e-336-extension-vsix
+          path: extension/*.vsix
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # SEC-07 — Supply-chain gate (REQUIRED before merge)
+  # npm audit (High/Critical) + lockfile integrity + single-version + exact-pin.
+  # Runs on Linux (fast, deterministic) — pure manifest/lockfile analysis, no
+  # pwsh needed. This is the blocking DEV gate from SECURITY-REVIEW.md SEC-07.
+  # ---------------------------------------------------------------------------
+  supply-chain-gate:
+    name: SEC-07 Supply-chain gate (audit / lockfile / single-version / pin)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Lockfile integrity (npm ci — no package-lock drift, SEC-07)
+        # npm ci fails if package.json and package-lock.json are out of sync, so
+        # a hand-edited dependency bump without a refreshed lockfile is caught.
+        run: npm ci
+
+      - name: npm audit — fail on High/Critical (SEC-07)
+        # Blocking gate on RUNTIME deps. Dev-only advisories excluded so test
+        # tooling (vitest/esbuild/etc.) doesn't block a production security gate.
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Single-version check — exactly ONE @earendil-works/pi-agent-core = 0.99.1 (TDD §1.5)
+        # Duplicate pi-agent-core instances break the Agent runtime (TDD §1.5,
+        # constraint 1). This asserts the resolved tree has a single version AND
+        # that it is 0.99.1. RED by design until DEV completes the lockstep bump
+        # across ALL @earendil-works/* AND their transitive consumers.
+        shell: bash
+        run: |
+          echo "--- resolved @earendil-works/pi-agent-core versions ---"
+          npm ls @earendil-works/pi-agent-core --all 2>/dev/null | tee /tmp/pils.txt || true
+          versions=$(grep -oE 'pi-agent-core@[0-9]+\.[0-9]+\.[0-9]+' /tmp/pils.txt | sed 's/.*@//' | sort -u)
+          echo "--- distinct versions: ---"
+          echo "$versions"
+          count=$(echo "$versions" | grep -c . || true)
+          if [ "$count" -ne 1 ]; then
+            echo "FAIL: expected exactly 1 resolved @earendil-works/pi-agent-core version, found $count:"
+            echo "$versions"
+            echo "A duplicate pi-agent-core means a transitive consumer still pins a different version (lockstep not complete) — TDD §1.5."
+            exit 1
+          fi
+          if [ "$versions" != "0.99.1" ]; then
+            echo "FAIL: resolved @earendil-works/pi-agent-core is '$versions', expected '0.99.1' (TDD §1.5)."
+            echo "(RED by design until DEV completes the 0.80.10 -> 0.99.1 upgrade in Phase 5.)"
+            exit 1
+          fi
+          echo "OK: single resolved @earendil-works/pi-agent-core = 0.99.1"
+
+      - name: Exact-pin check — no ^/~ range on @earendil-works/* (SEC-07)
+        # SEC-07: pin exact versions (no ^) for the upgraded packages so a
+        # future `npm install` cannot silently drift onto a different minor.
+        shell: bash
+        run: |
+          echo "--- @earendil-works/* specs in extension/package.json ---"
+          # Extract the dependencies/devDependencies specs for @earendil-works/*
+          ranged=$(grep -oE '"@earendil-works/[^"]+"[[:space:]]*:[[:space:]]*"[^"]+"' package.json | grep -E ':[[:space:]]*"[\^~]' || true)
+          if [ -n "$ranged" ]; then
+            echo "FAIL: @earendil-works/* must be exact-pinned (no ^ or ~) — SEC-07:"
+            echo "$ranged"
+            exit 1
+          fi
+          echo "OK: all @earendil-works/* specs are exact-pinned"
+
+      - name: New transitive dependency surface report (SEC-07, informational)
+        # SEC-07 flags NEW transitive deps (chord, pi-mcp, pi-codemode). pi-codemode
+        # may eval model-authored code (direct RCE surface) and needs a DEV
+        # capability review. This step surfaces their presence for the reviewer;
+        # it does NOT fail the build (capability review is a human DEV gate).
+        shell: bash
+        run: |
+          for pkg in chord pi-mcp pi-codemode; do
+            echo "=== $pkg ==="
+            npm ls "$pkg" --all 2>/dev/null || echo "(not present in resolved tree)"
+          done

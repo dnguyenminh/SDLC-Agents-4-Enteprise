@@ -2,7 +2,21 @@
  * SA4E-85 — ToolApprovalClassifier (Task 3).
  * Classifies tools as dangerous (requiresApproval) or safe (auto-approve).
  * Used by the execute_tools node to determine if human-in-the-loop is needed.
+ *
+ * SA4E-336: canonical home for PowerShell command-content security (FSD §3.3.1).
+ * The destructive catalog, safe allowlist, and normalization live in
+ * ps-command-patterns.ts (file-size / SRP separation) and are re-exported here
+ * so consumers import them from the single classifier module. Name-based sets
+ * below are UNCHANGED — no 'bash'/'powershell' name entries (TDD §3.2, BRD §1.2).
  */
+export {
+  DESTRUCTIVE_PS_PATTERNS,
+  READONLY_PS_PATTERNS,
+  normalizePsCommand,
+  isReadonlyPsCommand,
+  matchedDestructiveCategory,
+  type NormalizedCommand,
+} from './ps-command-patterns';
 
 /** Tools that mutate filesystem, run commands, or affect git state */
 const DANGEROUS_TOOL_PATTERNS: ReadonlySet<string> = new Set([

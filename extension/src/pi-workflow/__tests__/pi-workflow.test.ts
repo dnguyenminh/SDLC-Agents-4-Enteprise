@@ -68,7 +68,7 @@ describe('PiWorkflowEngine Integration (SA4E-294/295)', () => {
     expect(checkpoints['th-200'].currentPhase).toBe('specification');
   });
 
-  it('should filter out rejected tool calls and record error in state', async () => {
+  it('wires the gate into provider pre-execution approval and passes toolCalls through (Fix J)', async () => {
     const mockGate = {
       async requestApproval(req: any) {
         if (req.toolName === 'rejected_tool') {
@@ -78,10 +78,27 @@ describe('PiWorkflowEngine Integration (SA4E-294/295)', () => {
       }
     };
 
-    const customEngine = new PiWorkflowEngine({ gateHandler: mockGate, provider: mockRunProvider() });
+    const provider = mockRunProvider();
+    const setApproval = vi.spyOn(provider, 'setToolApproval');
+    const customEngine = new PiWorkflowEngine({ gateHandler: mockGate, provider });
     await customEngine.initialize('HTTP');
 
-    // Simulate tool call execution
+    // Fix J: the gate reaches the provider's beforeToolCall hook — not a
+    // post-turn filter (the old loop ran after tools had already executed).
+    expect(setApproval).toHaveBeenCalledTimes(1);
+    const handler = (setApproval.mock.calls[0] as any)[0];
+    await expect(
+      handler.requestApproval({ toolUseId: 'tu-1', toolName: 'rejected_tool', input: {} })
+    ).resolves.toMatchObject({ approved: false, reason: 'Security rejection' });
+    await expect(
+      handler.requestApproval({ toolUseId: 'tu-2', toolName: 'accepted_tool', input: {} })
+    ).resolves.toMatchObject({ approved: true });
+    // SEC-289-02 replay guard: one approval decision per toolUseId.
+    await expect(
+      handler.requestApproval({ toolUseId: 'tu-2', toolName: 'accepted_tool', input: {} })
+    ).resolves.toMatchObject({ approved: false });
+
+    // toolCalls pass through untouched — no post-turn filtering, no hang.
     const executor = (customEngine as any).executor;
     const origExecuteTurn = executor.executeTurn.bind(executor);
     executor.executeTurn = async (input: any) => {
@@ -96,9 +113,8 @@ describe('PiWorkflowEngine Integration (SA4E-294/295)', () => {
     const state: PipelineState = { ticketKey: 'SA4E-289', threadId: 'th-rej', currentPhase: 'requirements' };
     const { result, nextState } = await customEngine.executeTurn(state, 'Run tools', 'dev-agent');
 
-    expect(result.toolCalls.length).toBe(1);
-    expect(result.toolCalls[0].name).toBe('accepted_tool');
-    expect(nextState.pipelineStatus).toBe('ERROR');
-    expect(nextState.errors?.some(e => e.code === 'TOOL_APPROVAL_REJECTED')).toBe(true);
+    expect(result.toolCalls.length).toBe(2);
+    expect(nextState.pipelineStatus).not.toBe('ERROR');
+    expect(nextState.errors?.some(e => e.code === 'TOOL_APPROVAL_REJECTED')).toBe(false);
   });
 });

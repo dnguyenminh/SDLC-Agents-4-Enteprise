@@ -1,0 +1,21 @@
+<mxGraphModel dx="1000" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="l1" value="DevOps Engineer" style="swimlane;horizontal=0;startSize=30;fillColor=#ffe6cc;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="800" height="120" as="geometry"/></mxCell>
+<mxCell id="l2" value="CI System" style="swimlane;horizontal=0;startSize=30;fillColor=#dae8fc;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="180" width="800" height="120" as="geometry"/></mxCell>
+<mxCell id="l3" value="Docker Registry" style="swimlane;horizontal=0;startSize=30;fillColor=#d5e8d4;html=1;" vertex="1" parent="1"><mxGeometry x="40" y="320" width="800" height="120" as="geometry"/></mxCell>
+<mxCell id="s1" value="Review current Dockerfile/docker-compose" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l1"><mxGeometry x="40" y="50" width="200" height="60" as="geometry"/></mxCell>
+<mxCell id="s2" value="Define proposal requirements" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l1"><mxGeometry x="300" y="50" width="200" height="60" as="geometry"/></mxCell>
+<mxCell id="s3" value="Create GitHub Actions workflow" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l2"><mxGeometry x="40" y="50" width="200" height="60" as="geometry"/></mxCell>
+<mxCell id="s4" value="Build Docker image" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l2"><mxGeometry x="300" y="50" width="200" height="60" as="geometry"/></mxCell>
+<mxCell id="s5" value="Push image to registry" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l2"><mxGeometry x="560" y="50" width="200" height="60" as="geometry"/></mxCell>
+<mxCell id="s6" value="Store image" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l3"><mxGeometry x="300" y="50" width="200" height="60" as="geometry"/></mxCell>
+<mxCell id="s7" value="Provide image for deployment" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l3"><mxGeometry x="560" y="50" width="200" height="60" as="geometry"/></mxCell>
+<mxCell id="e1" edge="1" parent="1" source="s2" target="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e2" edge="1" parent="1" source="s3" target="s4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e3" edge="1" parent="1" source="s4" target="s5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e4" edge="1" parent="1" source="s5" target="s6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e5" edge="1" parent="1" source="s1" target="s2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root>
+</mxGraphModel>

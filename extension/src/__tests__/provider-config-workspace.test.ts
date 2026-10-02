@@ -123,7 +123,7 @@ describe("clearPegaPassword", () => {
     const h = getWsHash()!;
     await svc.clearPegaPassword();
     expect(store.get(secretKey("pega", h)!)).toBeUndefined();
-    expect(store.get(`kiroSdlc.${h}.migrated`)).toBe("1");
+    expect(store.get(`sdlcAgents.${h}.migrated`)).toBe("1");
     expect((await svc.getCurrentState()).hasPegaPassword).toBe(false);
   });
 });

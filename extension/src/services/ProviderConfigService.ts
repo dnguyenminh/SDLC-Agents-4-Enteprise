@@ -28,7 +28,7 @@ export class ProviderConfigService {
     atlassianConnectionType: string;
   }> {
     await ensureMigrated(this.secrets);
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const provider = config.get<string>("llmProvider", "anthropic");
     const model = config.get<string>("llmModel", "");
     const ollamaUrl = config.get<string>("ollamaUrl", "http://localhost:11434");
@@ -71,7 +71,7 @@ export class ProviderConfigService {
     const u = (username || "").trim();
     if (!/^https?:\/\//.test(e)) { throw new Error("Invalid Pega Endpoint URL (http/https required)."); }
     try {
-      const config = vscode.workspace.getConfiguration("kiroSdlc");
+      const config = vscode.workspace.getConfiguration("sdlcAgents");
       await config.update("pegaEndpoint", e, vscode.ConfigurationTarget.Workspace);
       await config.update("pegaUsername", u, vscode.ConfigurationTarget.Workspace);
       if (password && password.trim().length > 0) {
@@ -99,7 +99,7 @@ export class ProviderConfigService {
   }> {
     let models = getStaticModels(provider);
     const gatewayBaseUrl = this.getGatewayBaseUrl(provider);
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const lmstudioBaseUrl = config.get<string>("lmstudioBaseUrl", "")
       || "http://localhost:1234/v1";
 
@@ -112,7 +112,7 @@ export class ProviderConfigService {
       // return 401 on /v1/models without it, which caused a silent fallback to the
       // static catalog. Local providers (lmstudio/ollama) don't need auth.
       const providerSecretKey = SECRET_KEYS[provider];
-      const apiKey = providerSecretKey ? await this.secrets.get(providerSecretKey) : undefined;
+      const apiKey = providerSecretKey ? await this.safeGet(providerSecretKey) : undefined;
       const authHeader = apiKey ? `Bearer ${apiKey}` : undefined;
       const gatewayModels = await fetchGatewayModels(fetchUrl, authHeader);
       if (gatewayModels && gatewayModels.length > 0) {
@@ -135,7 +135,7 @@ export class ProviderConfigService {
     if (WORKSPACE_SCOPED_KEYS.includes(key)) {
       throw new Error(`Use workspace-scoped method for ${key} (SA4E-323).`);
     }
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     await config.update(key, value || undefined, vscode.ConfigurationTarget.Global);
   }
 
@@ -148,21 +148,34 @@ export class ProviderConfigService {
     return readScopedSecret(this.secrets, base, wsHash);
   }
 
-  /** Best-effort secret read that never breaks state load (UC-3 EF-3). */
+  /**
+   * Best-effort secret read that never breaks state load (UC-3 EF-3).
+   * Migrates on read: when a `sdlcAgents.*` key is empty but the pre-rename
+   * `kiroSdlc.*` value exists, copy it forward and return it.
+   */
   private async safeGet(key: string): Promise<string | undefined> {
-    try { return await this.secrets.get(key); }
-    catch { return undefined; }
+    try {
+      const current = await this.secrets.get(key);
+      if (current) { return current; }
+      const legacyKey = key.startsWith("sdlcAgents.")
+        ? key.replace(/^sdlcAgents\./, "kiroSdlc.") : undefined;
+      if (!legacyKey) { return undefined; }
+      const legacy = await this.secrets.get(legacyKey);
+      if (!legacy) { return undefined; }
+      try { await this.secrets.store(key, legacy); } catch { /* fail-open write */ }
+      return legacy;
+    } catch { return undefined; }
   }
 
   private getBaseUrlForProvider(provider: string): string {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const key = PROVIDER_BASE_URL_KEYS[provider];
     if (!key) { return ""; }
     return config.get<string>(key, "");
   }
 
   private getGatewayBaseUrl(provider: string): string {
-    const config = vscode.workspace.getConfiguration("kiroSdlc");
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const key = PROVIDER_BASE_URL_KEYS[provider];
     if (!key) { return ""; }
     const configuredUrl = config.get<string>(key, "");

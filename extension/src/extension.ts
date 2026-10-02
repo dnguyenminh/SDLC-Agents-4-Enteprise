@@ -35,6 +35,7 @@ import { KnowledgeClient } from "./knowledge-client";
 import { DiffTracker } from "./chat/diff/DiffTracker";
 import { DiffOriginalProvider } from "./chat/diff/DiffOriginalProvider";
 import { SessionLifecycleEmitter } from "./chat/engine/SessionLifecycleEmitter";
+import { migrateConfigNamespace } from "./config/config-namespace-migration";
 
 let mcpManager: McpServerManager | undefined;
 let panelManager: WebviewPanelManager | undefined;
@@ -45,6 +46,7 @@ let authManager: AuthManager | undefined;
 let statusBarManager: StatusBarManager | undefined;
 let sessionManager: SessionManager | undefined;
 let chatEngineAdapter: ChatEngineAdapter | undefined;
+let agenticWebviewProvider: import("./chat/webview/ChatWebviewProvider").ChatWebviewProvider | undefined;
 let diffTracker: DiffTracker | undefined;
 let sessionLifecycle: SessionLifecycleEmitter | undefined;
 
@@ -77,9 +79,17 @@ export function getEnrichmentService(): { pollNow(): void } | null { return null
 export async function activate(context: vscode.ExtensionContext) {
   // SA4E-99: Removed duplicate createStatusBar() — StatusBarManager handles status display
 
+  // Migrate user settings from the legacy `kiroSdlc.*` namespace to `sdlcAgents.*`
+  // BEFORE any config is read below. Never let a migration error break activation.
+  try {
+    await migrateConfigNamespace(context);
+  } catch (err) {
+    console.warn(`[config-migration] namespace migration failed: ${(err as Error).message}`);
+  }
+
   // Register Settings command early — must work even without a workspace folder.
   context.subscriptions.push(
-    vscode.commands.registerCommand("kiroSdlc.openSettings", () =>
+    vscode.commands.registerCommand("sdlcAgents.openSettings", () =>
       SettingsPanel.open(context.extensionUri, context.secrets)
     )
   );
@@ -173,7 +183,7 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   const outputChannel = vscode.window.createOutputChannel("Kiro MCP Server");
   context.subscriptions.push(outputChannel);
 
-  const mcpConfig = vscode.workspace.getConfiguration("kiroSdlc");
+  const mcpConfig = vscode.workspace.getConfiguration("sdlcAgents");
   let backendUrl: string;
   try {
     backendUrl = getBackendUrl();
@@ -207,7 +217,7 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
 
   const chatPanelProvider = new ChatPanelProvider(context.extensionUri, mcpManager, workspaceRoot, context.secrets, context.workspaceState);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("kiroChatPanel", chatPanelProvider, { webviewOptions: { retainContextWhenHidden: true } }),
+    vscode.window.registerWebviewViewProvider(ChatPanelProvider.viewType, chatPanelProvider, { webviewOptions: { retainContextWhenHidden: true } }),
     chatPanelProvider
   );
 
@@ -226,7 +236,7 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   });
   sessionManager = new SessionManager(workspaceRoot, kbClient);
   context.subscriptions.push(
-    vscode.commands.registerCommand("kiroSdlc.openAgenticChat", () => {
+    vscode.commands.registerCommand("sdlcAgents.openAgenticChat", () => {
       openAgenticChat(context, workspaceRoot, chatPanelProvider);
     })
   );
@@ -243,14 +253,14 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   };
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (!event.affectsConfiguration("kiroSdlc.backend.url")) { return; }
+      if (!event.affectsConfiguration("sdlcAgents.backend.url")) { return; }
       applyBackendUrlChange(outputChannel, buildKbHeaders);
     })
   );
 
   // SA4E-183: Initialize DiffTracker + SessionLifecycleEmitter
   sessionLifecycle = new SessionLifecycleEmitter();
-  diffTracker = new DiffTracker(null, vscode.workspace.getConfiguration('kiroSdlc').get<boolean>('diffTracker.enabled', true));
+  diffTracker = new DiffTracker(null, vscode.workspace.getConfiguration('sdlcAgents').get<boolean>('diffTracker.enabled', true));
   const diffOriginalProvider = new DiffOriginalProvider(diffTracker);
   context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider('diff-original', diffOriginalProvider)
@@ -382,7 +392,7 @@ function setupAuthStateHandlers(): void {
           "Session expired. Knowledge base sync is paused. Please login to resume.",
           "Login"
         ).then((action) => {
-          if (action === "Login") { vscode.commands.executeCommand("kiroSdlc.login"); }
+          if (action === "Login") { vscode.commands.executeCommand("sdlcAgents.login"); }
         });
       }
     }
@@ -418,7 +428,7 @@ function applyBackendUrlChange(
 
 function setupTreeView(context: vscode.ExtensionContext): void {
   treeProvider = new KiroTreeViewProvider(mcpManager!);
-  const treeView = vscode.window.createTreeView("kiroSdlcTree", { treeDataProvider: treeProvider });
+  const treeView = vscode.window.createTreeView("sdlcAgentsTree", { treeDataProvider: treeProvider });
   treeProvider.setTreeView(treeView);
   context.subscriptions.push(treeView);
   treeView.onDidChangeSelection((e) => {
@@ -433,8 +443,8 @@ function setupConfigWatcher(context: vscode.ExtensionContext, workspaceRoot: str
   configWatcher = new ConfigWatcher(workspaceRoot, mcpManager!, outputChannel);
   context.subscriptions.push(configWatcher);
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
-    if (!event.affectsConfiguration("kiroSdlc.mcpServerPort") || !mcpManager) { return; }
-    const cfg = vscode.workspace.getConfiguration("kiroSdlc");
+    if (!event.affectsConfiguration("sdlcAgents.mcpServerPort") || !mcpManager) { return; }
+    const cfg = vscode.workspace.getConfiguration("sdlcAgents");
     if (!cfg.get<boolean>("enableMcpServer", true)) { return; }
     if (mcpManager.status === "running") { mcpManager.restart().then(() => vscode.window.showInformationMessage("MCP Server restarted")).catch((err) => vscode.window.showErrorMessage(`MCP Server restart failed: ${(err as Error).message}`)); }
     else { mcpManager.spawn().catch((err) => vscode.window.showErrorMessage(`MCP Server start failed: ${(err as Error).message}`)); }
@@ -515,7 +525,14 @@ function openAgenticChat(context: vscode.ExtensionContext, workspaceRoot: string
     // Wire bridge to router (incoming webview messages)
     bridge.onMessage((msg) => router.dispatch(msg));
 
+    // Fan-out engine responses into the Agentic panel (previously
+    // handleEngineEvent had zero callers — the panel was send-only).
+    const liveAdapter = chatEngineAdapter;
+    const engineSub = chatPanel.onEngineMessage((msg) => liveAdapter.handleEngineEvent(msg));
+    context.subscriptions.push({ dispose: () => engineSub.dispose() });
+
     // Show the webview panel
+    agenticWebviewProvider = webviewProvider;
     webviewProvider.show(vscode.ViewColumn.Beside);
 
     // Wire the panel to the bridge after creation
@@ -530,7 +547,7 @@ function openAgenticChat(context: vscode.ExtensionContext, workspaceRoot: string
     context.subscriptions.push({ dispose: () => bridge.dispose() });
     context.subscriptions.push(webviewProvider);
   } else {
-    // Already initialized — just show
-    vscode.commands.executeCommand("workbench.action.focusPanel");
+    // Already initialized — re-show (recreates the panel if the user closed it)
+    agenticWebviewProvider?.show(vscode.ViewColumn.Beside);
   }
 }

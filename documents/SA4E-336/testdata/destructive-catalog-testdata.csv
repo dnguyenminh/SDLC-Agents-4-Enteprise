@@ -1,0 +1,48 @@
+test_case_id,category,tool_name,command,mode,expected_decision,matched_pattern,description
+TC-110,file-delete,powershell,Remove-Item -Recurse .,both,require-approval,/\bremove-item\b/i,File delete — Remove-Item
+TC-110,file-delete,powershell,rm -rf x,both,require-approval,/\brm\b/i,File delete — rm
+TC-110,file-delete,powershell,del x.txt,both,require-approval,/\bdel\b/i,File delete — del
+TC-110,file-delete,powershell,rd /s /q x,both,require-approval,/\brd\b/i,File delete — rd
+TC-110,file-delete,powershell,rmdir x,both,require-approval,/\brmdir\b/i,File delete — rmdir
+TC-110,file-delete,powershell,erase x,both,require-approval,/\berase\b/i,File delete — erase
+TC-110,file-delete,powershell,Clear-Content x,both,require-approval,/\bclear-content\b/i,File delete — Clear-Content
+TC-110,file-delete,powershell,Remove-ItemProperty HKLM:\x n,both,require-approval,/\bremove-itemproperty\b/i,File delete — Remove-ItemProperty
+TC-110,file-overwrite,powershell,Set-Content a.txt y,both,require-approval,/\bset-content\b/i,File overwrite — Set-Content
+TC-110,file-overwrite,powershell,Out-File a.txt,both,require-approval,/\bout-file\b/i,File overwrite — Out-File
+TC-110,file-overwrite,powershell,New-Item a -Force,both,require-approval,/\bnew-item\b.*-force\b/i,File overwrite — New-Item -Force
+TC-110,file-overwrite,powershell,echo x > a.txt,both,require-approval,/>>?/,File overwrite — redirection >
+TC-110,file-overwrite,powershell,echo x >> a.txt,both,require-approval,/>>?/,File overwrite — redirection >>
+TC-110,file-overwrite,powershell,Copy-Item a b -Force,both,require-approval,/\bcopy-item\b.*-force\b/i,File overwrite — Copy-Item -Force
+TC-110,file-overwrite,powershell,Move-Item a b,both,require-approval,/\bmove-item\b/i,File overwrite — Move-Item
+TC-110,file-overwrite,powershell,Rename-Item a b,both,require-approval,/\brename-item\b/i,File overwrite — Rename-Item
+TC-110,process-service,powershell,Stop-Process -Name node,both,require-approval,/\bstop-process\b/i,Process/service — Stop-Process
+TC-110,process-service,powershell,kill 123,both,require-approval,/\bkill\b/i,Process/service — kill
+TC-110,process-service,powershell,taskkill /F /PID 1,both,require-approval,/\btaskkill\b/i,Process/service — taskkill
+TC-110,process-service,powershell,Stop-Service svc,both,require-approval,/\bstop-service\b/i,Process/service — Stop-Service
+TC-110,process-service,powershell,Set-Service svc -Status Stopped,both,require-approval,/\bset-service\b/i,Process/service — Set-Service
+TC-110,process-service,powershell,Restart-Service svc,both,require-approval,/\brestart-service\b/i,Process/service — Restart-Service
+TC-110,process-service,powershell,Restart-Computer,both,require-approval,/\brestart-computer\b/i,Process/service — Restart-Computer
+TC-110,process-service,powershell,shutdown /r /t 0,both,require-approval,/\bshutdown\b/i,Process/service — shutdown
+TC-110,format-disk,powershell,Format-Volume -DriveLetter D,both,require-approval,/\bformat-volume\b/i,Format/disk — Format-Volume
+TC-110,format-disk,powershell,Format-Table,both,require-approval,/\bformat-\w+\b/i,Format/disk — Format-* (note: over-broad regex flagged for DEV refinement; still pends)
+TC-110,format-disk,powershell,Clear-Disk -Number 1,both,require-approval,/\bclear-disk\b/i,Format/disk — Clear-Disk
+TC-110,format-disk,powershell,Initialize-Disk 1,both,require-approval,/\binitialize-disk\b/i,Format/disk — Initialize-Disk
+TC-110,format-disk,powershell,diskpart,both,require-approval,/\bdiskpart\b/i,Format/disk — diskpart
+TC-110,policy-security,powershell,Set-ExecutionPolicy Bypass,both,require-approval,/\bset-executionpolicy\b/i,Policy/security — Set-ExecutionPolicy
+TC-110,policy-security,powershell,reg delete HKLM\x /f,both,require-approval,/\breg\s+delete\b/i,Policy/security — reg delete
+TC-110,policy-security,powershell,reg add HKLM\x,both,require-approval,/\breg\s+add\b/i,Policy/security — reg add
+TC-110,policy-security,powershell,Set-Acl p a,both,require-approval,/\bset-acl\b/i,Policy/security — Set-Acl
+TC-110,policy-security,powershell,Set-ItemProperty HKLM:\x n v,both,require-approval,/\bset-itemproperty\b/i,Policy/security — Set-ItemProperty (registry)
+TC-110,accounts,powershell,net user attacker P@ss /add,both,require-approval,/\bnet\s+user\b/i,Accounts — net user
+TC-110,accounts,powershell,net localgroup administrators attacker /add,both,require-approval,/\bnet\s+localgroup\b/i,Accounts — net localgroup
+TC-110,accounts,powershell,New-LocalUser x,both,require-approval,/\bnew-localuser\b/i,Accounts — New-LocalUser
+TC-110,accounts,powershell,Remove-LocalUser x,both,require-approval,/\bremove-localuser\b/i,Accounts — Remove-LocalUser
+TC-110,accounts,powershell,Add-LocalGroupMember -Group Administrators -Member x,both,require-approval,/\badd-localgroupmember\b/i,Accounts — Add-LocalGroupMember
+TC-110,scheduled-persistence,powershell,schtasks /create /tn t /tr c.exe,both,require-approval,/\bschtasks\b/i,Scheduled/persistence — schtasks
+TC-110,scheduled-persistence,powershell,Register-ScheduledTask -TaskName t,both,require-approval,/\bregister-scheduledtask\b/i,Scheduled/persistence — Register-ScheduledTask
+TC-110,scheduled-persistence,powershell,New-Service -Name s -BinaryPathName c.exe,both,require-approval,/\bnew-service\b/i,Scheduled/persistence — New-Service
+TC-110,git-destructive,powershell,git reset --hard HEAD~1,both,require-approval,/\bgit\s+reset\b.*--hard\b/i,Git-destructive — git reset --hard
+TC-110,git-destructive,powershell,git clean -fdx,both,require-approval,/\bgit\s+clean\b/i,Git-destructive — git clean
+TC-110,git-destructive,powershell,git checkout -- .,both,require-approval,/\bgit\s+checkout\b/i,Git-destructive — git checkout
+TC-110,git-destructive,powershell,git push origin main,both,require-approval,/\bgit\s+push\b/i,Git-destructive — git push
+TC-110,git-destructive,powershell,git commit -m x,both,require-approval,/\bgit\s+commit\b/i,Git-destructive — git commit

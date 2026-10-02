@@ -43,10 +43,15 @@ export class PiAgentExecutor {
 
     // Contract: provider.run() (real Agent) — prompt + subscribe events, not generator.
     // FIX A: forward provider/model resolved by the engine down to the provider.
+    // SA4E-333: forward workspace systemPrompt + tools so Agent knows cwd.
+    // Loop guard: forward per-turn budget so runaway turns are stopped.
     const runInput: PiRunInput = {
       prompt: input.messages[input.messages.length - 1].content,
       sessionId: input.sessionId,
       tools: input.tools as PiRunInput['tools'],
+      systemPrompt: (input as { systemPrompt?: string }).systemPrompt,
+      turnBudget: input.turnBudget as PiRunInput['turnBudget'],
+      onToolEvent: input.onToolEvent as PiRunInput['onToolEvent'],
       provider: input.provider,
       model: input.model,
     };

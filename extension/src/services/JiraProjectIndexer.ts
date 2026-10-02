@@ -160,12 +160,12 @@ export class JiraProjectIndexer {
 
     /** Read last used project key from workspace config. */
     private getLastProjectKey(): string | undefined {
-        return vscode.workspace.getConfiguration("kiroSdlc").get<string>("jiraLastProject");
+        return vscode.workspace.getConfiguration("sdlcAgents").get<string>("jiraLastProject");
     }
 
     /** Persist last used project key. */
     private async saveLastProjectKey(key: string): Promise<void> {
-        await vscode.workspace.getConfiguration("kiroSdlc")
+        await vscode.workspace.getConfiguration("sdlcAgents")
             .update("jiraLastProject", key, vscode.ConfigurationTarget.Workspace);
     }
 

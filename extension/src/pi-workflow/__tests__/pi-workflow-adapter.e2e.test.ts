@@ -107,7 +107,7 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
       .filter(m => (m as { type?: string }).type === 'chat:error');
     expect(errors.length).toBe(1);
     expect(errors[0].code).toBe('PI_MODEL_UNRESOLVED');
-    expect(errors[0].message).toContain('Set kiroSdlc.llmModel');
+    expect(errors[0].message).toContain('Set sdlcAgents.llmModel');
   });
 
   it('two overlapping invokeChat calls are serialized — no "already processing", both handled, busy notice emitted', async () => {

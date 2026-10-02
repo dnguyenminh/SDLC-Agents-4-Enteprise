@@ -96,6 +96,8 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:error"; code: string; message: string; retryable: boolean }
   | { type: "chat:toolCall"; toolCall: ToolCallDisplay }
   | { type: "chat:toolCallUpdate"; id: string; status: ToolCallDisplay["status"]; result?: string; duration?: number }
+  /** Fix J: a tool is waiting for user consent — the webview shows Approve/Reject on the working bar. */
+  | { type: "chat:toolApprovalPending"; toolId: string; toolName: string }
   | { type: "chat:contextPicked"; item: ContextItem }
   | { type: "chat:configUpdate"; model: string; mode: AutopilotMode; availableModels: ModelOption[] }
   | { type: "chat:models"; provider: string; models: ChatModelEntry[]; selected: string; supportsAuto: boolean }

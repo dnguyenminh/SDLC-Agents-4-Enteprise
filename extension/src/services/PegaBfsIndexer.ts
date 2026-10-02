@@ -19,7 +19,7 @@ type ProgressReporter = vscode.Progress<{ message?: string }>;
 type LogFn = (msg: string) => void;
 
 /**
- * Pipeline tuning defaults. These mirror the `kiroSdlc.pega.*` settings declared
+ * Pipeline tuning defaults. These mirror the `sdlcAgents.pega.*` settings declared
  * in package.json and are used when a setting is unset/invalid. Read at runtime
  * (readPipelineConfig) so a change in Settings takes effect on the next index run
  * without reloading the window.
@@ -50,12 +50,12 @@ interface PipelineTuning {
 }
 
 /**
- * Read + clamp the pipeline tuning from `kiroSdlc.pega.*` settings.
+ * Read + clamp the pipeline tuning from `sdlcAgents.pega.*` settings.
  * Called at the start of each run so edits in the Settings UI apply to the next
  * index without a reload. Invalid/out-of-range values fall back to safe defaults.
  */
 function readPipelineConfig(): PipelineTuning {
-  const cfg = vscode.workspace.getConfiguration("kiroSdlc");
+  const cfg = vscode.workspace.getConfiguration("sdlcAgents");
   const clamp = (v: number | undefined, def: number, b: { min: number; max: number }): number =>
     (typeof v === "number" && Number.isFinite(v)) ? Math.min(b.max, Math.max(b.min, Math.round(v))) : def;
 

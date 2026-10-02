@@ -1,0 +1,63 @@
+test_case_id,tool_name,command,mode,expected_decision,expected_result,description
+TC-004,powershell,Get-ChildItem .,both,auto-approve,res.approved === true in BOTH modes via READONLY_PS_PATTERNS positive match (NOT READ_ONLY_TOOLS membership); gate spy NOT called,Happy path — read-only PS auto-approved via allowlist (BR-10 / SEC-02 TDD v1.2 §3.2 Step 1b)
+TC-005,powershell,,n/a,shell,classifyTool('powershell') === 'shell'; classifyTool('bash') === 'shell',Happy path — classifyTool maps powershell to shell
+TC-103,powershell,Get-Clipboard,supervised,require-approval,Understandable + non-destructive but NOT in READONLY_PS_PATTERNS → deny-by-default PEND (gate spy called),AF-1 — non-allowlisted PS pends (SEC-02 §3.2 Step 1c)
+TC-103,powershell,Get-Clipboard,autopilot,require-approval,Same command PENDS under Autopilot too — deny-by-default is mode-independent for powershell (SEC-04 no fall-through),AF-1 — non-allowlisted PS pends both modes
+TC-106,totally-unknown-tool,,n/a,shell,classifyTool returns 'shell' default + classify_tool_unknown warning,AF-3 — classifyTool unknown tool default
+TC-108,powershell,Remove-Item -Recurse C:\temp,both,require-approval,DESTRUCTIVE_PS_PATTERNS /remove-item/i checked FIRST — never auto-approved in EITHER mode,AF-2 — destructive PS never auto-approved
+TC-108,powershell,Stop-Process -Name node,both,require-approval,Pattern /stop-process/i matches — never auto-approved in EITHER mode,AF-2 — destructive PS variant 2
+TC-206,write,,supervised,require-approval,Throwing gate reached (write not in READ_ONLY_TOOLS) — error caught; defaults to require-approval,EF-1 — ToolApprovalGate throws (Supervised default)
+TC-207,mystery-tool-42,,supervised,require-approval,Default Supervised mode decision + classify_tool_unknown WARN log (Autopilot would auto-approve — unknown-safe TDD §1.4),EF-2 — unknown tool under Supervised
+TC-309,powershell,Get-ChildItem .,both,auto-approve,READONLY_PS_PATTERNS positive match — auto-approve BOTH modes (SEC-02 §3.2 Step 1b; NOT READ_ONLY_TOOLS membership; bash divergent),BR-10 — read-only powershell allowlist classification
+TC-309,bash,Get-ChildItem .,supervised,require-approval,bash NOT in READ_ONLY_TOOLS — pends via gate under default Supervised (pre-upgrade behavior BRD §1.2; TDD §7.2),BR-10 counter-check — bash mode-scoped per TDD §7.2
+TC-309,bash,Get-ChildItem .,autopilot,auto-approve,requiresApproval('bash') === false — non-destructive auto-approve under Autopilot (TDD §7.2),BR-10 counter-check — bash mode-scoped per TDD §7.2
+TC-310,powershell,Remove-Item -Recurse C:\x,both,require-approval,DESTRUCTIVE_PS_PATTERNS (ToolApprovalClassifier) — require-approval in BOTH modes,BR-11 — remove-item pattern
+TC-310,powershell,rm -rf /tmp,both,require-approval,DESTRUCTIVE_PS_PATTERNS — require-approval in BOTH modes,BR-11 — rm pattern
+TC-310,powershell,Clear-Content x,both,require-approval,DESTRUCTIVE_PS_PATTERNS — require-approval in BOTH modes,BR-11 — clear- pattern
+TC-310,powershell,Format-Volume,both,require-approval,DESTRUCTIVE_PS_PATTERNS — require-approval in BOTH modes,BR-11 — format- pattern
+TC-310,powershell,Stop-Process -Name node,both,require-approval,DESTRUCTIVE_PS_PATTERNS — require-approval in BOTH modes,BR-11 — stop-process pattern
+TC-310,powershell,git push origin main,both,require-approval,DESTRUCTIVE_PS_PATTERNS — require-approval in BOTH modes,BR-11 — git push pattern
+TC-310,powershell,git commit -m x,both,require-approval,DESTRUCTIVE_PS_PATTERNS — require-approval in BOTH modes,BR-11 — git commit pattern
+TC-311,powershell,,n/a,shell,Property: 200 random strings classify to one of shell|file|mcp|search|browser,BR-12 — classifyTool valid category property
+TC-311,my-powershell-ext,,n/a,shell,Names containing powershell always classify shell,BR-12 — composite name property
+TC-312,powershell,3,n/a,powershell-dialect,Output contains PowerShell: use Get-ChildItem... and Windows paths work as-is,BR-13 — powershell dialect guidance
+TC-312,bash,3,n/a,bash-dialect,Output contains bash: POSIX Git Bash guidance,BR-13 — bash dialect guidance
+TC-312,edit,3,n/a,generic,Output contains generic fallback guidance — non-empty,BR-13 — generic fallback
+TC-403,,,supervised,require-approval,Empty toolName not in any allow set — pends under default Supervised (fail-secure TDD §1.4),Boundary — empty toolName (Supervised default)
+TC-404,powershell,,both,require-approval,FLIPPED v1.2 — empty command matches neither DESTRUCTIVE_PS_PATTERNS nor READONLY_PS_PATTERNS → deny-by-default PEND (SEC-02 §3.2 Step 1c / §8.4); matchedPattern=NO_SAFE_MATCH_PENDED,Boundary — empty command PENDS (TC-404 flip)
+TC-404,powershell,null,both,require-approval,String(null ?? '') → '' → same PEND result; no crash,Boundary — null command PENDS (fail-secure)
+TC-405,powershell,REMOVE-ITEM -recurse,both,require-approval,Case-insensitive pattern match (mode-independent),Boundary — mixed-case destructive
+TC-405,powershell,sToP-Process -Name x,both,require-approval,Case-insensitive pattern match (mode-independent),Boundary — mixed-case variant 2
+TC-406,powershell,,both,require-approval,command key absent — zod safeParse fails / empty → PEND (fail-secure SEC-08); consistent with TC-404 flip,Boundary — command key absent PENDS
+TC-406,powershell,null,both,require-approval,null input → deny-by-default PEND; no crash,Boundary — null input PENDS
+TC-407,random-unknown-name,,supervised,require-approval,Property: 200 random names outside known sets ALWAYS pend under default Supervised — never auto-approved,PBT — unknown tools fail-secure under Supervised (TDD §1.4)
+TC-407,random-unknown-name,,autopilot,auto-approve,Property: same 200 names ALWAYS auto-approve under Autopilot — unknown-safe classifier (deliberate MCP design),PBT — mode-scoped unknown-safe under Autopilot (TDD §1.4)
+TC-408,powershell,Remove-Item <random-args>,both,require-approval,Property: 200 destructive composites ALWAYS require-approval in BOTH modes,PBT — no destructive auto-approve
+TC-408,powershell,Get-ChildItem <random-args>,both,auto-approve,Property: read-only commands always auto-approve in BOTH modes,PBT — no false positives
+TC-606,powershell,Remove-Item -Recurse C:\temp\test,both,require-approval,Real gate — destructive PS matrix gated in BOTH modes (DESTRUCTIVE_PS_PATTERNS first — mode-independent),NFR security — destructive matrix PS (7 patterns × both modes)
+TC-606,powershell,Stop-Process -Name node,both,require-approval,Real gate — destructive PS matrix — mode-independent (TDD §7.2),NFR security — destructive matrix PS variant
+TC-606,bash,Remove-Item -Recurse C:\temp\test,supervised,require-approval,Real gate — destructive bash PENDS under default Supervised (bash NOT name-based gated — TDD §7.2),NFR security — destructive matrix bash (Supervised)
+TC-606,bash,Remove-Item -Recurse C:\temp\test,autopilot,auto-approve,Auto-approve — pre-existing exposure UNCHANGED per BRD §1.2 (TDD §7.2 Bash note),NFR security — destructive matrix bash (Autopilot documented exposure)
+TC-701,powershell,Get-ChildItem,both,auto-approve,IT-02 — read-only PS auto-approved in BOTH modes (BR-10),IT — mode-scoped parity: PS read-only
+TC-701,powershell,Remove-Item -Recurse,both,require-approval,IT-02 — destructive PS require-approval in BOTH modes (BR-11),IT — mode-scoped parity: PS destructive
+TC-701,bash,Get-ChildItem,supervised,require-approval,IT-02 — bash pends under default Supervised (NOT identical to PS — TDD §7.2),IT — mode-scoped parity: bash read-only Supervised
+TC-701,bash,Get-ChildItem,autopilot,auto-approve,IT-02 — bash auto-approved under Autopilot (non-destructive),IT — mode-scoped parity: bash read-only Autopilot
+TC-701,bash,Remove-Item -Recurse,supervised,require-approval,IT-02 — destructive bash still pends under Supervised,IT — mode-scoped parity: bash destructive Supervised
+TC-701,bash,Remove-Item -Recurse,autopilot,auto-approve,IT-02 — destructive bash auto-approved under Autopilot (pre-existing exposure UNCHANGED),IT — mode-scoped parity: bash destructive Autopilot
+TC-702,powershell,,n/a,shell,classifyTool('powershell') → 'shell'; mapAgentEvent payload well-formed for display,IT-03 — stream protocol with PowerShell renders
+TC-804,write,,supervised,require-approval,Still gated through real gate (spy called) under default Supervised,Regression — write still gated (Supervised)
+TC-804,edit,,supervised,require-approval,Still gated through real gate under default Supervised,Regression — edit still gated (Supervised)
+TC-804,bash,,supervised,require-approval,Still gated through real gate under default Supervised (pre-upgrade behavior),Regression — bash still gated (Supervised)
+TC-804,write,,autopilot,auto-approve,Not in DANGEROUS_TOOL_PATTERNS — Autopilot auto-approves (pre-upgrade semantics UNCHANGED),Regression — write Autopilot semantics unchanged
+TC-804,edit,,autopilot,auto-approve,Not in DANGEROUS_TOOL_PATTERNS — Autopilot auto-approves (pre-upgrade semantics UNCHANGED),Regression — edit Autopilot semantics unchanged
+TC-804,bash,,autopilot,auto-approve,requiresApproval('bash') === false — Autopilot auto-approves (TDD §7.2),Regression — bash Autopilot semantics unchanged
+TC-807,bash,ls,supervised,require-approval,{approved:false} — pends via ToolApprovalGate; gate spy called (TDD §11.3 TC-15),Bash regression — Supervised pends (BRD §1.2)
+TC-808,bash,ls,autopilot,auto-approve,{approved:true} — auto-approve; gate spy NOT called (TDD §11.3 TC-16),Bash regression — Autopilot auto-approves non-destructive
+TC-006,powershell,3,n/a,powershell-dialect,buildFailureSteerCorrection('powershell',3) contains Tool 'powershell' failed 3 times + PowerShell cmdlets guidance,Happy path — steer correction PowerShell dialect
+TC-006,bash,2,n/a,bash-dialect,buildFailureSteerCorrection('bash',2) contains bash guidance — POSIX Git Bash,Happy path — steer correction bash dialect
+TC-315,powershell,Get-Content a.txt,both,auto-approve,READONLY_PS_PATTERNS /^get-content\b/i positive match — sole auto-approval authority (SEC-02),BR-10/SEC-02 — allowlist authority safe match
+TC-315,powershell,Get-Content a.txt; Remove-Item .,both,require-approval,Compound statement with destructive segment — anchored allowlist does not match whole command → PEND,BR-10/SEC-02 — compound smuggle rejected
+TC-315,powershell,Get-Random,both,require-approval,Harmless but NOT allowlisted → over-pend (NFR-SEC-02 accepted residual),BR-10/SEC-02 — non-allowlisted over-pend
+TC-410,powershell,Get-Random,both,require-approval,Understandable + harmless + NOT allowlisted → deny-by-default PEND (over-pend not over-approve),Boundary — unrecognized PS pends
+TC-410,powershell,-EncodedCommand <non-utf8-base64>,both,require-approval,normalizePsCommand(...).decoded === false → fail-secure PEND (SEC-03),Boundary — undecodable encoded pends
+TC-410,powershell,iex $runtimeString,both,require-approval,Dynamic eval → decoded===false and/or /\biex\b/ match → PEND (SEC-03),Boundary — dynamic eval pends

@@ -8,7 +8,7 @@ import { BaseLlmProvider } from "./BaseLlmProvider";
 import { formatMessages, formatMessagesForTools, buildHeaders } from "./openai-helpers";
 import { validateProviderBaseUrl } from "./provider-url-policy";
 
-const OPENAI_SECRET_KEY = "kiroSdlc.openaiApiKey";
+const OPENAI_SECRET_KEY = "sdlcAgents.openaiApiKey";
 const DEFAULT_MODEL = "gpt-4o";
 const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_API_BASE = "https://api.openai.com/v1";

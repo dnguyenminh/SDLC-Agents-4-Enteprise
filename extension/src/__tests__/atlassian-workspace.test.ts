@@ -156,7 +156,7 @@ describe("clearConfig", () => {
     const h = getWsHash()!;
     await svc.clearConfig();
     expect(store.get(secretKey("atlassianToken", h)!)).toBeUndefined();
-    expect(store.get(`kiroSdlc.${h}.migrated`)).toBe("1");
+    expect(store.get(`sdlcAgents.${h}.migrated`)).toBe("1");
     expect(cfg.updates).toContainEqual({ key: "atlassianConnectionType", value: undefined, target: WS });
     expect(await svc.getConfig()).toBeNull();
   });

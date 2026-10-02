@@ -1,22 +1,75 @@
 import { ToolApprovalGate } from '../chat/engine/ToolApprovalGate';
 import { CommandPatternMatcher } from '../chat/engine/CommandPatternMatcher';
+import { requiresApproval as isDestructiveTool } from '../chat/engine/ToolApprovalClassifier';
+import type { AutopilotMode } from '../chat-panel/message-protocol';
 import type { ToolApprovalGateHandler } from './approval-adapter.js';
+import { evaluatePowerShellApproval } from './powershell-approval-branch.js';
 
 /**
- * Builds the real tool-approval gate handler for PiWorkflowEngine (SEC-289-03).
+ * Builds the real tool-approval gate handler (SEC-289-03, Fix J §5d).
  * Extracted from PiWorkflowAdapter to keep the adapter within the 200-line standard.
  *
- * Flow: auto-approve only on a user-stored command pattern; otherwise block on the
- * real ToolApprovalGate. Never silently auto-approves.
+ * Decision order:
+ * 1. read-only tools (read/grep/find/ls/get_workspace_info) auto-approve — both
+ *    modes; blocking them only stalls exploration.
+ * 2. remembered command patterns auto-approve (user opted in via "Allow all").
+ * 3. TRULY DESTRUCTIVE tools (ToolApprovalClassifier: delete_file, git_push,
+ *    git_* …) ALWAYS block — even under Autopilot (Kiro semantics: destructive
+ *    ops never run unattended).
+ * 4. Autopilot mode auto-approves everything else (bash/write/edit — the user
+ *    can revert; this was the UAT hang: every bash call pended an approval
+ *    nobody was ever asked for because the mode was never wired in here).
+ * 5. Supervised mode blocks and asks: onApprovalPending surfaces the Approve/
+ *    Reject control, then the real ToolApprovalGate promise decides.
+ *
+ * Without a getMode() callback the handler defaults to SUPERVISED (fail-secure:
+ * an unwired caller must not silently auto-approve).
  */
 export function createToolApprovalGateHandler(
   approvalGate: ToolApprovalGate,
-  commandPatternMatcher: CommandPatternMatcher
+  commandPatternMatcher: CommandPatternMatcher,
+  opts?: {
+    onApprovalPending?: (toolName: string, toolUseId: string) => void;
+    getMode?: () => AutopilotMode;
+  }
 ): ToolApprovalGateHandler {
   return {
     requestApproval: async (req) => {
+      const toolName = (req.toolName || '').toLowerCase();
+
+      // --- PowerShell branch (SA4E-336, allowlist-of-safe — TDD v1.2 §3.2) ---
+      // Gated by COMMAND CONTENT, not name-set membership. Fail-secure order:
+      // destructive/unparseable pend FIRST (mode-independent, BR-11, SEC-04),
+      // then positive safe-allowlist auto-approve (SEC-02), else deny-by-default
+      // (pend). The branch ALWAYS returns explicitly — it never falls through to
+      // the generic read-only / Autopilot path below. INVARIANT (SEC-04):
+      // Remove-Item (and any DESTRUCTIVE_PS_PATTERNS match) can NEVER reach
+      // {approved:true} via a read-only path, independent of step reordering.
+      // 'powershell' is deliberately NOT in READ_ONLY_TOOLS (SEC-02).
+      if (toolName === 'powershell') {
+        return evaluatePowerShellApproval(req, {
+          approvalGate,
+          onApprovalPending: opts?.onApprovalPending,
+          getMode: opts?.getMode,
+        });
+      }
+
+      if (READ_ONLY_TOOLS.has(toolName)) {
+        return { approved: true, reason: 'Read-only tool auto-approved' };
+      }
       if (commandPatternMatcher.matches(req.toolName)) {
         return { approved: true, reason: 'Matched auto-approve pattern' };
+      }
+      const destructive = isDestructiveTool(toolName);
+      const mode: AutopilotMode = opts?.getMode?.() ?? 'supervised';
+      if (mode === 'autopilot' && !destructive) {
+        return { approved: true, reason: 'Autopilot: non-destructive tool auto-approved' };
+      }
+      // Supervised (or destructive under Autopilot): ask the user.
+      try {
+        opts?.onApprovalPending?.(req.toolName, req.toolUseId);
+      } catch {
+        // Notification must never break the gate.
       }
       const result = await approvalGate.requestApproval(req.toolUseId);
       const decision = (result as { decision?: string })?.decision;
@@ -25,3 +78,6 @@ export function createToolApprovalGateHandler(
     },
   };
 }
+
+/** Tools that only read — safe to run without interrupting the turn (both modes). */
+const READ_ONLY_TOOLS = new Set(['read', 'grep', 'find', 'ls', 'get_workspace_info']);

@@ -64,7 +64,7 @@ export abstract class BasePanel implements IKbPanel, vscode.Disposable {
           // own login screen via 'auth_unavailable' — we must NOT let a single panel 401
           // cascade into a global host logout. The host stays as-is; only this panel
           // reflects the missing session.
-          vscode.commands.executeCommand('kiroSdlc.refreshToken').then(() => {
+          vscode.commands.executeCommand('sdlcAgents.refreshToken').then(() => {
             const newToken = BasePanel.authTokenProvider ? BasePanel.authTokenProvider() : '';
             if (!this._panel) { return; }
             if (newToken) {

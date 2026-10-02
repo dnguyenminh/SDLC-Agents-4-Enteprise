@@ -11,7 +11,7 @@ export interface ProjectSyncState {
     lastFullSync: string | null;
 }
 
-const CONFIG_KEY = "kiroSdlc.jiraSyncState";
+const CONFIG_KEY = "sdlcAgents.jiraSyncState";
 
 /**
  * Read sync state for a project key from workspace config.

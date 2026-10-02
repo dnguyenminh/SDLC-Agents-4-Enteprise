@@ -7,9 +7,12 @@
 import * as vscode from "vscode";
 import type { ProxyConfig, ProxyCredentials, ProxyMode, ProxyState } from "../models/ProxyModels";
 
-const CONFIG_SECTION = "kiroSdlc";
-const SECRET_USERNAME = "kiroSdlc.proxy.username";
-const SECRET_PASSWORD = "kiroSdlc.proxy.password";
+const CONFIG_SECTION = "sdlcAgents";
+const SECRET_USERNAME = "sdlcAgents.proxy.username";
+const SECRET_PASSWORD = "sdlcAgents.proxy.password";
+/** Pre-rename proxy secret keys — READ-ONLY migration/fallback sources. */
+const LEGACY_SECRET_USERNAME = "kiroSdlc.proxy.username";
+const LEGACY_SECRET_PASSWORD = "kiroSdlc.proxy.password";
 
 /**
  * Manages proxy configuration persistence.
@@ -31,10 +34,29 @@ export class ProxyConfigService {
 
   /** Read credentials from SecretStorage (returns null if not set) */
   async getCredentials(): Promise<ProxyCredentials | null> {
-    const username = await this.secrets.get(SECRET_USERNAME);
-    const password = await this.secrets.get(SECRET_PASSWORD);
+    const username = await this.readMigratedSecret(SECRET_USERNAME, LEGACY_SECRET_USERNAME);
+    const password = await this.readMigratedSecret(SECRET_PASSWORD, LEGACY_SECRET_PASSWORD);
     if (!username || !password) { return null; }
     return { username, password };
+  }
+
+  /**
+   * Read a secret from the new key, migrating a legacy value on read.
+   * When the new key is empty but a pre-rename `kiroSdlc.*` value exists, the
+   * value is copied to the new key and returned. A store failure is logged, not
+   * thrown, so a credential read never breaks proxy state load.
+   * @param newKey Current `sdlcAgents.*` secret key.
+   * @param legacyKey Pre-rename `kiroSdlc.*` fallback key.
+   * @returns The stored secret, or undefined when neither key is set.
+   */
+  private async readMigratedSecret(newKey: string, legacyKey: string): Promise<string | undefined> {
+    const current = await this.secrets.get(newKey);
+    if (current) { return current; }
+    const legacy = await this.secrets.get(legacyKey);
+    if (!legacy) { return undefined; }
+    try { await this.secrets.store(newKey, legacy); }
+    catch (err) { console.warn(`Failed to migrate secret ${newKey}:`, (err as Error).message); }
+    return legacy;
   }
 
   /**
@@ -79,9 +101,11 @@ export class ProxyConfigService {
     await this.secrets.store(SECRET_PASSWORD, password);
   }
 
-  /** Delete credentials from SecretStorage */
+  /** Delete credentials from SecretStorage (new + legacy keys) */
   async clearCredentials(): Promise<void> {
     await this.secrets.delete(SECRET_USERNAME);
     await this.secrets.delete(SECRET_PASSWORD);
+    await this.secrets.delete(LEGACY_SECRET_USERNAME);
+    await this.secrets.delete(LEGACY_SECRET_PASSWORD);
   }
 }

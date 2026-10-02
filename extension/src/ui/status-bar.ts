@@ -14,7 +14,7 @@ export class StatusBarManager implements vscode.Disposable {
 
   constructor() {
     this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    this.item.command = "kiroSdlc.status";
+    this.item.command = "sdlcAgents.status";
     this.item.show();
     this.update();
   }

@@ -4,10 +4,10 @@
 
 /** Secret storage keys for each provider */
 export const SECRET_KEYS: Record<string, string> = {
-  anthropic: "kiroSdlc.anthropicApiKey",
-  openai: "kiroSdlc.openaiApiKey",
-  openrouter: "kiroSdlc.openaiApiKey",
-  lmstudio: "kiroSdlc.openaiApiKey",
+  anthropic: "sdlcAgents.anthropicApiKey",
+  openai: "sdlcAgents.openaiApiKey",
+  openrouter: "sdlcAgents.openaiApiKey",
+  lmstudio: "sdlcAgents.openaiApiKey",
   // SA4E-323 OI-4: pega/atlassian* entries below are LEGACY read-only sources
   // (migration + no-folder fallback). DO NOT WRITE — new writes MUST use
   // WorkspaceScopeResolver.secretKey() for per-workspace namespaced keys.

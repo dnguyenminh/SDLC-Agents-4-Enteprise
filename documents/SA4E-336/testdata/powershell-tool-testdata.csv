@@ -1,0 +1,26 @@
+test_case_id,platform,workspace_root,command,expected_tool_name,expected_result,expected_http_code,description
+TC-001,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,Tool named powershell in array; core tools present; no bash,0,Happy path — createWorkspaceTools on win32
+TC-002,linux,/home/user/project,,bash,Tool named bash in array; no powershell,0,Happy path — createWorkspaceTools on non-win32
+TC-003,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Get-ChildItem 'C:\projects\kiro\SDLC-Agents-4-Enterprise' -Name,powershell,Command executes; returns file listing — no translation,0,Happy path — PowerShell executes native c:\ command
+TC-003,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Test-Path 'c:/projects/kiro/SDLC-Agents-4-Enterprise',powershell,Returns True — forward-slash variant works natively,0,Happy path — forward-slash path variant
+TC-100,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,SDK falls back to Windows PowerShell 5.1; tool still named powershell (PI_PWSH_NOT_FOUND),0,AF-1 — pwsh.exe not found fallback
+TC-101,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,bash,createPowerShellTool throws → fallback to bash with workaround (PI_PWSH_UNAVAILABLE),0,AF-2 — PowerShell tool creation fails fallback
+TC-102,darwin,/Users/user/project,,bash,createBashTool used as before — no PowerShell wiring on non-win32,0,AF-3 — non-Windows platform unchanged
+TC-203,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,bash,Error caught + Pino log powershell_fallback + core tools returned — no crash,0,EF-1 — createPowerShellTool throws caught
+TC-204,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Get-Content 'C:\projects\kiro\SDLC-Agents-4-Enterprise\definitely-missing-file-xyz.txt',powershell,Error result returned to agent loop — PowerShell-native Cannot find path error,1,EF-2 — command exit code != 0
+TC-205,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Get-ChildItem 'q:\nonexistent\path',powershell,PowerShell-native error surfaced — no translation attempted,1,EF-3 — invalid drive letter
+TC-304,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,Shell tool tool.name === 'powershell' strict equality,BR-05 — win32 tool name invariant
+TC-305,linux,/home/user/project,,bash,Shell tool tool.name === 'bash'; loadout excludes powershell,BR-06 — non-win32 tool name invariant
+TC-306,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,Factory call args contain NO shellPath option,BR-07 — no shellPath to createPowerShellTool
+TC-307,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,PowerShell dialect contribution active in prompt and tool description,BR-08 — powershellToolSystemPromptContribution
+TC-308,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,No resolveGitBashPath/normalizeBashCommandPaths on win32 path; resolve-git-bash.test.ts deleted,BR-09 — Git-Bash workaround retired
+TC-400,win32,,powershell,returns [],createWorkspaceTools('') returns []; prompt shows (unknown),0,Boundary — empty workspaceRoot
+TC-401,win32,relative/path,powershell,rejected,Invalid workspace root — no tools against relative path,0,Boundary — relative path rejected
+TC-402,win32,C:\nonexistent-root-xyz-123,powershell,graceful,Handled gracefully — no crash; prompt keeps root verbatim,0,Boundary — non-existent absolute path
+TC-409,win32,C:\Users\ASUS\AppData\Local\Temp\opencode\sa4e336-longpath,Test-Path '<long-path>',powershell,Native result — no truncation no translation on >260-char path,0,Boundary — long path >260 chars
+TC-600,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,createPowerShellTool < 500ms; createWorkspaceTools < 100ms,0,NFR — tool init time
+TC-601,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Get-ChildItem 'C:\projects\kiro\SDLC-Agents-4-Enterprise' -Name,powershell,Median latency < 2s over 5 samples,0,NFR — command execution latency
+TC-604,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,1000/1000 createWorkspaceTools succeed — 0 failures,0,NFR — availability >= 99.9%
+TC-605,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,,powershell,Fallback ratio < 5% (expected 0%); fallback_total not > 10/min,0,NFR — fallback rate
+TC-700,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Get-Content 'C:\projects\kiro\SDLC-Agents-4-Enterprise\extension\package.json' -TotalCount 3,powershell,Returns first 3 lines of package.json — no translation errors,0,IT-01 — end-to-end PowerShell execution
+TC-700,win32,C:\projects\kiro\SDLC-Agents-4-Enterprise,Test-Path 'c:/projects/kiro/SDLC-Agents-4-Enterprise/extension/package.json',powershell,Returns True — c:/ variant native,0,IT-01 — forward-slash end-to-end

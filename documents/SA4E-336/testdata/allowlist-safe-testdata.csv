@@ -1,0 +1,21 @@
+test_case_id,tool_name,command,mode,expected_decision,matched_pattern,description
+TC-004,powershell,Get-ChildItem .,both,auto-approve,/^get-childitem\b/i,Safe allowlist — Get-ChildItem
+TC-315,powershell,Get-Content a.txt,both,auto-approve,/^get-content\b/i,Safe allowlist — Get-Content
+TC-315,powershell,Test-Path x,both,auto-approve,/^test-path\b/i,Safe allowlist — Test-Path
+TC-315,powershell,Get-Item x,both,auto-approve,/^get-item\b/i,Safe allowlist — Get-Item
+TC-315,powershell,Get-ItemProperty x,both,auto-approve,/^get-itemproperty\b/i,Safe allowlist — Get-ItemProperty
+TC-315,powershell,Get-Location,both,auto-approve,/^get-location\b/i,Safe allowlist — Get-Location
+TC-315,powershell,Get-Process,both,auto-approve,/^get-process\b/i,Safe allowlist — Get-Process
+TC-315,powershell,Get-Service,both,auto-approve,/^get-service\b/i,Safe allowlist — Get-Service
+TC-315,powershell,Select-String pattern file.txt,both,auto-approve,/^select-string\b/i,Safe allowlist — Select-String
+TC-315,powershell,Measure-Object,both,auto-approve,/^measure-object\b/i,Safe allowlist — Measure-Object
+TC-315,powershell,Resolve-Path x,both,auto-approve,/^resolve-path\b/i,Safe allowlist — Resolve-Path
+TC-315,powershell,Get-Date,both,auto-approve,/^get-date\b/i,Safe allowlist — Get-Date
+TC-315,powershell,ls,both,auto-approve,/^ls\b/i,Safe allowlist — ls alias
+TC-315,powershell,cat a.txt,both,auto-approve,/^cat\b/i,Safe allowlist — cat alias
+TC-315,powershell,pwd,both,auto-approve,/^pwd\b/i,Safe allowlist — pwd
+TC-315,powershell,gci,both,auto-approve,/^gci\b/i,Safe allowlist — gci alias
+TC-315,powershell,gc a.txt,both,auto-approve,/^gc\b/i,Safe allowlist — gc alias
+TC-315,powershell,Get-Content a.txt; Remove-Item .,both,require-approval,none (compound rejected),Negative — compound smuggle rejected (destructive segment)
+TC-315,powershell,echo safe && Remove-Item .,both,require-approval,none (compound rejected),Negative — && compound smuggle rejected
+TC-315,powershell,Get-Random,both,require-approval,none (not allowlisted),Negative — harmless but non-allowlisted over-pend (NFR-SEC-02)

@@ -64,7 +64,7 @@ export class WebviewPanelManager implements IPanelManager, vscode.Disposable {
 
     const token = BasePanel.authTokenProvider ? BasePanel.authTokenProvider() : "";
     if (!token) {
-      vscode.commands.executeCommand('kiroSdlc.refreshToken').then(() => {
+      vscode.commands.executeCommand('sdlcAgents.refreshToken').then(() => {
         this.createAndTrack(type);
       });
       return;

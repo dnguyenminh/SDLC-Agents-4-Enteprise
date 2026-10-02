@@ -127,12 +127,12 @@ describe('validateBackendUrl allowInsecureRemote bypass (SA4E-320)', () => {
 });
 
 // SA4E-320 — the bypass must be strictly opt-in: package.json default stays false.
-describe('kiroSdlc.backend.allowInsecureRemote setting default (SA4E-320)', () => {
+describe('sdlcAgents.backend.allowInsecureRemote setting default (SA4E-320)', () => {
   it('package.json declares the setting as boolean with default false', () => {
     const pkgPath = path.resolve(__dirname, '../../../package.json');
     const manifest = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
     const prop =
-      manifest.contributes.configuration.properties['kiroSdlc.backend.allowInsecureRemote'];
+      manifest.contributes.configuration.properties['sdlcAgents.backend.allowInsecureRemote'];
     expect(prop).toBeDefined();
     expect(prop.type).toBe('boolean');
     expect(prop.default).toBe(false);

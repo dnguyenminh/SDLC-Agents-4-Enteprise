@@ -1,0 +1,4 @@
+test_case_id,service_name,expected_status,description
+E2E-API-01,postgres,Up,Postgres service running
+E2E-API-01,backend,Up,Backend service running
+E2E-API-01,nginx,Up,Nginx service running

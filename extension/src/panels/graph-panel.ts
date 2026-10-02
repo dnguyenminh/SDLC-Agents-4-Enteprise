@@ -40,7 +40,7 @@ export class GraphPanel extends BasePanel {
    * 2. Poll GET /enrich/poll every 500ms up to 15s for the result.
    * 3. If completed → return enrichment to webview.
    * 4. If timeout/failed → fallback: try local LLM (Ollama/LMStudio) first, then the
-   *    extension chatbox LLM (kiroSdlc.llmChat), and persist via /enrich-save.
+   *    extension chatbox LLM (sdlcAgents.llmChat), and persist via /enrich-save.
    */
   private async handleEnrichCodeSymbol(msg: { symbolId: string; content: string; kind: string }): Promise<void> {
     const backendUrl = getBackendUrl();
@@ -116,10 +116,10 @@ export class GraphPanel extends BasePanel {
       summary = local.summary || '';
       pseudoCode = local.pseudo_code || '';
     } else {
-      // Fall back to extension chatbox LLM (kiroSdlc.llmChat)
+      // Fall back to extension chatbox LLM (sdlcAgents.llmChat)
       try {
         const response = await vscode.commands.executeCommand<string>(
-          'kiroSdlc.llmChat',
+          'sdlcAgents.llmChat',
           [{ role: 'system', content: CODE_ENRICH_SYSTEM }, { role: 'user', content: userPrompt }],
           { maxTokens: 800, temperature: 0.3 },
         );
@@ -162,7 +162,7 @@ export class GraphPanel extends BasePanel {
 
   /** SA4E-155: attempt enrichment via local LLM (Ollama or LMStudio) if reachable. */
   private async tryLocalLLM(userPrompt: string): Promise<{ summary: string; pseudo_code: string } | null> {
-    const cfg = vscode.workspace.getConfiguration('kiroSdlc');
+    const cfg = vscode.workspace.getConfiguration('sdlcAgents');
     const candidates: Array<{ label: string; baseUrl: string; model: string }> = [];
     const ollamaUrl = (cfg.get<string>('ollamaUrl') || '').trim();
     if (ollamaUrl) candidates.push({ label: 'ollama', baseUrl: `${ollamaUrl.replace(/\/$/, '')}/v1`, model: cfg.get<string>('llmModel') || 'qwen2.5-coder' });

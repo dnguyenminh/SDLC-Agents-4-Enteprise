@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.46.2",
+  "version": "1.46.7",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -17,15 +17,15 @@
     "untrustedWorkspaces": {
       "supported": true,
       "restrictedConfigurations": [
-        "kiroSdlc.backend.allowInsecureRemote",
-        "kiroSdlc.backend.url",
-        "kiroSdlc.pegaEndpoint",
-        "kiroSdlc.pegaUsername",
-        "kiroSdlc.atlassianConnectionType",
-        "kiroSdlc.anthropicBaseUrl",
-        "kiroSdlc.openaiBaseUrl",
-        "kiroSdlc.ollamaUrl",
-        "kiroSdlc.lmstudioBaseUrl"
+        "sdlcAgents.backend.allowInsecureRemote",
+        "sdlcAgents.backend.url",
+        "sdlcAgents.pegaEndpoint",
+        "sdlcAgents.pegaUsername",
+        "sdlcAgents.atlassianConnectionType",
+        "sdlcAgents.anthropicBaseUrl",
+        "sdlcAgents.openaiBaseUrl",
+        "sdlcAgents.ollamaUrl",
+        "sdlcAgents.lmstudioBaseUrl"
       ]
     }
   },
@@ -45,51 +45,51 @@
     "mcp"
   ],
   "activationEvents": [
-    "onView:kiroSdlcTree",
-    "onView:kiroChatPanel",
-    "onCommand:kiroSdlc.injectAll",
-    "onCommand:kiroSdlc.status",
-    "onCommand:kiroSdlc.openSettings"
+    "onView:sdlcAgentsTree",
+    "onView:sdlcChatPanel",
+    "onCommand:sdlcAgents.injectAll",
+    "onCommand:sdlcAgents.status",
+    "onCommand:sdlcAgents.openSettings"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "kiroSdlc.injectAll",
+        "command": "sdlcAgents.injectAll",
         "title": "SDLC Agents: Inject All Agents",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "kiroSdlc.injectSelective",
+        "command": "sdlcAgents.injectSelective",
         "title": "SDLC Agents: Inject (Select Components)"
       },
       {
-        "command": "kiroSdlc.update",
+        "command": "sdlcAgents.update",
         "title": "SDLC Agents: Update Agents"
       },
       {
-        "command": "kiroSdlc.status",
+        "command": "sdlcAgents.status",
         "title": "SDLC Agents: Show Status",
         "icon": "$(info)"
       },
       {
-        "command": "kiroSdlc.openKbGraph",
+        "command": "sdlcAgents.openKbGraph",
         "title": "SDLC Agents: Open KB Graph"
       },
       {
-        "command": "kiroSdlc.openKbDashboard",
+        "command": "sdlcAgents.openKbDashboard",
         "title": "SDLC Agents: Open KB Dashboard"
       },
       {
-        "command": "kiroSdlc.openKbTags",
+        "command": "sdlcAgents.openKbTags",
         "title": "SDLC Agents: Open KB Tags"
       },
       {
-        "command": "kiroSdlc.openKbQuality",
+        "command": "sdlcAgents.openKbQuality",
         "title": "SDLC Agents: Open KB Quality"
       },
       {
-        "command": "kiroSdlc.openKbAnalytics",
+        "command": "sdlcAgents.openKbAnalytics",
         "title": "SDLC Agents: Open KB Analytics"
       },
       {
@@ -101,88 +101,102 @@
         "title": "SDLC Agents: Show Enrichment Status"
       },
       {
-        "command": "kiroSdlc.symbolSearch",
+        "command": "sdlcAgents.symbolSearch",
         "title": "SDLC Agents: Symbol Search"
       },
       {
-        "command": "kiroSdlc.openSecurityPanel",
+        "command": "sdlcAgents.openSecurityPanel",
         "title": "SDLC Agents: Security Panel"
       },
       {
-        "command": "kiroSdlc.impactAnalysis",
+        "command": "sdlcAgents.impactAnalysis",
         "title": "SDLC Agents: Impact Analysis"
       },
       {
-        "command": "kiroSdlc.openPlanCanvas",
+        "command": "sdlcAgents.openPlanCanvas",
         "title": "SDLC Agents: Open Plan Canvas"
       },
       {
-        "command": "kiroSdlc.getAIContext",
+        "command": "sdlcAgents.getAIContext",
         "title": "SDLC Agents: Get AI Context for Symbol"
       },
       {
-        "command": "kiroSdlc.getEditContext",
+        "command": "sdlcAgents.getEditContext",
         "title": "SDLC Agents: Get Edit Context for Symbol"
       },
       {
-        "command": "kiroSdlc.openSettings",
+        "command": "sdlcAgents.openSettings",
         "title": "SDLC Agents: Settings",
         "icon": "$(gear)"
       },
       {
-        "command": "kiroSdlc.openKbBrowser",
+        "command": "sdlcAgents.openKbBrowser",
         "title": "SDLC Agents: Open KB in Browser"
       },
       {
-        "command": "kiroSdlc.login",
+        "command": "sdlcAgents.login",
         "title": "SDLC Agents: Login to Backend"
       },
       {
-        "command": "kiroSdlc.logout",
+        "command": "sdlcAgents.logout",
         "title": "SDLC Agents: Logout"
       },
       {
-        "command": "kiroSdlc.reconnect",
+        "command": "sdlcAgents.reconnect",
         "title": "SDLC Agents: Reconnect to Backend"
       },
       {
-        "command": "kiroSdlc.disconnect",
+        "command": "sdlcAgents.disconnect",
         "title": "SDLC Agents: Disconnect"
       },
       {
-        "command": "kiroSdlc.indexDocuments",
+        "command": "sdlcAgents.indexDocuments",
         "title": "SDLC Agents: Index Documents"
       },
       {
-        "command": "kiroSdlc.indexSource",
+        "command": "sdlcAgents.indexSource",
         "title": "SDLC Agents: Index Source Code"
       },
       {
-        "command": "kiroSdlc.syncWorkspace",
+        "command": "sdlcAgents.syncWorkspace",
         "title": "SDLC Agents: Sync Workspace"
       },
       {
-        "command": "kiroSdlc.fetchPegaContext",
+        "command": "sdlcAgents.fetchPegaContext",
         "title": "SDLC Agents: Fetch Pega App Context"
+      },
+      {
+        "command": "sdlcAgents.openAgenticChat",
+        "title": "SDLC Agents: Open Agentic Chat",
+        "icon": "$(comment-discussion)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "kiroSdlc",
+          "id": "sdlcAgents",
           "title": "SDLC Agents 4 Enterprise",
           "icon": "resources/activity-icon.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "sdlcChatContainer",
+          "title": "SDLC Chat",
+          "icon": "$(comment-discussion)"
         }
       ]
     },
     "views": {
-      "kiroSdlc": [
+      "sdlcAgents": [
         {
-          "id": "kiroSdlcTree",
+          "id": "sdlcAgentsTree",
           "name": "SDLC Agents"
-        },
+        }
+      ],
+      "sdlcChatContainer": [
         {
-          "id": "kiroChatPanel",
+          "id": "sdlcChatPanel",
           "name": "Chat Panel",
           "type": "webview"
         }
@@ -191,95 +205,102 @@
     "configuration": {
       "title": "SDLC Agents 4 Enterprise",
       "properties": {
-        "kiroSdlc.backend.url": {
+        "sdlcAgents.backend.url": {
           "type": "string",
           "default": "http://127.0.0.1:48721",
           "description": "Remote Kiro backend server URL"
         },
-        "kiroSdlc.backend.allowInsecureRemote": {
+        "sdlcAgents.backend.allowInsecureRemote": {
           "type": "boolean",
           "default": false,
           "description": "Bypass the HTTPS requirement for remote (non-loopback) backend server URLs. When enabled, HTTP remote URLs are accepted but traffic is unencrypted — credentials and data can be intercepted. Only enable on trusted private networks."
         },
-        "kiroSdlc.backend.ssoEnabled": {
+        "sdlcAgents.backend.ssoEnabled": {
           "type": "boolean",
           "default": false,
           "description": "Enable SSO/PKCE authentication"
         },
-        "kiroSdlc.backend.ssoProviderUrl": {
+        "sdlcAgents.backend.ssoProviderUrl": {
           "type": "string",
           "default": "",
           "description": "OAuth2 SSO provider URL for PKCE flow"
         },
-        "kiroSdlc.backend.toolCallTimeout": {
+        "sdlcAgents.backend.toolCallTimeout": {
           "type": "number",
           "default": 300000,
           "description": "Timeout for MCP tool calls (ms)"
         },
-        "kiroSdlc.backend.chatTimeout": {
+        "sdlcAgents.backend.chatTimeout": {
           "type": "number",
-          "default": 120000,
-          "description": "Timeout for chat responses (ms)"
+          "default": 0,
+          "description": "Wall-clock timeout for a chat turn (ms). 0 = DISABLED (default): a turn is never stopped by elapsed time — it stops only when a tool/failure/response repeats (loop guard). Set a positive value to opt into a wall-clock backstop."
         },
-        "kiroSdlc.backend.healthCheckInterval": {
+        "sdlcAgents.turn.maxToolRepeats": {
+          "type": "number",
+          "default": 4,
+          "minimum": 2,
+          "maximum": 20,
+          "description": "Stop a chat turn when one identical tool call (same tool + arguments) repeats this many times — loop guard. No total call cap is enforced."
+        },
+        "sdlcAgents.backend.healthCheckInterval": {
           "type": "number",
           "default": 30000,
           "description": "Health check interval (ms)"
         },
-        "kiroSdlc.backend.rateLimitRpm": {
+        "sdlcAgents.backend.rateLimitRpm": {
           "type": "number",
           "default": 6000,
           "minimum": 1,
           "description": "Requests-per-minute this client asks the backend to allow. The server clamps this to its own hard cap (configured in the web admin); you can lower it but never exceed the server maximum."
         },
-        "kiroSdlc.pega.dedupMaxInMemory": {
+        "sdlcAgents.pega.dedupMaxInMemory": {
           "type": "number",
           "default": 100000,
           "minimum": 1,
           "description": "Max Pega rule dedup keys kept in memory during indexing. When exceeded, keys spill to a temporary disk file (deleted after the run) so RAM stays bounded on large rulebases. Lower this on memory-constrained machines."
         },
-        "kiroSdlc.pega.fetchBatchSize": {
+        "sdlcAgents.pega.fetchBatchSize": {
           "type": "number",
           "default": 50,
           "minimum": 1,
           "maximum": 1000,
           "description": "Pega indexing: number of rules the supplier pulls off the queue and fetches per batch. Larger batches reduce per-batch overhead but hold more rules in flight. Takes effect on the next indexing run."
         },
-        "kiroSdlc.pega.ingestConcurrency": {
+        "sdlcAgents.pega.ingestConcurrency": {
           "type": "number",
           "default": 10,
           "minimum": 1,
           "maximum": 64,
           "description": "Pega indexing: max concurrent ingest requests to the backend. Higher values speed up indexing when the network is the bottleneck, but increase load on the shared backend. Takes effect on the next indexing run."
         },
-        "kiroSdlc.pega.ingestChannelCapacity": {
+        "sdlcAgents.pega.ingestChannelCapacity": {
           "type": "number",
           "default": 0,
           "minimum": 0,
           "maximum": 512,
           "description": "Pega indexing: buffer size between the fetch supplier and ingest consumers (backpressure). 0 = auto (2× ingest concurrency). Raise to let the supplier run further ahead at the cost of more buffered rules in RAM. Takes effect on the next indexing run."
         },
-        "kiroSdlc.mcpServerPort": {
+        "sdlcAgents.mcpServerPort": {
           "type": "number",
           "default": 9181,
           "description": "Local MCP wrapper server port — the in-process HTTP server that the IDE connects to"
         },
-        "kiroSdlc.enableMcpServer": {
+        "sdlcAgents.enableMcpServer": {
           "type": "boolean",
           "default": true,
           "description": "Enable/disable the local MCP wrapper server on startup"
         },
-        "kiroSdlc.mcpServerUrl": {
+        "sdlcAgents.mcpServerUrl": {
           "type": "string",
           "default": "",
           "description": "Override URL for the local MCP wrapper server (leave empty to use mcpServerPort)"
         },
-        "kiroSdlc.configPath": {
+        "sdlcAgents.configPath": {
           "type": "string",
           "default": ".code-intel/orchestration.json",
           "description": "Path to orchestration config file (relative to workspace root)"
         },
-        "kiroSdlc.llmProvider": {
+        "sdlcAgents.llmProvider": {
           "type": "string",
           "default": "anthropic",
           "enum": [
@@ -293,12 +314,12 @@
           ],
           "description": "Active LLM provider"
         },
-        "kiroSdlc.llmModel": {
+        "sdlcAgents.llmModel": {
           "type": "string",
           "default": "",
           "description": "Override model for the selected provider"
         },
-        "kiroSdlc.llmFallbackModels": {
+        "sdlcAgents.llmFallbackModels": {
           "type": "array",
           "items": {
             "type": "string"
@@ -306,57 +327,57 @@
           "default": [],
           "markdownDescription": "Ordered list of fallback model ids the Pi chat retries on when the primary model fails with a transient gateway/upstream error (HTTP 5xx, timeout, or provider bootstrap failures like the Devin 'bridge sandbox' error). Tried in order after the primary; non-retryable errors (4xx/auth/bad request) do NOT trigger fallback. Example for an OmniRoute gateway: `[\"auto/best-coding\", \"agy/claude-sonnet-4-6\", \"auto/best-free\"]`."
         },
-        "kiroSdlc.anthropicBaseUrl": {
+        "sdlcAgents.anthropicBaseUrl": {
           "type": "string",
           "default": "",
           "description": "Custom base URL for Anthropic API (leave empty for official)"
         },
-        "kiroSdlc.openaiBaseUrl": {
+        "sdlcAgents.openaiBaseUrl": {
           "type": "string",
           "default": "",
           "description": "Custom base URL for OpenAI API"
         },
-        "kiroSdlc.ollamaUrl": {
+        "sdlcAgents.ollamaUrl": {
           "type": "string",
           "default": "http://localhost:11434",
           "description": "Ollama server URL"
         },
-        "kiroSdlc.lmstudioBaseUrl": {
+        "sdlcAgents.lmstudioBaseUrl": {
           "type": "string",
           "default": "",
           "description": "LM Studio server URL (default: http://localhost:1234/v1)"
         },
-        "kiroSdlc.openrouterBaseUrl": {
+        "sdlcAgents.openrouterBaseUrl": {
           "type": "string",
           "default": "",
           "description": "OpenRouter API base URL"
         },
-        "kiroSdlc.kiroModel": {
+        "sdlcAgents.kiroModel": {
           "type": "string",
           "default": "auto",
           "description": "Kiro gateway model selection"
         },
-        "kiroSdlc.pegaEndpoint": {
+        "sdlcAgents.pegaEndpoint": {
           "type": "string",
           "default": "http://localhost:8080/prweb",
           "description": "Pega Platform REST API Endpoint URL"
         },
-        "kiroSdlc.pega.useCatalogExport": {
+        "sdlcAgents.pega.useCatalogExport": {
           "type": "boolean",
           "default": true,
           "description": "Use the Pega Rule Catalog Export API (fast, authoritative rule list) when indexing Pega source code. Disable to force the legacy BFS crawl."
         },
-        "kiroSdlc.pegaUsername": {
+        "sdlcAgents.pegaUsername": {
           "type": "string",
           "default": "",
           "description": "Pega Operator ID (Username)"
         },
-        "kiroSdlc.pegaDeveloperShortName": {
+        "sdlcAgents.pegaDeveloperShortName": {
           "type": "string",
           "default": "",
           "description": "Pega developer short name — used for Pega branch naming (e.g. ssa_SA4E-58). Falls back to pegaUsername before @"
         },
-        "kiroSdlc.atlassianConnectionType": {
+        "sdlcAgents.atlassianConnectionType": {
           "type": "string",
           "enum": [
             "cloud",
@@ -365,22 +386,22 @@
           "default": "cloud",
           "description": "Atlassian connection type: cloud (email + API token) or server (username + PAT)"
         },
-        "kiroSdlc.jiraSyncState": {
+        "sdlcAgents.jiraSyncState": {
           "type": "object",
           "default": {},
           "description": "Internal: Jira project sync state (last sync dates per project key)"
         },
-        "kiroSdlc.jiraLastProject": {
+        "sdlcAgents.jiraLastProject": {
           "type": "string",
           "default": "",
           "description": "Last selected Jira project key for indexing"
         },
-        "kiroSdlc.jiraAttachmentChecksums": {
+        "sdlcAgents.jiraAttachmentChecksums": {
           "type": "object",
           "default": {},
           "description": "Internal: checksum cache for Jira attachment dedup (id+size per file)"
         },
-        "kiroSdlc.proxy.mode": {
+        "sdlcAgents.proxy.mode": {
           "type": "string",
           "enum": [
             "none",
@@ -399,19 +420,19 @@
             "PowerShell subprocess — uses Invoke-WebRequest with -ProxyUseDefaultCredentials for corporate NTLM/Kerberos SSO"
           ]
         },
-        "kiroSdlc.proxy.host": {
+        "sdlcAgents.proxy.host": {
           "type": "string",
           "default": "",
           "description": "Proxy server hostname or IP address (used when mode = manual)"
         },
-        "kiroSdlc.proxy.port": {
+        "sdlcAgents.proxy.port": {
           "type": "number",
           "default": 8080,
           "minimum": 1,
           "maximum": 65535,
           "description": "Proxy server port (used when mode = manual)"
         },
-        "kiroSdlc.proxy.bypass": {
+        "sdlcAgents.proxy.bypass": {
           "type": "string",
           "default": "localhost,127.0.0.1,::1",
           "description": "Comma-separated list of hosts that bypass the proxy. Supports wildcards (*.domain.com)"
@@ -421,18 +442,23 @@
     "menus": {
       "view/title": [
         {
-          "command": "kiroSdlc.injectAll",
-          "when": "view == kiroSdlcTree",
+          "command": "sdlcAgents.openAgenticChat",
+          "when": "view == sdlcAgentsTree",
           "group": "navigation"
         },
         {
-          "command": "kiroSdlc.openSettings",
-          "when": "view == kiroSdlcTree",
+          "command": "sdlcAgents.injectAll",
+          "when": "view == sdlcAgentsTree",
           "group": "navigation"
         },
         {
-          "command": "kiroSdlc.status",
-          "when": "view == kiroSdlcTree",
+          "command": "sdlcAgents.openSettings",
+          "when": "view == sdlcAgentsTree",
+          "group": "navigation"
+        },
+        {
+          "command": "sdlcAgents.status",
+          "when": "view == sdlcAgentsTree",
           "group": "navigation"
         }
       ]
@@ -445,6 +471,7 @@
     "package:prod": "npm run esbuild-production && vsce package --no-dependencies",
     "compile": "tsc -p ./",
     "esbuild": "node esbuild.js",
+    "smoke:bundle": "node scripts/smoke-bundle/run-smoke.js",
     "esbuild-production": "node esbuild.js --production",
     "esbuild-watch": "node esbuild.js --watch",
     "watch": "tsc -watch -p ./",
@@ -484,18 +511,31 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
-    "@earendil-works/pi-agent-core": "0.80.10",
+    "@cortexkit/aft-pi": "0.57.2",
+    "@earendil-works/chord": "0.99.1",
+    "@earendil-works/pi-agent-core": "0.99.1",
+    "@earendil-works/pi-ai": "0.99.1",
+    "@earendil-works/pi-codemode": "0.99.1",
+    "@earendil-works/pi-coding-agent": "0.99.1",
+    "@earendil-works/pi-mcp": "0.99.1",
+    "@earendil-works/pi-tui": "0.99.1",
+    "@juicesharp/rpiv-ask-user-question": "2.11.0",
+    "@juicesharp/rpiv-todo": "2.11.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@puppeteer/browsers": "^3.2.3",
     "@types/ws": "^8.18.1",
     "@vscode/proxy-agent": "^0.43.0",
     "ajv": "^8.17.1",
+    "billion-context-pi": "0.1.82",
     "chrome-devtools-frontend": "^1.0.1625079",
     "core-js": "^3.49.0",
     "debug": "^4.4.3",
     "diff": "^5.2.2",
+    "pi-subagents": "0.73.1",
+    "pi-web-access": "0.33.0",
     "puppeteer-core": "^25.12.0",
     "semver": "^7.7.4",
+    "typebox": "^1.1.38",
     "undici": "^6.21.0",
     "urlpattern-polyfill": "^10.1.0",
     "ws": "^8.21.1",

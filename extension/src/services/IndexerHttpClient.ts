@@ -504,7 +504,7 @@ export class IndexerHttpClient {
         }
         // Client-requested rate limit (rpm). Server clamps this to its own hard cap,
         // so this can only lower (never raise) the effective limit above the server max.
-        const rpm = vscode.workspace.getConfiguration("kiroSdlc").get<number>("backend.rateLimitRpm");
+        const rpm = vscode.workspace.getConfiguration("sdlcAgents").get<number>("backend.rateLimitRpm");
         if (typeof rpm === "number" && Number.isInteger(rpm) && rpm > 0) {
             headers["X-Rate-Limit-RPM"] = String(rpm);
         }

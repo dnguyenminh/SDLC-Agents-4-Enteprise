@@ -19,8 +19,11 @@ export class AuthError extends Error {
   }
 }
 
-const SECRET_ACCESS_TOKEN = "kiroSdlc.accessToken";
-const SECRET_LAST_USERNAME = "kiroSdlc.lastUsername";
+const SECRET_ACCESS_TOKEN = "sdlcAgents.accessToken";
+const SECRET_LAST_USERNAME = "sdlcAgents.lastUsername";
+/** Pre-rename secret keys — READ-ONLY migration/fallback sources. */
+const LEGACY_SECRET_ACCESS_TOKEN = "kiroSdlc.accessToken";
+const LEGACY_SECRET_LAST_USERNAME = "kiroSdlc.lastUsername";
 
 export class AuthManager implements vscode.Disposable {
   private state: AuthState = "UNAUTHENTICATED";
@@ -78,11 +81,30 @@ export class AuthManager implements vscode.Disposable {
   }
 
   /**
+   * Read a secret from the new key, migrating a legacy value on read.
+   * When the new key is empty but a pre-rename `kiroSdlc.*` value exists, the
+   * value is copied to the new key (migrate-on-read) and returned. A store
+   * failure is logged, not thrown, so a read never breaks auth (fail-open read).
+   * @param newKey Current `sdlcAgents.*` secret key.
+   * @param legacyKey Pre-rename `kiroSdlc.*` fallback key.
+   * @returns The stored secret, or undefined when neither key is set.
+   */
+  private async readMigratedSecret(newKey: string, legacyKey: string): Promise<string | undefined> {
+    const current = await this.secrets.get(newKey);
+    if (current) { return current; }
+    const legacy = await this.secrets.get(legacyKey);
+    if (!legacy) { return undefined; }
+    try { await this.secrets.store(newKey, legacy); }
+    catch (err) { console.warn(`Failed to migrate secret ${newKey}:`, (err as Error).message); }
+    return legacy;
+  }
+
+  /**
    * Get current access token (auto-refreshes if near expiry).
    */
   async getAccessToken(): Promise<string | null> {
     if (this.state !== "AUTHENTICATED") { return null; }
-    const token = await this.secrets.get(SECRET_ACCESS_TOKEN);
+    const token = await this.readMigratedSecret(SECRET_ACCESS_TOKEN, LEGACY_SECRET_ACCESS_TOKEN);
     if (!token) {
       this.transitionTo("UNAUTHENTICATED");
       return null;
@@ -315,7 +337,7 @@ export class AuthManager implements vscode.Disposable {
    * Get the username from the last successful login.
    */
   async getLastUsername(): Promise<string> {
-    return (await this.secrets.get(SECRET_LAST_USERNAME)) || "";
+    return (await this.readMigratedSecret(SECRET_LAST_USERNAME, LEGACY_SECRET_LAST_USERNAME)) || "";
   }
 
   /**
@@ -400,8 +422,10 @@ export class AuthManager implements vscode.Disposable {
       }
     }
 
-    // Perform local cleanup regardless of backend response.
+    // Perform local cleanup regardless of backend response. Delete the legacy
+    // key too so a stale pre-rename token cannot be resurrected on next read.
     await this.secrets.delete(SECRET_ACCESS_TOKEN);
+    await this.secrets.delete(LEGACY_SECRET_ACCESS_TOKEN);
     this.cachedToken = null;
     this.tokenExpiresAt = null;
     this.tokenAcquiredAt = null;

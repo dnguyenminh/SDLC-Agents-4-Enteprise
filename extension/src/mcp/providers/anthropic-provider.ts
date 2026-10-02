@@ -8,7 +8,7 @@ import { BaseLlmProvider } from "./BaseLlmProvider";
 import { splitMessages, formatMessagesForTools } from "./anthropic-helpers";
 import { validateProviderBaseUrl } from "./provider-url-policy";
 
-const ANTHROPIC_SECRET_KEY = "kiroSdlc.anthropicApiKey";
+const ANTHROPIC_SECRET_KEY = "sdlcAgents.anthropicApiKey";
 const DEFAULT_MODEL = "claude-sonnet-4-latest";
 const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_BASE_URL = "https://api.anthropic.com";

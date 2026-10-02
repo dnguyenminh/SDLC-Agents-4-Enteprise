@@ -1,0 +1,81 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="PiCodingTools" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="80" y="80" width="280" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="+createWorkspaceTools(workspaceRoot): Promise&lt;AgentTool[]&gt;&#xa;+buildWorkspaceSystemPrompt(workspaceRoot): string&#xa;-createPowerShellToolSafe(workspaceRoot): Promise&lt;AgentTool | null&gt;&#xa;-resolveGitBashPath(): string | undefined [DEPRECATED]&#xa;-normalizeBashCommandPaths(ctx): object [DEPRECATED]&#xa;+BASH_DIALECT_NOTE: string&#xa;+withBashDialectHint(tool): T" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="80" y="110" width="280" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="PiWorkflowGate" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="440" y="80" width="280" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="-READ_ONLY_TOOLS: ReadonlySet&lt;string&gt;&#xa;-DANGEROUS_TOOLS: ReadonlySet&lt;string&gt;&#xa;+createToolApprovalGateHandler(gate, matcher, opts): ToolApprovalGateHandler" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="440" y="110" width="280" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="TurnBudgetGuard" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="800" y="80" width="280" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="-totalCalls: number&#xa;-perSignature: Map&lt;string, number&gt;&#xa;-steered: Set&lt;string&gt;&#xa;+observeToolCall(name, argsJson): ObserveAction&#xa;+observeToolFailure(name, errorText): ObserveAction&#xa;+observeTextBlock(block): ObserveAction&#xa;+startTimeout(): void&#xa;+clear(): void" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="800" y="110" width="280" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="StreamProtocolAdapter" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="80" y="340" width="280" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="-streamToMessage: Map&lt;string, string&gt;&#xa;-startedStreams: Set&lt;string&gt;&#xa;+classifyTool(name): ToolType" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="80" y="370" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="ToolApprovalClassifier" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="440" y="340" width="280" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="-DANGEROUS_TOOL_PATTERNS: ReadonlySet&lt;string&gt;&#xa;-SAFE_TOOL_PATTERNS: ReadonlySet&lt;string&gt;&#xa;+requiresApproval(toolName): boolean&#xa;+getDangerousTools(): ReadonlySet&lt;string&gt;&#xa;+getSafeTools(): ReadonlySet&lt;string&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="440" y="370" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="12" value="PiAgentSessionHost" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="800" y="340" width="280" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="13" value="-hosts: Map&lt;string, Promise&lt;SessionHost&gt;&gt;&#xa;+ensureSessionHost(opts): Promise&lt;SessionHost&gt;&#xa;+clearSessionHostCache(): void&#xa;-getSessionToolLoadout(workspaceRoot): ToolDefinition[]" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="800" y="370" width="280" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="14" value="pi-coding-agent 0.99.1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="440" y="540" width="280" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="15" value="+createPowerShellTool(cwd, options?): AgentTool&#xa;+createBashTool(cwd, options?): AgentTool&#xa;+createReadTool(cwd): AgentTool&#xa;+createAllToolDefinitions(cwd): ToolDefinition[]" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=9;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="440" y="570" width="280" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;dashed=1;" edge="1" parent="1" source="2" target="4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;dashed=1;" edge="1" parent="1" source="4" target="6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="2" target="14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="4" target="14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="6" target="14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="8" target="14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="10" target="14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="12" target="14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="2" target="8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="4" target="10">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="6" target="12">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

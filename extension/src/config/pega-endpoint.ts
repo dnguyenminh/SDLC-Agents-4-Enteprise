@@ -6,7 +6,7 @@
  * Basic-auth credentials. This module gates that: HTTP is allowed only for
  * genuine loopback hosts (local dev); any non-loopback `http://` endpoint is
  * rejected unless the operator explicitly opts in via
- * `kiroSdlc.backend.allowInsecureRemote`. It deliberately reuses the same
+ * `sdlcAgents.backend.allowInsecureRemote`. It deliberately reuses the same
  * `isLoopbackHost` predicate and opt-in flag as backend-url validation so the
  * extension has one consistent transport-security policy (DRY).
  */

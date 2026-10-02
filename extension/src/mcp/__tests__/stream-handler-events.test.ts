@@ -131,14 +131,14 @@ describe("StreamHandler Self-Correction Events (KSA-233)", () => {
     expect(event.timestamp).toBeDefined();
   });
 
-  it("emitRetry generates streamId when null", () => {
+  it("emitRetry passes the caller-supplied streamId through (no generated ids)", () => {
     const emitFn = vi.fn();
     const handler = new StreamHandler(emitFn);
 
-    handler.emitRetry("ba-agent", 1, 2, 1000, "error", null);
+    handler.emitRetry("ba-agent", 1, 2, 1000, "error", "turn-1");
 
     const event = emitFn.mock.calls[0][0];
-    expect(event.streamId).toMatch(/^stream-ba-agent-\d+$/);
+    expect(event.streamId).toBe("turn-1");
   });
 
   it("events flush pending buffer before emitting", () => {

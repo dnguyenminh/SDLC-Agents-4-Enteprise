@@ -77,7 +77,7 @@ export async function resolveDeterministicPegaHierarchy(
 ): Promise<HierarchyResult> {
   const opId = (operatorIdHint || core.getConfiguredUsername()).trim();
   if (!opId) {
-    throw new Error("Pega Operator ID is not configured (kiroSdlc.pegaUsername). Set it before indexing.");
+    throw new Error("Pega Operator ID is not configured (sdlcAgents.pegaUsername). Set it before indexing.");
   }
   const folder = vscode.workspace.workspaceFolders?.[0];
   const root = folder ? folder.uri.fsPath : process.cwd();

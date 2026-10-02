@@ -1,0 +1,48 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    {
+      "id": "SCR-01",
+      "severity": "Medium",
+      "category": "Image Supply Chain",
+      "file": "backend/docker-compose.yml",
+      "description": "Optional ONNX sidecar uses mutable mcr.microsoft.com/onnxruntime/server:latest tag (not digest-pinned). Guarded behind dev-only 'embeddings' profile, inactive in production.",
+      "status": "accepted",
+      "remediation": "Pin ONNX image by tag@sha256 if/when the embeddings profile is used; keep out of production."
+    },
+    {
+      "id": "SCR-02",
+      "severity": "Medium",
+      "category": "Access Control",
+      "file": "backend/docker-compose.yml",
+      "description": "MCP Streamable-HTTP endpoint (:48721) has no documented app-layer authn/authz; mitigated by loopback port binding (PUBLISH_HOST default 127.0.0.1) and internal bridge network.",
+      "status": "accepted",
+      "remediation": "Capture MCP access control / network segmentation as a Phase 6.7 deployment-security requirement. No code change required in SA4E-335."
+    },
+    {
+      "id": "SCR-03",
+      "severity": "Low",
+      "category": "Logging / Monitoring",
+      "file": "backend (Pino)",
+      "description": "No explicit Pino secret-redaction paths or MCP tool-execution audit logging in this diff. Out of this containerization ticket's scope.",
+      "status": "accepted",
+      "remediation": "Specify Pino redaction keys + MCP tool-invocation audit logging in the deployment review."
+    },
+    {
+      "id": "SCR-04",
+      "severity": "Low",
+      "category": "Image Size / Attack Surface",
+      "file": "backend/Dockerfile",
+      "description": "AD-6 draw.io/Electron/X11/xvfb + model pre-cache available behind build args but DEFAULT OFF (SEC-08); default production image excludes them.",
+      "status": "accepted",
+      "remediation": "Keep AD-6 default-off; isolate diagram export in a separate image/sidecar if ever needed. Already correctly defaulted off."
+    }
+  ],
+  "resolvedDesignFindings": {
+    "critical": ["SEC-01", "SEC-02"],
+    "high": ["SEC-03", "SEC-04", "SEC-05"]
+  },
+  "secretScan": "no committed credentials (only *.example placeholders; real secret files git-ignored)",
+  "dependencyAudit": "npm audit --omit=dev = 0 vulnerabilities (440 prod deps)",
+  "reviewDoc": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\documents\\SA4E-335\\SECURITY-ASSESSMENT.md"
+}

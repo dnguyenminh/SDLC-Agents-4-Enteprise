@@ -1,0 +1,5 @@
+test_case_id,origin,csrf_token,expected_http_code,description
+E2E-API-13,https://app.sa4e.local,,200,Allowed origin
+E2E-API-13,http://evil.com,,403,Blocked origin
+E2E-API-14,https://app.sa4e.local,valid-token-32chars-long-enough,200,Valid CSRF token
+E2E-API-14,https://app.sa4e.local,,403,Missing CSRF token

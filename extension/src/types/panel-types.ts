@@ -82,7 +82,7 @@ export interface KbEntry { id: number; title: string; content: string; type: str
 export const PANEL_VIEW_TYPES: Record<PanelType, string> = {
   graph: "kiroKbGraph", dashboard: "kiroKbDashboard", tags: "kiroKbTags",
   quality: "kiroKbQuality", analytics: "kiroKbAnalytics", workflow: "kiroWorkflowGraph",
-  security: "kiroSecurityPanel", impact: "kiroImpactPanel", planCanvas: "kiroSdlc.planCanvas",
+  security: "kiroSecurityPanel", impact: "kiroImpactPanel", planCanvas: "sdlcAgents.planCanvas",
 };
 
 export const PANEL_TITLES: Record<PanelType, string> = {

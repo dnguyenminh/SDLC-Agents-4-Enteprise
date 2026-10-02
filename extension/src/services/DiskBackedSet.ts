@@ -157,7 +157,7 @@ function hashKey(key: string): string {
 
 /**
  * Factory: create a DiskBackedSet for a Pega crawl dedup, reading the hot-tier
- * cap from the `kiroSdlc.pega.dedupMaxInMemory` VS Code setting and placing the
+ * cap from the `sdlcAgents.pega.dedupMaxInMemory` VS Code setting and placing the
  * spill file under the workspace's temp area. Kept here (not in the class) so
  * DiskBackedSet stays free of vscode/path-policy concerns and remains unit-testable.
  * @param workspaceRoot Absolute workspace root; the spill file lives in a temp subdir.
@@ -168,7 +168,7 @@ export function createPegaDedupSet(workspaceRoot: string, label: string): DiskBa
   const vscode = require('vscode');
   const path = require('node:path');
   const cap = vscode.workspace
-    .getConfiguration('kiroSdlc')
+    .getConfiguration('sdlcAgents')
     .get('pega.dedupMaxInMemory') as number | undefined;
   const spillPath = path.join(workspaceRoot, '.pega-cache', `dedup-${label}.bin`);
   return new DiskBackedSet(spillPath, cap);

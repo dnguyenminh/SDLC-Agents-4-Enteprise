@@ -1,9 +1,9 @@
-﻿/**
+/**
  * Chat Panel Model Catalog — KSA-237
  * Single source of truth for the per-provider model list shown in the Chat
  * Panel model dropdown. Mirrors the catalog used by the Settings panel so the
  * dropdown reflects the provider configured in SDLC Settings
- * (kiroSdlc.llmProvider) instead of a hardcoded mixed list.
+ * (sdlcAgents.llmProvider) instead of a hardcoded mixed list.
  *
  * When the Anthropic base URL points at the local gateway (127.0.0.1),
  * the model list is fetched live from GET http://127.0.0.1:{port}/v1/models
@@ -13,7 +13,7 @@
 
 import type { ChatModelEntry } from "./message-protocol";
 
-/** Provider id as stored in kiroSdlc.llmProvider */
+/** Provider id as stored in sdlcAgents.llmProvider */
 export type ChatProvider = "anthropic" | "openai" | "ollama" | "onnx" | "lmstudio" | "openrouter";
 
 /** Default model id per provider (used when no override is configured). */

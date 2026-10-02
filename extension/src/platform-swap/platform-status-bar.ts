@@ -14,7 +14,7 @@ export class PlatformStatusBar implements vscode.Disposable {
     this.item = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Right, 99,
     );
-    this.item.command = "kiroSdlc.swapPlatform";
+    this.item.command = "sdlcAgents.swapPlatform";
     this.item.show();
   }
 

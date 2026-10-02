@@ -9,7 +9,7 @@ import { SettingsMessageHandler } from "./SettingsMessageHandler";
 import { getProvidersByCategory } from "../../mcp/providers/provider-registry";
 
 export class SettingsPanel {
-  public static readonly viewType = "kiroSettingsPanel";
+  public static readonly viewType = "sdlcAgentsSettingsPanel";
   public static instance: SettingsPanel | undefined;
 
   private readonly panel: vscode.WebviewPanel;

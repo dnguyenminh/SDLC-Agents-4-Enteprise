@@ -1,0 +1,21 @@
+case_id,artifact,config_key,input_value,expected_outcome,traces,notes
+CFG-01,Dockerfile,base_image,node:22-slim,pass,S1-AC2/BR-02,Slim base for glibc native modules
+CFG-02,Dockerfile,base_image,node:22-alpine,fail,S1-AC2/BR-02,Alpine musl breaks onnxruntime-node per decision
+CFG-03,Dockerfile,production.user,sa4e(1001),pass,S1-AC3/BR-05,Non-root runtime preserved
+CFG-04,Dockerfile,production.user,root,fail,S1-AC3/BR-05,Root runtime violates invariant
+CFG-05,compose,backend.environment.POSTGRES_PASSWORD,plaintext-literal,fail,S2-AC1/BR-08,Committed plaintext credential rejected
+CFG-06,compose,backend.environment.POSTGRES_PASSWORD_FILE,/run/secrets/postgres_password,pass,S2-AC1/BR-08,Secret-backed credential accepted
+CFG-07,compose,backend.environment.NODE_ENV,production,pass,S2-AC2/D-1,Production env required
+CFG-08,compose,backend.environment.NODE_ENV,development,fail,S2-AC2/D-1,Dev env in production config rejected
+CFG-09,compose,backend.healthcheck,present(wget /health 48721),pass,S2-AC2/BR-09,Compose-level healthcheck required
+CFG-10,compose,backend.healthcheck,absent,fail,S2-AC2/BR-09,Missing healthcheck rejected
+CFG-11,compose,backend.restart,unless-stopped,pass,S2-AC2/BR-10,Restart policy present
+CFG-12,compose,backend.deploy.resources.limits,"cpus+memory defined",pass,S2-AC3/BR-11,Resource limits present
+CFG-13,compose,backend.deploy.resources.limits,absent,fail,S2-AC3/BR-11,Missing resource limits rejected
+CFG-14,compose,onnx-runtime.profiles,[embeddings],pass,S2-AC5/BR-13,Dev sidecar guarded by profile
+CFG-15,compose,postgres.ports,"not published",pass,S2-AC1/S-1,Postgres not exposed to host in production
+CFG-16,workflow,triggers,"push[main];push tags v*.*.*;pull_request[main]",pass,S3-AC1/BR-14,All qualifying triggers declared
+CFG-17,Dockerfile,build.tree-sitter-jsp-strip,"strip step present when decision=adopt/adapt",pass,S1-AC1/BR-03,Hermetic build strips tree-sitter-jsp when adopted
+CFG-18,gap-record,tree-sitter-jsp.decision,"adopt|adapt|defer with rationale",pass,S1-AC1/BR-03,tree-sitter-jsp decision must be recorded (BR-01/BR-03)
+CFG-19,gap-record,tree-sitter-jsp.decision,"missing/no rationale",fail,S1-AC1/BR-03,Unrecorded tree-sitter-jsp decision rejected
+CFG-20,gap-record,sa4e-44-baseline.availability,"unavailable -> blocked+escalated,no decisions",pass,S1-AC1/BR-07,Baseline unavailable must block & escalate (UC-01 EF-1)
