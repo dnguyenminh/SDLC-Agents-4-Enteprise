@@ -1,0 +1,24 @@
+# =============================================================================
+# SA4E-335 — `embeddings` profile overlay (dev-only, BR-13 / AD-6 / SEC-08)
+# -----------------------------------------------------------------------------
+# Why this file exists (DEF-003):
+#   Docker Compose profiles gate SERVICES only. A service-level `environment`
+#   entry cannot be switched on by `--profile` — the flag is not visible to
+#   `${...}` interpolation (verified on Compose v5.2.0: interpolating
+#   ${COMPOSE_PROFILES} with `--profile embeddings` yields an empty string).
+#   Writing ONNX_RUNTIME_URL into docker-compose.yml would therefore either
+#   pollute the production config (default-OFF violated) or be impossible to
+#   activate with `--profile`.
+#
+# Usage (profile + wiring together):
+#   docker compose -f docker-compose.yml -f docker-compose.embeddings.yml \
+#     --profile embeddings up -d
+#
+# Base-only runs are untouched — no sidecar, no ONNX env:
+#   docker compose up -d
+# =============================================================================
+services:
+  backend:
+    environment:
+      # FSD §12.5 / TDD §3.3: URL of the embeddings sidecar (dev-only).
+      ONNX_RUNTIME_URL: http://onnx-runtime:8080

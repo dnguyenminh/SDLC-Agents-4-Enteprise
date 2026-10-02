@@ -16,3 +16,11 @@ test*.ts
 coverage
 .env
 .env.*
+# SA4E-335 DEF-001: the `test` stage COPYs tests/ and .env.test (Dockerfile
+# L127-128) — re-include exactly those so `docker build --target test` works.
+# Last matching pattern wins, so the negations must follow the exclusions.
+# Everything else (.env, .env.production, *.md, *.log) stays excluded.
+!tests
+!.env.test
+# SEC-01: credentials never enter the build context (nor any image layer).
+secrets

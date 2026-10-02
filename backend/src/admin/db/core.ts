@@ -17,6 +17,8 @@ import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js
 import { SqliteWasmAdapter } from '../../database/adapters/wasm/SqliteWasmAdapter.js';
 import { DatabaseAdapterFactory } from '../../database/factory/DatabaseAdapterFactory.js';
 import { DatabaseConfigService } from '../../database/config/DatabaseConfigService.js';
+import { seedEngineFromEnv } from '../../database/config/seedEngineFromEnv.js';
+import { ensurePostgresSchema } from '../../database/schema-registry/ensure-postgres-schema.js';
 
 export { hashPassword, verifyPassword, generateToken };
 
@@ -143,6 +145,9 @@ export function getDbAdapter(): DatabaseAdapter {
  * @throws Error if connection fails (server should not start)
  */
 export async function initAdapters(): Promise<void> {
+  // SA4E-335 DEF-002: a DATABASE_URL(_FILE) handed out by compose secrets wins
+  // over database.json — seed the engine before resolving it (no-op without env).
+  seedEngineFromEnv(DATA_DIR);
   const engine = getActiveEngine();
   if (engine === 'sqlite') {
     // Create instance + await wasm connect + schema init/seed (shared promise).
@@ -162,6 +167,9 @@ export async function initAdapters(): Promise<void> {
   try {
     await initSchema(adapter);
     await seedDefaults(adapter);
+    // SA4E-335 DEF-002: initSchema covers admin/graph tables only — also ensure
+    // the engine-specific index + memory (KB) tables (idempotent; no-op off PG).
+    await ensurePostgresSchema(adapter);
   } catch (err) {
     logger.error({ err }, '[admin] Failed to init schema/seed defaults');
   }

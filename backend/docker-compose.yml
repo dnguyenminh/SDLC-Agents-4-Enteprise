@@ -76,7 +76,11 @@ services:
       CODE_INTEL_ENABLED: "true"
       CODE_INTEL_MAX_BATCH_SIZE: "100"
       CODE_INTEL_UPLOAD_TIMEOUT_MS: "30000"
-      # ONNX_RUNTIME_URL set only when the `embeddings` profile is active (dev-only).
+      # SA4E-335 DEF-003: ONNX_RUNTIME_URL is dev-only and is NOT set here —
+      # Compose profiles gate services only, they cannot switch a service-level
+      # `environment` entry on/off (the `--profile` flag is invisible to ${...}
+      # interpolation). Keep the production file clean (AD-6/SEC-08/BR-13) and
+      # wire it in docker-compose.embeddings.yml instead; see that file.
     secrets:
       - database_url
     # SEC-07: bind the published port to loopback by default. Override
@@ -128,8 +132,26 @@ services:
     # SEC-02: pin by tag+digest (replaces the previous mutable `:latest`).
     image: mcr.microsoft.com/onnxruntime/server:latest
     container_name: sa4e-onnx
+    # SA4E-335 DEF-003: the ORT server hard-fails without --model_path, and its
+    # HTTP listener defaults to 8001. Serve the tiny dev-only identity fixture
+    # (models/onnx-runtime/, regenerable via generate-identity-model.py) on the
+    # port ONNX_RUNTIME_URL points at. Image keeps `:latest` (accepted SCR-01).
+    command:
+      - --model_path
+      - /models/identity.onnx
+      - --http_port
+      - "8080"
+    volumes:
+      - ./models/onnx-runtime/identity.onnx:/models/identity.onnx:ro
     ports:
       - "127.0.0.1:8080:8080"
+    # Image ships bash but no curl/wget — probe the listener over /dev/tcp.
+    healthcheck:
+      test: ["CMD", "bash", "-c", ": >/dev/tcp/127.0.0.1/8080"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
     networks:
       - sa4e-network
     profiles:

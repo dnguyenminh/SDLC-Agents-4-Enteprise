@@ -69,6 +69,32 @@ RUN npm run build
 FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS production
 WORKDIR /app
 
+# SA4E-335 DEF-004 — CI Trivy gate (CRITICAL,HIGH + ignore-unfixed) counts the
+# npm CLI that the base image bundles under /usr/local/lib/node_modules/npm.
+# Those copies (pacote, sigstore, brace-expansion, picomatch, ip-address,
+# undici) are NOT reachable from backend/package-lock.json, and the pinned
+# node:22-slim digest is already the latest — so the fix is to bump the CLI
+# itself (10.9.9 → NPM_VERSION: pacote/sigstore majors land on patched lines)
+# and refresh the two packages upstream has not re-released yet, using
+# same-major PATCH releases only (5.0.9→5.0.12, 6.28.0→6.28.1).
+# npm/npx stay installed: the sandbox module's local-mode fallback (UC-06)
+# shells out to them at runtime, so removing the CLI would be a regression.
+# Build stages keep the base npm for `npm ci` — only the runtime CLI moves.
+# The trailing probes fail the build if either patch broke module resolution
+# or the CLI itself.
+ARG NPM_VERSION=11.21.0
+RUN npm install -g npm@${NPM_VERSION} --no-audit --no-fund --loglevel=error \
+ && NM=/usr/local/lib/node_modules/npm/node_modules \
+ && for entry in "brace-expansion 5.0.12" "undici 6.28.1"; do \
+      name=$(echo "$entry" | cut -d' ' -f1); ver=$(echo "$entry" | cut -d' ' -f2); \
+      tgz=$(npm pack "${name}@${ver}" --pack-destination /tmp --silent); \
+      rm -rf "${NM}/${name}"; mkdir -p "${NM}/${name}"; \
+      tar -xzf "/tmp/${tgz}" -C "${NM}/${name}" --strip-components=1; \
+    done \
+ && rm -rf /tmp/*.tgz \
+ && node -e "require('${NM}/brace-expansion'); require('${NM}/undici')" \
+ && npm --version
+
 # Runtime copies the pruned production node_modules + compiled dist only.
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
