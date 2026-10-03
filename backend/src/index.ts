@@ -234,6 +234,15 @@ logger.info({ ingestedTools: ingestedCount, totalTools: allTools.length }, 'Inge
   // --- Graceful shutdown ---
   const shutdown = async (signal: string) => {
     logger.info({ signal }, 'Shutdown signal received');
+    // Best-effort: don't leave index_operations owned by this (dying) process
+    // stuck at status='running' — flip them to `interrupted` now (threshold 0).
+    // Non-fatal: the detector swallows DB errors internally.
+    try {
+      const { markInFlightOperationsInterrupted } = await import('./engine/indexer/startup-interrupt-detector.js');
+      await markInFlightOperationsInterrupted();
+    } catch (err) {
+      logger.warn({ err }, 'Failed to mark running operations interrupted (non-fatal)');
+    }
     await server.stop();
     await registry.shutdownAll();
     process.exit(0);

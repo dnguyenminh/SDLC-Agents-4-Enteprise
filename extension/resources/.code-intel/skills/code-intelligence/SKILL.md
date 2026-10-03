@@ -1,7 +1,14 @@
 ---
 name: code-intelligence
-description: Code Intelligence system reference — scripts, config, metadata for code analysis
+description: Code Intelligence System — Agent Instructions
 ---
+
+
+
+# Code Intelligence System — Agent Instructions
+
+> **Note**: This steering file will be fully written in Phase 11 of the implementation plan.
+> For now, it serves as a placeholder. The TypeScript scripts under `.analysis/code-intelligence/scripts/` contain all core logic.
 
 ## Quick Reference
 
@@ -18,3 +25,4 @@ description: Code Intelligence system reference — scripts, config, metadata fo
 [Code-Index] WARN: {warning-type} — {context} — {message}
 [Code-Index] INFO: {action} — {details}
 ```
+

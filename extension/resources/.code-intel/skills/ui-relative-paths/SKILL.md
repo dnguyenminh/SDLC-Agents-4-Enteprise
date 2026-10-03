@@ -1,40 +1,44 @@
 ---
 name: ui-relative-paths
-description: UI relative path rules — no absolute paths, use basePath helper for sub-path deployment
+description: UI Relative Paths — KHÔNG DÙNG ABSOLUTE PATH
 ---
 
-## Principle
 
-Application may be deployed under a sub-path (e.g. `https://domain.com/mcp/`).
-Every URL in HTML/JS **MUST** use relative paths via `basePath` helper.
 
-## ABSOLUTELY FORBIDDEN
+# UI Relative Paths — KHÔNG DÙNG ABSOLUTE PATH
+
+## Nguyên tắc
+
+Ứng dụng có thể được deploy dưới sub-path (ví dụ `https://domain.com/mcp/`).
+Mọi URL trong HTML/JS **PHẢI** dùng đường dẫn tương đối thông qua `basePath` helper.
+
+## TUYỆT ĐỐI KHÔNG
 
 ```javascript
-// NEVER use absolute path
+// ❌ KHÔNG BAO GIỜ dùng absolute path
 window.location.href = '/static/login.html';
 fetch('/api/auth/login', { ... });
 <script src="/static/nav-bar.js"></script>
 <a href="/profile">Profile</a>
 ```
 
-## MANDATORY
+## BẮT BUỘC
 
 ```javascript
-// Use basePath helper
+// ✅ Dùng basePath helper
 window.location.href = basePath + '/static/login.html';
 fetch(basePath + '/api/auth/login', { ... });
 
-// Or relative path for same directory
+// ✅ Hoặc relative path cho cùng thư mục
 <script src="nav-bar.js"></script>
 ```
 
-## How to Get basePath
+## Cách lấy basePath
 
-Every HTML page MUST include `nav-bar.js` (which exports `window.__MCP_BASE`):
+Mọi HTML page PHẢI include `nav-bar.js` (đã export `window.__MCP_BASE`):
 
 ```javascript
-// In nav-bar.js — auto-detect base path
+// Trong nav-bar.js — detect base path tự động
 const basePath = (function() {
     const base = document.querySelector('base');
     if (base) return base.getAttribute('href').replace(/\/$/, '');
@@ -45,30 +49,30 @@ const basePath = (function() {
 window.__MCP_BASE = basePath;
 ```
 
-In other pages:
+Trong các page khác:
 
 ```javascript
 const basePath = window.__MCP_BASE || '';
 ```
 
-## Rules by URL Type
+## Quy tắc cho từng loại URL
 
-| Type | Pattern | Example |
-|------|---------|---------|
+| Loại | Pattern | Ví dụ |
+|------|---------|-------|
 | **Page redirect** | `basePath + '/path'` | `window.location.href = basePath + '/login'` |
 | **API fetch** | `basePath + '/api/...'` | `fetch(basePath + '/api/auth/login')` |
 | **Static resource** | Relative path | `<script src="nav-bar.js">` |
 | **Nav links** | `basePath + '/path'` | `{ href: basePath + '/profile' }` |
 | **WebSocket** | Derive from `window.location` | `ws://${location.host}${basePath}/ws` |
 
-## Rules for `<script>` and `<link>` Tags
+## Quy tắc cho `<script>` và `<link>` tags
 
-- If HTML and resource are in **same directory** (`/static/`) → use relative: `src="nav-bar.js"`
-- If different directories → use `basePath`: do not hardcode `/static/`
+- Nếu HTML và resource **cùng thư mục** (`/static/`) → dùng relative: `src="nav-bar.js"`
+- Nếu khác thư mục → dùng `basePath`: không hardcode `/static/`
 
-## Pre-Commit Check
+## Kiểm tra trước khi commit
 
-Grep check — no occurrences of these patterns in HTML/JS:
+Grep check — không được có pattern sau trong HTML/JS:
 
 ```
 href="/          ← absolute href
@@ -79,4 +83,5 @@ src="/           ← absolute script/img src
 action="/        ← absolute form action
 ```
 
-Only exception: `href="/"` redirect to homepage → must be `basePath + '/'`.
+Ngoại lệ duy nhất: `href="/"` redirect về trang chủ → phải là `basePath + '/'`.
+

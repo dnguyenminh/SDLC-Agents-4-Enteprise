@@ -1,7 +1,10 @@
 ---
 name: phase-4-test-planning
-description: Phase 4 workflow — QA creates STP/STC, SM reviews, finalize with Jira attachment
+description: Phase 4: Test Planning (QA → STP/STC → SM Review)
 ---
+
+
+# Phase 4: Test Planning (QA → STP/STC → SM Review)
 
 ## Prerequisites
 
@@ -18,8 +21,8 @@ description: Phase 4 workflow — QA creates STP/STC, SM reviews, finalize with 
 ```
 invokeSubAgent(
   name: "qa-agent",
-  prompt: "Create STP and STC for {TICKET}. MUST create draw.io diagrams (test-coverage.drawio + test-execution-flow.drawio) and export PNG.",
-  contextFiles: [{ "path": ".opencode/skills/drawio-diagrams/SKILL.md" }]
+  prompt: "Tạo STP và STC cho {TICKET}. PHẢI tạo draw.io diagrams (test-coverage.drawio + test-execution-flow.drawio) và export PNG.",
+  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
 )
 ```
 
@@ -27,13 +30,13 @@ invokeSubAgent(
 
 ### Step 4b: SM Reviews STP/STC
 
-**SM self-review** with these criteria:
+**SM tự review** với các tiêu chí:
 
-| # | Criteria | Severity |
+| # | Tiêu chí | Severity |
 |---|----------|----------|
-| 1 | Completeness — RTM coverage = 100% | Critical |
+| 1 | Completeness — RTM coverage = 100%? | Critical |
 | 2 | 6 Test Levels (PBT, UT, IT, E2E-API, E2E-UI, SIT) | Critical |
-| 3 | E2E Classification — SIT maximized automation | High |
+| 3 | E2E Classification — SIT maximized automation? | High |
 | 4 | Consistency — counts, IDs match between STP/STC | High |
 | 5 | Test Case Quality — steps reproducible, data specific | High |
 | 6 | E2E-API Coverage — CRUD lifecycle, auth, errors | High |
@@ -51,18 +54,52 @@ invokeSubAgent(
 6. Check consistency (counts, IDs)
 7. Generate review report
 
+**Report Format:**
+```
+📋 STP/STC Review — {TICKET}
+
+✅ Điểm tốt:
+- ...
+
+⚠️ Cần cải thiện:
+- ...
+
+❌ Lỗi cần sửa:
+- ...
+
+Verdict: {Approve / Approve with conditions / Reject}
+```
+
 **Outcomes:**
 - **Approve** → proceed to finalize
 - **Approve with conditions** → QA fixes → re-verify → proceed
 - **Reject** → QA redo → re-review (max 2 iterations)
+
+### Step 4b.5: BA Reviews Test Cases (MANDATORY — QA done only after BA approves)
+
+**Sau khi SM review pass, BA PHẢI review STC để xác nhận test cases phản ánh đúng business requirements. QA chỉ hoàn thành việc khi BA agent đồng ý.**
+
+1. Invoke BA to review Test Cases (STC + STP). BA reads BRD/FSD from KB and checks:
+   1. Business coverage — Mọi User Story và Acceptance Criteria trong BRD đều có test case tương ứng?
+   2. Business rules — Mọi BR-XX trong FSD đều được test?
+   3. Đúng ý nghĩa nghiệp vụ — Expected results phản ánh đúng hành vi business mong đợi?
+   4. Edge cases nghiệp vụ — Các luồng exception/alternative quan trọng đã được cover?
+   5. Không thiếu, không thừa — Không bỏ sót requirement, không test ngoài scope.
+   BA returns verdict: **APPROVED** or **CHANGES REQUESTED** (with the list of gaps).
+
+2. Handle BA verdict:
+   - **APPROVED** → proceed to finalize
+   - **CHANGES REQUESTED** → invoke QA to fix STC/STP theo danh sách gap từ BA → re-invoke BA to re-review (max 2 iterations)
+
+3. ⛔ **QA test planning KHÔNG được đánh dấu done cho tới khi BA verdict = APPROVED.** Nếu sau 2 iterations vẫn CHANGES REQUESTED → report user.
 
 ### Step 4c: Fix Issues (if any)
 
 ```
 invokeSubAgent(
   name: "qa-agent",
-  prompt: "Fix the following issues in STP/STC for {TICKET}: {list}",
-  contextFiles: [{ "path": ".opencode/skills/drawio-diagrams/SKILL.md" }]
+  prompt: "Fix các issues sau trong STP/STC cho {TICKET}: {list}",
+  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
 )
 ```
 
@@ -83,11 +120,11 @@ jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{
 
 3. Report:
 ```
-Phase 4 done — STP.md + STC.md created and reviewed.
+✅ Phase 4 done — STP.md + STC.md created and reviewed.
 - {N} test cases across 6 levels
 - RTM coverage: 100%
 - Review: Approved
-Proceed to Phase 5 (Implementation)?
+Chuyển sang Phase 5 (Implementation)?
 ```
 
 4. Wait for user confirmation.
@@ -108,3 +145,5 @@ Proceed to Phase 5 (Implementation)?
 
 **QA reads:** KB (BRD + FSD + TDD)
 **QA writes:** STP.md, STC.md → KB
+
+

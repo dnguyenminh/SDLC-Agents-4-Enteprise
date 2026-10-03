@@ -13,11 +13,10 @@
  * (or NO_SAFE_MATCH_PENDED) + command hash + length.
  * SEC-08: the request input is zod-validated; a missing/renamed/invalid
  * `command` on a shell tool fails secure (pend), never empty-safe auto-approve.
+ *
+ * Shared plumbing (audit record, pend, command resolution) lives in
+ * approval-audit.ts — shared with the bash branch so both emit identical logs.
  */
-import * as crypto from 'node:crypto';
-import { z } from 'zod';
-import { debugLog } from '../debug-logger';
-import { ToolApprovalGate } from '../chat/engine/ToolApprovalGate';
 import {
   DESTRUCTIVE_PS_PATTERNS,
   normalizePsCommand,
@@ -25,72 +24,14 @@ import {
   matchedDestructiveCategory,
 } from '../chat/engine/ToolApprovalClassifier';
 import type { AutopilotMode } from '../chat-panel/message-protocol';
-
-/** Audit sentinel when a command matched neither destructive nor safe allowlist. */
-export const NO_SAFE_MATCH_PENDED = 'NO_SAFE_MATCH_PENDED';
-
-/** SEC-08: a shell tool's approval input must carry a string `command`. */
-const SHELL_INPUT_SCHEMA = z.object({ command: z.string() });
-
-interface GateResult {
-  approved: boolean;
-  reason?: string;
-}
-
-interface BranchDeps {
-  approvalGate: ToolApprovalGate;
-  onApprovalPending?: (toolName: string, toolUseId: string) => void;
-  getMode?: () => AutopilotMode;
-}
-
-/** Short, non-reversible hash of the command for audit without logging secrets (SEC-05). */
-function hashCommand(raw: string): string {
-  return crypto.createHash('sha256').update(raw).digest('hex').slice(0, 16);
-}
-
-/** Emit the structured tool_approval audit record (SEC-05, TDD §9.1). */
-function auditDecision(
-  toolName: string,
-  decision: 'auto-approve' | 'require-approval',
-  matchedPattern: string,
-  mode: AutopilotMode,
-  rawCommand: string
-): void {
-  debugLog(
-    `[PiWorkflowGate] tool_approval ` +
-    `event=tool_approval tool=${toolName} decision=${decision} ` +
-    `mode=${mode} matchedPattern=${matchedPattern} ` +
-    `commandHash=${hashCommand(rawCommand)} commandLength=${rawCommand.length}`
-  );
-}
-
-/** Ask the user via the real ToolApprovalGate and map the result. */
-async function pend(
-  deps: BranchDeps,
-  toolName: string,
-  toolUseId: string,
-  fallbackReason: string
-): Promise<GateResult> {
-  try {
-    deps.onApprovalPending?.(toolName, toolUseId);
-  } catch {
-    // Notification must never break the gate.
-  }
-  const result = await deps.approvalGate.requestApproval(toolUseId);
-  const decision = (result as { decision?: string })?.decision;
-  if (decision === 'approve') return { approved: true };
-  return { approved: false, reason: (result as { reason?: string })?.reason || fallbackReason };
-}
-
-/**
- * Resolve a shell command string from the approval request input (SEC-08).
- * Returns null when the input does not carry a valid string `command`.
- * @param input raw approval-request input object
- */
-export function resolveShellCommand(input: unknown): string | null {
-  const parsed = SHELL_INPUT_SCHEMA.safeParse(input);
-  return parsed.success ? parsed.data.command : null;
-}
+import {
+  NO_SAFE_MATCH_PENDED,
+  auditDecision,
+  pend,
+  resolveShellCommand,
+  type BranchDeps,
+  type GateResult,
+} from './approval-audit.js';
 
 /**
  * Evaluate the PowerShell approval decision (TDD v1.2 §3.2 Steps 1/1b/1c).
@@ -135,6 +76,9 @@ export async function evaluatePowerShellApproval(
   return pend(deps, req.toolName, req.toolUseId,
     'Unrecognized PowerShell command requires approval (fail-secure)');
 }
+
+/** Shared sentinels/helpers kept exported for backwards compatibility. */
+export { NO_SAFE_MATCH_PENDED, resolveShellCommand };
 
 /** Re-exported so the gate can reference the canonical destructive list if needed. */
 export { DESTRUCTIVE_PS_PATTERNS };

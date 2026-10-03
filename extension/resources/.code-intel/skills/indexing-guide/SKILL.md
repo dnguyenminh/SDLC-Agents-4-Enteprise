@@ -1,48 +1,52 @@
 ---
 name: indexing-guide
-description: Guide for indexing source code and documents into Knowledge Base
+description: Indexing Guide — Source Code & Documents
 ---
 
-## Overview
 
-Code Intelligence provides 2 types of indexing:
-1. **Code Indexing** — automatic indexing of source code (classes, functions, interfaces) into SQLite FTS5
-2. **Document Indexing** — manual indexing of documents (BRD, FSD, TDD, etc.) into Memory Knowledge Base
 
-## 1. Code Indexing (Automatic)
+# Indexing Guide — Source Code & Documents
 
-MCP server auto-indexes on startup. Check status:
+## Tổng quan
+
+Hệ thống Code Intelligence cung cấp 2 loại indexing:
+1. **Code Indexing** — tự động index source code (classes, functions, interfaces) vào SQLite FTS5
+2. **Document Indexing** — thủ công index tài liệu (BRD, FSD, TDD, etc.) vào Memory Knowledge Base
+
+## 1. Code Indexing (Tự động)
+
+MCP server tự động index khi khởi động. Kiểm tra trạng thái:
 
 ```
 Tool: code_index_status
 ```
 
-### Manual Re-index
+### Re-index thủ công
 
 ```
 Tool: code_index_status
 Arguments: { "reindex": true }
 ```
 
-### Sync Code Symbols into Memory Graph
+### Sync code symbols vào Memory Graph
 
-After code is indexed, sync into memory for cross-reference search:
+Sau khi code đã indexed, sync vào memory để agents có thể tìm cross-references:
 
 ```
 Tool: mem_sync_code
 Arguments: {} (sync all classes + interfaces)
 ```
 
-Or filter by kind:
+Hoặc filter theo kind:
 
 ```
 Tool: mem_sync_code
 Arguments: { "kind": "class", "limit": 500 }
 ```
 
-## 2. Document Indexing (Manual)
+## 2. Document Indexing (Thủ công)
 
-### Index a Single Document
+### Index một tài liệu
 
 ```
 Tool: mem_ingest_file
@@ -53,7 +57,7 @@ Arguments: {
 }
 ```
 
-### Document Types
+### Các type phù hợp cho từng loại tài liệu
 
 | Document | Type |
 |----------|------|
@@ -66,9 +70,9 @@ Arguments: {
 | Error patterns | `ERROR_PATTERN` |
 | Lessons learned | `LESSON_LEARNED` |
 
-### Index Multiple Documents
+### Index nhiều tài liệu cùng lúc
 
-Call `mem_ingest_file` for each file. Example indexing all docs for ticket KSA-14:
+Gọi `mem_ingest_file` cho từng file. Ví dụ index toàn bộ ticket KSA-14:
 
 ```
 mem_ingest_file → documents/KSA-14/BRD.md (type: REQUIREMENT)
@@ -76,22 +80,22 @@ mem_ingest_file → documents/KSA-14/FSD.md (type: REQUIREMENT)
 mem_ingest_file → documents/KSA-14/TDD.md (type: ARCHITECTURE)
 ```
 
-## 3. Check Memory Status
+## 3. Kiểm tra trạng thái Memory
 
 ```
 Tool: mem_status
 ```
 
-Returns: entry counts, tier breakdown, vector count.
+Trả về: entry counts, tier breakdown, vector count.
 
-## 4. Search in Knowledge Base
+## 4. Tìm kiếm trong Knowledge Base
 
 ```
 Tool: mem_search
 Arguments: { "query": "authentication flow", "detail": true }
 ```
 
-Filter by role:
+Filter theo role:
 
 ```
 Tool: mem_search
@@ -100,16 +104,17 @@ Arguments: { "query": "API design", "role": "SA" }
 
 ## 5. Best Practices
 
-- **When to re-index code**: After adding/removing many files, or after large branch merge
-- **When to index documents**: Immediately after creating/updating BRD, FSD, TDD
-- **When to sync code**: After re-index, or when agents need cross-reference between code and documents
-- **Consolidate memory**: Run `mem_consolidate` periodically to promote/demote entries by access patterns
+- **Khi nào re-index code**: Sau khi thêm/xóa nhiều files, hoặc sau merge branch lớn
+- **Khi nào index documents**: Ngay sau khi tạo/cập nhật BRD, FSD, TDD
+- **Khi nào sync code**: Sau re-index, hoặc khi agents cần cross-reference code ↔ documents
+- **Consolidate memory**: Chạy `mem_consolidate` định kỳ để promote/demote entries theo access patterns
 
 ## 6. Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| `code_index_status` returns 0 files | Check `--workspace` arg in mcp.json |
-| `mem_search` cannot find document | Run `mem_ingest_file` for that document |
-| Semantic search not working | Check Ollama is running + model pulled |
-| Memory has too many old entries | Run `mem_consolidate` |
+| Vấn đề | Giải pháp |
+|--------|-----------|
+| `code_index_status` trả về 0 files | Kiểm tra `--workspace` arg trong mcp.json |
+| `mem_search` không tìm thấy document | Chạy `mem_ingest_file` cho document đó |
+| Semantic search không hoạt động | Kiểm tra Ollama đang chạy + model đã pull |
+| Memory quá nhiều entries cũ | Chạy `mem_consolidate` |
+

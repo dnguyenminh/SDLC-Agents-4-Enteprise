@@ -22,7 +22,6 @@ import { FileWatcher } from './file-watcher.js';
 import { IndexScope, resolveScope } from './index-scope.js';
 import { GraphSyncService } from '../graph/graph-sync-service.js';
 import { GraphRepository as AdminGraphRepository } from '../../database/repositories/GraphRepository.js';
-import { getDbAdapter } from '../../admin/db/core.js';
 import type { IndexResult } from '../parsers/types.js';
 import type { ProgressPhase } from './types.js';
 import { CodeEnrichmentTaskCreator } from '../enrichment/CodeEnrichmentTaskCreator.js';
@@ -118,6 +117,11 @@ export class IndexingEngine {
     this.indexing.add(projectId);
     logger.error(`[indexer] Starting full index (project=${projectId})...`);
     await new Promise<void>(resolve => setImmediate(resolve));
+    // ROOT-CAUSE FIX: register the workspace BEFORE scanning. The old code only
+    // registered at the very END of this method, so a mid-run kill (tsx watch
+    // restart, crash, abort early-return above/below) left project_registry
+    // permanently empty. Registration is non-fatal (registerWorkspace catches).
+    await this.registerWorkspace(projectId, workspace, displayName);
     try {
       // SA4E-101: Checksum service setup
       let checksumService: ChecksumService | undefined;
@@ -155,7 +159,8 @@ export class IndexingEngine {
       await this.createEnrichmentTasks(projectId);
       await new Promise<void>(resolve => setImmediate(resolve));
       logSfdxStats(this.adapter, this.config, logger);
-      this.registerWorkspace(projectId, workspace, displayName);
+      // Awaited (was fire-and-forget): refresh last_seen at successful completion.
+      await this.registerWorkspace(projectId, workspace, displayName);
 
       this.emitProgress(projectId, 'complete', files.length, files.length, undefined, this.indexSkipped);
       logger.error('[indexer] Full index complete');
@@ -199,18 +204,28 @@ export class IndexingEngine {
     }
   }
 
-  /** Register workspace in project_registry so admin dropdown shows it (non-fatal). */
-  private registerWorkspace(projectId: string, workspace: string, displayName?: string): void {
+  /**
+   * Register workspace in project_registry so admin dropdown shows it (non-fatal).
+   * PUBLIC: the file-events route calls this for tenants that only ever push
+   * incremental events (POST /api/index/file-events never runs runFullIndex).
+   *
+   * MUST be awaited by callers — the previous sync `try/catch` wrapper could not
+   * catch the `registerProject` promise rejection, so a failed INSERT on
+   * PostgreSQL became a silent unhandled rejection (no warn log, empty table).
+   * Uses THIS engine's adapter (unified-DB contract, SA4E-49) instead of the
+   * global getDbAdapter() so it writes wherever index data is written.
+   */
+  public async registerWorkspace(projectId: string, workspace: string, displayName?: string): Promise<void> {
     try {
-      const repo = new AdminGraphRepository(getDbAdapter());
+      const repo = new AdminGraphRepository(this.adapter);
       // Prefer the client's real workspace name (X-Workspace-Root). The `workspace`
       // arg is a synthetic temp scan dir named after projectId, so its basename would
       // wrongly make display_name === project_id. Fall back to it only when no real
       // name was provided (e.g. boot-time indexing of the actual config.workspace).
       const name = displayName || path.basename(workspace);
-      repo.registerProject(projectId, name, workspace);
+      await repo.registerProject(projectId, name, workspace);
     } catch (err) {
-      logger.warn({ err }, '[indexer] project_registry upsert skipped (non-fatal)');
+      logger.warn({ err, projectId }, '[indexer] project_registry upsert skipped (non-fatal)');
     }
   }
 

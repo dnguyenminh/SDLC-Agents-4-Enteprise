@@ -1,44 +1,46 @@
 ---
 name: release-versioning
-description: Release versioning rules — bump publishable module versions before tagging, run tests, create tag
+description: Git release process — merge, version bump, tagging, README update
 ---
 
-## Mandatory Rule When Creating a Release Tag
+## Git Release Process (MANDATORY after successful deployment)
 
-Before creating a tag, MUST bump the version of ALL publishable modules:
+### Rules
+- Each implemented ticket = 1 branch (branch name = `{TICKET}`)
+- Each merge to master = 1 version bump + git tag
+- Do NOT merge if sanity test hasn't passed
+- Do NOT tag on branch — only tag on master after merge
 
-| Module | File | Registry |
-|--------|------|----------|
-| Extension | `extension/package.json` → `"version"` | VS Code Marketplace |
-| Backend | `backend/package.json` → `"version"` | npm |
-| Python Services | `backend/servers/fastapi/pyproject.toml` → `version` | PyPI |
+### Steps
+1. **Merge branch into master:**
+   ```bash
+   git checkout master && git pull origin master
+   git merge {TICKET} --no-ff -m "Merge {TICKET}: {summary}"
+   git push origin master
+   ```
 
-## Release Process (DevOps + SM)
+2. **Bump version (semver):**
+   - MAJOR: Breaking changes
+   - MINOR: New feature (default per ticket)
+   - PATCH: Bug fix, hotfix
+   ```bash
+   git tag -a v{VERSION} -m "{TICKET}: {summary}"
+   git push origin v{VERSION}
+   ```
 
-1. **Bump versions** — all modules must have a new version (npm/PyPI reject duplicates)
-2. **Run tests locally** — `npm test` (backend + extension) using Vitest
-3. **Commit version bumps** — `chore: bump versions to X.Y.Z for release`
-4. **Create tag** — `git tag vX.Y.Z -m "description"`
-5. **Push** — `git push origin master --tags`
-6. **Monitor CI** — `gh run watch` — if failing, fix immediately
+3. **Update README.md:**
+   - Add entry to `## Changelog` section
+   ```markdown
+   ### v{VERSION} — {YYYY-MM-DD}
+   - **{TICKET}**: {summary of changes}
+   ```
+   ```bash
+   git add README.md && git commit -m "docs: update changelog for v{VERSION}"
+   git push origin master
+   ```
 
-## Version Format
-
-- Major release: `v1.2.0` → bump all modules to match (e.g., `1.2.0`)
-- Patch release: `v1.2.1` → bump only the modules that changed (e.g., `1.0.0` → `1.0.1`)
-- Module versions do NOT need to match the project version, only need to be > previous published version
-
-## NEVER
-
-- Create a tag without bumping module versions
-- Push a tag while tests have not passed locally
-- Delete + recreate a tag more than 2 times (fail twice → stop, debug the root cause)
-
-## When CI Fails
-
-1. `gh run view --log-failed` — inspect the error
-2. Fix locally, run tests
-3. Commit the fix
-4. Delete old tag: `git tag -d vX.Y.Z && git push origin :refs/tags/vX.Y.Z`
-5. Recreate: `git tag vX.Y.Z -m "..."`
-6. Push: `git push origin master --tags`
+4. **Cleanup branch:**
+   ```bash
+   git branch -d {TICKET}
+   git push origin --delete {TICKET}
+   ```

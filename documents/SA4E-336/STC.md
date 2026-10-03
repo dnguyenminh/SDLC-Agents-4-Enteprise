@@ -1868,12 +1868,12 @@
 | Step | Action | Expected Result |
 |------|--------|-----------------|
 | 1 | Run destructive matrix for `powershell` — all 7 patterns from FSD §7.3 (`Remove-Item`, `rm -`, `Clear-`, `Format-`, `Stop-Process`, `git push`, `git commit`) × BOTH modes (`getMode()` → supervised / autopilot) | ALL 14 decisions = `require-approval` (pend) — `DESTRUCTIVE_PS_PATTERNS` checked FIRST on the normalized command, **mode-independent** (BR-11, fail-secure; TDD v1.2 §3.2 Step 1) |
-| 2 | Run same 7 pattern commands with `bash` under default Supervised (`getMode()` unwired) | ALL 7 → `require-approval` (pend) — default supervised path; `bash` is NOT content-gated and NOT allowlist-driven — this is the pre-upgrade behavior, **NOT "identical to PS"** (TDD v1.2 §7.2) |
-| 3 | Run same 7 pattern commands with `bash` under Autopilot | ALL 7 → `auto-approve` — **pre-existing exposure, UNCHANGED per BRD §1.2** (`requiresApproval('bash') === false`; command-content check and allowlist are powershell-only; TDD v1.2 §7.2 Bash note, SEC-06 tracked debt) — documented baseline, not a bypass introduced by this upgrade |
+| 2 | Run same 7 pattern commands with `bash` under default Supervised (`getMode()` unwired) | ALL 7 → `require-approval` (pend) — either the `DESTRUCTIVE_BASH_PATTERNS` content guard or the default supervised path; `bash` is NOT allowlist-driven — pre-upgrade behavior for non-destructive commands, **NOT "identical to PS"** (TDD v1.3 §7.2) |
+| 3 | Run same 7 pattern commands with `bash` under Autopilot | Split, by command CONTENT: commands matching `DESTRUCTIVE_BASH_PATTERNS` (`rm …`, `Format-…`) → **`require-approval` mode-independent — SEC-06 CLOSED (SA4E-335 follow-up, TDD v1.3 §3.2 Step 1a-bash)**; the PS-cmdlet-shaped remainder (`Remove-Item`, `Clear-`, `Stop-Process`, `git push`, `git commit`) → `auto-approve` (bash has no PowerShell semantics — unchanged pre-upgrade path) |
 
 **Test Data:** matrix = {`powershell`, `bash`} × {`Remove-Item`, `rm -`, `Clear-`, `Format-`, `Stop-Process`, `git push`, `git commit`} × {supervised, autopilot}
-**Postconditions:** No security bypass for `powershell`; `bash` gate behavior identical to pre-upgrade (BRD §1.2), divergent from PS (NOT identical)
-**Acceptance Criteria:** All destructive PowerShell commands require approval in BOTH modes (FSD NFR §8, honored via allowlist-of-safe); bash gate behavior unchanged from pre-upgrade and distinct from PS (BRD §1.2)
+**Postconditions:** No security bypass for `powershell`; destructive **bash command content** gated in BOTH modes (SEC-06 closed); non-destructive bash still mode-scoped and divergent from PS (BRD §1.2)
+**Acceptance Criteria:** All destructive PowerShell commands require approval in BOTH modes (FSD NFR §8, honored via allowlist-of-safe); destructive bash command content requires approval in BOTH modes (TDD v1.3 §3.2/§7.2, closes SEC-06); non-destructive bash behavior unchanged and distinct from PS (BRD §1.2)
 **File:** `extension/src/pi-workflow/__tests__/pi-workflow-gate.test.ts`
 
 ---
@@ -2010,12 +2010,14 @@
 |------|--------|-----------------|
 | 1 | `handler.requestApproval({ toolName: 'powershell', input: { command: 'Get-ChildItem' } })` in BOTH modes | `approved: true` — auto-approve both modes via `READONLY_PS_PATTERNS` positive match (TDD v1.2 §3.2 Step 1b, BR-10), NOT via name-set membership |
 | 2 | `handler.requestApproval({ toolName: 'powershell', input: { command: 'Remove-Item -Recurse' } })` in BOTH modes | `approved: false` (pending → rejected) — require-approval both modes (`DESTRUCTIVE_PS_PATTERNS` Step 1, mode-independent, BR-11) |
-| 3 | `handler.requestApproval({ toolName: 'bash', input: { command: 'Get-ChildItem' } })` under default Supervised (`getMode()` unwired) | **Pends via gate — NOT auto-approve** (bash NOT content-gated, NOT allowlist-driven; TDD v1.2 §7.2) — decisions differ from powershell (NOT "identical to PS") |
+| 3 | `handler.requestApproval({ toolName: 'bash', input: { command: 'Get-ChildItem' } })` under default Supervised (`getMode()` unwired) | **Pends via gate — NOT auto-approve** (non-destructive → content guard returns null → default supervised path; bash NOT allowlist-driven; TDD v1.3 §7.2) — decisions differ from powershell (NOT "identical to PS") |
 | 4 | Same bash call with `getMode()` → `'autopilot'` | `approved: true` — auto-approve non-destructive (TDD v1.2 §7.2) |
-| 5 | Repeat bash with destructive command (`Remove-Item -Recurse`) in both modes | Supervised → pend; Autopilot → auto-approve (**pre-existing exposure UNCHANGED**, BRD §1.2; SEC-06 tracked debt) |
-| 6 | Verify Story 4 semantics | **Security-policy equivalence**, not identical decisions: non-safe powershell ALWAYS gated (allowlist-of-safe — Story 4/FSD UC-003 postcondition, NFR-SEC-01); bash keeps pre-upgrade mode-dependent behavior — matrix per TDD v1.2 §7.2 |
+| 5a | Repeat bash with a PowerShell-cmdlet "destructive" command (`Remove-Item -Recurse`) in both modes | Supervised → pend; Autopilot → auto-approve — unchanged (bash has no `Remove-Item` semantics; it matches no `DESTRUCTIVE_BASH_PATTERNS` entry) |
+| 5b | Repeat bash with destructive **bash** command content (`docker compose down -v`) in both modes | BOTH modes → `require-approval` (pend) — `DESTRUCTIVE_BASH_PATTERNS` content guard, mode-independent, evaluated BEFORE the remembered-pattern and Autopilot branches (**SEC-06 CLOSED**, TDD v1.3 §3.2 Step 1a-bash) |
+| 5c | Same call with a harmless docker command (`docker ps`, `docker run --rm nginx`) under Autopilot | `approved: true`, gate NOT called — no over-pend regression (`--rm` is not mis-classified as file deletion) |
+| 6 | Verify Story 4 semantics | **Security-policy equivalence**, not identical decisions: non-safe powershell ALWAYS gated (allowlist-of-safe — Story 4/FSD UC-003 postcondition, NFR-SEC-01); bash keeps mode-dependent behavior for non-destructive commands but gates destructive content in BOTH modes — matrix per TDD v1.3 §7.2 |
 
-**Test Data:** commands = `Get-ChildItem`, `Remove-Item -Recurse`; tools = `powershell`, `bash`; modes = `supervised`, `autopilot`
+**Test Data:** commands = `Get-ChildItem`, `Remove-Item -Recurse`, `docker compose down -v`, `docker ps`, `docker run --rm nginx`; tools = `powershell`, `bash`; modes = `supervised`, `autopilot`
 **Postconditions:** None
 **File:** `extension/src/pi-workflow/__tests__/pi-workflow-gate.test.ts`
 
@@ -2414,7 +2416,7 @@
 | SEC-03 | High | Bypass-resistance (encode/iex/call-op/escape/concat/cmd/download+exec) + normalization | TC-111, TC-410 | ✅ |
 | SEC-04 | Medium | Ordering invariant — destructive never auto-approved via read-only path | TC-112 | ✅ |
 | SEC-05 | Medium | Audit log — matched pattern/category + mode + hash/length + `NO_SAFE_MATCH_PENDED` | TC-608 | ✅ |
-| SEC-06 | Medium | Bash under Autopilot destructive exposure (tracked debt, UNCHANGED) | TC-606, TC-701 (documented baseline) | ✅ (documented) |
+| SEC-06 | Medium | Bash under Autopilot destructive exposure — **CLOSED** by `DESTRUCTIVE_BASH_PATTERNS` content guard (SA4E-335 follow-up) | TC-606 step 3, TC-701 step 5b/5c | ✅ |
 | SEC-07 | High | Dependency supply-chain gate (npm audit, pins, single-version, capability) | TC-609 | ✅ |
 | SEC-08 | Medium | Malformed/renamed input field → fail-secure pend | TC-113, TC-406 | ✅ |
 | SEC-09 | Low | Unwired `getMode()` → Supervised (regression) | TC-114 | ✅ |

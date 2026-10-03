@@ -64,13 +64,18 @@ function mergeModuleLanguages(
 ): ModuleAggregate[] {
   const merged = new Map<string, ModuleAggregate & { top: number }>();
   for (const row of rows) {
+    // PostgreSQL returns COUNT(*) (int8) as a STRING (node-pg default) — raw
+    // `+=` would string-concat ("16"+"1234…" → 18 digits) and blow past the
+    // integer range on INSERT (PG 22003). Coerce before any arithmetic.
+    const fileCount = Number(row.file_count);
+    const symbolCount = Number(row.symbol_count);
     const cur = merged.get(row.module);
     if (!cur) {
-      merged.set(row.module, { name: row.module, language: row.language, file_count: row.file_count, symbol_count: row.symbol_count, top: row.file_count });
+      merged.set(row.module, { name: row.module, language: row.language, file_count: fileCount, symbol_count: symbolCount, top: fileCount });
     } else {
-      cur.file_count += row.file_count;
-      cur.symbol_count = Math.max(cur.symbol_count, row.symbol_count);
-      if (row.file_count > cur.top) { cur.language = row.language; cur.top = row.file_count; }
+      cur.file_count += fileCount;
+      cur.symbol_count = Math.max(cur.symbol_count, symbolCount);
+      if (fileCount > cur.top) { cur.language = row.language; cur.top = fileCount; }
     }
   }
   return [...merged.values()].map(({ top, ...m }) => m);

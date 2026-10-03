@@ -150,6 +150,15 @@ export async function handleFileEvents(c: Context, registry: ModuleRegistry, log
     const indexer = codeIntel?.getIndexer() as any;
     if (!indexer) return c.json({ error: 'Code intelligence not ready' }, 503);
 
+    // ROOT-CAUSE FIX: incremental tenants never run runFullIndex, so nothing
+    // ever wrote project_registry for them (empty admin dropdown). Register the
+    // project once per batch here — non-fatal, indexing continues on failure.
+    try {
+      await indexer.registerWorkspace(scope.projectId, scope.workspace, scope.displayName);
+    } catch (err) {
+      logger.warn({ err, projectId: scope.projectId }, '[index] project_registry register skipped (non-fatal)');
+    }
+
     const result: FileEventsResult = {
       indexed: 0, updated: 0, removed: 0,
       skipped: 0, rejected: [], projectId: scope.projectId,

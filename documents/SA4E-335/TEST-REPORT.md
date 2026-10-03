@@ -162,6 +162,15 @@ No results fabricated (task rule §6).
 
 **Basis:** independent re-execution by qa-agent after DEV's remediation (RUN-LOG #26). DEV's claims were **not trusted as evidence** — every case below was re-run from actual commands against the current tree (`70d39d6` + uncommitted DEF-001..004 fixes). Test-state hygiene: all `backend_*` volumes removed before the integration re-runs (`compose down -v`), so results are reproducible from fresh state (v1.0's stale-volume password mismatch no longer masks anything).
 
+> ⛔ **Do not copy the `compose down -v` step above (§4A) into new procedures.** It is
+> retained here as historical evidence of what was executed, but it destroyed
+> `backend_postgres_data` + `backend_code_intel_data` on 2026-10-03 (see
+> `RUN-LOG.md` #31) and the pre-incident Postgres data could not be recovered.
+> Current procedure: fresh-state testing runs on the isolated compose project
+> `sa4e-test` via `npm run db:test:up` / `npm run db:test:down`; any
+> volume-destroying teardown on the production project requires `npm run db:backup`
+> first. See `UAT-READINESS.md` §3.6.
+
 | Case | v1.0 | Retest | Steps executed (this session) | Actual / Evidence |
 |------|------|--------|-------------------------------|-------------------|
 | TC-BUILD-02 | **FAIL** | ✅ **PASS** | `docker build --target test -t sa4e-backend:qa-r2-test backend/` | **exit 0** (169s) — `[test 6/8] COPY tests/ ./tests/ DONE`, `[test 7/8] COPY .env.test ./ DONE`; `.dockerignore` now carries `!tests` + `!.env.test` negations (after the exclusions, last-match-wins) with `secrets` still excluded → **DEF-001 CLOSED** |

@@ -79,3 +79,41 @@ describe('updateModules bilingual merge', () => {
     expect(row?.file_count).toBe(7);
   });
 });
+
+describe('updateModules PG int8-as-string coercion (22003 regression)', () => {
+  let adapter: SqliteAdapter;
+  beforeEach(async () => {
+    adapter = new SqliteAdapter(':memory:');
+    await adapter.connect();
+    adapter.exec(SCHEMA);
+    seedBilingual(adapter);
+  });
+  afterEach(async () => {
+    if (adapter.isConnected()) await adapter.disconnect();
+  });
+
+  it('coerces stringified COUNT(*) before summing (no string-concat)', async () => {
+    // mixed: files 1(ts)+2(py)=2 → add a third (py) so merge has 2 rows to sum.
+    adapter.exec(`INSERT INTO files (id, project_id, path, relative_path, language, module, content_hash, size_bytes) VALUES
+      (4, 'p1', '/w/d.py', 'd.py', 'python', 'mixed', 'h4', 60)`);
+    // Simulate node-pg: COUNT(*) (int8) arrives as a STRING on PostgreSQL.
+    const pgStringAdapter = new Proxy(adapter, {
+      get(target, prop, recv) {
+        const value = Reflect.get(target, prop, recv);
+        if (prop === 'allAsync' && typeof value === 'function') {
+          return async (...args: unknown[]) => {
+            const rows = (await value.apply(target, args)) as Record<string, unknown>[];
+            return rows.map(r => ({ ...r, file_count: String(r.file_count), symbol_count: String(r.symbol_count) }));
+          };
+        }
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+    await updateModules(pgStringAdapter as any, 'p1');
+    const row = adapter.get<{ file_count: number; symbol_count: number }>(
+      `SELECT file_count, symbol_count FROM modules WHERE project_id = 'p1' AND name = 'mixed'`);
+    // Without Number(): "1" + "2" = "12" → INSERT 12 (PG 22003 out-of-range on bigint sums).
+    expect(row?.file_count).toBe(3);
+    expect(row?.symbol_count).toBe(3);
+  });
+});

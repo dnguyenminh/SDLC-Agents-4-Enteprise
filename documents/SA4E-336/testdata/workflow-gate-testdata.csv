@@ -37,13 +37,18 @@ TC-408,powershell,Get-ChildItem <random-args>,both,auto-approve,Property: read-o
 TC-606,powershell,Remove-Item -Recurse C:\temp\test,both,require-approval,Real gate — destructive PS matrix gated in BOTH modes (DESTRUCTIVE_PS_PATTERNS first — mode-independent),NFR security — destructive matrix PS (7 patterns × both modes)
 TC-606,powershell,Stop-Process -Name node,both,require-approval,Real gate — destructive PS matrix — mode-independent (TDD §7.2),NFR security — destructive matrix PS variant
 TC-606,bash,Remove-Item -Recurse C:\temp\test,supervised,require-approval,Real gate — destructive bash PENDS under default Supervised (bash NOT name-based gated — TDD §7.2),NFR security — destructive matrix bash (Supervised)
-TC-606,bash,Remove-Item -Recurse C:\temp\test,autopilot,auto-approve,Auto-approve — pre-existing exposure UNCHANGED per BRD §1.2 (TDD §7.2 Bash note),NFR security — destructive matrix bash (Autopilot documented exposure)
+TC-606,bash,Remove-Item -Recurse C:\temp\test,autopilot,auto-approve,Auto-approve — PS cmdlet shape matches NO DESTRUCTIVE_BASH_PATTERNS entry so the unchanged legacy path applies (bash has no Remove-Item semantics),NFR security — destructive matrix bash (PS-cmdlet shape unchanged by the SA4E-335 guard)
+TC-606,bash,docker volume rm backend_postgres_data,both,require-approval,SA4E-335 — DESTRUCTIVE_BASH_PATTERNS content guard pends in BOTH modes BEFORE the remembered-pattern and Autopilot branches (SEC-06 closed),NFR security — destructive bash content gate
+TC-606,bash,docker compose -f docker-compose.yml down -v,autopilot,require-approval,SA4E-335 — the incident command no longer auto-approves under Autopilot (content guard also beats an Allow-all pattern),NFR security — destructive bash content gate (incident command)
 TC-701,powershell,Get-ChildItem,both,auto-approve,IT-02 — read-only PS auto-approved in BOTH modes (BR-10),IT — mode-scoped parity: PS read-only
 TC-701,powershell,Remove-Item -Recurse,both,require-approval,IT-02 — destructive PS require-approval in BOTH modes (BR-11),IT — mode-scoped parity: PS destructive
 TC-701,bash,Get-ChildItem,supervised,require-approval,IT-02 — bash pends under default Supervised (NOT identical to PS — TDD §7.2),IT — mode-scoped parity: bash read-only Supervised
 TC-701,bash,Get-ChildItem,autopilot,auto-approve,IT-02 — bash auto-approved under Autopilot (non-destructive),IT — mode-scoped parity: bash read-only Autopilot
 TC-701,bash,Remove-Item -Recurse,supervised,require-approval,IT-02 — destructive bash still pends under Supervised,IT — mode-scoped parity: bash destructive Supervised
-TC-701,bash,Remove-Item -Recurse,autopilot,auto-approve,IT-02 — destructive bash auto-approved under Autopilot (pre-existing exposure UNCHANGED),IT — mode-scoped parity: bash destructive Autopilot
+TC-701,bash,Remove-Item -Recurse,autopilot,auto-approve,IT-02 — unchanged: a PS-cmdlet shape is not bash-destructive content so the legacy Autopilot path still applies,IT — mode-scoped parity: bash PS-cmdlet shape Autopilot
+TC-701,bash,docker compose down -v,both,require-approval,IT-02 — destructive bash CONTENT gated in BOTH modes via DESTRUCTIVE_BASH_PATTERNS (SEC-06 closed),IT — bash content guard mode-independence
+TC-701,bash,docker ps,autopilot,auto-approve,IT-02 — content guard returns null for non-destructive docker commands so there is no over-pend regression,IT — bash content guard no over-pend
+TC-701,bash,docker run --rm nginx,autopilot,auto-approve,IT-02 — the whitespace-anchored rm pattern does NOT mis-classify --rm as file deletion,IT — bash content guard --rm false positive
 TC-702,powershell,,n/a,shell,classifyTool('powershell') → 'shell'; mapAgentEvent payload well-formed for display,IT-03 — stream protocol with PowerShell renders
 TC-804,write,,supervised,require-approval,Still gated through real gate (spy called) under default Supervised,Regression — write still gated (Supervised)
 TC-804,edit,,supervised,require-approval,Still gated through real gate under default Supervised,Regression — edit still gated (Supervised)
@@ -51,6 +56,7 @@ TC-804,bash,,supervised,require-approval,Still gated through real gate under def
 TC-804,write,,autopilot,auto-approve,Not in DANGEROUS_TOOL_PATTERNS — Autopilot auto-approves (pre-upgrade semantics UNCHANGED),Regression — write Autopilot semantics unchanged
 TC-804,edit,,autopilot,auto-approve,Not in DANGEROUS_TOOL_PATTERNS — Autopilot auto-approves (pre-upgrade semantics UNCHANGED),Regression — edit Autopilot semantics unchanged
 TC-804,bash,,autopilot,auto-approve,requiresApproval('bash') === false — Autopilot auto-approves (TDD §7.2),Regression — bash Autopilot semantics unchanged
+TC-804,bash,docker volume rm backend_postgres_data,autopilot,require-approval,SA4E-335 regression — destructive bash content reaches the real gate under Autopilot (spy called) instead of auto-approving,Regression — bash destructive Autopilot now gated (SEC-06 closed)
 TC-807,bash,ls,supervised,require-approval,{approved:false} — pends via ToolApprovalGate; gate spy called (TDD §11.3 TC-15),Bash regression — Supervised pends (BRD §1.2)
 TC-808,bash,ls,autopilot,auto-approve,{approved:true} — auto-approve; gate spy NOT called (TDD §11.3 TC-16),Bash regression — Autopilot auto-approves non-destructive
 TC-006,powershell,3,n/a,powershell-dialect,buildFailureSteerCorrection('powershell',3) contains Tool 'powershell' failed 3 times + PowerShell cmdlets guidance,Happy path — steer correction PowerShell dialect

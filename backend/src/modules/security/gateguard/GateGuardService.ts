@@ -23,6 +23,14 @@ const DEFAULT_PATTERNS: DenyPattern[] = [
   { id: 'default-git-reset-hard', regex: 'git reset --hard', description: 'Hard reset', isDefault: true },
   { id: 'default-kubectl-delete-ns', regex: 'kubectl delete namespace', description: 'Delete k8s namespace', isDefault: true },
   { id: 'default-docker-prune', regex: 'docker system prune -a', description: 'Docker full prune', isDefault: true },
+  // SA4E-335: container / stack data destruction (parity with the extension
+  // bash gate, DESTRUCTIVE_BASH_PATTERNS). Segments use [^\n;|&]* instead of
+  // `.*` so each alternative stays bounded to a single command — ReDoS-safe and
+  // immune to cross-command smuggling (`echo down -v; docker compose down`).
+  { id: 'default-docker-volume-rm', regex: 'docker\\s+volume\\s+(rm|prune)\\b', description: 'Docker volume removal/prune', isDefault: true },
+  { id: 'default-docker-compose-down-v', regex: 'docker\\s+compose\\b[^\\n;|&]*\\sdown\\b[^\\n;|&]*\\s(-v|--volumes)\\b', description: 'docker compose down that deletes volumes', isDefault: true },
+  { id: 'default-docker-system-prune', regex: 'docker\\s+system\\s+prune\\b', description: 'Docker system prune', isDefault: true },
+  { id: 'default-docker-rm-force', regex: 'docker\\s+rm\\s+-f\\b', description: 'Force remove container', isDefault: true },
 ];
 
 /** SEC-05: Input that forces catastrophic backtracking for naive pattern detection. */

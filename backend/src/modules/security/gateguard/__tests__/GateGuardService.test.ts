@@ -142,6 +142,42 @@ describe('GateGuardService', () => {
     });
   });
 
+  describe('evaluate() — SA4E-335 container data destruction (closes SEC-06 parity)', () => {
+    it.each([
+      'docker compose -f docker-compose.yml down -v',
+      'docker compose down --volumes',
+      'docker volume rm backend_postgres_data',
+      'docker volume prune -f',
+      'docker system prune',
+      'docker system prune -af',
+      'docker rm -f sa4e-postgres',
+    ])('blocks %s', async (command) => {
+      const result = await service.evaluate(command);
+      expect(result.action, command).toBe('blocked');
+      expect(result.patternMatched, command).toBeDefined();
+    });
+
+    it.each([
+      'docker ps',
+      'docker run --rm nginx',
+      'docker compose up -d',
+      'docker compose config',
+    ])('allows %s (no over-block)', async (command) => {
+      const result = await service.evaluate(command);
+      expect(result.action, command).toBe('allowed');
+    });
+
+    it('is segment-bounded: a benign `docker compose down` before another echo is not blocked', async () => {
+      const result = await service.evaluate('echo docker compose down; echo -v');
+      expect(result.action).toBe('allowed');
+    });
+
+    it('still blocks the destructive segment of a compound command', async () => {
+      const result = await service.evaluate('echo starting; docker compose down -v');
+      expect(result.action).toBe('blocked');
+    });
+  });
+
   describe('addPattern() — custom denylist', () => {
     it('adds custom pattern that blocks matching commands', async () => {
       await service.addPattern('npm publish', 'Block npm publish');

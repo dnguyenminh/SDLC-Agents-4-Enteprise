@@ -63,6 +63,9 @@ coverage/
 # ...but keep the example config template in the repo
 !/backend/.code-intel/database.example.json
 
+# Database dumps (npm run db:backup — retention handled by the script)
+/backend/backups/
+
 # Secrets / env (SA4E-241 — never commit real credentials)
 .env
 .env.*

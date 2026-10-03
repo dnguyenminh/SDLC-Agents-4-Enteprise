@@ -1,7 +1,10 @@
 ---
 name: phase-3-design
-description: Phase 3 workflow — SA creates TDD with feedback loop and security design review
+description: Phase 3: Design (SA → TDD) + Feedback Loop
 ---
+
+
+# Phase 3: Design (SA → TDD) + Feedback Loop
 
 ## Prerequisites
 
@@ -18,14 +21,14 @@ description: Phase 3 workflow — SA creates TDD with feedback loop and security
 ```
 invokeSubAgent(
   name: "sa-agent",
-  prompt: "Create TDD for {TICKET}. Read code intelligence data and FSD. MUST create draw.io diagrams (architecture.drawio + component.drawio + class diagram) and export PNG. Do not skip Step 4 (Generate Diagrams).",
-  contextFiles: [{ "path": ".opencode/skills/drawio-diagrams/SKILL.md" }]
+  prompt: "Tạo TDD cho {TICKET}. Đọc code intelligence data và FSD. PHẢI tạo draw.io diagrams (architecture.drawio + component.drawio + class diagram) và export PNG. Không được bỏ qua Step 4 (Generate Diagrams).",
+  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
 )
 ```
 
 3. Verify `documents/{TICKET}/TDD.md` exists
 4. Verify diagrams: architecture.drawio, component.drawio + .png files
-   - If missing → invoke SA: "Create draw.io diagrams for TDD {TICKET}."
+   - If missing → invoke SA: "Tạo draw.io diagrams cho TDD {TICKET}."
 
 5. Check if `documents/{TICKET}/DISCREPANCY.md` exists
    - Yes → go to Step 3.5 (Feedback Loop)
@@ -44,7 +47,7 @@ jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{
 
 Also attach all `.drawio` files.
 
-8. Report: "Phase 3 done — TDD.md created & attached to Jira. Proceed to Phase 3.7 (Security Design Review)?"
+8. Report: "✅ Phase 3 done — TDD.md created & attached to Jira. Chuyển sang Phase 3.7 (Security Design Review)?"
 9. Wait for user confirmation.
 
 ### Step 3.7: Security Design Review (MANDATORY)
@@ -57,15 +60,15 @@ Also attach all `.drawio` files.
 ```
 invokeSubAgent(
   name: "security-agent",
-  prompt: "Security Design Review for {TICKET}. Read TDD.md at documents/{TICKET}/TDD.md. Review:
-  1. Authentication/Authorization design
-  2. Data protection — encryption at rest/transit, PII handling
-  3. API security — rate limiting, input validation, CORS
-  4. Dependency risks
-  5. Infrastructure security — network policies, secrets management
-  6. Injection risks — SQL, command, LDAP injection vectors
-  7. Session management — token lifetime, refresh, revocation
-  Output: documents/{TICKET}/SECURITY-REVIEW.md with findings table (Critical/High/Medium/Low)."
+  prompt: "Security Design Review cho {TICKET}. Đọc TDD.md tại documents/{TICKET}/TDD.md. Review:
+  1. Authentication/Authorization design — đầy đủ, an toàn?
+  2. Data protection — encryption at rest/transit, PII handling?
+  3. API security — rate limiting, input validation, CORS?
+  4. Dependency risks — vulnerable libraries được chọn?
+  5. Infrastructure security — network policies, secrets management?
+  6. Injection risks — SQL, command, LDAP injection vectors?
+  7. Session management — token lifetime, refresh, revocation?
+  Output: documents/{TICKET}/SECURITY-REVIEW.md với findings table (Critical/High/Medium/Low)."
 )
 ```
 
@@ -73,14 +76,21 @@ invokeSubAgent(
 
 4. Read findings:
    - **No Critical/High** → proceed to Phase 4
-   - **Critical findings** → invoke sa-agent to update TDD
+   - **Critical findings** → invoke sa-agent to update TDD:
+     ```
+     invokeSubAgent(
+       name: "sa-agent",
+       prompt: "Cập nhật TDD cho {TICKET}. Security review phát hiện: {critical findings}. Sửa TDD security section để address các issues này."
+     )
+     ```
    - **High findings** → log as DEV requirements, proceed with warning
 
 5. Update STATUS: `security_design_review.status = "done"`
 
-6. Report: "Phase 3.7 done — Security Design Review complete. Proceed to Phase 4?"
+6. Report: "✅ Phase 3.7 done — Security Design Review complete. {summary}. Chuyển sang Phase 4?"
+
 7. Wait for user confirmation.
-8. Wait for Jira ticket to transition to IN PROGRESS (transition "Implement" by reviewer/PO)
+8. Đợi Jira ticket chuyển sang IN PROGRESS (transition "Implement" do reviewer/PO)
 
 ## Step 3.5: Feedback Loop (BA ↔ SA)
 
@@ -95,22 +105,34 @@ while DISCREPANCY.md exists AND iteration < 5:
     
     1. Read DISCREPANCY.md
     2. Count discrepancies by severity
-    3. Report iteration progress
+    3. Report: "⚠️ Vòng {iteration}/5 — SA phát hiện {n} discrepancies"
     
-    4. Invoke BA to fix FSD
+    4. Invoke BA to fix FSD:
+       invokeSubAgent(
+         name: "ba-agent",
+         prompt: "Đọc discrepancy report tại documents/{TICKET}/DISCREPANCY.md và cập nhật FSD cho {TICKET}. Chỉ fix FSD, không tạo lại BRD.",
+         contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+       )
+    
     5. Verify FSD updated
     6. Update STATUS: specification.version++
     
-    7. Invoke SA to review and recreate TDD
+    7. Invoke SA to review:
+       invokeSubAgent(
+         name: "sa-agent",
+         prompt: "Review lại FSD đã cập nhật và tạo lại TDD cho {TICKET}. Kiểm tra discrepancies trước đó đã được fix chưa.",
+         contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+       )
+    
     8. Check DISCREPANCY.md exists?
        - Yes → continue loop
        - No → break
 
 if iteration >= 5 AND DISCREPANCY.md still exists:
-    Report feedback loop blocked, need manual review
+    Report: "⚠️ Đã chạy 5 vòng feedback nhưng vẫn còn discrepancies. Cần review thủ công."
     Update STATUS: feedback_loop.status = "blocked"
 else:
-    Report feedback loop done, FSD and TDD consistent
+    Report: "✅ Feedback loop done — FSD v{version} và TDD consistent."
     Update STATUS: design.status = "done", feedback_loop.status = "done"
 ```
 
@@ -134,3 +156,5 @@ else:
 
 **SA reads:** KB (BRD + FSD), code intelligence, source code, DB schema
 **SA writes:** TDD.md → KB, DISCREPANCY.md (if issues found)
+
+

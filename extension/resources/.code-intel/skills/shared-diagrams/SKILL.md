@@ -1,11 +1,14 @@
 ---
 name: shared-diagrams
-description: Draw.io diagram requirements — XML authoring, layout rules, sequence diagrams, export, minimum diagrams per document
+description: Shared: Draw.io Diagram Requirements
 ---
+
+
+# Shared: Draw.io Diagram Requirements
 
 ## Rules
 
-- **NO Mermaid** — use draw.io for ALL diagrams
+- **KHÔNG dùng Mermaid** — dùng draw.io cho TẤT CẢ diagrams
 - All diagrams stored at `documents/{TICKET}/diagrams/`
 - Each diagram has both `.drawio` (source) and `.png` (rendered)
 - PNG exported via draw.io CLI
@@ -46,13 +49,13 @@ Every document with diagrams MUST have:
 
 ---
 
-## UML Sequence Diagram Rules (CRITICAL)
+## ⛔ UML Sequence Diagram Rules (CRITICAL)
 
-**NO `shape=umlLifeline`** — drawio-cli renderer does NOT support UML-specific shapes; the export will produce a 0-byte PNG.
+**KHÔNG dùng `shape=umlLifeline`** — drawio-cli renderer KHÔNG hỗ trợ UML-specific shapes, export sẽ ra 0-byte PNG.
 
 ### Sequence Diagram Format (CLI-compatible)
 
-Use **participant boxes at top** + **dashed vertical lifelines** + **horizontal message arrows**:
+Dùng **participant boxes ở top** + **dashed vertical lifelines** + **horizontal message arrows**:
 
 ```xml
 <!-- Participant header box -->
@@ -92,21 +95,21 @@ Use **participant boxes at top** + **dashed vertical lifelines** + **horizontal 
 | Participant spacing | 200-250px apart horizontally |
 | Message Y increment | 40-50px per message (time flows DOWN) |
 | Lifeline start Y | participant.y + participant.height (e.g., 60) |
-| Lifeline end Y | Total height (last message Y + 40) |
+| Lifeline end Y | Total height (match last message Y + 40) |
 | Solid arrow (→) | Synchronous call: `endArrow=block;endFill=1` |
 | Dashed arrow (⇢) | Return/async: `endArrow=open;endFill=0;dashed=1` |
 | Error arrow | Add `strokeColor=#b85450` |
 | Messages use sourcePoint/targetPoint | NOT source/target cell IDs |
 
-### FORBIDDEN for Sequence Diagrams
+### ⛔ FORBIDDEN for Sequence Diagrams
 
-- `shape=umlLifeline` — NOT supported by drawio-cli renderer
-- `source="p1" target="p2"` on message edges — use sourcePoint/targetPoint instead
-- Routing messages through nodes — messages are purely positional
+- ❌ `shape=umlLifeline` — NOT supported by drawio-cli renderer
+- ❌ `source="p1" target="p2"` on message edges — use sourcePoint/targetPoint instead
+- ❌ Routing messages through nodes — messages are purely positional
 
 ---
 
-## XML Authoring Rules (CRITICAL)
+## ⛔ XML Authoring Rules (CRITICAL)
 
 ### File Structure
 
@@ -122,17 +125,17 @@ Use **participant boxes at top** + **dashed vertical lifelines** + **horizontal 
 
 1. **No `<mxfile>` wrapper** — file MUST start with `<mxGraphModel>`
 2. **IDs `0` and `1` are RESERVED** — never reuse them for custom cells
-3. **Every edge MUST have an `<mxGeometry>` child** — self-closing edge cells (`/>`) do NOT render
+3. **Every edge MUST have `<mxGeometry>` child** — self-closing edge cells (`/>`) do NOT render
 
 ### Edge Cell Format (MANDATORY)
 
 ```xml
-<!-- CORRECT — edge with geometry child -->
+<!-- ✅ CORRECT — edge with geometry child -->
 <mxCell id="e1" value="label" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;" edge="1" parent="1" source="n1" target="n2">
   <mxGeometry relative="1" as="geometry"/>
 </mxCell>
 
-<!-- WRONG — self-closing edge (will NOT render) -->
+<!-- ❌ WRONG — self-closing edge (will NOT render) -->
 <mxCell id="e1" value="label" style="..." edge="1" parent="1" source="n1" target="n2"/>
 ```
 
@@ -157,7 +160,7 @@ Use **participant boxes at top** + **dashed vertical lifelines** + **horizontal 
 
 ### Layout Strategy — Plan BEFORE Placing
 
-1. **Identify flow direction** — TB (top-bottom) or LR (left-right)
+1. **Identify flow direction** — choose TB (top-bottom) or LR (left-right)
 2. **Group nodes into layers/tiers** — nodes at same depth in same row/column
 3. **Place layers sequentially** — Row 1 (entry), Row 2 (processing), Row 3 (output)
 4. **Order nodes within each layer** to minimize crossings — place nodes near their targets
@@ -256,23 +259,19 @@ Use **participant boxes at top** + **dashed vertical lifelines** + **horizontal 
 
 ## Auto-Layout Tool
 
-Use the `drawio_auto_layout` tool to auto-fix layout:
 ```json
 { "tool": "drawio_auto_layout", "arguments": { "file_path": "path/to/diagram.drawio" } }
 ```
 
-**Known limitation:** ELK flattens swimlane hierarchy — do NOT use on container diagrams. Use manual layout with the rules above instead.
+**Known limitation:** ELK flattens swimlane hierarchy — do NOT use on container diagrams. Use manual layout with rules above instead.
 
 ---
 
 ## Agent Prompt Template
 
-When invoking any agent that creates documents with diagrams, ALWAYS include:
 ```
-task(
-  description: "Create draw.io diagrams and export PNG for {TICKET}",
-  prompt: "Must create draw.io diagrams and export PNG. Load the shared-diagrams skill via the skill tool and follow it strictly: orthogonal edges, waypoints for backward connections, port distribution, 10px grid, routing corridors between rows, 7-color palette. Do not skip the diagram generation step."
-)
+"PHẢI tạo draw.io diagrams và export PNG. Tuân thủ shared-diagrams.md: orthogonal edges, waypoints for backward connections, port distribution, 10px grid, routing corridors between rows, 7-color palette."
+contextFiles: [{ "path": ".opencode/rules/sdlc/shared-diagrams.md" }]
 ```
 
 ## KB Ingestion
@@ -280,3 +279,5 @@ task(
 All `.drawio` files MUST be ingested into KB:
 - Ingest FULL XML content
 - Tags: `drawio, diagram, {diagram-type}`
+
+

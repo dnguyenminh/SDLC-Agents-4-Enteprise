@@ -4,6 +4,7 @@ import { requiresApproval as isDestructiveTool } from '../chat/engine/ToolApprov
 import type { AutopilotMode } from '../chat-panel/message-protocol';
 import type { ToolApprovalGateHandler } from './approval-adapter.js';
 import { evaluatePowerShellApproval } from './powershell-approval-branch.js';
+import { evaluateBashDestructiveGuard } from './bash-approval-branch.js';
 
 /**
  * Builds the real tool-approval gate handler (SEC-289-03, Fix J §5d).
@@ -16,6 +17,9 @@ import { evaluatePowerShellApproval } from './powershell-approval-branch.js';
  * 3. TRULY DESTRUCTIVE tools (ToolApprovalClassifier: delete_file, git_push,
  *    git_* …) ALWAYS block — even under Autopilot (Kiro semantics: destructive
  *    ops never run unattended).
+ * 3b. bash command CONTENT gate (SA4E-335 / closes SEC-06): a destructive
+ *    command (DESTRUCTIVE_BASH_PATTERNS) pends mode-independent, evaluated
+ *    BEFORE the remembered-pattern branch. Non-destructive bash falls through.
  * 4. Autopilot mode auto-approves everything else (bash/write/edit — the user
  *    can revert; this was the UAT hang: every bash call pended an approval
  *    nobody was ever asked for because the mode was never wired in here).
@@ -52,6 +56,22 @@ export function createToolApprovalGateHandler(
           onApprovalPending: opts?.onApprovalPending,
           getMode: opts?.getMode,
         });
+      }
+
+      // --- bash content guard (SA4E-335 follow-up, closes SA4E-336 SEC-06) ---
+      // Narrow fix: ONLY destructive command content is promoted to a
+      // mode-independent pend (so `docker volume rm …` can never auto-approve
+      // under Autopilot, and is caught BEFORE the remembered-pattern branch —
+      // the exact sequence that wiped backend_postgres_data). Returning null
+      // keeps the entire legacy path below untouched, so non-destructive bash
+      // behavior is unchanged (TDD §7.2 / TC-15 / TC-16 remain valid).
+      if (toolName === 'bash') {
+        const guarded = await evaluateBashDestructiveGuard(req, {
+          approvalGate,
+          onApprovalPending: opts?.onApprovalPending,
+          getMode: opts?.getMode,
+        });
+        if (guarded) return guarded;
       }
 
       if (READ_ONLY_TOOLS.has(toolName)) {

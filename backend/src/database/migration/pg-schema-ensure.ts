@@ -10,6 +10,7 @@
  */
 
 import type { DatabaseAdapter } from '../adapters/DatabaseAdapter.js';
+import { ensureModulesSchema } from './pg-modules-schema.js';
 import pino from 'pino';
 
 const logger = pino({ name: 'pg-schema-ensure' });
@@ -165,6 +166,7 @@ export async function ensurePostgresIndexSchema(adapter: DatabaseAdapter): Promi
     await safeExec(adapter, `CREATE TABLE IF NOT EXISTS modules (
       id SERIAL PRIMARY KEY, project_id TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', path TEXT
     )`);
+    await ensureModulesSchema(adapter); // column parity — see pg-modules-schema.ts (42703 root_path)
 
     // 9. Additional indexes
     await safeExec(adapter, 'CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id)');

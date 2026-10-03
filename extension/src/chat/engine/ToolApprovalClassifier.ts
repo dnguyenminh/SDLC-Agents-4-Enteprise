@@ -18,6 +18,13 @@ export {
   type NormalizedCommand,
 } from './ps-command-patterns';
 
+export {
+  DESTRUCTIVE_BASH_PATTERNS,
+  normalizeBashCommand,
+  matchedDestructiveBashCategory,
+  type NormalizedBashCommand,
+} from './bash-command-patterns';
+
 /** Tools that mutate filesystem, run commands, or affect git state */
 const DANGEROUS_TOOL_PATTERNS: ReadonlySet<string> = new Set([
   'write_file',

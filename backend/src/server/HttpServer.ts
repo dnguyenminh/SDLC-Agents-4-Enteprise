@@ -40,7 +40,11 @@ import { ensureSa4e101Tables } from '../database/schema-registry/ensure-sa4e-101
 import { ensureSa4e300Cleanup } from '../database/schema-registry/ensure-sa4e-300.js';
 import { ensureSa4e302UniqueGraphEdges } from '../database/schema-registry/ensure-sa4e-302.js';
 import { ensureSa4e303DropUnusedTables } from '../database/schema-registry/ensure-sa4e-303.js';
-import { runStartupInterruptDetection } from '../engine/indexer/startup-interrupt-detector.js';
+import {
+  runStartupInterruptDetection,
+  startInterruptDetectionScheduler,
+  stopInterruptDetectionScheduler,
+} from '../engine/indexer/startup-interrupt-detector.js';
 import { runMigrations } from '../engine/db/migrations.js';
 import { runGraphMigrations } from '../engine/graph/migrator.js';
 import { ensurePostgresIndexSchema } from '../database/migration/pg-schema-ensure.js';
@@ -258,6 +262,9 @@ export class HttpServer {
           
           await ensureSa4e101Tables();
           await runStartupInterruptDetection();
+          // Periodic re-arm: the boot pass above runs once, so an operation
+          // killed <60s before the restart used to stay `running` forever.
+          startInterruptDetectionScheduler();
           await ensureSa4e300Cleanup();
           await ensureSa4e302UniqueGraphEdges();
           await ensureSa4e303DropUnusedTables();
@@ -276,6 +283,7 @@ export class HttpServer {
 
   async stop(): Promise<void> {
     if (this.server) {
+      stopInterruptDetectionScheduler();
       this.cleanupScheduler?.stop();
       this.server.close();
       this._isRunning = false;

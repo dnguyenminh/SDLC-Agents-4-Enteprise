@@ -1,104 +1,105 @@
 ---
 name: mcp-tools-reference
-description: Reference of MCP tools — core (direct) vs nested (child servers), parameters, discovery
+description: MCP Tools Reference
 ---
+
+
 
 # MCP Tools Reference
 
-> **Server endpoint:** Configured in `.kiro/settings/mcp.json` — port/host may change.
-> Current: `http://localhost:9181/mcp` (check mcp.json if you cannot connect).
-> For this project's OpenCode MCP server, the port is **48721**.
+> **Server endpoint:** Configured in `opencode.json` — port/host có thể thay đổi.  
+> Hiện tại: `http://localhost:9181/mcp` (kiểm tra mcp.json nếu không kết nối được).
 
-In OpenCode, tools are available directly in the session by name. Core tools below are exposed on the MCP server with a `code-intel_` prefix (e.g. `mem_search` → `code-intel_mem_search`).
+## Core Tools (gọi trực tiếp)
 
-## Core Tools (called directly)
+| # | Tool | Mô tả | Required Params |
+|---|------|--------|-----------------|
+| 1 | `mem_search` | Hybrid search KB (BM25 + vector + graph) | `query` |
+| 2 | `mem_ingest` | Lưu knowledge entry vào KB | `content` |
+| 3 | `mem_ingest_file` | Ingest file theo path (auto-read content) | `file_path` |
+| 4 | `code_search` | Full-text search code symbols (FTS5 porter stemming) | `query` |
+| 5 | `drawio_auto_layout` | Auto-fix layout draw.io (ELK engine) | `file_path` |
+| 6 | `drawio_export_png` | Export .drawio → PNG | `file_path` |
+| 7 | `get_curated_context` | NL query across code + KB + graph (token-budgeted) | `query` |
+| 8 | `orchestration_status` | Status tất cả child MCP servers | _(none)_ |
+| 9 | `find_tools` | Tìm tools từ child servers theo semantic query | `query` |
+| 10 | `execute_dynamic_tool` | Thực thi tool từ child servers | `toolName`, `arguments` |
+| 11 | `stream_write_file` | Write/append file local (creates parent dirs) | `file_path`, `content` |
+| 12 | `embed_image` | Embed local image refs → base64 trong markdown | `file_path` |
 
-| # | Tool | Description | Required Params | OpenCode Name |
-|---|------|-------------|-----------------|---------------|
-| 1 | `mem_search` | Hybrid KB search (BM25 + vector + graph) | `query` | `code-intel_mem_search` |
-| 2 | `mem_ingest` | Store a knowledge entry into KB | `content` | `code-intel_mem_ingest` |
-| 3 | `mem_ingest_file` | Ingest file by path (auto-reads content) | `file_path` | `code-intel_mem_ingest_file` |
-| 4 | `code_search` | Full-text search of code symbols (FTS5 porter stemming) | `query` | `code-intel_code_search` |
-| 5 | `drawio_auto_layout` | Auto-fix draw.io layout (ELK engine) | `file_path` | `code-intel_drawio_auto_layout` |
-| 6 | `drawio_export_png` | Export .drawio → PNG | `file_path` | `code-intel_drawio_export_png` |
-| 7 | `get_curated_context` | NL query across code + KB + graph (token-budgeted) | `query` | `code-intel_get_curated_context` |
-| 8 | `orchestration_status` | Status of all child MCP servers | _(none)_ | `code-intel_orchestration_status` |
-| 9 | `find_tools` | Find tools from child servers by semantic query | `query` | `code-intel_find_tools` |
-| 10 | `execute_dynamic_tool` | Execute a tool from child servers | `toolName`, `arguments` | `code-intel_execute_dynamic_tool` |
-| 11 | `stream_write_file` | Write/append local file (creates parent dirs) | `file_path`, `content` | `code-intel_stream_write_file` |
-| 12 | `embed_image` | Embed local image refs → base64 in markdown | `file_path` | `code-intel_embed_image` |
+## Nested Tools (child servers — dùng find_tools + execute_dynamic_tool)
 
-## Nested Tools (child servers — use find_tools + execute_dynamic_tool)
-
-| Category | Discovery Query | Example Tools |
-|----------|-----------------|---------------|
+| Category | Discovery Query | Ví dụ Tools |
+|----------|----------------|-------------|
 | Jira | `find_tools("jira")` | jira_get_issue, jira_search, jira_create_issue, jira_update_issue, jira_get_transitions, transition_issue |
 | Export | `find_tools("export docx")` | export_docx |
 | Draw.io | `find_tools("drawio")` | drawio_auto_layout, drawio_export_png |
 
-## Usage
+## Cách dùng
 
-### Core tools — call directly via MCP:
+### Core tools — gọi trực tiếp qua MCP:
 ```
-mem_search(query: "SA4E-85 BRD", limit: 5, detail: true)  # code-intel_mem_search
-code_search(query: "ProviderService", limit: 10)          # code-intel_code_search
+mem_search(query: "SA4E-85 BRD", limit: 5, detail: true)
+code_search(query: "ProviderService", limit: 10)
 ```
 
-### Nested tools — 2 steps:
+### Nested tools — 2 bước:
 ```
 # Step 1: Discover
-find_tools(query: "jira issue", threshold: 0.3, top_k: 5)  # code-intel_find_tools
+find_tools(query: "jira issue", threshold: 0.3, top_k: 5)
 
 # Step 2: Execute
-execute_dynamic_tool(toolName: "jira_get_issue", arguments: { "issue_key": "SA4E-85" })  # code-intel_execute_dynamic_tool
+execute_dynamic_tool(toolName: "jira_get_issue", arguments: { "issue_key": "SA4E-85" })
 ```
 
-## Important notes
+## Lưu ý quan trọng
 
-- `arguments` in `execute_dynamic_tool` MUST be an object, NOT a JSON string
-- Core tools are called directly — NO need for `execute_dynamic_tool`
-- If a tool returns "Unknown tool" → use `find_tools` to discover the exact name
-- If a child server is down → check `orchestration_status`
+- `arguments` trong `execute_dynamic_tool` PHẢI là object, KHÔNG phải JSON string
+- Core tools gọi trực tiếp — KHÔNG cần `execute_dynamic_tool`
+- Nếu tool trả "Unknown tool" → dùng `find_tools` để discover tên chính xác
+- Nếu child server chết → check `orchestration_status`
 
-## Detailed Params
+## Params chi tiết
 
 ### mem_search
-- `query` (required): search query
-- `limit`: max results (default 10)
+- `query` (required): Search query
+- `limit`: Max results (default 10)
 - `tier`: WORKING | EPISODIC | SEMANTIC | PROCEDURAL
 - `type`: DECISION | ERROR_PATTERN | ARCHITECTURE | API_DESIGN | REQUIREMENT | LESSON_LEARNED | PROCEDURE | CONTEXT
 - `scope`: USER | PROJECT | SHARED | all
 - `detail`: true → include content preview
 
 ### mem_ingest
-- `content` (required): full content
-- `summary`: brief summary (auto if omitted)
+- `content` (required): Full content
+- `summary`: Brief summary (auto if omitted)
 - `type`: DECISION | ERROR_PATTERN | ARCHITECTURE | API_DESIGN | REQUIREMENT | LESSON_LEARNED | PROCEDURE | CONTEXT
 - `scope`: USER | PROJECT | SHARED (default: USER)
-- `source`: source identifier (file path, ticket)
-- `tags`: comma-separated tags
+- `source`: Source identifier (file path, ticket)
+- `tags`: Comma-separated tags
 - `agent_name`: SM | BA | SA | DEV | QA | DevOps
 
 ### mem_ingest_file
-- `file_path` (required): path to document
+- `file_path` (required): Path to document
 - `type`: REQUIREMENT | ARCHITECTURE | DECISION | PROCEDURE | CONTEXT
 - `scope`: USER | PROJECT | SHARED
 - `format`: markdown | text
 
 ### get_curated_context
-- `query` (required): natural language query
-- `max_tokens`: token budget (default 4000)
-- `include_source`: search code (default true)
-- `include_memory`: search KB (default true)
-- `include_graph`: expand graph (default true)
+- `query` (required): Natural language query
+- `max_tokens`: Token budget (default 4000)
+- `include_source`: Search code (default true)
+- `include_memory`: Search KB (default true)
+- `include_graph`: Expand graph (default true)
 
 ### drawio_auto_layout
-- `file_path` (required): path to .drawio
+- `file_path` (required): Path to .drawio
 - `algorithm`: layered | force | mrtree | radial
-- `spacing`: node spacing px (default 80)
+- `spacing`: Node spacing px (default 80)
 - `direction`: DOWN | RIGHT | LEFT | UP
 
 ### stream_write_file
-- `file_path` (required): target path
-- `content` (required): content to write
+- `file_path` (required): Target path
+- `content` (required): Content to write
 - `mode`: write | append (default: write)
+
+

@@ -128,6 +128,10 @@ export const DESTRUCTIVE_PS_PATTERNS: ReadonlyArray<RegExp> = [
   /\bset-service\b/i, /\brestart-service\b/i, /\brestart-computer\b/i, /\bshutdown\b/i,
   // --- Format / disk ---
   /\bformat-volume\b/i, /\bformat-\w+\b/i, /\bclear-disk\b/i, /\binitialize-disk\b/i, /\bdiskpart\b/i,
+  // --- Docker / container data destruction (SA4E-335, closes SEC-06 parity) ---
+  /\bdocker\s+volume\s+(rm|prune)\b/i,
+  /\bdocker\s+compose\b.*\sdown\b.*\s(-v|--volumes)\b/i,
+  /\bdocker\s+system\s+prune\b/i,
   // --- Policy / security ---
   /\bset-executionpolicy\b/i, /\bset-itemproperty\b/i, /\breg\s+delete\b/i,
   /\breg\s+add\b/i, /\bset-acl\b/i,

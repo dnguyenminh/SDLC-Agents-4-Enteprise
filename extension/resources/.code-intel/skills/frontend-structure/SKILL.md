@@ -1,58 +1,63 @@
 ---
 name: frontend-structure
-description: Frontend architecture — Svelte 4 + Vite + TypeScript webview UI
+description: Frontend Architecture — Svelte 4 + Vite + TypeScript
 ---
+
+
+
+# Frontend Architecture — Svelte 4 + Vite + TypeScript
 
 ## Tech Stack
 
-- **Svelte 4** — Webview UI, components and reactive state
+- **Svelte 4** — Webview UI, components + reactive state
 - **Vite** — Bundler + dev server
-- **TypeScript** — Strong typing, separates logic from DOM
+- **TypeScript** — Strong typing, tách biệt logic khỏi DOM
 - **HTML/CSS** — Obsidian Kinetic design system, `resources/styles/`
 
-## Core Rules
+## Core Rules (chi tiết xem #[[file:documents/frontend-rules-detail.md]])
 
-### 1. SEPARATE MARKUP AND LOGIC
-- **NEVER** create HTML strings in code (no innerHTML with HTML, no template literal HTML)
-- **ALWAYS** use Svelte component files `.svelte` with logic in `<script>` block
-- Pure logic goes into `.ts` modules (stores, actions, services)
-- Dynamic repeated elements use `{#each}` block
+### 1. TÁCH BIỆT MARKUP VÀ LOGIC
+- **KHÔNG BAO GIỜ** tạo HTML string trong code (no innerHTML with HTML, no template literal HTML)
+- **LUÔN** dùng Svelte component files `.svelte` + logic trong `<script>` block
+- Logic thuần tách vào `.ts` modules (stores, actions, services)
+- Dynamic repeated elements dùng `{#each}` block
 
 ### 2. VIEW / CONTROLLER Pattern
-| Layer | Location | Contains |
-|-------|----------|----------|
+| Layer | Nơi đặt | Chứa gì |
+|-------|---------|---------|
 | **VIEW** | `extension/src/webview/**/*.svelte` + `resources/styles/*.css` | HTML structure, CSS classes, placeholders |
 | **CONTROLLER** | `extension/src/webview/**/*.ts` (stores, actions) | Event binding, API calls, DOM manipulation |
 
-### 3. NO LEGACY FILES
-- No subdirectories separating HTML/CSS/JS UI
-- Root `extension/src/webview/` contains: components, stores, styles — by component tree
-- Webview asset bundle built with Vite (`extension/webview/`)
+### 3. KHÔNG TẠO FILE LEGACY
+- Không tạo thư mục con HTML/CSS/JS tách rời UI
+- Root `extension/src/webview/` chứa: components, stores, styles — theo component tree
+- Webview asset bundle build bằng Vite (`extension/webview/`)
 
-### 4. UX REQUIREMENTS (MANDATORY)
-- Every operation MUST have feedback: Loading spinner, Empty state + action, Error message + fix action, Success confirmation
-- NEVER fail silently — every catch block must display error to user
-- Every API call MUST handle 3 states: loading, success, error
+### 4. UX BẮT BUỘC
+- Mọi thao tác PHẢI có feedback: Loading spinner, Empty state + action, Error message + fix action, Success confirmation
+- KHÔNG BAO GIỜ fail silently — mọi catch block phải hiển thị lỗi cho user
+- Mọi API call PHẢI handle 3 trạng thái: loading, success, error
 
 ### 5. BLOCKING OVERLAY
-- Every async operation (SAVE, TEST, DELETE, START, STOP, SCAN...) MUST use `BlockingOverlay` component
-- Show the overlay BEFORE `await`, remove it in `finally`
-- Specific message: "Saving...", "Testing connection...", NOT "Please wait"
+- Mọi async operation (SAVE, TEST, DELETE, START, STOP, SCAN...) PHẢI dùng `BlockingOverlay` component
+- Show overlay TRƯỚC `await`, remove trong `finally`
+- Message mô tả cụ thể: "Saving...", "Testing connection...", KHÔNG dùng "Please wait"
 
 ### 6. BROWSER MEMORY MANAGEMENT
-- Accumulated data (logs, lists) uses `sessionStorage` for dedup IDs, cap DOM nodes (max 500 logs, 200 chat)
-- Reset when starting a new operation
+- Dữ liệu tích lũy (logs, lists) dùng `sessionStorage` cho dedup IDs, cap DOM nodes (max 500 logs, 200 chat)
+- Reset khi bắt đầu operation mới
 
 ### 7. NATIVE FORM ELEMENTS ON DARK THEME
-- `<select>` MUST have `background: rgba(12,14,22,0.95)` + `color: var(--primary)`
-- `<input>` ALWAYS uses class `.field-input`
-- `-webkit-appearance: none; appearance: none;` for custom styling
+- `<select>` PHẢI có `background: rgba(12,14,22,0.95)` + `color: var(--primary)`
+- `<input>` LUÔN dùng class `.field-input`
+- `-webkit-appearance: none; appearance: none;` cho custom styling
 
 ## API & Routing
-- Svelte stores + MCP client (WebSocket/undici), JWT in `sessionStorage`
+- Svelte stores + MCP client (WebSocket/undici), JWT trong `sessionStorage`
 - Hash-based routing: `#dashboard`, `#analysis`, etc.
 - `apiClient.loadTemplate(name)` — fetch `/templates/$name.html`
 
 ## Build Commands
-- Dev: `npm run esbuild-watch` or `npm run watch` (Vite in extension webview)
+- Dev: `npm run esbuild-watch` hoặc `npm run watch` (Vite trong extension webview)
 - Build: `npm run esbuild` / `npm run esbuild-production`
+

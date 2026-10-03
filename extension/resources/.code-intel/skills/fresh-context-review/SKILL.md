@@ -1,37 +1,38 @@
 ---
 name: fresh-context-review
-description: Context-isolated code review — reviewer only sees diff + specs (no session history) for unbiased review
+description: Fresh-Context Review — Cô lập ngữ cảnh khi Code Review
 ---
 
-# Fresh-Context Review — Isolating Context in Code Review
 
-## Purpose
+# Fresh-Context Review — Cô lập ngữ cảnh khi Code Review
 
-A code review mechanism in which the reviewer receives NO conversation/session history.
-The reviewer only sees: git diff + specs (TDD, FSD, code-standards). Removes bias from the implementation process.
+## Mục đích
 
-## When Activated
+Cơ chế review code trong đó reviewer KHÔNG nhận bất kỳ lịch sử conversation/session nào.
+Reviewer chỉ thấy: git diff + specs (TDD, FSD, code-standards). Loại bỏ bias từ quá trình implementation.
+
+## Khi nào kích hoạt
 
 - Phase 6 Code Review (Axis 1: Standards, Axis 2: Spec Compliance)
-- SM MUST run a fresh-context review when ANY of the following conditions are met:
-  - >500 lines changed (`git diff --stat`)
+- SM PHẢI chạy fresh-context review khi ĐẠT bất kỳ điều kiện nào sau:
+  - >500 dòng thay đổi (git diff --stat)
   - Security-related changes (auth, authorization, encryption)
   - Data model changes (DB schema, migration files)
   - Complex refactoring (>5 files modified)
 
-## Context Isolation Rules
+## Quy tắc cô lập ngữ cảnh (Context Isolation Rules)
 
-### Reviewer RECEIVES (whitelist)
+### Reviewer ĐƯỢC NHẬN (whitelist)
 
 | # | Input | Source |
 |---|-------|--------|
 | 1 | Git diff (main..{TICKET}) | `git diff main..{TICKET}` |
 | 2 | TDD.md | `documents/{TICKET}/TDD.md` |
 | 3 | FSD.md | `documents/{TICKET}/FSD.md` |
-| 4 | Code standards | the `code-standards` skill (load via the skill tool) |
+| 4 | code-standards.md | `.opencode/rules/sdlc/code-standards.md` |
 | 5 | File tree (new/modified files only) | `git diff --name-status` |
 
-### Reviewer MUST NOT RECEIVE (denylist)
+### Reviewer KHÔNG ĐƯỢC NHẬN (denylist)
 
 | # | Excluded Context | Reason |
 |---|-----------------|--------|
@@ -44,25 +45,25 @@ The reviewer only sees: git diff + specs (TDD, FSD, code-standards). Removes bia
 
 ### Reviewer prompt constraints
 
-- MUST NOT contain: "as discussed", "as implemented", "based on previous"
-- MUST NOT reference: agent names, phase transitions, iteration history
-- MUST force independent analysis: reviewer forms own opinion FIRST
+- KHÔNG được chứa: "as discussed", "as implemented", "based on previous"
+- KHÔNG được reference: agent names, phase transitions, iteration history
+- PHẢI force independent analysis: reviewer forms own opinion FIRST
 
 ## Fresh Review Prompt Template
 
 ```
-task(
-  description: "Independent fresh-context code review for {TICKET}",
+invokeSubAgent(
+  name: "{review-agent}",
   prompt: "INDEPENDENT CODE REVIEW — Fresh Context
 
   You are reviewing code changes for the FIRST time with NO prior context.
   You have NEVER seen this code before. Form your OWN assessment.
 
   ## Input
-  - Git diff: run `git diff main..{TICKET}`
-  - Technical Design Document (TDD) for expected behavior: read documents/{TICKET}/TDD.md
-  - Functional Specification (FSD) for business requirements: read documents/{TICKET}/FSD.md
-  - Code standards for style/quality rules: load the 'code-standards' skill via the skill tool
+  - Git diff attached below
+  - Technical Design Document (TDD) for expected behavior
+  - Functional Specification (FSD) for business requirements
+  - Code standards for style/quality rules
 
   ## Your Task
   Review the diff against specs and standards. Report:
@@ -84,19 +85,23 @@ task(
   - Judge ONLY what the code does vs what specs say it should do
   - Flag anything that SURPRISES you — if code does something unexpected, report it
   ",
-  subagent_type: "{review-agent}"
+  contextFiles: [
+    { "path": "documents/{TICKET}/TDD.md" },
+    { "path": "documents/{TICKET}/FSD.md" },
+    { "path": ".opencode/rules/sdlc/code-standards.md" }
+  ]
 )
 ```
 
 ## Comparison Mechanism (Biased vs Unbiased)
 
-After the fresh review completes, SM compares findings:
+Sau khi fresh review hoàn thành, SM so sánh findings:
 
-### Process
+### Quy trình
 
-1. **Standard review** (Axis 1 + Axis 2) runs first — reviewer has full context
-2. **Fresh review** runs after — reviewer is isolated, only sees diff + specs
-3. SM compares the two results:
+1. **Standard review** (Axis 1 + Axis 2) chạy trước — reviewer có full context
+2. **Fresh review** chạy sau — reviewer cô lập, chỉ thấy diff + specs
+3. SM so sánh hai kết quả:
 
 ### Comparison Report Format
 
@@ -122,18 +127,20 @@ After the fresh review completes, SM compares findings:
 - Action: {merge findings / escalate blind spots / no action}
 ```
 
-### Actions based on comparison
+### Hành động dựa trên comparison
 
 | Scenario | Action |
 |----------|--------|
-| Fresh review finds Critical issues standard missed | BLOCK — DEV must fix |
-| Fresh review finds High issues standard missed | DEV fix or user accepts risk |
+| Fresh review finds Critical issues standard missed | ❌ BLOCK — DEV must fix |
+| Fresh review finds High issues standard missed | ⚠️ DEV fix or user accepts risk |
 | Only Medium/Low blind spots | Log as tech debt, proceed |
-| Fresh review finds nothing new | Confirms standard review quality |
+| Fresh review finds nothing new | ✅ Confirms standard review quality |
 
 ## SM Integration
 
-SM only runs fresh-context review when criteria are met (see "When Activated").
-Fresh review is an OPTIONAL enhancement — does not block pipeline if unavailable.
+SM chỉ chạy fresh-context review khi criteria đạt (xem "Khi nào kích hoạt").
+Fresh review là OPTIONAL enhancement — không block pipeline nếu unavailable.
 
-Order: Standard review → Fresh review → Comparison → Decision.
+Thứ tự: Standard review → Fresh review → Comparison → Decision.
+
+

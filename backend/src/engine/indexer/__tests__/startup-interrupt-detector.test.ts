@@ -40,7 +40,12 @@ vi.mock('../../../admin/db/core.js', () => ({
   getActiveEngine: () => 'sqlite',
 }));
 
-import { runStartupInterruptDetection } from '../startup-interrupt-detector.js';
+import {
+  markInFlightOperationsInterrupted,
+  runStartupInterruptDetection,
+  startInterruptDetectionScheduler,
+  stopInterruptDetectionScheduler,
+} from '../startup-interrupt-detector.js';
 
 beforeEach(async () => {
   db = await makeSqliteTestDb();
@@ -62,7 +67,7 @@ describe('runStartupInterruptDetection', () => {
     );
     await runStartupInterruptDetection();
     const row = adapter.get<{ status: string }>('SELECT status FROM index_operations WHERE id=?', ['op-1']);
-    expect(row.status).toBe('running');
+    expect(row?.status).toBe('running');
   });
 
   it('marks each stale running record as interrupted', async () => {
@@ -93,5 +98,58 @@ describe('runStartupInterruptDetection', () => {
   it('degrades gracefully on DB error (continues startup)', async () => {
     allAsyncSpy.mockRejectedValueOnce(new Error('db down'));
     await expect(runStartupInterruptDetection()).resolves.toBeUndefined();
+  });
+
+  it('accepts a custom staleness threshold', async () => {
+    // 5s old: stale under threshold 0, but fresh under the default 60s.
+    const recent = new Date(Date.now() - 5_000).toISOString();
+    adapter.run(
+      'INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)',
+      ['op-t1', 'u1', 'p1', 'running', recent],
+    );
+    await runStartupInterruptDetection(0);
+    const row = adapter.get<{ status: string }>('SELECT status FROM index_operations WHERE id=?', ['op-t1']);
+    expect(row?.status).toBe('interrupted');
+  });
+
+  it('markInFlightOperationsInterrupted flips ALL running rows (shutdown path)', async () => {
+    const recent = new Date(Date.now() - 5_000).toISOString();
+    adapter.run(
+      'INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)',
+      ['op-s1', 'u1', 'p1', 'running', recent],
+    );
+    adapter.run(
+      'INSERT INTO index_operations (id, user_id, project_id, status, updated_at) VALUES (?, ?, ?, ?, ?)',
+      ['op-s2', 'u2', 'p2', 'completed', recent],
+    );
+    await markInFlightOperationsInterrupted();
+    const rows = adapter.all<{ id: string; status: string }>('SELECT id, status FROM index_operations');
+    const byId = Object.fromEntries(rows.map((r) => [r.id, r.status]));
+    expect(byId['op-s1']).toBe('interrupted'); // running -> interrupted
+    expect(byId['op-s2']).toBe('completed'); // terminal untouched
+  });
+});
+
+describe('periodic interrupt-detection scheduler', () => {
+  it('re-arms detection every 60s with the 10-minute threshold (idempotent start/stop)', async () => {
+    vi.useFakeTimers();
+    try {
+      startInterruptDetectionScheduler();
+      startInterruptDetectionScheduler(); // idempotent — must not double-schedule
+      expect(allAsyncSpy).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(60_000);
+
+      expect(allAsyncSpy).toHaveBeenCalledTimes(1);
+      const [sql, params] = allAsyncSpy.mock.calls[0] as [string, unknown[]];
+      expect(sql).toMatch(/status = 'running'/);
+      // findStaleRunning(600) => cutoff = now - 600s
+      const cutoff = new Date(params[0] as string).getTime();
+      expect(Math.abs(cutoff - (Date.now() - 600_000))).toBeLessThan(5_000);
+    } finally {
+      stopInterruptDetectionScheduler();
+      stopInterruptDetectionScheduler(); // idempotent
+      vi.useRealTimers();
+    }
   });
 });

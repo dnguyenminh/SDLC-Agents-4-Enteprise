@@ -1,13 +1,16 @@
 ---
 name: phase-6-testing
-description: Phase 6 workflow — two-axis + fresh-context code review, automated testing, pentest, UAT
+description: Phase 6: Testing (QA → Test Execution + Quality Review)
 ---
+
+
+# Phase 6: Testing (QA → Test Execution + Quality Review)
 
 ## Prerequisites
 
 - Code exists (implementation.status = "done")
 - STP/STC exist (test_planning.status = "done")
-- Jira ticket in IN REVIEW or QA TEST
+- Jira ticket ở IN REVIEW hoặc QA TEST
 
 ## Workflow
 
@@ -29,15 +32,15 @@ Both reviews run in PARALLEL (2 independent sub-agent invocations):
 #### Axis 1: Standards Review
 
 ```
-task(
-  description: "Code review — standards axis for {TICKET}",
-  prompt: "CODE REVIEW — Standards Axis for {TICKET}.
+invokeSubAgent(
+  name: "dev-agent",
+  prompt: "CODE REVIEW — Standards Axis cho {TICKET}.
 
-  Read the implemented code (git diff main..{TICKET}) and review per code standards — load the 'code-standards' skill via the skill tool.
+  Đọc code vừa implement (git diff main..{TICKET}) và review theo .opencode/rules/sdlc/code-standards.md.
 
   CHECK LIST:
-  1. File size: each file ≤ 200 lines?
-  2. Function size: each function ≤ 20 lines?
+  1. File size: mỗi file ≤ 200 dòng?
+  2. Function size: mỗi hàm ≤ 20 dòng?
   3. SOLID violations? (SRP, OCP, LSP, ISP, DIP)
   4. Fowler code smells:
      - Feature Envy (method uses another class's data more than its own)
@@ -50,7 +53,7 @@ task(
   5. Model/processing separation: DTOs in models/, logic in services/?
   6. Design patterns: Strategy/Factory/Observer used where appropriate?
   7. Exception handling: no swallowed exceptions? User notified on errors?
-  8. Serialization: validate protocol communication with zod schemas (safeParse)?
+  8. Serialization: validate protocol communication bằng zod schemas (safeParse)?
 
   Output format:
   ## Standards Review — {TICKET}
@@ -60,29 +63,29 @@ task(
 
   Verdict: PASS / PASS with warnings / FAIL (needs fix)
   ",
-  subagent_type: "dev-agent"
+  contextFiles: [{ "path": ".opencode/rules/sdlc/code-standards.md" }]
 )
 ```
 
 #### Axis 2: Spec Compliance Review
 
 ```
-task(
-  description: "Code review — spec compliance axis for {TICKET}",
-  prompt: "CODE REVIEW — Spec Compliance Axis for {TICKET}.
+invokeSubAgent(
+  name: "qa-agent",
+  prompt: "CODE REVIEW — Spec Compliance Axis cho {TICKET}.
 
-  Read TDD.md and FSD.md from KB (mem_search('{TICKET} TDD') + mem_search('{TICKET} FSD')).
-  Read the implemented code (git diff main..{TICKET}).
+  Đọc TDD.md và FSD.md từ KB (mem_search('{TICKET} TDD') + mem_search('{TICKET} FSD')).
+  Đọc code vừa implement (git diff main..{TICKET}).
 
   CHECK LIST:
-  1. Missing features: TDD specs not implemented?
-  2. Scope creep: code implements something NOT in TDD/FSD?
-  3. API contracts: endpoints match TDD Section 3 (API Design) exactly?
-  4. Data model: entity fields match FSD data specifications?
-  5. Business rules: all FSD BR-XX rules implemented in code?
-  6. Error codes: all FSD error codes handled with correct HTTP status?
-  7. Integration: external system calls match TDD Section 6?
-  8. Security: auth/authz match TDD security design?
+  1. Missing features: TDD specs chưa implement?
+  2. Scope creep: Code implement thứ KHÔNG có trong TDD/FSD?
+  3. API contracts: Endpoints match TDD Section 3 (API Design) exactly?
+  4. Data model: Entity fields match FSD data specifications?
+  5. Business rules: All FSD BR-XX rules implemented in code?
+  6. Error codes: All FSD error codes handled with correct HTTP status?
+  7. Integration: External system calls match TDD Section 6?
+  8. Security: Auth/authz match TDD security design?
 
   Output format:
   ## Spec Compliance Review — {TICKET}
@@ -100,8 +103,7 @@ task(
   |---|-----------|-----------|----------|
 
   Verdict: PASS / PASS with warnings / FAIL (needs fix)
-  ",
-  subagent_type: "qa-agent"
+  "
 )
 ```
 
@@ -109,21 +111,20 @@ task(
 
 | Axis 1 | Axis 2 | Action |
 |--------|--------|--------|
-| PASS | PASS | Proceed to QA test execution |
-| PASS w/warnings | PASS | Log warnings as tech debt, proceed |
-| FAIL | * | Send back to DEV to fix standards violations |
-| * | FAIL | Send back to DEV to fix spec gaps |
-| FAIL | FAIL | Send back to DEV — fix both axes |
+| PASS | PASS | ✅ Proceed to QA test execution |
+| PASS w/warnings | PASS | ⚠️ Log warnings as tech debt, proceed |
+| FAIL | * | ❌ Send back to DEV to fix standards violations |
+| * | FAIL | ❌ Send back to DEV to fix spec gaps |
+| FAIL | FAIL | ❌ Send back to DEV — fix both axes |
 
 **If FAIL on either axis:**
 ```
-task(
-  description: "Fix code review issues for {TICKET}",
-  prompt: "Fix code review issues for {TICKET}:
+invokeSubAgent(
+  name: "dev-agent",
+  prompt: "Fix code review issues cho {TICKET}:
   Standards issues: {list from Axis 1}
   Spec issues: {list from Axis 2}
-  Fix and push again.",
-  subagent_type: "dev-agent"
+  Fix và push lại."
 )
 ```
 
@@ -139,7 +140,7 @@ Re-run code review after fix (max 2 iterations). If still FAIL → escalate to u
 - DB schema or migration files modified
 - >5 files modified (complex refactoring)
 
-**Process:** Load the 'fresh-context-review' skill via the skill tool for full details.
+**Process:** See `.opencode/rules/sdlc/fresh-context-review.md` for full details.
 
 **Summary:**
 1. Spawn separate agent with ONLY: git diff + TDD + FSD + code-standards (NO history)
@@ -154,10 +155,9 @@ If fresh review is unavailable (budget, time), standard review is sufficient to 
 
 Invoke QA agent for test execution:
 ```
-task(
-  description: "Run automated tests for {TICKET}",
-  prompt: "Run automated tests for {TICKET}. Run npm test (Vitest) in backend/ and extension/. Report pass/fail.",
-  subagent_type: "qa-agent"
+invokeSubAgent(
+  name: "qa-agent",
+  prompt: "Chạy automated tests cho {TICKET}. Run npm test (Vitest) trong backend/ và extension/. Báo cáo pass/fail."
 )
 ```
 
@@ -174,11 +174,11 @@ task(
 
 | Red Flag | Meaning | Action |
 |----------|---------|--------|
-| IT uses `mockk()` for ALL deps | Not real integration test | Send back to DEV |
-| IT calls service directly (no HTTP) | Missing API layer testing | Send back to DEV |
-| IT has no Testcontainers when STC requires | Missing real DB/infra | Send back to DEV |
-| IT mocks Connection/Transport | Missing real process interaction | Send back to DEV |
-| Config reload only parses YAML | Missing file watcher test | Flag as degraded |
+| IT uses `mockk()` for ALL deps | Not real integration test | ❌ Send back to DEV |
+| IT calls service directly (no HTTP) | Missing API layer testing | ❌ Send back to DEV |
+| IT has no Testcontainers when STC requires | Missing real DB/infra | ❌ Send back to DEV |
+| IT mocks Connection/Transport | Missing real process interaction | ❌ Send back to DEV |
+| Config reload only parses YAML | Missing file watcher test | ⚠️ Flag as degraded |
 
 **Acceptable exceptions:**
 - External paid APIs (OpenAI, cloud) → mock OK
@@ -186,10 +186,9 @@ task(
 
 **If issues found:**
 ```
-task(
-  description: "Fix IT tests for {TICKET}",
-  prompt: "Fix IT tests for {TICKET}. QA found: {discrepancies}. Must use the correct technique specified in STC.",
-  subagent_type: "dev-agent"
+invokeSubAgent(
+  name: "dev-agent",
+  prompt: "Fix IT tests cho {TICKET}. QA phát hiện: {discrepancies}. Phải dùng đúng technique trong STC."
 )
 ```
 Re-run tests after fix.
@@ -204,9 +203,9 @@ Re-run tests after fix.
 
 2. Invoke Security agent for pentest:
 ```
-task(
-  description: "Penetration testing for {TICKET}",
-  prompt: "Penetration Testing for {TICKET}. Application running at {test_url}. Execute:
+invokeSubAgent(
+  name: "security-agent",
+  prompt: "Penetration Testing cho {TICKET}. Application đang chạy tại {test_url}. Thực hiện:
 
   PHASE 1 — Reconnaissance:
   1. Enumerate API endpoints (from TDD/FSD + actual discovery)
@@ -216,7 +215,7 @@ task(
   PHASE 2 — Active Testing:
   4. Authentication attacks: brute force protection, session fixation, token manipulation
   5. Authorization attacks: IDOR, privilege escalation, horizontal access
-  6. Injection attacks: SQL injection, command injection, LDAP injection
+  6. Injection attacks: SQL injection, command injection, LDAP injection (use payloads)
   7. XSS attacks: reflected, stored, DOM-based (test all input fields)
   8. CSRF verification: token presence, SameSite cookies
   9. API abuse: rate limiting bypass, mass assignment, parameter pollution
@@ -233,12 +232,11 @@ task(
   TOOLS: Use curl, httpie, or equivalent CLI tools. Run actual HTTP requests.
   DO NOT just review code — EXECUTE real attacks against the running application.
 
-  Output: documents/{TICKET}/PENTEST-REPORT.md with:
+  Output: documents/{TICKET}/PENTEST-REPORT.md với:
   - Executive Summary (overall risk level)
   - Findings table (ID, Severity, Category, Endpoint, Proof of Concept, Remediation)
   - Evidence (request/response pairs showing vulnerability)
-  - Risk rating: Critical / High / Medium / Low / Informational",
-  subagent_type: "security-agent"
+  - Risk rating: Critical / High / Medium / Low / Informational"
 )
 ```
 
@@ -247,10 +245,9 @@ task(
 4. Handle findings:
    - **Critical/High vulns found** → MUST fix before UAT:
      ```
-     task(
-       description: "Fix pentest vulnerabilities for {TICKET}",
-       prompt: "Fix pentest vulnerabilities for {TICKET}: {findings with PoC}. Security has proven the exploit works.",
-       subagent_type: "dev-agent"
+     invokeSubAgent(
+       name: "dev-agent",
+       prompt: "Fix pentest vulnerabilities cho {TICKET}: {findings with PoC}. Security đã chứng minh exploit được."
      )
      ```
      After fix → re-run pentest on fixed endpoints (max 2 iterations)
@@ -268,13 +265,17 @@ task(
   - Update STATUS: `testing.status = "done"`
   - Report results including quality assessment and pentest summary
 
-### Step 6g: UAT (Phase 6.5)
+### Step 6f: UAT (Phase 6.5)
 
 **After QA pass:**
 
 1. Transition Jira: QA TEST → UAT (transition "Start UAT")
-2. Inform user/PO feature ready for UAT: URL, test accounts, acceptance criteria, key test scenarios
-3. **STOP — WAIT for user/PO to actually test and confirm**
+2. Inform user/PO feature ready for UAT:
+   - URL environment
+   - Test accounts
+   - Acceptance criteria (from BRD)
+   - Key test scenarios
+3. **⛔ STOP — WAIT for user/PO to actually test and confirm**
    - SM CANNOT auto-transition past UAT
    - SM CANNOT assume UAT pass
    - Only when user says "UAT pass" or "accepted" → continue
@@ -292,3 +293,5 @@ task(
 
 **QA reads:** KB (BRD + FSD + TDD), STP/STC, source code (test files)
 **QA writes:** Test results, TEST-REPORT.md
+
+

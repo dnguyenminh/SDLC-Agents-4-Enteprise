@@ -1,6 +1,19 @@
 # SA4E-44 Docker Compose Override — Test Environment
 # Usage: docker compose -f docker-compose.yml -f docker-compose.test.yml up
-version: "3.9"
+#
+# DATA-SAFETY (SA4E-335 incident): this stack MUST run under its own compose
+# project so `down -v` can never reach the production volumes
+# (`backend_postgres_data`, `backend_code_intel_data`). The helpers
+# `scripts/test-up.ps1` / `scripts/test-down.ps1` always pass `-p sa4e-test`;
+# the top-level `name:` below is a second layer of isolation for callers that
+# forget the flag. Verify with:
+#   docker compose -f docker-compose.yml -f docker-compose.test.yml config
+#
+# NOTE: `tmpfs` was removed here — it mounted the SAME target as the named
+# volume (`/var/lib/postgresql/data`), which makes Compose reject the file
+# ("target already mounted"). Tests get persistence from `postgres_test_data`
+# instead; teardown stays reproducible via `down -v` on project `sa4e-test`.
+name: sa4e-test
 
 services:
   postgres:
@@ -13,8 +26,6 @@ services:
       - "5433:5432"
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
-    tmpfs:
-      - /var/lib/postgresql/data
 
   backend:
     container_name: sa4e-backend-test

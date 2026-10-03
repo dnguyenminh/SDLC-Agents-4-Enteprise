@@ -185,14 +185,33 @@ docker compose -f backend/docker-compose.yml -f docker-compose.embeddings.yml --
 ### 3.6 Teardown / cleanup
 
 ```powershell
-# Default stack only (containers + network; keeps named volumes):
+# Default stack only (containers + network; keeps named volumes) — SAFE, use this:
 docker compose -f backend/docker-compose.yml down
 
-# Full clean slate (+ postgres_data / code_intel_data volumes) — VERIFIED leaves 0 sa4e-* containers, 0 backend_* volumes, 0 backend_sa4e-network:
-docker compose -f backend/docker-compose.yml -f backend/docker-compose.embeddings.yml --profile embeddings down -v
+# Two-file teardown incl. the profile sidecar (OBS-006) — also keeps named volumes:
+docker compose -f backend/docker-compose.yml -f backend/docker-compose.embeddings.yml --profile embeddings down
 
 # If a sidecar still lingers (OBS-006 edge case):  docker rm -f sa4e-onnx
 ```
+
+> ⛔ **DATA-SAFETY (added after the 2026-10-03 volume-loss incident):**
+> `down -v` against the **default `backend` project** permanently destroys
+> `backend_postgres_data` + `backend_code_intel_data`. Docker offers no undo, and
+> this repo ships **no** `pg_dump` restore point older than the backup script —
+> the pre-incident Postgres data is unrecoverable.
+>
+> - Routine teardown → plain `down` (no `-v`), as above.
+> - Test runs → always through the isolated project: `npm run db:test:up` /
+>   `npm run db:test:down` (compose project `sa4e-test`, volumes `sa4e-test_*`).
+> - Truly need a full clean slate on the production project → back up FIRST
+>   (`npm run db:backup`, which also snapshots `index.db`), then:
+>
+> ```powershell
+> docker compose -f backend/docker-compose.yml -f backend/docker-compose.embeddings.yml --profile embeddings down -v   # destroys volumes — backup first!
+> ```
+>
+> Verified on this host: `docker compose -f backend/docker-compose.yml -f backend/docker-compose.test.yml config --quiet` → exit 0 with
+> `name: sa4e-test`, postgres mounted on `postgres_test_data` only (never `postgres_data`).
 
 Images `sa4e-backend:sa4e-335-r2` (production, current tree), `qa-r2-test`, `sa4e-335-fix1`, `sa4e-335-test6`, `sa4e-335-verify` are kept as evidence — do not prune them before sign-off.
 

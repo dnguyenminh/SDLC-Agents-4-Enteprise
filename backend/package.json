@@ -23,6 +23,11 @@
     "lint:fix": "eslint src/ --ext .ts --fix",
     "lint:lines": "bash ../scripts/check-line-count.sh",
     "pega:generate": "node scripts/pega-generate-parser.mjs",
+    "db:backup": "node scripts/db/backup-postgres.mjs --target prod",
+    "db:backup:test": "node scripts/db/backup-postgres.mjs --target test --if-running",
+    "db:test:up": "node scripts/db/test-compose.mjs up",
+    "db:test:down": "node scripts/db/test-compose.mjs down",
+    "db:test:config": "node scripts/db/test-compose.mjs config --quiet",
     "check:ci": "npm run lint && npm run lint:lines && npm run build && npm run test:unit && npm run test:contract",
     "prepare": "node -e \"process.exit(0)\""
   },
