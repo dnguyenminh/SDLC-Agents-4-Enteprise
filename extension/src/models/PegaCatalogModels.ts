@@ -40,8 +40,9 @@ export interface RuleCatalogRow {
   /** SA4E-241: rule change timestamps (for checksum). Absent in legacy catalogs. */
   pxUpdateDateTime?: string;
   pxSaveDateTime?: string;
-  /** SA4E-241: checksum column from the Pega service (Cách A). Verified/recomputed
-   *  by the extension (Cách B). Absent → extension computes from the 3 fields. */
+  /** SA4E-241: checksum column from the Pega service (Cách A) — named `checksum`,
+   *  or `changeToken` in rulecatalog exports. Verified/recomputed by the extension
+   *  (Cách B). Absent → extension computes from the 3 fields. */
   checksum?: string;
 }
 

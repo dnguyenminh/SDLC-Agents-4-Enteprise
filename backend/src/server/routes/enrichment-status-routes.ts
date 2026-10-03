@@ -42,6 +42,32 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
     }
   });
 
+  /**
+   * GET /api/v1/enrichment/failures?limit=N — full list of FAILED enrichment tasks,
+   * scoped to the request's project. Unlike the status endpoint's recentFailures (capped
+   * at 10), this returns every failure (bounded by `limit`, default 200, max 1000) so the
+   * user can see exactly which rules/symbols failed and why. Each item carries the resolved
+   * source name, the stored error string, retry count, and completion timestamp.
+   */
+  app.get('/enrichment/failures', jwtAuth, async (c) => {
+    try {
+      const taskWorker = getTaskWorker(registry);
+      if (!taskWorker) {
+        return c.json({ error: 'Enrichment service unavailable', details: 'TaskWorker not initialized' }, 503);
+      }
+      const projectId = c.req.header('X-Project-Id') || '';
+      // Clamp limit to [1, 1000] — guards against unbounded payloads and bad input.
+      const rawLimit = Number(c.req.query('limit'));
+      const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 1000) : 200;
+      const repo = taskWorker.getRepository();
+      const failures = await repo.listFailedDetailed(limit, projectId || undefined);
+      return c.json({ projectId: projectId || null, count: failures.length, limit, failures }, 200);
+    } catch (err: any) {
+      logger.error({ err }, '[EnrichmentStatus] Failed to list failures');
+      return c.json({ error: 'Failed to list enrichment failures', details: err.message }, 500);
+    }
+  });
+
   /** POST /api/v1/enrichment/retry-failed — reconcile orphans first, then reset failed tasks to pending. */
   app.post('/enrichment/retry-failed', jwtAuth, async (c) => {
     try {

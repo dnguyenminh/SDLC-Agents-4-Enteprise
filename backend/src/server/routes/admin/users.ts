@@ -257,6 +257,7 @@ export function createUsersRoutes(ctx: AdminContext): Hono {
     const { newPassword } = await c.req.json();
     if (!newPassword || newPassword.length < 6) return c.json({ error: 'Password must be at least 6 characters' }, 400);
     await changePassword(targetId, newPassword);
+    await invalidateUserSessions(targetId);
     await recordAudit(user.userId, user.username, 'CHANGE_PASSWORD_ADMIN', 'users', targetId);
     return c.json({ success: true });
   });

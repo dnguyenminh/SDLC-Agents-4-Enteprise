@@ -10,11 +10,25 @@ import * as os from "os";
 import { parseCatalogCsv } from "../PegaCatalogCsvParser";
 import { catalogRowToSummary, CATALOG_COLUMNS } from "../../models";
 import { summaryToCrawlItem } from "../../models";
+import { computePegaChecksum } from "../../code-intel/checksum/PegaRuleChecksumStrategy";
 
 const HEADER =
   "pzInsKey,pxObjClass,pyClassName,pyRuleSet,pyRuleSetVersion,pyRuleAvailable," +
   "pyBaseRule,pyCircumstanceType,pyCircumstanceProp,pyCircumstanceVal," +
   "pyCircumstanceDateProp,pyCircumstanceDate,pyRuleStarts,pyRuleEnds,pyLabel,pxCreateDateTime";
+
+/** Real Pega rulecatalog export shape: timestamps + `changeToken` (no `checksum`). */
+const CHANGETOKEN_HEADER =
+  "pzInsKey,pxObjClass,pyClassName,pyRuleSet,pyRuleSetVersion,pyLabel," +
+  "pxCreateDateTime,pxSaveDateTime,pxUpdateDateTime,changeToken";
+
+const TS_UPDATE = "20240731T185502.849 GMT";
+const TS_SAVE = "20240731T185136.290 GMT";
+
+/** One catalog data row matching CHANGETOKEN_HEADER field order. */
+function changeTokenRow(key: string, token: string): string {
+  return `${key},Rule-Obj-Activity,A,RS,01-01-01,Label,${TS_SAVE},${TS_SAVE},${TS_UPDATE},${token}`;
+}
 
 const tmpFiles: string[] = [];
 function writeTmpCsv(content: string): string {
@@ -64,6 +78,47 @@ describe("PegaCatalogCsvParser", () => {
 
   it("throws when CSV file does not exist", async () => {
     await expect(parseCatalogCsv("/no/such/file.csv", noop)).rejects.toThrow(/not found/i);
+  });
+
+  // changeToken (Pega rulecatalog export) verified against the NT-2 formula.
+  it("TC-CT-01: changeToken column matching sha256(pzInsKey|update|save) → verified", async () => {
+    const key = "RULE-OBJ-ACTIVITY A!B";
+    const token = computePegaChecksum({
+      pzInsKey: key, pxUpdateDateTime: TS_UPDATE, pxSaveDateTime: TS_SAVE,
+    });
+    const csv = [CHANGETOKEN_HEADER, changeTokenRow(key, token)].join("\n");
+    const res = await parseCatalogCsv(writeTmpCsv(csv), noop);
+    expect(res.checksumVerified).toBe(1);
+    expect(res.checksumMismatch).toBe(0);
+    expect(res.checksumComputed).toBe(0);
+    expect(res.items[0].checksum).toBe(token);
+  });
+
+  it("TC-CT-02: wrong changeToken → E-03 mismatch, computed value wins", async () => {
+    const key = "RULE-OBJ-ACTIVITY C!D";
+    const computed = computePegaChecksum({
+      pzInsKey: key, pxUpdateDateTime: TS_UPDATE, pxSaveDateTime: TS_SAVE,
+    });
+    const csv = [
+      CHANGETOKEN_HEADER,
+      changeTokenRow(key, "f".repeat(64)),
+    ].join("\n");
+    const res = await parseCatalogCsv(writeTmpCsv(csv), noop);
+    expect(res.checksumMismatch).toBe(1);
+    expect(res.checksumVerified).toBe(0);
+    expect(res.items[0].checksum).toBe(computed);
+  });
+
+  it("TC-CT-03: legacy `checksum` column wins over `changeToken` when both present", async () => {
+    const key = "RULE-OBJ-ACTIVITY E!F";
+    const token = computePegaChecksum({
+      pzInsKey: key, pxUpdateDateTime: TS_UPDATE, pxSaveDateTime: TS_SAVE,
+    });
+    const header = CHANGETOKEN_HEADER + ",checksum";
+    const csv = [header, changeTokenRow(key, token) + "," + "a".repeat(64)].join("\n");
+    const res = await parseCatalogCsv(writeTmpCsv(csv), noop);
+    expect(res.checksumMismatch).toBe(1);
+    expect(res.checksumVerified).toBe(0);
   });
 });
 

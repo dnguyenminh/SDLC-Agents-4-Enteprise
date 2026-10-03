@@ -45,6 +45,37 @@ export function detectModule(relativePath: string): string {
   return 'root';
 }
 
+interface ModuleAggregate {
+  name: string;
+  language: string;
+  file_count: number;
+  symbol_count: number;
+}
+
+/**
+ * Collapse (module, language) rows to one row per module name.
+ * file_count sums; symbol_count is already per-module (the subquery ignores
+ * language) so take MAX to avoid double-counting; language = the variant
+ * owning the most files. Without this merge, a bilingual module violates
+ * UNIQUE(project_id, name) on INSERT.
+ */
+function mergeModuleLanguages(
+  rows: { module: string; language: string; file_count: number; symbol_count: number }[],
+): ModuleAggregate[] {
+  const merged = new Map<string, ModuleAggregate & { top: number }>();
+  for (const row of rows) {
+    const cur = merged.get(row.module);
+    if (!cur) {
+      merged.set(row.module, { name: row.module, language: row.language, file_count: row.file_count, symbol_count: row.symbol_count, top: row.file_count });
+    } else {
+      cur.file_count += row.file_count;
+      cur.symbol_count = Math.max(cur.symbol_count, row.symbol_count);
+      if (row.file_count > cur.top) { cur.language = row.language; cur.top = row.file_count; }
+    }
+  }
+  return [...merged.values()].map(({ top, ...m }) => m);
+}
+
 /** Rebuild the modules table for a single tenant from its files (SA4E-41). */
 export async function updateModules(adapter: DatabaseAdapter, projectId: string): Promise<void> {
   await adapter.runAsync('DELETE FROM modules WHERE project_id = ?', [projectId]);
@@ -57,10 +88,10 @@ export async function updateModules(adapter: DatabaseAdapter, projectId: string)
     [projectId, projectId, projectId],
   );
 
-  for (const row of rows) {
+  for (const m of mergeModuleLanguages(rows)) {
     await adapter.runAsync(
       'INSERT INTO modules (project_id, name, root_path, language, file_count, symbol_count) VALUES (?, ?, ?, ?, ?, ?)',
-      [projectId, row.module, row.module, row.language, row.file_count, row.symbol_count],
+      [projectId, m.name, m.name, m.language, m.file_count, m.symbol_count],
     );
   }
 }

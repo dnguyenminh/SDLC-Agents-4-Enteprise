@@ -2,38 +2,25 @@
  * Migration runner — sequential, versioned schema migrations.
  * Each migration is applied once and tracked in schema_version table.
  * SA4E-53: Uses QueryDatabaseAdapter instead of a raw Database handle.
+ * Versioned step implementations (V1–V4) live in ./migration-steps.js;
+ * the V5 multi-tenant step lives in ./migration-v5.js.
  */
 
 import pino from 'pino';
 import type { QueryDatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SCHEMA_V1 } from './schema.js';
 import { applyMigrationV5 } from './migration-v5.js';
+import {
+  applyGraphMigrationsSync,
+  applyMemorySchema,
+  applyMigration,
+  applyMigrationV2,
+  applyMigrationV4,
+  getExistingColumns,
+  type Migration,
+} from './migration-steps.js';
 
 const logger = pino({ name: 'migrations' });
-
-async function applyMemorySchema(db: QueryDatabaseAdapter): Promise<void> {
-  try {
-    await db.execAsync(SCHEMA_V1);
-  } catch (err) {
-    logger.error({ err }, '[migrations] Memory schema error (graceful):');
-  }
-}
-
-interface Migration {
-  version: number;
-  description: string;
-  sql: string;
-}
-
-/** Pattern metadata columns added in V2. */
-const MIGRATION_V2_COLUMNS = [
-  'di_style',
-  'error_handling',
-  'naming_convention',
-  'logging_framework',
-  'testing_framework',
-  'purpose',
-] as const;
 
 const MIGRATIONS: Migration[] = [
   { version: 1, description: 'Initial schema with FTS5', sql: SCHEMA_V1 },
@@ -58,6 +45,15 @@ export async function runMigrations(db: QueryDatabaseAdapter, legacyProjectId: s
 
   // SA4E-42 (PT-01): additive `server` column on mcp_tools.
   await migrateAddMcpToolsServerColumn(db);
+
+  // Provenance columns on files (registerFilesForIndex INSERTs them).
+  // Fresh DBs built from SCHEMA_V1 pre-fix lack them because V5's recreate
+  // returns early when project_id already exists — so ensure unconditionally.
+  await migrateAddFilesProvenanceColumns(db);
+
+  // SA4E-336: repair the body_embeddings upsert index BEFORE the early return so
+  // already-migrated DBs (the ones actually failing) get fixed too.
+  await ensureBodyEmbeddingsUpsertIndex(db);
 
   const current = await getCurrentVersion(db);
   const pending = MIGRATIONS.filter(m => m.version > current);
@@ -95,6 +91,10 @@ export async function runMigrations(db: QueryDatabaseAdapter, legacyProjectId: s
   if (current < 5) {
     await applyMigrationV5(db, legacyProjectId);
   }
+
+  // SA4E-336: fresh DBs create body_embeddings in the V3 block above (and V5
+  // backfills project_id) — index them once the table definitely exists.
+  await ensureBodyEmbeddingsUpsertIndex(db);
 }
 
 /**
@@ -110,161 +110,62 @@ export async function migrateAddMcpToolsServerColumn(db: QueryDatabaseAdapter): 
   await db.execAsync('CREATE INDEX IF NOT EXISTS idx_mcp_tools_server ON mcp_tools(server)');
 }
 
-async function applyMigrationV4(db: QueryDatabaseAdapter): Promise<void> {
-  try {
-    const memoryTables = [
-      'knowledge_entries', 'knowledge_vectors', 'knowledge_graph_edges',
-      'consolidation_log', 'memory_sessions', 'memory_audit',
-      'conversation_turns', 'entity_index', 'agent_scope_config',
-      'quality_scores', 'tags', 'entry_tags', 'citations',
-      'attachments', 'templates', 'feedback', 'reminders',
-      'search_log', 'popular_queries', 'knowledge_fts',
-    ];
-
-    await db.execAsync('PRAGMA foreign_keys=OFF;');
-    for (const table of memoryTables) {
-      await db.execAsync(`DROP TABLE IF EXISTS ${table};`);
-    }
-    await db.execAsync('PRAGMA foreign_keys=ON;');
-
-    await applyMemorySchema(db);
-    await db.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [4]);
-    logger.error('[migrations] V4: Memory tables dropped and recreated');
-  } catch (err) {
-    logger.error({ err }, `[migrations] V4 error:`);
-  }
-}
-
-async function applyMigration(db: QueryDatabaseAdapter, migration: Migration): Promise<void> {
-  await db.execAsync(migration.sql);
-  await db.runAsync('INSERT INTO schema_version (version) VALUES (?)', [migration.version]);
-  logger.error(`[migrations] v${migration.version} applied`);
-}
-
-/** Migration V2 — Add pattern metadata columns to modules table. */
-async function applyMigrationV2(db: QueryDatabaseAdapter): Promise<void> {
-  try {
-    const existing = await getExistingColumns(db, 'modules');
-    let added = 0;
-
-    for (const col of MIGRATION_V2_COLUMNS) {
-      if (!existing.has(col)) {
-        await db.execAsync(`ALTER TABLE modules ADD COLUMN ${col} TEXT DEFAULT NULL`);
-        added++;
-      }
-    }
-
-    await db.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [2]);
-    logger.error(`[migrations] V2: Added ${added} pattern columns`);
-  } catch (err) {
-    logger.error({ err }, `[migrations] V2 error (graceful degradation):`);
-  }
-}
-
-/** Get set of column names for a table via pragma_table_info. */
-async function getExistingColumns(db: QueryDatabaseAdapter, table: string): Promise<Set<string>> {
-  const rows = await db.allAsync<{ name: string }>(`PRAGMA table_info('${table}')`);
-  return new Set(rows.map(r => r.name));
-}
-
-async function applyGraphMigrationsSync(db: QueryDatabaseAdapter): Promise<void> {
-  logger.error('[migrations] Running graph schema migrations (SQLite sync)...');
-
-  // 1. Add enhanced columns to symbols
-  const existing = await getExistingColumns(db, 'symbols');
+/**
+ * Add file-provenance columns to `files` for existing DBs.
+ * Uses column existence probe instead of a swallow-all catch.
+ */
+export async function migrateAddFilesProvenanceColumns(db: QueryDatabaseAdapter): Promise<void> {
+  const existing = await getExistingColumns(db, 'files');
   let added = 0;
-  for (const col of [
-    { name: 'parameters', type: 'TEXT' },
-    { name: 'return_type', type: 'TEXT' },
-    { name: 'parent_symbol_id', type: 'INTEGER' },
-    { name: 'decorators', type: 'TEXT' },
-    { name: 'complexity', type: 'INTEGER' },
-    { name: 'is_async', type: 'INTEGER DEFAULT 0' },
-    { name: 'is_exported', type: 'INTEGER DEFAULT 0' },
-    { name: 'doc_comment_full', type: 'TEXT' },
-    { name: 'modifiers', type: 'TEXT' },
-  ]) {
-    if (!existing.has(col.name)) {
-      try {
-        await db.execAsync(`ALTER TABLE symbols ADD COLUMN ${col.name} ${col.type}`);
-        added++;
-      } catch { /* Column may already exist */ }
+  for (const col of ['file_created_at TEXT', 'file_author TEXT', 'file_version TEXT']) {
+    const name = col.split(' ')[0];
+    if (!existing.has(name)) {
+      await db.execAsync(`ALTER TABLE files ADD COLUMN ${col}`);
+      added++;
     }
   }
+  if (added > 0) logger.error(`[migrations] Added ${added} provenance columns to files`);
+}
 
-  if (added > 0) {
-    logger.error(`[migrations] Added ${added} enhanced symbol columns`);
-    try {
-      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_sym_parent ON symbols(parent_symbol_id)');
-      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_sym_exported ON symbols(is_exported)');
-      await db.execAsync('CREATE INDEX IF NOT EXISTS idx_sym_file_kind ON symbols(file_id, kind)');
-    } catch { /* Indexes may already exist */ }
+/**
+ * SA4E-336 — `symbol_sync_error` root-cause repair.
+ *
+ * SQLite built `body_embeddings` with UNIQUE(symbol_id, chunk_index) (V3 DDL and
+ * the graph migrator), but PegaSymbolSync.storeBodyEmbedding upserts with
+ * ON CONFLICT(project_id, symbol_id, chunk_index). SQLite rejects a conflict
+ * target that matches no unique index at statement prepare, so EVERY Pega rule
+ * sync threw "ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE
+ * constraint" and surfaced as `symbol_sync_error` in bulk-check. PostgreSQL
+ * already carries this index (SA4E-104, pg-schema-ensure) — SQLite needs the
+ * mirror. Safe on existing rows: (symbol_id, chunk_index) uniqueness implies the
+ * wider key is unique too. Probe-based and idempotent; SQLite-only (this runner
+ * is only invoked for engine === 'sqlite').
+ */
+export async function ensureBodyEmbeddingsUpsertIndex(db: QueryDatabaseAdapter): Promise<void> {
+  const cols = await getExistingColumns(db, 'body_embeddings');
+  if (cols.size === 0) return; // table not created yet (V3 / graph migrator create it)
+  if (!cols.has('project_id')) {
+    // Table predates V5 and V5 never ran — add the scope column the upsert writes.
+    await db.execAsync(`ALTER TABLE body_embeddings ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
+    logger.error('[migrations] SA4E-336: added body_embeddings.project_id');
   }
+  if (await hasBodyEmbeddingsUpsertIndex(db)) return;
+  await db.execAsync(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_body_embeddings_upsert
+     ON body_embeddings(project_id, symbol_id, chunk_index)`,
+  );
+  logger.error('[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index');
+}
 
-  // 2. Create relationships table
-  await db.execAsync(`
-CREATE TABLE IF NOT EXISTS relationships (
-    id INTEGER PRIMARY KEY,
-    source_symbol_id INTEGER NOT NULL,
-    target_symbol TEXT NOT NULL,
-    target_symbol_id INTEGER,
-    kind TEXT NOT NULL CHECK(kind IN ('calls','imports','inherits','implements','uses','decorates')),
-    file_path TEXT NOT NULL,
-    line INTEGER NOT NULL,
-    metadata TEXT,
-    FOREIGN KEY (source_symbol_id) REFERENCES symbols(id) ON DELETE CASCADE,
-    FOREIGN KEY (target_symbol_id) REFERENCES symbols(id) ON DELETE SET NULL
-);
-CREATE INDEX IF NOT EXISTS idx_rel_source_kind ON relationships(source_symbol_id, kind);
-CREATE INDEX IF NOT EXISTS idx_rel_target_kind ON relationships(target_symbol, kind);
-CREATE INDEX IF NOT EXISTS idx_rel_file ON relationships(file_path);
-  `);
-  logger.error('[migrations] Relationships table ready');
-
-  // 3. Create file_index table
-  await db.execAsync(`
-CREATE TABLE IF NOT EXISTS file_index (
-    path TEXT PRIMARY KEY,
-    mtime INTEGER NOT NULL,
-    content_hash TEXT NOT NULL,
-    size_bytes INTEGER NOT NULL,
-    last_indexed TEXT NOT NULL DEFAULT (datetime('now')),
-    symbol_count INTEGER DEFAULT 0
-);
-CREATE INDEX IF NOT EXISTS idx_file_index_hash ON file_index(content_hash);
-  `);
-  logger.error('[migrations] File index table ready');
-
-  // 4. Create graph_meta table
-  await db.execAsync(`
-CREATE TABLE IF NOT EXISTS graph_meta (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-);
-INSERT OR IGNORE INTO graph_meta (key, value) VALUES ('schema_version', '3');
-INSERT OR IGNORE INTO graph_meta (key, value) VALUES ('last_checkpoint', '');
-INSERT OR IGNORE INTO graph_meta (key, value) VALUES ('total_nodes', '0');
-INSERT OR IGNORE INTO graph_meta (key, value) VALUES ('total_edges', '0');
-  `);
-  logger.error('[migrations] Graph metadata table ready');
-
-  // 5. Create body_embeddings table
-  await db.execAsync(`
-CREATE TABLE IF NOT EXISTS body_embeddings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    symbol_id INTEGER NOT NULL,
-    chunk_index INTEGER NOT NULL DEFAULT 0,
-    embedding BYTEA NOT NULL,
-    token_count INTEGER NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(symbol_id, chunk_index),
-    FOREIGN KEY (symbol_id) REFERENCES symbols(id) ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS idx_body_embeddings_symbol ON body_embeddings(symbol_id);
-  `);
-  logger.error('[migrations] Body embeddings table ready');
-
-  // 6. Update schema version
-  await db.runAsync('INSERT OR REPLACE INTO schema_version (version) VALUES (?)', [3]);
-  logger.error('[migrations] Schema version set to 3 (sync)');
+/** True when a unique index over exactly (project_id, symbol_id, chunk_index) exists. */
+async function hasBodyEmbeddingsUpsertIndex(db: QueryDatabaseAdapter): Promise<boolean> {
+  const indexes = await db.allAsync<{ name: string; unique: number }>(
+    `PRAGMA index_list('body_embeddings')`,
+  );
+  for (const idx of indexes) {
+    if (idx.unique !== 1) continue;
+    const cols = await db.allAsync<{ name: string }>(`PRAGMA index_info('${idx.name}')`);
+    if (cols.map((c) => c.name).join(',') === 'project_id,symbol_id,chunk_index') return true;
+  }
+  return false;
 }

@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.46.3.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.47.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.47.0 (2026-10-02)
+
+- **KB ingest status visibility** — The "KB: Ready" status bar item is now clickable while idle (runs `sdlcAgents.showIndexStatus`), reporting index/parse progress plus LLM enrichment status in the Output channel. New backend endpoint `GET /api/v1/enrichment/failures?limit=N` (clamped 1–1000, default 200) returns the full list of FAILED enrichment tasks from `pending_tasks` — resolved source, error, retry count, timestamp — so users can see exactly which rules/symbols failed and why, instead of only the latest 10 in the status tooltip.
 
 ### v1.46.3 (2026-09-29)
 

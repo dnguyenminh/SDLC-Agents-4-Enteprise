@@ -187,6 +187,39 @@ export class PendingTaskRepository {
     );
   }
 
+  /**
+   * List FAILED tasks with a human-readable source resolved, scoped by project.
+   * Mirrors listProcessing's COALESCE join so the UI can show which symbol/entry
+   * failed (not just a numeric id). Used by GET /api/v1/enrichment/failures to give
+   * users full visibility into every failed enrichment task (not just the latest 10).
+   * @param limit Max rows to return (caller bounds payload size)
+   * @param projectId Optional project scope (omit → all projects)
+   */
+  async listFailedDetailed(
+    limit = 200, projectId?: string,
+  ): Promise<Array<{ id: number; source: string; error: string | null; retryCount: number; completedAt: string | null }>> {
+    const params: unknown[] = [TaskStatus.FAILED];
+    let whereExtra = '';
+    if (projectId) {
+      whereExtra = ' AND pt.project_id = ?';
+      params.push(projectId);
+    }
+    params.push(limit);
+    return this.db.allAsync<{ id: number; source: string; error: string | null; retryCount: number; completedAt: string | null }>(
+      `SELECT pt.id,
+              COALESCE(ke.source, s.name, 'entry-' || pt.entry_id) as source,
+              pt.error as error,
+              pt.retry_count as "retryCount",
+              pt.completed_at as "completedAt"
+       FROM pending_tasks pt
+       LEFT JOIN knowledge_entries ke ON ke.id = pt.entry_id AND pt.task_type != 'CODE_ENRICHMENT'
+       LEFT JOIN symbols s ON s.id = pt.entry_id AND pt.task_type = 'CODE_ENRICHMENT'
+       WHERE pt.status = ?${whereExtra}
+       ORDER BY pt.completed_at DESC LIMIT ?`,
+      params,
+    );
+  }
+
   /** Get currently processing tasks with their source info, scoped by project. */
   async listProcessing(limit = 5, projectId?: string): Promise<Array<{ id: number; source: string; startedAt: string | null }>> {
     const params: unknown[] = [TaskStatus.PROCESSING];

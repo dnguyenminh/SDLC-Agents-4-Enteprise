@@ -22,6 +22,7 @@ import { SecurityPanel } from "../panels/security-panel";
 import { showImpactAnalysis } from "../panels/impact-panel";
 import { SettingsPanel } from "../panels/settings-panel";
 import { LoginPanel } from "../panels/login-panel";
+import { PegaIngesterPanel } from "../panels/pega-ingester-panel";
 import { AuthManager } from "../auth/AuthManager";
 import { KiroTreeViewProvider } from "../sidebar/tree-view-provider";
 import { showUserError } from "../utils/panel-utils";
@@ -88,6 +89,9 @@ export function registerCommands(context: vscode.ExtensionContext, deps: Command
       } catch (err: any) {
         vscode.window.showErrorMessage(`Failed to fetch Pega Context: ${err.message}`);
       }
+    }),
+    vscode.commands.registerCommand("sdlcAgents.openPegaIngester", () => {
+      PegaIngesterPanel.open(context.extensionUri);
     }),
   );
 

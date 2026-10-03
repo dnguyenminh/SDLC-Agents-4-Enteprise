@@ -15,7 +15,6 @@ import { getBackendUrl } from "../config/backend-url";
 export function getIframeHtml(panelType: PanelType, authTokenProvider?: () => string): string {
   const backendUrl = getBackendUrl();
   const token = authTokenProvider ? authTokenProvider() : "";
-  const encodedToken = encodeURIComponent(token);
   const pageMapping: Record<string, string> = {
     dashboard: "dashboard", graph: "graph", tags: "tags",
     quality: "quality", analytics: "analytics", workflow: "workflow",
@@ -26,10 +25,11 @@ export function getIframeHtml(panelType: PanelType, authTokenProvider?: () => st
   // Use the centralized projectId (derived at activation)
   const projectId = getProjectId();
 
-  // SA4E-319: unified bootstrap key is `sso_token` (the key the SPA __ssoBootstrap
-  // already reads + strips from history). Using `token` here caused split-brain auth:
-  // the SPA never wrote admin_token and rendered the login screen instead of content.
-  const src = `${backendUrl}/admin?embed=true&page=${page}&sso_token=${encodedToken}&projectId=${encodeURIComponent(projectId)}`;
+  // SA4E-321: the token is deliberately NOT a URL parameter. It used to be sent as
+  // `sso_token=` on the iframe src, which puts the credential in the backend access
+  // log, any reverse proxy log, the browser history and the Referer header. It is
+  // handed to the iframe via postMessage once the frame has loaded instead.
+  const src = `${backendUrl}/admin?embed=true&page=${page}&projectId=${encodeURIComponent(projectId)}`;
 
   const nonce = getNonce();
 
@@ -54,6 +54,14 @@ export function getIframeHtml(panelType: PanelType, authTokenProvider?: () => st
     <iframe src="${src}" allow="clipboard-read; clipboard-write"></iframe>
     <script nonce="${nonce}">
       const vscode = acquireVsCodeApi();
+      const bootToken = ${JSON.stringify(token)};
+      const iframe = document.querySelector('iframe');
+      // Deliver the token only after the frame has parsed its own scripts, so the
+      // SPA's message listener exists. No token ever appears in the frame URL.
+      iframe.addEventListener('load', () => {
+        if (bootToken) iframe.contentWindow.postMessage({ type: 'token_refreshed', token: bootToken }, '*');
+        else iframe.contentWindow.postMessage({ type: 'auth_unavailable' }, '*');
+      });
       window.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'token_refreshed' && event.data.token) {
           const iframe = document.querySelector('iframe');

@@ -524,7 +524,8 @@ function PortalInstance({permissions,username,isActive,impersonateUserId}){
 // (?embed=true). In that mode the EXTENSION HOST (AuthManager) is the single source of
 // truth for auth — the SPA must NOT self-authenticate from a stale localStorage.admin_token
 // left over from a previous session. It only becomes logged-in once the host delivers a
-// token via one of the two channels below (URL sso_token bootstrap OR postMessage).
+// token via one of the two channels below (host postMessage OR the one-time
+// `sso_code` exchange on a fresh SSO redirect).
 const __embedded=__urlParams.get('embed')==='true';
 // When embedded, discard any stale replica so a previous session's token can't render
 // the graph with empty/old permissions ("Admin (0)"). The host will redeliver the token.
@@ -545,19 +546,22 @@ async function applyToken(tok){
   }catch(e){localStorage.setItem('admin_user',JSON.stringify({username:'sso-user',permissions:[]}));}
 }
 
-// SSO web flow: the /auth/{provider}/callback redirects back with the session token on
-// the URL (?sso_token=...). The extension iframe also delivers the token via the same
-// `sso_token` key (SA4E-319 unified key). Persist via applyToken, then strip the params
-// from the URL so the token isn't left in history. Runs once at load, before App mounts.
-window.__ssoBootstrap=(async function captureSsoToken(){
+// SSO web flow: the /auth/{provider}/callback redirects back with a single-use
+// `sso_code` (?sso_code=...). Exchange it for the token pair over POST, then strip
+// the param from the URL so the code can't be replayed from history. No credential
+// ever rides on the URL anymore (SA4E-321). Runs once at load, before App mounts.
+window.__ssoBootstrap=(async function captureSsoCode(){
   try{
     const p=new URLSearchParams(window.location.search);
-    const tok=p.get('sso_token');
-    if(!tok) return;
-    p.delete('sso_token'); p.delete('sso_expires');
+    const code=p.get('sso_code');
+    if(!code) return;
+    p.delete('sso_code'); p.delete('state');
     const qs=p.toString();
     window.history.replaceState({},'',window.location.pathname+(qs?'?'+qs:''));
-    await applyToken(tok);
+    const res=await fetch(API+'/auth/exchange',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+    if(!res.ok) return;
+    const data=await res.json();
+    if(data.token) await applyToken(data.token);
   }catch(e){}
 })();
 // SA4E-319: runtime token delivery channel. Registered at GLOBAL scope (next to

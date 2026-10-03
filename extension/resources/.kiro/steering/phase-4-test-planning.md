@@ -147,8 +147,10 @@ Chuyển sang Phase 5 (Implementation)?
 | 4 | RTM (Traceability Matrix) | Re-invoke QA |
 | 5 | Test Coverage Diagram (.drawio + .png) | Invoke QA for diagrams |
 | 6 | Test Execution Flow Diagram (.drawio + .png) | Invoke QA for diagrams |
-| 7 | CSV test data files | Re-invoke QA |
+| 7 | CSV test data files in `documents/{TICKET}/testdata/` | Re-invoke QA |
 | 8 | BA review of Test Cases = APPROVED | Invoke BA (Step 4b.5) — QA not done until BA approves |
+
+> **Test data location (MANDATORY):** All CSV/test data files MUST live in `documents/{TICKET}/testdata/` (a dedicated subfolder, consistent with `diagrams/`). Never place test data flat in the ticket root. STP/STC references MUST use the `testdata/...` relative path.
 
 ## Agent Data Access
 

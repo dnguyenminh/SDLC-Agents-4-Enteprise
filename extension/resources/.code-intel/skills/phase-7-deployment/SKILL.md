@@ -1,10 +1,7 @@
 ---
 name: phase-7-deployment
-description: Phase 7: Deployment (DevOps → DPG/RLN + Deploy)
+description: Phase 7 workflow — DevOps creates DPG/RLN, deploy, release process, finalize
 ---
-
-
-# Phase 7: Deployment (DevOps → DPG/RLN + Deploy)
 
 ## Prerequisites
 
@@ -13,7 +10,7 @@ description: Phase 7: Deployment (DevOps → DPG/RLN + Deploy)
 - Security Deployment Review done (security_deploy_review.status = "done") — Phase 6.7
 - Jira status: UAT or Ready For Product
 
-## ⛔ CHỈ THỰC HIỆN KHI USER XÁC NHẬN UAT PASS + SECURITY DEPLOY REVIEW PASS
+## ONLY EXECUTE WHEN USER CONFIRMS UAT PASS + SECURITY DEPLOY REVIEW PASS
 
 ## Workflow
 
@@ -23,10 +20,10 @@ description: Phase 7: Deployment (DevOps → DPG/RLN + Deploy)
 
 2. Invoke DevOps:
 ```
-invokeSubAgent(
-  name: "devops-agent",
-  prompt: "Tạo Deployment Guide và Release Notes cho {TICKET}. PHẢI tạo draw.io diagrams (deployment-architecture.drawio + rollback-flow.drawio) và export PNG.",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+task(
+  description: "Create Deployment Guide and Release Notes for {TICKET}",
+  prompt: "Create Deployment Guide and Release Notes for {TICKET}. MUST create draw.io diagrams (deployment-architecture.drawio + rollback-flow.drawio) and export PNG — load the 'drawio-diagrams' skill via the skill tool.",
+  subagent_type: "devops-agent"
 )
 ```
 
@@ -45,44 +42,45 @@ invokeSubAgent(
 
 ### Step 7c: Release Process (MANDATORY)
 
-**⛔ PIC: DevOps Agent — chịu trách nhiệm 100% version consistency khi release.**
+**PIC: DevOps Agent — 100% responsible for version consistency during release.**
 
-**SM invoke DevOps with explicit instructions:**
+**SM invokes DevOps with explicit instructions:**
 ```
-invokeSubAgent(
-  name: "devops-agent",
-  prompt: "Release {TICKET} — Deploy đã thành công. Thực hiện release process:
-  1. Merge branch {TICKET} vào master (--no-ff)
-  2. Bump version — tạo git tag (semver: minor cho feature, patch cho bugfix)
-  3. ⛔ SYNC ALL VERSION REFERENCES (MANDATORY — đây là trách nhiệm của bạn):
-     a. Scan project để tìm TẤT CẢ version sources (package.json, pyproject.toml, version.txt, v.v.)
-     b. Scan README/docs tìm hardcoded version strings (badges, install commands, download links)
-     c. Update TẤT CẢ sources tìm được thành version mới
-     d. Thêm changelog entry (README, CHANGELOG.md, hoặc equivalent)
-     e. Báo cáo danh sách files đã update kèm version number
-     Rule: Tất cả version references trong project PHẢI consistent. Không được bỏ sót.
+task(
+  description: "Release {TICKET} — version sync and tagging",
+  prompt: "Release {TICKET} — Deploy successful. Execute release process:
+  1. Merge branch {TICKET} into master (--no-ff)
+  2. Bump version — create git tag (semver: minor for feature, patch for bugfix)
+  3. SYNC ALL VERSION REFERENCES (MANDATORY — your responsibility):
+     a. Scan project for ALL version sources (package.json, pyproject.toml, version.txt, etc.)
+     b. Scan README/docs for hardcoded version strings (badges, install commands, download links)
+     c. Update ALL discovered sources to the new version
+     d. Add changelog entry (README, CHANGELOG.md, or equivalent)
+     e. Report list of updated files with version number
+     Rule: All version references in the project MUST be consistent. Do not miss any.
   4. Auto-promote KB: mem_promote(action='promote_on_merge', ticket_key='{TICKET}')
-  Báo cáo: danh sách files đã update + version number đã apply."
+  Report: list of updated files + applied version number.",
+  subagent_type: "devops-agent"
 )
 ```
 
-**SM verify sau khi DevOps hoàn thành:**
+**SM verify after DevOps completes:**
 
-| # | Bước | SM Verify |
+| # | Step | SM Verify |
 |---|------|-----------|
 | 1 | Merge to master | Confirm merge commit exists |
 | 2 | Bump version | Confirm tag exists, semver valid |
-| 3 | Version sources discovered | DevOps báo cáo danh sách files chứa version |
-| 4 | All version sources updated | Grep version string trong reported files → tất cả match tag |
+| 3 | Version sources discovered | DevOps reports list of version files |
+| 4 | All version sources updated | Grep version string in reported files — all match tag |
 | 5 | Changelog/README updated | New entry exists with correct version |
 
-- If ANY version mismatch → ask DevOps to fix TRƯỚC khi transition
+- If ANY version mismatch → ask DevOps to fix BEFORE transition
 - Only when ALL checks PASS → transition READY FOR PRODUCT → DONE
 
 ### Step 7d: Finalize
 
 9. Transition Jira: READY FOR PRODUCT → DONE (transition "Complete")
-   **⛔ ONLY after release process complete**
+   **ONLY after release process complete**
 
 10. Attach DPG + RLN to Jira:
 ```
@@ -91,7 +89,7 @@ embed_images → export_docx → jira_update_issue
 
 11. Update STATUS: `deployment.status = "done"`
 
-12. Report: "✅ Phase 7 done — Deployed, released, DONE."
+12. Report: "Phase 7 done — Deployed, released, complete."
 
 ## Quality Gate — DPG
 
@@ -107,26 +105,24 @@ embed_images → export_docx → jira_update_issue
 
 ## Quality Gate — Version Sync (Release) — PIC: DevOps Agent
 
-DevOps PHẢI scan project và báo cáo tất cả version sources. SM verify:
+DevOps MUST scan project and report all version sources. SM verify:
 
 | # | Check | If Fail |
 |---|-------|---------|
-| 1 | DevOps báo cáo danh sách version files đã discovered | Re-invoke: "Scan lại, báo cáo TẤT CẢ files chứa version" |
-| 2 | Tất cả reported files chứa cùng version = git tag | DevOps fix ngay |
-| 3 | README/docs không còn old version string | DevOps fix ngay |
-| 4 | Changelog có entry mới đúng version | DevOps fix ngay |
-| 5 | Tất cả consistent | ⛔ BLOCK transition until fixed |
+| 1 | DevOps reports list of version files discovered | Re-invoke: "Scan again, report ALL version files" |
+| 2 | All reported files contain same version = git tag | DevOps fix immediately |
+| 3 | README/docs no longer contain old version string | DevOps fix immediately |
+| 4 | Changelog has new entry with correct version | DevOps fix immediately |
+| 5 | All consistent | BLOCK transition until fixed |
 
-## ⛔ Transitions SM KHÔNG ĐƯỢC tự động
+## Transitions SM MUST NOT Auto-Execute
 
 | Transition | Condition |
 |-----------|-----------|
-| UAT → READY FOR PRODUCT | CHỈ sau user xác nhận UAT pass |
-| READY FOR PRODUCT → DONE | CHỈ sau deploy + sanity + release process |
+| UAT → READY FOR PRODUCT | Only after user confirms UAT pass |
+| READY FOR PRODUCT → DONE | Only after deploy + sanity + release process |
 
 ## Agent Data Access
 
 **DevOps reads:** KB (TDD + FSD + BRD), source code (configs)
 **DevOps writes:** DPG.md, RLN.md → KB
-
-

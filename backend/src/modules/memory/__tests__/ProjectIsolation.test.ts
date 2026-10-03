@@ -1,11 +1,14 @@
 /**
- * SA4E-26 — Project Isolation Tests
- * PBT (4) + UT (14) + IT (12) = 30 test cases
+ * SA4E-26 - Project Isolation Tests
+ * PBT (4) + UT (15) + IT (12) = 31 test cases
  * Uses real SQLite via sa4e-testkit (no mocks).
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fc from 'fast-check';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { makeTempDb, type TempDb } from '../../../__tests__/sa4e-testkit.js';
 import { MemoryEngine } from '../engine/index.js';
 import type { ScopeContext } from '../models.js';
@@ -158,37 +161,51 @@ describe('SA4E-26 UT — deriveProjectId', () => {
     }
   });
 
-  it('UT-09: deriveProjectId from Unix path (hash of user+folder)', async () => {
+  it('UT-09: Unix path with no explicit source does not infer identity', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '/projects/my-app' } as any);
-    // No git remote in test → falls to sha256(user:folder).slice(0,12)
-    expect(config.projectId).toHaveLength(12);
-    expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
+    // The backend never guesses project identity from the folder path: no
+    // explicit source means the 'default' sentinel (writes fail closed).
+    expect(config.projectId).toBe('default');
   });
 
-  it('UT-10: deriveProjectId from Windows path (hash of user+folder)', async () => {
+  it('UT-10: Windows path with no explicit source does not infer identity', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: 'C:\\projects\\my-app' } as any);
-    expect(config.projectId).toHaveLength(12);
-    expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
+    expect(config.projectId).toBe('default');
   });
 
-  it('UT-11: deriveProjectId from root path returns 12-char hash', async () => {
+  it('UT-11: root path yields the default sentinel, not a hash', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '/' } as any);
-    // sha256(user:/) or sha256(user:default) → 12 hex chars
-    expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
+    expect(config.projectId).toBe('default');
   });
 
-  it('UT-12: deriveProjectId from empty string returns hash', async () => {
+  it('UT-12: empty workspace yields the default sentinel', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '' } as any);
-    // sha256(user:default) → 12 hex chars
-    expect(config.projectId).toMatch(/^[a-f0-9]{12}$/);
+    expect(config.projectId).toBe('default');
+  });
+
+  it('UT-15: reads an explicit .code-intel/project.json from the workspace', async () => {
+    delete process.env.CODE_INTEL_PROJECT_ID;
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e-proj-'));
+    fs.mkdirSync(path.join(tmp, '.code-intel'), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmp, '.code-intel', 'project.json'),
+      JSON.stringify({ projectId: 'from-project-json' }),
+    );
+    try {
+      const { loadConfig } = await import('../../../config/index.js');
+      const config = loadConfig({ workspace: tmp } as any);
+      expect(config.projectId).toBe('from-project-json');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   it('UT-13: deriveProjectId with config override', async () => {

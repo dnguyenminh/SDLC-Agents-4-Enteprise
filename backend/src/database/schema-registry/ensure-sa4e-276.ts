@@ -1,11 +1,16 @@
 import { getDbAdapter } from '../../admin/db/core.js';
 
 /**
- * SA4E-276: Ensure Entra SSO config tables exist
+ * SA4E-276: Ensure the Entra SSO config table exists (idempotent, safe on boot).
+ *
+ * Owns ONLY `entra_sso_config`: `audit_log` is created by admin/db/schema.ts
+ * initSchema and its shape there (audit_id/user_id/username/action/resource/...)
+ * is what `recordAudit()` writes. A duplicate, divergent `audit_log` definition
+ * here would either fail against an existing DB or, on a fresh one, create a
+ * table that breaks every audit write — so it must not be re-declared.
  */
 export async function ensureSa4e276(): Promise<void> {
   const adapter = getDbAdapter();
-  // entra_sso_config table
   await adapter.execAsync(`
     CREATE TABLE IF NOT EXISTS entra_sso_config (
       id TEXT PRIMARY KEY,
@@ -23,19 +28,4 @@ export async function ensureSa4e276(): Promise<void> {
   `);
   await adapter.execAsync(`CREATE UNIQUE INDEX IF NOT EXISTS idx_entra_config_tenant_client ON entra_sso_config(tenant_id, client_id)`);
   await adapter.execAsync(`CREATE INDEX IF NOT EXISTS idx_entra_config_updated_at ON entra_sso_config(updated_at)`);
-  
-  // audit_log table (if not exists)
-  await adapter.execAsync(`
-    CREATE TABLE IF NOT EXISTS audit_log (
-      id TEXT PRIMARY KEY,
-      entity_type TEXT NOT NULL,
-      entity_id TEXT NOT NULL,
-      action TEXT NOT NULL,
-      user_id TEXT NOT NULL,
-      timestamp TEXT NOT NULL,
-      details TEXT
-    )
-  `);
-  await adapter.execAsync(`CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entity_type, entity_id)`);
-  await adapter.execAsync(`CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp)`);
 }

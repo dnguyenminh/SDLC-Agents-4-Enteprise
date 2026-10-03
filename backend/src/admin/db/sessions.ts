@@ -1,147 +1,62 @@
 /**
  * admin/db/sessions.ts — Session management via DatabaseAdapter async methods.
  * SA4E-50: All functions are async; use getDbAdapter() for multi-DB support.
+ * SA4E-321: dual-token auth — each session carries a hashed refresh token and
+ * a 15-minute access JWT. validateSession() accepts either credential.
+ *
+ * Issue / refresh / revoke live in sibling modules (session-issue.ts,
+ * session-lifecycle.ts) with the shared policy in session-types.ts; this file
+ * keeps the public `./sessions.js` API unchanged for existing importers.
  */
 
-import * as crypto from 'crypto';
 import type { Session } from '../types/rbac.types.js';
 import { getDbAdapter } from './core.js';
-import { generateToken } from './password.js';
+import { looksLikeJwt, verifyAccessJwt } from './jwt.js';
+import { hashRefreshToken } from './refresh-tokens.js';
+import { sessionCacheGet, sessionCacheSet } from './session-cache.js';
+import {
+  ID_COLUMNS,
+  cacheKey,
+  evaluate,
+  sessionIdentity,
+  type SessionIdentity,
+  type SessionUserRow,
+} from './session-types.js';
 
-/** Session row shape returned by the DB. */
-interface SessionRow {
-  session_id: string;
-  user_id: string;
-  token: string;
-  device: string;
-  ip_address: string;
-  user_agent_hash: string;
-  login_at: string;
-  expires_at: string;
-  is_active: number;
-}
-
-/** Row with joined user fields for validation. */
-interface SessionUserRow extends SessionRow {
-  username: string;
-  access_group_id: string;
-  status: string;
-}
+export { createSession } from './session-issue.js';
+export { invalidateSession, invalidateUserSessions, refreshSession } from './session-lifecycle.js';
+export type { IssuedTokens, SessionIdentity } from './session-types.js';
 
 /**
- * Create a new session for a user.
- * @returns Session with plain-text token
- */
-export async function createSession(
-  userId: string,
-  device?: string,
-  ip?: string,
-  userAgentHash?: string,
-): Promise<Session & { token: string }> {
-  const adapter = getDbAdapter();
-  const sessionId = 'sess-' + crypto.randomUUID().slice(0, 8);
-  const token = generateToken();
-  const now = new Date();
-  const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-  await adapter.runAsync(
-    `INSERT INTO sessions (session_id, user_id, token, device, ip_address, user_agent_hash, login_at, expires_at, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-    [sessionId, userId, token, device || '', ip || '', userAgentHash || '', now.toISOString(), expires.toISOString()],
-  );
-
-  return {
-    sessionId, userId, token,
-    device, ipAddress: ip,
-    loginAt: now.toISOString(),
-    expiresAt: expires.toISOString(),
-    isActive: true,
-  };
-}
-
-/**
- * Validate an opaque session token.
- * Checks is_active, expiry, and user status.
+ * Validate an access JWT or an opaque refresh token.
+ * Checks is_active, both expiries, and user status; a positive verdict is
+ * cached for 30s so logout takes effect within that bound.
  * @returns Session identity or null if invalid/expired
  */
 export async function validateSession(
   token: string,
   currentUserAgentHash?: string,
-): Promise<{ userId: string; username: string; accessGroupId: string } | null> {
-  const adapter = getDbAdapter();
-  const row = await adapter.getAsync<SessionUserRow>(
-    `SELECT s.user_id, s.expires_at, s.is_active, s.user_agent_hash, u.username, u.access_group_id, u.status
-     FROM sessions s JOIN users u ON s.user_id = u.user_id
-     WHERE s.token = ?`,
-    [token],
-  );
-  if (currentUserAgentHash && row?.user_agent_hash && row.user_agent_hash !== currentUserAgentHash) {
-    return null;
+): Promise<SessionIdentity | null> {
+  if (looksLikeJwt(token)) {
+    const result = verifyAccessJwt(token);
+    if (!result.ok) return null;
+    const key = cacheKey(result.claims.sid);
+    const cached = sessionCacheGet(key);
+    if (cached?.valid && cached.value) return cached.value as SessionIdentity;
+    return sessionIdentity(result.claims.sid, currentUserAgentHash);
   }
 
+  const row = await getDbAdapter().getAsync<SessionUserRow>(
+    `SELECT ${ID_COLUMNS} FROM refresh_tokens rt
+     JOIN sessions s ON rt.session_id = s.session_id
+     JOIN users u ON s.user_id = u.user_id
+     WHERE rt.token_hash = ?`,
+    [hashRefreshToken(token)],
+  );
   if (!row) return null;
-  if (!row.is_active) return null;
-  if (row.status !== 'ACTIVE') return null;
-  if (new Date(row.expires_at) < new Date()) {
-    // Expire the session in the background — don't block the response
-    adapter.runAsync('UPDATE sessions SET is_active = 0 WHERE token = ?', [token])
-      .catch(() => {});
-    return null;
-  }
-
-  return { userId: row.user_id, username: row.username, accessGroupId: row.access_group_id };
-}
-
-/** Invalidate a single session by token. */
-export async function invalidateSession(token: string): Promise<void> {
-  const adapter = getDbAdapter();
-  await adapter.runAsync('UPDATE sessions SET is_active = 0 WHERE token = ?', [token]);
-}
-
-/**
- * Invalidate all active sessions for a user (e.g., on disable or force-logout).
- * @returns Number of sessions terminated
- */
-export async function invalidateUserSessions(userId: string): Promise<number> {
-  const adapter = getDbAdapter();
-  const result = await adapter.runAsync(
-    'UPDATE sessions SET is_active = 0 WHERE user_id = ? AND is_active = 1',
-    [userId],
-  );
-  return result.changes;
-}
-
-/**
- * Rotate a session token (sliding expiry).
- * @returns New token + expiry or null if session is invalid
- */
-export async function refreshSession(
-  token: string,
-  currentUserAgentHash?: string,
-): Promise<{ token: string; expiresAt: string } | null> {
-  const adapter = getDbAdapter();
-  const row = await adapter.getAsync<Pick<SessionUserRow, 'user_id' | 'expires_at' | 'is_active' | 'status' | 'user_agent_hash'>>(
-    `SELECT s.user_id, s.expires_at, s.is_active, s.user_agent_hash, u.status
-     FROM sessions s JOIN users u ON s.user_id = u.user_id
-     WHERE s.token = ?`,
-    [token],
-  );
-
-  if (!row || !row.is_active || row.status !== 'ACTIVE') return null;
-  if (currentUserAgentHash && row.user_agent_hash && row.user_agent_hash !== currentUserAgentHash) return null;
-  if (new Date(row.expires_at) < new Date()) {
-    await adapter.runAsync('UPDATE sessions SET is_active = 0 WHERE token = ?', [token]);
-    return null;
-  }
-
-  const newToken = generateToken();
-  const newExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-  await adapter.runAsync(
-    'UPDATE sessions SET token = ?, expires_at = ? WHERE token = ?',
-    [newToken, newExpires, token],
-  );
-
-  return { token: newToken, expiresAt: newExpires };
+  const identity = evaluate(row, currentUserAgentHash);
+  if (identity) sessionCacheSet(cacheKey(row.session_id), true, identity);
+  return identity;
 }
 
 /**
@@ -149,8 +64,7 @@ export async function refreshSession(
  * @returns Array of active Session objects
  */
 export async function getUserSessions(userId: string): Promise<Session[]> {
-  const adapter = getDbAdapter();
-  const rows = await adapter.allAsync<Record<string, unknown>>(
+  const rows = await getDbAdapter().allAsync<Record<string, unknown>>(
     'SELECT * FROM sessions WHERE user_id = ? AND is_active = 1 ORDER BY login_at DESC',
     [userId],
   );

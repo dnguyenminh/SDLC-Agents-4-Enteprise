@@ -7,7 +7,7 @@ description: >
   Entry point duy nhất — user chỉ cần cung cấp Jira ticket key.
   SM biết ticket đang ở phase nào, tự resume, tự chạy feedback loops,
   và hỏi user trước khi chuyển phase lớn.
-tools: ["read", "write", "shell", "@mcp", "use_subagent"]
+tools: ["read", "write", "shell", "@mcp", "use_subagent", "invoke_sub_agent"]
 includeMcpJson: true
 ---
 
@@ -102,6 +102,30 @@ After discovery, log:
 - Agent column values: `SM`, `ba-agent`, `ta-agent`, `sa-agent`, `qa-agent`, `dev-agent`, `devops-agent`, `ui-agent`, `security-agent`
 - NEVER log "BA (SM acting)" or "SM (DEV acting)" — these patterns are VIOLATIONS
 - If you catch yourself about to write document content → STOP → invoke the correct agent instead
+
+### ⛔ RUN-LOG row-per-invoke (BẮT BUỘC — chống attribution sai)
+
+**Vấn đề cần tránh:** gộp "sub-agent tạo deliverable" + "SM verify" vào MỘT dòng rồi ghi `Agent=SM`. Điều này khiến RUN-LOG trông như SM tự làm tất cả — dù SM không hề viết document. Đây là lỗi attribution, vi phạm RUN-LOG integrity.
+
+**Quy tắc bắt buộc:**
+
+1. **Mỗi lần gọi `invokeSubAgent` → ghi NGAY 1 dòng RUN-LOG** với:
+   - Cột `Agent` = ĐÚNG tên agent được gọi (`ba-agent`/`ta-agent`/`sa-agent`/`qa-agent`/`dev-agent`/`devops-agent`/`ui-agent`/`security-agent`)
+   - Cột `Action` = mô tả deliverable agent đó tạo/review (vd: "Authored BRD.md v1", "Reviewed STC — BA Review Gate", "Enriched FSD → v2.0")
+2. **Việc SM verify / transition / update STATUS là 1 dòng RIÊNG** với cột `Agent` = `SM`, Action = "Verified {deliverable} (N/N quality gate)" hoặc "Transition Jira X → Y".
+3. **CẤM gộp authorship + verify vào 1 dòng.** Một lần invoke → ít nhất 2 dòng: dòng tác giả (tên agent) + dòng SM verify.
+4. **CẤM đặt `Agent=SM` cho bất kỳ dòng nào mô tả việc TẠO hoặc REVIEW một deliverable.** `Agent=SM` chỉ dùng cho: init, orchestration, verify, Jira transition, STATUS/RUN-LOG update, báo cáo user.
+5. Ghi dòng NGAY khi invoke (không chờ cuối phase mới batch-ghi).
+
+**Ví dụ ĐÚNG / SAI:**
+
+| | Agent | Action |
+|---|-------|--------|
+| ❌ SAI | `SM` | `✅ Phase 1 complete — BRD.md v1` (gộp authorship + verify, sai attribution) |
+| ✅ ĐÚNG | `ba-agent` | `Authored BRD.md v1 (+ use-case/business-flow diagrams)` |
+| ✅ ĐÚNG | `SM` | `Verified BRD.md v1 (6/6 quality gate) & marked phase done` |
+
+**Self-check trước khi append dòng:** nếu Action chứa động từ "Authored/Created/Wrote/Reviewed/Enriched/Reconciled" mà cột Agent lại là `SM` → DỪNG, sửa thành tên agent thật đã làm việc đó.
 
 ## ⛔ Document Attachment Rule — MANDATORY
 

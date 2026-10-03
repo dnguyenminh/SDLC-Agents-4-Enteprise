@@ -63,8 +63,9 @@ export async function downloadCatalogCsv(
 /**
  * Fetch all Range chunks sequentially and concatenate the DECODED bytes.
  *
- * The server measures the `Range` header against the DECODED file (the ZIP),
- * takes that byte window, then base64-encodes it in the response body. So a
+ * The server measures the `Range` (sent as a QUERY param on a POST request)
+ * against the DECODED file (the ZIP), takes that byte window, then
+ * base64-encodes it in the response body. So a
  * request for `bytes=0-1048575` yields the base64 of the first 1 MiB of ZIP
  * (≈1.4M base64 chars), NOT the first 1 MiB of base64 text.
  *
@@ -87,10 +88,15 @@ async function fetchAllChunks(
   while (iter < MAX_CHUNKS) {
     iter++;
     const end = offset + CHUNK_BYTES - 1;
-    const urlWithRange = `${url}${url.includes('?') ? '&' : '?'}Range=bytes=${offset}-${end}`;
-    const res = await fetch(urlWithRange, {
+    // API mới: POST + Range là QUERY param (không phải header), body rỗng.
+    // Server vẫn trả 206 + base64 text + header x-file-size như cũ.
+    // Accept=application/octet-stream: ta nhận luồng bytes (base64 text của ZIP),
+    // không phải JSON — server trả content-type application/zip bất kể Accept.
+    const sep = url.includes("?") ? "&" : "?";
+    const chunkUrl = `${url}${sep}Range=${encodeURIComponent(`bytes=${offset}-${end}`)}`;
+    const res = await fetch(chunkUrl, {
       method: "POST",
-      headers: { Authorization: authHeader, Accept: "application/json" },
+      headers: { Authorization: authHeader, Accept: "application/octet-stream" },
       body: "",
     });
     if (res.status !== 206 && res.status !== 200) {

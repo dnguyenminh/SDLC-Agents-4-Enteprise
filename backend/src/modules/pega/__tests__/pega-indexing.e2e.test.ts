@@ -8,6 +8,7 @@ import { createPegaApiRoutes } from '../../../server/routes/pega-api.js';
 import { PegaRuleResolver } from '../PegaRuleResolver.js';
 import { PegaDeclarativeEngine } from '../PegaDeclarativeEngine.js';
 import { SqliteAdapter } from '../../../database/adapters/SqliteAdapter.js';
+import { ensureSa4e237Tables } from '../../../database/schema-registry/ensure-sa4e-237.js';
 import { MemoryEngine } from '../../memory/engine/core.js';
 import {
   MOCK_ACTIVITY_JSON,
@@ -71,6 +72,9 @@ describe('Pega Indexing E2E Integration Suite', () => {
     adapter = new SqliteAdapter(':memory:');
     await adapter.connect();
     await adapter.execAsync(E2E_SCHEMA);
+    // SA4E-237: bootstrap against THIS adapter (mirrors index.ts) so
+    // stageRuleReferences does not fail with "no such table" under test.
+    await ensureSa4e237Tables({ adapter, engine: 'sqlite' });
     engine = new MemoryEngine(adapter);
     const mockRegistry = {
       getModule: (name: string) => {

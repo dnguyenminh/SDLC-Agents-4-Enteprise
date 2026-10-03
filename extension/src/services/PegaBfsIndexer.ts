@@ -5,11 +5,13 @@
  */
 
 import * as vscode from "vscode";
+import * as path from "path";
 import type { CrawlPlanItem } from "../models";
 import { computePegaChecksum } from "../code-intel/checksum/PegaRuleChecksumStrategy";
 import type { PegaHttpClient } from "./PegaHttpClient";
 import type { ISchemaOrchestrator } from "./PegaSchemaOrchestrator";
 import { saveRuleFile, calibrateFetchConcurrency } from "./PegaCrawlHelper";
+import { PegaLocalRuleIndex } from "./PegaLocalRuleIndex";
 import { PegaStreamIngester } from "./PegaStreamIngester";
 import type { UnresolvedDependency } from "./DependencyMapper";
 import type { MembershipSet } from "./DiskBackedSet";
@@ -89,6 +91,8 @@ export class PegaBfsIndexer {
   private readonly ingester: PegaStreamIngester;
   /** SA4E-214: Track rule types already seen this session for schema creation */
   private readonly seenRuleTypes = new Set<string>();
+  /** Local file+checksum index written as rules are successfully ingested. */
+  private localIndex?: PegaLocalRuleIndex;
 
   /**
    * @param resilient - When true, a per-rule 5xx does NOT abort the whole run.
@@ -125,6 +129,9 @@ export class PegaBfsIndexer {
     root: string,
   ): Promise<BfsIndexResult> {
     const initialCount = fetchQueue.length;
+    // Local skip source: records every rule that lands in the backend so the
+    // next catalog run can skip it without touching the network.
+    this.localIndex = new PegaLocalRuleIndex(root);
     // Effective cap scales with the seed count so a full catalog is never truncated.
     // Seeds + MAX_QUEUE_SIZE covers all seeds plus the relatives the queue can hold.
     const maxIterations = Math.max(MIN_BFS_ITERATIONS, initialCount + MAX_QUEUE_SIZE);
@@ -159,7 +166,11 @@ export class PegaBfsIndexer {
       }),
     );
 
-    await pipeline.run(fetchQueue, dedupSet, counters);
+    try {
+      await pipeline.run(fetchQueue, dedupSet, counters);
+    } finally {
+      this.localIndex?.flush();
+    }
 
     this.log(`[BfsIndexer] ✅ BFS complete: ingested=${counters.totalIngested}, discovered=${counters.discoveredCount}, errors=${counters.errorCount}`);
     return { ...counters, initialCount };
@@ -178,12 +189,19 @@ export class PegaBfsIndexer {
     root: string,
   ): Promise<{ ingested: boolean; relatives: UnresolvedDependency[] }> {
     const { ruleObj, item } = fetched;
+    const file = ruleFilePath(root, ruleObj, item.pxObjClass, item.pyRuleName);
     saveRuleFile(ruleObj, root, this.log, item.pxObjClass, item.pyRuleName);
     // SA4E-241: carry the catalog-resolved checksum (computePegaChecksum, NT-2)
     // through to ingest so the STORED content_hash equals the value bulk-check
     // compares against (INV-1). Without this the stored hash would diverge and
     // no-change skip would never trigger for Pega rules.
-    const result = await this.ingestAndDiscover(projectId, ruleObj, item.checksum);
+    const checksum = item.checksum ?? this.computeChecksum(ruleObj);
+    const result = await this.ingestAndDiscover(projectId, ruleObj, checksum, file);
+    // Only a rule that actually LANDED in the backend enters the local index —
+    // a failed ingest must stay eligible for retry on the next run.
+    if (result.ingested && this.localIndex) {
+      this.localIndex.record(item.insKey, file, checksum);
+    }
     // SA4E-214: Hook schema creation/validation (async, non-blocking).
     this.triggerSchemaHook(item.pxObjClass, ruleObj);
     return result;
@@ -199,6 +217,7 @@ export class PegaBfsIndexer {
     projectId: string,
     ruleJson: Record<string, unknown>,
     presetChecksum?: string,
+    sourceFile?: string,
   ): Promise<{ ingested: boolean; relatives: UnresolvedDependency[] }> {
     try {
       const checksum = presetChecksum ?? this.computeChecksum(ruleJson);
@@ -214,11 +233,20 @@ export class PegaBfsIndexer {
         const pxObjClass = String(ruleJson.pxObjClass ?? '');
         const pyRuleName = String(ruleJson.pyRuleName ?? '');
         const icon = result.reason === 'checksum_match' ? 'ℹ️' : '⚠️';
-        this.log(`[Pega Ingester] ${icon} Backend did not store rule (status=${result.status}, ruleId=${result.ruleId ?? 'none'}${result.reason ? `, reason=${result.reason}` : ''}) insKey=${pzInsKey} pxObjClass=${pxObjClass} pyRuleName=${pyRuleName}`);
+        const suffix = sourceFile && icon === '⚠️' ? ` | file=${sourceFile}` : '';
+        this.log(`[Pega Ingester] ${icon} Backend did not store rule (status=${result.status}, ruleId=${result.ruleId ?? 'none'}${result.reason ? `, reason=${result.reason}` : ''}) insKey=${pzInsKey} pxObjClass=${pxObjClass} pyRuleName=${pyRuleName}${suffix}`);
       }
       return { ingested, relatives: result.unresolvedDependencies || [] };
     } catch (err: any) {
-      this.log(`[Pega Ingester] ❌ Ingest POST failed (skipping): ${err.message}`);
+      // undici reports generic "fetch failed"; the real cause (ECONNREFUSED,
+      // 401, body-too-large…) lives in err.cause — surface it or the failure
+      // is un-diagnosable from the log alone. Include the rule identity so the
+      // failed rule can be re-ingested individually (Pega Ingester panel).
+      const cause = err?.cause ? ` (cause: ${err.cause.message ?? err.cause})` : "";
+      const pzInsKey = String(ruleJson.pzInsKey ?? ruleJson.insKey ?? '');
+      const pxObjClass = String(ruleJson.pxObjClass ?? '');
+      const pyRuleName = String(ruleJson.pyRuleName ?? '');
+      this.log(`[Pega Ingester] ❌ Ingest POST failed (skipping): ${err.message}${cause} | insKey=${pzInsKey} pxObjClass=${pxObjClass} pyRuleName=${pyRuleName}${sourceFile ? ` | file=${sourceFile}` : ""}`);
       return { ingested: false, relatives: [] };
     }
   }
@@ -259,4 +287,27 @@ export class PegaBfsIndexer {
       });
     }
   }
+}
+
+/**
+ * Mirror of saveRuleFile's path rule so a failed ingest can be retried from the
+ * exact file the rule was written to (must stay in sync with PegaCrawlHelper).
+ */
+function ruleFilePath(
+  root: string,
+  rObj: Record<string, unknown>,
+  fallbackClass?: string,
+  fallbackName?: string,
+): string {
+  const objClass = (rObj.pxObjClass as string) || fallbackClass || "Rule";
+  const ruleName = (rObj.pyRuleName as string)
+    || (rObj.pyPropertyName as string)
+    || (rObj.pyActivityName as string)
+    || (rObj.pyFlowName as string)
+    || (rObj.pyModelName as string)
+    || (rObj.pyLabel as string)
+    || fallbackName || "Rule";
+  const safeClass = objClass.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const safeName = ruleName.replace(/[^a-zA-Z0-9_.-]/g, "_");
+  return path.join(root, "rules", safeClass, `${safeName}.pega.json`);
 }

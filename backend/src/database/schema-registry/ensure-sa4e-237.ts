@@ -16,12 +16,21 @@ import { getDbAdapter, getActiveEngine } from '../../admin/db/core.js';
 
 const logger = pino({ name: 'sa4e-237-schema' });
 
+/** Minimal adapter surface the bootstrap needs (lets tests target their own DB). */
+type ExecOnlyAdapter = { execAsync(sql: string): Promise<void> };
+
+/** Optional overrides: bootstrap against a non-global adapter (tests, tools). */
+export interface EnsureSa4e237Options {
+  adapter?: ExecOnlyAdapter;
+  engine?: string;
+}
+
 /** Ensure the pega_reference_resolution table exists. Idempotent; safe on every boot. */
-export async function ensureSa4e237Tables(): Promise<void> {
-  const engine = getActiveEngine();
+export async function ensureSa4e237Tables(options: EnsureSa4e237Options = {}): Promise<void> {
+  const engine = options.engine ?? getActiveEngine();
   const tsType = engine === 'postgresql' ? 'TIMESTAMP WITH TIME ZONE' : 'TIMESTAMP';
   const pk = engine === 'postgresql' ? 'BIGSERIAL PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
-  const adapter = getDbAdapter();
+  const adapter = options.adapter ?? getDbAdapter();
 
   const ddl = `
 CREATE TABLE IF NOT EXISTS pega_reference_resolution (

@@ -165,7 +165,8 @@ function processFile(fullPath: string, relPath: string, config: AppConfig, root:
 
   try {
     // F-01: reject symlinks that escape the workspace (realpath containment).
-    const realPath = fs.realpathSync(fullPath);
+    // .native so the form matches resolveWorkspaceRoot (short vs long on Windows).
+    const realPath = fs.realpathSync.native(fullPath);
     if (!isWithinWorkspace(realPath, root)) return null;
 
     const stat = fs.statSync(realPath);

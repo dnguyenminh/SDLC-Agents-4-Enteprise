@@ -208,8 +208,9 @@ export class EnrichmentStatusService implements vscode.Disposable {
 
   private updateStatusBarIdle(): void {
     this.statusBarItem.text = '$(database) KB: Ready';
-    this.statusBarItem.tooltip = 'Knowledge Base enrichment is idle';
-    this.statusBarItem.command = undefined;
+    // Click opens the on-demand KB ingest status report (index/parse + enrichment).
+    this.statusBarItem.tooltip = 'Knowledge Base enrichment is idle — click to view ingest status';
+    this.statusBarItem.command = 'sdlcAgents.showIndexStatus';
     this.statusBarItem.color = undefined;
   }
 

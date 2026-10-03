@@ -245,6 +245,7 @@ export class IndexOperationManager {
           phase: op.phase,
           file: op.currentFile,
         };
+        logger.error({ err, opId: op.operationId, msg }, '[index-op] full index failed');
         this.opRepo.updateStatus(op.operationId, 'failed').catch(() => undefined);
       })
       .finally(() => {

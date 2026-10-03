@@ -14,6 +14,8 @@ import { OrchestrationModule } from './modules/orchestration/OrchestrationModule
 import { EmbeddingService } from './engine/parsers/embedding/EmbeddingService.js';
 import { initAdapters } from './admin/db/core.js';
 import { ensureSa4e215Tables } from './database/schema-registry/ensure-sa4e-215.js';
+import { ensureSa4e237Tables } from './database/schema-registry/ensure-sa4e-237.js';
+import { ensureSa4e276 } from './database/schema-registry/ensure-sa4e-276.js';
 import { Container } from './di/Container.js';
 import { bus, Events } from './shared/EventBus.js';
 
@@ -44,6 +46,22 @@ async function main() {
     await ensureSa4e215Tables();
   } catch (err) {
     logger.error({ err }, 'Failed to ensure SA4E-215 tables; continuing startup');
+  }
+
+  // --- SA4E-237: Pega rule-to-rule reference resolution table ---
+  // Never created before this: stageRuleReferences failed with
+  // `no such table: pega_reference_resolution` on every rule ingest.
+  try {
+    await ensureSa4e237Tables();
+  } catch (err) {
+    logger.error({ err }, 'Failed to ensure SA4E-237 tables; Pega reference resolution unavailable');
+  }
+
+  // --- SA4E-276: Entra SSO config table (audit_log already lives in initSchema) ---
+  try {
+    await ensureSa4e276();
+  } catch (err) {
+    logger.error({ err }, 'Failed to ensure SA4E-276 tables; Entra SSO config unavailable');
   }
 
   // --- Registry + Factory ---

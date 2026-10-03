@@ -68,12 +68,25 @@ export class PegaCodeIntelDiscovery {
     return { appName: "HRAppsV2", appVersion: "01.01" };
   }
 
+  /**
+   * Headers for /api/v1/pega/discover: Bearer token from the live auth provider
+   * plus the caller's project id (never a copy captured at startup).
+   */
+  private authHeaders(projectId: string): Record<string, string> {
+    const token = (globalThis as { __authTokenProvider?: () => string }).__authTokenProvider?.() || "";
+    const headers: Record<string, string> = { "X-Project-Id": projectId };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return headers;
+  }
+
   private async callBackendDiscovery(payload: Record<string, unknown>, projectId: string): Promise<PegaCodeIntelDiscoveryResult> {
     const backendUrl = this.httpClient.getBackendUrlPublic().replace(/\/$/, "");
     const url = `${backendUrl}/api/v1/pega/discover`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Project-Id": projectId },
+      // /api/v1/* sits behind jwtAuthStrict — without a Bearer token this 401s
+      // with AUTH_REQUIRED, which the caller surfaces as a discovery failure.
+      headers: { "Content-Type": "application/json", ...this.authHeaders(projectId) },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(120000),
     });

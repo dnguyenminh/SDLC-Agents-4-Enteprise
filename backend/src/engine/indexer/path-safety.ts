@@ -19,12 +19,45 @@ export function isWithinWorkspace(realPath: string, root: string): boolean {
   return realPath === root || realPath.startsWith(root + path.sep);
 }
 
-/** Resolve the canonical workspace root, falling back to a string resolve. */
+/**
+ * Resolve the canonical workspace root, falling back to a string resolve.
+ *
+ * Uses `realpathSync.native` because on Windows the JS `realpathSync` does NOT
+ * expand DOS 8.3 short names (e.g. C:\Users\NGUYEN~1\…) — it echoes back whatever
+ * form the INPUT had — while `.native` always expands short→long
+ * (C:\Users\nguyenminhduc3\…). Since `os.tmpdir()`/config workspaces can be short
+ * form, every realpath in this module must go through `.native` or root and
+ * per-file paths diverge → containment fails → "Found 0 files".
+ */
 export function resolveWorkspaceRoot(workspace: string): string {
   try {
-    return fs.realpathSync(workspace);
+    return fs.realpathSync.native(workspace);
   } catch {
-    return path.resolve(workspace);
+    try {
+      return fs.realpathSync(workspace);
+    } catch {
+      return path.resolve(workspace);
+    }
+  }
+}
+
+/**
+ * Canonicalize a single path with the SAME semantics as `resolveWorkspaceRoot`.
+ * Returns null when the path cannot be resolved (missing/broken link).
+ *
+ * `realpathSync.native` always expands Windows 8.3 short names (NGUYEN~1 →
+ * long); the JS `realpathSync` just echoes the input's form. Callers comparing
+ * a per-file path against the root must use this so both sides share a form.
+ */
+export function canonicalRealPathSync(filePath: string): string | null {
+  try {
+    return fs.realpathSync.native(filePath);
+  } catch {
+    try {
+      return fs.realpathSync(filePath);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -34,12 +67,8 @@ export function resolveWorkspaceRoot(workspace: string): string {
  * (broken link, missing file) so callers can safely skip the entry.
  */
 export function resolveContainedPath(filePath: string, workspace: string): string | null {
-  try {
-    const realPath = fs.realpathSync(filePath);
-    const root = resolveWorkspaceRoot(workspace);
-    if (isWithinWorkspace(realPath, root)) return realPath;
-    return null;
-  } catch {
-    return null;
-  }
+  const realPath = canonicalRealPathSync(filePath);
+  if (!realPath) return null;
+  const root = resolveWorkspaceRoot(workspace);
+  return isWithinWorkspace(realPath, root) ? realPath : null;
 }

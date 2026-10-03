@@ -43,7 +43,9 @@ describe('path-safety containment', () => {
   it('allows a real file inside the workspace', () => {
     const resolved = resolveContainedPath(insideFile, dir);
     expect(resolved).not.toBeNull();
-    expect(resolved).toBe(fs.realpathSync(insideFile));
+    // Compare against the native form: plain realpathSync echoes the input's
+    // 8.3 short form while the guard canonicalizes with realpathSync.native.
+    expect(resolved).toBe(fs.realpathSync.native(insideFile));
   });
 
   it('rejects a file outside the workspace', () => {
@@ -52,9 +54,9 @@ describe('path-safety containment', () => {
 
   it('isWithinWorkspace is true for contained path, false for escape', () => {
     const root = resolveWorkspaceRoot(dir);
-    const inReal = fs.realpathSync(insideFile);
+    const inReal = fs.realpathSync.native(insideFile);
     expect(isWithinWorkspace(inReal, root)).toBe(true);
-    expect(isWithinWorkspace(fs.realpathSync(outside), root)).toBe(false);
+    expect(isWithinWorkspace(fs.realpathSync.native(outside), root)).toBe(false);
   });
 
   it.skipIf(!symlinkSupported)('rejects a symlink that escapes the workspace', () => {

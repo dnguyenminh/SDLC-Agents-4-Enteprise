@@ -191,6 +191,14 @@ export async function initSchema(db: DatabaseAdapter): Promise<void> {
     await db.execAsync(`ALTER TABLE sessions ADD COLUMN user_agent_hash TEXT DEFAULT ''`);
   } catch (err) { console.debug('[schema] sessions.user_agent_hash already exists :', (err as Error).message); }
 
+  // SA4E-321 migration: absolute session deadline (7d hard cap) for dual-token auth
+  try {
+    await db.execAsync(`ALTER TABLE sessions ADD COLUMN absolute_expires_at TEXT DEFAULT ''`);
+  } catch (err) { console.debug('[schema] sessions.absolute_expires_at already exists :', (err as Error).message); }
+
+  await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_family ON refresh_tokens(family_id)`);
+  await db.execAsync(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_session ON refresh_tokens(session_id)`);
+
   // Idempotent migration: add project_id to graph_nodes for existing DBs
   try {
     await db.execAsync(`ALTER TABLE graph_nodes ADD COLUMN project_id TEXT NOT NULL DEFAULT ''`);
@@ -394,6 +402,18 @@ function schemaSql(engine: DatabaseEngine): string {
       expires_at TEXT NOT NULL,
       is_active INTEGER NOT NULL DEFAULT 1,
       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      token_hash TEXT PRIMARY KEY,
+      session_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      family_id TEXT NOT NULL,
+      used_at TEXT,
+      revoked_at TEXT,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (session_id) REFERENCES sessions(session_id) ON DELETE CASCADE
     );
 
     CREATE TABLE IF NOT EXISTS audit_log (

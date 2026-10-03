@@ -41,6 +41,9 @@ import { ensureSa4e300Cleanup } from '../database/schema-registry/ensure-sa4e-30
 import { ensureSa4e302UniqueGraphEdges } from '../database/schema-registry/ensure-sa4e-302.js';
 import { ensureSa4e303DropUnusedTables } from '../database/schema-registry/ensure-sa4e-303.js';
 import { runStartupInterruptDetection } from '../engine/indexer/startup-interrupt-detector.js';
+import { runMigrations } from '../engine/db/migrations.js';
+import { runGraphMigrations } from '../engine/graph/migrator.js';
+import { ensurePostgresIndexSchema } from '../database/migration/pg-schema-ensure.js';
 import { CleanupScheduler } from '../engine/indexer/cleanup-scheduler.js';
 import { createPegaSyncToKbRoutes } from './routes/pega-sync-to-kb.js';
 import { createPegaReferenceRoutes } from './routes/pega-references.js';
@@ -99,7 +102,8 @@ export class HttpServer {
     // /api/v1/pega/*). projectId is derived from the authenticated identity
     // (X-Project-Id / JWT pid), never from the request body (fail-closed).
     // Require login session for all Pega APIs except login itself.
-    app.use('/api/v1/pega/*', jwtAuthStrict);
+    // Dev-friendly: use jwtAuth to allow anonymous when CODE_INTEL_REQUIRE_AUTH is false
+    app.use('/api/v1/pega/*', jwtAuth);
     // Enforce login session for all /api/v1/* endpoints except login itself
     app.use('/api/v1/*', async (c, next) => {
       const path = c.req.path;
@@ -208,6 +212,50 @@ export class HttpServer {
         // Ensure schema is ready before marking server as fully started to avoid E2E race.
         try {
           await ensureEngineIndexSchema();
+          
+          // Auto-run DB migrations on startup
+          const adapter = getDbAdapter();
+          const engine = adapter.getEngine();
+          if (engine === 'sqlite') {
+            await runMigrations(adapter, process.env.CODE_INTEL_PROJECT_ID || 'default');
+            await runGraphMigrations(adapter);
+            // SA4E-171: Recreate pending_tasks without FK to knowledge_entries (SQLite cannot DROP CONSTRAINT)
+            // Force recreate on every start to guarantee no FK remains
+            try {
+              const rows = await adapter.allAsync<any>('SELECT id, task_type, entry_id, status, payload, error, retry_count, max_retries, project_id, priority, created_at, started_at, completed_at FROM pending_tasks');
+              await adapter.execAsync(`DROP TABLE IF EXISTS pending_tasks`);
+              await adapter.execAsync(`
+                CREATE TABLE pending_tasks (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  task_type TEXT NOT NULL,
+                  entry_id INTEGER NOT NULL,
+                  status TEXT NOT NULL,
+                  payload TEXT,
+                  error TEXT,
+                  retry_count INTEGER DEFAULT 0,
+                  max_retries INTEGER DEFAULT 3,
+                  project_id TEXT,
+                  priority INTEGER DEFAULT 0,
+                  created_at TEXT,
+                  started_at TEXT,
+                  completed_at TEXT
+                )
+              `);
+              for (const r of rows) {
+                await adapter.runAsync(
+                  `INSERT INTO pending_tasks (id, task_type, entry_id, status, payload, error, retry_count, max_retries, project_id, priority, created_at, started_at, completed_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  [r.id, r.task_type, r.entry_id, r.status, r.payload, r.error, r.retry_count, r.max_retries, r.project_id, r.priority, r.created_at, r.started_at, r.completed_at]
+                );
+              }
+              this.logger.info('[startup] pending_tasks recreated without FK');
+            } catch (e) {
+              this.logger.warn({ e }, '[startup] pending_tasks recreation failed');
+            }
+          } else if (engine === 'postgresql') {
+            await ensurePostgresIndexSchema(adapter);
+          }
+          
           await ensureSa4e101Tables();
           await runStartupInterruptDetection();
           await ensureSa4e300Cleanup();

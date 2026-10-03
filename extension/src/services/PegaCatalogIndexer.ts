@@ -15,6 +15,7 @@ import { PegaRuleCatalogClient } from "./PegaRuleCatalogClient";
 import { parseCatalogCsv } from "./PegaCatalogCsvParser";
 import { PegaBfsIndexer } from "./PegaBfsIndexer";
 import { createPegaDedupSet } from "./DiskBackedSet";
+import { PegaLocalRuleIndex } from "./PegaLocalRuleIndex";
 import { setProjectId } from "../extension";
 import type { CrawlPlanItem } from "../models";
 import { StateComparer } from "../code-intel/delta/StateComparer";
@@ -82,12 +83,30 @@ export class PegaCatalogIndexer {
     setProjectId(projectId);
     this.log(`[Catalog] 📌 Project "${appName}" → projectId=${projectId}, ${parsed.items.length} rules to fetch`);
 
+    // 5a (LR-01): LOCAL skip — file path + checksum, no network. A rule that was
+    // downloaded before and is unchanged on disk never reaches the fetch stage.
+    // Fail-safe: a rule is only indexed locally after its ingest SUCCEEDED.
+    const localIndex = new PegaLocalRuleIndex(root);
+    if (localIndex.size === 0) {
+      // First run on this workspace: rules/ may already hold everything the
+      // previous (pre-index) runs downloaded — seed from disk before deciding.
+      localIndex.backfill((msg) => this.log(msg));
+    }
+    const pruned = localIndex.prune();
+    if (pruned > 0) { this.log(`[Catalog] 🧹 Local index: ${pruned} missing files pruned`); }
+    const afterLocal: CrawlPlanItem[] = [];
+    let localSkipped = 0;
+    for (const it of parsed.items) {
+      if (localIndex.isUnchanged(it.insKey, it.checksum)) { localSkipped++; } else { afterLocal.push(it); }
+    }
+    this.log(`[Catalog] 📁 Local: ${localSkipped} already downloaded & unchanged skipped (of ${parsed.items.length}, index=${localIndex.size} entries)`);
+
     // 5b (SA4E-241): incremental delta — ask the backend which checksums it already
     // has and skip them BEFORE fetching (NT-3/NT-4). Fail-safe: on bulk-check error
     // the comparer returns a full run (no false-negative, BR-15).
     const backendUrl = pegaClient.getBackendUrlPublic();
     report.report({ message: "Rule Catalog: checking which rules changed (incremental)..." });
-    const toFetch = await this.applyIncrementalSkip(backendUrl, projectId, parsed.items);
+    const toFetch = await this.applyIncrementalSkip(backendUrl, projectId, afterLocal);
     const skipped = parsed.items.length - toFetch.length;
     this.log(`[Catalog] ⚡ Incremental: ${skipped} unchanged skipped, ${toFetch.length} to fetch`);
 
@@ -118,7 +137,12 @@ export class PegaCatalogIndexer {
     const withoutChecksum = items.filter((it) => !it.checksum);
     if (withChecksum.length === 0) { return items; }
 
-    const comparer = new StateComparer(new BulkCheckClient(new BackendHttpPoster(backendUrl)));
+    // The bulk-check route requires a Bearer token under CODE_INTEL_REQUIRE_AUTH
+    // (jwtAuth → 401 AUTH_REQUIRED otherwise, which forces a full re-download).
+    const tokenProvider = () =>
+      this.authManager?.getTokenSync() ||
+      (globalThis as any).__authTokenProvider?.() || "";
+    const comparer = new StateComparer(new BulkCheckClient(new BackendHttpPoster(backendUrl, tokenProvider)));
     const candidates: IndexCandidate[] = withChecksum.map((it) => ({ checksum: it.checksum as string, ref: it }));
     const { result, warning } = await comparer.compare(projectId, candidates);
     if (warning) { this.log(`[Catalog] ⚠️ ${warning}`); }

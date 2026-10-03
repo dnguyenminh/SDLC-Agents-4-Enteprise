@@ -53,11 +53,21 @@ export function getManager(registry: ModuleRegistry): IndexOperationManager | nu
  * directory that gets scanned, and progress is keyed by the same userId:projectId.
  * Exported for reuse by api-index.ts.
  */
-export function resolveScope(c: Context): { userId: string; projectId: string; workspace: string; displayName?: string } {
+export async function resolveScope(c: Context): Promise<{ userId: string; projectId: string; workspace: string; displayName?: string }> {
   const config = loadConfig();
-  const projectId = requireProjectId(c.req.header('X-Project-Id') || config.projectId);
+  // Identity MUST come from the request (X-Project-Id / JWT projectContext). The backend
+  // is multi-tenant and must never infer identity from its own config — missing identity
+  // fails closed via requireProjectId (PROJECT_REQUIRED → 400), never silently defaulting
+  // to the boot project (which would mis-scope or leak across tenants).
   const ctx = c.get('projectContext') as { userId?: string; projectId?: string } | undefined;
-  const userId = ctx?.userId || 'default';
+  const projectId = requireProjectId(c.req.header('X-Project-Id') || ctx?.projectId);
+  // SINGLE SOURCE OF TRUTH for userId: the upload route (/api/index/source) derives
+  // userId from validateSession(token) (requireAuth). The full-index/progress routes
+  // MUST resolve the SAME userId, otherwise upload writes to {session.userId}/… while
+  // the scan reads {ctx.userId||'default'}/… — a different (empty) dir → "Found 0 files".
+  // Resolve from the session token first (matches upload), then ctx, then 'default'.
+  const sessionUserId = await resolveSessionUserId(c);
+  const userId = sessionUserId || ctx?.userId || 'default';
   // indexTempDir/{userId}/{projectId} — same dir for source file writes + scan.
   const workspace = path.join(config.indexTempDir, userId, projectId);
   if (!fs.existsSync(workspace)) fs.mkdirSync(workspace, { recursive: true });
@@ -70,12 +80,30 @@ export function resolveScope(c: Context): { userId: string; projectId: string; w
 }
 
 /**
+ * Resolve userId from the Bearer session token — the SAME mechanism the upload
+ * route uses (validateSession). Returns '' when no valid session, so callers can
+ * fall back. This keeps upload and full-index on one identity source.
+ */
+async function resolveSessionUserId(c: Context): Promise<string> {
+  const auth = c.req.header('Authorization') || '';
+  const token = auth.replace('Bearer ', '').trim();
+  if (!token) return '';
+  try {
+    const { validateSession } = await import('../../admin/db/sessions.js');
+    const session = await validateSession(token);
+    return session?.userId || '';
+  } catch {
+    return '';
+  }
+}
+
+/**
  * POST /api/index/full — Trigger async full index.
  * @returns 202 with operationId, or 409 if already running.
  */
 export async function handleFullIndex(c: Context, registry: ModuleRegistry, logger: Logger) {
   try {
-    const scope = resolveScope(c);
+    const scope = await resolveScope(c);
     const manager = getManager(registry);
     if (!manager) return c.json({ error: 'Code intelligence not ready' }, 503);
 
@@ -107,7 +135,7 @@ export async function handleFullIndex(c: Context, registry: ModuleRegistry, logg
  */
 export async function handleFileEvents(c: Context, registry: ModuleRegistry, logger: Logger) {
   try {
-    const scope = resolveScope(c);
+    const scope = await resolveScope(c);
     const body = await c.req.json() as { events: FileEvent[] };
     const { events } = body;
 
@@ -182,7 +210,7 @@ async function processFileEvent(
  */
 export async function handleCancel(c: Context, registry: ModuleRegistry, logger: Logger) {
   try {
-    const scope = resolveScope(c);
+    const scope = await resolveScope(c);
     const manager = getManager(registry);
     if (!manager) return c.json({ error: 'Code intelligence not ready' }, 503);
 
@@ -206,14 +234,18 @@ export async function handleCancel(c: Context, registry: ModuleRegistry, logger:
  * GET /api/index/progress — Poll current indexing progress.
  * @returns Current progress snapshot (idle if no operation).
  */
-export async function handleProgress(c: Context, registry: ModuleRegistry, _logger: Logger) {
-  const scope = resolveScope(c);
-  const manager = getManager(registry);
-  if (!manager) return c.json({ error: 'Code intelligence not ready' }, 503);
+export async function handleProgress(c: Context, registry: ModuleRegistry, logger: Logger) {
+  try {
+    const scope = await resolveScope(c);
+    const manager = getManager(registry);
+    if (!manager) return c.json({ error: 'Code intelligence not ready' }, 503);
 
-  // Hot-path first, cold-path (DB) fallback for post-restart durability.
-  const progress = await manager.getProgress(scope.userId, scope.projectId);
-  return c.json(progress);
+    // Hot-path first, cold-path (DB) fallback for post-restart durability.
+    const progress = await manager.getProgress(scope.userId, scope.projectId);
+    return c.json(progress);
+  } catch (err: unknown) {
+    return handleError(c, err, logger, 'Error reading index progress');
+  }
 }
 
 /** Shared error handler for decoupled endpoints. */

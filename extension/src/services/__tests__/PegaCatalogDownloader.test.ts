@@ -65,10 +65,9 @@ function mockFetchOnce(zipBuf: Buffer, opts?: { fileSize?: number; status?: numb
  * @param window - Decoded bytes returned per request (server may exceed the ask)
  */
 function mockFetchRanged(zipBuf: Buffer, window: number): void {
-  vi.stubGlobal("fetch", vi.fn(async (url: string | URL, init: { headers?: Record<string, string> }) => {
-    const urlStr = typeof url === "string" ? url : url.toString();
-    const params = new URL(urlStr, "http://mock").searchParams;
-    const range = params.get("Range") ?? "bytes=0-";
+  vi.stubGlobal("fetch", vi.fn(async (url: string, _init: { headers: Record<string, string> }) => {
+    // API mới: Range nằm trong URL query (đã URL-encode), không còn ở header.
+    const range = decodeURIComponent(/[?&]Range=([^&]+)/.exec(url)?.[1] ?? "bytes=0-");
     const start = Number(/bytes=(\d+)-/.exec(range)?.[1] ?? "0");
     const slice = zipBuf.subarray(start, Math.min(start + window, zipBuf.length));
     return {
@@ -168,5 +167,24 @@ describe("PegaCatalogDownloader", () => {
     mockFetchOnce(zip, { status: 500 });
     await expect(downloadCatalogCsv("http://mock/dl", "Basic x", tmpDir(), noop))
       .rejects.toThrow(/HTTP 500/);
+  });
+
+  // Regression (HTTP 400 fix): API mới yêu cầu POST + Range ở query param.
+  it("uses POST with Range in query param", async () => {
+    const zip = buildZip("rulecatalog.csv", "a,b\n");
+    const spy = vi.fn(async () => ({
+      status: 206,
+      ok: true,
+      headers: { get: (h: string) => (h.toLowerCase() === "x-file-size" ? String(zip.length) : null) },
+      text: async () => zip.toString("base64"),
+    }));
+    vi.stubGlobal("fetch", spy);
+    await downloadCatalogCsv("http://mock/file/resumableDownload?filePath=%2Fx.zip", "Basic x", tmpDir(), noop);
+    const [calledUrl, init] = spy.mock.calls[0] as unknown as [string, { method: string; headers: Record<string, string>; body: string }];
+    expect(init.method).toBe("POST");
+    expect(init.headers.Accept).toBe("application/octet-stream");
+    expect(init.body).toBe("");
+    expect(calledUrl).toMatch(/[?&]Range=/);          // Range moved to query
+    expect(calledUrl).toMatch(/filePath=%2Fx\.zip/);  // filePath preserved as query
   });
 });

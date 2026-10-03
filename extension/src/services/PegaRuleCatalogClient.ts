@@ -90,6 +90,10 @@ export class PegaRuleCatalogClient {
    */
   async downloadCatalog(fileName: string, destDir: string): Promise<string> {
     const auth = await this.pegaClient.getAuthHeader();
+    // API mới: resumableDownload nhận filePath qua QUERY param (POST), KHÔNG phải
+    // path segment. `fileName` là full path server trả ở /result
+    // (vd: /ColdeIntelligence/RuleList/rulecatalog_...zip) — giữ nguyên dấu '/',
+    // chỉ encode để nhét an toàn vào query string.
     const url = `${this.baseUrl()}/file/resumableDownload?filePath=${encodeURIComponent(fileName)}`;
     const { csvPath, zipBytes } = await downloadCatalogCsv(url, auth, destDir, this.log);
     this.log(`[Catalog] ✅ Catalog ZIP ${zipBytes} bytes → ${csvPath}`);

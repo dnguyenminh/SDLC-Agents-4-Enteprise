@@ -2,8 +2,6 @@ import { z } from 'zod';
 import * as path from 'path';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
-import * as crypto from 'crypto';
-import { execSync } from 'child_process';
 import * as os from 'os';
 import pino from 'pino';
 import { SandboxConfigSchema } from './SandboxConfig.js';
@@ -127,6 +125,15 @@ function envInt(key: string, fallback: number): number {
 }
 
 function deriveProjectId(workspace: string, overrides?: Partial<UnifiedConfig>): string {
+  // Project identity is NEVER inferred by the backend. The backend is multi-tenant and
+  // does not own a project; per-request identity arrives via X-Project-Id / JWT. This
+  // config value only serves EXPLICIT standalone/CLI configuration and the single-tenant
+  // boot file-watcher. Accept only explicit sources — never guess from git/user/folder:
+  //   1. loadConfig override (programmatic)
+  //   2. CODE_INTEL_PROJECT_ID env (operator-set)
+  //   3. .code-intel/project.json in the boot workspace (client-written, standalone only)
+  // No explicit source → 'default' sentinel; downstream write paths fail closed
+  // (requireProjectId) rather than operating under a guessed/mis-scoped identity.
   if (overrides?.projectId && overrides.projectId !== 'default') return overrides.projectId;
   const envId = process.env.CODE_INTEL_PROJECT_ID;
   if (envId) return envId;
@@ -138,16 +145,8 @@ function deriveProjectId(workspace: string, overrides?: Partial<UnifiedConfig>):
         return content.projectId;
       }
     }
-  } catch (err) { logger.debug({ err }, '[index] ignore '); }
-  try {
-    const remoteUrl = execSync('git remote get-url origin', { cwd: workspace, encoding: 'utf-8', timeout: 3000 }).trim();
-    if (remoteUrl) {
-      return crypto.createHash('sha256').update(remoteUrl).digest('hex').slice(0, 12);
-    }
-  } catch (err) { logger.debug({ err }, '[index] no git or no remote '); }
-  const userId = os.userInfo().username || 'unknown';
-  const folderName = path.basename(workspace) || 'default';
-  return crypto.createHash('sha256').update(`${userId}:${folderName}`).digest('hex').slice(0, 12);
+  } catch (err) { logger.debug({ err }, '[index] project.json unreadable — not inferring identity'); }
+  return 'default';
 }
 
 export function loadConfig(overrides?: Partial<UnifiedConfig>): UnifiedConfig {

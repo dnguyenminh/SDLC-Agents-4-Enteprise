@@ -13,6 +13,7 @@ import type { MiddlewareHandler } from 'hono';
 import { createProjectContext } from '../../modules/memory/ProjectContext.js';
 import { SessionService } from '../services/SessionService.js';
 import { getEntraVerifier, isEntraToken, tryEntraVerification, validateEntraAuthConfig } from './verifiers/entra-auth.js';
+import { getJwtSecret } from '../../admin/db/jwt.js';
 
 const REQUIRE_AUTH = process.env.CODE_INTEL_REQUIRE_AUTH === 'true';
 const TOKEN_SECRET = process.env.KB_TOKEN_SECRET || '';
@@ -43,11 +44,14 @@ function decodeJwtPayload(token: string): Record<string, any> | null {
 
 async function verifyHs256(token: string, secret: string): Promise<boolean> {
   const [header, payload, signature] = token.split('.');
-  const { createHmac } = await import('crypto');
+  const { createHmac, timingSafeEqual } = await import('crypto');
   const expected = createHmac('sha256', secret)
     .update(`${header}.${payload}`)
     .digest('base64url');
-  return signature === expected;
+  const a = Buffer.from(signature, 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
 }
 
 function isExpired(payload: Record<string, any>): boolean {
@@ -102,12 +106,11 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
     }
 
     if (looksLikeJwt) {
-      if (TOKEN_SECRET) {
-        const valid = await verifyHs256(token, TOKEN_SECRET);
-        if (!valid) {
-          if (!mustAuth) return anonymous();
-          return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
-        }
+      const secret = getJwtSecret();
+      const valid = await verifyHs256(token, secret);
+      if (!valid) {
+        if (!mustAuth) return anonymous();
+        return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
       }
       const payload = decodeJwtPayload(token);
       if (!payload || isExpired(payload)) {
@@ -151,15 +154,13 @@ export interface JwtVerification {
 /**
  * Verify a bearer credential as a JWT.
  * SA4E-41 SEC-03: shared by the tools route to bind X-Project-Id to identity.
- * SA4E-55 SR-01: If KB_TOKEN_SECRET is not configured, JWT is rejected — never
- *   accept an unverified JWT payload as trusted identity.
+ * SA4E-55 SR-01: a signature secret always exists (env or provisioned file), so
+ *   an unverified JWT payload is never accepted as trusted identity.
  */
 export async function verifyJwtToken(token: string): Promise<JwtVerification> {
   const looksLikeJwt = token.split('.').length === 3;
   if (!looksLikeJwt) return { valid: false, payload: null };
-  // SR-01 fix: reject JWT when secret not configured — prevents forged identity
-  if (!TOKEN_SECRET) return { valid: false, payload: null };
-  const ok = await verifyHs256(token, TOKEN_SECRET);
+  const ok = await verifyHs256(token, getJwtSecret());
   if (!ok) return { valid: false, payload: null };
   const payload = decodeJwtPayload(token);
   if (!payload || isExpired(payload)) return { valid: false, payload: null };

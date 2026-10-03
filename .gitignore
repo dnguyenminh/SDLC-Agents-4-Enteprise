@@ -3,6 +3,7 @@ node_modules/
 
 .code-intel/*.db
 .code-intel/.dbkey
+.code-intel/.jwt-secret
 .code-intel/database.json
 .code-intel/project.json
 

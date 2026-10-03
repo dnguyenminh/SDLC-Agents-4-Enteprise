@@ -43,6 +43,15 @@ export class IndexingService {
         this.refreshTokenFn = fn;
     }
 
+    /**
+     * Live auth token — prefers AuthManager's current token over the copy
+     * captured when indexing started, so a rotated token is never replayed.
+     */
+    private currentToken(): string {
+        const live = (globalThis as { __authTokenProvider?: () => string }).__authTokenProvider?.();
+        return live || this.token || "";
+    }
+
     private log(msg: string): void {
         if (this.outputChannel) { this.outputChannel.appendLine(msg); }
     }
@@ -138,8 +147,10 @@ export class IndexingService {
                     } else {
                         this.showProgress("Scanning source code...");
                         report.report({ message: "Scanning and uploading source code files..." });
+                        // Notification only — the manual status bar is reserved for
+                        // post-withProgress phases (pollTaskWorkerProgress).
                         const res = await this.httpClient.uploadSourceFiles(
-                            { report: (v) => { report.report(v); if (v.message) this.showProgress(v.message); } },
+                            { report: (v) => { report.report(v); } },
                             token,
                             undefined,
                         );
@@ -151,8 +162,9 @@ export class IndexingService {
                     report.report({ message: "Discovering documents..." });
                     const { DocumentIndexer } = await import("./DocumentIndexer");
                     const docIndexer = new DocumentIndexer(this.httpClient);
+                    // Notification only — same dedup rationale as source upload above.
                     results.push(await docIndexer.run(root,
-                        { report: (v) => { report.report(v); if (v.message) this.showProgress(v.message); } },
+                        { report: (v) => { report.report(v); } },
                         token));
                 }
                 if (options.sync) {
@@ -204,7 +216,7 @@ export class IndexingService {
             current ? { "Authorization": `Bearer ${current}` } : {};
         const poll = async () => {
             try {
-                let token = this.token;
+                let token = this.currentToken();
                 let res = await fetch(`${backendUrl}/api/admin/taskworker/progress`, { headers: headersOf(token) });
                 if (res.status === 401 && this.refreshTokenFn) {
                     const fresh = await this.refreshTokenFn();
@@ -263,7 +275,7 @@ export class IndexingService {
         if (useCatalog && secrets) {
             try {
                 const { PegaCatalogIndexer } = await import("./PegaCatalogIndexer");
-                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.token || '' });
+                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.currentToken() });
                 const result = await catalogIndexer.run(root, report, secrets);
                 if (result) {
                     return `🏛️ Pega (catalog): "${result.appName}" — ${result.catalogRules} rules in catalog, ingested ${result.totalIngested}`;
@@ -277,7 +289,7 @@ export class IndexingService {
         // Fallback path: BFS crawl (enumeration + relative discovery).
         try {
             const { PegaProjectIndexer } = await import("./PegaProjectIndexer");
-            const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.token || '' });
+            const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.currentToken() });
             return await indexer.run(root, report, secrets);
         } catch (err: any) {
             this.log(`[Pega Indexer] ❌ Fatal error: ${err.message}`);

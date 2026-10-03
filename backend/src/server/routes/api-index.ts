@@ -32,10 +32,17 @@ interface IndexScope { projectId: string; workspace: string }
 const INDEX_CONCURRENCY_LIMIT = 3;
 let activeIndexRequests = 0;
 
-/** Resolve request scope from trusted headers, falling back to boot config. */
+/**
+ * Resolve request scope from the trusted request identity only.
+ * The project identity MUST come from the client (X-Project-Id header). The backend
+ * is multi-tenant and does NOT own a project — it must never infer identity from its
+ * own filesystem/git/config. Missing identity → requireProjectId throws PROJECT_REQUIRED
+ * (fail-closed), surfaced as 400 by the route error handler.
+ */
 function resolveRequestScope(c: Context): IndexScope {
   const config = loadConfig();
-  const projectId = requireProjectId(c.req.header('X-Project-Id') || config.projectId);
+  const projectId = requireProjectId(c.req.header('X-Project-Id'));
+  // workspace is only a display/scan hint, not identity — boot config fallback is safe here.
   const workspace = c.req.header('X-Workspace-Root') || config.workspace;
   return { projectId, workspace };
 }

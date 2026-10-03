@@ -163,7 +163,15 @@ export async function deriveProjectId(workspaceRoot: string): Promise<string> {
   if (!projectId) {
     const userId = os.userInfo().username || "unknown";
     const folderName = pathModule.basename(workspaceRoot) || "workspace";
-    projectId = crypto.createHash("sha256").update(`${userId}:${folderName}`).digest("hex").slice(0, 12);
+    // 3a. Add random UUID component to break user-to-project correlation
+    const uuidComponent = crypto.randomUUID().slice(0, 8);
+    projectId = crypto.createHash("sha256").update(`${userId}:${folderName}:${uuidComponent}`).digest("hex").slice(0, 12);
+  }
+
+  // 4. JWT Secret Validation (CRIT-2)
+  const tokenSecret = process.env.TOKEN_SECRET;
+  if (!tokenSecret) {
+    throw new Error("[KRIO] CRITICAL: TOKEN_SECRET environment variable is not set. Cannot authenticate.");
   }
 
   // Persist derived project ID for stability across reloads
@@ -292,6 +300,60 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
       if (state === "AUTHENTICATED") { enrichmentService.start(); }
     });
     context.subscriptions.push(enrichmentService);
+    // Show KB ingest status (index/parse progress + LLM enrichment) in Output.
+    // Indexing is asynchronous: /api/index/source only uploads; the server then
+    // parses (index/progress) and enriches via LLM (enrichment/status) in the
+    // background. This command lets the user poll both halves on demand.
+    context.subscriptions.push(
+      vscode.commands.registerCommand('sdlcAgents.showIndexStatus', async () => {
+        const token = authManager?.getTokenSync();
+        outputChannel.show(true);
+        outputChannel.appendLine(`\n=== KB Ingest Status @ ${new Date().toLocaleTimeString()} ===`);
+
+        // 1. Code index / parse progress (synchronous phase on the server)
+        try {
+          const prog = await enrichmentClient.getIndexProgress(token);
+          if (!prog.ok) {
+            outputChannel.appendLine(`Index progress: ⚠️ unreachable (verify server is running)`);
+          } else {
+            try {
+              const p = JSON.parse(prog.body);
+              const phase = p.phase ?? p.status ?? 'idle';
+              const pct = typeof p.percentage === 'number' ? ` ${p.percentage}%` : '';
+              const counts = (typeof p.current === 'number' && typeof p.total === 'number')
+                ? ` (${p.current}/${p.total} files)` : '';
+              const cur = p.currentFile ? ` — ${p.currentFile}` : '';
+              outputChannel.appendLine(`Index parse: ${phase}${pct}${counts}${cur}`);
+            } catch {
+              outputChannel.appendLine(`Index parse: ${prog.body.slice(0, 300)}`);
+            }
+          }
+        } catch (err: any) {
+          outputChannel.appendLine(`Index progress error: ${err?.message ?? String(err)}`);
+        }
+
+        // 2. LLM enrichment status (async KB ingest phase)
+        const status = await enrichmentService.pollNow();
+        if (!status) {
+          outputChannel.appendLine('Enrichment: ⚠️ unreachable or no data yet.');
+          vscode.window.showWarningMessage('KB ingest status partially available — see Output > Kiro.');
+          return;
+        }
+        outputChannel.appendLine(
+          `Enrichment: ${status.state} — ${status.completedRules}/${status.totalRules}` +
+          ` (${status.percent}%), pending ${status.pendingRules}, failed ${status.failedRules}`,
+        );
+
+        // 3. Full failure detail (every failed rule/symbol, not just the latest 10).
+        if (status.failedRules > 0) {
+          await printEnrichmentFailures(enrichmentClient, outputChannel, token);
+        }
+
+        vscode.window.showInformationMessage(
+          `KB ingest — enrichment ${status.state}: ${status.completedRules}/${status.totalRules} (${status.percent}%). See Output > Kiro.`,
+        );
+      })
+    );
     // SA4E-157: Show enrichment status in Output Channel
     context.subscriptions.push(
       vscode.commands.registerCommand('sa4e.showEnrichmentStatus', async () => {
@@ -397,6 +459,43 @@ function setupAuthStateHandlers(): void {
       }
     }
   });
+}
+
+/**
+ * Fetch and print the full list of FAILED enrichment tasks to the Output channel.
+ * Surfaces every failed rule/symbol (bounded by the server's limit) with its error,
+ * so users can diagnose ingest problems that the 10-item status tooltip hides.
+ * Non-fatal: logs a notice and returns on any transport/validation failure.
+ */
+async function printEnrichmentFailures(
+  client: import('./services/IndexerHttpClient').IndexerHttpClient,
+  outputChannel: vscode.OutputChannel,
+  token: string | undefined,
+): Promise<void> {
+  const { EnrichmentFailuresResponseSchema } = await import('./services/enrichment-status-schema');
+  const resp = await client.getEnrichmentFailures(200, token);
+  if (!resp.ok) {
+    outputChannel.appendLine('Failures: ⚠️ could not fetch failure details.');
+    return;
+  }
+  const parsed = EnrichmentFailuresResponseSchema.safeParse(JSON.parse(resp.body));
+  if (!parsed.success) {
+    outputChannel.appendLine('Failures: ⚠️ unexpected response shape.');
+    return;
+  }
+  const { failures, count } = parsed.data;
+  outputChannel.appendLine(`Failed tasks (${count}):`);
+  for (const f of failures) { outputChannel.appendLine(formatFailureLine(f)); }
+}
+
+/** Format a single failed-task line: source, retry count, timestamp, and error. */
+function formatFailureLine(
+  f: import('./services/enrichment-status-schema').EnrichmentFailure,
+): string {
+  const when = f.completedAt ? ` @ ${f.completedAt}` : '';
+  const retries = f.retryCount > 0 ? ` (retries: ${f.retryCount})` : '';
+  const err = f.error ? f.error.replace(/\s+/g, ' ').trim() : 'Unknown error';
+  return `  • ${f.source}${retries}${when}\n      ${err}`;
 }
 
 /**

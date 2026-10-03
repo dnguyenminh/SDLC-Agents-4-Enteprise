@@ -11,12 +11,16 @@
 
 import type { Logger } from 'pino';
 import { LLMService } from './LLMService.js';
+import { describeError, isConnectivityFailure } from './llm-error.js';
 import { TagAnalyzerService } from './analyzer.js';
 import { ClassifyService } from './classify-service.js';
 import { EmbeddingService } from '../../../engine/parsers/embedding/EmbeddingService.js';
 import type { MemoryToolDispatcher } from '../dispatchers/index.js';
 import type { TaskWorker } from '../task-queue/TaskWorker.js';
 import { loadPersistedLLMConfig } from '../../../admin/db/config.js';
+
+/** Probe/health-check timeout for the LLM server (ms). */
+const LLM_PROBE_TIMEOUT_MS = 5000;
 
 /** Build LLM config: DB overrides > env vars > auto-detect from LMStudio. */
 async function buildLLMConfig() {
@@ -62,7 +66,7 @@ async function buildLLMConfig() {
 async function autoDetectModel(baseUrl: string): Promise<string> {
   const modelsUrl = baseUrl.replace(/\/v1\/?$/, '') + '/v1/models';
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const timeout = setTimeout(() => controller.abort(), LLM_PROBE_TIMEOUT_MS);
   try {
     const resp = await fetch(modelsUrl, { signal: controller.signal });
     clearTimeout(timeout);
@@ -76,7 +80,12 @@ async function autoDetectModel(baseUrl: string): Promise<string> {
   } catch (err: any) {
     clearTimeout(timeout);
     if (err.message?.includes('LLM_MODEL')) throw err;
-    throw new Error(`LLM_MODEL not configured and cannot auto-detect from ${modelsUrl}: ${err.message}`, { cause: err });
+    // Undici collapses every network failure into "fetch failed" — expand the
+    // cause chain so the log names the real reason (ECONNREFUSED addr:port, DNS, timeout).
+    const detail = controller.signal.aborted
+      ? `no response within ${LLM_PROBE_TIMEOUT_MS}ms`
+      : describeError(err);
+    throw new Error(`LLM_MODEL not configured and cannot auto-detect from ${modelsUrl}: ${detail}`, { cause: err });
   }
 }
 
@@ -105,7 +114,7 @@ export function initLLMInBackground(
 
       const healthUrl = llmConfig.baseUrl.replace(/\/v1\/?$/, '') + '/v1/models';
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
+      const timeout = setTimeout(() => controller.abort(), LLM_PROBE_TIMEOUT_MS);
       const healthResp = await fetch(healthUrl, { signal: controller.signal });
       clearTimeout(timeout);
 
@@ -147,7 +156,15 @@ export function initLLMInBackground(
 
       return true;
     } catch (err) {
-      logger.error({ err }, '[LLMInitializer] LLM initialization FAILED — will retry in 60s');
+      // An unreachable LLM server is EXPECTED while it is not running (the retry
+      // loop below keeps probing) — log it as warn with the expanded cause chain,
+      // and reserve error for genuine config/programming failures.
+      const detail = describeError(err);
+      if (isConnectivityFailure(err)) {
+        logger.warn({ detail }, '[LLMInitializer] LLM server unreachable — will retry in 60s');
+      } else {
+        logger.error({ detail, err }, '[LLMInitializer] LLM initialization FAILED — will retry in 60s');
+      }
       return false;
     }
   };

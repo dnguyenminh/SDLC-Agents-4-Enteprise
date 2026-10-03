@@ -29,3 +29,23 @@ export const EnrichmentStatusResponseSchema = z.object({
 
 export type EnrichmentStatusResponse = z.infer<typeof EnrichmentStatusResponseSchema>;
 export type EnrichmentState = z.infer<typeof EnrichmentStateEnum>;
+
+/** A single failed enrichment task with resolved source + stored error. */
+export const EnrichmentFailureSchema = z.object({
+  id: z.number().int(),
+  source: z.string(),
+  error: z.string().nullable(),
+  retryCount: z.number().int().min(0),
+  completedAt: z.string().nullable(),
+});
+
+/** Response schema for GET /api/v1/enrichment/failures — validated before UI consumption. */
+export const EnrichmentFailuresResponseSchema = z.object({
+  projectId: z.string().nullable(),
+  count: z.number().int().min(0),
+  limit: z.number().int().min(1),
+  failures: z.array(EnrichmentFailureSchema),
+});
+
+export type EnrichmentFailure = z.infer<typeof EnrichmentFailureSchema>;
+export type EnrichmentFailuresResponse = z.infer<typeof EnrichmentFailuresResponseSchema>;

@@ -3,7 +3,8 @@
  * Manages token lifecycle using VS Code SecretStorage (OS keychain).
  *
  * Auth endpoint: /api/admin/auth/login
- * Response format: { token, user, expiresAt }
+ * Response format (dual-token): { accessToken, refreshToken, token, expiresAt, expiresIn }
+ * Back-compat: a legacy single-token response ({ token, expiresAt }) is still accepted.
  */
 
 import * as vscode from "vscode";
@@ -20,10 +21,24 @@ export class AuthError extends Error {
 }
 
 const SECRET_ACCESS_TOKEN = "sdlcAgents.accessToken";
+/** Opaque refresh credential stored beside the access token (dual-token). */
+const SECRET_REFRESH_TOKEN = "sdlcAgents.refreshToken";
 const SECRET_LAST_USERNAME = "sdlcAgents.lastUsername";
 /** Pre-rename secret keys — READ-ONLY migration/fallback sources. */
 const LEGACY_SECRET_ACCESS_TOKEN = "kiroSdlc.accessToken";
 const LEGACY_SECRET_LAST_USERNAME = "kiroSdlc.lastUsername";
+
+/** Refresh at 70% of the access token lifetime, leaving headroom for retries. */
+const ACCESS_REFRESH_FRACTION = 0.7;
+
+/** Shapes returned by /login and /refresh (accessToken/refreshToken absent on legacy backends). */
+interface TokenResponse {
+  token?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: string;
+  expiresIn?: number;
+}
 
 export class AuthManager implements vscode.Disposable {
   private state: AuthState = "UNAUTHENTICATED";
@@ -31,6 +46,10 @@ export class AuthManager implements vscode.Disposable {
   private tokenExpiresAt: number | null = null;
   private tokenAcquiredAt: number | null = null;
   private cachedToken: string | null = null;
+  /** Opaque refresh credential — never sent as a Bearer token. */
+  private refreshTokenValue: string | null = null;
+  private accessRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshInFlight: Promise<void> | null = null;
   private _onStateChange = new vscode.EventEmitter<AuthState>();
   readonly onStateChange: vscode.Event<AuthState> = this._onStateChange.event;
   private _onTokenRefreshed = new vscode.EventEmitter<string>();
@@ -70,7 +89,54 @@ export class AuthManager implements vscode.Disposable {
     // Do NOT auto-restore token from SecretStorage.
     // Enrichment data is per-user — must require explicit login each session.
     this.cachedToken = null;
+    this.refreshTokenValue = null;
+    this.clearAccessRefreshTimer();
     this.transitionTo("UNAUTHENTICATED");
+  }
+
+  /**
+   * Adopt a login/refresh response: dual-token when the backend provides
+   * accessToken/refreshToken, legacy single-token otherwise.
+   */
+  private async adoptTokens(data: TokenResponse, legacyExpiresAt?: number | null): Promise<void> {
+    const refresh = data.refreshToken ?? data.token ?? null;
+    const access = data.accessToken ?? data.token ?? null;
+    if (refresh) {
+      this.refreshTokenValue = refresh;
+      await this.secrets.store(SECRET_REFRESH_TOKEN, refresh);
+    }
+    if (access) {
+      this.cachedToken = access;
+      await this.secrets.store(SECRET_ACCESS_TOKEN, access);
+    }
+    this.tokenAcquiredAt = Date.now();
+    this.tokenExpiresAt = data.accessToken
+      ? Date.now() + (data.expiresIn && data.expiresIn > 0 ? data.expiresIn : 900) * 1000
+      : data.expiresAt
+        ? new Date(data.expiresAt).getTime()
+        : legacyExpiresAt ?? null;
+    this.scheduleAccessRefresh();
+  }
+
+  /** Refresh exactly once at ACCESS_REFRESH_FRACTION of the access token lifetime. */
+  private scheduleAccessRefresh(): void {
+    this.clearAccessRefreshTimer();
+    if (this.state !== "AUTHENTICATED" || !this.tokenExpiresAt || !this.tokenAcquiredAt) return;
+    const lifetime = this.tokenExpiresAt - this.tokenAcquiredAt;
+    if (lifetime <= 0) return;
+    const dueAt = this.tokenAcquiredAt + lifetime * ACCESS_REFRESH_FRACTION;
+    const delay = Math.max(1_000, dueAt - Date.now());
+    this.accessRefreshTimer = setTimeout(() => {
+      this.accessRefreshTimer = null;
+      void this.refreshToken();
+    }, delay);
+  }
+
+  private clearAccessRefreshTimer(): void {
+    if (this.accessRefreshTimer) {
+      clearTimeout(this.accessRefreshTimer);
+      this.accessRefreshTimer = null;
+    }
   }
 
   /**
@@ -141,14 +207,10 @@ export class AuthManager implements vscode.Disposable {
         const body = await response.text();
         throw new AuthError(`Login failed (${response.status}): ${body}`);
       }
-      const data = await response.json() as { token: string; user: unknown; expiresAt: string };
-      await this.secrets.store(SECRET_ACCESS_TOKEN, data.token);
+      const data = await response.json() as TokenResponse;
       await this.secrets.store(SECRET_LAST_USERNAME, username);
-      this.cachedToken = data.token;
-      this.tokenAcquiredAt = Date.now();
-      // expiresAt is ISO string — store as epoch ms (null if backend omits it)
-      this.tokenExpiresAt = data.expiresAt ? new Date(data.expiresAt).getTime() : null;
       this.transitionTo("AUTHENTICATED");
+      await this.adoptTokens(data);
       this.refreshTimer.start();
     } catch (err) {
       this.transitionTo("UNAUTHENTICATED");
@@ -276,7 +338,10 @@ export class AuthManager implements vscode.Disposable {
               return;
             }
 
+            const code = url.searchParams.get("sso_code");
             const token = url.searchParams.get("token");
+            const accessToken = url.searchParams.get("accessToken");
+            const refreshToken = url.searchParams.get("refreshToken");
             const expiresAt = url.searchParams.get("expiresAt");
 
             // Respond immediately to avoid browser hanging, then process token
@@ -288,16 +353,26 @@ export class AuthManager implements vscode.Disposable {
             res.end("<html><body>Authentication complete. You can close this window.</body></html>");
             cleanup();
 
-            if (!token) {
+            if (!code && !token && !accessToken) {
               reject(new AuthError("No token returned from backend"));
               return;
             }
 
-            await this.secrets.store(SECRET_ACCESS_TOKEN, token);
-            this.cachedToken = token;
-            this.tokenAcquiredAt = Date.now();
-            this.tokenExpiresAt = expiresAt ? new Date(expiresAt).getTime() : null;
+            let payload: TokenResponse | null = null;
+            if (code) {
+              payload = await this.exchangeAuthCode(code);
+              if (!payload) {
+                this.transitionTo("UNAUTHENTICATED");
+                reject(new AuthError("Authorization code exchange failed"));
+                return;
+              }
+            }
             this.transitionTo("AUTHENTICATED");
+            await this.adoptTokens(payload ?? {
+              token: token ?? undefined,
+              accessToken: accessToken ?? undefined,
+              refreshToken: refreshToken ?? undefined,
+            }, expiresAt ? new Date(expiresAt).getTime() : null);
             this.refreshTimer.start();
             resolve();
           } catch (e) {
@@ -334,6 +409,26 @@ export class AuthManager implements vscode.Disposable {
   }
 
   /**
+   * Redeem a single-use `sso_code` from the login redirect for the token pair.
+   * The credential travels in the request body, never in a URL.
+   * @returns Token payload or null when the code is unknown/expired/reused.
+   */
+  private async exchangeAuthCode(code: string): Promise<TokenResponse | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/auth/exchange`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Client-Type": "extension" },
+        body: JSON.stringify({ code }),
+      });
+      if (!response.ok) return null;
+      return await response.json() as TokenResponse;
+    } catch (err) {
+      console.warn("Auth code exchange failed:", (err as Error).message);
+      return null;
+    }
+  }
+
+  /**
    * Get the username from the last successful login.
    */
   async getLastUsername(): Promise<string> {
@@ -365,10 +460,18 @@ export class AuthManager implements vscode.Disposable {
   }
 
   /**
-   * Refresh the access token using refresh endpoint.
+   * Refresh the access token using the refresh credential.
+   * Concurrent callers share one in-flight request (one rotation, not two).
    */
   async refreshToken(): Promise<void> {
-    if (!this.cachedToken) {
+    if (this.refreshInFlight) { return this.refreshInFlight; }
+    this.refreshInFlight = this.doRefresh().finally(() => { this.refreshInFlight = null; });
+    return this.refreshInFlight;
+  }
+
+  private async doRefresh(): Promise<void> {
+    const refresh = this.refreshTokenValue ?? (await this.secrets.get(SECRET_REFRESH_TOKEN)) ?? this.cachedToken;
+    if (!refresh) {
       this.transitionTo("UNAUTHENTICATED");
       return;
     }
@@ -378,40 +481,52 @@ export class AuthManager implements vscode.Disposable {
         // SA4E-319: same extension-client marker so refresh doesn't get rejected by
         // UA-binding (the extension host UA differs from the login/webview UA).
         headers: { "Content-Type": "application/json", "X-Client-Type": "extension" },
-        body: JSON.stringify({ refresh_token: this.cachedToken }),
+        body: JSON.stringify({ refresh_token: refresh }),
       });
       if (!response.ok) {
         if (response.status === 401 || response.status === 403 || response.status === 400 || response.status === 404) {
-          this.transitionTo("UNAUTHENTICATED");
+          // Refresh credential is dead (rotated away, revoked or expired) — drop
+          // BOTH tokens so no caller keeps replaying a token the backend rejects.
+          await this.clearSession();
         }
         return;
       }
-      const data = await response.json() as { token: string; expiresAt?: string };
-      await this.secrets.store(SECRET_ACCESS_TOKEN, data.token);
-      this.cachedToken = data.token;
-      this.tokenAcquiredAt = Date.now();
-      if (data.expiresAt) {
-        this.tokenExpiresAt = new Date(data.expiresAt).getTime();
-      }
-      // Notify listeners (e.g. iframe panels) that token has been refreshed
-      this._onTokenRefreshed.fire(data.token);
+      const data = await response.json() as TokenResponse;
+      await this.adoptTokens(data);
+      // Notify listeners (e.g. iframe panels) that the Bearer token changed.
+      this._onTokenRefreshed.fire(this.cachedToken ?? "");
     } catch (err) {
       console.warn("Failed to refresh token due to network/server issue. Keeping current session.", err);
     }
+  }
+
+  /** Drop local credentials and enter UNAUTHENTICATED without a backend call. */
+  private async clearSession(): Promise<void> {
+    await this.secrets.delete(SECRET_ACCESS_TOKEN);
+    await this.secrets.delete(SECRET_REFRESH_TOKEN);
+    await this.secrets.delete(LEGACY_SECRET_ACCESS_TOKEN);
+    this.cachedToken = null;
+    this.refreshTokenValue = null;
+    this.tokenExpiresAt = null;
+    this.tokenAcquiredAt = null;
+    this.clearAccessRefreshTimer();
+    this.refreshTimer.stop();
+    this.transitionTo("UNAUTHENTICATED");
   }
 
   /**
    * Logout — clear all stored tokens.
    */
   async logout(): Promise<void> {
-    // Attempt to notify backend about logout using current access token.
-    // Errors are logged but do not block local cleanup.
-    if (this.cachedToken) {
+    // Attempt to notify backend about logout using the refresh credential —
+    // that is what the backend revokes (the access JWT dies with the session).
+    const refresh = this.refreshTokenValue ?? this.cachedToken;
+    if (refresh) {
       try {
         const response = await fetch(`${this.baseUrl}/api/auth/logout`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refresh_token: this.cachedToken }),
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${this.cachedToken ?? ""}` },
+          body: JSON.stringify({ refresh_token: refresh }),
         });
         if (!response.ok) {
           const body = await response.text();
@@ -424,13 +539,7 @@ export class AuthManager implements vscode.Disposable {
 
     // Perform local cleanup regardless of backend response. Delete the legacy
     // key too so a stale pre-rename token cannot be resurrected on next read.
-    await this.secrets.delete(SECRET_ACCESS_TOKEN);
-    await this.secrets.delete(LEGACY_SECRET_ACCESS_TOKEN);
-    this.cachedToken = null;
-    this.tokenExpiresAt = null;
-    this.tokenAcquiredAt = null;
-    this.refreshTimer.stop();
-    this.transitionTo("UNAUTHENTICATED");
+    await this.clearSession();
   }
 
   private isExpired(): boolean {
@@ -469,6 +578,7 @@ export class AuthManager implements vscode.Disposable {
 
   dispose(): void {
     this.refreshTimer.stop();
+    this.clearAccessRefreshTimer();
     this._onStateChange.dispose();
     this._onTokenRefreshed.dispose();
   }

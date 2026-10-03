@@ -9,6 +9,7 @@
 import type { Context } from 'hono';
 import type { StoredSsoState } from '../../auth/strategies/SsoProviderStrategy.js';
 import { SessionService } from '../../services/SessionService.js';
+import { issueAuthCode } from './one-time-codes.js';
 
 export const PKCE_TTL_MS = 5 * 60 * 1000;
 const PKCE_MAX_ENTRIES = 1000;
@@ -143,7 +144,17 @@ export function resolveWebRedirect(targetRaw: string): string {
  *   User-Agents differ — binding would make every subsequent extension call
  *   (e.g. /api/admin/auth/me) fail validation. Web flow keeps binding (true).
  */
-export async function issueSessionCookie(c: Context, userId: string, ip: string, bindUserAgent = true): Promise<{ token: string; expiresAt: string }> {
+/** Token payload handed to the client after an SSO login. */
+export interface SessionIssueResult {
+  token: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+  refreshExpiresAt: string;
+  expiresIn: number;
+}
+
+export async function issueSessionCookie(c: Context, userId: string, ip: string, bindUserAgent = true): Promise<SessionIssueResult> {
   const sessionService = new SessionService();
   const userAgent = bindUserAgent ? (c.req.header('user-agent') || '') : '';
   const session = await sessionService.issue(userId, '', ip, userAgent);
@@ -153,24 +164,30 @@ export async function issueSessionCookie(c: Context, userId: string, ip: string,
   // avoids leaking the session token over plain HTTP if NODE_ENV is misconfigured.
   const secureFlag = process.env.ALLOW_INSECURE_COOKIES === 'true' ? '' : '; Secure';
   c.header('Set-Cookie', `session_token=${session.token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secureFlag}`);
-  return { token: session.token, expiresAt: session.expiresAt };
+  return {
+    token: session.token,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
+    expiresAt: session.expiresAt,
+    refreshExpiresAt: session.refreshExpiresAt,
+    expiresIn: session.expiresIn,
+  };
 }
 
-/** Build the final redirect (loopback with token params, or web allowlist). */
-export function buildPostLoginRedirect(redirectToRaw: string | undefined, state: string, session: { token: string; expiresAt: string }): string {
+/**
+ * Build the final redirect. The token payload is redeemed server-side and only
+ * a single-use `sso_code` goes on the URL — credentials never appear in URLs.
+ */
+export function buildPostLoginRedirect(redirectToRaw: string | undefined, state: string, session: SessionIssueResult): string {
+  const code = issueAuthCode(session);
   const redirectUrlRaw = redirectToRaw || '/admin?page=dashboard';
   if (isLoopbackRedirect(redirectUrlRaw)) {
     const loopbackUrl = new URL(redirectUrlRaw);
     loopbackUrl.searchParams.set('state', state);
-    loopbackUrl.searchParams.set('token', session.token);
-    loopbackUrl.searchParams.set('expiresAt', session.expiresAt);
+    loopbackUrl.searchParams.set('sso_code', code);
     return loopbackUrl.toString();
   }
-  // Web (browser) flow: the admin SPA authenticates via a Bearer token kept in
-  // localStorage, NOT the HttpOnly cookie. So we must hand the token to the SPA
-  // on the redirect URL (same-origin, allow-listed target) — otherwise the SPA
-  // lands on an authenticated route with no token and bounces back to login.
   const webTarget = resolveWebRedirect(redirectUrlRaw);
   const sep = webTarget.includes('?') ? '&' : '?';
-  return `${webTarget}${sep}sso_token=${encodeURIComponent(session.token)}&sso_expires=${encodeURIComponent(session.expiresAt)}`;
+  return `${webTarget}${sep}sso_code=${encodeURIComponent(code)}`;
 }

@@ -6,7 +6,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { httpPostJson as utilHttpPostJson } from "../utils/http-client-utils";
 // SA4E-261: unified extension whitelist shared with backend/src/config/unified-extensions.ts
-import { UNIFIED_EXTENSIONS } from "./unified-extensions.js";
+import { UNIFIED_EXTENSIONS } from "./unified-extensions";
 
 export interface DocEntry {
     path: string;
@@ -54,6 +54,55 @@ export class IndexerHttpClient {
         return IndexerHttpClient.outputChannel;
     }
 
+    /**
+     * Extract detailed failure reason from progress payload. Backend returns
+     * `error: {message, stack, file}` — surface it instead of 'unknown error'.
+     */
+    static formatIndexError(progress: any): string {
+        const msg = progress?.error?.message || progress?.message || 'unknown error';
+        const file = progress?.error?.file || progress?.currentFile;
+        return file ? `${msg} (file: ${file})` : msg;
+    }
+
+    /**
+     * Persist a terminal (non-success) index outcome to the Output channel so it
+     * outlives the transient status bar item (which auto-disposes after 5–8s).
+     * Logs phase/status/percentage/file so the user can diagnose after the fact.
+     * @param outcome Terminal state label (failed/interrupted/cancelled/timeout)
+     * @param progress Last parsed progress payload from /api/index/progress
+     * @param reveal When true, bring the Output channel to front (used for failures)
+     */
+    /**
+     * Derive a display percentage, computing from current/total when the
+     * backend omits the percentage field. Returns null when unknowable.
+     */
+    static progressPct(progress: any): number | null {
+        if (typeof progress?.percentage === 'number') return progress.percentage;
+        if (typeof progress?.current === 'number' && typeof progress?.total === 'number'
+            && progress.total > 0) {
+            return Math.round((progress.current / progress.total) * 100);
+        }
+        return null;
+    }
+
+    static logTerminalIndexState(outcome: string, progress: any, reveal: boolean): void {
+        const channel = IndexerHttpClient.getIndexerOutput();
+        const when = new Date().toLocaleTimeString();
+        const pct = typeof progress?.percentage === 'number' ? `${progress.percentage}%` : 'n/a';
+        const counts = (typeof progress?.current === 'number' && typeof progress?.total === 'number')
+            ? ` (${progress.current}/${progress.total} files)` : '';
+        const elapsed = typeof progress?.elapsedMs === 'number' ? ` after ${Math.round(progress.elapsedMs / 1000)}s` : '';
+        const file = progress?.currentFile ? ` — last file: ${progress.currentFile}` : '';
+        const errMsg = progress?.error?.message || progress?.message;
+        const detail = errMsg ? ` — ${IndexerHttpClient.formatIndexError(progress)}` : '';
+        const icon = outcome === 'complete' ? '✅' : '❌';
+        channel.appendLine(
+            `[Indexer] ${icon} Index ${outcome} @ ${when} — phase ${progress?.phase ?? 'unknown'}, ${pct}${counts}${elapsed}${file}${detail}`,
+        );
+        if (progress?.error?.stack) { channel.appendLine(`   Stack: ${progress.error.stack}`); }
+        if (reveal) { channel.show(true); }
+    }
+
     /** SA4E-99: Set token refresher callback — called on 401 to get a fresh token. */
     setTokenRefresher(refresher: () => Promise<string | undefined>): void {
         this.tokenRefresher = refresher;
@@ -81,29 +130,26 @@ export class IndexerHttpClient {
      * SA4E-99: Poll /api/index/progress until idle. Shows status bar progress.
      * Resolves when indexing completes or times out after maxWaitMs.
      */
-    async pollIndexProgress(token?: string, maxWaitMs = 300000): Promise<void> {
+    async pollIndexProgress(token?: string, maxWaitMs = 900000): Promise<void> {
         const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50);
         statusBar.show();
         const start = Date.now();
         let lastProgress: any = null;
+        let lastPct: number | null = null;
         try {
             while (Date.now() - start < maxWaitMs) {
                 await new Promise(r => setTimeout(r, 2000));
-                const headers = await this.buildHeaders(token);
-                const url = `${this.backendUrl}/api/index/progress`;
-                let resp: { ok: boolean; body: string };
-                try {
-                    const response = await fetch(url, {
-                        method: "GET",
-                        headers,
-                        signal: AbortSignal.timeout(5000),
-                    });
-                    resp = { ok: response.status === 200, body: await response.text() };
-                } catch {
-                    resp = { ok: false, body: "" };
+                // Shared GET path: 401 refresh + 10s timeout. A raw fetch here
+                // loses auth mid-run (long index → expired JWT → 401) and the
+                // bar collapses to a %‑less "Indexing..." for the rest of the run.
+                const { ok, body } = await this.getIndexProgress(token);
+                if (!ok) {
+                    statusBar.text = lastPct !== null
+                        ? `$(sync~spin) Indexing: ${lastPct}% (reconnecting…)`
+                        : "$(sync~spin) Indexing...";
+                    statusBar.tooltip = "Code Intelligence: Indexing workspace... (progress poll retrying)";
+                    continue;
                 }
-                const { ok, body } = resp;
-                if (!ok) { statusBar.text = "$(sync~spin) Indexing..."; statusBar.tooltip = "Code Intelligence: Indexing workspace..."; continue; }
                 try {
                     const progress = JSON.parse(body);
                     lastProgress = progress;
@@ -117,6 +163,8 @@ export class IndexerHttpClient {
                     if (status === 'interrupted') {
                         statusBar.text = "$(warning) Index interrupted";
                         statusBar.tooltip = "Code Intelligence: Indexing was interrupted by backend restart";
+                        // Persist to Output — the transient status bar vanishes after 8s.
+                        IndexerHttpClient.logTerminalIndexState('interrupted', progress, false);
                         setTimeout(() => statusBar.dispose(), 8000);
                         return;
                     }
@@ -126,15 +174,29 @@ export class IndexerHttpClient {
                         setTimeout(() => statusBar.dispose(), 8000);
                         return;
                     }
+                    if (status === 'completed' || progress.phase === 'complete') {
+                        statusBar.text = "$(check) Index complete";
+                        statusBar.tooltip = "Code Intelligence: Indexing finished successfully";
+                        IndexerHttpClient.logTerminalIndexState('complete', progress, false);
+                        setTimeout(() => statusBar.dispose(), 5000);
+                        return;
+                    }
                     if (status === 'failed' || progress.phase === 'error') {
+                        const errDetail = IndexerHttpClient.formatIndexError(progress);
                         statusBar.text = "$(error) Index failed";
-                        statusBar.tooltip = `Code Intelligence: Indexing failed — ${progress.message || 'unknown error'}`;
+                        statusBar.tooltip = `Code Intelligence: Indexing failed — ${errDetail}`;
+                        // Persist + surface: failure detail must outlive the 8s status bar so
+                        // the user can read why the index failed (see Output > Kiro Indexer).
+                        IndexerHttpClient.logTerminalIndexState('failed', progress, true);
+                        vscode.window.showErrorMessage(`Indexing failed: ${errDetail}`, "Open Output")
+                            .then(action => { if (action === "Open Output") { IndexerHttpClient.getIndexerOutput().show(); } });
                         setTimeout(() => statusBar.dispose(), 8000);
                         return;
                     }
                     if (status === 'cancelled' || progress.phase === 'cancelled') {
                         statusBar.text = "$(stop) Index cancelled";
                         statusBar.tooltip = "Code Intelligence: Indexing was cancelled";
+                        IndexerHttpClient.logTerminalIndexState('cancelled', progress, false);
                         setTimeout(() => statusBar.dispose(), 5000);
                         return;
                     }
@@ -144,17 +206,25 @@ export class IndexerHttpClient {
                     if (checksumStats) {
                         checksumInfo = `\nChecksum: skipped ${checksumStats.files_skipped}, processed ${checksumStats.files_processed}, pending ${checksumStats.files_pending}`;
                     }
-                    statusBar.text = `$(sync~spin) Indexing: ${progress.percentage}%`;
+                    const pct = IndexerHttpClient.progressPct(progress);
+                    if (pct !== null) lastPct = pct;
+                    const shown = pct ?? lastPct;
+                    const pctText = shown !== null ? `${shown}%` : 'n/a';
+                    statusBar.text = shown !== null ? `$(sync~spin) Indexing: ${shown}%` : "$(sync~spin) Indexing...";
                     statusBar.tooltip = `Code Intelligence — ${progress.phase}${status ? ' (' + status + ')' : ''}\n`
-                        + `Progress: ${progress.current}/${progress.total} files (${progress.percentage}%)\n`
+                        + `Progress: ${progress.current}/${progress.total} files (${pctText})\n`
                         + `Elapsed: ${elapsed}s${checksumInfo}\n`
                         + (progress.currentFile ? `Current: ${progress.currentFile}` : '');
-                } catch { statusBar.text = "$(sync~spin) Indexing..."; statusBar.tooltip = "Code Intelligence: Processing..."; }
+                } catch {
+                    statusBar.text = lastPct !== null
+                        ? `$(sync~spin) Indexing: ${lastPct}% (reconnecting…)`
+                        : "$(sync~spin) Indexing...";
+                    statusBar.tooltip = "Code Intelligence: Processing... (progress poll retrying)";
+                }
             }
             statusBar.text = "$(warning) Index timeout";
-            if (lastProgress) {
-                IndexerHttpClient.getIndexerOutput().appendLine(`[Indexer] Index timeout at ${lastProgress.percentage || 0}% — phase ${lastProgress.phase}, status ${lastProgress.status}`);
-            }
+            // Persist + reveal — a timeout is a failure the user needs to see.
+            IndexerHttpClient.logTerminalIndexState('timeout', lastProgress ?? {}, true);
             setTimeout(() => statusBar.dispose(), 5000);
         } catch { statusBar.dispose(); }
     }
@@ -318,32 +388,67 @@ export class IndexerHttpClient {
         }
         report.report({ message: `Indexing source code: 100% complete`, increment: 0 });
 
-        // SA4E-99: Trigger full re-index ONCE after all files written (not per-batch)
+        // SA4E-99: Trigger full re-index ONCE after all files written (not per-batch).
+        // The full index is the step that PARSES uploaded files into symbols — uploading
+        // alone produces 0 symbols. If it fails, the whole indexing run is effectively a
+        // no-op, so the failure MUST surface (not be swallowed) and MUST taint the summary.
+        let fullIndexFailed = false;
         if (uploaded > 0) {
             report.report({ message: "Running full index on uploaded files..." });
-            await this.triggerFullIndex(token);
-            // SA4E-99: Poll backend progress until index + LLM enrichment complete
-            this.pollIndexProgress(token).catch(() => {}); // fire-and-forget, shows status bar
+            const full = await this.triggerFullIndex(token);
+            if (!full.ok) {
+                fullIndexFailed = true;
+                const channel = IndexerHttpClient.getIndexerOutput();
+                channel.appendLine(`\n❌ Full index FAILED — uploaded files were NOT parsed into symbols.`);
+                channel.appendLine(`   Status: ${full.status} | Error: ${full.error}`);
+                if (full.details) { channel.appendLine(`   Details: ${full.details}`); }
+                if (full.action) { channel.appendLine(`   Action: ${full.action}`); }
+                channel.show(true);
+                vscode.window.showErrorMessage(
+                    `Indexing incomplete: files uploaded but full index failed (${full.status || 'network error'}). Code symbols were not generated — see Output > Kiro Indexer.`,
+                );
+            } else {
+                // SA4E-99: Poll backend progress until index + LLM enrichment complete
+                this.pollIndexProgress(token).catch(() => {}); // fire-and-forget, shows status bar
+            }
         }
 
-        const summary = `✅ Indexed ${uploaded} project files` + (errors > 0 ? `, ⚠️ Failed: ${errors} (see Output > Kiro Indexer for details)` : "");
+        // Summary must reflect reality: a successful upload with a failed full index is
+        // NOT a successful index (symbols = 0). Do not report "✅ Indexed" in that case.
+        let summary: string;
+        if (fullIndexFailed) {
+            summary = `❌ Uploaded ${uploaded} files but full index FAILED — no code symbols generated (see Output > Kiro Indexer)`;
+        } else {
+            summary = `✅ Indexed ${uploaded} project files` + (errors > 0 ? `, ⚠️ Failed: ${errors} (see Output > Kiro Indexer for details)` : "");
+        }
         return { uploaded, errors, summary };
     }
 
-    /** SA4E-99: Trigger a full re-index on backend after all source files are written. */
-    private async triggerFullIndex(token?: string): Promise<void> {
-        try {
-            const url = `${this.backendUrl}/api/index/full`;
-            const { ok, body } = await this.httpPostJson(url, {}, token);
-            if (ok && body) {
-                try {
-                    const data = JSON.parse(body);
-                    if (data.cancelledPrevious && data.message) {
-                        vscode.window.showInformationMessage(`Indexing: ${data.message}`);
-                    }
-                } catch { /* ignore parse errors */ }
+    /**
+     * SA4E-99: Trigger a full re-index on backend after all source files are written.
+     * Returns a structured result so the caller can surface failures — a swallowed
+     * failure here silently leaves the KB with 0 symbols despite a "successful" upload.
+     * @returns ok=true on 2xx; otherwise ok=false with status/error/details for reporting.
+     */
+    private async triggerFullIndex(
+        token?: string,
+    ): Promise<{ ok: boolean; status: number; error: string; details?: string; action?: string }> {
+        const url = `${this.backendUrl}/api/index/full`;
+        let result = await this.httpPostWithDetail(url, {}, token);
+        // Source upload can take minutes on large repos, so the JWT may expire before
+        // the final full-index POST. Refresh once on 401 and retry (same pattern as batch upload).
+        if (result.status === 401 && this.tokenRefresher) {
+            const freshToken = await this.tokenRefresher();
+            if (freshToken) {
+                this.notifyTokenRefreshed(freshToken);
+                result = await this.httpPostWithDetail(url, {}, freshToken);
             }
-        } catch { /* non-fatal */ }
+        }
+        if (!result.ok) {
+            // Do NOT swallow — return the failure so uploadSourceFiles can report it.
+            return { ok: false, status: result.status, error: result.error, details: result.details, action: result.action };
+        }
+        return { ok: true, status: result.status || 200, error: '' };
     }
 
     /**
@@ -531,6 +636,28 @@ export class IndexerHttpClient {
     }
 
     /**
+     * Get current index/parse progress (GET /api/index/progress). Reports the
+     * synchronous code-indexing phase (scanning → indexing → resolving → complete),
+     * which is the first half of the async KB-ingest pipeline. Pairs with
+     * getEnrichmentStatus() (the LLM enrichment half) to give users full visibility.
+     */
+    async getIndexProgress(token?: string): Promise<{ ok: boolean; body: string }> {
+        const url = `${this.backendUrl}/api/index/progress`;
+        return this.httpGet(url, token);
+    }
+
+    /**
+     * Get the full list of FAILED enrichment tasks (GET /api/v1/enrichment/failures).
+     * Unlike the status endpoint's recentFailures (capped at 10), this returns every
+     * failure up to `limit` so the user can inspect which rules/symbols failed and why.
+     * @param limit Max failures to fetch (server clamps to [1, 1000])
+     */
+    async getEnrichmentFailures(limit = 200, token?: string): Promise<{ ok: boolean; body: string }> {
+        const url = `${this.backendUrl}/api/v1/enrichment/failures?limit=${encodeURIComponent(String(limit))}`;
+        return this.httpGet(url, token);
+    }
+
+    /**
      * GET request returning raw body + ok status. Uses fetch() (proxy-patched globally).
      * On 401, refreshes the token once (if a refresher is set) and retries — the
      * extension is responsible for keeping its JWT fresh against the remote backend.
@@ -549,6 +676,7 @@ export class IndexerHttpClient {
         return { ok: retry.status === 200, body: retry.body };
     }
 
+    private static lastTimeoutLog = 0;
     /** Single GET attempt returning HTTP status + raw body (status 0 on network error). */
     private async httpGetOnce(url: string, token: string | undefined): Promise<{ status: number; body: string }> {
         const headers = await this.buildHeaders(token);
@@ -556,12 +684,16 @@ export class IndexerHttpClient {
             const response = await fetch(url, {
                 method: "GET",
                 headers,
-                signal: AbortSignal.timeout(10000),
+                signal: AbortSignal.timeout(30000),
             });
             const body = await response.text();
             return { status: response.status, body };
         } catch (err) {
-            IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] httpGet failed (non-fatal): ${(err as Error).message}`);
+            const now = Date.now();
+            if (now - IndexerHttpClient.lastTimeoutLog > 30000) {
+                IndexerHttpClient.lastTimeoutLog = now;
+                IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] httpGet failed (non-fatal): ${(err as Error).message}`);
+            }
             return { status: 0, body: "" };
         }
     }

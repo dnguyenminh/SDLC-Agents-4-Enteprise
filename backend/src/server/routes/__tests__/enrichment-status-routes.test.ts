@@ -19,6 +19,9 @@ function makeFakeRepo(overrides: Record<string, unknown> = {}) {
     listFailed: vi.fn().mockResolvedValue([
       { id: 2, payload: JSON.stringify({ symbolName: 'fooFn' }), error: 'boom' },
     ]),
+    listFailedDetailed: vi.fn().mockResolvedValue([
+      { id: 2, source: 'fooFn', error: 'boom', retryCount: 3, completedAt: '2026-01-02T00:00:00.000Z' },
+    ]),
     reconcileOrphans: vi.fn().mockResolvedValue(0),
     retryAllFailed: vi.fn().mockResolvedValue(0),
     ...overrides,
@@ -100,6 +103,38 @@ describe('createEnrichmentStatusRoutes', () => {
       expect(res.status).toBe(500);
       const body = await res.json();
       expect(body.error).toBe('Failed to retrieve enrichment status');
+    });
+  });
+
+  describe('GET /enrichment/failures', () => {
+    it('returns 200 with the full failure list, default limit 200', async () => {
+      const res = await app.request('/enrichment/failures', { method: 'GET' });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.count).toBe(1);
+      expect(body.limit).toBe(200);
+      expect(body.failures).toEqual([
+        { id: 2, source: 'fooFn', error: 'boom', retryCount: 3, completedAt: '2026-01-02T00:00:00.000Z' },
+      ]);
+      expect(repo.listFailedDetailed).toHaveBeenCalledWith(200, undefined);
+    });
+
+    it('scopes failures to project and clamps limit to [1,1000]', async () => {
+      const res = await app.request('/enrichment/failures?limit=99999', {
+        method: 'GET',
+        headers: { 'X-Project-Id': 'proj-7' },
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.projectId).toBe('proj-7');
+      expect(body.limit).toBe(1000);
+      expect(repo.listFailedDetailed).toHaveBeenCalledWith(1000, 'proj-7');
+    });
+
+    it('returns 503 when TaskWorker is missing', async () => {
+      const brokenApp = createEnrichmentStatusRoutes(makeRegistry(null), logger);
+      const res = await brokenApp.request('/enrichment/failures', { method: 'GET' });
+      expect(res.status).toBe(503);
     });
   });
 

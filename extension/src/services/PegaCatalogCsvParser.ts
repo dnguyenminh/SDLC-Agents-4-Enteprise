@@ -1,9 +1,12 @@
 /**
  * PegaCatalogCsvParser — Parse rulecatalog.csv into crawl items.
  * SA4E-241 (IC-A1): HEADER-NAME-BASED parsing (not fixed index) so appended
- * columns (pxUpdateDateTime, pxSaveDateTime, checksum) are read by name and a
- * changed column order/count never breaks parsing. Each row's checksum is
- * resolved via Cách B (extension computes; column only verifies — IC-A2/A3).
+ * columns (pxUpdateDateTime, pxSaveDateTime, checksum/changeToken) are read by
+ * name and a changed column order/count never breaks parsing. Each row's
+ * checksum is resolved via Cách B (extension computes; the service column only
+ * verifies — IC-A2/A3). The service column is read as `checksum`, falling back
+ * to `changeToken` (the name Pega's rulecatalog export actually uses — verified
+ * 15100/15100 rows match the NT-2 formula).
  * Rows are converted to RuleSetRuleSummary → CrawlPlanItem carrying the checksum,
  * feeding the existing fetch+ingest pipeline (PegaCrawlHelper / PegaBfsIndexer).
  */
@@ -98,7 +101,8 @@ function rowFromLine(line: string, header: Map<string, number>): RuleCatalogRow 
     pyLabel: at("pylabel") || undefined,
     pxUpdateDateTime: at("pxupdatedatetime") || undefined,
     pxSaveDateTime: at("pxsavedatetime") || undefined,
-    checksum: at("checksum") || undefined,
+    // Service checksum column: legacy name `checksum`, Pega export name `changeToken`.
+    checksum: at("checksum") || at("changetoken") || undefined,
   };
 }
 

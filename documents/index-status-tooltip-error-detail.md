@@ -233,7 +233,7 @@ xem phần "Điều tra backend" bên dưới.)
 (dòng ~60) nhưng **không bao giờ set `statusBar.command`**. Do đó click vào icon
 `Indexing: N%` / `Indexing...` KHÔNG làm gì.
 → FIX: set `statusBar.command` trỏ tới một command mở OutputChannel chi tiết (ví dụ tái dùng
-"Kiro Indexer" channel hoặc tạo command `kiroSdlc.showIndexStatus`).
+"Kiro Indexer" channel hoặc tạo command `sdlcAgents.showIndexStatus`).
 
 ### Lỗi UI 2 — `triggerFullIndex` nuốt lỗi hoàn toàn
 `IndexerHttpClient.triggerFullIndex()` (dòng ~326) bọc toàn bộ trong `try { ... } catch { /* non-fatal */ }`.

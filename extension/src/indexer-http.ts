@@ -8,6 +8,23 @@ import * as path from "path";
 import { httpPostJson } from "./utils/http-client-utils";
 import { getEffectiveScope } from "./utils/scope-detector";
 import { getBackendUrl, DEFAULT_BACKEND_URL } from "./config/backend-url";
+import { getProjectId } from "./extension";
+import { UNIFIED_EXTENSIONS } from "./services/unified-extensions";
+
+/**
+ * Build request headers for indexing calls. The backend is multi-tenant and
+ * fail-closed on writes: it never infers project identity itself, so the client
+ * MUST send X-Project-Id (resolved at activation from .code-intel/project.json →
+ * git remote → user+folder). Omitting it causes a 400 PROJECT_REQUIRED.
+ * @param token Optional bearer token for authenticated requests.
+ */
+function buildIndexHeaders(token?: string): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const projectId = getProjectId();
+  if (projectId) { headers["X-Project-Id"] = projectId; }
+  if (token) { headers["Authorization"] = `Bearer ${token}`; }
+  return headers;
+}
 
 /** SA4E-320: validated backend URL with fail-safe fallback — a [Security] rejection never aborts indexing. */
 function getSafeBackendUrl(): string {
@@ -33,7 +50,7 @@ export async function ingestDocumentsViaHttp(
   const url = `${backendUrl}/mcp/tools/call`;
   let ingested = 0;
   let errors = 0;
-  const authHeaders: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+  const authHeaders = buildIndexHeaders(token);
 
   try {
     for (let i = 0; i < docs.length; i++) {
@@ -70,7 +87,7 @@ export async function ingestDocumentsViaHttp(
 export async function uploadDocumentFile(relPath: string, content: string, token?: string): Promise<boolean> {
   const backendUrl = getSafeBackendUrl();
   if (!backendUrl) return false;
-  const authHeaders: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+  const authHeaders = buildIndexHeaders(token);
   return httpPostJson<unknown>(`${backendUrl}/api/index/document`, { path: relPath, content }, { headers: authHeaders })
     .then(() => true)
     .catch(() => false);
@@ -81,13 +98,13 @@ export async function uploadSourceFiles(report: vscode.Progress<{ message?: stri
   if (!backendUrl) return "❌ Backend URL not configured.";
   const libraryExcludes = "**/{node_modules,dist,.git,build,out,.opencode,vendor,packages,bower_components,.kilo,scratch,.code-intel,.analysis}/**";
   const files = await vscode.workspace.findFiles(
-    "**/*.{ts,tsx,kt,java,py,go,rs}", libraryExcludes
+    `**/*.{${UNIFIED_EXTENSIONS.join(',')}}`, libraryExcludes
   );
   if (files.length === 0) return "❌ No source files found";
   const url = `${backendUrl}/api/index/source`;
   let uploaded = 0;
   let errors = 0;
-  const authHeaders: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
+  const authHeaders = buildIndexHeaders(token);
 
   for (let i = 0; i < files.length; i += 50) {
     report.report({ message: `Indexing project code ${i + 1}/${files.length}...` });

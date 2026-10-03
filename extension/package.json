@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.46.7",
+  "version": "1.47.0",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -49,7 +49,8 @@
     "onView:sdlcChatPanel",
     "onCommand:sdlcAgents.injectAll",
     "onCommand:sdlcAgents.status",
-    "onCommand:sdlcAgents.openSettings"
+    "onCommand:sdlcAgents.openSettings",
+    "onCommand:sdlcAgents.openPegaIngester"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -99,6 +100,10 @@
       {
         "command": "sa4e.showEnrichmentStatus",
         "title": "SDLC Agents: Show Enrichment Status"
+      },
+      {
+        "command": "sdlcAgents.showIndexStatus",
+        "title": "SDLC Agents: Show KB Ingest Status"
       },
       {
         "command": "sdlcAgents.symbolSearch",
@@ -169,6 +174,10 @@
         "command": "sdlcAgents.openAgenticChat",
         "title": "SDLC Agents: Open Agentic Chat",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "sdlcAgents.openPegaIngester",
+        "title": "SDLC Agents: Open Pega Ingester"
       }
     ],
     "viewsContainers": {

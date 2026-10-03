@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.46.7-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.47.0-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.46.3.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.47.0.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.46.3.vsix
+code --install-extension sdlc-agents-4-enterprise-1.47.0.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.47.0 (2026-10-02)
+
+- **KB ingest status visibility** — "KB: Ready" status bar is now clickable while idle (`sdlcAgents.showIndexStatus`), printing index/parse progress + LLM enrichment status to the Output channel. When failures exist, the command fetches the full failed-task list via the new backend endpoint `GET /api/v1/enrichment/failures` (resolved source, error, retry count, timestamp) rather than only the 10 shown in the status tooltip. New command `sdlcAgents.showIndexStatus` ("SDLC Agents: Show KB Ingest Status").
 
 ### v1.46.2 (2026-09-28)
 

@@ -8,14 +8,25 @@ import type { HttpPoster } from "./BulkCheckClient";
 
 /** POSTs JSON to `${backendUrl}${path}` and returns the parsed JSON body. */
 export class BackendHttpPoster implements HttpPoster {
-  /** @param backendUrl - Base URL of the Code Intelligence backend (no trailing slash). */
-  constructor(private readonly backendUrl: string) {}
+  /**
+   * @param backendUrl - Base URL of the Code Intelligence backend (no trailing slash).
+   * @param tokenProvider - Optional JWT source. The bulk-check route sits behind
+   *   jwtAuth, which returns 401 AUTH_REQUIRED when CODE_INTEL_REQUIRE_AUTH=true
+   *   and no `Authorization: Bearer` header is present.
+   */
+  constructor(
+    private readonly backendUrl: string,
+    private readonly tokenProvider?: () => string,
+  ) {}
 
   /** @inheritdoc */
   async postJson(path: string, body: unknown, headers: Record<string, string>): Promise<unknown> {
+    const merged: Record<string, string> = { "Content-Type": "application/json", ...headers };
+    const token = this.tokenProvider?.();
+    if (token && !merged["Authorization"]) { merged["Authorization"] = `Bearer ${token}`; }
     const res = await fetch(`${this.backendUrl}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...headers },
+      headers: merged,
       body: JSON.stringify(body),
     });
     if (!res.ok) {
