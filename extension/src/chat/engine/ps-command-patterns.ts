@@ -162,7 +162,7 @@ export const READONLY_PS_PATTERNS: ReadonlyArray<RegExp> = [
 ];
 
 /** Compound-statement separators — a command with these must have EVERY segment safe. */
-const COMPOUND_SPLIT_RE = /\s*(?:;|\|\||&&|\|)\s*/;
+const COMPOUND_SPLIT_RE = /\s*(?:;|\|\||&&|&)\s*/;
 
 /**
  * True when the normalized command is a positively-recognized safe read-only

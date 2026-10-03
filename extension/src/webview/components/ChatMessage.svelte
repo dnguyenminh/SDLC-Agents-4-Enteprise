@@ -205,7 +205,7 @@
   {/if}
 
   <div class="message-body">
-    {@html renderMarkdown(message.content)}
+    {renderMarkdown(message.content)}
   </div>
 </article>
 

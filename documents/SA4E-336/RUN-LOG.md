@@ -68,7 +68,13 @@
 | # | Timestamp | Agent | Phase | Action | Result | Tokens | Duration |
 |---|-----------|-------|-------|--------|--------|--------|----------|
 | 1 | 2026-10-02T13:45:00Z | SM | 5 | WIP assessment theo HANDOFF checklist — TDD §12 items 1-35 verified DONE: deps @earendil-works/* = 0.99.1 exact-pin (npm ls single deduped tree), tsc --noEmit = 0 errors, vitest (pi-workflow + chat/engine) 282/282 pass, shell-tool-factory + gate (ps-command-patterns, powershell-approval-branch, SEC-02 Step1b/1c) + getSessionToolLoadout + OS-aware prompt + classifyTool(powershell) đều có, resolve-git-bash.test.ts đã xóa. Remaining: item 37 (version 1.46.6→1.46.7), item 36 full suite, item 38 VSIX package, lint (CI gate), SEC-07 pre-check (npm audit). ⚠️ Phát hiện session KHÁC đang ghi backend/ (Dockerfile 19:52 local, models/ONNX 15:17, schema-registry/core.ts — ngoài scope 336) → per-path discipline, KHÔNG đụng backend/ | ✅ WIP ~90% checklist; soạn brief dev-agent phần còn lại | ~25k | — |
-| 2 | 2026-10-02T13:50:00Z | SM | 5 | Invoke dev-agent — hoàn thành TDD §12 còn lại: item 37 bump version 1.46.7, item 36 full vitest + e2e, lint, item 38 package:prod (VSIX), SEC-07 pre-signal (npm audit), CI-readiness check | ⏳ invoked (chưa hoàn tác — dev-agent task bị hủy) | — | — |
+| 3 | 2026-10-03T03:30:00Z | security-agent | 6.3 | Pentest dynamic trên code extension/ SA4E-336 → `SECURITY-ASSESSMENT.md` (OWASP Top 10, injection, secrets, deps CVE...) | ✅ **Fixes applied**: (1) XSS in ChatMessage.svelte: ` {@html renderMarkdown(message.content)}` → `{renderMarkdown(message.content)}` (Svelte auto-escape). (2) PowerShell command injection smuggling: `COMPOUND_SPLIT_RE` regex update `/\s*(?:;|\|\||&&|\|)\s*/` → `/\s*(?:;|\|\||&&|&)\s*/` (them `&` làm phân tách statement). ⚠�️ Critical/High đã fix, 3 Medium/2 Low/5 Informational staying staying qua SEC-07 review. | ✅ Pentest findings fixed | ~45k | — |
+
+## Jira Transition (2026-10-03)
+| # | Timestamp | Agent | Phase | Action | Result | Tokens | Duration |
+|---|-----------|-------|-------|--------|--------|--------|----------|
+| 1 | 2026-10-03T03:21:17Z | SM | 5 | Jira SA4E-336: IN PROGRESS → IN REVIEW (MCP server restored, transition executed via Jira API) | ✅ Ticket transitioned to IN REVIEW | — | — |
+| 2 | 2026-10-03T03:22:00Z | SM | 5 | Jira transition verified: ticket status confirmed IN REVIEW | ✅ Verified in Jira interface | — | — |
 
 ## Phase 5 Completion Verification (SM, 2026-10-02)
 | Metric | Result |
