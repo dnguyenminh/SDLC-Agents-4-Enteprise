@@ -50,6 +50,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      # GHCR/OCI refs must be lowercase; vars.IMAGE_NAME and github.repository
+      # fallback are mixed-case (repo name has uppercase). metadata-action
+      # lowercases tags internally, but raw env.IMAGE_NAME refs (Trivy image-ref)
+      # do not — normalize once for all consumers.
+      - name: Normalize image name to lowercase
+        run: echo "IMAGE_NAME=${IMAGE_NAME,,}" >> "$GITHUB_ENV"
+
       # 2. Derive tags/labels: sha-<short>, semver (vX.Y.Z / X.Y / X), latest (main only).
       - name: Derive image tags
         id: meta
