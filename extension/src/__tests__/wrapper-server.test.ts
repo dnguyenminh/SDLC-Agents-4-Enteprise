@@ -208,6 +208,41 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
     expect(res.body.error.message).toContain('Failed to read file');
   });
 
+  it('TC-42: relative file_path resolves against the workspace root (D2 regression)', async () => {
+    const relName = 'relative-input.drawio';
+    const content = '<mxGraphModel>relative</mxGraphModel>';
+    fs.writeFileSync(path.join(TMP_DIR, relName), content);
+    deps.restCallToolMock.result = {
+      content: [{ type: 'text', text: JSON.stringify({ output_base64: Buffer.from('PNG-REL').toString('base64') }) }],
+    };
+
+    const res = await postMcp(port, {
+      jsonrpc: '2.0', id: 14, method: 'tools/call',
+      params: { name: 'drawio_export_png', arguments: { file_path: relName } },
+    });
+
+    expect(res.status).toBe(200);
+    const call = deps.restCallToolMock.calls[0];
+    expect(call.name).toBe('drawio_export_png');
+    // File was read from the workspace root, not process.cwd() (Kiro install dir)
+    expect(call.args.content_base64).toBe(Buffer.from(content).toString('base64'));
+    // Derived output also lands inside the workspace root as an absolute path
+    const resultText = JSON.parse(res.body.result.content[0].text);
+    expect(path.isAbsolute(resultText.file_path)).toBe(true);
+    expect(resultText.file_path.startsWith(TMP_DIR)).toBe(true);
+  });
+
+  it('TC-43: relative file_path outside the workspace root fails with resolved path in error (D2 regression)', async () => {
+    const res = await postMcp(port, {
+      jsonrpc: '2.0', id: 15, method: 'tools/call',
+      params: { name: 'drawio_export_png', arguments: { file_path: 'missing-under-root.drawio' } },
+    });
+
+    expect(res.body.error).toBeDefined();
+    expect(res.body.error.message).toContain('Failed to read file');
+    expect(res.body.error.message).toContain(path.join(TMP_DIR, 'missing-under-root.drawio'));
+  });
+
   it('TC-30: Backend unreachable returns JSON-RPC error', async () => {
     const { server: s2, deps: d2 } = createTestServer({
       restCallTool: async () => { throw new Error('ECONNREFUSED'); },

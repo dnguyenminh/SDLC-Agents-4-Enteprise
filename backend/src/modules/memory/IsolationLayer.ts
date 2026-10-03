@@ -8,6 +8,7 @@
  * - validateMutationOwnership()    — pre-mutation ownership check
  * - validateReadAccess()           — post-fetch scope validation (TA Decision #1)
  * - buildIngestFileDeleteClause()  — scoped deduplication (TA Decision #4)
+ * - buildIngestFileStaleTaskDeleteClause() — child-first cleanup before re-ingest (D3)
  */
 
 import type { ProjectContext, ScopeFilter, WriteDecorator, MutationValidation } from './ProjectContext.js';
@@ -97,6 +98,32 @@ export function buildIngestFileDeleteClause(
   }
   return {
     clause: 'DELETE FROM knowledge_entries WHERE source = ?',
+    params: [source],
+  };
+}
+
+/**
+ * Child-first cleanup for mem_ingest_file deduplication (D3 follow-up).
+ *
+ * pending_tasks.entry_id FK (migration 003) has NO ON DELETE CASCADE — the
+ * Postgres equivalent was dropped by SA4E-171, but SQLite keeps it enforced
+ * (PRAGMA foreign_keys=ON). Deleting knowledge_entries rows that still have
+ * enrichment tasks fails with SQLITE_CONSTRAINT_FOREIGNKEY during re-ingest,
+ * so callers MUST run this clause before buildIngestFileDeleteClause.
+ * Predicate mirrors buildIngestFileDeleteClause exactly.
+ */
+export function buildIngestFileStaleTaskDeleteClause(
+  ctx: ProjectContext | undefined,
+  source: string,
+): { clause: string; params: unknown[] } {
+  if (ctx?.projectId) {
+    return {
+      clause: 'DELETE FROM pending_tasks WHERE entry_id IN (SELECT id FROM knowledge_entries WHERE source = ? AND (project_id = ? OR project_id IS NULL))',
+      params: [source, ctx.projectId],
+    };
+  }
+  return {
+    clause: 'DELETE FROM pending_tasks WHERE entry_id IN (SELECT id FROM knowledge_entries WHERE source = ?)',
     params: [source],
   };
 }

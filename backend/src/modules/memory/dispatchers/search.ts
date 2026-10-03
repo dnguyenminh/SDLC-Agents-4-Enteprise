@@ -11,14 +11,15 @@ type Args = Record<string, unknown>;
 export async function handleSearch(engine: MemoryEngine, scopeCtx: ScopeContext | undefined, a: Args): Promise<string> {
   const query = a.query as string;
   if (!query) return 'Error: query required';
-  const scope = a.scope as string | undefined;
-  const scopeCtxResolved = scope === 'all' ? undefined : scopeCtx;
   const limit = (a.limit as number) ?? 10;
-  // SA4E-331: fail closed if no scope context for PROJECT isolation
-  if (!scopeCtxResolved?.projectId) {
+  // SA4E-331: fail closed if no scope context for PROJECT isolation.
+  // SA4E-26: scope='all' does NOT bypass isolation — it searches every scope
+  // visible to the caller's project (default context already covers WORKSPACE +
+  // PROJECT + SHARED), so the project context is kept instead of dropped.
+  if (!scopeCtx?.projectId) {
     return `No knowledge found for "${query}"`;
   }
-  const results = await engine.search(query, limit, a.tier as string, undefined, scopeCtxResolved);
+  const results = await engine.search(query, limit, a.tier as string, undefined, scopeCtx);
   await engine.auditLog('SEARCH');
   for (const r of results) await engine.recordAccess(r.entry.id);
   const lines: string[] = [];
@@ -38,7 +39,7 @@ export async function handleSearch(engine: MemoryEngine, scopeCtx: ScopeContext 
   }
 
   // SA4E-79: Append pending entries that need client-side enrichment (max 3)
-  const pendingHits = await queryPendingEntries(engine, scopeCtxResolved);
+  const pendingHits = await queryPendingEntries(engine, scopeCtx);
   if (pendingHits.length > 0) {
     lines.push('--- Pending Entries (need enrichment) ---\n');
     pendingHits.forEach((pe, idx) => {

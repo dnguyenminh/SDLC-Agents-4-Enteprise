@@ -39,8 +39,10 @@ describe('E2E-API: File Ingest → Entry Creation', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  // E2E-API-01: Full cycle — 3-section file → entries created
-  it('E2E-API-01: ingests 3-section file and creates entries', async () => {
+  // E2E-API-01: Full cycle — 3-section file → single full-content entry
+  // SA4E-163: UNIQUE(source, project_id) + UPSERT → one row per file holds the
+  // full document (section chunks collapse onto the same source key).
+  it('E2E-API-01: ingests 3-section file as a single entry with full content', async () => {
     const mdFile = path.join(tmpDir, 'test.md');
     const lines = [
       '# Section 1: Authentication',
@@ -61,35 +63,37 @@ describe('E2E-API: File Ingest → Entry Creation', () => {
     const result = await handleIngestFile(ctx.engine, undefined, tmpDir, { file_path: mdFile });
     const parsed = JSON.parse(result);
     expect(parsed.status).toBe('ingested');
-    expect(parsed.entries).toBe(3);
+    expect(parsed.entries).toBe(1);
 
-    // Verify entries exist with structured_map default
+    // Verify a single entry with structured_map default
     const matched = await getEntriesBySource(ctx, 'test.md');
-    expect(matched.length).toBe(3);
+    expect(matched.length).toBe(1);
 
-    for (const entry of matched) {
-      expect(entry.structured_map).toBe('{}');
-      expect(entry.source).toContain('test.md');
-    }
+    expect(matched[0].structured_map).toBe('{}');
+    expect(matched[0].source).toContain('test.md');
+    // Full content spans all sections (not a single collapsed chunk)
+    expect(matched[0].content).toContain('authentication flow with JWT tokens');
+    expect(matched[0].content).toContain('authorization rules and role-based');
+    expect(matched[0].content).toContain('session handling and token refresh');
   });
 
   // E2E-API-02: Context chain flows through entry creation
-  it('E2E-API-02: ingest creates entries with correct source and defaults', async () => {
+  it('E2E-API-02: ingest creates entry with correct source and defaults', async () => {
     const mdFile = path.join(tmpDir, 'test.md');
     fs.writeFileSync(mdFile, '# Section 1\n\nContent 1\n\n## Section 2\n\nContent 2\n');
 
     const result = await handleIngestFile(ctx.engine, undefined, tmpDir, { file_path: mdFile });
     const parsed = JSON.parse(result);
     expect(parsed.status).toBe('ingested');
-    expect(parsed.entries).toBe(2);
+    expect(parsed.entries).toBe(1);
 
     const matched = await getEntriesBySource(ctx, 'test.md');
-    expect(matched.length).toBe(2);
+    expect(matched.length).toBe(1);
 
-    // Each entry has default structured_map = '{}'
-    for (const entry of matched) {
-      expect(entry.structured_map).toBe('{}');
-    }
+    // Entry has default structured_map = '{}'
+    expect(matched[0].structured_map).toBe('{}');
+    expect(matched[0].content).toContain('Content 1');
+    expect(matched[0].content).toContain('Content 2');
   });
 
   // E2E-API-04: Ingest with LLM-unavailable scenario

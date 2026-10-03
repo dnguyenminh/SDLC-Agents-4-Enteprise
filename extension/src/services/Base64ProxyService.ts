@@ -24,6 +24,13 @@ export class Base64ProxyService {
   private base64InputTools = new Set<string>();
   private base64OutputTools = new Set<string>();
 
+  /**
+   * @param workspaceRoot Project/workspace root used to resolve relative
+   *   file paths. Without it, relative paths fall back to process.cwd() —
+   *   which is the Kiro install dir for the wrapper host (ENOENT).
+   */
+  constructor(private readonly workspaceRoot?: string) {}
+
   /** Scan tool list from backend and auto-detect proxy requirements. */
   detectFromToolList(tools: ToolSchema[]): void {
     this.base64InputTools.clear();
@@ -59,11 +66,12 @@ export class Base64ProxyService {
     const filePath = args.file_path as string | undefined;
     if (!filePath || args.content_base64) return args;
     const newArgs = { ...args };
+    const resolvedPath = this.resolvePath(filePath);
     try {
-      const buf = fs.readFileSync(filePath);
+      const buf = fs.readFileSync(resolvedPath);
       newArgs.content_base64 = buf.toString("base64");
     } catch (err: any) {
-      throw new Error(`Failed to read file ${filePath}: ${err.message}`);
+      throw new Error(`Failed to read file ${resolvedPath}: ${err.message}`);
     }
     return newArgs;
   }
@@ -118,6 +126,17 @@ export class Base64ProxyService {
 
   // --- Private detection helpers ---
 
+  /**
+   * Resolve a possibly-relative path against the workspace root.
+   * Absolute paths are returned unchanged. Relative paths resolve against the
+   * configured workspace root (falling back to process.cwd() only when no root
+   * is known) — process.cwd() of the wrapper host is the Kiro install dir.
+   */
+  private resolvePath(filePath: string): string {
+    if (path.isAbsolute(filePath)) return filePath;
+    return path.resolve(this.workspaceRoot ?? process.cwd(), filePath);
+  }
+
   private hasBase64InputParam(tool: ToolSchema): boolean {
     const schema = tool.inputSchema;
     if (!schema) return false;
@@ -157,11 +176,12 @@ export class Base64ProxyService {
   }
 
   private resolveOutputPath(toolName: string, args: Record<string, unknown>): string | null {
-    if (args.output_path) return args.output_path as string;
+    if (args.output_path) return this.resolvePath(args.output_path as string);
     const fp = args.file_path as string | undefined;
     if (!fp) return null;
-    if (fp.endsWith(".drawio")) return fp.replace(/\.drawio$/, ".png");
-    return fp + ".out";
+    const resolved = this.resolvePath(fp);
+    if (resolved.endsWith(".drawio")) return resolved.replace(/\.drawio$/, ".png");
+    return resolved + ".out";
   }
 
   private extractText(result: any): string | null {

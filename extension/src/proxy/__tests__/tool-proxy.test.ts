@@ -73,6 +73,29 @@ describe("ToolProxy", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
+  it("callTool resolves relative mem_ingest_file against the workspace root (D2 regression)", async () => {
+    const vscode = await import("vscode");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "toolproxy-rel-"));
+    const prevFolders = vscode.workspace.workspaceFolders;
+    (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = [
+      { uri: { fsPath: dir, path: dir }, name: "ws", index: 0 },
+    ];
+    fs.writeFileSync(path.join(dir, "rel-notes.md"), "relative content", "utf-8");
+    try {
+      await proxy.callTool("mem_ingest_file", { file_path: "rel-notes.md" });
+      expect(httpClient.callTool).toHaveBeenCalledWith(
+        "mem_ingest_file",
+        expect.objectContaining({
+          file_path: path.resolve(dir, "rel-notes.md"),
+          content: "relative content",
+        })
+      );
+    } finally {
+      (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = prevFolders;
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("callTool wraps unreadable files in an error payload", async () => {
     const result = await proxy.callTool("mem_ingest_file", { file_path: "C:/nothing/here.ts" });
     expect(result.content[0].text).toContain("Cannot read local file");

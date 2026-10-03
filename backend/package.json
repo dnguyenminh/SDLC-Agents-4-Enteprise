@@ -16,13 +16,14 @@
     "test:watch": "vitest",
     "test:unit": "vitest run src/",
     "test:integration": "vitest run tests/integration/",
+    "test:contract": "vitest run tests/contract/",
     "test:e2e-api": "vitest run --config vitest.e2e.config.ts",
     "test:e2e-ui": "npx playwright test",
     "lint": "npx eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix",
     "lint:lines": "bash ../scripts/check-line-count.sh",
     "pega:generate": "node scripts/pega-generate-parser.mjs",
-    "check:ci": "npm run lint && npm run lint:lines && npm run build && npm run test:unit",
+    "check:ci": "npm run lint && npm run lint:lines && npm run build && npm run test:unit && npm run test:contract",
     "prepare": "node -e \"process.exit(0)\""
   },
   "keywords": [

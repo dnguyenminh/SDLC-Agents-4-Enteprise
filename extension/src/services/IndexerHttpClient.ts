@@ -5,6 +5,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { httpPostJson as utilHttpPostJson } from "../utils/http-client-utils";
+// SA4E-261: unified extension whitelist shared with backend/src/config/unified-extensions.ts
+import { UNIFIED_EXTENSIONS } from "./unified-extensions.js";
 
 export interface DocEntry {
     path: string;
@@ -236,7 +238,7 @@ export class IndexerHttpClient {
         // Priority 1: Project source code (exclude all library/vendor directories at ANY depth)
         const libraryExcludes = "**/{node_modules,dist,.git,build,out,.opencode,vendor,packages,bower_components,.kilo,scratch,.code-intel,.analysis,SDLC-Agents-4-Enterprise}/**";
         const projectFiles = await vscode.workspace.findFiles(
-            "**/*.{ts,tsx,kt,java,py,go,rs}", libraryExcludes
+            `**/*.{${UNIFIED_EXTENSIONS.join(',')}}`, libraryExcludes
         );
 
         if (projectFiles.length === 0) { return { uploaded: 0, errors: 0, summary: "ℹ️ No source files found" }; }

@@ -9,7 +9,7 @@ import type { KBScope, ScopeContext } from '../models.js';
 import type { TagAnalyzerService } from '../llm/analyzer.js';
 import type { ProjectContext } from '../ProjectContext.js';
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
-import { validateReadAccess, validateMutationOwnership, buildIngestFileDeleteClause } from '../IsolationLayer.js';
+import { validateReadAccess, validateMutationOwnership, buildIngestFileDeleteClause, buildIngestFileStaleTaskDeleteClause } from '../IsolationLayer.js';
 import { tierForType, inferOwner, resolvePath } from './helpers.js';
 import { classifyFormat, normalizeExt } from '../ingest/FormatClassifier.js';
 import type { ConvertToolResolver } from '../ingest/ConvertToolResolver.js';
@@ -216,6 +216,13 @@ export async function handleIngestFile(
         await adminAdapter.runAsync(`DELETE FROM graph_nodes WHERE entry_id IN (${idList})`, []);
       }
     } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale graph nodes (non-fatal)'); }
+    // D3 follow-up: pending_tasks.entry_id FK (migration 003) has no ON DELETE
+    // CASCADE — remove stale enrichment tasks for the rows being replaced BEFORE
+    // deleting them, otherwise re-ingest fails with SQLITE_CONSTRAINT_FOREIGNKEY.
+    try {
+      const staleTasks = buildIngestFileStaleTaskDeleteClause(scopeCtx as ProjectContext, filePath);
+      await engine.getAdapter().runAsync(staleTasks.clause, staleTasks.params);
+    } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale pending tasks (non-fatal)'); }
     await engine.getAdapter().runAsync(clause, params);
   } else {
     // Delete stale graph nodes before removing KB entries (while IDs still exist)
@@ -230,6 +237,11 @@ export async function handleIngestFile(
         await adminAdapter.runAsync(`DELETE FROM graph_nodes WHERE entry_id IN (${idList})`, []);
       }
     } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale graph nodes (non-fatal)'); }
+    // D3 follow-up: child-first cleanup (see scopeCtx path above).
+    try {
+      const staleTasks = buildIngestFileStaleTaskDeleteClause(undefined, filePath);
+      await engine.getAdapter().runAsync(staleTasks.clause, staleTasks.params);
+    } catch (err) { logger.debug({ err }, '[ingest-file] Failed to delete stale pending tasks (non-fatal)'); }
     await engine.getAdapter().runAsync('DELETE FROM knowledge_entries WHERE source = ?', [filePath]);
   }
 
@@ -237,55 +249,57 @@ export async function handleIngestFile(
   text = text.split('\x00').join('');
 
   const sections = text.split(/^#{1,3}\s+/m).filter(s => s.trim());
-  let created = 0;
   const fileMeta = loadFileMetadata(workspace);
   const meta = fileMeta[filePath.replace(/\\/g, '/')];
   const structuredMap = meta ? JSON.stringify({ fileCreatedAt: meta.fileCreatedAt, fileAuthor: meta.fileAuthor, fileVersion: meta.fileVersion }) : undefined;
   const taskRepo = dbAdapter ? new PendingTaskRepository(dbAdapter) : undefined;
 
-  for (const sec of (sections.length > 0 ? sections : [text])) {
-    const summary = sec.split('\n')[0]?.trim().slice(0, 120) || filePath;
-    const id = await engine.insert({ content: sec.trim(), summary, type, tier: tierForType(type), scope, user_id: userId, project_id: scopeCtx?.projectId ?? null, source: filePath, tags: '' });
-    // NEW-01: Mark as pending — TAG_ENRICHMENT task will process later
-    try {
-      await engine.getAdapter().runAsync(
-        `UPDATE knowledge_entries SET enrichment_status = 'pending' WHERE id = ?`,
-        [id],
-      );
-    } catch (err) { logger.debug({ err }, '[ingest-file] Failed to set enrichment_status (column may not exist pre-migration)'); }
-    if (structuredMap) {
-      await engine.updateStructuredMap(id, structuredMap);
+  // SA4E-163 design: UNIQUE(source, project_id) + UPSERT means ONE row per file
+  // holds the FULL document content (section chunks would collapse onto the same
+  // source anyway). Summary comes from the first section heading.
+  const summary = (sections[0] ?? text).split('\n')[0]?.trim().slice(0, 120) || filePath;
+  const id = await engine.insert({
+    content: text, summary, type, tier: tierForType(type), scope,
+    user_id: userId, project_id: scopeCtx?.projectId ?? null, source: filePath, tags: '',
+  });
+  // NEW-01: Mark as pending — TAG_ENRICHMENT task will process later
+  try {
+    await engine.getAdapter().runAsync(
+      `UPDATE knowledge_entries SET enrichment_status = 'pending' WHERE id = ?`,
+      [id],
+    );
+  } catch (err) { logger.debug({ err }, '[ingest-file] Failed to set enrichment_status (column may not exist pre-migration)'); }
+  if (structuredMap) {
+    await engine.updateStructuredMap(id, structuredMap);
+  }
+  if (taskRepo) {
+    await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content: text, existing_tags: '', options: { threshold: 0.6, autoApply: true } } });
+    if (embeddingAvailable) {
+      await taskRepo.create({ task_type: TaskType.VECTOR_EMBEDDING, entry_id: id, payload: { entry_id: id, text: `${summary} ${text}`.slice(0, 4000) } });
     }
-    if (taskRepo) {
-      await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content: sec.trim(), existing_tags: '', options: { threshold: 0.6, autoApply: true } } });
-      if (embeddingAvailable) {
-        await taskRepo.create({ task_type: TaskType.VECTOR_EMBEDDING, entry_id: id, payload: { entry_id: id, text: `${summary} ${sec.trim()}`.slice(0, 4000) } });
-      }
-    }
-    created++;
-    await upsertGraphNode(id, summary, type, scopeCtx?.projectId ?? null);
-    try {
-      await extractAndInsertIngestEdges(engine.getAdapter(), {
-        entryId: id,
-        content: sec.trim(),
-        source: filePath,
-        tags: '',
-        type,
-        projectId: scopeCtx?.projectId ?? null,
-      });
-    } catch (err) {
-      logger.warn({ err }, '[edge-on-ingest] Non-blocking edge extraction failed for file ingest');
-    }
+  }
+  await upsertGraphNode(id, summary, type, scopeCtx?.projectId ?? null);
+  try {
+    await extractAndInsertIngestEdges(engine.getAdapter(), {
+      entryId: id,
+      content: text,
+      source: filePath,
+      tags: '',
+      type,
+      projectId: scopeCtx?.projectId ?? null,
+    });
+  } catch (err) {
+    logger.warn({ err }, '[edge-on-ingest] Non-blocking edge extraction failed for file ingest');
   }
   await engine.auditLog('INGEST_FILE');
 
-  if (created > 5) {
+  if (sections.length > 5) {
     const epochSvc = new EpochService(engine.getAdapter(), logger);
     const epochId = `epoch-ingest-${Date.now()}`;
     epochSvc.trigger('BULK_INGEST', epochId).catch(() => {});
   }
 
-  return JSON.stringify({ status: 'ingested', entries: created, file: filePath } satisfies IngestFileResponse);
+  return JSON.stringify({ status: 'ingested', entries: 1, file: filePath } satisfies IngestFileResponse);
 }
 
 export async function handlePin(a: Args, engine?: MemoryEngine): Promise<string> {

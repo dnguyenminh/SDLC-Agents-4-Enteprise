@@ -44,7 +44,7 @@ export class RemoteBackendClient implements vscode.Disposable {
   readonly onStatusChange = this._onStatusChange.event;
   private readonly _onNotification = new vscode.EventEmitter<{ method: string; params?: any }>();
   public readonly onNotification = this._onNotification.event;
-  private readonly base64Proxy = new Base64ProxyService();
+  private readonly base64Proxy: Base64ProxyService;
   private wrapperServer: WrapperServer | null = null;
 
   constructor(
@@ -55,6 +55,9 @@ export class RemoteBackendClient implements vscode.Disposable {
     secrets?: vscode.SecretStorage
   ) {
     this._port = extractPort(backendUrl);
+    // Relative file_path args resolve against the workspace root (not the
+    // extension host's cwd, which is the Kiro install dir → ENOENT).
+    this.base64Proxy = new Base64ProxyService(workspaceFolder);
     if (secrets) {
       try {
         registerPegaLocalTools(new PegaMcpTools(secrets));

@@ -106,4 +106,36 @@ describe('SA4E-331 UT — mem_search cross-project access control', () => {
     const result = await handleSearch(engine, undefined, { query: 'project A', limit: 10 });
     expect(result).toContain('No knowledge found');
   });
+
+  // ── scope='all' regression (D1) ──────────────────────────────────
+
+  it('mem_search scope=all WITH project context returns results (regression: was fail-closed)', async () => {
+    const result = await handleSearch(
+      engine,
+      { userId: 'user-1', projectId: '22b039993db3' },
+      { query: 'project A', limit: 10, scope: 'all' },
+    );
+    expect(result).toContain('Found 1 results');
+    expect(result).toContain('proj A entry');
+  });
+
+  it('mem_search scope=all does not leak other projects (SA4E-331 preserved)', async () => {
+    const result = await handleSearch(
+      engine,
+      { userId: 'user-1', projectId: 'other-project' },
+      { query: 'project', limit: 10, scope: 'all' },
+    );
+    expect(result).not.toContain('proj A entry');
+    expect(result).toContain('proj B entry');
+  });
+
+  it('mem_search scope=all without project context stays fail-closed (SA4E-331 preserved)', async () => {
+    const result = await handleSearch(engine, undefined, { query: 'project A', limit: 10, scope: 'all' });
+    expect(result).toContain('No knowledge found');
+  });
+
+  it('mem_search scope=all with empty projectId stays fail-closed (SA4E-331 preserved)', async () => {
+    const result = await handleSearch(engine, { userId: 'user-1', projectId: '' }, { query: 'project A', limit: 10, scope: 'all' });
+    expect(result).toContain('No knowledge found');
+  });
 });

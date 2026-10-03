@@ -253,6 +253,58 @@ describe('Base64ProxyService', () => {
     }).toThrow(/Failed to read file/);
   });
 
+  it('TC-44: proxyInput resolves relative file_path against the workspace root (D2 regression)', () => {
+    const rooted = new Base64ProxyService(TMP_DIR);
+    rooted.detectFromToolList([
+      {
+        name: 'drawio_export_png',
+        description: 'Export drawio to PNG. Returns output_base64 field.',
+        inputSchema: {
+          type: 'object',
+          properties: { file_path: { type: 'string' }, content_base64: { type: 'string' } },
+          required: ['content_base64'],
+        },
+      },
+    ]);
+    fs.writeFileSync(path.join(TMP_DIR, 'rel-input.txt'), 'relative hello');
+    const result = rooted.proxyInput('drawio_export_png', { file_path: 'rel-input.txt' });
+    expect(result.content_base64).toBe(Buffer.from('relative hello').toString('base64'));
+    // Absolute paths stay unchanged
+    const abs = path.join(TMP_DIR, 'rel-input.txt');
+    const absResult = rooted.proxyInput('drawio_export_png', { file_path: abs });
+    expect(absResult.file_path).toBe(abs);
+    // Missing relative file reports the workspace-resolved path
+    expect(() => rooted.proxyInput('drawio_export_png', { file_path: 'nope.txt' }))
+      .toThrow(new RegExp(`Failed to read file ${path.join(TMP_DIR, 'nope.txt').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  });
+
+  it('TC-45: proxyOutput resolves relative output_path against the workspace root (D2 regression)', () => {
+    const rooted = new Base64ProxyService(TMP_DIR);
+    rooted.detectFromToolList([
+      {
+        name: 'drawio_export_png',
+        description: 'Export drawio to PNG. Returns output_base64 field.',
+        inputSchema: {
+          type: 'object',
+          properties: { file_path: { type: 'string' } },
+          required: [],
+        },
+      },
+    ]);
+    const b64 = Buffer.from('ROOTED-PNG').toString('base64');
+    const mockResult = { content: [{ type: 'text', text: JSON.stringify({ output_base64: b64 }) }] };
+    const result = rooted.proxyOutput(
+      'drawio_export_png',
+      { file_path: 'rel-input.drawio' },
+      mockResult
+    );
+    const expectedOut = path.join(TMP_DIR, 'rel-input.png');
+    expect(fs.existsSync(expectedOut)).toBe(true);
+    expect(fs.readFileSync(expectedOut).toString()).toBe('ROOTED-PNG');
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.file_path).toBe(expectedOut);
+  });
+
   it('TC-16: proxyInput passes through if tool not in set', () => {
     const args = { query: 'test' };
     const result = service.proxyInput('code_search', args);

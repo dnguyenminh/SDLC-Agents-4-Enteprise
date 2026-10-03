@@ -55,7 +55,9 @@ export function createTestServer(overrides?: Partial<MockDeps>): { server: Wrapp
   const restGetToolsMock = { tools: [...TOOL_SCHEMAS] };
   const restCallToolMock = { calls: [] as Array<{ name: string; args: any }>, result: {} as any };
 
-  const base64Proxy = new Base64ProxyService();
+  // Workspace root = TMP_DIR so relative file_path args resolve inside it
+  // (mirrors RemoteBackendClient wiring the real workspace folder — D2 fix).
+  const base64Proxy = new Base64ProxyService(TMP_DIR);
   const deps: MockDeps = {
     outputChannel: createMockOutputChannel(),
     base64Proxy,
