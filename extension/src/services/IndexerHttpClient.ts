@@ -44,6 +44,7 @@ export class IndexerHttpClient {
     private onTokenRefreshed?: (token: string) => void;
     private lastRefreshedToken?: string;
     private static outputChannel?: vscode.OutputChannel;
+    private _autoRegisterAttempted = false;
 
     constructor(private readonly backendUrl: string) {}
 
@@ -123,10 +124,39 @@ export class IndexerHttpClient {
         this.lastRefreshedToken = token;
         try { this.onTokenRefreshed?.(token); } catch { /* non-fatal */ }
     }
-    /** Expose backend base URL for other callers. */
-    getBaseUrl(): string { return this.backendUrl; }
+	/** Expose backend base URL for other callers. */
+	getBaseUrl(): string { return this.backendUrl; }
 
-    /**
+	/** SA4E-215: Auto-register project if backend reports PROJECT_NOT_REGISTERED. */
+	private async maybeAutoRegister(token?: string): Promise<boolean> {
+		if (this._autoRegisterAttempted) return false;
+		this._autoRegisterAttempted = true;
+		const workspaceFolders = vscode.workspace.workspaceFolders;
+		const workspaceFolder = workspaceFolders?.[0]?.uri.fsPath || '';
+		const folderName = workspaceFolder ? path.basename(workspaceFolder) : 'unknown';
+		const { getProjectId } = await import("../extension");
+		const projectId = getProjectId();
+		if (!projectId) return false;
+		try {
+			const headers = await this.buildHeaders(token);
+			const resp = await fetch(`${this.backendUrl}/api/admin/projects/register`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', ...headers },
+				body: JSON.stringify({ projectId, displayName: folderName, workspacePath: workspaceFolder }),
+				signal: AbortSignal.timeout(15000),
+			});
+			if (resp.ok) {
+				IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] Auto-registered project: ${projectId}`);
+				return true;
+			}
+			return false;
+		} catch (err) {
+			IndexerHttpClient.getIndexerOutput().appendLine(`[IndexerHttpClient] Auto-register failed: ${(err as Error).message}`);
+			return false;
+		}
+	}
+
+	/**
      * SA4E-99: Poll /api/index/progress until idle. Shows status bar progress.
      * Resolves when indexing completes or times out after maxWaitMs.
      */
@@ -539,19 +569,32 @@ export class IndexerHttpClient {
      * operations (e.g. Pega crawl of hundreds of rules) can outlive the JWT, so the
      * final sync POST must refresh rather than fail with Unauthorized.
      */
-    private async httpPostJson(url: string, payload: unknown, token: string | undefined): Promise<{ ok: boolean; body: string }> {
-        const first = await this.httpPostJsonOnce(url, payload, token);
-        if (first.status !== 401 || !this.tokenRefresher) {
-            return { ok: first.status >= 200 && first.status < 300, body: first.body };
-        }
-        // Token likely expired mid-operation — refresh once and retry.
-        const freshToken = await this.tokenRefresher();
-        if (!freshToken) { return { ok: false, body: first.body }; }
-        // SA4E-300 GAP 3: propagate refreshed token outward
-        this.notifyTokenRefreshed(freshToken);
-        const retry = await this.httpPostJsonOnce(url, payload, freshToken);
-        return { ok: retry.status >= 200 && retry.status < 300, body: retry.body };
-    }
+	private async httpPostJson(url: string, payload: unknown, token: string | undefined): Promise<{ ok: boolean; body: string }> {
+		const first = await this.httpPostJsonOnce(url, payload, token);
+		// SA4E-215: Auto-register project if not registered
+		if (first.status === 404 && first.body) {
+			try {
+				const body = JSON.parse(first.body);
+				if (body?.__error?.error?.code === 'PROJECT_NOT_REGISTERED') {
+					const registered = await this.maybeAutoRegister(token);
+					if (registered) {
+						const retry = await this.httpPostJsonOnce(url, payload, token);
+						return { ok: retry.status >= 200 && retry.status < 300, body: retry.body };
+					}
+				}
+			} catch { /* not JSON, proceed normally */ }
+		}
+		if (first.status !== 401 || !this.tokenRefresher) {
+			return { ok: first.status >= 200 && first.status < 300, body: first.body };
+		}
+		// Token likely expired mid-operation — refresh once and retry.
+		const freshToken = await this.tokenRefresher();
+		if (!freshToken) { return { ok: false, body: first.body }; }
+		// SA4E-300 GAP 3: propagate refreshed token outward
+		this.notifyTokenRefreshed(freshToken);
+		const retry = await this.httpPostJsonOnce(url, payload, freshToken);
+		return { ok: retry.status >= 200 && retry.status < 300, body: retry.body };
+	}
 
     /** Single POST attempt returning HTTP status + raw body (status 0 on network error). */
     private async httpPostJsonOnce(url: string, payload: unknown, token: string | undefined): Promise<{ status: number; body: string }> {
@@ -579,23 +622,38 @@ export class IndexerHttpClient {
             .catch(() => false);
     }
 
-    /** POST with detailed error info for user-facing error reporting. */
-    private async httpPostWithDetail(url: string, payload: unknown, token: string | undefined): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number }> {
-        const headers = await this.buildHeaders(token);
-        try {
-            const result = await utilHttpPostJson<any>(url, payload, { headers, timeoutMs: 60000 });
-            return { ok: true, error: "", status: 200 };
-        } catch (err: any) {
-            const status = err?.statusCode || err?.status || 0;
-            const body = err?.body || {};
-            const errorMsg = body?.error || err?.message || String(err);
-            const details = body?.details;
-            const action = body?.action;
-            if (status === 401) return { ok: false, error: "Unauthorized", details, action, status: 401 };
-            // SA4E-300 GAP 3: widened from 200 → 500 chars so important details survive
-            return { ok: false, error: String(errorMsg).slice(0, 500), details, action, status };
-        }
-    }
+	/** POST with detailed error info for user-facing error reporting. */
+	private async httpPostWithDetail(url: string, payload: unknown, token: string | undefined): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number }> {
+		const headers = await this.buildHeaders(token);
+		try {
+			const result = await utilHttpPostJson<any>(url, payload, { headers, timeoutMs: 60000 });
+			return { ok: true, error: "", status: 200 };
+		} catch (err: any) {
+			const status = err?.statusCode || err?.status || 0;
+			const body = err?.body || {};
+			const errorMsg = body?.error || err?.message || String(err);
+			const details = body?.details;
+			const action = body?.action;
+			if (status === 401) return { ok: false, error: "Unauthorized", details, action, status: 401 };
+			// SA4E-215: Auto-register project if not registered
+			if (status === 404 && body?.__error?.error?.code === 'PROJECT_NOT_REGISTERED') {
+				const registered = await this.maybeAutoRegister(token);
+				if (registered) {
+					// Retry original request
+					try {
+						await utilHttpPostJson<any>(url, payload, { headers, timeoutMs: 60000 });
+						return { ok: true, error: "", status: 200 };
+					} catch (retryErr: any) {
+						const rStatus = retryErr?.statusCode || retryErr?.status || 0;
+						const rBody = retryErr?.body || {};
+						return { ok: false, error: String(rBody?.error || retryErr?.message || retryErr).slice(0, 500), details: rBody?.details, action: rBody?.action, status: rStatus };
+					}
+				}
+			}
+			// SA4E-300 GAP 3: widened from 200 → 500 chars so important details survive
+			return { ok: false, error: String(errorMsg).slice(0, 500), details, action, status };
+		}
+	}
 
     /** Build standard auth + project-id headers. */
     private async buildHeaders(token: string | undefined): Promise<Record<string, string>> {
@@ -662,19 +720,32 @@ export class IndexerHttpClient {
      * On 401, refreshes the token once (if a refresher is set) and retries — the
      * extension is responsible for keeping its JWT fresh against the remote backend.
      */
-    private async httpGet(url: string, token: string | undefined): Promise<{ ok: boolean; body: string }> {
-        const first = await this.httpGetOnce(url, token);
-        if (first.status !== 401 || !this.tokenRefresher) {
-            return { ok: first.status === 200, body: first.body };
-        }
-        // Token likely expired — refresh once and retry with the fresh token.
-        const freshToken = await this.tokenRefresher();
-        if (!freshToken) { return { ok: false, body: first.body }; }
-        // SA4E-300 GAP 3: propagate refreshed token outward
-        this.notifyTokenRefreshed(freshToken);
-        const retry = await this.httpGetOnce(url, freshToken);
-        return { ok: retry.status === 200, body: retry.body };
-    }
+	private async httpGet(url: string, token: string | undefined): Promise<{ ok: boolean; body: string }> {
+		const first = await this.httpGetOnce(url, token);
+		// SA4E-215: Auto-register project if not registered
+		if (first.status === 404 && first.body) {
+			try {
+				const body = JSON.parse(first.body);
+				if (body?.__error?.error?.code === 'PROJECT_NOT_REGISTERED') {
+					const registered = await this.maybeAutoRegister(token);
+					if (registered) {
+						const retry = await this.httpGetOnce(url, token);
+						return { ok: retry.status === 200, body: retry.body };
+					}
+				}
+			} catch { /* not JSON, proceed normally */ }
+		}
+		if (first.status !== 401 || !this.tokenRefresher) {
+			return { ok: first.status === 200, body: first.body };
+		}
+		// Token likely expired — refresh once and retry with the fresh token.
+		const freshToken = await this.tokenRefresher();
+		if (!freshToken) { return { ok: false, body: first.body }; }
+		// SA4E-300 GAP 3: propagate refreshed token outward
+		this.notifyTokenRefreshed(freshToken);
+		const retry = await this.httpGetOnce(url, freshToken);
+		return { ok: retry.status === 200, body: retry.body };
+	}
 
     private static lastTimeoutLog = 0;
     /** Single GET attempt returning HTTP status + raw body (status 0 on network error). */

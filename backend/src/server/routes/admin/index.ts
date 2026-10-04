@@ -46,14 +46,62 @@ function createProjectsRoutes(ctx: AdminContext): Hono {
       return c.json({ projects: [] });
     }
   });
+  /** POST /api/admin/projects/register — register/upsert a project in project_registry. */
+  app.post('/api/admin/projects/register', async (c) => {
+    const user = await ctx.requireAuth(c);
+    if (user instanceof Response) return user;
+    try {
+      const body = await c.req.json().catch(() => ({}));
+      const projectId = body.projectId as string | undefined;
+      if (!projectId) return c.json({ error: 'projectId is required' }, 400);
+      const adapter = getDbAdapter();
+      await adapter.runAsync(
+        `INSERT INTO project_registry (project_id, display_name, workspace_path, created_by, last_seen)
+         VALUES (?, ?, ?, ?, current_timestamp)
+         ON CONFLICT(project_id) DO UPDATE SET
+            display_name = EXCLUDED.display_name,
+            workspace_path = EXCLUDED.workspace_path,
+            last_seen = current_timestamp`,
+        [projectId, body.displayName || '', body.workspacePath || '', body.createdBy || user.userId]
+      );
+      const row = await adapter.getAsync<{ project_id: string; display_name: string; workspace_path: string }>(
+        'SELECT project_id, display_name, workspace_path FROM project_registry WHERE project_id = ?',
+        [projectId]
+      );
+      return c.json({ success: true, project: row });
+    } catch (err: any) {
+      ctx.logger.error({ err }, 'Register project error');
+      return c.json({ __error: true, error: { code: 'INTERNAL_ERROR', message: err.message } }, 500);
+    }
+  });
   return app;
 }
 
 export function createAdminRoute(logger: Logger, registry?: any): Hono {
   const ctx = createAdminContext(logger, registry);
-  // getAdminDb() removed — only called when engine is sqlite (lazy init)
-
   const app = new Hono();
+
+  // Middleware: ensure project is registered for all admin routes
+  app.use('*', async (c, next) => {
+    const path = c.req.path;
+    const method = c.req.method;
+    // Skip auth routes, static routes, GET projects list, and POST register
+    // Skip non-project-scoped routes: auth, users, RBAC, config, database, SSO, static, SA4E-215, projects list/register
+    if (path.startsWith('/api/admin/auth') || path.startsWith('/auth')) { return next(); }
+    if (path.startsWith('/api/admin/users') || path.startsWith('/api/admin/impersonate') || path.startsWith('/api/admin/profile')) { return next(); }
+    if (path.startsWith('/api/admin/rbac')) { return next(); }
+    if (path.startsWith('/api/admin/config') || path.startsWith('/api/admin/llm')) { return next(); }
+    if (path.startsWith('/api/admin/database')) { return next(); }
+    if (path.startsWith('/api/admin/sso-providers')) { return next(); }
+    if (path.startsWith('/api/sa4e-215')) { return next(); }
+    if (path.startsWith('/admin') || path.startsWith('/static')) { return next(); }
+    if (path === '/api/admin/projects' && method === 'GET') { return next(); }
+    if (path === '/api/admin/projects/register' && method === 'POST') { return next(); }
+    const result = await ctx.ensureProjectRegistered(c);
+    if (result instanceof Response) return result;
+    if (result === '') return next(); // Empty string = skip guard (default project)
+    return next();
+  });
 
   app.route('/', createStaticRoutes(ctx));
   app.route('/', createAuthRoutes(ctx));
@@ -75,6 +123,6 @@ export function createAdminRoute(logger: Logger, registry?: any): Hono {
   app.route('/api/admin/sso-providers', createSsoProvidersRoutes(ctx));
   app.route('/api/sa4e-215', createSa4e215Route());
 
-  logger.info('Admin portal routes registered: /admin + /api/admin/* + /api/sa4e-215/* (with auth, SSE)');
+  logger.info('Admin portal routes registered: /admin + /api/admin/* + /api/sa4e-215/* (with auth, SSE, project-registry guard)');
   return app;
 }

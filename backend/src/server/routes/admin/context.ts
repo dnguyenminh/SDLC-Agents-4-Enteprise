@@ -25,6 +25,8 @@ export interface AdminContext {
   checkPermission: (userId: string, requiredPermission: string) => Promise<{ has: boolean; roleData: Record<string, unknown> }>;
   requirePermission: (c: any, userId: string, requiredPermission: string) => Promise<any>;
   getRequestProjectId: (c: any) => string;
+  /** SA4E-215: Ensure project is registered before accessing protected admin routes. */
+  ensureProjectRegistered: (c: any) => Promise<string | Response>;
   mcpServerLogs: Record<string, any[]>;
   toolToggles: Record<string, Record<string, boolean>>;
   configOverrides: Record<string, Record<string, any>>;
@@ -93,6 +95,37 @@ export function createAdminContext(logger: Logger, registry?: any): AdminContext
     return loadConfig().projectId;
   };
 
+  /** SA4E-215: Ensure project is registered before accessing protected admin routes.
+   *  Returns the projectId string if OK, or a Response if blocked.
+   *  Callers should skip this check for routes that don't need project scope. */
+  const ensureProjectRegistered = async (c: any): Promise<string | Response> => {
+    const headerProjectId = c.req.header('X-Project-Id');
+    const queryProjectId = c.req.query('projectId');
+    const configProjectId = loadConfig().projectId;
+    const projectId = headerProjectId || queryProjectId || configProjectId;
+    if (!projectId || projectId === 'default') return ''; // Empty string = skip guard (backward compat)
+    try {
+      const adapter = getDbAdapter();
+      const row = await adapter.getAsync<{ project_id: string }>(
+        'SELECT project_id FROM project_registry WHERE project_id = ?',
+        [projectId]
+      );
+      if (row) return projectId;
+      return c.json({
+        __error: true,
+        error: {
+          code: 'PROJECT_NOT_REGISTERED',
+          message: `Project ${projectId} is not registered. Call POST /api/admin/projects/register first.`,
+          action: 'register',
+          projectId,
+        }
+      }, 404);
+    } catch (err: any) {
+      logger.error({ err }, '[ensureProjectRegistered] check failed');
+      return c.json({ __error: true, error: { code: 'INTERNAL_ERROR', message: err.message } }, 500);
+    }
+  };
+
   // SA4E-50: Wire DatabaseManager with pre-resolved adapters
   const db = DatabaseManager.createDefault(getDbAdapter(), getDbAdapter());
 
@@ -105,6 +138,7 @@ export function createAdminContext(logger: Logger, registry?: any): AdminContext
     checkPermission,
     requirePermission,
     getRequestProjectId,
+    ensureProjectRegistered,
     mcpServerLogs: {},
     toolToggles: {},
     configOverrides: {},
