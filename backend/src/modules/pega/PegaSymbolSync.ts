@@ -5,6 +5,7 @@
  */
 
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
+import { GraphRepository } from '../../database/repositories/GraphRepository.js';
 import {
   resolveSymbolKind, buildVirtualPath, buildFqn, resolveRuleNameField,
   resolveClassNameField, resolveRuleSetName, resolveRuleSetVersion,
@@ -106,6 +107,7 @@ export async function syncRuleToSymbols(
 
   const fileId = await upsertVirtualFile(adapter, projectId, virtualPath, pyClassName, contentHash, ruleJsonStr.length);
   const symbolId = await upsertSymbol(adapter, projectId, fileId, pyRuleName, kind, fqn, pyClassName, docComment);
+  try { await new GraphRepository(adapter).registerProject(projectId, pyClassName, `pega://${pyClassName}`); } catch (err) { logger.warn({ err, projectId }, '[pega] project_registry register skipped (non-fatal)'); }
   // SA4E-222: resolve learned schema paths (if any) and pass to extraction (no LLM at index time)
   const nestedLogicPaths = await resolveNestedLogicPaths(adapter, pxObjClass);
   // SA4E-106: store extracted readable content (steps/params/Java) for LLM enrichment
