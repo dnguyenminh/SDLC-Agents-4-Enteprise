@@ -47,6 +47,8 @@ export class GraphSyncService {
       this.log.info(`[graph-sync] Synced ${symbols.length} code nodes for project ${projectId}`);
       // SA4E-91: Extract and insert code edges (IMPORTS, CALLS, EXTENDS)
       await this.syncCodeEdges(projectId);
+      // SA4E-100: Create Pega class nodes for BELONGS_TO edges
+      await this.syncPegaClasses(projectId);
     } catch (err) {
       // Non-fatal: visualization projection must never fail the index run.
       this.log.error({ err }, `[graph-sync] Failed to sync code nodes for ${projectId}`);
@@ -107,7 +109,7 @@ export class GraphSyncService {
         const pos = fibonacciSphereGrouped(i, group.length, gi, totalGroups, nodeType);
         await this.adminAdapter.runAsync(sql, [
           `code:${s.id}`, this.toLabel(s), nodeType, 'CODE',
-          projectId, pos.x, pos.y, pos.z, 'micro', `code-${nodeType.toLowerCase()}`,
+          projectId, pos.x, pos.y, pos.z, 2, `code-${nodeType.toLowerCase()}`,
         ]);
       }
     }
@@ -116,6 +118,25 @@ export class GraphSyncService {
   private toLabel(s: CodeSymbolRow): string {
     const file = s.relative_path ? s.relative_path.split('/').pop() ?? '' : '';
     return `${s.name} (${file})`.substring(0, 60);
+  }
+
+  /** SA4E-100: Create class nodes for Pega parent symbols (targets of BELONGS_TO edges). */
+  private async syncPegaClasses(projectId: string): Promise<void> {
+    const classes = await this.indexAdapter.allAsync<{ parent_symbol: string }>(
+      `SELECT DISTINCT parent_symbol FROM symbols
+       WHERE project_id = ? AND parent_symbol IS NOT NULL AND kind LIKE 'pega_%'`,
+      [projectId],
+    );
+    if (classes.length === 0) return;
+    const sql = this.adminDialect.insertIgnore('graph_nodes',
+      ['entry_id','label','type','tier','project_id','x','y','z','level','cluster_id'], 'entry_id');
+    for (const cls of classes) {
+      const entryId = `class:${cls.parent_symbol}`;
+      await this.adminAdapter.runAsync(sql, [
+        entryId, cls.parent_symbol, 'CLASS', 'CODE',
+        projectId, 0, 0, 0, 1, `code-class`,
+      ]);
+    }
   }
 }
 

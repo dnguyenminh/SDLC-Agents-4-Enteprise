@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.47.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.47.1.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,12 @@ MIT
 ---
 
 ## Changelog
+
+### v1.47.1 (2026-10-04)
+
+- **Fix: Docker CI build fail** — Trivy scan detected `CVE-2026-103111` (HIGH) in `libpcre2-8-0 10.42-1+deb12u1`. Added `apt-get upgrade libpcre2-8-0` in production stage; package now at `10.42-1+deb12u2`. CI pipeline passes.
+- **Fix: defensive JSON parse on `/auth/refresh`** — Malformed JSON body now returns clean 400 instead of unhandled throw.
+- **SA4E-100: Pega BELONGS_TO edges** — New `PegaMembershipEdgeStrategy` extracts BELONGS_TO edges for Pega rules; `GraphSyncService.syncPegaClasses()` creates CLASS nodes as edge targets.
 
 ### v1.47.0 (2026-10-02)
 

@@ -123,11 +123,34 @@ export class RelationshipsEdgeStrategy implements CodeEdgeStrategy {
   }
 }
 
+/** Extracts BELONGS_TO edges for Pega rules: symbols → parent class nodes. */
+export class PegaMembershipEdgeStrategy implements CodeEdgeStrategy {
+  async extract(indexAdapter: DatabaseAdapter, projectId: string): Promise<CodeGraphEdge[]> {
+    const rows = await indexAdapter.allAsync<{ child_id: number; parent_symbol: string }>(
+      `SELECT id AS child_id, parent_symbol FROM symbols
+       WHERE project_id = ? AND parent_symbol IS NOT NULL AND kind LIKE 'pega_%'`,
+      [projectId],
+    );
+    const edges: CodeGraphEdge[] = [];
+    const seen = new Set<string>();
+    for (const r of rows) {
+      const targetId = `class:${r.parent_symbol}`;
+      const key = `${r.child_id}→${targetId}→BELONGS_TO`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        edges.push({ source: `code:${r.child_id}`, target: targetId, label: 'BELONGS_TO', weight: 0.5 });
+      }
+    }
+    return edges;
+  }
+}
+
 /** Registry of all code-edge strategies. */
 const CODE_EDGE_STRATEGIES: CodeEdgeStrategy[] = [
   new MembershipEdgeStrategy(),
   new FileContainsSymbolStrategy(),
   new RelationshipsEdgeStrategy(),
+  new PegaMembershipEdgeStrategy(),
 ];
 
 /**

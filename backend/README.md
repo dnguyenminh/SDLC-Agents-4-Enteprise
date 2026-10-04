@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.47.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.47.1-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/tools-66+-teal?style=for-the-badge" alt="Tools">
   <img src="https://img.shields.io/badge/node-%3E%3D18-green?style=for-the-badge" alt="Node">
 </p>
@@ -38,7 +38,7 @@ Server starts at **http://localhost:48721**. Verify it's running:
 
 ```bash
 curl http://localhost:48721/health
-# → {"status":"healthy","version":"1.47.0","uptime":5,"tools_loaded":52}
+# → {"status":"healthy","version":"1.47.1","uptime":5,"tools_loaded":52}
 ```
 
 ### Development Mode (auto-reload)
@@ -233,6 +233,7 @@ The embedding model is expected at `.code-intel/models/model.onnx`. Download it:
 
 | Version | Date | Ticket | Changes |
 |---------|------|--------|---------|
+| 1.47.1 | 2026-10-04 | — | Fix Docker CI fail (Trivy CVE-2026-103111 libpcre2-8-0 HIGH), defensive JSON parse on `/auth/refresh`, SA4E-100 Pega BELONGS_TO edges. |
 | 1.47.0 | 2026-10-02 | — | New endpoint `GET /api/v1/enrichment/failures?limit=N` (clamp 1–1000, default 200) returns full FAILED enrichment task list from `pending_tasks` with resolved source, error, retry count, timestamp (`PendingTaskRepository.listFailedDetailed`). Surfaces ingest failures to the extension beyond the 10-item status tooltip. |
 | 1.46.2 | 2026-09-28 | — | Version sync (no backend code changes; packaging fix lives in `extension`: missing direct `yargs` dep for vendored devtools barrel). |
 | 1.46.1 | 2026-09-28 | — | Version sync patch: align `root`/`backend`/`extension` to 1.46.1; README badges + health example + changelogs updated. No runtime code changes since 1.46.0. |

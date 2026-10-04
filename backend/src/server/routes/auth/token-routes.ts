@@ -20,7 +20,15 @@ const exchangeSchema = z.object({ code: z.string().min(10).max(200) });
 export function registerTokenRoutes(app: Hono, sessions: SessionService): void {
   app.post('/refresh', async (c) => {
     try {
-      const body = await c.req.json();
+      // Parse the body defensively: a malformed JSON payload must yield a clean
+      // 400 instead of an unhandled throw. Never log the raw body — it carries
+      // the refresh credential.
+      let body;
+      try {
+        body = await c.req.json();
+      } catch {
+        return c.json({ error: 'Invalid JSON body' }, 400);
+      }
       const parsed = refreshSchema.safeParse(body);
       if (!parsed.success) return c.json({ error: 'Refresh token required' }, 400);
       const token = parsed.data.sessionToken || parsed.data.refresh_token;
