@@ -84,16 +84,21 @@ WORKDIR /app
 # or the CLI itself.
 ARG NPM_VERSION=11.21.0
 RUN npm install -g npm@${NPM_VERSION} --no-audit --no-fund --loglevel=error \
- && NM=/usr/local/lib/node_modules/npm/node_modules \
- && for entry in "brace-expansion 5.0.12" "undici 6.28.1"; do \
-      name=$(echo "$entry" | cut -d' ' -f1); ver=$(echo "$entry" | cut -d' ' -f2); \
-      tgz=$(npm pack "${name}@${ver}" --pack-destination /tmp --silent); \
-      rm -rf "${NM}/${name}"; mkdir -p "${NM}/${name}"; \
-      tar -xzf "/tmp/${tgz}" -C "${NM}/${name}" --strip-components=1; \
-    done \
- && rm -rf /tmp/*.tgz \
- && node -e "require('${NM}/brace-expansion'); require('${NM}/undici')" \
- && npm --version
+  && NM=/usr/local/lib/node_modules/npm/node_modules \
+  && for entry in "brace-expansion 5.0.12" "undici 6.28.1"; do \
+       name=$(echo "$entry" | cut -d ' ' -f1); ver=$(echo "$entry" | cut -d ' ' -f2); \
+       tgz=$(npm pack "${name}@${ver}" --pack-destination /tmp --silent); \
+       rm -rf "${NM}/${name}"; mkdir -p "${NM}/${name}"; \
+       tar -xzf "/tmp/${tgz}" -C "${NM}/${name}" --strip-components=1; \
+     done \
+  && rm -rf /tmp/*.tgz \
+  && node -e "require('${NM}/brace-expansion'); require('${NM}/undici')" \
+  && npm --version \
+  # SEC-04: upgrade Debian packages to fix CVE-2026-103111 (libpcre2-8-0 HIGH) \
+  && apt-get update \
+  && apt-get upgrade -y --no-install-recommends libpcre2-8-0 \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # Runtime copies the pruned production node_modules + compiled dist only.
 COPY --from=deps /app/node_modules ./node_modules
