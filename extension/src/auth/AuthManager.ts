@@ -207,11 +207,11 @@ export class AuthManager implements vscode.Disposable {
         const body = await response.text();
         throw new AuthError(`Login failed (${response.status}): ${body}`);
       }
-      const data = await response.json() as TokenResponse;
-      await this.secrets.store(SECRET_LAST_USERNAME, username);
-      this.transitionTo("AUTHENTICATED");
-      await this.adoptTokens(data);
-      this.refreshTimer.start();
+       const data = await response.json() as TokenResponse;
+       await this.secrets.store(SECRET_LAST_USERNAME, username);
+       await this.adoptTokens(data);
+       this.transitionTo("AUTHENTICATED");
+       this.refreshTimer.start();
     } catch (err) {
       this.transitionTo("UNAUTHENTICATED");
       if (err instanceof AuthError) { throw err; }
@@ -367,13 +367,13 @@ export class AuthManager implements vscode.Disposable {
                 return;
               }
             }
-            this.transitionTo("AUTHENTICATED");
-            await this.adoptTokens(payload ?? {
-              token: token ?? undefined,
-              accessToken: accessToken ?? undefined,
-              refreshToken: refreshToken ?? undefined,
-            }, expiresAt ? new Date(expiresAt).getTime() : null);
-            this.refreshTimer.start();
+             await this.adoptTokens(payload ?? {
+               token: token ?? undefined,
+               accessToken: accessToken ?? undefined,
+               refreshToken: refreshToken ?? undefined,
+             }, expiresAt ? new Date(expiresAt).getTime() : null);
+             this.transitionTo("AUTHENTICATED");
+             this.refreshTimer.start();
             resolve();
           } catch (e) {
             cleanup();
@@ -442,10 +442,10 @@ export class AuthManager implements vscode.Disposable {
    * user (e.g. an Entra/Google account) instead of a hardcoded name.
    * @returns username, then email, then "" when unavailable (never throws).
    */
-  async fetchCurrentUsername(): Promise<string> {
-    const token = this.cachedToken;
-    if (!token) return "";
-    try {
+   async fetchCurrentUsername(): Promise<string> {
+     const token = await this.getAccessToken();
+     if (!token) return "";
+     try {
       const response = await fetch(`${this.baseUrl}/api/admin/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });

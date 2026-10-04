@@ -33,18 +33,19 @@ export type { IssuedTokens, SessionIdentity } from './session-types.js';
  * cached for 30s so logout takes effect within that bound.
  * @returns Session identity or null if invalid/expired
  */
-export async function validateSession(
-  token: string,
-  currentUserAgentHash?: string,
-): Promise<SessionIdentity | null> {
-  if (looksLikeJwt(token)) {
-    const result = verifyAccessJwt(token);
-    if (!result.ok) return null;
-    const key = cacheKey(result.claims.sid);
-    const cached = sessionCacheGet(key);
-    if (cached?.valid && cached.value) return cached.value as SessionIdentity;
-    return sessionIdentity(result.claims.sid, currentUserAgentHash);
-  }
+ export async function validateSession(
+   token: string,
+   currentUserAgentHash?: string,
+ ): Promise<SessionIdentity | null> {
+   if (looksLikeJwt(token)) {
+     const result = verifyAccessJwt(token);
+     if (!result.ok) return null;
+     const key = cacheKey(result.claims.sid);
+     const cached = sessionCacheGet(key);
+     if (cached?.valid && cached.value) return cached.value as SessionIdentity;
+     const identity = await sessionIdentity(result.claims.sid, currentUserAgentHash);
+     return identity;
+   }
 
   const row = await getDbAdapter().getAsync<SessionUserRow>(
     `SELECT ${ID_COLUMNS} FROM refresh_tokens rt

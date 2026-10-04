@@ -48,12 +48,12 @@ export function createUnifiedAuthRoutes() {
     return c.json({ success: true, message: 'Successfully logged out' });
   });
 
-  app.get('/me', async (c) => {
-    const auth = c.req.header('Authorization') || '';
-    const token = auth.replace('Bearer ', '');
-    const userAgent = c.req.header('user-agent') || '';
-    const user = await sessions.validate(token, userAgent);
-    if (!user) return c.json({ error: 'Unauthorized' }, 401);
+   app.get('/me', async (c) => {
+     const auth = c.req.header('Authorization') || '';
+     const token = auth.replace('Bearer ', '');
+     const userAgent = c.req.header('user-agent') || '';
+     const user = await sessions.validate(token, userAgent);
+     if (!user) return c.json({ error: 'Unauthorized' }, 401);
     const [permissions, dbUser] = await Promise.all([
       getUserPermissions(user.userId),
       getUserById(user.userId),

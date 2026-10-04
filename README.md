@@ -69,6 +69,8 @@ MIT
 ### v1.47.0 (2026-10-02)
 
 - **KB ingest status visibility** — The "KB: Ready" status bar item is now clickable while idle (runs `sdlcAgents.showIndexStatus`), reporting index/parse progress plus LLM enrichment status in the Output channel. New backend endpoint `GET /api/v1/enrichment/failures?limit=N` (clamped 1–1000, default 200) returns the full list of FAILED enrichment tasks from `pending_tasks` — resolved source, error, retry count, timestamp — so users can see exactly which rules/symbols failed and why, instead of only the latest 10 in the status tooltip.
+- **Fix: username not showing after login** — Race condition in `AuthManager.ts`: `transitionTo("AUTHENTICATED")` fired `onStateChange` event before `adoptTokens()` stored tokens in SecretStorage. `fetchCurrentUsername()` called `getAccessToken()` → token not yet persisted → `/me` returned 401 → sidebar showed "Logged in" with empty username. Fixed by awaiting `adoptTokens()` BEFORE `transitionTo("AUTHENTICATED")` in both password and SSO login paths. Also improved `fetchCurrentUsername()` to use `getAccessToken()` (auto-refresh) instead of `this.cachedToken`.
+- **Cleanup: removed debug logging** from `unified.ts` (`/me` handler) and `sessions.ts` (`validateSession`) — `appendFileSync` to hardcoded `C:\...\backend\*debug.log` paths removed.
 
 ### v1.46.3 (2026-09-29)
 
