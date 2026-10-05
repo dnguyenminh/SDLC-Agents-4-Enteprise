@@ -11,12 +11,12 @@
 | Jira Ticket | SA4E-337 |
 | Title | Document Indexer: Fix auto-ingest into KB Memory with correct type/tags |
 | Author | QA Agent |
-| Version | 1.0 |
+| Version | 1.1 |
 | Date | 2026-10-05 |
 | Status | Draft — pending BA review (Review Gate) |
 | Related BRD | BRD-v1.0-SA4E-337.docx |
 | Related FSD | FSD.md (v1.0) — documents/SA4E-337/FSD.md |
-| Related TDD | TDD-v1.1-SA4E-337.docx |
+| Related TDD | TDD-v1.2-SA4E-337.docx |
 
 ---
 
@@ -35,6 +35,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-05 | QA Agent | Initiate document — auto-generated from BRD, FSD, and TDD |
+| 1.1 | 2026-10-05 | QA Agent | Phase 6 sync — automated pass count 101 → 105 (UT-79..82 executed PASS), Bug #5/R-4 → Fixed/Closed with evidence, §1.3/§9 evidence rows updated, testdata CSVs synchronized, related TDD ref → v1.2 |
 
 ---
 
@@ -71,12 +72,12 @@ SA4E-337 fixes six (6) defects in the document indexing → KB Memory ingest pip
 |----------|----------|
 | BRD | documents/SA4E-337/BRD.md → BRD-v1.0-SA4E-337.docx |
 | FSD | documents/SA4E-337/FSD.md |
-| TDD | documents/SA4E-337/TDD.md → TDD-v1.1-SA4E-337.docx |
+| TDD | documents/SA4E-337/TDD.md → TDD-v1.2-SA4E-337.docx |
 | Discrepancy Report | documents/SA4E-337/DISCREPANCY.md (DISC-1..DISC-8) |
-| STC (Test Cases) | documents/SA4E-337/STC.md → STC-v1.0-SA4E-337.xlsx |
+| STC (Test Cases) | documents/SA4E-337/STC.md → STC-v1.1-SA4E-337.xlsx |
 | E2E Evidence | %TEMP%/opencode/sa4e337-e2e-results.json (14/14 PASS) |
 | E2E Script | %TEMP%/opencode/sa4e337-e2e-test.mjs |
-| Unit Evidence | Fresh runs 2026-10-05: 34/34, 14/14, 23/23, 23/23 PASS (see §9.3) |
+| Unit Evidence | Fresh runs 2026-10-05: 34/34, 14/14, 23/23, 23/23 PASS + UT-79..82 (51+9) PASS; Round 2 full suites backend 3364 / extension 2384 PASS (see §9.3) |
 
 ---
 ## 2. Test Strategy
@@ -136,8 +137,7 @@ This plan uses the six-level SDLC test model. Levels that do not apply to SA4E-3
 
 | Status | Count | Detail |
 |--------|-------|--------|
-| PASS (executed) | 101 | UT 78 + IT 9 + E2E-API 14 — all green (see §9.3 evidence) |
-| NOT_RUN — planned unit (DEV to implement) | 4 | UT-79..UT-82 close identified coverage gaps (Bug #5 fallback, BR-12 client parse, nested/root tags) |
+| PASS (executed) | 105 | UT 82 + IT 9 + E2E-API 14 — all green (see §9.3 evidence); UT-79..UT-82 executed PASS 2026-10-05 |
 | NOT_RUN — manual SIT | 4 | SIT-01..SIT-04 — VS Code session required (Phase 6) |
 
 ### 2.5 Entry Criteria
@@ -177,7 +177,7 @@ This plan uses the six-level SDLC test model. Levels that do not apply to SA4E-3
 | 2 | Bug #2 — Extract tags from folder path (`extractTagsFromPath`) | MUST HAVE | UC-02, BR-06..BR-11, Story 2 | Functional (UT + E2E-API) |
 | 3 | Bug #3 — Verify ingest result (`{ingested, errors, total, failedFiles}`) | MUST HAVE | UC-03, BR-12..BR-15, Story 3 | Functional (UT + E2E-API) |
 | 4 | Bug #4 — Include `.drawio` files in document indexing | SHOULD HAVE | UC-04, BR-16..BR-19, Story 4 | Functional (UT + E2E-API) |
-| 5 | Bug #5 — Fallback tag extraction when LLM unavailable | SHOULD HAVE | UC-05, BR-20..BR-24, Story 5 | Functional (UT planned + E2E-API) |
+| 5 | Bug #5 — Fallback tag extraction when LLM unavailable | SHOULD HAVE | UC-05, BR-20..BR-24, Story 5 | Functional (UT + E2E-API) |
 | 6 | Bug #6 — UI shows indexing results (Output channel + toast) | MUST HAVE | UC-06, BR-25..BR-28, Story 6 | Usability (manual SIT) |
 | 7 | QA-001 (CRITICAL) — `mem.getDispatcher()` → `getToolHandlers().get('mem_ingest_file')`, fail-closed summary | MUST HAVE | TDD §6.2, §12 | Functional + Security (UT + E2E-API) |
 | 8 | QA-002 (MAJOR) — happy-path unit coverage for ingest route | MUST HAVE | TDD §11.4 | Functional (UT) |
@@ -226,7 +226,7 @@ This plan uses the six-level SDLC test model. Levels that do not apply to SA4E-3
 | Type-inference inputs | `BRD.md, FSD.docx, TDD.pdf, STP.xlsx, meeting-notes.docx, TDD-v1-KSA-26.docx, BRD_STORY_8.md` | `testdata/type-inference-testdata.csv` | Unit fixtures (in-test temp dirs) |
 | Tag-extraction paths | `SA4E-337/BRD.md, GRAPH-EMAIL/BRD.md, overview.md, SA4E-337/attachments/spec.pdf, attachments/spec.pdf` | `testdata/tag-extraction-testdata.csv` | Unit fixtures |
 | Auth negative data | no header / corrupted Bearer / missing `X-Project-Id` | `testdata/auth-testdata.csv` | E2E steps E2E-API-03/04/14 |
-| API response fixtures | `{success, ingested, errors, total, failedFiles}` variants, invalid JSON, non-OK status | `testdata/ingest-verification-testdata.csv` | Unit mocks (planned UT-81) |
+| API response fixtures | `{success, ingested, errors, total, failedFiles}` variants, invalid JSON, non-OK status | `testdata/ingest-response-testdata.csv` | Unit mocks (UT-81 PASS 2026-10-05) |
 | Test project & session | project id `SA4E-337`, admin session with `KB_WRITE` (perms=15) | E2E-02 session creation | Runtime-created; cleaned in `afterAll` |
 
 ### 4.4 External Dependencies
@@ -246,8 +246,8 @@ This plan uses the six-level SDLC test model. Levels that do not apply to SA4E-3
 |-------|-----------|----------|----------|-----------|
 | Test Planning (STP + STC + RTM + test data CSVs) | 2026-10-05 | 2026-10-05 | 1 day | STP + STC delivered |
 | BA Review Gate (business coverage of RTM) | 2026-10-05 | 2026-10-06 | 1 day | BA verdict APPROVED |
-| Automated execution (UT/IT/E2E-API) — initial run | 2026-10-05 | 2026-10-05 | Same day | 101/101 PASS (evidence captured) |
-| Gap tests implementation (UT-79..UT-82) | 2026-10-06 | 2026-10-06 | 1 day | DEV implements, QA verifies |
+| Automated execution (UT/IT/E2E-API) — initial run | 2026-10-05 | 2026-10-05 | Same day | 105/105 PASS (evidence captured) |
+| Gap tests implementation (UT-79..UT-82) | 2026-10-05 | 2026-10-05 | Same day | DONE 2026-10-05 — UT-79..82 PASS (QA verified) |
 | Manual SIT execution (SIT-01..SIT-04) | 2026-10-06 | 2026-10-06 | 0.5 day | SIT sign-off + evidence screenshots |
 | Defect Fix & Retest | 2026-10-06 | 2026-10-07 | 1–2 days | All Critical/Major fixed & retested |
 | Test Report + DOCX/XLSX export | 2026-10-07 | 2026-10-07 | 1 day | TEST-REPORT-v1.0-SA4E-337.docx |
@@ -275,7 +275,7 @@ This plan uses the six-level SDLC test model. Levels that do not apply to SA4E-3
 | R-1 | Bug #4 half-delivered (DISC-3): extension `indexer-discovery.ts` still skips `.drawio`; only backend temp-walk accepts it | High | High (known) | E2E stages `.drawio` directly at backend; DISC-3 explicitly tracked; BA/SM decide scope before close |
 | R-2 | Production-PostgreSQL schema drift found during planning: missing `tool_usage` table crashed the backend (unhandled rejection in `incrementToolUsage`) | Critical | Confirmed 2026-10-05 | Additive DDL repair applied to dev KB; defects D-NEW-1/D-NEW-2 raised for DEV (see §8.4); tests kept on isolated SQLite |
 | R-3 | Async `TAG_ENRICHMENT` timing — tags appear after queue completes; flaky assertions | Medium | Medium | E2E polls until tasks `COMPLETED` (observed 9/9); assert non-empty tags, not exact content |
-| R-4 | Bug #5 `fallbackTagExtraction` (`!tagAnalyzer` branch) has no direct executed test | Medium | Confirmed | Planned UT-79/UT-80 (DEV to implement) closes the gap before exit; RTM marks status explicitly |
+| R-4 | Bug #5 `fallbackTagExtraction` (`!tagAnalyzer` branch) has no direct executed test | Medium | **Closed 2026-10-05** | UT-79/UT-80 PASS (`backend/src/modules/memory/task-queue/__tests__/TaskWorker.fallback-tag.test.ts`); RTM marks status PASS |
 | R-5 | FSD↔implementation discrepancies (DISC-1..DISC-8): FSD API contract `POST /api/v1/ingestDocuments` does not exist; tags client-side vs server-side | High | Known | Test against **actual** endpoints (`/api/index/documents`, `/api/index/ingest-docs`); discrepancies logged for BA/SA — tests never assert the non-existent contract |
 | R-6 | Test writes leaking into production KB | High | Low | Guardrail: E2E only on isolated SQLite dir; PostgreSQL KB receives planning artifacts (STP/STC) only |
 | R-7 | 1727-file performance NFR untested (out of scope) | Low | Certain | Documented in §3.2; follow-up ticket recommended at release review |
@@ -317,7 +317,7 @@ New → Open → In Progress → Fixed → Ready for Retest → Verified → Clo
 | Bug #2 | Major / P2 | Tags not passed, left empty | **Fixed** | E2E-API-12: 8/8 `.md` tagged after async enrichment |
 | Bug #3 | Major / P2 | Ingest result not verified client-side | **Fixed** | E2E-API-07: `{ingested:9, errors:0, total:9, failedFiles:[]}` |
 | Bug #4 | Major / P2 | `.drawio` excluded from indexing | **Fixed (partial — DISC-3)** | E2E-API-10: row `type=CONTEXT`; extension discovery gap tracked as R-1 |
-| Bug #5 | Major / P3 | No fallback tag extraction when LLM unavailable | **Fixed — test gap** | Code present (`TaskWorker.ts:374`); direct test = planned UT-79/80 |
+| Bug #5 | Major / P3 | No fallback tag extraction when LLM unavailable | **Fixed** | UT-79/UT-80 PASS 2026-10-05 (`TaskWorker.fallback-tag.test.ts`) + adjacent IT-04 |
 | Bug #6 | Major / P2 | UI shows no KB ingest result | **Fixed — pending SIT** | Implementation in `indexer.ts`; SIT-01..SIT-02 verify manually |
 | QA-001 | **Critical** / P1 | `mem.getDispatcher()` undefined → HTTP 500 on `/api/index/ingest-docs` | **Fixed** | UT-26..UT-31 + E2E-API-06 (regression: was 500, now 200); route mocks omit `getDispatcher` deliberately |
 | QA-002 | Major / P2 | Missing happy-path unit test for ingest route | **Fixed** | UT-26 (happy path 200) + UT-27 (args contract) added |
@@ -335,7 +335,7 @@ New → Open → In Progress → Fixed → Ready for Retest → Verified → Clo
 | Metric | Formula | Target |
 |--------|---------|--------|
 | Test Execution Rate | Executed / Total × 100% | 100% at exit (105/109 automated executed + 4 SIT) |
-| Pass Rate | Passed / Executed × 100% | ≥ 95% (observed: 101/101 = 100% on executed set) |
+| Pass Rate | Passed / Executed × 100% | ≥ 95% (observed: 105/105 = 100% on executed set) |
 | Automation Rate | Automated / Total × 100% | ≥ 90% (observed: 105/109 = 96.3%) |
 | Requirement Coverage | RTM covered requirements / total × 100% | 100% (STC §10 RTM) |
 | Defect Density | Defects / Test Cases | ≤ 0.1 (10 defects / 109 cases ≈ 0.09) |
@@ -360,6 +360,10 @@ New → Open → In Progress → Fixed → Ready for Retest → Verified → Clo
 | UT + IT — `TaskWorker.test.ts` + `TaskWorker.it.test.ts` | `npx vitest run …` (backend) | **23/23 PASS** | 08:36 |
 | UT — `IndexerHttpClient.error/token-refresh.test.ts` | `npx vitest run …` (extension) | **23/23 PASS** (16 cases incl. `it.each` rows) | 08:39 |
 | E2E-API — full pipeline | `sa4e337-e2e-test.mjs` vs isolated backend | **14/14 PASS** — `%TEMP%/opencode/sa4e337-e2e-results.json` | 06:57 |
+| UT-79..UT-82 gap tests | `npx vitest run` (backend `TaskWorker.fallback-tag.test.ts` + `IndexerHttpClient.ingest.test.ts`) | **51/51 PASS** (backend) + **9/9 PASS** (extension) | 13:35 / 13:40 |
+| **Round 2 — backend full suite** | `cd backend; npx vitest run` | **321/322 test files passed (1 skipped) · 3364 passed / 0 failed / 19 skipped (3383)** | 15:25 |
+| **Round 2 — extension full suite** | `cd extension; npx vitest run` | **248/248 test files passed · 2384 passed / 0 failed / 0 skipped (2384)** | 15:28 |
+| Round 2 — type check | `npx tsc --noEmit` (backend + extension) | **exit 0** both packages | 15:33 |
 | SIT — VS Code manual | Pending (Phase 6) | NOT_RUN (4 cases) | — |
 
 ---
@@ -381,7 +385,7 @@ New → Open → In Progress → Fixed → Ready for Retest → Verified → Clo
 
 ### Assumptions
 
-- Backend source with all 6 fixes + QA-001 fix is present in the working tree (uncommitted) — tests run against it.
+- Backend source with all 6 fixes + QA-001 fix is committed on branch `SA4E-337` (`5c29588` + `4d4b5f8`) — tests run against it.
 - The isolated E2E backend (SQLite) faithfully reproduces production behaviour for the endpoints under test; PostgreSQL-only behaviours (schema drift) are handled as separate defects (D-NEW-1/2), not test failures.
 - FSD endpoint contract discrepancies (DISC-1) are resolved in favour of **actual** endpoints; FSD will be corrected by BA/SA separately.
 - BA Review Gate (APPROVED) is required before STC is treated as final (see Review Gate note in STC).
@@ -408,6 +412,7 @@ New → Open → In Progress → Fixed → Ready for Retest → Verified → Clo
 
 ### 10.3 Related Documents
 
-- STC: `documents/SA4E-337/STC.md` → `STC-v1.0-SA4E-337.xlsx`
+- STC: `documents/SA4E-337/STC.md` → `STC-v1.1-SA4E-337.xlsx`
+- Test Report: `documents/SA4E-337/TEST-REPORT.md` → `TEST-REPORT-v1.0-SA4E-337.docx`
 - Discrepancy Report: `documents/SA4E-337/DISCREPANCY.md`
 - STATUS: `documents/SA4E-337/STATUS.json`
