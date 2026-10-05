@@ -1,0 +1,63 @@
+<mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<!-- States -->
+<mxCell id="start" value="" style="ellipse;fillColor=#000000;html=1;strokeColor=#000000;" vertex="1" parent="1">
+  <mxGeometry x="365" y="30" width="20" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="discovered" value="Discovered" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="310" y="70" width="130" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="classified" value="Classified" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="310" y="140" width="130" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="typeDerived" value="Type Derived" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="310" y="210" width="130" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="tagsExtracted" value="Tags Extracted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="310" y="280" width="130" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="ingested" value="Ingested to KB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="310" y="350" width="130" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="verified" value="Verified" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="310" y="420" width="130" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="displayed" value="Displayed in UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCD9F;strokeColor=#D6A14F;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="310" y="490" width="130" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="end" value="" style="ellipse;fillColor=#000000;html=1;strokeColor=#000000;" vertex="1" parent="1">
+  <mxGeometry x="365" y="550" width="20" height="20" as="geometry"/>
+</mxCell>
+<!-- Error state -->
+<mxCell id="error" value="Error / Skipped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCCCC;strokeColor=#B85450;fontStyle=1;fontColor=#8B0000;" vertex="1" parent="1">
+  <mxGeometry x="520" y="280" width="120" height="40" as="geometry"/>
+</mxCell>
+<!-- Transitions -->
+<mxCell id="t1" value="scan files" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="start" target="discovered">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="t2" value="classify by ext" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="discovered" target="classified">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="t3" value="match filename" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="classified" target="typeDerived">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="t4" value="parse path" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="typeDerived" target="tagsExtracted">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="t5" value="POST /ingest" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="tagsExtracted" target="ingested">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="t6" value="parse response" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="ingested" target="verified">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="t7" value="show results" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="verified" target="displayed">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="t8" value="" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="displayed" target="end">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Error transition -->
+<mxCell id="tErr" value="validation failure" style="endArrow=block;endFill=1;html=1;strokeColor=#B85450;dashed=1;dashPattern=5 3;" edge="1" parent="1" source="tagsExtracted" target="error">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root></mxGraphModel>

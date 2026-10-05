@@ -171,7 +171,7 @@ function showIndexResults(results: string[], options: string[], root: string, ch
     channel.appendLine(results.join("\n"));
     channel.appendLine("\n--- Next Steps ---");
     if (options.includes("code")) { channel.appendLine("• Code: MCP server indexes automatically."); }
-    if (options.includes("documents")) { channel.appendLine("• Documents: Indexed via HTTP API."); }
+    if (options.includes("documents")) { channel.appendLine("• Documents: Indexed via HTTP API + KB ingest."); }
     if (options.includes("sync")) { channel.appendLine("• Sync: Code symbols synced to KB automatically."); }
     if (options.includes("jira")) { channel.appendLine("• Jira: Project tickets ingested into KB for agent context."); }
     vscode.window.showInformationMessage("📋 Indexing complete — see Output panel.", "Open Output")

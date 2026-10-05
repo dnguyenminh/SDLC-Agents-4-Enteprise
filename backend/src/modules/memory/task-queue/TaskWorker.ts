@@ -297,7 +297,11 @@ export class TaskWorker {
   // ── SA4E-47: Enhanced Tag Enrichment ──
 
   private async processTagEnrichment(task: PendingTask, payload: any): Promise<void> {
-    if (!this.tagAnalyzer) { this.repo.resetForRetry(task.id); return; }
+    // SA4E-337: Fallback tag extraction when LLM unavailable
+    if (!this.tagAnalyzer) {
+      await this.fallbackTagExtraction(task, payload);
+      return;
+    }
 
     // SA4E-79: Check if already enriched by client (BR-12, BR-13)
     const entry = await this.engine.findById(task.entry_id);
@@ -358,6 +362,52 @@ export class TaskWorker {
 
     if (updateResult.changes === 0) {
       this.logger.info({ entry_id: task.entry_id }, 'Client enriched during tag/map update — discarding');
+    }
+
+    await this.repo.markCompleted(task.id);
+  }
+
+  /**
+   * SA4E-337: Fallback tag extraction when LLM unavailable.
+   * Extracts tags from source file path and content heuristics.
+   */
+  private async fallbackTagExtraction(task: PendingTask, payload: any): Promise<void> {
+    const tags = new Set<string>();
+
+    // Extract tags from source path
+    const source = payload.source || '';
+    const parts = source.replace(/\\/g, '/').split('/');
+    for (const part of parts) {
+      if (/^SA4E-\d+$/i.test(part)) { tags.add('sa4e'); tags.add(part.toLowerCase()); }
+      if (/^F[0-9]+$/i.test(part)) { tags.add('feature'); tags.add(part.toLowerCase()); }
+      if (/^(BRD|FSD|TDD|STP|STC|DPG|RLN|UG|RUN-LOG)/i.test(part)) {
+        tags.add(part.replace(/\..*$/, '').toLowerCase());
+      }
+    }
+
+    // Extract doc-type from content heuristics
+    const content = payload.content || '';
+    if (/#### STORY/.test(content)) tags.add('user-story');
+    if (/#### REQUIREMENT/.test(content)) tags.add('requirement');
+    if (/## Acceptance Criteria/.test(content)) tags.add('acceptance-criteria');
+    if (/## API Design/.test(content)) tags.add('api-design');
+    if (/## Architecture/.test(content)) tags.add('architecture');
+    if (/## Test Cases/.test(content)) tags.add('test-cases');
+    if (/## Deployment/.test(content)) tags.add('deployment');
+
+    // Update entry with fallback tags
+    try {
+      const existing = payload.existing_tags
+        ? payload.existing_tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+        : [];
+      const merged = [...new Set([...existing, ...tags])];
+      await this.engine.getAdapter().runAsync(
+        `UPDATE knowledge_entries SET tags = ? WHERE id = ?`,
+        [merged.join(','), task.entry_id],
+      );
+      this.logger.info({ entry_id: task.entry_id, tags: merged }, 'Fallback tag extraction applied');
+    } catch (err: any) {
+      this.logger.warn({ err, entry_id: task.entry_id }, 'Fallback tag extraction failed');
     }
 
     await this.repo.markCompleted(task.id);

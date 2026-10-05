@@ -1,0 +1,67 @@
+<mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<!-- Lifelines -->
+<mxCell id="indexer" value="Indexer Extension" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="1">
+  <mxGeometry x="240" y="40" width="120" height="420" as="geometry"/>
+</mxCell>
+<mxCell id="client" value="IndexerHttpClient" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+  <mxGeometry x="440" y="40" width="130" height="420" as="geometry"/>
+</mxCell>
+<mxCell id="backend" value="Backend API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B1DDFF;strokeColor=#6CACDF;" vertex="1" parent="1">
+  <mxGeometry x="630" y="40" width="120" height="420" as="geometry"/>
+</mxCell>
+<mxCell id="verifier" value="Result Verifier" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+  <mxGeometry x="810" y="40" width="130" height="420" as="geometry"/>
+</mxCell>
+<mxCell id="ui" value="UI Display" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCD9F;strokeColor=#D6A14F;" vertex="1" parent="1">
+  <mxGeometry x="1000" y="40" width="120" height="420" as="geometry"/>
+</mxCell>
+<!-- Lifeline dashes -->
+<mxCell id="ld1" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 4;strokeColor=#666666;" edge="1" parent="1" source="indexer" target="client">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="ld2" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 4;strokeColor=#666666;" edge="1" parent="1" source="client" target="backend">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="ld3" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 4;strokeColor=#666666;" edge="1" parent="1" source="backend" target="verifier">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="ld4" value="" style="endArrow=none;dashed=1;html=1;dashPattern=1 4;strokeColor=#666666;" edge="1" parent="1" source="verifier" target="ui">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Messages -->
+<mxCell id="m1" value="ingestDocuments(docs)" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="indexer" target="client">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m2" value="POST /api/v1/ingest" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="client" target="backend">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m3" value="JSON response" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="backend" target="client">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m4" value="parsed result" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="client" target="verifier">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m5" value="summary + details" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="verifier" target="ui">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Exception flow: API error -->
+<mxCell id="m6" value="error/timeout" style="endArrow=block;endFill=1;html=1;strokeColor=#B85450;dashed=1;dashPattern=5 3;" edge="1" parent="1" source="backend" target="client">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m7" value="log error + notify user" style="endArrow=block;endFill=1;html=1;strokeColor=#B85450;" edge="1" parent="1" source="verifier" target="indexer">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Activation bars -->
+<mxCell id="a1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;opacity=30;" vertex="1" parent="1">
+  <mxGeometry x="248" y="100" width="4" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="a2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;opacity=30;" vertex="1" parent="1">
+  <mxGeometry x="448" y="140" width="4" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="a3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B1DDFF;strokeColor=#6CACDF;opacity=30;" vertex="1" parent="1">
+  <mxGeometry x="638" y="180" width="4" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="a4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;opacity=30;" vertex="1" parent="1">
+  <mxGeometry x="818" y="240" width="4" height="80" as="geometry"/>
+</mxCell>
+</root></mxGraphModel>

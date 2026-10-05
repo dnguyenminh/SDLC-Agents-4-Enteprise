@@ -306,27 +306,50 @@ export class IndexerHttpClient {
         if (errors > 0) { channel.show(true); }
 
         // Trigger KB ingest from Temp files (single call)
+        let kbIngested = 0;
+        let kbErrors = 0;
         if (ingested > 0) {
             report.report({ message: "Running document KB ingest..." });
-            await this.triggerDocumentIngest(token);
+            const kbResult = await this.triggerDocumentIngest(token);
+            kbIngested = kbResult.ingested;
+            kbErrors = kbResult.errors;
         }
 
         const parts = [`✅ Indexed: ${ingested} files`];
         if (errors > 0) { parts.push(`⚠️ Failed: ${errors}`); }
         if (unconvertible.length > 0) { parts.push(`⏭️ Un-convertible: ${unconvertible.length}`); }
+        parts.push(`📚 KB: ${kbIngested} ingested`);
         return { ingested, errors, summary: parts.join(", "), unconvertible };
     }
 
     /** SA4E-99: Trigger backend to ingest documents from Temp folder into KB. */
-    private async triggerDocumentIngest(token?: string): Promise<void> {
-        const result = await this.httpPostWithDetail(`${this.backendUrl}/api/index/ingest-docs`, {}, token);
-        if (!result.ok) {
+    private async triggerDocumentIngest(token?: string): Promise<{ ingested: number; errors: number; total: number }> {
+        const url = `${this.backendUrl}/api/index/ingest-docs`;
+        const headers = await this.buildHeaders(token);
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...headers },
+                body: JSON.stringify({}),
+                signal: AbortSignal.timeout(60000),
+            });
+            const bodyText = await response.text();
+            if (!response.ok) {
+                const channel = IndexerHttpClient.getIndexerOutput();
+                channel.appendLine(`⚠️ Document ingest failed: status ${response.status}`);
+                return { ingested: 0, errors: 0, total: 0 };
+            }
+            const parsed = JSON.parse(bodyText || '{}');
+            const ingested = parsed?.ingested ?? 0;
+            const errors = parsed?.errors ?? 0;
+            const total = parsed?.total ?? 0;
             const channel = IndexerHttpClient.getIndexerOutput();
-            channel.appendLine(`⚠️ Document ingest failed: ${result.error} (status ${result.status})`);
-            if (result.details) channel.appendLine(`   Details: ${result.details}`);
-            if (result.action) channel.appendLine(`   Action: ${result.action}`);
-            // Log error but do not abort batch ingest; surface to user via Output channel
-            return;
+            channel.appendLine(`   KB ingest: ${ingested}/${total} files ingested, ${errors} errors`);
+            return { ingested, errors, total };
+        } catch (err: any) {
+            const channel = IndexerHttpClient.getIndexerOutput();
+            channel.appendLine(`⚠️ Document ingest error: ${err?.message || String(err)}`);
+            return { ingested: 0, errors: 0, total: 0 };
         }
     }
 

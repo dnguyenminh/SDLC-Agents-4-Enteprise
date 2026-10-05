@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import {
@@ -9,6 +10,7 @@ import {
   resolveSafeTargetPath,
   resolveIndexTempBase,
 } from '../api-index';
+import { summarizeIngestResult, inferTypeFromPath, extractTagsFromPath } from '../api-index-ingest';
 
 vi.mock('../../../admin/db/sessions.js', () => ({
   validateSession: vi.fn(),
@@ -420,5 +422,223 @@ describe('SA4E-300 SEC High #1 (BOLA) + High #2 (sync RBAC)', () => {
     expect(res.status).toBe(200);
     const body = await res.json() as any;
     expect(body.indexed).toBe(1);
+  });
+});
+
+/**
+ * SA4E-337-QA-001 (CRITICAL) regression + SA4E-337-QA-002 (MAJOR) coverage.
+ *
+ * Root cause: handleIngestDocsFromTemp called `mem.getDispatcher()` — a method that
+ * does NOT exist on MemoryModule → "mem.getDispatcher is not a function" → HTTP 500.
+ * Fix: use `mem.getToolHandlers().get('mem_ingest_file')` (scoped withScopeContext
+ * wrapper) so project_id is injected from the trusted tenant scope.
+ */
+describe('SA4E-337-QA-001: /api/index/ingest-docs uses mem_ingest_file tool handler', () => {
+  const userId = 'qa337-user';
+  const projectId = 'qa337-proj';
+  const tempBase = resolveIndexTempBase(userId, projectId, 'batch-docs');
+
+  /** Memory module mock that mimics MemoryModule — NO getDispatcher() method (root cause guard). */
+  function makeMemoryModule(handler: ReturnType<typeof vi.fn>) {
+    return {
+      status: 'ready',
+      getToolHandlers: () => new Map([['mem_ingest_file', handler]]),
+      // NOTE: intentionally NO getDispatcher — mirrors the real MemoryModule API surface.
+    };
+  }
+
+  /** ToolResult for a successful ingest (matches handleIngestFile success JSON). */
+  function okResult(file: string) {
+    return { content: [{ type: 'text' as const, text: JSON.stringify({ status: 'ingested', entries: 1, file }) }], isError: false };
+  }
+
+  function seedTempDocs() {
+    fs.rmSync(tempBase, { recursive: true, force: true });
+    fs.mkdirSync(path.join(tempBase, 'SA4E-337'), { recursive: true });
+    fs.writeFileSync(path.join(tempBase, 'SA4E-337', 'BRD.md'), '# Requirements\ncontent');
+    fs.writeFileSync(path.join(tempBase, 'SA4E-337', 'diagram.drawio'), '<mxGraphModel></mxGraphModel>');
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mockValidateSession.mockReset();
+    mockGrantedCaller();
+    mockValidateSession.mockResolvedValue({ userId, username: 'u', accessGroupId: 'g' } as any);
+    seedTempDocs();
+  });
+
+  afterEach(() => {
+    fs.rmSync(tempBase, { recursive: true, force: true });
+  });
+
+  // SA4E-337-QA-002 — happy path: 200 { ingested, errors, total } via getToolHandlers()
+  it('happy path: 200 {ingested, errors, total} when handler ingests all staged files', async () => {
+    const handler = vi.fn(async (args: Record<string, unknown>) => okResult(String(args.file_path)));
+    const { app, registry } = makeApp();
+    (registry.getModule as any).mockReturnValue(makeMemoryModule(handler));
+
+    const res = await app.request('/api/index/ingest-docs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer good', 'X-Project-Id': projectId },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.ingested).toBe(2);
+    expect(body.errors).toBe(0);
+    expect(body.total).toBe(2);
+    expect(body.failedFiles).toEqual([]);
+    expect(handler).toHaveBeenCalledTimes(2);
+  });
+
+  // SA4E-337-QA-002 — args contract: type/tags/scope/content_base64 + tenant scope keys
+  it('passes SA4E-337 args (type, tags, scope, content_base64) + tenant scope to the handler', async () => {
+    const handler = vi.fn(async (args: Record<string, unknown>) => okResult(String(args.file_path)));
+    const { app, registry } = makeApp();
+    (registry.getModule as any).mockReturnValue(makeMemoryModule(handler));
+
+    await app.request('/api/index/ingest-docs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer good', 'X-Project-Id': projectId },
+      body: JSON.stringify({}),
+    });
+
+    expect(handler).toHaveBeenCalledTimes(2);
+    const calls = handler.mock.calls.map((c: any[]) => c[0] as Record<string, unknown>);
+    const brdCall = calls.find((a) => String(a.file_path).endsWith('BRD.md'))!;
+    expect(brdCall).toBeDefined();
+    // Bug #1: type derived from path
+    expect(brdCall.type).toBe('REQUIREMENT');
+    // Bug #2: tags extracted from path segment SA4E-337
+    expect(String(brdCall.tags)).toContain('sa4e');
+    expect(String(brdCall.tags)).toContain('sa4e-337');
+    // Contract fields
+    expect(brdCall.scope).toBe('PROJECT');
+    expect(typeof brdCall.content_base64).toBe('string');
+    expect(String(brdCall.content_base64).length).toBeGreaterThan(0);
+    // Tenant scope — withScopeContext() reads these → project_id NOT NULL
+    expect(brdCall.__projectId).toBe(projectId);
+    expect(brdCall.__userId).toBe(userId);
+    expect(brdCall._projectContext).toMatchObject({ userId, projectId });
+    // Bug #4: .drawio file also ingested with CONTEXT type
+    const drawioCall = calls.find((a) => String(a.file_path).endsWith('.drawio'))!;
+    expect(drawioCall).toBeDefined();
+    expect(drawioCall.type).toBe('CONTEXT');
+  });
+
+  // SA4E-337-QA-002 — handler failure surfaces in failedFiles + errors counter
+  it('counts failed ingest (isError result) into errors/failedFiles', async () => {
+    const handler = vi.fn(async (args: Record<string, unknown>) => ({
+      content: [{ type: 'text' as const, text: 'Error: disk write failed' }],
+      isError: true,
+    }));
+    const { app, registry } = makeApp();
+    (registry.getModule as any).mockReturnValue(makeMemoryModule(handler));
+
+    const res = await app.request('/api/index/ingest-docs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer good', 'X-Project-Id': projectId },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.ingested).toBe(0);
+    expect(body.errors).toBe(2);
+    expect(body.total).toBe(2);
+    expect(body.failedFiles).toHaveLength(2);
+    expect(body.failedFiles[0].reason).toBe('disk write failed');
+    expect(body.failedFiles[0].file).toBeDefined();
+  });
+
+  // SA4E-337-QA-001 — regression guard: handler throwing must NOT 500 the endpoint
+  it('handler throwing is captured per-file (no 500) and reported in failedFiles', async () => {
+    const handler = vi.fn(async () => { throw new Error('boom'); });
+    const { app, registry } = makeApp();
+    (registry.getModule as any).mockReturnValue(makeMemoryModule(handler));
+
+    const res = await app.request('/api/index/ingest-docs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer good', 'X-Project-Id': projectId },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.ingested).toBe(0);
+    expect(body.errors).toBe(2);
+    expect(body.failedFiles[0].reason).toBe('boom');
+  });
+
+  // Missing mem_ingest_file handler → 503 with enriched envelope
+  it('503 enriched when mem_ingest_file tool handler is unavailable', async () => {
+    const { app, registry } = makeApp();
+    (registry.getModule as any).mockReturnValue({ status: 'ready', getToolHandlers: () => new Map() });
+
+    const res = await app.request('/api/index/ingest-docs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer good', 'X-Project-Id': projectId },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(503);
+    const body = await res.json() as any;
+    expect(body.error).toBe('Memory module not ready');
+    expect(body.details).toContain('mem_ingest_file');
+    expect(body.action).toBeDefined();
+  });
+
+  // Empty staging area → early 200 (no handler required)
+  it('returns {ingested:0, message} when temp folder missing', async () => {
+    fs.rmSync(tempBase, { recursive: true, force: true });
+    const { app, registry } = makeApp();
+    (registry.getModule as any).mockReturnValue({ status: 'ready', getToolHandlers: () => new Map() });
+
+    const res = await app.request('/api/index/ingest-docs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer good', 'X-Project-Id': projectId },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json() as any;
+    expect(body.ingested).toBe(0);
+    expect(body.message).toBe('No documents in Temp folder');
+  });
+});
+
+describe('api-index-ingest helpers (SA4E-337)', () => {
+  it('inferTypeFromPath maps BRD/FSD/TDD/STP patterns', () => {
+    expect(inferTypeFromPath('docs/SA4E-1/BRD.md')).toBe('REQUIREMENT');
+    expect(inferTypeFromPath('docs/FSD-embedded.md')).toBe('REQUIREMENT');
+    expect(inferTypeFromPath('docs/TDD.md')).toBe('ARCHITECTURE');
+    expect(inferTypeFromPath('docs/STP.md')).toBe('PROCEDURE');
+    expect(inferTypeFromPath('docs/RUN-LOG.md')).toBe('PROCEDURE');
+    expect(inferTypeFromPath('docs/diagram.drawio')).toBe('CONTEXT');
+    expect(inferTypeFromPath('docs/notes.txt')).toBe('CONTEXT');
+  });
+
+  it('extractTagsFromPath extracts SA4E / feature tags from segments', () => {
+    expect(extractTagsFromPath('documents/SA4E-337/BRD.md')).toEqual(expect.arrayContaining(['sa4e', 'sa4e-337']));
+    expect(extractTagsFromPath('C:\\ws\\F3\\TDD.md')).toEqual(expect.arrayContaining(['feature', 'f3']));
+    expect(extractTagsFromPath('docs/plain.md')).toEqual([]);
+  });
+
+  it('summarizeIngestResult classifies ok / Error / isError / unconvertible', () => {
+    // Success JSON from handleIngestFile
+    expect(summarizeIngestResult({ content: [{ type: 'text', text: '{"status":"ingested"}' }], isError: false }))
+      .toEqual({ ok: true, reason: '' });
+    // Unconvertible payload (TDD §3.2 failedFiles reason "no-tool")
+    expect(summarizeIngestResult({ content: [{ type: 'text', text: '{"status":"unconvertible","reason":"no-tool"}' }], isError: false }))
+      .toEqual({ ok: false, reason: 'no-tool' });
+    // String error result (handler returned, not thrown)
+    expect(summarizeIngestResult({ content: [{ type: 'text', text: 'Error: file not found — /x' }], isError: false }))
+      .toEqual({ ok: false, reason: 'file not found — /x' });
+    // withErrorHandling wrapped throw → isError envelope
+    expect(summarizeIngestResult({ content: [{ type: 'text', text: 'Error: ENOSPC' }], isError: true }))
+      .toEqual({ ok: false, reason: 'ENOSPC' });
+    // Empty result
+    expect(summarizeIngestResult(null).ok).toBe(false);
   });
 });

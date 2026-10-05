@@ -1,0 +1,13 @@
+test_case_id,input_path,expected_tags,expected_result,description
+UT-79,dev/notes.md,[dev],PLANNED,Fallback parent-folder name BR-20 TC-14
+UT-79,docs-old/report.md,[docs-old],PLANNED,Fallback hyphenated parent BR-20
+UT-79,projects/x/y/file.md,[y],PLANNED,Fallback immediate parent (not root) BR-20
+UT-79,root.md,[unknown],PLANNED,Fallback failure — no parent → unknown BR-24
+IT-04,project-x/notes.md,[project-x],PASS,LLM-timeout fallback extraction — TaskWorker in-process real DB
+IT-04,non-ticket-folder/doc.md,[non-ticket-folder],PASS,In-process Hono — fallback branch via app.request
+IT-04,archive/2024/report.md,[2024],PASS,In-process — numeric folder name parent
+UT-80,backup/backup.md,[backup],PLANNED,Dedup — parent equals filename stem BR-22 TC-15
+UT-80,archive/archive/doc.md,[archive; doc],PLANNED,Dedup across nested levels BR-22
+UT-80,cache/cache/file.md,[cache],PLANNED,Dedup repeated folder name BR-22
+UT-82,documents/SA4E-337/attachments/img.png,[sa4e-337; attachments],PLANNED,Primary ticket + secondary attachment Story 5 AC-2
+UT-82,documents/x.md,[documents],PLANNED,Root parent → documents tag BR-21 TC-11

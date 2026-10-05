@@ -1,0 +1,28 @@
+{
+  "ticket": "SA4E-337",
+  "summary": "Document Indexer: Index khong ingest vao KB Memory + thieu tags",
+  "currentPhase": "design",
+  "phases": {
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-10-04T22:40:00Z", "note": "Verified pass quality gate 2026-10-05 — kept as-is (user decision)" },
+    "specification": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-10-04T22:50:00Z", "note": "Verified pass quality gate 2026-10-05 — kept as-is (user decision)" },
+    "design": { "status": "in_progress", "file": "TDD.md", "version": null, "startedAt": "2026-10-05T00:00:00Z", "note": "Old TDD.md was 88-byte placeholder — regenerating via sa-agent" },
+    "feedback_loop": { "status": "not_started", "iterations": 0, "maxIterations": 5 },
+    "test_planning": { "status": "not_started" },
+    "implementation": { "status": "done", "completedAt": "2026-10-04T10:30:00Z", "note": "6 bugs fixed before documentation backfill" },
+    "testing": { "status": "in_progress" },
+    "user_guide": { "status": "not_started" },
+    "deployment": { "status": "not_started" }
+  },
+  "bugfix": {
+    "rootCause": "handleIngestDocsFromTemp hardcodes type CONTEXT, no tags, no ingest verification",
+    "bugs_fixed": [
+      { "id": "Bug #1", "desc": "Type hardcoded as CONTEXT for all documents", "file": "backend/src/server/routes/api-index.ts", "fix": "inferTypeFromPath()" },
+      { "id": "Bug #2", "desc": "Tags not passed, left empty", "file": "backend/src/server/routes/api-index.ts", "fix": "extractTagsFromPath()" },
+      { "id": "Bug #3", "desc": "Ingest result not verified", "file": "extension/src/services/IndexerHttpClient.ts", "fix": "Parse JSON response for ingested/errors/total" },
+      { "id": "Bug #4", "desc": "Drawio files excluded", "file": "backend/src/server/routes/api-index.ts", "fix": "Added .drawio to walk function" },
+      { "id": "Bug #5", "desc": "No fallback tag extraction when LLM unavailable", "file": "backend/src/modules/memory/task-queue/TaskWorker.ts", "fix": "fallbackTagExtraction() method" },
+      { "id": "Bug #6", "desc": "UI shows no KB ingest result", "file": "extension/src/indexer.ts", "fix": "Updated showIndexResults message" }
+    ]
+  },
+  "lastUpdated": "2026-10-05T00:00:00Z"
+}
