@@ -42,3 +42,5 @@
 | 2026-10-05T09:18Z | ba-agent | 4 | BA review round 2: APPROVED — all 5 gaps closed, no new gaps (invocation 2/2) | ✅ |
 | 2026-10-05T09:21Z | SM | 4 | Attach Jira: STP-v1.1 docx (11512), STC-v1.1 xlsx (11510), test-coverage.drawio (11511), test-execution-flow.drawio (11513) + comment 12163 | ✅ |
 | 2026-10-05T09:21Z | SM | 4 | Phase 4 DONE — STATUS test_planning=done, review=approved, currentPhase=implementation | ✅ |
+
+| 2026-10-05T09:25Z | SM | 5 | Phase 5 start — commit SA4E-337 leftovers on its branch (6bd9031), create branch SA4E-338 from main, commit docs cd41bdf, implementation in_progress, Jira confirmed In Progress | ✅ |

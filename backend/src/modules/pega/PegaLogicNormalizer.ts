@@ -22,7 +22,7 @@ export interface NormalizedDataAction {
 
 export class PegaLogicNormalizer {
   public static normalizeActivity(json: Record<string, unknown>): string {
-    const steps = Array.isArray(json.steps) ? json.steps : [];
+    const steps = Array.isArray(json.pySteps) ? json.pySteps : Array.isArray(json.steps) ? json.steps : [];
     const lines: string[] = [];
     lines.push(`ACTIVITY: ${json.pyClassName}.${json.pyActivityName || json.pyLabel}`);
 

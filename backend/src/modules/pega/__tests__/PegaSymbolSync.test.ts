@@ -79,12 +79,12 @@ describe('PegaSymbolSync', () => {
       expect(mockAdapter.runAsync).toHaveBeenCalled();
     });
 
-    it('should store extracted content (not raw JSON) in body_embeddings (SA4E-106)', async () => {
+    it('should store AST digest (not raw JSON) in body_embeddings (SA4E-338 Plan B)', async () => {
       const rule = {
         pxObjClass: 'Rule-Obj-Activity',
         pyClassName: 'Work-HR',
         pyRuleName: 'ApproveLeave',
-        steps: [{ pyStepNum: '1', pyMethod: 'Call', pyMethodParameters: 'Work-HR.Validate' }],
+        pySteps: [{ pyStepNum: '1', pyMethod: 'Call', pyMethodParameters: 'Work-HR.Validate' }],
       };
       await syncRuleToSymbols(mockAdapter, rule, 'proj1', '', CHK);
 
@@ -94,8 +94,10 @@ describe('PegaSymbolSync', () => {
       expect(bodyInsert).toBeDefined();
       const embeddingBuf = bodyInsert![1][2] as Buffer;
       const text = Buffer.from(embeddingBuf).toString('utf-8');
-      expect(text.startsWith('RULE TYPE:')).toBe(true);
-      expect(text).toContain('Call(Work-HR.Validate)');
+      // AST digest starts with "Rule: Rule-Obj-Activity" (toPromptContext format)
+      expect(text.startsWith('Rule:')).toBe(true);
+      expect(text).toContain('ApproveLeave');
+      expect(text).toContain('Work-HR');
       expect(text).not.toContain('{"pxObjClass"');
     });
 

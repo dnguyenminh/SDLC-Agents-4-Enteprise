@@ -117,14 +117,15 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
         if (!mustAuth) return anonymous();
         return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
       }
-      const ctx = createProjectContext(
-        projectId || payload.pid || '',
-        payload.sub || 'anonymous',
-        undefined,
-        payload.wid || undefined,
-      );
-      c.set('projectContext', ctx);
-      return next();
+       const ctx = createProjectContext(
+         projectId || payload.pid || '',
+         payload.sub || 'anonymous',
+         undefined,
+         payload.wid || undefined,
+       );
+       c.set('projectContext', ctx);
+       c.set('jwtPayload', payload);
+       return next();
     }
 
     const userAgent = c.req.header('user-agent') || '';

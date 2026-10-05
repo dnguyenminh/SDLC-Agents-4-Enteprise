@@ -2,6 +2,9 @@ import type { PegaRuleAst, AstNode, AstReference } from './PegaRuleAst.js';
 import { SYSTEM_FIELD_PREFIXES, SYSTEM_FIELDS } from './PegaRuleAst.js';
 import { isExpressionField, renderFieldExpression } from './PegaExprAnnotator.js';
 
+/** Maximum characters rendered for a single property value before truncation. */
+const MAX_RENDER_VALUE_CHARS = 2000;
+
 /**
  * Render a property value for pseudo-code. Expression-bearing fields (SA4E-236/GD4) are parsed
  * by the ANTLR parser and re-emitted canonically; everything else is stringified as before.
@@ -12,7 +15,18 @@ function renderPropertyValue(key: string, value: unknown): string {
   if (isExpressionField(key) && typeof value === 'string') {
     return renderFieldExpression(value);
   }
-  return typeof value === 'object' ? JSON.stringify(value) : String(value);
+  if (typeof value === 'object' && value !== null) {
+    const s = JSON.stringify(value);
+    if (s.length > MAX_RENDER_VALUE_CHARS) {
+      return '{…large object…(+' + (s.length - MAX_RENDER_VALUE_CHARS) + ' chars)}';
+    }
+    return s;
+  }
+  const s = String(value);
+  if (s.length > MAX_RENDER_VALUE_CHARS) {
+    return s.slice(0, MAX_RENDER_VALUE_CHARS) + '…(+' + (s.length - MAX_RENDER_VALUE_CHARS) + ' chars)';
+  }
+  return s;
 }
 
 const REFERENCE_FIELDS = new Set([
@@ -173,6 +187,7 @@ export class PegaRuleAstParser {
     if (pxObjClass === 'Rule-Obj-Class') return this.buildClass.bind(this);
     if (pxObjClass === 'Rule-Obj-Property') return this.buildProperty.bind(this);
     if (pxObjClass === 'Rule-Obj-When') return this.buildWhen.bind(this);
+    if (pxObjClass === 'Rule-Obj-DecisionTable') return this.buildDecision.bind(this);
     if (pxObjClass === 'Rule-Declare-DecisionTable' || pxObjClass === 'Rule-Declare-DecisionTree') return this.buildDecision.bind(this);
     if (pxObjClass.startsWith('Rule-Declare-')) return this.buildDeclare.bind(this);
     if (pxObjClass.startsWith('Rule-Decision-')) return this.buildDecision.bind(this);
@@ -212,7 +227,7 @@ export class PegaRuleAstParser {
   private buildActivity(json: Record<string, unknown>): { properties: Record<string, unknown>; children: AstNode[] } {
     const props = this.stripSystemFields(json);
     delete props.steps;
-    const steps = Array.isArray(json.steps) ? json.steps : [];
+    const steps = Array.isArray(json.pySteps) ? json.pySteps : Array.isArray(json.steps) ? json.steps : [];
     const children: AstNode[] = steps.map((s: unknown, _i: number) => {
       const step = s as Record<string, unknown>;
       return {
@@ -227,7 +242,7 @@ export class PegaRuleAstParser {
   private buildDataTransform(json: Record<string, unknown>): { properties: Record<string, unknown>; children: AstNode[] } {
     const props = this.stripSystemFields(json);
     delete props.pyActions;
-    const actions = Array.isArray(json.pyActions) ? json.pyActions : [];
+    const actions = Array.isArray(json.pyProperties) ? json.pyProperties : Array.isArray(json.pyActions) ? json.pyActions : [];
     const children: AstNode[] = actions.map((a: unknown) => {
       const act = a as Record<string, unknown>;
       return {
@@ -302,7 +317,7 @@ export class PegaRuleAstParser {
     const props = this.stripSystemFields(json);
     const children: AstNode[] = [];
 
-    const rows = json.pyDecisionTableRows || json.pyRows;
+    const rows = json.pyDecisionRules || json.pyDecisionTableRows || json.pyRows;
     if (Array.isArray(rows)) {
       for (const r of rows) {
         children.push({ type: 'DecisionRow', properties: this.stripSystemFields(r as Record<string, unknown>), children: [] });
@@ -508,15 +523,23 @@ export class PegaRuleAstParser {
 
   private formatNodes(nodes: AstNode[], lines: string[], indent: string, depth: number): void {
     if (depth <= 0) { lines.push(`${indent}...`); return; }
+    const MAX_RENDER_NODE_LINES = 200;
     for (const node of nodes) {
-      lines.push(`${indent}[${node.type}]`);
+      const nodeLines: string[] = [];
+      nodeLines.push(`${indent}[${node.type}]`);
       for (const [k, v] of Object.entries(node.properties)) {
         if (k.startsWith('px') && k !== 'pxObjClass') continue;
         if (k.startsWith('pz')) continue;
-        lines.push(`${indent}  ${k}: ${renderPropertyValue(k, v)}`);
+        nodeLines.push(`${indent}  ${k}: ${renderPropertyValue(k, v)}`);
       }
       if (node.children.length > 0) {
-        this.formatNodes(node.children, lines, indent + '  ', depth - 1);
+        this.formatNodes(node.children, nodeLines, indent + '  ', depth - 1);
+      }
+      if (nodeLines.length > MAX_RENDER_NODE_LINES) {
+        lines.push(...nodeLines.slice(0, MAX_RENDER_NODE_LINES));
+        lines.push(`${indent}…`);
+      } else {
+        lines.push(...nodeLines);
       }
     }
   }

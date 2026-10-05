@@ -193,10 +193,17 @@ FORMAT:
     return parts.join('\n');
   }
 
-  /** Estimate token count by whitespace split, truncate to max tokens. */
+  /** Build a prompt with empty digest to measure overhead tokens (BR-15). */
+  buildPromptForBudget(context: SymbolContext): string {
+    const messages = this.build('PEGA_SUMMARY', context);
+    return messages.map((m) => m.content).join('\n');
+  }
+
+  /** Estimate token count (chars/3 per TokenBudgetManager) and truncate to max tokens. */
   private truncateToTokens(text: string, maxTokens: number): string {
-    const words = text.split(/\s+/);
-    if (words.length <= maxTokens) return text;
-    return words.slice(0, maxTokens).join(' ') + '...';
+    const charsPerToken = 3;
+    const maxChars = maxTokens * charsPerToken;
+    if (text.length <= maxChars) return text;
+    return text.slice(0, maxChars) + '...';
   }
 }

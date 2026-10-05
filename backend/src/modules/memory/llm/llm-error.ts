@@ -81,3 +81,55 @@ export function isConnectivityFailure(err: unknown, depth = 0): boolean {
   })) return true;
   return isConnectivityFailure(e.cause, depth + 1);
 }
+
+/** Context-length patterns (matches Ollama / LM Studio / vLLM error shapes). */
+const CONTEXT_LENGTH_PATTERNS = [
+  /context[_ -]?length/i,
+  /maximum context/i,
+  /prompt is too long/i,
+  /exceeds .{0,40}(context|window)/i,
+  /num_ctx/i,
+];
+
+/** Extract HTTP status from an error object or message. */
+function extractHttpStatus(err: unknown): number | null {
+  if (!err || typeof err !== 'object') return null;
+  const e = err as Record<string, any>;
+  if (typeof e.status === 'number') return e.status;
+  if (typeof e.message === 'string') {
+    const m = e.message.match(/(?:error:\s*)(\d{3})/);
+    if (m) return parseInt(m[1], 10);
+  }
+  return null;
+}
+
+/** Check if the flattened message matches any context-length pattern. */
+function messageMatchesContextLength(msg: string): boolean {
+  return CONTEXT_LENGTH_PATTERNS.some((re) => re.test(msg));
+}
+
+/**
+ * SA4E-338 A2: returns true when err represents a context-length exhaustion.
+ * Recognition: (a) flattened message matches context-length regexes, or
+ * (b) parsed body has error.code === 'context_length_exceeded' (OpenAI/vLLM).
+ * Negative rules: connectivity failures, HTTP 401/403/404/429, non-Error inputs.
+ */
+export function isContextLengthError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  if (isConnectivityFailure(err)) return false;
+  const status = extractHttpStatus(err);
+  if (status !== null) {
+    if ([401, 403, 404, 429].includes(status)) return false;
+    if (status >= 500) {
+      const body = (err as Record<string, any>)?.providerBody ?? (err as Record<string, any>)?.message;
+      if (!body || !messageMatchesContextLength(String(body))) return false;
+    }
+  }
+  const flat = describeError(err);
+  if (messageMatchesContextLength(flat)) return true;
+  // Check error.code === 'context_length_exceeded' (OpenAI/vLLM shape)
+  const e = err as Record<string, any>;
+  if (e?.error?.code === 'context_length_exceeded') return true;
+  if (e?.code === 'context_length_exceeded') return true;
+  return false;
+}

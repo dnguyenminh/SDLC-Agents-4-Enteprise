@@ -2,15 +2,42 @@
  * SA4E-157 — Enrichment Status Route.
  * GET /api/v1/enrichment/status — returns current LLM enrichment progress.
  * JWT auth required (backend is remote), no admin permission check (read-only data).
+ *
+ * SA4E-338 S1+S2: POST /enrichment/retry-failed hardened:
+ *  - admin-only (require ADMIN claim from JWT pid scope)
+ *  - rate-limit 6 burst → 429
+ *  - exclude terminal errors (budget_error:/llm_auth:)
+ *  - limit 500 re-queued per call
+ *  - project scope from JWT pid (not X-Project-Id header)
  */
 
 import { Hono } from 'hono';
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
-import { jwtAuth } from '../middleware/jwt-auth.js';
+import { jwtAuth, jwtAuthStrict } from '../middleware/jwt-auth.js';
 import { deriveEnrichmentState } from '../../shared/schemas/EnrichmentStatusSchema.js';
 import type { EnrichmentStatusResponse } from '../../shared/schemas/EnrichmentStatusSchema.js';
 import type { TaskWorker } from '../../modules/memory/task-queue/TaskWorker.js';
+import type { PendingTaskRepository } from '../../modules/memory/task-queue/PendingTaskRepository.js';
+
+/** In-memory burst limiter: IP → timestamps of retry calls. */
+const retryTimestamps = new Map<string, number[]>();
+const RETRY_BURST_LIMIT = 6;
+const RETRY_BURST_WINDOW_MS = 60_000;
+
+function checkRetryBurstLimit(ip: string): boolean {
+  const now = Date.now();
+  const timestamps = retryTimestamps.get(ip) ?? [];
+  const windowStart = now - RETRY_BURST_WINDOW_MS;
+  const recent = timestamps.filter((t) => t > windowStart);
+  if (recent.length >= RETRY_BURST_LIMIT) {
+    retryTimestamps.set(ip, recent);
+    return false;
+  }
+  recent.push(now);
+  retryTimestamps.set(ip, recent);
+  return true;
+}
 
 /**
  * Create enrichment status route group.
@@ -31,8 +58,9 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
         return c.json({ error: 'Enrichment service unavailable', details: 'TaskWorker not initialized' }, 503);
       }
 
-      // Filter by project_id from request context (X-Project-Id header or JWT)
-      const projectId = c.req.header('X-Project-Id') || '';
+      // S2: Project scope from JWT pid (projectContext), never from X-Project-Id header.
+      const projectContext = c.get('projectContext') as { projectId: string } | undefined;
+      const projectId = projectContext?.projectId ?? '';
 
       const response = await buildStatusResponse(taskWorker, projectId || null);
       return c.json(response, 200);
@@ -44,10 +72,8 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
 
   /**
    * GET /api/v1/enrichment/failures?limit=N — full list of FAILED enrichment tasks,
-   * scoped to the request's project. Unlike the status endpoint's recentFailures (capped
-   * at 10), this returns every failure (bounded by `limit`, default 200, max 1000) so the
-   * user can see exactly which rules/symbols failed and why. Each item carries the resolved
-   * source name, the stored error string, retry count, and completion timestamp.
+   * scoped to the request's project (from JWT pid). Unlike the status endpoint's recentFailures
+   * (capped at 10), this returns every failure (bounded by limit, default 200, max 1000).
    */
   app.get('/enrichment/failures', jwtAuth, async (c) => {
     try {
@@ -55,8 +81,11 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
       if (!taskWorker) {
         return c.json({ error: 'Enrichment service unavailable', details: 'TaskWorker not initialized' }, 503);
       }
-      const projectId = c.req.header('X-Project-Id') || '';
-      // Clamp limit to [1, 1000] — guards against unbounded payloads and bad input.
+
+      // S2: Project scope from JWT pid.
+      const projectContext = c.get('projectContext') as { projectId: string } | undefined;
+      const projectId = projectContext?.projectId ?? '';
+
       const rawLimit = Number(c.req.query('limit'));
       const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 1000) : 200;
       const repo = taskWorker.getRepository();
@@ -68,20 +97,48 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
     }
   });
 
-  /** POST /api/v1/enrichment/retry-failed — reconcile orphans first, then reset failed tasks to pending. */
-  app.post('/enrichment/retry-failed', jwtAuth, async (c) => {
+  /**
+   * POST /api/v1/enrichment/retry-failed — reconcile orphans first, then reset failed tasks to pending.
+   * S1 (SEC-338-01 FIX): admin-only, rate-limit 6 burst → 429, exclude terminal errors, limit 500.
+   * S2: project scope from JWT pid, X-Project-Id header ignored.
+   */
+  app.post('/enrichment/retry-failed', jwtAuthStrict, async (c) => {
     try {
+      // S1: Rate-limit: 6 burst per IP per minute → 429.
+      const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || '127.0.0.1';
+      if (!checkRetryBurstLimit(ip)) {
+        return c.json({ error: 'Too many requests', retryAfter: 60 }, { status: 429, headers: { 'Retry-After': '60' } });
+      }
+
+      // S1: Admin-only — verify JWT has admin claim.
+      const payload = c.get('jwtPayload') as Record<string, any> | undefined;
+      const isAdmin = payload?.role === 'ADMIN' || payload?.permissions?.includes('CONFIG_EDIT') || false;
+      if (!isAdmin) {
+        return c.json({ error: { code: 'FORBIDDEN', message: 'Admin permission required' } }, 403);
+      }
+
+      // S2: Project scope from JWT pid (projectContext), never from X-Project-Id header.
+      const projectContext = c.get('projectContext') as { projectId: string } | undefined;
+      const projectId = projectContext?.projectId ?? '';
+
       const taskWorker = getTaskWorker(registry);
       if (!taskWorker) {
         return c.json({ error: 'Enrichment service unavailable', details: 'TaskWorker not initialized' }, 503);
       }
       const repo = taskWorker.getRepository();
+
       // Auto-purge orphan tasks before retry (entries deleted but tasks remain)
       const purgedCount = await repo.reconcileOrphans();
       if (purgedCount > 0) {
         logger.info({ purgedCount }, '[EnrichmentStatus] Auto-purged orphan tasks before retry');
       }
-      const resetCount = await repo.retryAllFailed();
+
+      // S1: Exclude terminal errors (budget_error:/llm_auth:), limit 500, scope to project.
+      const resetCount = await repo.retryAllFailed({
+        excludeTerminalErrors: true,
+        limit: 500,
+        projectId: projectId || undefined,
+      });
       logger.info({ resetCount, purgedCount }, '[EnrichmentStatus] Retry failed tasks');
       return c.json({ data: { resetCount, purgedCount, message: `${purgedCount} orphans purged, ${resetCount} failed tasks reset to pending` }, error: null });
     } catch (err: any) {

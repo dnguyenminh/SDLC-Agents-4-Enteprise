@@ -6,6 +6,8 @@
 import type { LLMAdapter, LLMConfig, LLMMessage, LLMProvider, LLMResponse } from './types.js';
 import { OllamaAdapter } from './ollama-adapter.js';
 import { OpenAIAdapter } from './openai-adapter.js';
+import { ContextWindowDiscovery, type WindowInfo } from './context-window.js';
+import { isContextLengthError } from './error-classifier.js';
 
 const ADAPTERS: Record<LLMProvider, () => LLMAdapter> = {
   ollama: () => new OllamaAdapter(),
@@ -32,6 +34,7 @@ const DEFAULT_CONFIGS: Record<LLMProvider, Partial<LLMConfig>> = {
 export class LLMService {
   private config: LLMConfig;
   private adapter: LLMAdapter;
+  private readonly windowDiscovery = new ContextWindowDiscovery();
 
   constructor(config?: Partial<LLMConfig>) {
     const provider: LLMProvider = (config?.provider || process.env.LLM_PROVIDER || 'ollama') as LLMProvider;
@@ -43,7 +46,7 @@ export class LLMService {
       baseUrl: config?.baseUrl || process.env.LLM_BASE_URL || defaults.baseUrl || 'http://localhost:11434',
       apiKey: config?.apiKey || process.env.LLM_API_KEY || undefined,
       temperature: config?.temperature ?? defaults.temperature ?? 0.3,
-      maxTokens: config?.maxTokens ?? defaults.maxTokens ?? 2048,
+      maxTokens: config?.maxTokens ?? defaults.maxTokens ?? 800,
     };
 
     this.adapter = ADAPTERS[provider]?.() || new OllamaAdapter();
@@ -75,5 +78,20 @@ export class LLMService {
     const result = await this.ask(userPrompt, systemPrompt);
     // Clean up: remove quotes, newlines, prefixes
     return result.replace(/^["'\s]+|["'\s]+$/g, '').split('\n')[0].trim().substring(0, 80);
+  }
+
+  /** SA4E-338 A1: resolve context window (env > cache > provider > fallback 8192). Never throws. */
+  async getContextWindow(): Promise<WindowInfo> {
+    return this.windowDiscovery.getContextWindow(this.config);
+  }
+
+  /** SA4E-338 A2: invalidate window cache on provider/model/baseUrl change (AF-1.2). */
+  invalidateWindowCache(modelKey?: string): void {
+    this.windowDiscovery.invalidate(modelKey);
+  }
+
+  /** SA4E-338 A2: classify whether an error is a context-length error. */
+  isContextLengthError(err: unknown): boolean {
+    return isContextLengthError(err);
   }
 }

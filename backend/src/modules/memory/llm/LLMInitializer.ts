@@ -22,11 +22,40 @@ import { loadPersistedLLMConfig } from '../../../admin/db/config.js';
 /** Probe/health-check timeout for the LLM server (ms). */
 const LLM_PROBE_TIMEOUT_MS = 5000;
 
+/** Hosts allowed to use HTTP (localhost/loopback). Everything else requires HTTPS. */
+const HTTP_ALLOWED_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
+/**
+ * Enforce HTTPS for remote LLM provider URLs.
+ * Localhost/127.0.0.1/::1 are allowed HTTP (dev). Set LLM_ALLOW_INSECURE_HTTP=1 to bypass.
+ * @throws {Error} if URL is remote HTTP without the insecure flag
+ */
+function enforceHttps(baseUrl: string): void {
+  try {
+    const url = new URL(baseUrl);
+    const host = url.hostname;
+    if (url.protocol === 'http:') {
+      if (HTTP_ALLOWED_HOSTS.has(host)) return; // localhost is acceptable for dev
+      if (process.env.LLM_ALLOW_INSECURE_HTTP === '1') return; // explicit operator override
+      throw new Error(
+        `SEC-338-03: Remote LLM URL must use HTTPS (got http:// for ${host}). ` +
+        `Set LLM_ALLOW_INSECURE_HTTP=1 to allow insecure HTTP (not recommended).`,
+      );
+    }
+  } catch (err: any) {
+    if (err.message?.startsWith('SEC-338-03')) throw err;
+    // URL parse failure — let buildLLMConfig handle it downstream
+  }
+}
+
 /** Build LLM config: DB overrides > env vars > auto-detect from LMStudio. */
 async function buildLLMConfig() {
   const provider = process.env.LLM_PROVIDER || '';
   const model = process.env.LLM_MODEL || '';
   const baseUrl = process.env.LLM_BASE_URL || 'http://localhost:1234/v1';
+
+  // S3: Enforce HTTPS for remote providers before merging config.
+  enforceHttps(baseUrl);
 
   const envConfig = {
     provider: (provider || 'lmstudio') as any,

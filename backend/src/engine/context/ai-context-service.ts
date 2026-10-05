@@ -6,7 +6,7 @@
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { SymbolResolver } from '../graph/symbol-resolver.js';
 import { CallGraphService } from '../graph/call-graph-service.js';
-import { TokenBudgetManager } from './token-budget-manager.js';
+import { TokenBudgetManager, estimateTokens } from './token-budget-manager.js';
 import { getStrategy } from './intent-strategies.js';
 import { GitService } from './git-service.js';
 import { AIContextParams, AIContextResponse } from './types.js';
@@ -61,7 +61,7 @@ export class AIContextService {
         continue;
       }
 
-      const tokens = budgetManager.estimateTokens(content);
+      const tokens = estimateTokens(content);
 
       if (budgetManager.canFit(tokens)) {
         context[section.name] = content;

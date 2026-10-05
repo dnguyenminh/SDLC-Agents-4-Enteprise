@@ -10,6 +10,7 @@ import { LLMService } from './LLMService.js';
 import type { Logger } from 'pino';
 import { SYSTEM_PROMPT, DEFAULT_TAXONOMY, KNOWN_KEYWORDS } from './prompts.js';
 import type { TaskWorkerConfig } from '../task-queue/TaskWorkerConfig.js';
+import { chunkedReduce } from './chunked-reduce.js';
 
 export interface TagSuggestion {
   tag: string;
@@ -255,27 +256,49 @@ export class TagAnalyzerService {
     const { chunks } = this.chunkContent(content, chunkSize, overlap);
     this.logger?.info({ totalChunks: chunks.length, chunkSize, component: 'TagAnalyzerService' },
       'Chunking activated');
-    const results: TagAnalysisResult[] = [];
-    for (const chunk of chunks) {
-      try {
-        const ctx = results.length === 0 ? context : null;
-        const llmResult = await this.analyzeWithLLM(chunk, undefined, ctx);
-        const normalized = this.normalizeTags(llmResult.suggestions);
-        results.push(this.applyThresholdWithExtended(normalized, 0.7, true, llmResult));
-      } catch (err) {
-        this.logger?.warn({ err, chunkIdx: results.length, component: 'TagAnalyzerService' }, 'Chunk LLM failed, using fallback');
-        results.push({ ...this.fallbackKeywordExtraction(chunk, 0.7), summary: '', business_entities: [], actors: [], business_rules: [] });
-      }
-    }
-    return {
-      appliedTags: [...new Set(results.flatMap(r => r.appliedTags))].slice(0, 6),
-      suggestedTags: results[0]?.suggestedTags ?? [],
-      fallbackUsed: results.some(r => r.fallbackUsed),
-      summary: results[0]?.summary ?? '',
-      business_entities: [...new Set(results.flatMap(r => r.business_entities))].slice(0, 5),
-      actors: [...new Set(results.flatMap(r => r.actors))].slice(0, 5),
-      business_rules: [...new Set(results.flatMap(r => r.business_rules))].slice(0, 10),
-    };
+
+    // Delegate to shared chunkedReduce (OI-04)
+    const results = await chunkedReduce<TagAnalysisResult, string>({
+      chunks,
+      initial: { appliedTags: [], suggestedTags: [], fallbackUsed: false, summary: '', business_entities: [], actors: [], business_rules: [] },
+      reduceFn: (acc, chunkResult) => ({
+        appliedTags: [...new Set([...acc.appliedTags, ...chunkResult.appliedTags])].slice(0, 6),
+        suggestedTags: acc.suggestedTags.length > 0 ? acc.suggestedTags : chunkResult.suggestedTags,
+        fallbackUsed: acc.fallbackUsed || chunkResult.fallbackUsed,
+        summary: acc.summary || chunkResult.summary,
+        business_entities: [...new Set([...acc.business_entities, ...chunkResult.business_entities])].slice(0, 5),
+        actors: [...new Set([...acc.actors, ...chunkResult.actors])].slice(0, 5),
+        business_rules: [...new Set([...acc.business_rules, ...chunkResult.business_rules])].slice(0, 10),
+      }),
+      mapFn: async (chunk, index) => {
+        try {
+          // First chunk gets the context chain; subsequent chunks start fresh (per original pattern)
+          const ctx = index === 0 ? context : null;
+          const llmResult = await this.analyzeWithLLM(chunk, undefined, ctx);
+          const normalized = this.normalizeTags(llmResult.suggestions);
+          return this.applyThresholdWithExtended(normalized, 0.7, true, llmResult);
+        } catch (err) {
+          this.logger?.warn({ err, component: 'TagAnalyzerService' }, 'Chunk LLM failed, using fallback');
+          return { ...this.fallbackKeywordExtraction(chunk, 0.7), summary: '', business_entities: [], actors: [], business_rules: [] };
+        }
+      },
+      mergeFn: (results) => {
+        return results.reduce<TagAnalysisResult>((acc, r) => ({
+          appliedTags: [...new Set([...acc.appliedTags, ...r.appliedTags])].slice(0, 6),
+          suggestedTags: acc.suggestedTags.length > 0 ? acc.suggestedTags : r.suggestedTags,
+          fallbackUsed: acc.fallbackUsed || r.fallbackUsed,
+          summary: acc.summary || r.summary,
+          business_entities: [...new Set([...acc.business_entities, ...r.business_entities])].slice(0, 5),
+          actors: [...new Set([...acc.actors, ...r.actors])].slice(0, 5),
+          business_rules: [...new Set([...acc.business_rules, ...r.business_rules])].slice(0, 10),
+        }), { appliedTags: [], suggestedTags: [], fallbackUsed: false, summary: '', business_entities: [], actors: [], business_rules: [] });
+      },
+      maxRetriesPerChunk: 2,
+      backoffMs: (a) => 200 * 2 ** a,
+      logger: this.logger,
+    });
+
+    return results;
   }
 
   // ── Helpers ──

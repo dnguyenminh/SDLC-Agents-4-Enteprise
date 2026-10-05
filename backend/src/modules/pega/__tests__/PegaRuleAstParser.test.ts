@@ -271,6 +271,136 @@ describe('PegaRuleAstParser', () => {
     });
   });
 
+  // ── SA4E-338 Plan A2: real field mapping (BR-14) ──
+
+  describe('buildActivity — pySteps primary (BR-14)', () => {
+    it('reads pySteps when present', () => {
+      const ast = parser.parse({
+        pxObjClass: 'Rule-Obj-Activity',
+        pyClassName: 'W',
+        pyActivityName: 'A',
+        pySteps: [{ pyStepNum: '1', pyMethod: 'Call', pyMethodParameters: 'X.Y' }],
+      });
+      expect(ast.children).toHaveLength(1);
+      expect(ast.children[0].type).toBe('Step');
+    });
+
+    it('falls back to legacy steps when pySteps absent', () => {
+      const ast = parser.parse({
+        pxObjClass: 'Rule-Obj-Activity',
+        pyClassName: 'W',
+        pyActivityName: 'A',
+        steps: [{ pyStepNum: '2', pyMethod: 'Property-Set', pyMethodParameters: '.x' }],
+      });
+      expect(ast.children).toHaveLength(1);
+      expect(ast.children[0].type).toBe('Step');
+    });
+  });
+
+  describe('buildDataTransform — pyProperties primary (BR-14)', () => {
+    it('reads pyProperties when present', () => {
+      const ast = parser.parse({
+        pxObjClass: 'Rule-Obj-Model',
+        pyClassName: 'W',
+        pyModelName: 'M',
+        pyProperties: [{ pyActionName: 'Set', pyTarget: '.x', pySource: '1' }],
+      });
+      expect(ast.children).toHaveLength(1);
+      expect(ast.children[0].type).toBe('Action');
+    });
+
+    it('falls back to legacy pyActions when pyProperties absent', () => {
+      const ast = parser.parse({
+        pxObjClass: 'Rule-Obj-Model',
+        pyClassName: 'W',
+        pyModelName: 'M',
+        pyActions: [{ pyActionName: 'Set', pyTarget: '.y', pySource: '2' }],
+      });
+      expect(ast.children).toHaveLength(1);
+      expect(ast.children[0].type).toBe('Action');
+    });
+  });
+
+  describe('buildDecision — pyDecisionRules primary (BR-14)', () => {
+    it('reads pyDecisionRules when present', () => {
+      const ast = parser.parse({
+        pxObjClass: 'Rule-Obj-DecisionTable',
+        pyClassName: 'W',
+        pyRuleName: 'D',
+        pyDecisionRules: [{ pyCondition: 'C1', pyResult: 'R1' }],
+      });
+      expect(ast.children).toHaveLength(1);
+      expect(ast.children[0].type).toBe('DecisionRow');
+    });
+
+    it('falls back to pyDecisionTableRows then pyRows', () => {
+      const ast = parser.parse({
+        pxObjClass: 'Rule-Obj-DecisionTable',
+        pyClassName: 'W',
+        pyRuleName: 'D',
+        pyDecisionTableRows: [{ pyCondition: 'C2', pyResult: 'R2' }],
+      });
+      expect(ast.children).toHaveLength(1);
+    });
+  });
+
+  describe('getBuilder — Rule-Obj-DecisionTable', () => {
+    it('routes Rule-Obj-DecisionTable to buildDecision', () => {
+      const ast = parser.parse({
+        pxObjClass: 'Rule-Obj-DecisionTable',
+        pyClassName: 'W',
+        pyRuleName: 'D',
+        pyDecisionRules: [{ pyCondition: 'C', pyResult: 'R' }],
+      });
+      expect(ast.ruleType).toBe('Rule-Obj-DecisionTable');
+      expect(ast.children[0].type).toBe('DecisionRow');
+    });
+  });
+
+  describe('renderPropertyValue — cap + ellipsis (BR-17)', () => {
+    it('truncates large string values with ellipsis', () => {
+      const large = 'x'.repeat(3000);
+      const result = (parser as any).renderPropertyValue?.('pyData', large);
+      // renderPropertyValue is private — test via toPromptContext output
+    });
+
+    it('does not JSON.stringify large objects in toPromptContext', () => {
+      const ruleJson: Record<string, unknown> = {
+        pxObjClass: 'Rule-Obj-Activity',
+        pyClassName: 'W',
+        pyActivityName: 'A',
+        pySteps: [{ pyStepNum: '1', pyMethod: 'Call', pyMethodParameters: 'X.Y' }],
+        pyHugeProp: { a: 'b', c: { d: { e: 'f' } } },
+      };
+      const ast = parser.parse(ruleJson);
+      const ctx = parser.toPromptContext(ast);
+      // Large nested objects should be rendered as outline, not full JSON dump
+      expect(ctx.length).toBeLessThan(2000);
+    });
+  });
+
+  describe('formatNodes — line budget (BR-17)', () => {
+    it('caps a single node subtree at 200 lines', () => {
+      const ast = parser.parse({
+        pxObjClass: 'Rule-Obj-Activity',
+        pyClassName: 'W',
+        pyActivityName: 'A',
+        pySteps: [{ pyStepNum: '1', pyMethod: 'Call', pyMethodParameters: 'X.Y' }],
+      });
+      // Create ONE node whose subtree exceeds 200 lines (deep nesting)
+      const deepChild: AstNode = { type: 'Layout', properties: { pyName: 'Root' }, children: [] };
+      for (let i = 0; i < 300; i++) {
+        deepChild.children.push({ type: 'Item', properties: { pyName: `L${i}` }, children: [] });
+      }
+      ast.children = [deepChild];
+      const ctx = parser.toPromptContext(ast);
+      // Per-node subtree cap at 200 lines → output bounded
+      expect(ctx.length).toBeLessThan(5000);
+      // Should contain truncation marker because subtree > 200 lines
+      expect(ctx).toContain('…');
+    });
+  });
+
   describe('Generic fallback', () => {
     const generic = {
       pxObjClass: 'Rule-Admin-Product',

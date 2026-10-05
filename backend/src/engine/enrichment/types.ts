@@ -68,7 +68,34 @@ export interface CodeEnrichmentLLMResponse {
   summary: string;
   pseudo_code?: string;
   tags?: string[];
+  /** SA4E-338 Task F: mapReduceReport always present in response/meta (BR-13). */
+  mapReduceReport?: MapReduceReport;
 }
 
 /** Enrichment status values stored in symbols table. */
-export type EnrichmentStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
+export type EnrichmentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'budget_error';
+
+/** Map-reduce report persisted in symbols.enrichment_meta (BR-13). */
+export interface MapReduceReport {
+  trigger: 'proactive_over_budget' | 'context_length_error';
+  strategy: string;
+  chunks: Array<{ section: string; tokens: number; status: 'ok' | 'failed'; attempts: number }>;
+  reduceRounds: number;
+  chunksCompacted: number;
+  tokensFreed: number;
+  pinnedLogicIntact: boolean;
+  boundsHit?: { chunksTried?: number; roundsTried?: number };
+  budgetError?: { message: string; context: Record<string, unknown> };
+}
+
+/** Enrichment metadata stored in symbols.enrichment_meta (OI-02). */
+export interface EnrichmentMeta {
+  digestSource?: string;
+  ruleClass?: string;
+  window?: { tokens: number; source: string; model: string };
+  budgetCheck?: { digestTokens: number; overheadTokens: number; inputBudget: number; withinBudget: boolean; utilization: number };
+  schemaContextPresent?: boolean;
+  mapReduceReport?: MapReduceReport;
+  schemaContext?: Record<string, unknown>;
+  truncatedAt?: string | null;
+}

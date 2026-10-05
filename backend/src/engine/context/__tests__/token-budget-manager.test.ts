@@ -16,18 +16,18 @@ describe('TokenBudgetManager construction', () => {
 });
 
 describe('TokenBudgetManager.estimateTokens', () => {
-  it('estimates ~4 chars per token for strings', () => {
+  it('estimates ~3 chars per token for strings (OI-03 / FSD §5.6.6)', () => {
     const m = new TokenBudgetManager(500);
-    expect(m.estimateTokens('abcd')).toBe(1);
+    expect(m.estimateTokens('abc')).toBe(1);
     expect(m.estimateTokens('')).toBe(0);
-    expect(m.estimateTokens('abcde')).toBe(2);
-    expect(m.estimateTokens('a'.repeat(400))).toBe(100);
+    expect(m.estimateTokens('abcd')).toBe(2);
+    expect(m.estimateTokens('a'.repeat(300))).toBe(100);
   });
 
   it('JSON-stringifies non-string content', () => {
     const m = new TokenBudgetManager(500);
-    expect(m.estimateTokens({ a: 1 })).toBe(Math.ceil('{"a":1}'.length / 4));
-    expect(m.estimateTokens([1, 2])).toBe(Math.ceil('[1,2]'.length / 4));
+    expect(m.estimateTokens({ a: 1 })).toBe(Math.ceil('{"a":1}'.length / 3));
+    expect(m.estimateTokens([1, 2])).toBe(Math.ceil('[1,2]'.length / 3));
   });
 });
 

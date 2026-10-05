@@ -606,7 +606,9 @@ export class TaskWorker {
     const nonRetryable = err.message.includes('invalid_json')
       || err.message.includes('invalid_payload')
       || err.message.includes('entry_not_found')
-      || err.message.includes('symbol_not_found');
+      || err.message.includes('symbol_not_found')
+      || err.message.startsWith('budget_error:')
+      || err.message.startsWith('llm_auth:');
     if (nonRetryable || task.retry_count + 1 >= task.max_retries) {
       await this.repo.markFailed(task.id, err.message);
     } else {

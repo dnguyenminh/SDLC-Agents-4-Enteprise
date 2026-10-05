@@ -12,4 +12,6 @@
     "deployment": { "status": "not_started" }
   },
   "jiraStatus": "In Progress",
-  "kbNotes": "BRD v2, FSD v1.2 (#392), TDD v2 (#394), DISCREPANCY, SECURITY-REVIEW, STP v1.1 + STC v1.1 ingested. mem_search index unreliable — verify via
+  "kbNotes": "BRD v2, FSD v1.2 (#392), TDD v2 (#394), DISCREPANCY, SECURITY-REVIEW, STP v1.1 + STC v1.1 ingested. mem_search index unreliable — verify via mem_crud list",
+  "lastUpdated": "2026-10-05T09:21:00Z"
+}

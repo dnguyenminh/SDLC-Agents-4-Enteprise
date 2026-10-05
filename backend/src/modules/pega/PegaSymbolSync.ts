@@ -10,7 +10,7 @@ import {
   resolveSymbolKind, buildVirtualPath, buildFqn, resolveRuleNameField,
   resolveClassNameField, resolveRuleSetName, resolveRuleSetVersion,
 } from './pega-mapping.js';
-import { extractRuleContent } from './PegaContentExtractor.js';
+import { AstDigestBuilder } from './AstDigestBuilder.js';
 import { SchemaStorageService, type IDatabaseAdapter } from './schema/SchemaStorageService.js';
 import { TaskType, TaskStatus } from '../memory/task-queue/models.js';
 import pino from 'pino';
@@ -27,6 +27,17 @@ export const PEGA_DUAL_WRITE = parseDualWriteFlag(process.env.PEGA_DUAL_WRITE);
 function parseDualWriteFlag(value: string | undefined): boolean {
   if (!value) return true; // Default true when not set
   return value.toLowerCase() !== 'false';
+}
+
+/** Build AST digest via AstDigestBuilder; falls back to raw outline on parse failure (EF-2.1). */
+async function buildDigest(ruleJson: Record<string, unknown>): Promise<string> {
+  const builder = new AstDigestBuilder();
+  const result = builder.build(ruleJson);
+  if (result.source === 'raw-fallback') {
+    // Log the fallback for observability (ERR-08)
+    logger.warn({ fallbackReason: result.fallbackReason }, 'AST parse failed — raw outline fallback');
+  }
+  return result.text;
 }
 
 /** Result of syncing a rule to the symbols table. */
@@ -72,7 +83,11 @@ export async function syncRuleToSymbols(
 ): Promise<SymbolSyncResult | null> {
   const fields = extractRequiredFields(ruleJson);
   if (!fields) {
-    logger.warn({ ruleJson }, 'extractRequiredFields returned null');
+    // S4: Log identity fields only — never full rule JSON (FSD §7.2).
+    const kind = (ruleJson?.pxObjClass as string) || '?';
+    const name = (ruleJson?.pyRuleName as string) || '?';
+    const size = JSON.stringify(ruleJson).length;
+    logger.warn({ pxObjClass: kind, pyRuleName: name, size }, 'extractRequiredFields returned null');
     return null;
   }
   logger.info({ pxObjClass: fields.pxObjClass, pyClassName: fields.pyClassName, pyRuleName: fields.pyRuleName, projectId }, 'syncRuleToSymbols start');
@@ -111,7 +126,8 @@ export async function syncRuleToSymbols(
   // SA4E-222: resolve learned schema paths (if any) and pass to extraction (no LLM at index time)
   const nestedLogicPaths = await resolveNestedLogicPaths(adapter, pxObjClass);
   // SA4E-106: store extracted readable content (steps/params/Java) for LLM enrichment
-  await storeBodyEmbedding(adapter, projectId, symbolId, extractRuleContent(ruleJson, { nestedLogicPaths }));
+  // Plan B: AST digest (AstDigestBuilder) replaces raw text dump as enrichment source
+  await storeBodyEmbedding(adapter, projectId, symbolId, await buildDigest(ruleJson));
   await createEnrichmentTaskIfNeeded(
     adapter, symbolId, pyRuleName, kind, virtualPath, projectId, pyClassName, resolveRuleSet(ruleJson),
   );
@@ -130,7 +146,7 @@ export async function refreshRuleSymbolBody(
   const fields = extractRequiredFields(ruleJson);
   if (!fields) return;
   const nestedLogicPaths = await resolveNestedLogicPaths(adapter, fields.pxObjClass);
-  await storeBodyEmbedding(adapter, projectId, symbolId, extractRuleContent(ruleJson, { nestedLogicPaths }));
+  await storeBodyEmbedding(adapter, projectId, symbolId, await buildDigest(ruleJson));
 
   const kind = resolveSymbolKind(fields.pxObjClass);
   const virtualPath = buildVirtualPath(

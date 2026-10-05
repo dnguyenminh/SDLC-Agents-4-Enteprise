@@ -2,6 +2,12 @@
  * KSA-158/159: Token Budget Manager — estimates tokens and assembles context within budget.
  */
 
+/** Estimate token count for content (~3 chars per token, OI-03 / FSD §5.6.6). */
+export function estimateTokens(content: any): number {
+  const text = typeof content === 'string' ? content : JSON.stringify(content);
+  return Math.ceil(text.length / 3);
+}
+
 export class TokenBudgetManager {
   private budget: number;
   private consumed: number = 0;
@@ -10,10 +16,9 @@ export class TokenBudgetManager {
     this.budget = Math.max(budget, 500); // Minimum 500 tokens
   }
 
-  /** Estimate token count for content (~4 chars per token). */
+  /** Estimate token count for content (~3 chars per token, OI-03 / FSD §5.6.6). */
   estimateTokens(content: any): number {
-    const text = typeof content === 'string' ? content : JSON.stringify(content);
-    return Math.ceil(text.length / 4);
+    return estimateTokens(content);
   }
 
   /** Check if tokens can fit within remaining budget. */
@@ -90,7 +95,7 @@ export class TokenBudgetManager {
     const excluded: string[] = [];
 
     for (const [key, { content }] of sorted) {
-      const tokens = this.estimateTokens(content);
+      const tokens = estimateTokens(content);
 
       if (usedTokens + tokens <= budget) {
         result[key] = content;
@@ -102,7 +107,7 @@ export class TokenBudgetManager {
         const truncated = this.truncateArray(content, remaining);
         if (truncated.length > 0) {
           result[key] = truncated;
-          usedTokens += this.estimateTokens(truncated);
+          usedTokens += estimateTokens(truncated);
           included.push(`${key} (truncated: ${truncated.length}/${content.length})`);
           continue;
         }
@@ -119,7 +124,7 @@ export class TokenBudgetManager {
     const result: any[] = [];
     let used = 0;
     for (const item of arr) {
-      const tokens = this.estimateTokens(item);
+      const tokens = estimateTokens(item);
       if (used + tokens > tokenBudget) break;
       result.push(item);
       used += tokens;

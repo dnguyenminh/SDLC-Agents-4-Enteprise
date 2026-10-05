@@ -9,6 +9,15 @@ import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
 import type { PendingTask, CreateTaskInput } from './models.js';
 import { TaskStatus } from './models.js';
 
+export interface RetryAllFailedOptions {
+  /** Exclude tasks whose error matches terminal patterns (budget_error:/llm_auth:). */
+  excludeTerminalErrors?: boolean;
+  /** Max tasks to reset per call (SAF-01: bounded re-queue). */
+  limit?: number;
+  /** Scope to project — undefined = all projects (admin only). */
+  projectId?: string;
+}
+
 export class PendingTaskRepository {
   private readonly dialect: DialectHelper;
 
@@ -246,10 +255,30 @@ export class PendingTaskRepository {
     );
   }
 
-  async retryAllFailed(): Promise<number> {
+  /**
+   * Reset FAILED tasks to PENDING, with optional filters to avoid re-queuing terminal errors.
+   * SA4E-338 S1: excludes budget_error:/llm_auth: errors by default, scopes to project, bounded by limit.
+   * @param options excludeTerminalErrors (default true), limit (default 500), projectId
+   * @returns number of tasks reset
+   */
+  async retryAllFailed(options: RetryAllFailedOptions = {}): Promise<number> {
+    const { excludeTerminalErrors = true, limit = 500, projectId } = options;
+    const params: unknown[] = [TaskStatus.PENDING, TaskStatus.FAILED];
+    let whereExtra = '';
+
+    if (excludeTerminalErrors) {
+      whereExtra += ` AND (error IS NULL OR (error NOT LIKE 'budget_error:%' AND error NOT LIKE 'llm_auth:%'))`;
+    }
+    if (projectId) {
+      whereExtra += ' AND project_id = ?';
+      params.push(projectId);
+    }
+    params.push(limit);
+
     const result = await this.db.runAsync(
-      `UPDATE pending_tasks SET status = ?, started_at = NULL, error = NULL, retry_count = 0 WHERE status = ?`,
-      [TaskStatus.PENDING, TaskStatus.FAILED],
+      `UPDATE pending_tasks SET status = ?, started_at = NULL, error = NULL, retry_count = 0
+       WHERE status = ?${whereExtra} LIMIT ?`,
+      params,
     );
     return result.changes;
   }
