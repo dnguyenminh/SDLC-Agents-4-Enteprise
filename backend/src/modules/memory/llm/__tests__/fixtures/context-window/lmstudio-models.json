@@ -1,0 +1,14 @@
+{
+  "data": [
+    {
+      "id": "qwen2.5-7b-instruct",
+      "object": "model",
+      "created": 1712000000,
+      "owned_by": "lmstudio",
+      "state": "loaded",
+      "max_context_length": 32768,
+      "window_context_length": 32768,
+      "loaded_context_length": 32768
+    }
+  ]
+}

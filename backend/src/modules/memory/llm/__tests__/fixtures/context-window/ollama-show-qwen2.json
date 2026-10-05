@@ -1,0 +1,12 @@
+{
+  "model": "qwen2.5:7b-instruct-q4_K_M",
+  "details": { "family": "qwen2", "parameter_size": "7.6B", "quantization_level": "Q4_K_M" },
+  "model_info": {
+    "general.architecture": "qwen2",
+    "general.file_type": 15,
+    "qwen2.context_length": 32768,
+    "qwen2.embedding_length": 3584
+  },
+  "parameters": "num_ctx 8192\nstop \"<|eot|>\"",
+  "template": "{}"
+}
