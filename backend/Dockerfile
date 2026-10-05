@@ -141,3 +141,4 @@ RUN addgroup -g 1001 -S sa4e && \
     chown -R sa4e:sa4e /app
 USER sa4e
 CMD ["npx", "vitest", "run"]
+
