@@ -1,0 +1,93 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="820" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="h1" value="PegaSymbolSync" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="130" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="PegaRuleAstParser" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="40" width="130" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="LLMService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="360" y="40" width="130" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="TokenBudgetManager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="520" y="40" width="130" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="PromptBuilder" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="680" y="40" width="130" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="h6" value="Map-Reduce&#10;(analyzeWithChunking)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="840" y="40" width="130" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="h7" value="LLM Provider&#10;(Ollama/LM Studio/vLLM)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="40" width="130" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="h8" value="Symbol Store" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="40" width="130" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="l1" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="105" y="84" as="sourcePoint"/><mxPoint x="105" y="750" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l2" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="265" y="84" as="sourcePoint"/><mxPoint x="265" y="750" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l3" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="425" y="84" as="sourcePoint"/><mxPoint x="425" y="750" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l4" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="585" y="84" as="sourcePoint"/><mxPoint x="585" y="750" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l5" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="745" y="84" as="sourcePoint"/><mxPoint x="745" y="750" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l6" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="905" y="84" as="sourcePoint"/><mxPoint x="905" y="750" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l7" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1065" y="84" as="sourcePoint"/><mxPoint x="1065" y="750" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="l8" style="dashed=1;endArrow=none;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1225" y="84" as="sourcePoint"/><mxPoint x="1225" y="750" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. extract rule body" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="105" y="140" as="sourcePoint"/><mxPoint x="265" y="140" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. AST digest (toPromptContext) → budget check" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="105" y="190" as="sourcePoint"/><mxPoint x="585" y="190" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. getContextWindow()" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="585" y="240" as="sourcePoint"/><mxPoint x="425" y="240" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. provider query (skipped when env LLM_CONTEXT_WINDOW set — BR-04)" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="425" y="290" as="sourcePoint"/><mxPoint x="1065" y="290" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5. context_length / max_context_length / max_model_len" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1065" y="340" as="sourcePoint"/><mxPoint x="425" y="340" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6. estimateTokens vs input_budget = window − reserved_output − overhead (BR-01)" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="585" y="390" as="sourcePoint"/><mxPoint x="745" y="390" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7a. over budget → split by AST sections (structural chunking)" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;fontColor=#d79b00;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="585" y="440" as="sourcePoint"/><mxPoint x="905" y="440" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="7b. within budget → send prompt (digest + schemaContext, no truncate)" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="745" y="490" as="sourcePoint"/><mxPoint x="1065" y="490" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="8a. OK → enrichment result" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;fontColor=#82b366;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1065" y="540" as="sourcePoint"/><mxPoint x="745" y="540" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="8b. context_length_exceeded → isContextLengthError() → map-reduce (BR-08)" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;fontColor=#b85450;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1065" y="590" as="sourcePoint"/><mxPoint x="905" y="590" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="9. map/reduce chunk prompts — recursive tree reduce (BR-10)" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="905" y="640" as="sourcePoint"/><mxPoint x="1065" y="640" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="10. save enrichment result + reduction report" style="edgeStyle=none;html=1;endArrow=block;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="905" y="690" as="sourcePoint"/><mxPoint x="1225" y="690" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="note1" value="Decision points:&#10;• within budget? (step 6 → 7a/7b)&#10;• context error? (step 8a/8b)" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="40" y="640" width="260" height="80" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

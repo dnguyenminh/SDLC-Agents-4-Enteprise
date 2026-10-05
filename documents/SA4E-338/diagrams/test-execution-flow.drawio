@@ -1,0 +1,268 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1700" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="t" value="Test Execution Flow — SA4E-338 (PBT → UT → IT → E2E-API → E2E-UI → SIT)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="700" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s" value="ENTRY CRITERIA — STP + STC BA-approved · BRD/FSD/TDD baselined · code merged · testdata CSVs loaded" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;fontStyle=1;spacing=4;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="320" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="se" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s" target="in0">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="20" y="100"/>
+          <mxPoint x="20" y="240"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l0" value="1 · PBT — fast-check · AUTOMATED (9 tests)" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="140" width="1100" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="in0" value="Entry: fast-check ready, properties derived from BR-01/02/07/09" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="l0">
+      <mxGeometry x="20" y="70" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="run0" value="Run PBT (9) — random inputs, invariant checks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="l0">
+      <mxGeometry x="250" y="70" width="230" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ex0" value="Exit: 9/9 pass, 3 consecutive stable runs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="l0">
+      <mxGeometry x="540" y="70" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="def0" value="Defect: New → Open → In Progress → Fixed → retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="l0">
+      <mxGeometry x="810" y="70" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a0" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l0" source="in0" target="run0">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m0" value="execute" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l0" source="run0" target="ex0">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f0" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l0" source="ex0" target="def0">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="b0" value="fix → retest" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;strokeColor=#b85450;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="l0" source="def0" target="run0">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="870" y="170"/>
+          <mxPoint x="365" y="170"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l1" value="2 · UT — vitest · AUTOMATED (66 tests)" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="380" width="1100" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="in1" value="Entry: PBT passed, module compiles, fixtures ready" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="l1">
+      <mxGeometry x="20" y="70" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="run1" value="Run UT (66) — discovery, digest, budget, routing, security" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="l1">
+      <mxGeometry x="250" y="70" width="230" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ex1" value="Exit: 66/66 pass, npm test + npm run lint green" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="l1">
+      <mxGeometry x="540" y="70" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="def1" value="Defect: New → Open → In Progress → Fixed → retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="l1">
+      <mxGeometry x="810" y="70" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l1" source="in1" target="run1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m1" value="execute" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l1" source="run1" target="ex1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f1" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l1" source="ex1" target="def1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1" value="fix → retest" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;strokeColor=#b85450;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="l1" source="def1" target="run1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="870" y="170"/>
+          <mxPoint x="365" y="170"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" value="3 · IT — vitest + Hono app.request() in-process · AUTOMATED (19 tests)" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="620" width="1100" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="in2" value="Entry: UT passed, Hono app + test SQLite + JWT helper ready" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="l2">
+      <mxGeometry x="20" y="70" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="run2" value="Run IT (19) — CRUD, RBAC, validation, audit, error codes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="l2">
+      <mxGeometry x="250" y="70" width="230" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ex2" value="Exit: 19/19 pass, audit entries written, real DB used" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="l2">
+      <mxGeometry x="540" y="70" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="def2" value="Defect: New → Open → In Progress → Fixed → retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="l2">
+      <mxGeometry x="810" y="70" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l2" source="in2" target="run2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m2" value="execute" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l2" source="run2" target="ex2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f2" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l2" source="ex2" target="def2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2" value="fix → retest" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;strokeColor=#b85450;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="l2" source="def2" target="run2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="870" y="170"/>
+          <mxPoint x="365" y="170"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" value="4 · E2E-API — vitest + fetch (real server) · AUTOMATED (26 tests)" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="860" width="1100" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="in3" value="Entry: IT passed, real server up, admin JWT obtained" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="l3">
+      <mxGeometry x="20" y="70" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="run3" value="Run E2E-API (26) — endpoints, auth, redaction, HTTPS, retry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="l3">
+      <mxGeometry x="250" y="70" width="230" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ex3" value="Exit: 26/26 pass, error codes match FSD §7" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="l3">
+      <mxGeometry x="540" y="70" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="def3" value="Defect: New → Open → In Progress → Fixed → retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="l3">
+      <mxGeometry x="810" y="70" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l3" source="in3" target="run3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m3" value="execute" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l3" source="run3" target="ex3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f3" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l3" source="ex3" target="def3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3" value="fix → retest" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;strokeColor=#b85450;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="l3" source="def3" target="run3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="870" y="170"/>
+          <mxPoint x="365" y="170"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" value="5 · E2E-UI — Playwright (Admin config surface) · AUTOMATED (3 tests)" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1100" width="1100" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="in4" value="Entry: E2E-API passed, portal reachable, Chromium ready" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="l4">
+      <mxGeometry x="20" y="70" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="run4" value="Run E2E-UI (3) — masked key, HTTPS reject, Max Tokens validation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="l4">
+      <mxGeometry x="250" y="70" width="230" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ex4" value="Exit: 3/3 pass, no UI regression on config screen" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="l4">
+      <mxGeometry x="540" y="70" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="def4" value="Defect: New → Open → In Progress → Fixed → retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="l4">
+      <mxGeometry x="810" y="70" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l4" source="in4" target="run4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m4" value="execute" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l4" source="run4" target="ex4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f4" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l4" source="ex4" target="def4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="b4" value="fix → retest" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;strokeColor=#b85450;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="l4" source="def4" target="run4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="870" y="170"/>
+          <mxPoint x="365" y="170"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" value="6 · SIT — manual (browser / log / CLI) · MANUAL (11 tests)" style="swimlane;startSize=30;fillColor=#f5f5f5;strokeColor=#666666;html=1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1340" width="1100" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="in5" value="Entry: all automated green, 0 Critical/Major open, SECURITY C4 confirmed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="l5">
+      <mxGeometry x="20" y="70" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="run5" value="Run SIT (11) — Ollama log, corpus re-enrich, prompt inspect, npm audit, quality gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="l5">
+      <mxGeometry x="250" y="70" width="230" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ex5" value="Exit: 11/11 + evidence captured, 0 rules fail from window overflow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="l5">
+      <mxGeometry x="540" y="70" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="def5" value="Defect: New → Open → In Progress → Fixed → retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="l5">
+      <mxGeometry x="810" y="70" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l5" source="in5" target="run5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m5" value="execute" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l5" source="run5" target="ex5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f5" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="l5" source="ex5" target="def5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="b5" value="fix → retest" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;strokeColor=#b85450;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="l5" source="def5" target="run5">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="870" y="170"/>
+          <mxPoint x="365" y="170"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="p0" value="PASS — exit criteria met" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#82b366;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex0" target="in1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="680" y="360"/>
+          <mxPoint x="20" y="360"/>
+          <mxPoint x="20" y="480"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="p1" value="PASS — exit criteria met" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#82b366;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex1" target="in2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="680" y="600"/>
+          <mxPoint x="20" y="600"/>
+          <mxPoint x="20" y="720"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="p2" value="PASS — exit criteria met" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#82b366;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex2" target="in3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="680" y="840"/>
+          <mxPoint x="20" y="840"/>
+          <mxPoint x="20" y="960"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="p3" value="PASS — exit criteria met" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#82b366;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex3" target="in4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="680" y="1080"/>
+          <mxPoint x="20" y="1080"/>
+          <mxPoint x="20" y="1200"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="p4" value="PASS — exit criteria met" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#82b366;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex4" target="in5">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="680" y="1320"/>
+          <mxPoint x="20" y="1320"/>
+          <mxPoint x="20" y="1440"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="end" value="EXIT CRITERIA — 134/134 executed · RTM 100% · 0 Critical · ≤ 2 Major with fix plan → TEST-REPORT + BA sign-off" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1580" width="1100" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="ee" value="all pass" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#82b366;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ex5" target="end">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="680" y="1560"/>
+          <mxPoint x="590" y="1560"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

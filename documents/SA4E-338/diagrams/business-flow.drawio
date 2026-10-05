@@ -1,0 +1,108 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="lane1" value="Pega Symbol Sync" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;align=center;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="2400" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane2" value="Pega Rule AST Parser" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;align=center;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="180" width="2400" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane3" value="LLM Service" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=center;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="320" width="2400" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane4" value="Prompt &amp; Budget" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;align=center;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="460" width="2400" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane5" value="Map-Reduce Recovery" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;align=center;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="600" width="2400" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="Start" style="ellipse;fillColor=#000000;fontColor=#ffffff;html=1;fontSize=9;" vertex="1" parent="lane1">
+      <mxGeometry x="130" y="54" width="60" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" value="Extract rule body&lt;br&gt;(PegaSymbolSync)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane1">
+      <mxGeometry x="210" y="48" width="170" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2" value="Build AST digest&lt;br&gt;toPromptContext()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane2">
+      <mxGeometry x="430" y="48" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_win" value="Discover context window (A1)&lt;br&gt;provider / env / fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane3">
+      <mxGeometry x="680" y="48" width="220" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3" value="estimateTokens vs&lt;br&gt;input_budget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane4">
+      <mxGeometry x="950" y="48" width="210" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="d1" value="Within budget?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane4">
+      <mxGeometry x="1210" y="38" width="140" height="64" as="geometry"/>
+    </mxCell>
+    <mxCell id="s5" value="Build prompt +&lt;br&gt;schemaContext (A3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane4">
+      <mxGeometry x="1400" y="48" width="190" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="s6" value="Call LLM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane3">
+      <mxGeometry x="1640" y="48" width="170" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="d2" value="Context-length&lt;br&gt;error?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane3">
+      <mxGeometry x="1860" y="38" width="150" height="64" as="geometry"/>
+    </mxCell>
+    <mxCell id="s7" value="Save enrichment result" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane1">
+      <mxGeometry x="2060" y="48" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="End" style="ellipse;fillColor=#000000;fontColor=#ffffff;html=1;fontSize=9;" vertex="1" parent="lane1">
+      <mxGeometry x="2310" y="54" width="60" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="s8" value="Split by AST sections" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane5">
+      <mxGeometry x="1210" y="48" width="200" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="s9" value="Map: summarize&lt;br&gt;each chunk" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane5">
+      <mxGeometry x="1460" y="48" width="180" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="s10" value="Reduce: merge&lt;br&gt;summaries (tree)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;" vertex="1" parent="lane5">
+      <mxGeometry x="1690" y="48" width="210" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="f1" edge="1" parent="1" source="e1" target="s1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f2" edge="1" parent="1" source="s1" target="s2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f3" edge="1" parent="1" source="s2" target="s_win" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f4" edge="1" parent="1" source="s_win" target="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f5" edge="1" parent="1" source="s3" target="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f6" value="Yes" edge="1" parent="1" source="d1" target="s5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f7" value="No — over budget" edge="1" parent="1" source="d1" target="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f8" edge="1" parent="1" source="s5" target="s6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f9" edge="1" parent="1" source="s6" target="d2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f10" value="No — success" edge="1" parent="1" source="d2" target="s7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f11" value="Yes — context_length_exceeded" edge="1" parent="1" source="d2" target="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f12" edge="1" parent="1" source="s8" target="s9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f13" edge="1" parent="1" source="s9" target="s10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f14" edge="1" parent="1" source="s10" target="s7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0.5;entryY=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f15" edge="1" parent="1" source="s7" target="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

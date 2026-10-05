@@ -1,0 +1,127 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1260" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="k1" value="&lt;b&gt;TokenBudgetManager&lt;/b&gt; (EDIT)&lt;hr size=&quot;1&quot;&gt;+ CHARS_PER_TOKEN = 3 (OI-03)&lt;br&gt;+ reserved: number&lt;hr size=&quot;1&quot;&gt;+ estimateTokens(text): number {static}&lt;br&gt;+ maxChars(window): number" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="240" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="k2" value="&lt;b&gt;BudgetGuard&lt;/b&gt; (NEW)&lt;hr size=&quot;1&quot;&gt;+ CONTEXT_FRACTION_WARN = 0.80&lt;hr size=&quot;1&quot;&gt;+ check(input): BudgetDecision {static}&lt;br&gt;+ computeInputBudget(w, overhead): number {static}" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="220" width="240" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="k3" value="&lt;b&gt;BudgetDecision&lt;/b&gt; (DTO)&lt;hr size=&quot;1&quot;&gt;withinBudget: boolean&lt;br&gt;utilization: number&lt;br&gt;digestTokens / overheadTokens&lt;br&gt;inputBudget: number" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="370" width="240" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="k5" value="&lt;b&gt;BudgetError&lt;/b&gt; (NEW)&lt;hr size=&quot;1&quot;&gt;+ report: MapReduceReport&lt;br&gt;+ roundsTried / chunksTried&lt;hr size=&quot;1&quot;&gt;message = budget_error: ..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="520" width="240" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="k4" value="&lt;b&gt;TaskWorker&lt;/b&gt; (EDIT)&lt;hr size=&quot;1&quot;&gt;- handleTaskError(task, err)&lt;hr size=&quot;1&quot;&gt;NON_RETRYABLE += budget_error:&lt;br&gt;llm_auth: (OI-05, 0 retries)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="650" width="240" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="m1" value="&lt;b&gt;CodeEnrichmentHandler&lt;/b&gt; (EDIT)&lt;hr size=&quot;1&quot;&gt;- promptBuilder / llm / guard / pipeline&lt;hr size=&quot;1&quot;&gt;+ enrichSymbol(task): Promise&lt;br&gt;- loadBodyText(): digest&lt;br&gt;- storeResults(...) persists meta&lt;br&gt;- toBudgetTaskError(err): BudgetError&lt;br&gt;- classifyAndRoute(err)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="360" y="60" width="260" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="m2" value="&lt;b&gt;CodeEnrichmentPromptBuilder&lt;/b&gt; (EDIT)&lt;hr size=&quot;1&quot;&gt;+ build(context, digest): messages&lt;br&gt;+ buildOverhead(context): number (A3)&lt;br&gt;− truncateToTokens (CLASS/FUNCTION only)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="360" y="260" width="260" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="m3" value="&lt;b&gt;ReductionPipeline&lt;/b&gt; (NEW)&lt;hr size=&quot;1&quot;&gt;MAX_REDUCE_ROUNDS=3 / MAX_CHUNKS=32&lt;hr size=&quot;1&quot;&gt;+ reduce(ast, digest, trigger, budget, ctx)&lt;br&gt;- chunkByAstSections(ast, budget)&lt;br&gt;- verifyPinnedCoverage(ast, chunks) (BR-02)&lt;br&gt;- treeReduce(summaries, budget)&lt;br&gt;  ‹throws BudgetError›" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="360" y="420" width="260" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="m4" value="&lt;b&gt;chunkedReduce&lt;T&gt;&lt;/b&gt; (NEW, OI-04)&lt;hr size=&quot;1&quot;&gt;+ chunkedReduce(chunks, mapFn, opts)&lt;br&gt;  ordering · retry≤2 · auth abort&lt;br&gt;  degrade · backoff — pure fn" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="360" y="610" width="260" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" value="&lt;b&gt;LLMService&lt;/b&gt; (EDIT)&lt;hr size=&quot;1&quot;&gt;+ complete(messages): Promise&lt;br&gt;+ getContextWindow(cfg): Promise&lt;br&gt;+ invalidateWindowCache(modelKey?)&lt;br&gt;+ isContextLengthError(err) {static}" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="700" y="60" width="250" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2" value="&lt;b&gt;ContextWindowDiscovery&lt;/b&gt; (NEW, A1)&lt;hr size=&quot;1&quot;&gt;- windowCache: Map&lt;string, WindowInfo&gt;&lt;br&gt;DISCOVERY_TIMEOUT_MS=5000&lt;br&gt;FALLBACK_WINDOW=8192&lt;hr size=&quot;1&quot;&gt;+ getContextWindow(cfg): Promise&lt;br&gt;+ invalidate(modelKey?)&lt;br&gt;+ resolveOllamaContextLength(info) {static}&lt;br&gt;+ parsePositiveInt(v) {static} (EF-1.3)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="700" y="230" width="250" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3" value="&lt;b&gt;ErrorClassifier&lt;/b&gt; (NEW, Plan D)&lt;hr size=&quot;1&quot;&gt;+ classify(err): ProviderErrorKind {static}&lt;br&gt;+ isContextLengthError(err): boolean {static}&lt;br&gt;+ toTaskMessage(kind, err): string {static}&lt;br&gt;+ attachProviderError(err, status, body) {static}" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="700" y="430" width="250" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5" value="&lt;b&gt;PegaRuleAstParser&lt;/b&gt; (EDIT, A2)&lt;hr size=&quot;1&quot;&gt;+ getBuilder() → DecisionTable branch&lt;br&gt;+ buildActivity (pySteps, BR-14)&lt;br&gt;+ buildDataTransform (pyProperties)&lt;br&gt;+ buildDecision (pyDecisionRules)&lt;br&gt;+ buildDecisionTable() NEW&lt;br&gt;+ renderPropertyValue (caps, BR-17)&lt;br&gt;+ formatNodes (line budget)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="60" width="220" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4" value="&lt;b&gt;AstDigestBuilder&lt;/b&gt; (NEW, B)&lt;hr size=&quot;1&quot;&gt;+ build(ruleJson): DigestResult&lt;br&gt;+ splitDigestSections(digest) {static}&lt;br&gt;- buildWithGrammarOutline(step) (Plan E)&lt;br&gt;- minimalOutline(ruleJson) (EF-2.2)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="260" width="220" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="a1" value="delegates window discovery" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="r1" target="r2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a2" value="classify" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=1;exitY=0.9;exitDx=0;exitDy=0;entryX=1;entryY=0.54;entryDx=0;entryDy=0;" edge="1" parent="1" source="r1" target="r3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="970" y="170"/>
+          <mxPoint x="970" y="500"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a3" value="getContextWindow + complete" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.24;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="m1" target="r1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="490" y="35"/>
+          <mxPoint x="760" y="35"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a4" value="budget check" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0;exitY=0.85;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" edge="1" parent="1" source="m1" target="k2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="320" y="187"/>
+          <mxPoint x="320" y="250"/>
+        </Array>
+      <mxPoint x="0" y="-25" as="offset"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a5" value="buildOverhead()" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="m1" target="m2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a6" value="reduce (BR-08)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=1;exitY=0.95;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="m1" target="m3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="630" y="210"/>
+          <mxPoint x="630" y="395"/>
+          <mxPoint x="555" y="395"/>
+        </Array>
+      <mxPoint x="0" y="60" as="offset"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a7" value="uses (OI-04)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="m3" target="m4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a8" value="«throws»" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#b85450;fontSize=9;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="m3" target="k5">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="330" y="525"/>
+          <mxPoint x="330" y="505"/>
+          <mxPoint x="160" y="505"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a9" value="estimateTokens" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="k2" target="k1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="290" y="270"/>
+          <mxPoint x="290" y="115"/>
+        </Array>
+      <mxPoint x="0" y="12" as="offset"/></mxGeometry>
+    </mxCell>
+    <mxCell id="a10" value="budget_error: → terminal (OI-05)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#b85450;fontSize=9;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="k5" target="k4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="305" y="580"/>
+          <mxPoint x="305" y="700"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a11" value="parse digest AST (Plan B)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="r4" target="r5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a12" value="build(digest)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;exitX=1;exitY=0.65;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="m1" target="r4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="660" y="160"/>
+          <mxPoint x="660" y="405"/>
+          <mxPoint x="1110" y="405"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

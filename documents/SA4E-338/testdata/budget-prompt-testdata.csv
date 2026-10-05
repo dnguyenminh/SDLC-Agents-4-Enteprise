@@ -1,0 +1,24 @@
+test_case_id,window,reserved_tokens,overhead_tokens,estimated_tokens,input_budget,utilization_pct,schema_context,expected_action,expected_http_code,expected_error_code,description
+PBT-01,8192,1024,512,6000,6656,90,,warn+send,200,,Property: input_budget = window - reserved - overhead always (BR-01)
+PBT-02,8192,1024,512,99999,-3343,, ,proactive-map-reduce,422,BudgetError,Property: over-budget never sends full prompt; no truncation (BR-16)
+PBT-03,8192,1024,512,random,6656,, ,estimateTokens one-sided,200,,Property: estimate within one-sided bound vs provider count (BR-07)
+PBT-08,8192,1024,512,7000,6656,105,,map-reduce-no-full-retry,422,BudgetError,Property: context error never retries full prompt (BR-08)
+UT-30,8192,1024,512,6656,6656,100,,send-boundary,200,,Budget boundary at exactly 100 percent still allowed logic
+UT-31,8192,1024,512,6657,6656,100.02,,proactive-map-reduce,422,BudgetError,One token over budget triggers proactive path
+UT-32,8192,1024,512,5325,6656,80,,send+warn-log,200,,Warn logged at utilization >= 80 percent (BR-12)
+UT-33,1024,1024,512,100,-512,, ,never-send,422,BudgetError,inputBudget <= 0 never sends (EF-3.6)
+UT-34,8192,1024,512,wordcount_wrong,, ,estimateTokens-usage,200,,estimateTokens used not word-count (BR-07)
+UT-35,8192,1024,512,6000,6656,90,,no-truncation,200,,PEGA path sends complete prompt (BRD US4 AC-4)
+UT-36,8192,1024,512,6600,6656,99,,schema-in-estimate,200,,schemaContext counted in estimate (BRD US5 AC-4)
+UT-37,8192,1024,512,4000,6656,60,schema-json,schema-section-in-prompt,200,,Rule with schemaContext emits schema guidance (BRD US5 AC-2)
+UT-38,8192,1024,512,4000,6656,60,,omit-schema-section,200,,No schemaContext omits section without crash (BRD US5 AC-3)
+UT-39,8192,1024,512,4000,6656,60,malformed-json,omit+warn,200,,Malformed schemaContext warn and omit (ERR-10)
+UT-40,8192,1024,512,4000,6656,60,unresolvable-type,early-return,200,,schemaContext absent for unresolvable ruleType (EF-5.4)
+IT-07,8192,1024,512,4000,6656,60,,transient-no-map-reduce,500,,Transient 5xx retries bounded; no map-reduce (EF-3.2/3.4)
+IT-19,8192,1024,512,4000,6656,60,,parse-tiers-then-fail,422,BudgetError,Empty or unparseable 200 body handled by 3-tier parse then structured fail (EF-3.5)
+E2E-API-24,8192,1024,512,4000,6656,60,schema-json,schema-in-request-body,201,,schemaContext appears in sent prompt (TC-13)
+E2E-API-25,8192,1024,512,4000,6656,60,,http-500-handled,500,,Provider 5xx classified transient bounded retry (TC-23)
+E2E-API-26,8192,1024,512,estimate-vs-real,6656,80,,accuracy-within-10pct,200,,estimateTokens vs provider usage delta <= 10 percent (OI-03)
+E2E-API-27,8192,1024,512,corpus-100-prompts-vs-usage,6656,, ,sampling-accuracy-95pct-within-10pct,200,,100 corpus prompts sampled; >=95 within +/-10 percent of provider usage.prompt_tokens; none under-estimated by >10 percent (TC-28 / OI-03)
+SIT-04,8192,1024,512,5400,6656,81,,send+warn-observed,200,,80 percent warn visible in logs (BRD US4 AC-5)
+SIT-06,8192,1024,512,4500,6656,68,schema-json,schema-section-visible,200,,Manual prompt inspection shows schemaContext section

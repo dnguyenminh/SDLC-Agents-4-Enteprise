@@ -1,0 +1,22 @@
+test_case_id,provider,endpoint,fixture_field,fixture_value,env_LLM_CONTEXT_WINDOW,expected_window,window_source,expected_http_code,expected_error_message,description
+UT-01,ollama,http://localhost:11434/api/show,ignored,ignored,64000,64000,env,200,,Env override wins over provider discovery (BRD US1 AC-4)
+UT-02,ollama,http://localhost:11434/api/show,model_info.*.context_length,8192,abc,8192,discovery,200,,Invalid env value ignored with warn; discovery used (ERR-02)
+UT-03,ollama,http://localhost:11434/api/show,model_info.qwen3.context_length,8192,,8192,discovery,200,,Ollama arch-suffixed field read (TC-19)
+UT-04,ollama,http://localhost:11434/api/tags,models[0].name,llama3,,8192,discovery,200,,Ollama {model} to {name} retry path (EF-1.5)
+UT-05,lmstudio,http://localhost:1234/api/v0/models,data[0].max_context_length,32768,,32768,discovery,200,,LM Studio max_context_length chain (TC-20)
+UT-06,vllm,http://localhost:8000/v1/models,data[0].max_model_len,131072,,131072,discovery,200,,vLLM max_model_len selected by id==LLM_MODEL (TC-21)
+UT-07,ollama,http://localhost:11434/api/show,missing_field,, ,8192,discovery-fallback,200,,Missing field triggers fallback 8192 plus warn (BR-03)
+UT-08,ollama,http://localhost:11434/api/show,timeout,, ,8192,discovery-fallback,200,,Provider timeout within 5s then fallback (EF-1.1)
+UT-09,ollama,http://localhost:11434/api/show,http_401,, ,8192,discovery-fallback,200,,Discovery auth failure fallback (ERR-12)
+UT-09b,lmstudio,http://localhost:1234/api/v0/models,http_404_endpoint_absent,, ,8192,discovery-fallback,404,endpoint not found,LM Studio endpoint absent 404 falls back to 8192 with warn; zero version probe requests (OI-09)
+UT-10,ollama,http://localhost:11434/api/show,model_info.*.context_length,16384,,16384,cache,200,,Session cache hit; invalidated when model/provider changes (BR-06)
+UT-11,ollama,http://localhost:11434/api/show,model_info.*.context_length,512,,8192,discovery-fallback,200,,Fallback window still above reserved+overhead else error log (EF-1.7)
+PBT-07,any,property-random,env_and_field_values,random,,valid-or-fallback,any,200,,Property: any invalid env/field yields fallback never crash (EF-1.3)
+IT-04,ollama,http://localhost:11434/api/show,model_info.*.context_length,8192,,16384,discovery,200,,Config model change invalidates discovery cache (US1 AC-5)
+E2E-API-16,ollama,http://localhost:11434/api/show,ignored,ignored,64000,64000,env,200,,End-to-end env override effective (BRD US1 AC-1/AC-4)
+E2E-API-17,ollama,http://localhost:11434/api/show,connection_refused,, ,8192,discovery-fallback,200,,Provider failure fallback no crash (BRD US1 AC-3)
+E2E-API-18,ollama,http://localhost:11434/api/show,model_info.*.context_length,32768,,32768,discovery,200,,Ollama arch-suffixed MAX of context_length values (OI-01)
+E2E-API-19,lmstudio,http://localhost:1234/api/v0/models,data[*].max_context_length,65536,,65536,discovery,200,,LM Studio max_context_length chain resolution
+E2E-API-20,vllm,http://localhost:8000/v1/models,data[0].max_model_len,262144,,262144,discovery,200,,vLLM max_model_len read from matching model id
+E2E-API-21,ollama,http://localhost:11434/api/show,timeout_6000ms,, ,8192,discovery-fallback,200,,Discovery responds or falls back within 5 seconds (TC-27)
+SIT-01,ollama,http://localhost:11434/api/show,real_provider,real,,real_window,discovery,200,,Real Ollama endpoint logs discovered window to console

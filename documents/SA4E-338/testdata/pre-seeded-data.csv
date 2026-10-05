@@ -1,0 +1,11 @@
+test_case_id,entity_type,id,name,field,value,status,expected_result,description
+IT-09;IT-11;E2E-API-07;E2E-API-10,user,user-viewer-001,Test Viewer,role,READER,ACTIVE,403 Forbidden with zero rows reset,Non-admin actor for RBAC project-scope tests (D-SEC-01/03)
+E2E-UI-01;E2E-UI-03;SIT-10,user,admin-001,Admin User,role,ADMINISTRATOR,ACTIVE,200 OK and masked value rendered in config UI,Admin actor for Playwright login (password test-admin-pw-01)
+E2E-API-10;IT-11,project,proj-001,Pega Corpus Project,owner,admin-001,ACTIVE,Forged X-Project-Id cannot access rows of other project,Project scope for JWT pid checks
+E2E-API-10;IT-11,project,proj-002,Other Project,owner,user-viewer-001,ACTIVE,403 for cross-project access via forged header,Second project for scope-isolation test
+SIT-02;SIT-03;E2E-API-22,rule,HomeTabMain,HomeTabMain,expected_size_bytes,3565158,INDEXED,Digest under 8 KB and under window; no overflow failure,Real 3.4 MB layout rule from C:\projects\Pega\PegaPlatfrom\rules
+SIT-02;E2E-API-23,rule,GetDBobjects,GetDBobjects,expected_digest_max_chars,8192,INDEXED,Structured digest not MB-scale raw dump,Real GetDBobjects rule (BRD US3 AC-4)
+UT-20;SIT-09,rule,DT-Discount,Discount Decision Table,rule_type,Rule-Obj-DecisionTable,INDEXED,Conditions and actions rendered by dedicated builder,DecisionTable fixture for AC-2
+UT-23;SIT-09,rule,BrokenJSONRule,Broken JSON Sample,rule_type,Rule-Obj-Activity,BROKEN,raw_text_fallback used; enrichment continues,Invalid JSON body fixture (EF-2.1)
+UT-26;SIT-09,rule,PureLayoutRule,Pure Layout Sample,rule_type,Rule-Obj-Section,INDEXED,Aggregated outline only; rule still enriched,Pure-layout rule fixture (AF-2.2)
+IT-20,rule,OversizedRule6MB,Oversized 6MB Rule Fixture,expected_size_bytes,6291456,SKIPPED_AT_SYNC,Skipped at sync before digest build with warn fqn and size; batch continues,Rule JSON above MAX_RULE_SIZE_BYTES 5MB cap (EF-2.4) — must not reach enrichment
