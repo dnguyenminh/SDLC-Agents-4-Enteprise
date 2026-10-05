@@ -22,7 +22,12 @@
 | 15 | sa-agent | TDD v1.2 (race-guard SQL inventory, pseudocode sync, enriched_by 3 values, R4 denylist note) + DISCREPANCY v2 (DISC-2 RESOLVED, DISC-7 PARTIAL, DISC-9 added RESOLVED) | ✅ |
 | 16 | qa-agent | Fix testdata row 5/10 + STC UT-82 retitle / TC-13 label; UT-79..82 → PASS (51+9 tests GREEN) | ✅ |
 | 17 | SM | Verify: backend tsc 0, backend 3,364 pass, extension 2,384 pass | ✅ |
-| 18 | SM | Commit round 2 + push | see git.commit in STATUS.json |
+| 18 | SM | Commit round 2 + push | ✅ `4d4b5f8` (17 files, +1,317) |
+| 19 | SM | Export TDD v1.2 → DOCX via CLI route (embed_image → md_to_docx CLI; HTTP MCP bị body limit ~1MB với payload 1.9MB) | ✅ 2.8MB, 5 images embedded |
+| 20 | dev-agent | Fix xlsx sheet-name colon bug (markdown-exporter-mcp-local/table_utils.py: sanitize openpyxl illegal chars, +8 tests, ruff clean) | ✅ 11 tests pass |
+| 21 | SM | Export STC → XLSX v1.1 (31 sheets, 0 illegal chars) | ✅ 43KB |
+| 22 | SM | Attach 5 files Jira: TDD-v1.2 docx (11509), STC-v1.1 xlsx (11506), architecture/component/class-diagram drawio (11505/11507/11508) | ✅ |
+| 23 | SM | Jira comment round-2 summary (id 12162); workflow project = To Do/In Progress/In Review/Done (KHÔNG có QA Test) → ticket giữ In Review, currentPhase=testing | ✅ |
 
 **Notes:**
 - ta-agent requested `agent_log` tool — not found in session (3 find_tools queries) → logged here per TA request.
