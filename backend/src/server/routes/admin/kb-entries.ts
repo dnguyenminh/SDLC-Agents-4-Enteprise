@@ -133,8 +133,9 @@ export function createKbEntriesRoutes(ctx: AdminContext): Hono {
     // Branch: KB entries (non-symbol) — enrich via TAG_ENRICHMENT flow
     if (entryId.startsWith('kb-entry:')) {
       const numericId = parseInt(entryId.replace('kb-entry:', ''), 10);
-      const entry = await indexAdapter.getAsync<{ id: number; content: string; summary: string | null; enrichment_status: string | null; structured_map: string | null }>(
-        'SELECT id, content, summary, enrichment_status, structured_map FROM knowledge_entries WHERE id = ?', [numericId]);
+      // SA4E-337 R1: read `tags` too — it seeds payload.existing_tags below.
+      const entry = await indexAdapter.getAsync<{ id: number; content: string; summary: string | null; enrichment_status: string | null; structured_map: string | null; source: string | null; tags: string | null }>(
+        'SELECT id, content, summary, enrichment_status, structured_map, source, tags FROM knowledge_entries WHERE id = ?', [numericId]);
       if (!entry) return c.json({ error: 'Entry not found' }, 404);
       if (entry.enrichment_status === 'done') {
         const map = entry.structured_map ? JSON.parse(entry.structured_map) : {};
@@ -147,7 +148,11 @@ export function createKbEntriesRoutes(ctx: AdminContext): Hono {
         const taskId = await taskRepo.create({
           task_type: TaskType.TAG_ENRICHMENT,
           entry_id: entry.id,
-          payload: { entry_id: entry.id, content: (entry.summary || entry.content || '').slice(0, 2000), existing_tags: '', options: { threshold: 0.6, autoApply: true } },
+          // SA4E-337 F1: include `source` so the LLM-down fallback can derive path tags.
+          // SA4E-337 R1: pass the entry's CURRENT tags — the LLM-up merge in
+          // TaskWorker.processTagEnrichment() unions existing_tags with appliedTags
+          // before UPDATEing `tags`; '' would wipe path tags persisted at insert (F1).
+          payload: { entry_id: entry.id, content: (entry.summary || entry.content || '').slice(0, 2000), existing_tags: entry.tags ?? '', source: entry.source ?? '', options: { threshold: 0.6, autoApply: true } },
           priority: TaskPriority.HIGH,
         });
         return c.json({ status: 'queued', task_id: taskId, message: 'High-priority enrichment task created. Poll /enrich/poll for status (15s timeout).' });

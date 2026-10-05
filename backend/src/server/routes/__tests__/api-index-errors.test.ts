@@ -10,7 +10,7 @@ import {
   resolveSafeTargetPath,
   resolveIndexTempBase,
 } from '../api-index';
-import { summarizeIngestResult, inferTypeFromPath, extractTagsFromPath } from '../api-index-ingest';
+import { summarizeIngestResult, inferTypeFromPath, extractTagsFromPath, isIngestableFile } from '../api-index-ingest';
 
 vi.mock('../../../admin/db/sessions.js', () => ({
   validateSession: vi.fn(),
@@ -640,5 +640,26 @@ describe('api-index-ingest helpers (SA4E-337)', () => {
       .toEqual({ ok: false, reason: 'ENOSPC' });
     // Empty result
     expect(summarizeIngestResult(null).ok).toBe(false);
+  });
+
+  // SA4E-337 F3 — fail-open regression: text that LOOKS like JSON but cannot be
+  // parsed must be reported as a failure (per-file isolation keeps the run alive).
+  it('summarizeIngestResult fails closed on invalid JSON ingest result', () => {
+    expect(summarizeIngestResult({ content: [{ type: 'text', text: '{ingested: 3' }], isError: false }))
+      .toEqual({ ok: false, reason: 'invalid JSON ingest result' });
+    expect(summarizeIngestResult({ content: [{ type: 'text', text: '{"status": "ingested"' }], isError: false }))
+      .toEqual({ ok: false, reason: 'invalid JSON ingest result' });
+    // Non-JSON free text not starting with '{' is still accepted (backward compat)
+    expect(summarizeIngestResult({ content: [{ type: 'text', text: 'Knowledge entry created: id=1' }], isError: false }))
+      .toEqual({ ok: true, reason: '' });
+  });
+
+  // SA4E-337 F6 — extension check must be case-insensitive (.MD / .TXT / .DRAWIO)
+  it('isIngestableFile accepts upper/mixed-case extensions', () => {
+    expect(isIngestableFile('README.MD')).toBe(true);
+    expect(isIngestableFile('notes.Txt')).toBe(true);
+    expect(isIngestableFile('diagram.DRAWIO')).toBe(true);
+    expect(isIngestableFile('image.png')).toBe(false);
+    expect(isIngestableFile('archive.md.bak')).toBe(false);
   });
 });

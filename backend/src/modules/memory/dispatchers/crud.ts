@@ -84,7 +84,9 @@ export async function handleIngest(
       owner: inferOwner(source),
     });
     const taskRepo = new PendingTaskRepository(dbAdapter);
-    await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content, existing_tags: tags, options: { threshold: 0.6, autoApply: true } } });
+    // SA4E-337 F1: payload MUST carry `source` — TaskWorker.fallbackTagExtraction
+    // derives path tags (sa4e/ticket/doc-type) from payload.source when LLM is down.
+    await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content, existing_tags: tags, source: source ?? null, options: { threshold: 0.6, autoApply: true } } });
     if (embeddingAvailable) {
       await taskRepo.create({ task_type: TaskType.VECTOR_EMBEDDING, entry_id: id, payload: { entry_id: id, text: `${summary} ${content}`.slice(0, 4000) } });
     }
@@ -254,13 +256,18 @@ export async function handleIngestFile(
   const structuredMap = meta ? JSON.stringify({ fileCreatedAt: meta.fileCreatedAt, fileAuthor: meta.fileAuthor, fileVersion: meta.fileVersion }) : undefined;
   const taskRepo = dbAdapter ? new PendingTaskRepository(dbAdapter) : undefined;
 
+  // SA4E-337 F1: caller-supplied path tags (buildIngestFileArgs → extractTagsFromPath)
+  // must reach the DB. Previously hardcoded '' in the insert below, so the tags
+  // computed by the ingest-docs route never persisted end-to-end.
+  const tags = Array.isArray(a.tags) ? (a.tags as string[]).join(',') : ((a.tags as string) ?? '');
+
   // SA4E-163 design: UNIQUE(source, project_id) + UPSERT means ONE row per file
   // holds the FULL document content (section chunks would collapse onto the same
   // source anyway). Summary comes from the first section heading.
   const summary = (sections[0] ?? text).split('\n')[0]?.trim().slice(0, 120) || filePath;
   const id = await engine.insert({
     content: text, summary, type, tier: tierForType(type), scope,
-    user_id: userId, project_id: scopeCtx?.projectId ?? null, source: filePath, tags: '',
+    user_id: userId, project_id: scopeCtx?.projectId ?? null, source: filePath, tags,
   });
   // NEW-01: Mark as pending — TAG_ENRICHMENT task will process later
   try {
@@ -273,7 +280,9 @@ export async function handleIngestFile(
     await engine.updateStructuredMap(id, structuredMap);
   }
   if (taskRepo) {
-    await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content: text, existing_tags: '', options: { threshold: 0.6, autoApply: true } } });
+    // SA4E-337 F1: `source` drives fallbackTagExtraction path tags (LLM-down path);
+    // `existing_tags` seeds the dedup merge instead of always starting from ''.
+    await taskRepo.create({ task_type: TaskType.TAG_ENRICHMENT, entry_id: id, payload: { entry_id: id, content: text, existing_tags: tags, source: filePath, options: { threshold: 0.6, autoApply: true } } });
     if (embeddingAvailable) {
       await taskRepo.create({ task_type: TaskType.VECTOR_EMBEDDING, entry_id: id, payload: { entry_id: id, text: `${summary} ${text}`.slice(0, 4000) } });
     }
@@ -284,7 +293,7 @@ export async function handleIngestFile(
       entryId: id,
       content: text,
       source: filePath,
-      tags: '',
+      tags,
       type,
       projectId: scopeCtx?.projectId ?? null,
     });

@@ -1,28 +1,44 @@
 {
   "ticket": "SA4E-337",
-  "summary": "Document Indexer: Index khong ingest vao KB Memory + thieu tags",
-  "currentPhase": "design",
+  "summary": "Fix document indexer auto-ingest into KB Memory with correct type/tags",
+  "currentPhase": "code_review",
+  "jiraStatus": "In Review",
+  "git": {
+    "branch": "SA4E-337",
+    "commit": "5c29588",
+    "round2Commit": "pending",
+    "pushed": true
+  },
   "phases": {
-    "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-10-04T22:40:00Z", "note": "Verified pass quality gate 2026-10-05 — kept as-is (user decision)" },
-    "specification": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-10-04T22:50:00Z", "note": "Verified pass quality gate 2026-10-05 — kept as-is (user decision)" },
-    "design": { "status": "in_progress", "file": "TDD.md", "version": null, "startedAt": "2026-10-05T00:00:00Z", "note": "Old TDD.md was 88-byte placeholder — regenerating via sa-agent" },
-    "feedback_loop": { "status": "not_started", "iterations": 0, "maxIterations": 5 },
-    "test_planning": { "status": "not_started" },
-    "implementation": { "status": "done", "completedAt": "2026-10-04T10:30:00Z", "note": "6 bugs fixed before documentation backfill" },
-    "testing": { "status": "in_progress" },
-    "user_guide": { "status": "not_started" },
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-10-04T10:35:00Z" },
+    "specification": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-10-04T10:52:00Z" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1.2, "completedAt": "2026-10-05T06:05:00Z", "note": "v1.2 synced with F1/F4/R1 fixes (race-guard SQL, enriched_by=fallback, DISC-2/9 resolved)" },
+    "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "version": 1, "review": "approved", "completedAt": "2026-10-05T10:00:00Z", "note": "UT-79..82 PASS 2026-10-05; STC/testdata deviation fixes applied" },
+    "implementation": { "status": "done", "commit": "5c29588", "round2": "F1-F7 + R1 fixes pending commit", "completedAt": "2026-10-05T10:35:00Z" },
+    "testing": { "status": "done", "round1": "unit 34/34 + e2e 14/14", "round2": "backend 3364/3364 + extension 2384/2384 (full suites)", "completedAt": "2026-10-05T06:10:00Z" },
+    "code_review": { "status": "done", "devReview": "REQUEST CHANGES → fixed (F1-F7, R1)", "taReview": "conditional APPROVED (R1 fixed per TA criteria, SM verified)", "completedAt": "2026-10-05T06:15:00Z" },
     "deployment": { "status": "not_started" }
   },
-  "bugfix": {
-    "rootCause": "handleIngestDocsFromTemp hardcodes type CONTEXT, no tags, no ingest verification",
-    "bugs_fixed": [
-      { "id": "Bug #1", "desc": "Type hardcoded as CONTEXT for all documents", "file": "backend/src/server/routes/api-index.ts", "fix": "inferTypeFromPath()" },
-      { "id": "Bug #2", "desc": "Tags not passed, left empty", "file": "backend/src/server/routes/api-index.ts", "fix": "extractTagsFromPath()" },
-      { "id": "Bug #3", "desc": "Ingest result not verified", "file": "extension/src/services/IndexerHttpClient.ts", "fix": "Parse JSON response for ingested/errors/total" },
-      { "id": "Bug #4", "desc": "Drawio files excluded", "file": "backend/src/server/routes/api-index.ts", "fix": "Added .drawio to walk function" },
-      { "id": "Bug #5", "desc": "No fallback tag extraction when LLM unavailable", "file": "backend/src/modules/memory/task-queue/TaskWorker.ts", "fix": "fallbackTagExtraction() method" },
-      { "id": "Bug #6", "desc": "UI shows no KB ingest result", "file": "extension/src/indexer.ts", "fix": "Updated showIndexResults message" }
-    ]
-  },
-  "lastUpdated": "2026-10-05T00:00:00Z"
+  "jiraAttachments": [
+    "STP-v1.0-SA4E-337.docx (11491)",
+    "test-coverage.drawio (11493)",
+    "test-execution-flow.drawio (11494)",
+    "STC-v1.0-SA4E-337.xlsx (11495)",
+    "BRD-v1.0-SA4E-337.docx (11496)",
+    "TDD-v1.1-SA4E-337.docx (11497)"
+  ],
+  "openItems": [
+    "D-NEW-1 Major: tool_usage schema drift → SA4E ticket riêng",
+    "SA4E-339 Bug/High: knowledge_entries thiếu cột vector",
+    "SA4E-340 Bug/High: unhandled rejection D-NEW-2",
+    "Ticket riêng: .drawio + INDEXABLE_EXTENSIONS (DISC-3/D2)",
+    "DISC-7 partial: trigger LLM-down ≠ no-ticket-key → BA rewrite FSD §3.5",
+    "DISC-1,3,4,5,6,8 open trong DISCREPANCY.md",
+    "testdata/tag-extraction-testdata.csv row 12 nghi deviation (BR-20) → TA rule sau",
+    "STC xlsx/docx + TDD docx stale → re-export v2 trước khi attach",
+    "TEST-REPORT csv rows 80-83 stale expectations → regenerate Phase 6",
+    "STP.md + diagrams/test-coverage.drawio còn status UT-PLANNED cũ → sync Phase 6",
+    "4 SIT manual cases"
+  ],
+  "lastUpdated": "2026-10-05T06:20:00Z"
 }

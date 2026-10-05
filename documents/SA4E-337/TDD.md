@@ -11,7 +11,7 @@
 | Jira Ticket | SA4E-337 |
 | Title | Document Indexer: Index khong ingest vao KB Memory + thieu tags |
 | Author | SA Agent |
-| Version | 1.1 |
+| Version | 1.2 |
 | Date | 2026-10-05 |
 | Status | Final (retroactive — design reflects code as fixed for QA defect SA4E-337-QA-001) |
 | Related BRD | documents/SA4E-337/BRD.md |
@@ -34,6 +34,16 @@
 > with the full SA4E-337 args contract, and documents the new
 > `backend/src/server/routes/api-index-ingest.ts` module (SRP split, per-file isolation,
 > fail-closed `summarizeIngestResult()`).
+>
+> **v1.2 update (TA re-review + dev fix round 1):** §4.3 SQL inventory and the §5.2 fallback
+> pseudocode are now race-guarded — `UPDATE ... SET tags = ? WHERE id = ? AND enrichment_status = 'pending'`
+> followed by the conditional close
+> `UPDATE ... SET enrichment_status='done', enriched_by='fallback', enriched_at=? WHERE id=? AND enrichment_status = 'pending'`
+> (F4). Added the **`enriched_by` provenance** table (`client_llm` | `backend_llm` | `fallback`)
+> in §4.3 and the **R4** denylist-superset note in §16.1. §1.5/§2.2/§2.4/§4.3/§5.1/§6.3 refreshed
+> for fix round 1: caller `a.tags` honoured at insert (DISC-2 → RESOLVED), `source` present in all
+> 4 `TAG_ENRICHMENT` payload creators (new DISC-9 → RESOLVED). §14/§16.3 synced with
+> `DISCREPANCY.md` v2 (DISC-7 → PARTIAL).
 
 ---
 
@@ -54,6 +64,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-05 | SA Agent | Initial TDD (retroactive). Architecture, API, data model, class design, security, E2E test architecture for the 6 bug fixes. |
 | 1.1 | 2026-10-05 | SA Agent | Fix §6.2 design mismatch after defect SA4E-337-QA-001: `mem.getDispatcher().dispatch(...)` (nonexistent method → HTTP 500) replaced by `mem.getToolHandlers().get('mem_ingest_file')` with full args (`type`, `tags`, `scope`, `_projectContext`, `__userId`, `__projectId`). Document new `api-index-ingest.ts` module (§1.2, §2.2, §5.1, §5.2, §5.3), fail-closed `summarizeIngestResult()` verification (§3.2, §5.4, §12), updated diagrams. |
+| 1.2 | 2026-10-05 | SA Agent | TA re-review sync with dev fix round 1 (F1/F4/R1): §4.3 SQL inventory + §5.2 fallback pseudocode → race-guarded `WHERE enrichment_status = 'pending'` + conditional close (`enriched_by='fallback'`); new `enriched_by` provenance table in §4.3 (`client_llm` \| `backend_llm` \| `fallback`); §1.5/§2.2/§2.4/§4.3/§5.1/§6.3 updated (a.tags honoured → DISC-2 RESOLVED; `source` in TAG_ENRICHMENT payload → DISC-9 RESOLVED); new R4 denylist-superset note (§16.1); §14/§16.3 synced with DISCREPANCY.md v2 (DISC-7 PARTIAL). |
 
 ---
 
@@ -122,9 +133,11 @@ Jira ticket indexing pipeline; refactoring unrelated to the index/ingest flow; n
 ### 1.5 Constraints
 
 - `mem_ingest_file` tool schema exposes only `{ file_path, content_base64, type }` — `tags` and
-  `scope` are passed by the route but **`handleIngestFile` ignores `a.tags`** and persists
-  `tags = ''` (Section 4.3, Section 14 DISC-2). Tags materialize asynchronously via
-  `TAG_ENRICHMENT` / `fallbackTagExtraction`.
+  `scope` are passed by the route; since fix round 1 (F1) **`handleIngestFile` honours `a.tags`**
+  (inserted immediately, `crud.ts:262-271`) instead of persisting `tags = ''`, and seeds the
+  `TAG_ENRICHMENT` payload with `existing_tags` + `source` (`crud.ts:285`). Tags are still
+  *refined* asynchronously by `TAG_ENRICHMENT` / `fallbackTagExtraction`, but only while
+  `enrichment_status = 'pending'` (race guard — see §4.3). DISC-2: **RESOLVED**.
 - **Only supported entry point into the memory module for routes** is
   `MemoryModule.getToolHandlers()` (returns `Map<string, ToolHandler>`; each handler is decorated
   with `withErrorHandling → withScopeContext → withResultFormat`). `MemoryModule` exposes **no
@@ -195,9 +208,9 @@ Workspace Scan → File Classification → Staged Temp Write → (server) Type D
 | `buildIngestFileArgs()` | `backend/src/server/routes/api-index-ingest.ts` | Handler args: `{ file_path, content_base64, type, scope: 'PROJECT', tags, _projectContext, __userId, __projectId }` (tenant scope keys — QA-001) | QA-001 |
 | `summarizeIngestResult()` | `backend/src/server/routes/api-index-ingest.ts` | Fail-closed verdict on each handler result (5 branches: `isError` / empty / `Error:` / JSON `status≠ingested` / ok) — prevents `ingested++` on failures | QA-001 |
 | `ingestOneFile()` / `ingestFilesFromTemp()` | `backend/src/server/routes/api-index-ingest.ts` | Per-file isolation: read → handler → verify → count; one bad file never aborts the run | QA-001 |
-| `handleIngestFile()` | `backend/src/modules/memory/dispatchers/crud.ts` | UPSERT entry (`type`, `tier`, `scope`, `source`), `tags=''`, enqueue enrichment | — |
-| `processTagEnrichment()` | `backend/src/modules/memory/task-queue/TaskWorker.ts` | LLM tag analysis when `tagAnalyzer` available, else fallback | #5 |
-| `fallbackTagExtraction()` | `backend/src/modules/memory/task-queue/TaskWorker.ts` | Path + content heuristics → `UPDATE knowledge_entries.tags` | #5 |
+| `handleIngestFile()` | `backend/src/modules/memory/dispatchers/crud.ts` | UPSERT entry (`type`, `tier`, `scope`, `source`, `tags` from `a.tags` — F1), mark `enrichment_status='pending'`, enqueue enrichment with `existing_tags` + `source` | #2 (F1) |
+| `processTagEnrichment()` | `backend/src/modules/memory/task-queue/TaskWorker.ts` | LLM tag analysis when `tagAnalyzer` available, else fallback; conditional writes (race guard) + close `enriched_by='backend_llm'` | #5 |
+| `extractFallbackTags()` / `fallbackTagExtraction()` | `backend/src/modules/memory/task-queue/TaskWorker.ts` | Pure path/content heuristics (BR-20..24) → conditional `UPDATE ... tags ... WHERE ... enrichment_status='pending'` + close `enriched_by='fallback'` (F4) | #5 |
 | `showIndexResults()` / `describeSummaryTitle()` | `extension/src/indexer.ts` | Summary title per selected ops, results + next steps, toast with "Open Output" | #6 |
 
 ### 2.3 Deployment Architecture
@@ -219,7 +232,9 @@ No deployment change. Both processes run on the developer machine:
   ingest (`AbortSignal.timeout(60000)` on the ingest trigger).
 - **Async**: backend → `pending_tasks` queue; `TaskWorker` polls (first poll delayed 6 s to allow
   LLM health-check / `setTagAnalyzer`), executes `TAG_ENRICHMENT` (LLM) or fallback, then
-  `UPDATE knowledge_entries SET tags = ?`.
+  `UPDATE knowledge_entries SET tags = ? WHERE id = ? AND enrichment_status = 'pending'` and
+  closes the entry to `enrichment_status = 'done'` / `enriched_by = 'backend_llm' | 'fallback'`
+  (F4 race guard — writes only land while the entry is still `pending`).
 - **Backpressure**: `INDEX_CONCURRENCY_LIMIT = 3` returns `429` — enforced on `POST /api/index/source`
   only (Section 3.3).
 
@@ -460,7 +475,7 @@ CREATE TABLE IF NOT EXISTS pending_tasks (
   task_type TEXT NOT NULL,                 -- 'TAG_ENRICHMENT' | 'VECTOR_EMBEDDING'
   entry_id INTEGER NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending',  -- pending → running → completed | failed
-  payload TEXT NOT NULL,                   -- { entry_id, content, existing_tags, options }
+  payload TEXT NOT NULL,                   -- { entry_id, content, existing_tags, source, options }
   error TEXT, error_message TEXT,
   retry_count INTEGER NOT NULL DEFAULT 0,
   max_retries INTEGER NOT NULL DEFAULT 3,
@@ -477,18 +492,39 @@ CREATE INDEX IF NOT EXISTS idx_pending_tasks_entry_id ON pending_tasks(entry_id)
 
 | Step | Statement | Location |
 |------|-----------|----------|
-| Ingest | `engine.insert({ content, summary, type, tier: tierForType(type), scope, user_id, project_id, source: filePath, tags: '' })` — UPSERT on `UNIQUE(source, project_id)` | `crud.ts → handleIngestFile` |
+| Ingest | `engine.insert({ content, summary, type, tier: tierForType(type), scope, user_id, project_id, source: filePath, tags })` — UPSERT on `UNIQUE(source, project_id)`; `tags` = normalised `a.tags` (array or string), **F1 — caller tags honoured** | `crud.ts → handleIngestFile` |
 | Mark pending | `UPDATE knowledge_entries SET enrichment_status = 'pending' WHERE id = ?` | `handleIngestFile` |
-| Enqueue | `INSERT pending_tasks (TAG_ENRICHMENT, payload {existing_tags: ''})` + optional `VECTOR_EMBEDDING` | `handleIngestFile` |
+| Enqueue | `INSERT pending_tasks (TAG_ENRICHMENT, payload {entry_id, content, existing_tags: <tags>, source: filePath, options})` + optional `VECTOR_EMBEDDING` (all 4 payload creators carry `source` — DISC-9) | `handleIngestFile` |
 | Tags (LLM) | `UPDATE knowledge_entries SET tags = ? WHERE id = ? AND enrichment_status = 'pending'` | `TaskWorker.processTagEnrichment` |
-| Tags (fallback, Bug #5) | `UPDATE knowledge_entries SET tags = ? WHERE id = ?` (merges `existing_tags` + derived) | `TaskWorker.fallbackTagExtraction` |
+| Tags (fallback, Bug #5, F4) | `UPDATE knowledge_entries SET tags = ? WHERE id = ? AND enrichment_status = 'pending'` (race guard — mirrors the LLM path; merges `existing_tags` + derived) | `TaskWorker.fallbackTagExtraction` |
+| Close enrichment (fallback, F4) | `UPDATE knowledge_entries SET enrichment_status = 'done', enriched_by = 'fallback', enriched_at = ? WHERE id = ? AND enrichment_status = 'pending'` — executed only when the tag write actually changed a row | `TaskWorker.fallbackTagExtraction` |
+| Close enrichment (LLM) | `UPDATE knowledge_entries SET enrichment_status = 'done', enriched_by = 'backend_llm', enriched_at = ? WHERE id = ? AND enrichment_status = 'pending'` (`changes = 0` → client won, result discarded) | `TaskWorker.processTagEnrichment` |
 
-> ⚠️ **Design fact:** the `tags` argument computed by `buildIngestFileArgs()`
-> (`extractTagsFromPath(...).join(',')`, sent by `handleIngestDocsFromTemp`) is dropped in
-> `handleIngestFile` (`tags: ''` at insert). Effective tags therefore always come from the async
-> enrichment step — LLM analysis of `content`, or the path/content heuristics of
-> `fallbackTagExtraction` (which reads `payload.source` = temp path, preserving `SA4E-*` /
-> doc-type tags). See DISC-2.
+> Legacy exception: a **pre-migration-007** schema has no `enrichment_status` column, so the
+> fallback write hits the column-error catch branch in `TaskWorker.ts` and applies without a race
+> guard (there is no race state to guard). Not reachable after migration 007 — all shipped
+> databases carry the column.
+
+> ✅ **Design fact (fix round 1 — DISC-2 RESOLVED):** the `tags` argument computed by
+> `buildIngestFileArgs()` (`extractTagsFromPath(...).join(',')`, sent by `handleIngestDocsFromTemp`)
+> is **honoured** by `handleIngestFile` — normalised at `crud.ts:262` and persisted at insert
+> (`crud.ts:268-271`), then re-used as `existing_tags` in the `TAG_ENRICHMENT` payload
+> (`crud.ts:285`). The async enrichment step then *refines* those tags — LLM analysis of `content`,
+> or the path/content heuristics of `fallbackTagExtraction` (which reads `payload.source` = temp
+> path, preserving `SA4E-*` / doc-type tags). Every writer (insert, LLM, fallback, client enrich)
+> is guarded by `enrichment_status = 'pending'`, so a client-enriched entry is never clobbered.
+
+**`enriched_by` provenance — who won the enrichment race (3 values):**
+
+| Value | Written by | Location | Guard |
+|-------|-----------|----------|-------|
+| `client_llm` | `mem_enrich` client-side enrichment | `dispatchers/enrich.ts:105` | `WHERE id = ? AND enrichment_status = 'pending'` (atomic — `changes=0` means someone else already enriched) |
+| `backend_llm` | `TaskWorker.processTagEnrichment` (LLM path) | `task-queue/TaskWorker.ts:434` | `WHERE id = ? AND enrichment_status = 'pending'`; `changes=0` → log "Client enriched during tag/map update — discarding" |
+| `fallback` | `TaskWorker.fallbackTagExtraction` (F4 — LLM unavailable) | `task-queue/TaskWorker.ts:481` | `WHERE id = ? AND enrichment_status = 'pending'`, executed only when the conditional tag write changed a row |
+
+Exactly one value wins per entry: all three writers predicate on `enrichment_status = 'pending'`,
+so `enriched_by` records the provenance of the `tags` / `structured_map` / `summary` actually
+stored (`models.ts:45`, SA4E-79).
 
 **`tierForType()` mapping** (`dispatchers/helpers.ts`): `REQUIREMENT | ARCHITECTURE | PROCEDURE |
 API_DESIGN → SEMANTIC`; `DECISION | LESSON_LEARNED | ERROR_PATTERN → EPISODIC`; else `WORKING`.
@@ -498,7 +534,7 @@ API_DESIGN → SEMANTIC`; `DECISION | LESSON_LEARNED | ERROR_PATTERN → EPISODI
 | # | Pattern | Plan notes |
 |---|---------|------------|
 | Q1 | UPSERT by `source` (+ `project_id`) | backed by the SA4E-163 uniqueness on `(source, project_id)` — one row per file; re-ingest replaces content instead of duplicating |
-| Q2 | `UPDATE knowledge_entries SET tags = ? WHERE id = ?` (PK lookup) | O(1); triggers `knowledge_fts_au` → tags searchable via FTS immediately |
+| Q2 | `UPDATE knowledge_entries SET tags = ? WHERE id = ?` (PK lookup; enrichment writers append `AND enrichment_status = 'pending'` — §4.3) | O(1); triggers `knowledge_fts_au` → tags searchable via FTS immediately |
 | Q3 | `SELECT ... FROM pending_tasks WHERE status = 'pending' ORDER BY created_at` | covered by `idx_pending_tasks_status_created` |
 | Q4 | FTS search `knowledge_fts(tags, type, ...)` | refreshed by triggers — no manual reindex |
 | Q5 | Stale cleanup `DELETE FROM knowledge_entries WHERE source = ? [AND project_id = ?]` before insert | graph nodes + stale `pending_tasks` deleted first (FK ordering, D3 fix) |
@@ -548,7 +584,8 @@ backend/src/
 └── modules/memory/
     ├── MemoryModule.ts           # getToolHandlers() — withErrorHandling(withScopeContext(
     │                             #   withResultFormat(dispatch)))  ← QA-001 entry point
-    ├── dispatchers/crud.ts       # handleIngestFile() (consumes type/scope; ignores tags)
+    ├── dispatchers/crud.ts       # handleIngestFile() (consumes type/scope/tags — F1; marks
+    │                             #   enrichment_status='pending', enqueues TAG_ENRICHMENT)
     ├── dispatchers/helpers.ts    # tierForType(), inferOwner(), resolvePath()
     └── task-queue/TaskWorker.ts  # [Bug #5] processTagEnrichment(), fallbackTagExtraction()
 ```
@@ -614,7 +651,14 @@ export function registerIndexRoutes(app: Hono, registry: ModuleRegistry, logger:
 private async processTagEnrichment(task: PendingTask, payload: any): Promise<void>
 private async fallbackTagExtraction(task: PendingTask, payload: any): Promise<void>
 // fallback inputs: payload.source (path segments) + payload.content (#### STORY, ## Architecture, ...)
-// output: UPDATE knowledge_entries SET tags = ? WHERE id = ?  → markCompleted(task.id)
+//                + payload.existing_tags (dedup merge — never re-add what the caller already sent)
+// output (F4 race guard — conditional WHERE, mirrors the LLM path):
+//   1) UPDATE knowledge_entries SET tags = ? WHERE id = ? AND enrichment_status = 'pending'
+//   2) changes > 0 → UPDATE knowledge_entries
+//        SET enrichment_status = 'done', enriched_by = 'fallback', enriched_at = ?
+//        WHERE id = ? AND enrichment_status = 'pending'      // close: never sticks at 'pending'
+//      changes = 0 → log 'Fallback tag extraction skipped — entry no longer pending'
+//   3) markCompleted(task.id)
 ```
 
 ![Class diagram — SA4E-337](diagrams/class-diagram.png)
@@ -752,7 +796,7 @@ withErrorHandling(logger, 'mem_ingest_file')(     // catches all throws → { is
 |--------|---------------|
 | Trigger | `handleIngestFile` creates `TAG_ENRICHMENT` (+ `VECTOR_EMBEDDING` when embedding available) |
 | Poll | worker loop with **6 s initial delay** (LLM health check / `setTagAnalyzer` init) |
-| Payload | `{ entry_id, content, existing_tags, options: { threshold: 0.6, autoApply: true } }` |
+| Payload | `{ entry_id, content, existing_tags, source, options: { threshold: 0.6, autoApply: true } }` — `source` present in **all 4** payload creators (`crud.ts:89`, `crud.ts:285`, `kb-entries.ts:151`, `analytics.ts:71`); drives `fallbackTagExtraction` path tags when the LLM is down (DISC-9, fix round 1) |
 | Retry | `max_retries = 3`, status `failed` with `error` code |
 | Failure isolation | one bad payload marks that task failed; queue continues |
 
@@ -880,6 +924,7 @@ via triggers instead of re-scan.
 | `api-index` | `[ingest-docs] Failed to ingest document` | `file` + `reason` (result verdict) or `err` (thrown), from `ingestOneFile()` |
 | `api-index` | `[ingest-docs] Document ingest complete` | **`ingested`, `errors`, `total`** |
 | TaskWorker | `Fallback tag extraction applied` | `entry_id`, `tags` |
+| TaskWorker | `Fallback tag extraction skipped — entry no longer pending` | `entry_id` (F4 race guard hit) |
 | TaskWorker | `Fallback tag extraction failed` | `err`, `entry_id` |
 
 Client-side logs go to the **"SDLC Indexing"** Output channel: per-file `📄 Text read`,
@@ -1087,15 +1132,17 @@ Summary:
 | ID | Severity | One-line |
 |----|----------|----------|
 | DISC-1 | High | FSD API contract `POST /api/v1/ingestDocuments` does not exist — real endpoints are `POST /api/index/documents` + `POST /api/index/ingest-docs` |
-| DISC-2 | High | `handleIngestFile` ignores the `tags` argument (INSERT `tags=''`); Bug #2's tags only persist indirectly via `TAG_ENRICHMENT` / `fallbackTagExtraction` |
+| DISC-2 | High | ✅ **RESOLVED (fix round 1)** — `handleIngestFile` now honours `a.tags` (insert + `existing_tags`/`source` on payload, `crud.ts:262-295`); IT `ingest-file-tags-fallback.it.test.ts` 3/3 |
 | DISC-3 | High | FSD BR-16 requires `.drawio` in `INDEXABLE_EXTENSIONS` (`indexer-discovery.ts`); only the backend temp walk got `.drawio` — extension discovery still skips `.drawio` (and `diagrams/`), so Bug #4 is only half-delivered |
 | DISC-4 | Medium | Type derivation exists twice with different tables (extension `DOCUMENT_TYPES` vs server `inferTypeFromPath`); server wins, `TEST-REPORT`/`DOCUMENTATION` differ |
 | DISC-5 | Medium | FSD BR-07 generic `{PROJECT}-{NUMBER}`; implementation hardcodes `^SA4E-\d+$` (both server + worker) → non-SA4E tickets get no ticket tag |
 | DISC-6 | Medium | FSD puts tag extraction client-side on `DocEntry`; real `DocEntry` has no `tags` field — extraction is server-side from the temp path |
-| DISC-7 | Low | FSD fallback = "no ticket key in folder"; actual fallback trigger = "LLM `tagAnalyzer` unavailable", different implementation/location |
+| DISC-7 | Low | ⚠️ **PARTIAL** — BR-20..BR-24 now implemented literally in `extractFallbackTags()` (parent-folder / denylist / `documents` root / `unknown`); open point = trigger (LLM-down ≠ "no ticket-key") → BA rewrites FSD §3.5 |
 | DISC-8 | Low | FSD `DOCUMENTATION` type (`DISCREPANCY*`, `SECURITY-REPORT*`) does not exist in backend; mappings differ from FSD table |
+| DISC-9 | High | ✅ **RESOLVED (fix round 1)** — `TAG_ENRICHMENT` payload had no `source` → fallback path tags dead in production; `source` now set by all 4 payload creators (`crud.ts:89,285`, `kb-entries.ts:151`, `analytics.ts:71`), IT 3/3 |
 
 **No Critical discrepancies** — data model (Section 4) matches the real schema; no DB impact.
+Status: 2 resolved (DISC-2, DISC-9), 1 partial (DISC-7), 6 open.
 
 ---
 
@@ -1127,7 +1174,20 @@ Summary:
 | `summarizeIngestResult()` | fail-closed classifier of `mem_ingest_file` handler results — decides `ingested` vs `failedFiles` (§6.2) |
 | `TAG_ENRICHMENT` | async `pending_tasks` job that computes tags (LLM) or applies heuristics (fallback) |
 | `KB_WRITE` | admin permission id gating KB writes (also used by `kb-tags`, `kb-operations`) |
-| Denylist | `FOLDER_DENYLIST = {diagrams, testdata, templates, node_modules, .git}` |
+| Denylist | two distinct lists (discovery `FOLDER_DENYLIST` vs worker `FALLBACK_TAG_DENYLIST`) — see **R4 note** below |
+| `enriched_by` | provenance column: `client_llm` \| `backend_llm` \| `fallback` — exactly one value wins (§4.3) |
+
+> **R4 — Denylist superset is deliberate (do NOT synchronise the two lists):**
+> `FALLBACK_TAG_DENYLIST` (`backend/src/modules/memory/task-queue/TaskWorker.ts:48`) =
+> `{diagrams, testdata, templates, node_modules, .git, dist, build, out, .opencode, .code-intel, .analysis}`
+> is a **superset** of the FSD `FOLDER_DENYLIST` `{diagrams, testdata, templates, node_modules, .git}`,
+> which is mirrored verbatim by the extension's `FOLDER_DENYLIST`
+> (`extension/src/indexer-discovery.ts:23`). The two lists serve different layers: *discovery*
+> prunes folders that never contain indexable documents, while *fallback tag derivation* also
+> strips build/tooling segments that would otherwise surface as meaningless tags. The superset
+> still satisfies **BR-23** (denylisted folder names never become tags) — in fact it satisfies it
+> more strongly. **Do not widen the discovery list and do not narrow the fallback list to "match"
+> in future changes**; keep them intentionally divergent.
 
 ### 16.2 Assumptions
 
@@ -1140,6 +1200,9 @@ Summary:
 
 1. DISC-3: should `.drawio` also be added to `INDEXABLE_EXTENSIONS` + classification in
    `indexer-discovery.ts` to complete Bug #4 end-to-end? (recommended: yes, as a follow-up fix)
-2. DISC-2: should `handleIngestFile` honour `a.tags` at insert time (faster, deterministic tags)?
-   (recommended: yes — small change, removes reliance on async enrichment)
+2. ~~DISC-2: should `handleIngestFile` honour `a.tags` at insert time (faster, deterministic tags)?~~
+   — **closed**: implemented in fix round 1 (F1, `crud.ts:262-295`), verified by IT
+   `ingest-file-tags-fallback.it.test.ts` (3/3).
 3. DISC-5: generalise ticket-key regex from `SA4E-\d+` to any project key?
+4. DISC-7 (PARTIAL): BA to rewrite FSD §3.5 — trigger of fallback is "LLM `tagAnalyzer` unavailable",
+   not "no ticket-key in folder"; BR-20..BR-24 behaviour itself is now implemented as written.

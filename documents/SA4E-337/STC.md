@@ -35,12 +35,12 @@
 | Category | ID Range | Count | Priority | Execution Status |
 |----------|----------|-------|----------|------------------|
 | PBT — Property-Based | — | 0 (N/A) | — | Level not applicable (STP §2.1) |
-| UT — Unit (automated) | UT-01 to UT-82 | 82 | High | 78 PASS / 4 PLANNED (NOT_RUN) |
+| UT — Unit (automated) | UT-01 to UT-82 | 82 | High | 82 PASS (UT-79..82 executed 2026-10-05) |
 | IT — Integration (automated) | IT-01 to IT-09 | 9 | High | 9 PASS |
 | E2E-API — REST E2E (automated) | E2E-API-01 to E2E-API-14 | 14 | High | 14 PASS |
 | E2E-UI — Browser (automated) | — | 0 (N/A) | — | Level not applicable (TDD §11.5) |
 | SIT — Manual (VS Code UI) | SIT-01 to SIT-04 | 4 | High | 0 executed (NOT_RUN — Phase 6) |
-| **Total** | | **109** | | **101 PASS, 4 PLANNED, 4 SIT pending** |
+| **Total** | | **109** | | **105 PASS, 0 PLANNED, 4 SIT pending** |
 
 **Priority distribution:** High 89 · Medium 20.
 
@@ -164,16 +164,21 @@
 
 ---
 
-## 5. Planned Unit Test Cases — Coverage Gaps (UT-79..UT-82)
+## 5. Unit Test Cases — Coverage Gaps (UT-79..UT-82) — Executed 2026-10-05
 
 > **Assigned to DEV Agent** (role boundary: unit-test implementation = DEV). QA defines the cases + acceptance; QA retests after implementation. These close the gaps identified during RTM construction (STP R-4, Story 3/5 client-side paths).
+>
+> **Execution result (2026-10-05): all 4 cases GREEN.** Environment: local SQLite (in-memory/temp) + vitest (backend), vitest (extension). Commands run from `backend/` / `extension/`.
 
 | ID | Title | Priority | Requirement | Preconditions / Test Data | Expected Result | Status |
 |----|-------|----------|-------------|---------------------------|-----------------|--------|
-| UT-79 | fallbackTagExtraction applies parent-path + content tags when tagAnalyzer absent | High | **Bug #5**, UC-05, BR-20, BR-21, BR-24, TC-14 | TaskWorker constructed **without** `tagAnalyzer`; payload `source='…/SA4E-337/BRD.md'`, content with `#### STORY` | `processTagEnrichment` → tags include `sa4e`, `sa4e-337`, `brd`, `user-story`; task COMPLETED; log `Fallback tag extraction applied` | NOT_RUN (planned) |
-| UT-80 | fallback tag deduplication + denylist skip | Medium | **Bug #5**, BR-22, BR-23, TC-15, TC-16 | payload `existing_tags='sa4e-337'`, path segment `SA4E-337` (duplicate); parent folder `diagrams` (denylisted) | No duplicate tags; denylisted folder not used as tag | NOT_RUN (planned) |
-| UT-81 | triggerDocumentIngest handles invalid JSON / non-OK status per BR-12 | High | **Bug #3**, UC-03, BR-12, TC-19, TC-20 | Mocked `fetch`: (a) 200 + invalid JSON; (b) 500 status | (a) returns zeros + warning `⚠️ Could not parse ingest response`; (b) zeros + `⚠️ Document ingest failed: status 500`; run continues | NOT_RUN (planned) |
-| UT-82 | extractTagsFromPath: nested folder secondary tag + root-level fallback | High | **Bug #2/#5**, BRD Story 2 AC-1/AC-4, Story 5 AC-2/AC-3, TC-11, TC-12, TC-13 | Paths: `SA4E-337/attachments/spec.pdf`, `overview.md` (root), `attachments/spec.pdf` | `['sa4e-337','attachments']` (secondary present); root → `documents` fallback; non-ticket → parent-folder tag; never empty | NOT_RUN (planned) |
+| UT-79 | fallbackTagExtraction applies parent-path + content tags when tagAnalyzer absent | High | **Bug #5**, UC-05, BR-20, BR-21, BR-24, TC-14 | TaskWorker constructed **without** `tagAnalyzer`; payload `source='…/SA4E-337/BRD.md'`, content with `#### STORY`; CSV rows `dev/notes.md`, `docs-old/report.md`, `projects/x/y/file.md`, `root.md`, empty source | `processTagEnrichment` → tags include `sa4e`, `sa4e-337`, `brd`, `user-story`; task COMPLETED; log `Fallback tag extraction applied`; root → `documents`; empty source → `unknown` | **PASS** (2026-10-05, local SQLite/vitest — `backend/src/modules/memory/task-queue/__tests__/TaskWorker.fallback-tag.test.ts`) |
+| UT-80 | fallback tag deduplication + denylist skip | Medium | **Bug #5**, BR-22, BR-23, TC-15, TC-16 | payload `existing_tags='sa4e-337'`, path segment `SA4E-337` (duplicate); parent folder `diagrams` (denylisted); CSV rows `backup/backup.md`, `archive/archive/doc.md`, `cache/cache/file.md` | No duplicate tags; denylisted folder not used as tag; `archive/archive/doc.md` → `[archive]` (immediate parent only) | **PASS** (2026-10-05, local SQLite/vitest — `backend/src/modules/memory/task-queue/__tests__/TaskWorker.fallback-tag.test.ts`) |
+| UT-81 | triggerDocumentIngest handles invalid JSON / non-OK status per BR-12 | High | **Bug #3**, UC-03, BR-12, TC-19, TC-20 | Mocked `fetch`: (a) 200 + invalid JSON; (b) 500 status | (a) returns zeros + warning `⚠️ Could not parse ingest response`; (b) zeros + `⚠️ Document ingest failed: status 500`; run continues | **PASS** (2026-10-05, local vitest (extension) — `extension/src/services/__tests__/IndexerHttpClient.ingest.test.ts`) |
+| UT-82 | extractFallbackTags (TaskWorker.ts): nested folder secondary tag + root-level fallback | High | **Bug #2/#5**, BRD Story 2 AC-1/AC-4, Story 5 AC-2/AC-3, TC-11, TC-12, TC-13 | Paths: `SA4E-337/attachments/spec.pdf`, `overview.md` (root), `attachments/spec.pdf` | `extractFallbackTags` → `['sa4e-337','attachments']` (secondary present); root → `documents` fallback; non-ticket → immediate-parent tag (BR-20); never empty | **PASS** (2026-10-05, local SQLite/vitest — `backend/src/modules/memory/task-queue/__tests__/TaskWorker.fallback-tag.test.ts`) |
+
+> **UT-82 function note (corrected):** the **secondary-tag / root-level / never-empty** logic lives in **`extractFallbackTags`** (`backend/src/modules/memory/task-queue/TaskWorker.ts`) — the LLM-down fallback path. **`extractTagsFromPath`** (`backend/src/server/routes/api-index-ingest.ts`) only derives the **primary** ticket/feature tags at ingest time. UT-82 asserts both halves: primary via `extractTagsFromPath('SA4E-337/attachments/spec.pdf')`, secondary/root/never-empty via `extractFallbackTags(...)`.
+> **Test-file evidence:** backend run `npx vitest run src/modules/memory/task-queue/__tests__/TaskWorker.fallback-tag.test.ts src/modules/memory/ingest/__tests__/ingest-file-tags-fallback.it.test.ts src/server/routes/__tests__/api-index-errors.test.ts` → **3 files / 51 tests PASS**; extension run `npx vitest run src/services/__tests__/IndexerHttpClient.ingest.test.ts` → **1 file / 9 tests PASS** (2026-10-05).
 
 ---
 
@@ -333,7 +338,7 @@
 
 ## 10. Requirements Traceability Matrix (RTM)
 
-> Status legend: **PASS** = executed & green (2026-10-05) · **PLANNED** = test case defined, NOT_RUN (UT-79..82, DEV to implement) · **SIT** = pending manual VS Code execution · ⚠ = covered with documented deviation (see notes).
+> Status legend: **PASS** = executed & green (2026-10-05) · **PLANNED** = test case defined, NOT_RUN (none remaining — UT-79..82 executed 2026-10-05) · **SIT** = pending manual VS Code execution · ⚠ = covered with documented deviation (see notes).
 
 ### 10.1 BRD User Stories & Acceptance Criteria (BRD §2.3)
 
@@ -349,18 +354,18 @@
 | Story 2 AC-1 `SA4E-337/BRD.md` → tags `[SA4E-337]` | BRD 2.3 S2 | UT-33, UT-41, E2E-API-12 | PASS (actual tags lowercase `sa4e-337` — implementation normalizes) |
 | Story 2 AC-2 drawio in ticket folder → tags `[SA4E-337]` | BRD 2.3 S2 | E2E-API-12 | ⚠ PASS — observed `test-coverage.drawio` tags `[]`; AC conflicts with `diagrams/` denylist (S1-AC-3) — deviation reported to BA |
 | Story 2 AC-3 `GRAPH-EMAIL/BRD.md` → `[GRAPH-EMAIL]` | BRD 2.3 S2 | UT-47 | PASS |
-| Story 2 AC-4 root file → `[documents]` fallback | BRD 2.3 S2 | UT-48, UT-82 | PLANNED (discovery PASS; tag-fallback assert = UT-82) |
+| Story 2 AC-4 root file → `[documents]` fallback | BRD 2.3 S2 | UT-48, UT-82 | PASS (discovery UT-48 + tag fallback UT-82) |
 | Story 3 AC-1 Output shows total/ingested/converted/skipped | BRD 2.3 S3 | E2E-API-07, SIT-01 | SIT pending (API counts PASS) |
 | Story 3 AC-2 unconvertible files listed with reasons | BRD 2.3 S3 | UT-34, UT-28, UT-71 | PASS |
 | Story 3 AC-3 summary line shows API overall result | BRD 2.3 S3 | E2E-API-07, SIT-01 | SIT pending (API PASS) |
-| Story 3 AC-4 API error logged + user notified | BRD 2.3 S3 | UT-65, UT-68, UT-71, UT-73, UT-81, E2E-API-03/04/14 | PASS (server/client errs) + UT-81 PLANNED (parse-fail notify) |
+| Story 3 AC-4 API error logged + user notified | BRD 2.3 S3 | UT-65, UT-68, UT-71, UT-73, UT-81, E2E-API-03/04/14 | PASS (server/client errs + UT-81 parse-fail notify) |
 | Story 4 AC-1 `.drawio` discovered during scan | BRD 2.3 S4 | E2E-API-05, UT-35, UT-46 | ⚠ PASS (backend walk) — extension discovery gap = DISC-3 (STP R-1) |
 | Story 4 AC-2 `.drawio` classified format=drawio, type=CONTEXT | BRD 2.3 S4 | E2E-API-10, UT-32 | PASS |
 | Story 4 AC-3 `.drawio` in denylisted folders excluded | BRD 2.3 S4 | UT-35, UT-36, UT-46 | PASS |
 | Story 4 AC-4 `.drawio` sent to server (binary path) | BRD 2.3 S4 | E2E-API-05, E2E-API-06, E2E-API-10 | PASS |
 | Story 5 AC-1 primary tag, no fallback needed | BRD 2.3 S5 | UT-33, E2E-API-12 | PASS |
-| Story 5 AC-2 nested → `["SA4E-337","attachments"]` | BRD 2.3 S5 | UT-82 | PLANNED |
-| Story 5 AC-3 root → `["documents"]` | BRD 2.3 S5 | UT-82 | PLANNED |
+| Story 5 AC-2 nested → `["SA4E-337","attachments"]` | BRD 2.3 S5 | UT-82 | PASS |
+| Story 5 AC-3 root → `["documents"]` | BRD 2.3 S5 | UT-82 | PASS |
 | Story 6 AC-1 summary title matches operations | BRD 2.3 S6 | SIT-01 | SIT pending |
 | Story 6 AC-2 results line by line | BRD 2.3 S6 | SIT-01 | SIT pending |
 | Story 6 AC-3 Next Steps per operation | BRD 2.3 S6 | SIT-01 | SIT pending |
@@ -373,10 +378,10 @@
 | Requirement | Source | Test Cases | Status |
 |-------------|--------|------------|--------|
 | UC-01 Derive document type from file path | FSD 3.1.2 | UT-32, UT-39, UT-40, UT-42, E2E-API-09 | PASS |
-| UC-02 Extract tags from folder path | FSD 3.2.2 | UT-33, UT-41, UT-47, E2E-API-12, UT-82 | PASS + PLANNED (UT-82) |
-| UC-03 Verify ingest result | FSD 3.3.2 | UT-26..UT-31, UT-34, E2E-API-06/07/08, UT-81 | PASS + PLANNED (UT-81) |
+| UC-02 Extract tags from folder path | FSD 3.2.2 | UT-33, UT-41, UT-47, E2E-API-12, UT-82 | PASS |
+| UC-03 Verify ingest result | FSD 3.3.2 | UT-26..UT-31, UT-34, E2E-API-06/07/08, UT-81 | PASS |
 | UC-04 Include `.drawio` files | FSD 3.4.2 | UT-35, UT-36, UT-43, UT-46, E2E-API-05/10 | PASS ⚠ (DISC-3 extension side) |
-| UC-05 Fallback tag extraction | FSD 3.5.2 | IT-04, E2E-API-12, UT-79, UT-80 | PASS (adjacent — IT-04 LLM-timeout fallback path) + PLANNED (direct branch UT-79/80) |
+| UC-05 Fallback tag extraction | FSD 3.5.2 | IT-04, E2E-API-12, UT-79, UT-80 | PASS (direct branch UT-79/80 + adjacent IT-04 LLM-timeout fallback path) |
 | UC-06 Updated UI to show indexing results | FSD 3.6.2 | SIT-01, SIT-02, SIT-03, SIT-04 | SIT pending |
 
 ### 10.3 FSD Business Rules (FSD §3.1.3–§3.6.3)
@@ -388,13 +393,13 @@
 | BR-03 | DOCUMENT_TYPES single source of truth | UT-01, UT-39, UT-40 (exercised via shared mapping) | PASS |
 | BR-04 | Case-insensitive matching | UT-32, UT-42 | PASS |
 | BR-05 | Extension gate before inference | UT-38 | PASS |
-| BR-06 | Tags from folder path, never empty | E2E-API-12, UT-33, UT-82 | PASS + PLANNED (UT-82) |
+| BR-06 | Tags from folder path, never empty | E2E-API-12, UT-33, UT-82 | PASS |
 | BR-07 | Ticket key pattern `{PROJECT}-{NUMBER}` | UT-41, UT-33 | PASS |
-| BR-08 | Fallback tag non-empty | UT-79 | PLANNED |
-| BR-09 | Fallback tag not duplicate | UT-80 | PLANNED |
-| BR-10 | Fallback tag not denylisted | UT-80, UT-46 | PLANNED (dedicated) + PASS (folder denylist) |
-| BR-11 | ≥ 1 tag per document | E2E-API-12, IT-07, UT-79 | PASS + PLANNED (UT-79) |
-| BR-12 | API response parsed as JSON; fail → failure | UT-34, UT-81 | PASS (server-side) + PLANNED (client UT-81) |
+| BR-08 | Fallback tag non-empty | UT-79 | PASS |
+| BR-09 | Fallback tag not duplicate | UT-80 | PASS |
+| BR-10 | Fallback tag not denylisted | UT-80, UT-46 | PASS (dedicated UT-80 + folder denylist UT-46) |
+| BR-11 | ≥ 1 tag per document | E2E-API-12, IT-07, UT-79 | PASS |
+| BR-12 | API response parsed as JSON; fail → failure | UT-34, UT-81 | PASS (server-side UT-34 + client UT-81) |
 | BR-13 | Unconvertible files carry `reason` | UT-34, UT-28, UT-71 | PASS |
 | BR-14 | Skipped count never negative | UT-34, E2E-API-07 | PASS (adapted — actual API has no `skipped` field, DISC-1; fail-closed summary asserted) |
 | BR-15 | Summary includes counts | UT-26, E2E-API-07, SIT-01 | PASS + SIT pending |
@@ -402,11 +407,11 @@
 | BR-17 | `.drawio` in denylisted folders excluded | UT-35, UT-36, UT-43, UT-46 | PASS |
 | BR-18 | `.drawio` = binary (server-side) | E2E-API-05, E2E-API-06 | PASS |
 | BR-19 | `.drawio` format=drawio type=CONTEXT | E2E-API-10, UT-32 | PASS |
-| BR-20 | Fallback uses parent folder name | UT-79 | PLANNED |
-| BR-21 | Parent `documents` → tag `documents` | UT-79, UT-82 | PLANNED |
-| BR-22 | Fallback no duplicate tags | UT-80 | PLANNED |
-| BR-23 | Fallback not denylisted folder | UT-80 | PLANNED |
-| BR-24 | Fallback fails → `["unknown"]` | UT-79 | PLANNED |
+| BR-20 | Fallback uses parent folder name | UT-79 | PASS |
+| BR-21 | Parent `documents` → tag `documents` | UT-79, UT-82 | PASS |
+| BR-22 | Fallback no duplicate tags | UT-80 | PASS |
+| BR-23 | Fallback not denylisted folder | UT-80 | PASS |
+| BR-24 | Fallback fails → `["unknown"]` | UT-79 | PASS |
 | BR-25 | Toast only AFTER indexing completes | SIT-02 | SIT pending |
 | BR-26 | "Open Output" opens correct channel | SIT-02 | SIT pending |
 | BR-27 | Results appended atomically | SIT-01 | SIT pending |
@@ -427,16 +432,16 @@
 | TC-08 Ticket folder `SA4E-337` | FSD 10 | UT-33, UT-41, E2E-API-12 | PASS |
 | TC-09 `SA4E-337/diagrams/*.drawio` ticket tag | FSD 10 | E2E-API-12 | ⚠ PASS — tags=[] (denylist conflict, see S2-AC-2) |
 | TC-10 Non-ticket `GRAPH-EMAIL` | FSD 10 | UT-47 | PASS |
-| TC-11 Root file → `documents` | FSD 10 | UT-48 (discovery), UT-82 (tag) | PLANNED |
-| TC-12 Nested → secondary tag `attachments` | FSD 10 | UT-44 (discovery), UT-82 (tag) | PLANNED |
-| TC-13 Deep nesting collect-all-tags | FSD 10 | UT-82 | PLANNED |
-| TC-14 Fallback (non-ticket folder) | FSD 10 | UT-79 | PLANNED |
-| TC-15 Fallback dedup | FSD 10 | UT-80 | PLANNED |
-| TC-16 Fallback denylist | FSD 10 | UT-80 | PLANNED |
+| TC-11 Root file → `documents` | FSD 10 | UT-48 (discovery), UT-82 (tag) | PASS |
+| TC-12 Nested → secondary tag `attachments` | FSD 10 | UT-44 (discovery), UT-82 (tag) | PASS |
+| TC-13 No ticket pattern → immediate parent fallback | FSD 10 | UT-82 | PASS |
+| TC-14 Fallback (non-ticket folder) | FSD 10 | UT-79 | PASS |
+| TC-15 Fallback dedup | FSD 10 | UT-80 | PASS |
+| TC-16 Fallback denylist | FSD 10 | UT-80 | PASS |
 | TC-17 Success response all-ingested | FSD 10 | E2E-API-07, UT-26 | PASS |
 | TC-18 Partial success (errors>0) | FSD 10 | UT-28, UT-34 | PASS |
 | TC-19 HTTP 503 → failure summary | FSD 10 | UT-30, UT-65, UT-68 | PASS |
-| TC-20 Invalid JSON body → failure | FSD 10 | UT-34 (server), UT-81 (client) | PASS + PLANNED (UT-81) |
+| TC-20 Invalid JSON body → failure | FSD 10 | UT-34 (server), UT-81 (client) | PASS |
 | TC-21 `.drawio` staged & ingested | FSD 10 | E2E-API-05, E2E-API-10 | PASS |
 | TC-22 Denylisted `.drawio` excluded | FSD 10 | UT-35, UT-36, UT-46 | PASS |
 | TC-23 Output line-by-line + Next Steps | FSD 10 | SIT-01 | SIT pending |
@@ -444,7 +449,7 @@
 | TC-25 Toast + Open Output action | FSD 10 | SIT-02 | SIT pending |
 | TC-26 No files in staging → graceful message | FSD 10 | UT-31 | PASS |
 | TC-27 Inference error never fails | FSD 10 | UT-32 (no-throw, default CONTEXT) | PASS |
-| TC-28 Tag enrichment ≥1 tag non-empty | FSD 10 | E2E-API-12, IT-07, UT-82 | PASS + PLANNED |
+| TC-28 Tag enrichment ≥1 tag non-empty | FSD 10 | E2E-API-12, IT-07, UT-82 | PASS |
 | TC-29 API concurrency guard (429) | FSD 10 | UT-15 | PASS (API-level) |
 | TC-30 Scale run (1727 files) → note | FSD 10 | E2E-API-05..13 (scaled to 9 files) | PASS (scaled — R-7: full-scale perf out of scope) |
 ### 10.5 QA Discovered Defects (this ticket's regression tests)
@@ -461,9 +466,9 @@
 | Error Scenario | Test Cases | Status |
 |----------------|------------|--------|
 | Type inference error → default CONTEXT | UT-32, UT-40 (TC-27) | PASS |
-| Tag extraction fails → fallback | UT-33, IT-04, UT-79 | PASS + PLANNED (UT-79) |
+| Tag extraction fails → fallback | UT-33, IT-04, UT-79 | PASS |
 | API returns error → failure summary | UT-65, UT-68, UT-71, UT-73, E2E-API-03/04/14 | PASS |
-| JSON parse fails → failure | UT-34, UT-81 | PASS + PLANNED (UT-81) |
+| JSON parse fails → failure | UT-34, UT-81 | PASS |
 | No files discovered → graceful message | UT-31 | PASS |
 | Output channel creation fails → results still returned | SIT-01 (observational, code path TDD §12) | SIT pending (manual observation) |
 | Toast display fails → results still in Output | SIT-02 (observational) | SIT pending (manual observation) |
@@ -476,12 +481,12 @@
 | Category | Target | Covered | Coverage | Notes |
 |----------|--------|---------|----------|-------|
 | BRD Acceptance Criteria | 28 | 28 | **100%** | 2 with ⚠ deviation notes (S2-AC-2, S4-AC-1) |
-| FSD Use Cases (UC-01..06) | 6 | 6 | **100%** | UC-05 direct-branch = PLANNED (UT-79/80) |
-| FSD Business Rules (BR-01..28) | 28 | 28 | **100%** | BR-20..24 = PLANNED; BR-16 backend ⚠/extension DISC-3 |
-| FSD Test Scenarios (TC-01..30) | 30 | 30 | **100%** | 11 PLANNED/SIT pending execution |
+| FSD Use Cases (UC-01..06) | 6 | 6 | **100%** | UC-05 direct-branch PASS (UT-79/80, 2026-10-05) |
+| FSD Business Rules (BR-01..28) | 28 | 28 | **100%** | BR-20..24 PASS (2026-10-05); BR-16 backend ⚠/extension DISC-3 |
+| FSD Test Scenarios (TC-01..30) | 30 | 30 | **100%** | 3 SIT pending execution |
 | QA Discovered Defects (QA-001/002) | 2 | 2 | **100%** | Regression PASS |
 | FSD §9 Error Scenarios | 10 | 10 | **100%** | 3 via manual SIT observation (TDD §12 code path) |
-| **Overall** | **104** | **104** | **100%** | One primary status per row: **69 PASS** (incl. 3 ⚠ deviation notes) · **16 PLANNED** (UT-79..82, UT-81, UT-82 multi-rule rows) · **19 SIT pending** (VS Code manual) |
+| **Overall** | **104** | **104** | **100%** | One primary status per row: **85 PASS** (incl. 3 ⚠ deviation notes) · **0 PLANNED** (UT-79..82 executed 2026-10-05) · **19 SIT pending** (VS Code manual) |
 
 > D-NEW-1 / D-NEW-2 (§10.5) are environment defects reported via STP §8.4 — excluded from the 104 coverage rows above.
 
@@ -497,13 +502,13 @@
 | `pre-seeded-data.csv` | 8 | Baseline for all tests | Workspace doc fixtures: BRD.md, FSD.md, TDD.pdf, STP.xlsx, UG.md, notes.txt, diagrams/use-case.drawio, meeting-notes.docx |
 | `document-type-testdata.csv` | 18 | UT-32, UT-39, UT-40, UT-42, E2E-API-09 | Type inference: known/unknown/upper/mixed-case/prefix/underscore filenames + expected type |
 | `tag-extraction-testdata.csv` | 14 | UT-33, UT-41, UT-47, UT-48, E2E-API-12 | Path→tags: ticket, non-ticket, root, nested, deep-nested (expects lowercase actual) |
-| `fallback-tag-testdata.csv` | 12 | IT-04, UT-79, UT-80, UT-82 | Fallback branch: parent name, dedup, denylist, documents-root, failure→`unknown` |
+| `fallback-tag-testdata.csv` | 13 | IT-04, UT-79, UT-80, UT-82 | Fallback branch: parent name, dedup, denylist, documents-root, root.md→`documents`, empty source→`unknown` |
 | `ingest-response-testdata.csv` | 14 | UT-26, UT-27, UT-28, UT-30, UT-31, UT-34, UT-81, E2E-API-06/07 | Response fixtures: success/partial/503/invalid-JSON/empty/corrupt |
 | `drawio-discovery-testdata.csv` | 10 | UT-35, UT-36, UT-43, UT-44, UT-46, E2E-API-05/10 | .drawio discovery & denylist: in/out of denylist, staging, type=CONTEXT |
 | `client-error-testdata.csv` | 16 | UT-63..UT-78 (one row per case) | HTTP status taxonomy (401/403/404/409/429/500/503) + token refresh |
 | `auth-testdata.csv` | 6 | E2E-API-02/03/04/14, UT-63, UT-64 | Bearer token valid/corrupt/missing, X-Project-Id missing, role check |
 
-> **Totals:** 8 CSV files, **98 data rows** (excl. headers). Every data-driven UT/IT/E2E-API test case ID maps to ≥ 1 row — see `test_case_id` column in each CSV. Dynamic IDs use `{token}`, `{reader-token}` placeholders.
+> **Totals:** 8 CSV files, **99 data rows** (excl. headers). Every data-driven UT/IT/E2E-API test case ID maps to ≥ 1 row — see `test_case_id` column in each CSV. Dynamic IDs use `{token}`, `{reader-token}` placeholders.
 > **Code-internal tests** (UT-01..25 enrichment/SEC, UT-49..61 TaskWorker, IT-01..03/05..09 in-process) use in-code fixtures declared inside their test files — they assert on function outputs, not external data files, so no CSV row is needed.
 
 ### 11.2 Test Environment
@@ -527,6 +532,7 @@
 | Extension UT (indexer) | vitest stdout 2026-10-05 08:32 | **14/14 PASS** |
 | TaskWorker UT + IT | vitest stdout 2026-10-05 08:36 | **23/23 PASS** |
 | IndexerHttpClient error/token-refresh | vitest stdout 2026-10-05 08:39 | **23/23 PASS** |
+| UT-79..82 gap tests (backend 3 files + extension 1 file) | vitest stdout 2026-10-05 13:35 / 13:40 | **51/51 PASS** (backend) + **9/9 PASS** (extension) |
 | E2E-API suite | `%TEMP%/opencode/sa4e337-e2e-results.json` | **14/14 PASS** (06:57) |
 | Backend crash evidence (D-NEW-1/2) | `%TEMP%/opencode/sa4e337-kb-backend-err.log` | Attached to STP §10.1 |
 | SIT screenshots | `documents/SA4E-337/evidence/SIT-0{1..4}-*.png` | Pending manual run |
@@ -536,14 +542,14 @@
 | Level | Total | Automated | Manual | Executed PASS | PLANNED | SIT pending |
 |-------|-------|-----------|--------|---------------|---------|-------------|
 | PBT | 0 | 0 | 0 | 0 | 0 | 0 |
-| UT | 82 | 82 | 0 | 78 | 4 | 0 |
+| UT | 82 | 82 | 0 | 82 | 0 | 0 |
 | IT | 9 | 9 | 0 | 9 | 0 | 0 |
 | E2E-API | 14 | 14 | 0 | 14 | 0 | 0 |
 | E2E-UI | 0 | 0 | 0 | 0 | 0 | 0 |
 | SIT | 4 | 0 | 4 | 0 | 0 | 4 |
-| **Total** | **109** | **105 (96.3%)** | **4 (3.7%)** | **101** | **4** | **4** |
+| **Total** | **109** | **105 (96.3%)** | **4 (3.7%)** | **105** | **0** | **4** |
 
-**Automated pass rate:** 101/105 executed automated = **96.2%** (4 PLANNED not yet written).
+**Automated pass rate:** 105/105 executed automated = **100%** (0 PLANNED remaining — UT-79..82 closed 2026-10-05).
 **Overall requirement coverage:** **104/104 = 100%** (RTM §10.7).
 
 ### 11.5 Requirements Traceability Quick Index
@@ -554,7 +560,7 @@
 | UT-35..UT-48 | 14 | UC-04 (drawio discovery), UC-02 (tag extraction) |
 | UT-49..UT-62 | 14 | UT-12 context chain (6), SA4E-106 retry policy (8) |
 | UT-63..UT-78 | 16 | UC-03 (error taxonomy), UC-06 (client) |
-| UT-79..UT-82 | 4 (PLANNED) | UC-05 direct branches, UC-02 nested tags, BR-08..BR-11, BR-20..BR-24 |
+| UT-79..UT-82 | 4 (PASS 2026-10-05) | UC-05 direct branches, UC-02 nested tags, BR-08..BR-11, BR-20..BR-24 |
 | IT-01..IT-07 (9 incl. 01b/03a/03b) | 9 | UC-03/UC-05 TaskWorker integration (real DB in-process) |
 | E2E-API-01..14 | 14 | UC-01..UC-04, Bug #1..#5, Story 1..5 (real server) |
 | SIT-01..SIT-04 | 4 | UC-06 (VS Code Output/Toast/Salesforce), Story 6 |

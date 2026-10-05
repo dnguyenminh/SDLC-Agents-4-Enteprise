@@ -65,9 +65,10 @@ export function extractTagsFromPath(filePath: string): string[] {
   return [...tags];
 }
 
-/** SA4E-337 Bug #4: ingestable extensions — .md, .txt and .drawio. */
+/** SA4E-337 Bug #4: ingestable extensions — .md, .txt and .drawio (case-insensitive). */
 export function isIngestableFile(fileName: string): boolean {
-  return fileName.endsWith('.md') || fileName.endsWith('.txt') || fileName.endsWith('.drawio');
+  const lower = fileName.toLowerCase();
+  return lower.endsWith('.md') || lower.endsWith('.txt') || lower.endsWith('.drawio');
 }
 
 /**
@@ -139,7 +140,9 @@ export function summarizeIngestResult(result: ToolResult | null | undefined): { 
         return { ok: false, reason: String(parsed.reason ?? parsed.status) };
       }
     } catch {
-      // Not JSON after all — treat as a successful free-text result.
+      // SA4E-337 F3: text LOOKED like JSON but is not — fail closed instead of
+      // silently reporting ok:true. Per-file isolation guarantees the run continues.
+      return { ok: false, reason: 'invalid JSON ingest result' };
     }
   }
   return { ok: true, reason: '' };

@@ -318,11 +318,17 @@ export class IndexerHttpClient {
         const parts = [`✅ Indexed: ${ingested} files`];
         if (errors > 0) { parts.push(`⚠️ Failed: ${errors}`); }
         if (unconvertible.length > 0) { parts.push(`⏭️ Un-convertible: ${unconvertible.length}`); }
-        parts.push(`📚 KB: ${kbIngested} ingested`);
+        // SA4E-337 F7: only surface the KB line when a KB ingest actually ran/report something.
+        if (kbIngested + kbErrors > 0) { parts.push(`📚 KB: ${kbIngested} ingested`); }
         return { ingested, errors, summary: parts.join(", "), unconvertible };
     }
 
-    /** SA4E-99: Trigger backend to ingest documents from Temp folder into KB. */
+    /**
+     * SA4E-99: Trigger backend to ingest documents from Temp folder into KB.
+     * SA4E-337 F5: on non-OK responses the body is parsed for {error, details, action}
+     * so the user sees the same detail lines as httpPostWithDetail produced before
+     * the rewrite (60s timeout and return shape unchanged).
+     */
     private async triggerDocumentIngest(token?: string): Promise<{ ingested: number; errors: number; total: number }> {
         const url = `${this.backendUrl}/api/index/ingest-docs`;
         const headers = await this.buildHeaders(token);
@@ -334,16 +340,26 @@ export class IndexerHttpClient {
                 signal: AbortSignal.timeout(60000),
             });
             const bodyText = await response.text();
+            const channel = IndexerHttpClient.getIndexerOutput();
             if (!response.ok) {
-                const channel = IndexerHttpClient.getIndexerOutput();
-                channel.appendLine(`⚠️ Document ingest failed: status ${response.status}`);
+                // F5: restore error/details/action surfacing (was dropped with httpPostWithDetail)
+                const detail = IndexerHttpClient.parseErrorBody(bodyText);
+                channel.appendLine(`⚠️ Document ingest failed: status ${response.status}${detail.error ? ` — ${detail.error}` : ''}`);
+                if (detail.details) channel.appendLine(`   Details: ${detail.details}`);
+                if (detail.action) channel.appendLine(`   Action: ${detail.action}`);
                 return { ingested: 0, errors: 0, total: 0 };
             }
-            const parsed = JSON.parse(bodyText || '{}');
+            let parsed: any;
+            try {
+                parsed = JSON.parse(bodyText || '{}');
+            } catch {
+                // FSD TC-20 / STC UT-81(a): invalid body → notify, keep the run going
+                channel.appendLine('⚠️ Could not parse ingest response');
+                return { ingested: 0, errors: 0, total: 0 };
+            }
             const ingested = parsed?.ingested ?? 0;
             const errors = parsed?.errors ?? 0;
             const total = parsed?.total ?? 0;
-            const channel = IndexerHttpClient.getIndexerOutput();
             channel.appendLine(`   KB ingest: ${ingested}/${total} files ingested, ${errors} errors`);
             return { ingested, errors, total };
         } catch (err: any) {
@@ -351,6 +367,22 @@ export class IndexerHttpClient {
             channel.appendLine(`⚠️ Document ingest error: ${err?.message || String(err)}`);
             return { ingested: 0, errors: 0, total: 0 };
         }
+    }
+
+    /** SA4E-337 F5: best-effort parse of an error response body ({error, details, action}). */
+    private static parseErrorBody(bodyText: string): { error?: string; details?: string; action?: string } {
+        if (!bodyText) return {};
+        try {
+            const body = JSON.parse(bodyText);
+            if (body && typeof body === 'object') {
+                return {
+                    error: typeof body.error === 'string' ? body.error : undefined,
+                    details: typeof body.details === 'string' ? body.details : undefined,
+                    action: typeof body.action === 'string' ? body.action : undefined,
+                };
+            }
+        } catch { /* non-JSON error body (HTML proxy page, plain text) — no detail lines */ }
+        return {};
     }
 
     async uploadSourceFiles(

@@ -38,7 +38,8 @@ async function handleReEnrich(engine: MemoryEngine, a: Args): Promise<string> {
   const source = a.source as string | undefined;
 
   // Find entries with poor summaries (likely just headings)
-  let query = `SELECT id, summary, content FROM knowledge_entries
+  // SA4E-337 R1: `tags` must be selected — it seeds payload.existing_tags below.
+  let query = `SELECT id, summary, content, source, tags FROM knowledge_entries
     WHERE enrichment_status = 'done' AND LENGTH(summary) <= ?
     AND LENGTH(content) > 50`;
   const params: unknown[] = [maxSummaryLen];
@@ -50,7 +51,7 @@ async function handleReEnrich(engine: MemoryEngine, a: Args): Promise<string> {
   query += ` LIMIT ?`;
   params.push(limit);
 
-  const entries = await adapter.allAsync<{ id: number; summary: string; content: string }>(query, params);
+  const entries = await adapter.allAsync<{ id: number; summary: string; content: string; source: string | null; tags: string | null }>(query, params);
   if (entries.length === 0) {
     return JSON.stringify({ status: 'no_entries', message: 'No entries with poor summaries found', limit, maxSummaryLen });
   }
@@ -67,7 +68,11 @@ async function handleReEnrich(engine: MemoryEngine, a: Args): Promise<string> {
     await adapter.runAsync(
       `INSERT INTO pending_tasks (task_type, entry_id, payload, status, retry_count, max_retries, created_at)
        VALUES ('TAG_ENRICHMENT', ?, ?, 'PENDING', 0, 3, ?)`,
-      [entry.id, JSON.stringify({ entry_id: entry.id, content: entry.content.slice(0, 6000), existing_tags: '', options: { threshold: 0.6, autoApply: true } }), now],
+      // SA4E-337 F1: carry `source` so the LLM-down fallback can derive path tags.
+      // SA4E-337 R1: carry the entry's CURRENT tags — the LLM-up merge in
+      // TaskWorker.processTagEnrichment() unions existing_tags with appliedTags
+      // before UPDATEing `tags`; '' would wipe path tags persisted at insert (F1).
+      [entry.id, JSON.stringify({ entry_id: entry.id, content: entry.content.slice(0, 6000), existing_tags: entry.tags ?? '', source: entry.source ?? '', options: { threshold: 0.6, autoApply: true } }), now],
     );
     queued++;
   }
