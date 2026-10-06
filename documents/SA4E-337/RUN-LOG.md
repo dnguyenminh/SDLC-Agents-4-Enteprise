@@ -28,6 +28,8 @@
 | 21 | SM | Export STC → XLSX v1.1 (31 sheets, 0 illegal chars) | ✅ 43KB |
 | 22 | SM | Attach 5 files Jira: TDD-v1.2 docx (11509), STC-v1.1 xlsx (11506), architecture/component/class-diagram drawio (11505/11507/11508) | ✅ |
 | 23 | SM | Jira comment round-2 summary (id 12162); workflow project = To Do/In Progress/In Review/Done (KHÔNG có QA Test) → ticket giữ In Review, currentPhase=testing | ✅ |
+| 24 | qa-agent | Phase 6 formal (bounded — no re-run): regenerate TEST-REPORT v1.2 từ Round 2 evidence; fix csv rows 80-83 (UT-79..82 → PASS) + tag-extraction row 12; sync STP v1.1 + test-coverage.drawio; list 4 SIT cases; KB ingest | ✅ 105/109 PASS — 4 SIT NOT_RUN (CONDITIONAL PASS) |
+| 25 | SM | Wave 1 verify: git state check; ANOMALY — worktree (branch SA4E-338) bị mutate giữa session, documents/SA4E-337/ không tồn tại → QA restore worktree-only từ branch SA4E-337; deliverables hiện untracked trong worktree SA4E-338; backup %TEMP%\opencode\sa4e337-phase6-backup (+SHA256) | ⚠️ cần commit vào branch SA4E-337 (quyết định SM/user) |
 
 **Notes:**
 - ta-agent requested `agent_log` tool — not found in session (3 find_tools queries) → logged here per TA request.

@@ -116,7 +116,7 @@
     <mxCell id="r5_pbt" value="N/A" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
       <mxGeometry x="360" y="308" width="105" height="52" as="geometry"/>
     </mxCell>
-    <mxCell id="r5_ut" value="◐ UT-62 PASS · UT-79..82 planned" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">
+    <mxCell id="r5_ut" value="✔ UT-62 PASS · UT-79..82 PASS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="465" y="308" width="105" height="52" as="geometry"/>
     </mxCell>
     <mxCell id="r5_it" value="◐ IT-04 (fallback path)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=10;" vertex="1" parent="1">
@@ -203,7 +203,7 @@
     <mxCell id="leg1" value="✔ Covered &amp; executed PASS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="140" y="556" width="180" height="44" as="geometry"/>
     </mxCell>
-    <mxCell id="leg2" value="◐ / ⚠ Covered — partial, deviation, or PLANNED (UT-79..82)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">
+    <mxCell id="leg2" value="◐ / ⚠ Covered — partial or deviation" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="330" y="556" width="280" height="44" as="geometry"/>
     </mxCell>
     <mxCell id="leg3" value="SIT pending manual run" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=10;" vertex="1" parent="1">

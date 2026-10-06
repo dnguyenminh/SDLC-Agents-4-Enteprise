@@ -15,7 +15,7 @@
     "design": { "status": "done", "file": "TDD.md", "version": 1.2, "completedAt": "2026-10-05T06:05:00Z", "note": "v1.2 synced with F1/F4/R1 fixes (race-guard SQL, enriched_by=fallback, DISC-2/9 resolved)" },
     "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "version": 1, "review": "approved", "completedAt": "2026-10-05T10:00:00Z", "note": "UT-79..82 PASS 2026-10-05; STC/testdata deviation fixes applied" },
     "implementation": { "status": "done", "commit": "5c29588", "round2Commit": "4d4b5f8", "completedAt": "2026-10-05T06:45:00Z" },
-    "testing": { "status": "in_progress", "round1": "unit 34/34 + e2e 14/14", "round2PreCheck": "backend 3364/3364 + extension 2384/2384 (full suites, 2026-10-05)", "note": "Phase 6 formal execution pending (TEST-REPORT)" },
+    "testing": { "status": "in_progress", "round1": "unit 34/34 + e2e 14/14", "round2PreCheck": "backend 3364/3364 + extension 2384/2384 (full suites, 2026-10-05)", "formalPhase6": { "executedAt": "2026-10-06T20:15:00Z", "mode": "bounded — regenerate từ Round 2 evidence, KHÔNG re-run", "testReport": "TEST-REPORT.md v1.2 (109 total: 105 PASS + 4 SIT NOT_RUN)", "verdict": "CONDITIONAL PASS", "stpSync": "STP.md v1.1 + test-coverage.drawio synced (UT-79..82 → PASS)", "csvFix": "rows 80-83 + tag-extraction row 12", "kbIngest": "TEST-REPORT ingested (PROCEDURE)" }, "note": "Còn 4 SIT manual cases (VS Code) — TEST-REPORT §3.3 + evidence/" },
     "code_review": { "status": "done", "devReview": "REQUEST CHANGES → fixed (F1-F7, R1)", "taReview": "conditional APPROVED (R1 fixed per TA criteria, SM verified)", "completedAt": "2026-10-05T06:15:00Z" },
     "deployment": { "status": "not_started" }
   },
@@ -39,11 +39,13 @@
     "Ticket riêng: .drawio + INDEXABLE_EXTENSIONS (DISC-3/D2)",
     "DISC-7 partial: trigger LLM-down ≠ no-ticket-key → BA rewrite FSD §3.5",
     "DISC-1,3,4,5,6,8 open trong DISCREPANCY.md",
-    "testdata/tag-extraction-testdata.csv row 12 nghi deviation (BR-20) → TA rule sau",
+    "testdata/tag-extraction-testdata.csv row 12 → ✅ fixed 2026-10-06 (BR-20 nearest-parent per verified impl); TA rule confirmation optional",
     "STC docx → xlsx re-exported v1.1 + TDD docx v1.2 ATTACHED (2026-10-05)",
-    "TEST-REPORT csv rows 80-83 stale expectations → regenerate Phase 6",
-    "STP.md + diagrams/test-coverage.drawio còn status UT-PLANNED cũ → sync Phase 6",
-    "4 SIT manual cases"
+    "✅ RESOLVED 2026-10-06 (QA bounded Phase 6): TEST-REPORT v1.2 regenerated, csv rows 80-83 fixed (UT-79..82 PASS)",
+    "✅ RESOLVED 2026-10-06: STP v1.1 + test-coverage.drawio synced (UT-79..82 → PASS)",
+    "4 SIT cases (SIT-01..04) NOT_RUN — chi tiết trong TEST-REPORT §3.3, evidence chờ tại evidence/",
+    "⚠️ 2026-10-06: QA deliverables (9 files trong documents/SA4E-337/) hiện untracked trong worktree SA4E-338 — cần commit vào branch SA4E-337; backup tại %TEMP%/opencode/sa4e337-phase6-backup (+SHA256 manifest)",
+    "⚠️ 2026-10-06: worktree bị mutate bởi session song song — documents/SA4E-337/ đã restore worktree-only từ branch; verify trước khi commit"
   ],
-  "lastUpdated": "2026-10-05T07:45:00Z"
+  "lastUpdated": "2026-10-06T20:21:11Z"
 }

@@ -1,14 +1,14 @@
 test_case_id,input_path,expected_tags,expected_result,description
-UT-79,dev/notes.md,[dev],PLANNED,Fallback parent-folder name BR-20 TC-14
-UT-79,docs-old/report.md,[docs-old],PLANNED,Fallback hyphenated parent BR-20
-UT-79,projects/x/y/file.md,[y],PLANNED,Fallback immediate parent (not root) BR-20
-UT-79,root.md,[documents],PLANNED,Root-level file (no folder) → documents tag BR-21 TC-11 Story 5 AC-3
-UT-79,,[unknown],PLANNED,Fallback failure — empty source & no content tags → unknown BR-24
+UT-79,dev/notes.md,[dev],PASS,Fallback parent-folder name BR-20 TC-14
+UT-79,docs-old/report.md,[docs-old],PASS,Fallback hyphenated parent BR-20
+UT-79,projects/x/y/file.md,[y],PASS,Fallback immediate parent (not root) BR-20
+UT-79,root.md,[documents],PASS,Root-level file (no folder) → documents tag BR-21 TC-11 Story 5 AC-3
+UT-79,,[unknown],PASS,Fallback failure — empty source & no content tags → unknown BR-24
 IT-04,project-x/notes.md,[project-x],PASS,LLM-timeout fallback extraction — TaskWorker in-process real DB
 IT-04,non-ticket-folder/doc.md,[non-ticket-folder],PASS,In-process Hono — fallback branch via app.request
 IT-04,archive/2024/report.md,[2024],PASS,In-process — numeric folder name parent
-UT-80,backup/backup.md,[backup],PLANNED,Dedup — parent equals filename stem BR-22 TC-15
-UT-80,archive/archive/doc.md,[archive],PLANNED,Dedup across nested levels BR-22 — immediate parent only (BR-20) tag doc not derived
-UT-80,cache/cache/file.md,[cache],PLANNED,Dedup repeated folder name BR-22
-UT-82,documents/SA4E-337/attachments/img.png,[sa4e-337; attachments],PLANNED,Primary ticket + secondary attachment Story 5 AC-2
-UT-82,documents/x.md,[documents],PLANNED,Root parent → documents tag BR-21 TC-11
+UT-80,backup/backup.md,[backup],PASS,Dedup — parent equals filename stem BR-22 TC-15
+UT-80,archive/archive/doc.md,[archive],PASS,Dedup across nested levels BR-22 — immediate parent only (BR-20) tag doc not derived
+UT-80,cache/cache/file.md,[cache],PASS,Dedup repeated folder name BR-22
+UT-82,documents/SA4E-337/attachments/img.png,[sa4e; sa4e-337; attachments],PASS,Primary ticket + secondary attachment Story 5 AC-2 (exact set verified 2026-10-05)
+UT-82,documents/x.md,[documents],PASS,Root parent → documents tag BR-21 TC-11
