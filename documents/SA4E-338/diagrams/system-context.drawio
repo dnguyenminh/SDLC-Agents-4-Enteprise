@@ -1,0 +1,75 @@
+<mxGraphModel adaptiveColors="auto" dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="boundary" value="Pega Enrichment Pipeline — SA4E-338 (AST Digest + Budget + Map-Reduce)" style="swimlane;startSize=40;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="260" y="120" width="640" height="440" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1" value="PegaSymbolSync&#10;(extract rule :114/:133)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="boundary">
+      <mxGeometry x="30" y="70" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2" value="PegaRuleAstParser&#10;toPromptContext() digest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="boundary">
+      <mxGeometry x="235" y="70" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3" value="LLMService&#10;getContextWindow()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="boundary">
+      <mxGeometry x="440" y="70" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c4" value="TokenBudgetManager&#10;estimateTokens + budget" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="boundary">
+      <mxGeometry x="30" y="170" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c5" value="CodeEnrichmentPromptBuilder&#10;(no truncate — Plan C)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="boundary">
+      <mxGeometry x="235" y="170" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c6" value="Map-Reduce&#10;(analyzeWithChunking)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="boundary">
+      <mxGeometry x="440" y="170" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c7" value="CodeEnrichmentHandler&#10;schemaContext set (:81)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="boundary">
+      <mxGeometry x="30" y="280" width="250" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="c8" value="Reduction Report&#10;(observability)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="boundary">
+      <mxGeometry x="330" y="280" width="250" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="a1" value="Platform Operator&#10;(config / re-enrich run)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="180" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a2" value="Rules Repository&#10;1578 Pega rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="330" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a3" value="LLM Provider&#10;Ollama / LM Studio / vLLM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="980" y="180" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a4" value="Symbol Store&#10;symbols + enrichment result" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="980" y="330" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="a1" target="c1" value="trigger enrichment / env config">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="c1" target="a2" value="extract rule JSON">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c3" target="a3" value="window query + enrichment prompt / response">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c6" target="a3" value="chunk map/reduce prompts">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c7" target="a4" value="save enrichment + report">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c7" target="c5" value="schemaContext (SA4E-214)">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c1" target="c2" value="rule JSON">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c2" target="c4" value="AST digest">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c4" target="c5" value="within budget?">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c4" target="c6" value="over budget / context error">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

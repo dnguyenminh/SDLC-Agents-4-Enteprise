@@ -1,0 +1,15 @@
+test_case_id,provider_error_body,http_status,error_class,is_context_length,expected_retry,expected_route,expected_error_code,description
+UT-12,"{""message"":""context length exceeded""}",400,context-length,TRUE,0,map-reduce,ERR-05,Context error classified and routed to map-reduce
+UT-13,"{""error"":""prompt is too long""}",400,context-length,TRUE,0,map-reduce,ERR-05,Classification accuracy preserved when providerBody present (TC-SEC-07d)
+UT-14,"{""message"":""internal server error""}",500,transient,TRUE,2,retry-then-fail,ERR-07,Non-context error never triggers map-reduce (EF-3.4)
+UT-15,timeout-empty,0,timeout,TRUE,2,retry-then-fail,ERR-07,Timeout classified transient bounded retry
+UT-16,"{""message"":""insufficient quota""}",429,terminal,TRUE,0,fail-fast,ERR-14,Terminal class excluded from retry and map-reduce (OI-05)
+IT-07,"{""message"":""bad gateway""}",502,transient,TRUE,2,retry-then-fail,ERR-07,Transient error integration behavior (TC-23)
+IT-09,burst-of-requests,429,rate-limit,TRUE,0,fail-fast,ERR-12,Rate limited calls classified terminal for client
+IT-10,retry-all-with-terminal-tasks,200,n/a,TRUE,0,fail-fast,ERR-06,Terminal rows excluded from bulk retry (TC-SEC-01b)
+E2E-API-06,no-token-request,401,auth,TRUE,0,fail-fast,ERR-12,Auth error routes fail-fast (D-SEC-01)
+E2E-API-25,"{""message"":""upstream unavailable""}",503,transient,TRUE,2,retry-then-fail,ERR-07,Transient E2E retry budget (TC-23)
+E2E-API-09,retry-all-endpoint,200,n/a,TRUE,0,fail-fast,ERR-06,Terminal error not auto-retried E2E (TC-SEC-01e)
+SIT-05,BudgetError-task-row,429,terminal,TRUE,0,fail-fast,ERR-06,Task terminal state observed in logs (D-SEC-04)
+SIT-11,quality-gate-run,0,n/a,TRUE,0,n/a,n/a,npm test and npm run lint must both exit 0 (TC-17)
+SIT-01,provider-discovery-log,200,n/a,TRUE,0,n/a,n/a,Discovered window printed to console from real Ollama

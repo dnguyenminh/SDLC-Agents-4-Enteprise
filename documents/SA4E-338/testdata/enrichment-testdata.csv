@@ -1,0 +1,13 @@
+test_case_id,operation,rule_name,endpoint,method,payload_summary,expected_http_code,expected_result,description
+E2E-API-01,create,GetDBobjects,/api/enrichment,POST,{rule: GetDBobjects, digest: ast},201,enrichment record created with digestSource=ast,Full enrichment lifecycle happy path (TC-01)
+E2E-API-01,read,GetDBobjects,/api/enrichment/{id},GET,,200,record readable with pseudoCode provenance llm,Lifecycle read step
+E2E-API-01,update,GetDBobjects,/api/enrichment/{id},PUT,{regenerate: true},200,record updated regenerate succeeds,Lifecycle update step
+E2E-API-01,delete,GetDBobjects,/api/enrichment/{id},DELETE,,204,record removed; audit entry written,Lifecycle delete step
+IT-01,create,HomeTabMain,/api/enrichment,POST,{rule: HomeTabMain},201,enrichment_meta has digestSource ast,OI-02 persistence part 1
+IT-02,read-meta,HomeTabMain,/api/enrichment/{id},GET,,200,enrichment_meta JSON contains mapReduceReport,OI-02 persistence part 2
+IT-03,switch-source,HomeTabMain,/api/enrichment/{id},PUT,{digestSource: raw},200,source switched ast to raw per OI-08,Digest source switchable
+E2E-API-02,create,HomeTabMain,/api/enrichment,POST,{digest: ast not raw},201,prompt built from digest markers,Prompt uses AST digest (BRD US3 AC-2)
+E2E-API-22,create,HomeTabMain,/api/enrichment,POST,{rule: HomeTabMain 3.4MB},201,success under window no overflow,HomeTabMain 3.4MB under 5MB sync cap digests normally (TC-09)
+SIT-02,bulk,all-1578-rules,/api/enrichment/retry-all,POST,{projectScope: JWT pid},200,0 rules fail from window overflow,Corpus re-enrich after C4 confirmation (BRD US3 AC-5)
+SIT-07,read-meta,HomeTabMain,/api/enrichment/{id},GET,,200,enrichment_meta persisted in DB rows,Manual DB inspection of meta (OI-02)
+SIT-09,regression,CLASS-FUNCTION-rules,/api/enrichment,POST,{non-Pega legacy rule},201,existing non-Pega enrichment unaffected,Regression: non-Pega routes still work

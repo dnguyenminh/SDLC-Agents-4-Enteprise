@@ -1,0 +1,24 @@
+test_case_id,rule_type,fixture_file,field_name,expected_digest_contains,expected_max_chars,expected_http_code,expected_result,description
+PBT-04,Rule-Obj-Activity,pega-samples.ts,pySteps+pinned,all logic nodes pinned,8192,200,Property: layout bulk never drops logic nodes (BR-02)
+PBT-06,Rule-Obj-Activity,pega-samples.ts,oversized_value,value cap applied at 2000 chars,8192,200,Property: JSON.stringify of large objects never enters prompt (BR-17)
+UT-17,Rule-Obj-Activity,pega-samples.ts,pySteps,step names + children present,8192,200,pySteps real field read with child steps (TC-05)
+UT-18,Rule-Obj-Activity,pega-samples.ts,pyProperties,property references listed,8192,200,pyProperties real field read
+UT-19,Rule-Obj-Activity,pega-samples.ts,pyDecisionRules,decision rule references listed,8192,200,pyDecisionRules real field read
+UT-20,Rule-Obj-DecisionTable,pega-samples.ts,pyConditions+pyActions,conditions and actions rows,8192,200,Dedicated DecisionTable builder (BRD US2 AC-2)
+UT-21,Rule-Obj-Activity,legacy-fields-fixture,pyActivityHistory,legacy fallback content present,8192,200,Legacy field fallback chain (AF-2.1)
+UT-22,UnknownClass,unknown-pxobjclass.json,pxObjClass,generic builder output,8192,200,buildGeneric fallback for unknown pxObjClass (ERR-09)
+UT-23,Rule-Obj-Activity,broken-json.json,raw_text,raw_text_fallback marker,8192,200,Broken JSON uses raw_text_fallback not crash (ERR-08)
+UT-24,Rule-Obj-Activity,oversized-value.json,pyDescription,value truncated to 2000 chars,8192,200,MAX_RENDER_VALUE_CHARS cap enforced (TC-07 caps)
+UT-25,Rule-Obj-Activity,oversized-nodes.json,pySteps,node lines capped at 200,8192,200,Node line cap enforced (MAX_RENDER_NODE_LINES)
+UT-26,Rule-Obj-Section,pure-layout.json,pxTransform,aggregated outline only,8192,200,Layout bulk aggregated outline (BR-05)
+UT-27,Activity-GetDBobjects,getdbobjects.json,pySteps,getdbobjects digest under 8192,8192,200,GetDBobjects digest at KB scale not MB (BRD US3 AC-4)
+UT-28,Rule-Obj-Section,hometabmain-3.4mb.json,pxTransform,full digest under window,8192,200,HomeTabMain 3.4MB yields compact digest (BRD US3 AC-1)
+UT-29,Rule-Obj-Activity,embedded-java.jsp,javascript+html,grammar outline sections,8192,200,Embedded java/jsp grammar outline (AF-2.3)
+IT-01,Rule-Obj-Activity,pega-samples.ts,pySteps,digestSource=ast in enrichment_meta,8192,201,Enrichment persists digestSource=ast (OI-02)
+IT-02,Rule-Obj-Activity,pega-samples.ts,pySteps,enrichment_meta mapReduceReport JSON,8192,200,enrichment_meta readable after enrichment
+IT-03,Rule-Obj-Activity,pega-samples.ts,raw_body_switch,digestSource switchable ast/raw,8192,200,digest source switchable per OI-08
+IT-20,Rule-Obj-Activity,oversized-6mb.json,pySteps,skipped-before-digest-warn-fqn-size,8192,200,Rule JSON 6MB exceeds MAX_RULE_SIZE_BYTES 5MB skipped at sync before digest build with warn fqn and size; batch continues (EF-2.4)
+E2E-API-02,Rule-Obj-Activity,pega-samples.ts,pySteps,prompt contains digest markers not raw dump,8192,201,Enrichment source is AST digest (BRD US3 AC-2)
+E2E-API-22,Rule-Obj-Section,hometabmain-3.4mb.json,pxTransform,all logic nodes present in digest,8192,201,HomeTabMain 3.4MB under 5MB cap is digested not skipped (TC-09 / EF-2.4 control)
+E2E-API-23,Activity-GetDBobjects,getdbobjects.json,pySteps,digest size under 8192 chars,8192,201,GetDBobjects digest bounded (TC-08)
+SIT-03,Rule-Obj-Section,hometabmain-3.4mb.json,pxTransform,all logic nodes present in prompt,8192,201,Manual prompt inspection confirms no lost logic (BRD US3 AC-3)

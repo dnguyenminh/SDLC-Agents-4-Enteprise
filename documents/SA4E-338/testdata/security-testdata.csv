@@ -1,0 +1,44 @@
+test_case_id,category,input_summary,secret_marker,endpoint,role,expected_http_code,expected_result,description
+UT-53,terminal-error,retry-all on BudgetError task,none,/api/enrichment/retry-all,ADMINISTRATOR,400,terminal task never re-queued,D-SEC-04 terminal errors have no bulk path
+UT-54,retry-budget,transient 503 sequence,none,/api/enrichment,ADMINISTRATOR,201,retry attempts <= 2 per chunk,Retry budget enforced
+UT-55,redaction,adapter error containing sk-1234567890abcdef,sk-1234567890abcdef,internal,ADMINISTRATOR,200,scrubbed and capped at 200 chars at construction,D-SEC-07/08 redaction single point
+UT-56,redaction,error message built from full rule JSON,none,internal,ADMINISTRATOR,200,error text contains no prompt content,D-SEC-10 no prompt in messages
+UT-57,masking,config response with apiKey,sk-live-abcdef123456,/api/config/llm,ADMINISTRATOR,200,apiKey rendered as ***,TC-SEC-12a masking
+UT-58,https,base_url http://remote.example.com,none,/api/config/llm,ADMINISTRATOR,400,rejected insecure remote http,TC-SEC-03a HTTPS enforcement
+UT-58,https,base_url http://localhost:11434,none,/api/config/llm,ADMINISTRATOR,200,localhost http allowed,TC-SEC-03b localhost exception
+UT-58,https,base_url http://remote.example.com with LLM_ALLOW_INSECURE_HTTP=1,none,/api/config/llm,ADMINISTRATOR,200,allowed with warn log,TC-SEC-03c flag exception
+UT-59,injection,prompt containing UNTRUSTED delimiters,none,internal,ADMINISTRATOR,200,rule payload wrapped in UNTRUSTED delimiters,D-SEC-13 delimiter wrapping
+UT-60,injection,injected instruction ignore previous,none,internal,ADMINISTRATOR,200,injection confined inside delimiters,TC-SEC-15b
+UT-61,injection,existingPseudoCode with trusted instruction,none,internal,ADMINISTRATOR,200,pseudoCode not re-injected as trusted,D-SEC-14
+UT-62,schema,malformed schemaContext JSON,none,internal,ADMINISTRATOR,200,delimited placeholder instead of raw,D-SEC-15
+UT-63,provenance,enrichment result record,none,/api/enrichment,ADMINISTRATOR,201,provenance generatedBy=llm recorded,D-SEC-16
+UT-64,output-validation,LLM output with script tags,script>alert(1)/script,internal,ADMINISTRATOR,200,validateTags rejects; length <= 2000,D-SEC-17 output caps
+UT-65,log-safety,LLMService startup log,sk-live-abcdef123456,logs,ADMINISTRATOR,200,no key substring in any log line,D-SEC-11 no credentials in logs
+UT-66,masking,DB config row after save,sk-live-abcdef123456,database,ADMINISTRATOR,200,DB apiKey column masked at rest,C2 condition DB masking
+IT-09,rbac,retry-all without admin role,none,/api/enrichment/retry-all,READER,403,403 and zero rows reset,TC-SEC-01a
+IT-09,rate-limit,burst 30 rapid requests,none,/api/enrichment,ADMINISTRATOR,429,429 after threshold,TC-SEC-01d
+IT-10,retry-limit,retry-all with 600 eligible tasks,none,/api/enrichment/retry-all,ADMINISTRATOR,200,at most 500 non-terminal reset; terminal untouched,TC-SEC-01b + D-SEC-02
+IT-11,scope,forged X-Project-Id header,none,/api/enrichment,ADMINISTRATOR,403,project from JWT pid only,TC-SEC-01c + D-SEC-03
+IT-12,audit,mutation requests,none,/api/enrichment,ADMINISTRATOR,201,audit entry written per mutation,D-SEC-02 audit
+IT-13,auth,missing JWT,none,/api/enrichment/retry-all,anonymous,401,401 unauthorized,D-SEC-01 auth
+IT-14,redaction,failures list output,sk-9876543210fedcba,/api/enrichment/failures,ADMINISTRATOR,200,each entry redacted and <= 200 chars,TC-SEC-07c
+IT-15,redaction,persisted pending_tasks.error row,sk-9876543210fedcba,database,ADMINISTRATOR,200,error column redacted at write,TC-SEC-07b
+IT-16,masking,config read endpoint,sk-live-fedcba987654,/api/config/llm,ADMINISTRATOR,200,apiKey masked in response,TC-SEC-12a API level
+IT-17,https,save remote http base_url,none,/api/config/llm,ADMINISTRATOR,400,400 insecure URL rejected,TC-SEC-03a integration
+IT-18,masking,config history endpoint,sk-old-111111111111,/api/config/llm/history,ADMINISTRATOR,200,history rows show *** only,TC-SEC-12b
+E2E-API-01,auth,GET without Authorization,none,/api/enrichment,anonymous,401,401 on all enrichment routes,Auth E2E
+E2E-API-06,auth,retry-all without token,none,/api/enrichment/retry-all,anonymous,401,401 unauthorized,D-SEC-01
+E2E-API-07,rbac,retry-all with READER JWT,none,/api/enrichment/retry-all,READER,403,403 forbidden,TC-SEC-01a
+E2E-API-08,rate-limit,60 rapid calls to retry-all,none,/api/enrichment/retry-all,ADMINISTRATOR,429,429 returned in burst,TC-SEC-01d
+E2E-API-09,retry,retry-all with terminal BudgetError tasks,none,/api/enrichment/retry-all,ADMINISTRATOR,200,terminal rows unchanged; <=500 reset,TC-SEC-01b
+E2E-API-10,scope,forged X-Project-Id to other project,none,/api/enrichment,ADMINISTRATOR,403,no cross-project rows,TC-SEC-01c
+E2E-API-11,rate-limit,sustained burst window,none,/api/enrichment,ADMINISTRATOR,429,429 with retry-after,D-SEC-01
+E2E-API-12,redaction,failures response body,sk-555555555555aaaa,/api/enrichment/failures,ADMINISTRATOR,200,secret absent from response body,TC-SEC-07c E2E
+E2E-API-13,masking,config GET after save,sk-live-000011112222,/api/config/llm,ADMINISTRATOR,200,masked ••• in response,TC-SEC-12a E2E
+E2E-API-14,log-safety,server log tail during config save,sk-live-000011112222,logs,ADMINISTRATOR,200,log contains no key substring,TC-SEC-12c
+E2E-API-15,https,PUT remote http base_url,none,/api/config/llm,ADMINISTRATOR,400,400 and config unchanged,TC-SEC-03a E2E
+E2E-UI-01,masking,admin config page after save,sk-live-333344445555,ui-config-page,ADMINISTRATOR,200,••• (saved) badge visible,E2E-UI masked display
+E2E-UI-02,https,enter http://remote.example.com in base URL,none,ui-config-page,ADMINISTRATOR,200,error shown and value reverted; localhost accepted,E2E-UI HTTPS validation
+E2E-UI-03,validation,Max Tokens 800 to 1024 save; then 0/-1/abc,none,ui-config-page,ADMINISTRATOR,200,valid persists; invalid rejected inline,E2E-UI numeric validation
+SIT-08,dependency,CI dependency scan,none,cli,n/a,0,vulnerabilities fixed; pi-subagents >= 0.76.0,Condition C3
+SIT-10,visual,admin portal pages smoke,none,ui-admin,ADMINISTRATOR,200,no visual regression or leaked secret,Manual visual judgement
