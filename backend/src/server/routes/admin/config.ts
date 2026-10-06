@@ -56,7 +56,7 @@ async function getEffectiveConfig(ctx: AdminContext): Promise<Record<string, Rec
     if (llmOverrides.provider) base.llm.provider = llmOverrides.provider;
     if (llmOverrides.model) base.llm.model = llmOverrides.model;
     if (llmOverrides.baseUrl) base.llm.baseUrl = llmOverrides.baseUrl;
-    if (llmOverrides.apiKey && llmOverrides.apiKey !== '***') base.llm.apiKey = llmOverrides.apiKey;
+    if (llmOverrides.apiKey && llmOverrides.apiKey !== '***') base.llm.apiKey = '***';
     if (llmOverrides.temperature !== undefined) base.llm.temperature = llmOverrides.temperature;
     if (llmOverrides.maxTokens !== undefined) base.llm.maxTokens = llmOverrides.maxTokens;
     if (llmOverrides.tagAnalysisEnabled !== undefined) base.llm.tagAnalysisEnabled = llmOverrides.tagAnalysisEnabled;

@@ -72,7 +72,7 @@ export async function syncRuleToSymbols(
 ): Promise<SymbolSyncResult | null> {
   const fields = extractRequiredFields(ruleJson);
   if (!fields) {
-    logger.warn({ ruleJson }, 'extractRequiredFields returned null');
+    logger.warn({ pxObjClass: ruleJson?.pxObjClass, pyClassName: ruleJson?.pyClassName, pyRuleName: ruleJson?.pyRuleName }, 'extractRequiredFields returned null');
     return null;
   }
   logger.info({ pxObjClass: fields.pxObjClass, pyClassName: fields.pyClassName, pyRuleName: fields.pyRuleName, projectId }, 'syncRuleToSymbols start');

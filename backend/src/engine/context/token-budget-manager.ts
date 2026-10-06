@@ -10,6 +10,11 @@ export class TokenBudgetManager {
     this.budget = Math.max(budget, 500); // Minimum 500 tokens
   }
 
+  static estimateTokens(content: any): number {
+    const dummy = new TokenBudgetManager(1);
+    return dummy.estimateTokens(content);
+  }
+
   /** Estimate token count for content (~4 chars per token). */
   estimateTokens(content: any): number {
     const text = typeof content === 'string' ? content : JSON.stringify(content);
