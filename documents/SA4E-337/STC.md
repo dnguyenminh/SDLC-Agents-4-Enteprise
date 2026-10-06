@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-337 |
 | Title | Document Indexer: Fix auto-ingest into KB Memory with correct type/tags |
 | Author | QA Agent |
-| Version | 1.0 |
-| Date | 2026-10-05 |
+| Version | 1.1 |
+| Date | 2026-10-06 |
 | Status | Draft — pending BA review (Review Gate) |
 | Related STP | STP-v1.0-SA4E-337.docx |
 | Related FSD | FSD.md (v1.0) |
@@ -25,6 +25,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-05 | QA Agent | Initiate document — derived from BRD §2.3 stories/ACs, FSD §3 (UC-01..06, BR-01..28), FSD §10 (TC-01..30), TDD §11 (E2E design), and executed evidence |
+| 1.1 | 2026-10-06 | QA Agent | Phase 6 sync — STP/STC version bump, SIT cases marked NOT_RUN with VS Code session reason |
 
 ---
 

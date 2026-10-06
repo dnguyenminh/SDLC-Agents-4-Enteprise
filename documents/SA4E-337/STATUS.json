@@ -13,7 +13,7 @@
     "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-10-04T10:35:00Z" },
     "specification": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-10-04T10:52:00Z" },
     "design": { "status": "done", "file": "TDD.md", "version": 1.2, "completedAt": "2026-10-05T06:05:00Z", "note": "v1.2 synced with F1/F4/R1 fixes (race-guard SQL, enriched_by=fallback, DISC-2/9 resolved)" },
-    "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "version": 1, "review": "approved", "completedAt": "2026-10-05T10:00:00Z", "note": "UT-79..82 PASS 2026-10-05; STC/testdata deviation fixes applied" },
+    "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "version": 1.2, "review": "approved", "completedAt": "2026-10-06T00:00:00Z", "note": "UT-79..82 PASS 2026-10-05; STC/testdata deviation fixes applied; Phase 6 sync 2026-10-06: STP v1.2, STC v1.1, test-coverage.png re-exported" },
     "implementation": { "status": "done", "commit": "5c29588", "round2Commit": "4d4b5f8", "completedAt": "2026-10-05T06:45:00Z" },
     "testing": { "status": "in_progress", "round1": "unit 34/34 + e2e 14/14", "round2PreCheck": "backend 3364/3364 + extension 2384/2384 (full suites, 2026-10-05)", "note": "Phase 6 formal execution pending (TEST-REPORT)" },
     "code_review": { "status": "done", "devReview": "REQUEST CHANGES → fixed (F1-F7, R1)", "taReview": "conditional APPROVED (R1 fixed per TA criteria, SM verified)", "completedAt": "2026-10-05T06:15:00Z" },
