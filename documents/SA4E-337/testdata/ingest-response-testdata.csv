@@ -1,0 +1,15 @@
+test_case_id,scenario,response_json,expected_http_code,expected_result,description
+UT-26,success-all,"{""ingested"":9,""errors"":0,""total"":9,""failedFiles"":[]}",200,PASS,Summary all-ingested — QA-001 regression (was 500)
+UT-27,failedfiles-present,"{""ingested"":7,""errors"":2,""total"":9,""failedFiles"":[""a.md"",""b.txt""]}",200,PASS,failedFiles array present — QA-002
+UT-28,partial-success,"{""ingested"":5,""errors"":1,""total"":6,""failedFiles"":[""bad.pdf""]}",200,PASS,Partial success counts TC-18
+UT-29,handler-iserror,"{""error"":""DB unavailable""}",500,PASS,Handler isError → failure classification UT-34 path
+UT-30,server-503,"{""error"":""Service Unavailable""}",503,PASS,503 → failure summary TC-19
+UT-31,empty-staging,"{""ingested"":0,""errors"":0,""total"":0,""failedFiles"":[]}",200,PASS,No files → graceful message TC-26
+UT-34,invalid-json-body,not-json{,200,PASS,Parse failure → failure summary TC-20 server-side
+UT-81,invalid-json-client,<html>bad gateway</html>,200,PASS,(a) 200 + invalid JSON → zeros + Could not parse ingest response; (b) HTTP 500 → Document ingest failed: status 500; run continues (verified 2026-10-05)
+E2E-API-06,real-ingest-9files,"{""ingested"":9,""errors"":0,""total"":9,""failedFiles"":[]}",200,PASS,Real server QA-001 — 200 OK (was HTTP 500)
+E2E-API-07,bug3-summary,"{""ingested"":9,""errors"":0,""total"":9,""failedFiles"":[]}",200,PASS,Bug #3 — all four fields present
+E2E-API-08,db-rows-9,query: count(*)=9,200,PASS,All 9 staged files created KB rows
+QA-001,regression-200,"{""ingested"":1,""errors"":0,""total"":1,""failedFiles"":[]}",200,PASS,QA-001 original repro — POST ingest-docs returns 200
+QA-002,regression-failedfiles,"{""ingested"":0,""errors"":1,""total"":1,""failedFiles"":[""corrupt.docx""]}",200,PASS,QA-002 — failedFiles populated in response
+UT-26,handler-500-recovery,"{""error"":""Internal Server Error""}",500,PASS,500 → failure summary never crash

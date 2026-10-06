@@ -1,0 +1,9 @@
+id,file_name,path,expected_type,format,indexable,description
+doc-001,BRD.md,documents/SA4E-337/BRD.md,REQUIREMENT,md,yes,Baseline — Story 1 AC-1 type inference
+doc-002,FSD.md,documents/SA4E-337/FSD.md,REQUIREMENT,md,yes,Story 1 AC-2 functional spec
+doc-003,TDD.pdf,documents/SA4E-337/TDD.pdf,ARCHITECTURE,pdf,yes,Story 1 AC-3 technical design
+doc-004,STP.xlsx,documents/SA4E-337/STP.xlsx,PROCEDURE,xlsx,yes,Story 1 AC-4 test plan
+doc-005,UG.md,documents/SA4E-337/UG.md,PROCEDURE,md,yes,Story 1 user guide mapping
+doc-006,notes.txt,documents/notes.txt,CONTEXT,txt,no,Non-indexable extension — must be excluded (UT-38)
+doc-007,use-case.drawio,documents/SA4E-337/diagrams/use-case.drawio,CONTEXT,drawio,yes,Story 4 drawio — denylisted diagrams folder (discovery excluded extension-side)
+doc-008,meeting-notes.docx,documents/meeting-notes.docx,CONTEXT,docx,yes,Story 1 AC-5 unknown filename defaults CONTEXT

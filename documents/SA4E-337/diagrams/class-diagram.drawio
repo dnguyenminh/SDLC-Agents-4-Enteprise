@@ -1,0 +1,101 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="K1" value="«interface» DocEntry&#xa;extension/src/services/IndexerHttpClient.ts&#xa;+ path: string&#xa;+ type: string&#xa;+ ticket: string&#xa;+ format?: string&#xa;+ content?: string" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="340" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="K3" value="DocumentIndexer&#xa;extension/src/services/DocumentIndexer.ts&#xa;+ run(root, report, token): string&#xa;- readTextDocs(textDocs, root, channel)&#xa;- buildSummary(total, direct, conv, skip, api)&#xa;— discoverDocuments() then httpClient" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="420" y="60" width="340" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="K2" value="«interface» IngestResult&#xa;+ ingested: number&#xa;+ errors: number&#xa;+ summary: string&#xa;+ unconvertible: UnconvertibleEntry[]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="800" y="60" width="340" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="K4" value="IndexerHttpClient&#xa;extension/src/services/IndexerHttpClient.ts&#xa;+ ingestDocuments(docs, report, token): IngestResult&#xa;- triggerDocumentIngest(token): { ingested, errors, total }  [Bug #3]&#xa;- sendBatchWithRetry(url, body, token, retries)&#xa;- buildHeaders(token): Record&lt;string, string&gt;&#xa;+ static getIndexerOutput(): OutputChannel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="40" y="260" width="340" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="K5" value="indexer.ts — module functions [Bug #6]&#xa;+ describeSummaryTitle(options): string&#xa;+ showIndexResults(results, options, root, channel)&#xa;+ getIndexingOutputChannel(): OutputChannel&#xa;— appends to &#34;SDLC Indexing&#34; + info toast" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="420" y="260" width="340" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="K6" value="api-index.ts + api-index-ingest.ts [Bug #1 #2 #4 · QA-001]&#xa;+ handleIngestDocsFromTemp(c, registry, logger, userId)&#xa;+ mem.getToolHandlers().get('mem_ingest_file') → 503 if absent&#xa;+ inferTypeFromPath(filePath): string&#xa;+ extractTagsFromPath(filePath): string[]&#xa;+ buildIngestFileArgs(filePath, content, tenant): Args&#xa;+ summarizeIngestResult(result): { ok, reason } — fail-closed&#xa;+ ingestFilesFromTemp(files, tempBase, handler, tenant, logger)&#xa;+ handleIndexDocuments / resolveIndexTempBase / resolveSafeTargetPath" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="800" y="260" width="340" height="230" as="geometry"/>
+    </mxCell>
+    <mxCell id="K7" value="handleIngestFile(a: Args) — dispatchers/crud.ts&#xa;type = a.type ?? CONTEXT&#xa;scope = a.scope ?? PROJECT&#xa;content = content_base64 | content | convert()&#xa;engine.insert({ content, summary, type, tier, source, tags: '' })&#xa;enqueue TAG_ENRICHMENT + VECTOR_EMBEDDING" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="40" y="500" width="340" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="K8" value="TaskWorker — task-queue/TaskWorker.ts&#xa;- processTagEnrichment(task, payload)&#xa;- fallbackTagExtraction(task, payload)  [Bug #5]&#xa;   path tags: SA4E-* / F* / doc-type prefixes&#xa;   content heuristics: STORY, Architecture, ...&#xa;   UPDATE knowledge_entries SET tags = ?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="420" y="500" width="340" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="K9" value="«entity» knowledge_entries (SQLite / PostgreSQL)&#xa;id INTEGER PK&#xa;type TEXT NOT NULL      — REQUIREMENT | ARCHITECTURE | PROCEDURE | CONTEXT&#xa;tags TEXT NOT NULL DEFAULT ''   — comma-separated, written by TaskWorker&#xa;tier TEXT — SEMANTIC (type-derived) | WORKING | EPISODIC&#xa;source TEXT, project_id TEXT, scope TEXT, enrichment_status TEXT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="800" y="500" width="340" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="legend" value="Green = created/changed by SA4E-337     Blue = existing class, unchanged     Purple = data access / entity     Grey = interface" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="780" width="700" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="«param» docs: DocEntry[]" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="K1" target="K4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="«uses» httpClient" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;fontSize=9;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.62;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="K3" target="K4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="505" y="215"/>
+          <mxPoint x="250" y="215"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="«creates»" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="K4" target="K2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="400" y="350"/>
+          <mxPoint x="400" y="240"/>
+          <mxPoint x="970" y="240"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="summary string" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;fontSize=9;exitX=0.85;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" edge="1" parent="1" source="K4" target="K5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="POST /api/index/documents + /ingest-docs" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="K4" target="K6">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="210" y="460"/>
+          <mxPoint x="770" y="460"/>
+          <mxPoint x="770" y="350"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="handler({file_path, content_base64, type, scope, tags,&#10;_projectContext, __userId, __projectId}) — getToolHandlers() [QA-001]" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;fontSize=9;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0.44;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="K6" target="K7">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="790" y="400"/>
+          <mxPoint x="790" y="485"/>
+          <mxPoint x="190" y="485"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e9" value="«pending_tasks» queue" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;exitX=0.85;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="K7" target="K8">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="329" y="695"/>
+          <mxPoint x="590" y="695"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="INSERT (type, tier, scope, source)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="K7" target="K9">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="150" y="740"/>
+          <mxPoint x="970" y="740"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="UPDATE tags" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;fontSize=9;strokeColor=#82b366;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;" edge="1" parent="1" source="K8" target="K9">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="780" y="585"/>
+          <mxPoint x="780" y="602"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

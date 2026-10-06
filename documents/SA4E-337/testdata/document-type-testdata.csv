@@ -1,0 +1,19 @@
+test_case_id,filename,expected_type,expected_result,description
+UT-39,BRD.md,REQUIREMENT,PASS,Known type mapping — FSD extension .md
+UT-39,FSD.md,REQUIREMENT,PASS,Known type mapping — spec keyword
+UT-39,TDD.pdf,ARCHITECTURE,PASS,Known type mapping — design keyword
+UT-39,STP.xlsx,PROCEDURE,PASS,Known type mapping — plan keyword
+UT-39,UG.md,PROCEDURE,PASS,Known type mapping — guide keyword
+UT-39,DPG.md,PROCEDURE,PASS,Known type mapping — deploy procedure
+UT-39,RLN.md,PROCEDURE,PASS,Known type mapping — release note
+UT-39,STC.md,PROCEDURE,PASS,Known type mapping — test cases
+UT-32,diagram-final.md,CONTEXT,PASS,Unknown filename — default CONTEXT never fail
+UT-32,unknown-file.md,CONTEXT,PASS,Unknown filename variant — BR-02
+UT-32,report.md,CONTEXT,PASS,Generic name no keyword — CONTEXT
+UT-40,meeting-notes.docx,CONTEXT,PASS,Unknown .docx — CONTEXT default
+UT-40,plan-v2.docx,CONTEXT,PASS,docx not matching DOCUMENT_TYPES names — CONTEXT
+UT-42,BRD.MD,REQUIREMENT,PASS,Uppercase extension — case-insensitive BR-04
+UT-42,brd.md,REQUIREMENT,PASS,Lowercase control — same result as BRD.MD
+UT-42,TDD-v1-KSA-26.docx,ARCHITECTURE,PASS,Mixed-case prefix match Story 1 AC-6
+UT-42,BRD_STORY_8.md,REQUIREMENT,PASS,Underscore filename Story 1 AC-7
+E2E-API-09,UG.md,PROCEDURE,PASS,Real-server batch — type assertion E2E row

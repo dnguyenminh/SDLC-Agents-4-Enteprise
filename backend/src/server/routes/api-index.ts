@@ -18,6 +18,9 @@ import { verifyJwtToken, allowedProjectsFromClaims } from '../middleware/jwt-aut
 import {
   handleFullIndex, handleFileEvents, handleCancel, handleProgress,
 } from './api-index-decoupled.js';
+import {
+  collectIngestFiles, ingestFilesFromTemp, type IngestTenant,
+} from './api-index-ingest.js';
 import { PegaService } from '../../modules/pega/PegaService.js';
 
 interface SourceFile {
@@ -390,6 +393,18 @@ async function handleIndexDocuments(c: Context, logger: Logger, userId = '') {
 /**
  * SA4E-99: Scan Temp/{userId}/{projectId}/batch-docs/ and ingest all markdown files into KB.
  * Called ONCE after all document batches are written to Temp.
+ *
+ * SA4E-337 FIX:
+ * - Derive type from file path pattern (BRD/FSD→REQUIREMENT, TDD→ARCHITECTURE, STP/STC/DPG/RLN/UG→PROCEDURE)
+ * - Extract tags from file path (SA4E-* → sa4e, ticket key)
+ * - Also process .drawio files (Bug #4)
+ *
+ * SA4E-337-QA-001 (CRITICAL): use the memory module's scoped mem_ingest_file TOOL
+ * HANDLER (getToolHandlers) — MemoryModule has NO getDispatcher() method, so the
+ * previous `mem.getDispatcher()` call threw "mem.getDispatcher is not a function"
+ * → HTTP 500. The handler is wrapped with withScopeContext(), which injects the
+ * trusted tenant scope from the args → knowledge_entries.project_id stays populated
+ * (bare mem.dispatcher.dispatch() would leave it NULL).
  */
 async function handleIngestDocsFromTemp(c: Context, registry: ModuleRegistry, logger: Logger, userId: string) {
   try {
@@ -406,48 +421,24 @@ async function handleIngestDocsFromTemp(c: Context, registry: ModuleRegistry, lo
       return c.json({ ingested: 0, message: 'No documents in Temp folder' });
     }
 
-    // Recursively find all files in temp docs folder
-    const files: string[] = [];
-    function walk(dir: string) {
-      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) { walk(full); }
-        else if (entry.name.endsWith('.md') || entry.name.endsWith('.txt')) { files.push(full); }
-      }
-    }
-    walk(tempBase);
+    // Recursively find all ingestable files (.md/.txt/.drawio) in temp docs folder
+    const files = collectIngestFiles(tempBase);
 
-    // Ingest each file via mem_ingest_file handler
-    const mem = registry.getModule('memory') as any;
+    // SA4E-337-QA-001: resolve the mem_ingest_file tool handler (scoped dispatcher path)
+    const mem = registry.getModule('memory');
     if (!mem || mem.status !== 'ready') {
       return c.json({ error: 'Memory module not ready', details: 'Memory service is initializing', action: 'Retry after a short delay' }, 503);
     }
-    const dispatcher = mem.getDispatcher();
-    let ingested = 0;
-    let errors = 0;
-    const failedFiles: { file: string; reason: string }[] = [];
-
-    for (const filePath of files) {
-      const relPath = path.relative(tempBase, filePath).replace(/\\/g, '/');
-      try {
-        const content = fs.readFileSync(filePath, 'utf-8');
-        await dispatcher.dispatch('mem_ingest_file', {
-          file_path: filePath,
-          content_base64: Buffer.from(content, 'utf-8').toString('base64'),
-          type: 'CONTEXT',
-          scope: 'PROJECT',
-        });
-        ingested++;
-      } catch (err: any) {
-        errors++;
-        const reason = err?.message || String(err);
-        failedFiles.push({ file: relPath, reason });
-        logger.warn({ err, file: relPath }, '[ingest-docs] Failed to ingest document');
-      }
+    const ingestHandler = mem.getToolHandlers().get('mem_ingest_file');
+    if (!ingestHandler) {
+      return c.json({ error: 'Memory module not ready', details: 'mem_ingest_file tool handler is unavailable', action: 'Retry after a short delay' }, 503);
     }
 
-    logger.info({ ingested, errors, total: files.length }, '[ingest-docs] Document ingest complete');
-    return c.json({ ingested, errors, total: files.length, failedFiles });
+    const tenant: IngestTenant = { userId, projectId: scope.projectId };
+    const outcome = await ingestFilesFromTemp(files, tempBase, ingestHandler, tenant, logger);
+
+    logger.info({ ingested: outcome.ingested, errors: outcome.errors, total: outcome.total }, '[ingest-docs] Document ingest complete');
+    return c.json(outcome);
   } catch (err: any) {
     return indexError(c, err, logger, 'Error ingesting documents from Temp');
   }

@@ -1,0 +1,15 @@
+test_case_id,path,tags_expected,expected_result,description
+UT-33,documents/SA4E-337/BRD.md,[sa4e-337],PASS,Ticket-folder primary tag — actual lowercase output
+UT-33,documents/SA4E-337/TDD.md,[sa4e-337],PASS,Ticket-folder primary tag — second file
+UT-33,documents/SA4E-337/diagrams/arch.png,[sa4e-337],PASS,Ticket-folder file outside diagrams denylist handled by server tag
+UT-41,documents/KSA-120/BRD.md,[ksa-120],PASS,Pattern {PROJECT}-{NUMBER} BR-07
+UT-41,documents/PROJ-42/notes.md,[proj-42],PASS,Pattern multi-digit number BR-07
+UT-47,documents/GRAPH-EMAIL/BRD.md,[graph-email],PASS,Non-ticket folder tag Story 2 AC-3
+UT-47,documents/GRAPH-EMAIL-2/report.md,[graph-email-2],PASS,Hyphenated non-ticket folder name
+UT-48,documents/readme.md,[documents],PASS,Root-level file fallback Story 2 AC-4
+UT-48,documents/top-level.md,[documents],PASS,Root-level second file
+UT-82,documents/SA4E-337/attachments/scan.pdf,[sa4e; sa4e-337; attachments],PASS,Secondary tag nested below ticket Story 5 AC-2 (exact set verified 2026-10-05)
+UT-82,documents/ticket-root/deep/file.md,[deep],PASS,Nearest non-denylisted parent only BR-20 — TC-13 collect-all not applied (verified 2026-10-05)
+E2E-API-12,documents/SA4E-337/BRD.md,[sa4e-337],PASS,Real-server enrichment — non-empty tags after TAG_ENRICHMENT
+E2E-API-12,documents/GRAPH-EMAIL/BRD.md,[graph-email],PASS,Real-server enrichment — non-ticket folder
+E2E-API-12,documents/SA4E-337/diagrams/test-coverage.drawio,[],PASS,Deviation — drawio in diagrams denylist yields tags=[] (Story 2 AC-2 conflict)

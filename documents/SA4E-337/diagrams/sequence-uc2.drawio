@@ -1,0 +1,50 @@
+<mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<!-- Lifelines -->
+<mxCell id="indexer" value="Indexer Extension" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="1">
+  <mxGeometry x="240" y="40" width="120" height="400" as="geometry"/>
+</mxCell>
+<mxCell id="tagExtractor" value="extractTagsFromPath()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+  <mxGeometry x="440" y="40" width="140" height="400" as="geometry"/>
+</mxCell>
+<mxCell id="fallback" value="fallbackTagExtraction()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+  <mxGeometry x="640" y="40" width="140" height="400" as="geometry"/>
+</mxCell>
+<mxCell id="backend" value="Backend API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+  <mxGeometry x="840" y="40" width="120" height="400" as="geometry"/>
+</mxCell>
+<!-- Lifeline dashes -->
+<mxCell id="ld1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="indexer" target="tagExtractor">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="ld2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="tagExtractor" target="fallback">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Main flow: path -> tags -->
+<mxCell id="m1" value="relativePath" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="indexer" target="tagExtractor">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m2" value="tags" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="tagExtractor" target="indexer">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Alternative flow: no ticket pattern -> fallback -->
+<mxCell id="m3" value="no ticket pattern" style="endArrow=block;endFill=1;html=1;strokeColor=#B85450;dashed=1;strokeWidth=2;" edge="1" parent="1" source="tagExtractor" target="fallback">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="m4" value="parentFolder as tag" style="endArrow=block;endFill=1;html=1;strokeColor=#B85450;" edge="1" parent="1" source="fallback" target="tagExtractor">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Tags -> Backend -->
+<mxCell id="m5" value="tags array" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;" edge="1" parent="1" source="indexer" target="backend">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Activation bars -->
+<mxCell id="a1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;opacity=30;" vertex="1" parent="1">
+  <mxGeometry x="248" y="100" width="4" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="a2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;opacity=30;" vertex="1" parent="1">
+  <mxGeometry x="448" y="140" width="4" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="a3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;opacity=30;" vertex="1" parent="1">
+  <mxGeometry x="648" y="220" width="4" height="70" as="geometry"/>
+</mxCell>
+</root></mxGraphModel>

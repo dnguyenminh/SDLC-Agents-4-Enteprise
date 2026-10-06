@@ -1,0 +1,7 @@
+test_case_id,auth_scenario,token,project_header,expected_http_code,expected_result,description
+E2E-API-02,valid-bearer-kb-write,{token},SA4E-337,200,PASS,Session login → Bearer 64 chars KB_WRITE=true perms=15
+E2E-API-03,missing-auth-header,,SA4E-337,401,PASS,No Authorization header → 401 FSD §7.1
+E2E-API-04,missing-project-id,{token},,400,PASS,No X-Project-Id → 400 PROJECT_REQUIRED fail-closed TDD §7.2
+E2E-API-14,corrupted-bearer,corrupted{token},SA4E-337,401,PASS,Tampered token → 401
+UT-63,unauthorized-direct,invalid-token-xyz,SA4E-337,401,PASS,Client-side 401 handling regression row
+UT-64,forbidden-role,{reader-token},SA4E-337,403,PASS,Role without KB_WRITE → 403

@@ -1,0 +1,11 @@
+test_case_id,path,denylisted,expected_discovered,expected_type,description
+UT-35,documents/SA4E-337/diagrams/arch.drawio,yes,false,,Denylisted diagrams folder excluded BR-17
+UT-36,docs/diagrams/test-coverage.drawio,yes,false,,Denylisted nested diagrams path excluded BR-17
+UT-44,documents/SA4E-337/nested/diagrams/x.drawio,yes,false,,Nested denylist segment excluded
+UT-35,node_modules/lib/diagram.drawio,yes,false,,Dependency folder denylist variant
+UT-43,documents/report.drawio,no,true,CONTEXT,Discoverable drawio outside denylist TC-21
+UT-46,scripts/tool.drawio,no,true,CONTEXT,Scripts folder — not denylisted, discovered
+UT-38,cache/notes.drawio,no,true,CONTEXT,Extension gate allows .drawio BR-16
+E2E-API-05,staged test-coverage.drawio,no,true,CONTEXT,9-file batch includes 1 drawio — staged OK
+E2E-API-10,staged test-coverage.drawio,no,true,CONTEXT,Bug #4 — ingested type=CONTEXT format=drawio
+E2E-API-12,staged test-coverage.drawio,no,true,CONTEXT,Deviation — tags=[] observed after enrichment (denylist vs AC-2)

@@ -1,0 +1,86 @@
+<mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+<!-- System Boundary -->
+<mxCell id="sys" value="Document Indexer System" style="swimlane;startSize=30;fillColor=#DAE8FC;html=1;rounded=1;shadow=0;" vertex="1" parent="1">
+  <mxGeometry x="220" y="40" width="760" height="620" as="geometry"/>
+</mxCell>
+<!-- Indexer Engine -->
+<mxCell id="engine" value="Indexer Engine&#xa;discovery + classification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="sys">
+  <mxGeometry x="300" y="100" width="200" height="70" as="geometry"/>
+</mxCell>
+<!-- Type Deriver -->
+<mxCell id="typeDeriver" value="Type Deriver&#xa;inferTypeFromPath()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="sys">
+  <mxGeometry x="300" y="200" width="200" height="70" as="geometry"/>
+</mxCell>
+<!-- Tag Extractor -->
+<mxCell id="tagExtractor" value="Tag Extractor&#xa;extractTagsFromPath()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="sys">
+  <mxGeometry x="300" y="300" width="200" height="70" as="geometry"/>
+</mxCell>
+<!-- Ingest Client -->
+<mxCell id="ingestClient" value="IndexerHttpClient&#xa;ingestDocuments()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="sys">
+  <mxGeometry x="300" y="400" width="200" height="70" as="geometry"/>
+</mxCell>
+<!-- Result Verifier -->
+<mxCell id="verifier" value="Result Verifier&#xa;parse JSON response" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="sys">
+  <mxGeometry x="300" y="500" width="200" height="70" as="geometry"/>
+</mxCell>
+<!-- UI Display -->
+<mxCell id="uiDisplay" value="UI Display&#xa;showIndexResults()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCD9F;strokeColor=#D6A14F;" vertex="1" parent="sys">
+  <mxGeometry x="560" y="100" width="180" height="70" as="geometry"/>
+</mxCell>
+<!-- External: Developer -->
+<mxCell id="dev" value="Developer&#xa;(VS Code User)" style="shape=mxgraph.flowchart.annotation_2;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="40" y="120" width="140" height="60" as="geometry"/>
+</mxCell>
+<!-- External: KB Memory Backend -->
+<mxCell id="kbBackend" value="KB Memory Backend&#xa;(Knowledge Service)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B1DDFF;strokeColor=#6CACDF;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="620" y="300" width="180" height="70" as="geometry"/>
+</mxCell>
+<!-- External: File System -->
+<mxCell id="fs" value="Workspace File System&#xa;(documents/ tree)" style="shape=mxgraph.flowchart.annotation_2;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
+  <mxGeometry x="40" y="320" width="140" height="60" as="geometry"/>
+</mxCell>
+<!-- Edge: Dev -> Indexer -->
+<mxCell id="e1" edge="1" parent="1" source="dev" target="engine">
+  <mxGeometry relative="1" as="geometry">
+    <Array as="points"><mxPoint x="180" y="150"/></Array>
+  </mxGeometry>
+</mxCell>
+<!-- Edge: Indexer -> File System -->
+<mxCell id="e2" edge="1" parent="1" source="engine" target="fs">
+  <mxGeometry relative="1" as="geometry">
+    <Array as="points"><mxPoint x="180" y="350"/></Array>
+  </mxGeometry>
+</mxCell>
+<!-- Edge: Indexer -> Type Deriver -->
+<mxCell id="e3" edge="1" parent="sys" source="engine" target="typeDeriver">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Edge: Type Deriver -> Tag Extractor -->
+<mxCell id="e4" edge="1" parent="sys" source="typeDeriver" target="tagExtractor">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Edge: Tag Extractor -> Ingest Client -->
+<mxCell id="e5" edge="1" parent="sys" source="tagExtractor" target="ingestClient">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Edge: Ingest Client -> Result Verifier -->
+<mxCell id="e6" edge="1" parent="sys" source="ingestClient" target="verifier">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Edge: Verifier -> UI Display -->
+<mxCell id="e7" edge="1" parent="sys" source="verifier" target="uiDisplay">
+  <mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<!-- Edge: Ingest Client -> KB Backend -->
+<mxCell id="e8" edge="1" parent="1" source="ingestClient" target="kbBackend">
+  <mxGeometry relative="1" as="geometry">
+    <Array as="points"><mxPoint x="540" y="435"/><mxPoint x="620" y="335"/></Array>
+  </mxGeometry>
+</mxCell>
+<!-- Edge: Indexer -> UI Display -->
+<mxCell id="e9" edge="1" parent="sys" source="engine" target="uiDisplay">
+  <mxGeometry relative="1" as="geometry">
+    <Array as="points"><mxPoint x="500" y="135"/><mxPoint x="560" y="135"/></Array>
+  </mxGeometry>
+</mxCell>
+</root></mxGraphModel>

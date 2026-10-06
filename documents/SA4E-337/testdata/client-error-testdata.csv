@@ -1,0 +1,17 @@
+test_case_id,scenario,input_state,expected_result,description
+UT-63,singleton-output-channel,init,reused-channel,getXxx returns singleton channel
+UT-64,sync-code-symbols-return,null-or-string,mixed-return,syncCodeSymbols returns string|null
+UT-65,http-post-401-maps-authorized,401,keeps-details-action,401 mapped to Unauthorized but details/action preserved
+UT-66,http-post-ok-path,200,details-action-undefined,ok-path keeps details/action undefined
+UT-67,batch-retry-no-retry,400,propagates-details,maxRetries=0 — propagates details/action without retry
+UT-68,batch-401-early-return,401,no-retry-intact,early-returns 401 with details/action intact
+UT-69,batch-retries-exhausted,503,propagates-details,retries exhausted — details/action propagated
+UT-70,batch-ok-path,200,details-action-undefined,ok-path keeps details/action undefined
+UT-71,format-index-error,message+file,formatted-text,prefers error.message and appends file
+UT-72,log-terminal-complete,phase=complete,success-no-phantom-error,complete logs success without phantom error detail
+UT-73,log-terminal-failed,error+stack,surfaces-error,surfaces error.message and stack
+UT-74,poll-phase-complete,phase=complete,exits-promptly,pollIndexProgress exits promptly on complete
+UT-75,poll-timeout,no-phantom-detail,no-unknown-error,timeout reports no phantom unknown-error detail
+UT-76,http-post-token-refresh,401-then-refresh,propagates-fresh-token,httpPostJson propagates fresh token via onTokenRefreshed
+UT-77,http-get-token-refresh,401-then-refresh,propagates-fresh-token,httpGet propagates fresh token
+UT-78,token-before-refresh,undefined,no-token-yet,getCurrentToken undefined before any refresh
