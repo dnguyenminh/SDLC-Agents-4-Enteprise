@@ -132,12 +132,12 @@ This plan uses the six-level SDLC test model. Levels that do not apply to SA4E-3
 | SIT | 4 | 0 | 4 |
 | **Total** | **109** | **105 (96.3%)** | **4 (3.7%)** |
 
-**Execution status (as of 2026-10-05):**
+**Execution status (as of 2026-10-06):**
 
 | Status | Count | Detail |
 |--------|-------|--------|
-| PASS (executed) | 101 | UT 78 + IT 9 + E2E-API 14 — all green (see §9.3 evidence) |
-| NOT_RUN — planned unit (DEV to implement) | 4 | UT-79..UT-82 close identified coverage gaps (Bug #5 fallback, BR-12 client parse, nested/root tags) |
+| PASS (executed) | 105 | UT 82 + IT 9 + E2E-API 14 — all green (see §9.3 evidence) |
+| NOT_RUN — planned unit (DEV to implement) | 0 | UT-79..UT-82 closed 2026-10-05 |
 | NOT_RUN — manual SIT | 4 | SIT-01..SIT-04 — VS Code session required (Phase 6) |
 
 ### 2.5 Entry Criteria
