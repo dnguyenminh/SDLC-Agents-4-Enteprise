@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import { loadConfig } from '../../../config/index.js';
 import { validateExternalUrl } from '../../middleware/url-validator.js';
 import { getConfigChanges, recordConfigChange, recordAudit, getAuditLogs, loadPersistedLLMConfig, getLatestConfigValue } from '../../../admin/admin-db.js';
+import { maskSecret, isSecretConfigKey } from '../../../admin/sanitize.js';
 import type { AdminContext } from './context.js';
 import { bus, Events } from '../../../shared/EventBus.js';
 import { authRuntimeOverrides } from '../../../config/EntraConfig.js';
@@ -270,7 +271,12 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     const permCheck = await ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
     if (permCheck instanceof Response) return permCheck;
     const config = await getEffectiveConfig(ctx);
+    // SA4E-338 S4 (D-SEC-06): mask secrets at the response boundary — covers env, DB and
+    // runtime-override sources (runtime overrides would otherwise echo the raw value).
+    if (config.llm) config.llm.apiKey = maskSecret(config.llm.apiKey);
+    if (config.auth) config.auth.entraClientSecret = maskSecret(config.auth.entraClientSecret);
     const history = await getConfigChanges(10);
+    c.header('Cache-Control', 'no-store');
     return c.json({ config, history, restartRequired: ctx.RESTART_REQUIRED_KEYS });
   });
 
@@ -310,10 +316,16 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     const oldValue = JSON.stringify(config[section][key]);
     const newValue = typeof value === 'string' ? value : JSON.stringify(value);
     const requiresRestart = (ctx.RESTART_REQUIRED_KEYS[section] || []).includes(key);
+    // SA4E-338 S4 (D-SEC-06): audit entries never carry secrets in plaintext.
+    const secret = isSecretConfigKey(section, key);
     if (!ctx.configOverrides[section]) ctx.configOverrides[section] = {};
     ctx.configOverrides[section][key] = value;
     await recordConfigChange(section, key, oldValue, newValue, user.username, requiresRestart);
-    await recordAudit(user.userId, user.username, 'CONFIG_CHANGE', 'config', `${section}.${key}`, JSON.stringify({ oldValue, newValue, requiresRestart }));
+    await recordAudit(user.userId, user.username, 'CONFIG_CHANGE', 'config', `${section}.${key}`, JSON.stringify({
+      oldValue: secret ? maskSecret(oldValue) : oldValue,
+      newValue: secret ? maskSecret(newValue) : newValue,
+      requiresRestart,
+    }));
     // If LLM config changed, notify MemoryModule to re-init LLM services immediately (no restart needed)
     if (section === 'llm') {
       await bus.emit(Events.LLM_CONFIG_CHANGED, { section, key, value });
@@ -342,7 +354,8 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
       }
       await bus.emit(Events.AUTH_CONFIG_CHANGED, { section, key, value });
     }
-    return c.json({ success: true, requiresRestart, section, key, value });
+    // Echo never returns a submitted secret in plaintext (D-SEC-06).
+    return c.json({ success: true, requiresRestart, section, key, value: secret ? maskSecret(newValue) : value });
   });
 
   app.get('/api/admin/config/history', async (c) => {
@@ -351,6 +364,7 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     const permCheck = await ctx.requirePermission(c, user.userId, 'CONFIG_EDIT');
     if (permCheck instanceof Response) return permCheck;
     const history = await getConfigChanges(20);
+    c.header('Cache-Control', 'no-store');
     return c.json({ history });
   });
 
