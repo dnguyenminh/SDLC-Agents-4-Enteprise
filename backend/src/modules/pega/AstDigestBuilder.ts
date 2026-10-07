@@ -5,6 +5,9 @@ export interface DigestResult {
   ast: any | null;
   source: 'ast' | 'raw-fallback';
   fallbackReason?: string;
+  // S5: Provenance tracking for LLM-generated content
+  generatedBy?: 'llm' | 'ast-parser';
+  enrichedAt?: string;
 }
 
 export class AstDigestBuilder {
@@ -13,11 +16,11 @@ export class AstDigestBuilder {
       const parser = new PegaRuleAstParser();
       const ast = parser.parse(ruleJson);
       const text = parser.toPromptContext(ast);
-      return { text, ast, source: 'ast' };
+      return { text, ast, source: 'ast', generatedBy: 'ast-parser', enrichedAt: new Date().toISOString() };
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
       const minimal = `Rule: ${ruleJson?.pxObjClass || 'unknown'} — ${ruleJson?.pyRuleName || 'unnamed'}`;
-      return { text: minimal, ast: null, source: 'raw-fallback', fallbackReason: reason };
+      return { text: minimal, ast: null, source: 'raw-fallback', fallbackReason: reason, generatedBy: 'ast-parser', enrichedAt: new Date().toISOString() };
     }
   }
 }
