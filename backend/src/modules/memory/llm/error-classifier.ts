@@ -6,6 +6,38 @@ export interface ProviderHttpError extends Error {
   kind?: ProviderErrorKind;
 }
 
+/** D-SEC-08: single exposure cap for provider error messages on every exit path. */
+const ERROR_MESSAGE_MAX_CHARS = 200;
+/** D-SEC-09: providerBody is classification-only, in-memory; never logged/persisted/returned. */
+const PROVIDER_BODY_MAX_CHARS = 2000;
+
+/**
+ * D-SEC-07 secret scrub (TDD §7.4 base pattern, extended to also consume the token
+ * following the keyword — e.g. `Authorization: Bearer <key>` — so the credential
+ * itself is removed, not just its first word). Applied case-insensitively.
+ */
+const SECRET_SCRUB_PATTERN = /\b(api[_-]?key|authorization|bearer|token)\b\s*[:=]?\s*\S+(?:\s+\S+)?/gi;
+
+/** Scrub secret material (API keys / tokens) from arbitrary provider text. */
+export function scrubSecrets(text: string): string {
+  return String(text ?? '').replace(SECRET_SCRUB_PATTERN, '$1 ***');
+}
+
+/**
+ * D-SEC-07/08/09: build a `ProviderHttpError` with redaction AT CONSTRUCT —
+ * (a) secrets scrubbed, (b) `message` capped at 200 chars, (c) `kind` pre-computed,
+ * (d) `providerBody` (≤2000) kept in memory for classification only and never
+ * included in `message`.
+ */
+export function buildProviderHttpError(provider: string, status: number, body?: string): ProviderHttpError {
+  const scrubbed = scrubSecrets(String(body ?? '').replace(/\s+/g, ' ').trim());
+  const err = new Error(`${provider} error: ${status} ${scrubbed}`.slice(0, ERROR_MESSAGE_MAX_CHARS)) as ProviderHttpError;
+  err.status = status;
+  if (body) err.providerBody = body.slice(0, PROVIDER_BODY_MAX_CHARS);
+  err.kind = ErrorClassifier.classify(err);
+  return err;
+}
+
 export class ErrorClassifier {
   static isContextLengthError(err: unknown): boolean {
     if (!err) return false;
@@ -46,14 +78,14 @@ export class ErrorClassifier {
   }
 
   static toTaskMessage(kind: ProviderErrorKind, err: unknown): string {
-    const base = this.flattenError(err);
+    const base = scrubSecrets(this.flattenError(err));
     switch (kind) {
       case 'context_length':
-        return `budget_error: context_length_exceeded | ${base.slice(0,200)}`;
+        return `budget_error: context_length_exceeded | ${base}`.slice(0, ERROR_MESSAGE_MAX_CHARS);
       case 'auth':
-        return `llm_auth: ${base.slice(0,200)}`;
+        return `llm_auth: ${base}`.slice(0, ERROR_MESSAGE_MAX_CHARS);
       default:
-        return base.slice(0,500);
+        return base.slice(0, ERROR_MESSAGE_MAX_CHARS);
     }
   }
 
