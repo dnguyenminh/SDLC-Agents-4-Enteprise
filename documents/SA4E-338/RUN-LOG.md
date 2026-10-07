@@ -42,3 +42,11 @@
 | 2026-10-05T09:18Z | ba-agent | 4 | BA review round 2: APPROVED — all 5 gaps closed, no new gaps (invocation 2/2) | ✅ |
 | 2026-10-05T09:21Z | SM | 4 | Attach Jira: STP-v1.1 docx (11512), STC-v1.1 xlsx (11510), test-coverage.drawio (11511), test-execution-flow.drawio (11513) + comment 12163 | ✅ |
 | 2026-10-05T09:21Z | SM | 4 | Phase 4 DONE — STATUS test_planning=done, review=approved, currentPhase=implementation | ✅ |
+| 2026-10-06T09:31Z | dev-agent | 5 | Commit ebfdaf9 sẵn có trước Wave 1 — Phase 5 Implementation skeleton: context-window, error-classifier, reduction-pipeline, budget-guard, chunked-reduce, AstDigestBuilder, token-budget-manager, graph-schema-ddl + 2 one-line fixes (10 files, +443/−2) | ✅ committed |
+| 2026-10-06T20:05Z | dev-agent | 5 | Wave 1 invocation 1 (verify + hoàn tất C2/S1-S5) — empty result, không output | ⚠️ no changes (verify qua git) |
+| 2026-10-06T20:20Z | dev-agent | 5 | Wave 1 invocation 2 (resume, report-only): S1/S2/S3/S5 MISSING, S4 PARTIAL; C2 — full-JSON-log ✅ (PegaSymbolSync.ts:75), mask apiKey PARTIAL (GET only), redaction ❌; NO-CHANGES | ⚠️ S1-S5 gap, C2 chưa đóng |
+| 2026-10-06T20:21Z | SM | 5 | Wave 1: update STATUS.json (repair truncated JSON + wave1Verify + blockers); RUN-LOG append; git verify (branch SA4E-338, tip ebfdaf9) | ✅ |
+| 2026-10-06T20:40Z | SM | 5 | Wave 2a: merge SA4E-337 → SA4E-338 = d804f1d (70 files, +8845/−59; ebfdaf9 + 353ec4a reachable; pushed) — branch-divergence blocker RESOLVED | ✅ |
+| 2026-10-06T20:55Z | sa-agent | 5 | Reconcile endpoint: canonical = POST /api/v1/enrichment/retry-failed (harden in-place; /api/admin/pega/* phantom); TDD v2.0→v2.1 (§7.1 note + §10); KB ingest; không ghi DISCREPANCY | ✅ |
+| 2026-10-06T21:00Z | qa-agent | 5 | Sync STC v1.1→v1.2 theo TDD v2.1: IT-09 + IT-13 + E2E-API-06 (endpoints); TEST-REPORT csv 3 rows; 0 phantom matches; KB #409 | ✅ |
+| 2026-10-07T01:30Z | SM | 5 | Wave 2a final: STATUS/RUN-LOG update (2 tickets) + commit docs (TDD v2.1 + STC v1.2 + csv + post-merge docs) → pushed; endpoint blocker RESOLVED | ✅ |

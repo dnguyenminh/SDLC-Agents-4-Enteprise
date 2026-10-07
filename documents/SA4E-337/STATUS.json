@@ -7,6 +7,8 @@
     "branch": "SA4E-337",
     "commit": "5c29588",
     "round2Commit": "4d4b5f8",
+    "phase6Commit": "353ec4a",
+    "mergedInto338": "d804f1d",
     "pushed": true
   },
   "phases": {
@@ -44,8 +46,9 @@
     "✅ RESOLVED 2026-10-06 (QA bounded Phase 6): TEST-REPORT v1.2 regenerated, csv rows 80-83 fixed (UT-79..82 PASS)",
     "✅ RESOLVED 2026-10-06: STP v1.1 + test-coverage.drawio synced (UT-79..82 → PASS)",
     "4 SIT cases (SIT-01..04) NOT_RUN — chi tiết trong TEST-REPORT §3.3, evidence chờ tại evidence/",
-    "⚠️ 2026-10-06: QA deliverables (9 files trong documents/SA4E-337/) hiện untracked trong worktree SA4E-338 — cần commit vào branch SA4E-337; backup tại %TEMP%/opencode/sa4e337-phase6-backup (+SHA256 manifest)",
-    "⚠️ 2026-10-06: worktree bị mutate bởi session song song — documents/SA4E-337/ đã restore worktree-only từ branch; verify trước khi commit"
+    "✅ RESOLVED 2026-10-06 (Wave 2a): QA deliverables committed — SA4E-337 commit 353ec4a (13 files), pushed; merged vào SA4E-338 d804f1d",
+    "✅ RESOLVED 2026-10-06 (Wave 2a): worktree anomaly xử lý xong — docs committed + merged; divergence resolved",
+    "⚠️ Attach pending: TEST-REPORT-v1.2 DOCX (425KB) chưa lên Jira — 9181 thiếu Atlassian creds; 3062 raw HTTP 'Invalid session' → cần attach qua IDE MCP client"
   ],
-  "lastUpdated": "2026-10-06T20:21:11Z"
+  "lastUpdated": "2026-10-07T01:30:00Z"
 }

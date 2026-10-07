@@ -11,13 +11,13 @@
 | Jira Ticket | SA4E-338 |
 | Title | [pega][enrichment] AST digest thay text dump — fix vượt LLM context window cho Pega rule enrichment |
 | Author | QA Agent |
-| Version | 1.1 |
+| Version | 1.2 |
 | Date | 2026-10-05 |
 | Status | BA review round 1 applied (CHANGES REQUESTED → fixed) — awaiting BA re-approval |
 | Related STP | STP-v1.1-SA4E-338.docx |
 | Related BRD | BRD-v2.0-SA4E-338.docx (BRD.md v2.0) |
 | Related FSD | FSD-v1.2-SA4E-338.docx (FSD.md v1.2) |
-| Related TDD | TDD-v2-SA4E-338.docx (TDD.md v2.0) |
+| Related TDD | TDD-v2-SA4E-338.docx (TDD.md v2.1) |
 | Related Security | SECURITY-REVIEW.md (PASS_WITH_CONDITIONS) |
 
 ---
@@ -28,6 +28,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-05 | QA Agent | Initiate document — derived from BRD §2 (US1..US5, 26 ACs), FSD §3 (UC-1..UC-5, BR-01..BR-20, AF/EF flows), FSD §9 (ERR-01..ERR-14), FSD §10 (TC-01..TC-28), FSD §11 (OI-01..OI-09), TDD §3/§6/§7 (D-SEC-01..17, TC-SEC-*), SECURITY-REVIEW conditions C1..C4 |
 | 1.1 | 2026-10-05 | QA Agent | **BA review (CHANGES REQUESTED) fixes:** added **UT-09b** (OI-09 LM Studio 404 → fallback, no version probe), **IT-20** (EF-2.4 rule > `MAX_RULE_SIZE_BYTES` 5 MB skipped at sync + warn), **IT-21** (US4 AC-6/OI-04 `chunkedReduce<T>` shared — static/structure check), **E2E-API-27** (FSD TC-28 estimator accuracy sampling ±10%); RTM §12.4 corrected EF-2.4 content + added AF-5.2 row + relabelled AF-1.2/AF-1.4; §12.5 source `FSD §7`→`FSD §9`; §12.6 TC-09/TC-23/TC-28 labels corrected; §12.7 OI-09 label corrected; §12.3 BR-14 dropped IT-02; §13.4 SEC-338-01..19; counts 134 → **138** |
+| 1.2 | 2026-10-07 | QA Agent | Reconciled retry endpoint with TDD v2.1 — phantom `/api/admin/pega/*` paths replaced by `/api/v1/enrichment/*` (IT-09 precondition, IT-13 title+precondition, E2E-API-06 expected; TEST-REPORT CSV rows synced) |
 
 ---
 
@@ -217,11 +218,11 @@
 | IT-06 | reactive ctx error → map-reduce with `retry_count = 0` | High | BR-08, BR-05, FSD TC-11, ERR-05, OI-05 | first full-prompt call returns ctx-length error; reduce succeeds | task final `retry_count = 0`; `enrichment_status='completed'`; exactly 1 full-prompt attempt + N chunk calls; result saved; warn `ERR-05 context length exceeded → auto map-reduce` logged | NOT_RUN |
 | IT-07 | non-context 503 → bounded retry, **no** map-reduce | High | UC-3 EF-3.2, BR-18, BR-08, FSD TC-23 | stub returns 503 with `x-error-code: llm_unavailable` | retries ≤ 3 with backoff, no chunk calls, `enrichment_status='failed'` with `ERR-07`; no map_reduce_report | NOT_RUN |
 | IT-08 | BudgetError → terminal status + report written **before** throw | High | BR-11, FSD TC-12, FSD ERR-14 | stub always over-budget; reduce rounds exhausted | DB row shows `enrichment_status='budget_error'` + `map_reduce_report` present; worker records failure once; 0 re-enrichment attempts afterward | NOT_RUN |
-| IT-09 | retry gate returns 401/403/429 correctly | High | OI-05, D-SEC-01, TC-SEC-01a, TC-SEC-01d, SEC-338-12, FSD §8, TDD §3.3 | `POST /api/admin/pega/enrichment-retry` with no JWT / non-admin JWT / 6 rapid bursts | (a) 401 no body leak; (b) 403 admin-only; (c) 429 rate-limited; none mutate `pending_tasks` | NOT_RUN |
+| IT-09 | retry gate returns 401/403/429 correctly | High | OI-05, D-SEC-01, TC-SEC-01a, TC-SEC-01d, SEC-338-12, FSD §8, TDD §3.3 | `POST /api/v1/enrichment/retry-failed` with no JWT / non-admin JWT / 6 rapid bursts | (a) 401 no body leak; (b) 403 admin-only; (c) 429 rate-limited; none mutate `pending_tasks` | NOT_RUN |
 | IT-10 | `retryAllFailed` excludes terminal statuses + ≤500 limit + project scoping | High | OI-05, BR-11, D-SEC-02, D-SEC-04, TC-SEC-01b, TDD §3.3 | 520 failed tasks (mix of `failed`/`budget_error`/`llm_auth`), 2 projects | only non-terminal re-queued, count ≤ 500, `project_id` filter respected (other project untouched) | NOT_RUN |
 | IT-11 | forged `X-Project-Id` header ignored — JWT project wins | High | D-SEC-03, TC-SEC-01c, TDD §7, SEC-338-02 | admin JWT with `pid=proj-A`, header `X-Project-Id: proj-B` | operation scoped to `proj-A`; no cross-project read/write; audit log records `proj-A` | NOT_RUN |
 | IT-12 | audit log entry written for each retry mutation | Medium | D-SEC-01, TDD §7, FSD §7.2 | successful retry call as admin | audit row with `actor`, `action='enrichment_retry'`, `target`, timestamp; no secret/prompt content in audit payload | NOT_RUN |
-| IT-13 | `GET /api/admin/pega/enrichment-failures` requires JWT | High | OI-05, FSD §8, TDD §3.3 | unauthenticated GET | 401; with admin JWT → 200 list | NOT_RUN |
+| IT-13 | `GET /api/v1/enrichment/failures` requires JWT | High | OI-05, FSD §8, TDD §3.3 | unauthenticated `GET /api/v1/enrichment/failures` | 401; with admin JWT → 200 list | NOT_RUN |
 | IT-14 | failures response redacted ≤ 200 chars, no provider body | High | D-SEC-07, D-SEC-08, D-SEC-09, TC-SEC-07c, SEC-338-07 | failure rows whose raw provider error contains `Bearer sk-x` + long body | each `error` field ≤ 200 chars; `authorization ***` scrubbed; `providerBody` absent from HTTP response | NOT_RUN |
 | IT-15 | `pending_tasks.error` redacted at `markFailed` | High | D-SEC-07, D-SEC-08, TC-SEC-07b, FSD §7.2 | transient failure with secret-bearing message | stored `error` ≤ 200 chars and scrubbed; raw secret not in DB | NOT_RUN |
 | IT-16 | `GET /api/admin/config` masked + `Cache-Control: no-store` | High | D-SEC-06, TC-SEC-12a, TC-SEC-12c, SEC-338-12 | admin JWT, real DB config with `apiKey=sk-live-abc123` | response `apiKey === '***'`; header `cache-control: no-store`; no plaintext anywhere in body | NOT_RUN |
@@ -246,7 +247,7 @@
 | E2E-API-03 | context-length error → map-reduce → report in response/meta | High | UC-2 EF-2.3, UC-3 EF-3.1, BR-13, ERR-05, FSD TC-16 | stub: 1st full-prompt call → ctx error, chunk calls OK | enrich → `completed`; response/meta `map_reduce_report.strategy='ast_sections_map_reduce'`, `pinnedLogicIntact=true`, `chunks ≥ 2` | NOT_RUN |
 | E2E-API-04 | proactive over-budget → map-reduce with **0** full-prompt calls | High | UC-2 EF-2.3, AF-4.1, BR-10, ERR-04, FSD TC-10, FSD TC-16, BR-16 | stub counts calls; digest pre-computed > `inputBudget` | `completed` via reduce; stub full-prompt counter `= 0`; chunk counters `≥ 2`; report persisted | NOT_RUN |
 | E2E-API-05 | BudgetError → terminal status, report persisted, no retry | High | BR-11, EF-4.1, D-SEC-04, TC-SEC-01e, FSD TC-12, ERR-14 | stub always returns ctx error even on chunks | `enrichment_status='budget_error'`; report present; subsequent retry endpoint does **not** re-enrich it (terminal) | NOT_RUN |
-| E2E-API-06 | retry endpoint without JWT → 401 | High | OI-05, FSD §8, D-SEC-01, TC-SEC-01a (401 variant) | no Authorization header | `POST /api/admin/pega/enrichment-retry` → 401; no task reset | NOT_RUN |
+| E2E-API-06 | retry endpoint without JWT → 401 | High | OI-05, FSD §8, D-SEC-01, TC-SEC-01a (401 variant) | no Authorization header | `POST /api/v1/enrichment/retry-failed` → 401; no task reset | NOT_RUN |
 | E2E-API-07 | retry endpoint as non-admin → 403, 0 tasks reset | High | OI-05, FSD §8, D-SEC-01, TC-SEC-01a | non-admin JWT | 403; `pending_tasks` unchanged (compare before/after counts) | NOT_RUN |
 | E2E-API-08 | retry burst → 429 rate limit | High | FSD §8 (rate limiting), D-SEC-01, TC-SEC-01d, TDD §3.3 | 6 rapid retry requests same admin | at least one 429; server stays healthy; no partial corrupt state | NOT_RUN |
 | E2E-API-09 | retry excludes terminal statuses + ≤500 limit | High | OI-05, BR-11, D-SEC-02, D-SEC-04, TC-SEC-01b | 520 failed + 10 `budget_error` + 10 `llm_auth` rows | re-queued ≤ 500; terminal rows untouched | NOT_RUN |

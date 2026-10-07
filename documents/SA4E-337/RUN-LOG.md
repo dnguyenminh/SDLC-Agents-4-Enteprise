@@ -30,6 +30,8 @@
 | 23 | SM | Jira comment round-2 summary (id 12162); workflow project = To Do/In Progress/In Review/Done (KHÔNG có QA Test) → ticket giữ In Review, currentPhase=testing | ✅ |
 | 24 | qa-agent | Phase 6 formal (bounded — no re-run): regenerate TEST-REPORT v1.2 từ Round 2 evidence; fix csv rows 80-83 (UT-79..82 → PASS) + tag-extraction row 12; sync STP v1.1 + test-coverage.drawio; list 4 SIT cases; KB ingest | ✅ 105/109 PASS — 4 SIT NOT_RUN (CONDITIONAL PASS) |
 | 25 | SM | Wave 1 verify: git state check; ANOMALY — worktree (branch SA4E-338) bị mutate giữa session, documents/SA4E-337/ không tồn tại → QA restore worktree-only từ branch SA4E-337; deliverables hiện untracked trong worktree SA4E-338; backup %TEMP%\opencode\sa4e337-phase6-backup (+SHA256) | ⚠️ cần commit vào branch SA4E-337 (quyết định SM/user) |
+| 26 | SM | Wave 2a: commit 13 files (TEST-REPORT v1.2 + embedded + DOCX 425KB, STP v1.1, testdata, test-coverage drawio/png, evidence/README, STATUS/RUN-LOG) → SA4E-337 `353ec4a`; push origin | ✅ |
+| 27 | SM | Wave 2a: TEST-REPORT DOCX export qua HTTP MCP OK; attach Jira FAIL (9181 thiếu creds; 3062 'Invalid session' qua raw HTTP) → deferred IDE client; SA4E-337 merged → SA4E-338 `d804f1d` (divergence resolved, pushed); STATUS/RUN-LOG sync trên 338 tip | ⚠️ attach pending |
 
 **Notes:**
 - ta-agent requested `agent_log` tool — not found in session (3 find_tools queries) → logged here per TA request.
