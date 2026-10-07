@@ -429,7 +429,8 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     const memory = ctx.registry?.getModule?.('memory');
     const worker = memory?.taskWorker as any;
     if (!worker?.getRepository) return c.json({ ok: false, error: 'TaskWorker not available' });
-    const count = await worker.getRepository().retryAllFailed();
+    // SA4E-338 S1 (D-SEC-02): scoped + bounded + terminal-exclusion apply here too.
+    const count = await worker.getRepository().retryAllFailed({ projectScope: ctx.getRequestProjectId(c), limit: 500 });
     return c.json({ ok: true, retried: count });
   });
 

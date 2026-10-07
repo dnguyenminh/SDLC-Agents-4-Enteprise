@@ -1,14 +1,52 @@
 /**
  * SA4E-157 — Unit/integration tests for enrichment-status-routes.
+ * SA4E-338 S1 — hardened retry/reconcile/failures: JWT `pid` scope (X-Project-Id
+ * header ignored, D-SEC-03), admin permission gate (D-SEC-01), rate limiting,
+ * bounded/scoped retry + audit (D-SEC-02).
  * Uses Hono's in-process app.request() against mocked TaskWorker/Repository.
+ * Traces: TC-SEC-01a…e, STC UT (S1) + IT-09/11/12 specs.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createHmac } from 'crypto';
 import type { Logger } from 'pino';
 import pino from 'pino';
+
+const { mockGetUserPermissions, mockRecordAudit } = vi.hoisted(() => ({
+  mockGetUserPermissions: vi.fn().mockResolvedValue([{ permissionId: 'CONFIG_EDIT', roleData: {} }]),
+  mockRecordAudit: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../../../admin/admin-db.js', () => ({
+  getUserPermissions: mockGetUserPermissions,
+  recordAudit: mockRecordAudit,
+  validateSession: vi.fn().mockResolvedValue(null),
+  createSession: vi.fn(),
+  invalidateSession: vi.fn(),
+  refreshSession: vi.fn(),
+}));
+
 import { createEnrichmentStatusRoutes } from '../enrichment-status-routes.js';
-import type { TaskWorker } from '../../modules/memory/task-queue/TaskWorker.js';
+import type { TaskWorker } from '../../../modules/memory/task-queue/TaskWorker.js';
 
 const logger: Logger = pino({ level: 'silent' });
+const TEST_SECRET = 'test-secret';
+
+/** Mint an HS256 JWT matching jwt-auth verifyHs256 (pattern from jwt-auth.test.ts). */
+function makeJwt(payload: Record<string, unknown>): string {
+  const body = Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600, ...payload })).toString('base64url');
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const sig = createHmac('sha256', TEST_SECRET).update(`${header}.${body}`).digest('base64url');
+  return `${header}.${body}.${sig}`;
+}
+
+/** Admin JWT bound to a project id. */
+function adminJwt(pid = 'proj-A'): string {
+  return makeJwt({ sub: 'admin-1', username: 'admin', pid });
+}
+
+function authHeaders(jwt: string, extra: Record<string, string> = {}): Record<string, string> {
+  return { Authorization: `Bearer ${jwt}`, ...extra };
+}
 
 /** Build a fake repo with all methods the route touches. */
 function makeFakeRepo(overrides: Record<string, unknown> = {}) {
@@ -50,9 +88,19 @@ describe('createEnrichmentStatusRoutes', () => {
   let app: ReturnType<typeof createEnrichmentStatusRoutes>;
 
   beforeEach(() => {
+    process.env.KB_TOKEN_SECRET = TEST_SECRET;
+    mockGetUserPermissions.mockResolvedValue([{ permissionId: 'CONFIG_EDIT', roleData: {} }]);
+    mockGetUserPermissions.mockClear();
+    mockGetUserPermissions.mockResolvedValue([{ permissionId: 'CONFIG_EDIT', roleData: {} }]);
+    mockRecordAudit.mockClear();
+    mockRecordAudit.mockResolvedValue(undefined);
     repo = makeFakeRepo();
     taskWorker = makeFakeTaskWorker(repo);
     app = createEnrichmentStatusRoutes(makeRegistry(taskWorker), logger);
+  });
+
+  afterEach(() => {
+    delete (process.env as any).KB_TOKEN_SECRET;
   });
 
   describe('GET /enrichment/status', () => {
@@ -106,72 +154,185 @@ describe('createEnrichmentStatusRoutes', () => {
     });
   });
 
-  describe('GET /enrichment/failures', () => {
-    it('returns 200 with the full failure list, default limit 200', async () => {
-      const res = await app.request('/enrichment/failures', { method: 'GET' });
-      expect(res.status).toBe(200);
-      const body = await res.json();
-      expect(body.count).toBe(1);
-      expect(body.limit).toBe(200);
-      expect(body.failures).toEqual([
-        { id: 2, source: 'fooFn', error: 'boom', retryCount: 3, completedAt: '2026-01-02T00:00:00.000Z' },
-      ]);
-      expect(repo.listFailedDetailed).toHaveBeenCalledWith(200, undefined);
-    });
-
-    it('scopes failures to project and clamps limit to [1,1000]', async () => {
-      const res = await app.request('/enrichment/failures?limit=99999', {
+  describe('GET /enrichment/failures — S1 hardening', () => {
+    it('scopes to the JWT pid and ignores a forged X-Project-Id header (TC-SEC-01c)', async () => {
+      const res = await app.request('/enrichment/failures', {
         method: 'GET',
-        headers: { 'X-Project-Id': 'proj-7' },
+        headers: authHeaders(adminJwt('proj-A'), { 'X-Project-Id': 'proj-B' }),
       });
       expect(res.status).toBe(200);
       const body = await res.json();
-      expect(body.projectId).toBe('proj-7');
-      expect(body.limit).toBe(1000);
-      expect(repo.listFailedDetailed).toHaveBeenCalledWith(1000, 'proj-7');
+      expect(body.projectId).toBe('proj-A');
+      expect(repo.listFailedDetailed).toHaveBeenCalledWith(200, 'proj-A');
     });
 
-    it('returns 503 when TaskWorker is missing', async () => {
+    it('clamps limit to [1,1000] with the default of 200', async () => {
+      const res = await app.request('/enrichment/failures?limit=99999', {
+        method: 'GET',
+        headers: authHeaders(adminJwt('proj-A')),
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.limit).toBe(1000);
+      expect(repo.listFailedDetailed).toHaveBeenCalledWith(1000, 'proj-A');
+    });
+
+    it('returns 401 without a JWT and never reads failures (TC-SEC-01a)', async () => {
+      const res = await app.request('/enrichment/failures', { method: 'GET' });
+      expect(res.status).toBe(401);
+      expect(repo.listFailedDetailed).not.toHaveBeenCalled();
+    });
+
+    it('returns 403 for a non-admin JWT (TC-SEC-01a)', async () => {
+      mockGetUserPermissions.mockResolvedValue([]);
+      const res = await app.request('/enrichment/failures', {
+        method: 'GET',
+        headers: authHeaders(adminJwt('proj-A')),
+      });
+      expect(res.status).toBe(403);
+      expect(repo.listFailedDetailed).not.toHaveBeenCalled();
+    });
+
+    it('returns 403 when the JWT carries no pid claim (D-SEC-03)', async () => {
+      const res = await app.request('/enrichment/failures', {
+        method: 'GET',
+        headers: authHeaders(makeJwt({ sub: 'admin-1' })),
+      });
+      expect(res.status).toBe(403);
+      expect(repo.listFailedDetailed).not.toHaveBeenCalled();
+    });
+
+    it('returns 503 when TaskWorker is missing (authorized caller)', async () => {
       const brokenApp = createEnrichmentStatusRoutes(makeRegistry(null), logger);
-      const res = await brokenApp.request('/enrichment/failures', { method: 'GET' });
+      const res = await brokenApp.request('/enrichment/failures', {
+        method: 'GET',
+        headers: authHeaders(adminJwt()),
+      });
       expect(res.status).toBe(503);
     });
   });
 
-  describe('POST /enrichment/retry-failed', () => {
-    it('reconciles orphans and resets failed tasks, returns 200', async () => {
+  describe('POST /enrichment/retry-failed — S1 hardening', () => {
+    it('resets with JWT-pid scope, 500 limit + terminal exclusion info, writes audit', async () => {
       repo.reconcileOrphans.mockResolvedValue(2);
       repo.retryAllFailed.mockResolvedValue(4);
-      const res = await app.request('/enrichment/retry-failed', { method: 'POST' });
+      const res = await app.request('/enrichment/retry-failed', {
+        method: 'POST',
+        headers: authHeaders(adminJwt('proj-A')),
+      });
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.error).toBeNull();
-      expect(body.data.resetCount).toBe(4);
-      expect(body.data.purgedCount).toBe(2);
-      expect(repo.reconcileOrphans).toHaveBeenCalled();
-      expect(repo.retryAllFailed).toHaveBeenCalled();
+      expect(body.data).toMatchObject({ resetCount: 4, purgedCount: 2, limit: 500, excluded: 'terminal' });
+      expect(repo.retryAllFailed).toHaveBeenCalledWith({ projectScope: 'proj-A', limit: 500 });
+      expect(mockRecordAudit).toHaveBeenCalledWith(
+        'admin-1', 'admin', 'enrichment_retry', 'enrichment', 'proj-A',
+        expect.stringContaining('"resetCount":4'),
+      );
     });
 
-    it('returns 503 when TaskWorker is missing', async () => {
+    it('ignores a forged X-Project-Id header — JWT pid wins (TC-SEC-01c)', async () => {
+      const res = await app.request('/enrichment/retry-failed', {
+        method: 'POST',
+        headers: authHeaders(adminJwt('proj-A'), { 'X-Project-Id': 'proj-B' }),
+      });
+      expect(res.status).toBe(200);
+      expect(repo.retryAllFailed).toHaveBeenCalledWith({ projectScope: 'proj-A', limit: 500 });
+    });
+
+    it('returns 401 without a JWT and mutates nothing (TC-SEC-01a)', async () => {
+      const res = await app.request('/enrichment/retry-failed', { method: 'POST' });
+      expect(res.status).toBe(401);
+      expect(repo.retryAllFailed).not.toHaveBeenCalled();
+      expect(repo.reconcileOrphans).not.toHaveBeenCalled();
+    });
+
+    it('returns 403 for a non-admin JWT and mutates nothing (TC-SEC-01a)', async () => {
+      mockGetUserPermissions.mockResolvedValue([{ permissionId: 'KB_READ', roleData: {} }]);
+      const res = await app.request('/enrichment/retry-failed', {
+        method: 'POST',
+        headers: authHeaders(adminJwt()),
+      });
+      expect(res.status).toBe(403);
+      expect(repo.retryAllFailed).not.toHaveBeenCalled();
+    });
+
+    it('returns 403 when the JWT carries no pid claim (D-SEC-03)', async () => {
+      const res = await app.request('/enrichment/retry-failed', {
+        method: 'POST',
+        headers: authHeaders(makeJwt({ sub: 'admin-1' })),
+      });
+      expect(res.status).toBe(403);
+      expect(repo.retryAllFailed).not.toHaveBeenCalled();
+    });
+
+    it('returns 503 when TaskWorker is missing (authorized caller)', async () => {
       const brokenApp = createEnrichmentStatusRoutes(makeRegistry(null), logger);
-      const res = await brokenApp.request('/enrichment/retry-failed', { method: 'POST' });
+      const res = await brokenApp.request('/enrichment/retry-failed', {
+        method: 'POST',
+        headers: authHeaders(adminJwt()),
+      });
       expect(res.status).toBe(503);
+    });
+
+    it('still succeeds when the audit write fails (audit never blocks retry)', async () => {
+      mockRecordAudit.mockRejectedValueOnce(new Error('audit db down'));
+      repo.retryAllFailed.mockResolvedValue(1);
+      const res = await app.request('/enrichment/retry-failed', {
+        method: 'POST',
+        headers: authHeaders(adminJwt()),
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.data.resetCount).toBe(1);
+    });
+
+    it('rate-limits a burst — second rapid call is 429 (TC-SEC-01d)', async () => {
+      const req = {
+        method: 'POST' as const,
+        headers: authHeaders(adminJwt(), { 'x-rate-limit-rpm': '1' }),
+      };
+      await app.request('/enrichment/retry-failed', req);
+      const res2 = await app.request('/enrichment/retry-failed', req);
+      expect(res2.status).toBe(429);
     });
   });
 
-  describe('POST /enrichment/reconcile-orphans', () => {
-    it('purges orphan tasks and returns 200', async () => {
+  describe('POST /enrichment/reconcile-orphans — S1 hardening', () => {
+    it('purges orphan tasks for an admin JWT', async () => {
       repo.reconcileOrphans.mockResolvedValue(3);
-      const res = await app.request('/enrichment/reconcile-orphans', { method: 'POST' });
+      const res = await app.request('/enrichment/reconcile-orphans', {
+        method: 'POST',
+        headers: authHeaders(adminJwt()),
+      });
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.data.purgedCount).toBe(3);
       expect(repo.reconcileOrphans).toHaveBeenCalled();
     });
 
-    it('returns 503 when TaskWorker is missing', async () => {
+    it('returns 401 without a JWT and purges nothing', async () => {
+      const res = await app.request('/enrichment/reconcile-orphans', { method: 'POST' });
+      expect(res.status).toBe(401);
+      expect(repo.reconcileOrphans).not.toHaveBeenCalled();
+    });
+
+    it('returns 403 for a non-admin JWT', async () => {
+      mockGetUserPermissions.mockResolvedValue([]);
+      const res = await app.request('/enrichment/reconcile-orphans', {
+        method: 'POST',
+        headers: authHeaders(adminJwt()),
+      });
+      expect(res.status).toBe(403);
+      expect(repo.reconcileOrphans).not.toHaveBeenCalled();
+    });
+
+    it('returns 503 when TaskWorker is missing (authorized caller)', async () => {
       const brokenApp = createEnrichmentStatusRoutes(makeRegistry(null), logger);
-      const res = await brokenApp.request('/enrichment/reconcile-orphans', { method: 'POST' });
+      const res = await brokenApp.request('/enrichment/reconcile-orphans', {
+        method: 'POST',
+        headers: authHeaders(adminJwt()),
+      });
       expect(res.status).toBe(503);
     });
   });

@@ -9,6 +9,9 @@ import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
 import type { PendingTask, CreateTaskInput } from './models.js';
 import { TaskStatus } from './models.js';
 
+/** SA4E-338 S1 (D-SEC-02): bulk retry is bounded to 500 rows per call. */
+const RETRY_ALL_MAX_LIMIT = 500;
+
 export class PendingTaskRepository {
   private readonly dialect: DialectHelper;
 
@@ -246,10 +249,33 @@ export class PendingTaskRepository {
     );
   }
 
-  async retryAllFailed(): Promise<number> {
+  /**
+   * SA4E-338 S1 (D-SEC-02, D-SEC-03, OI-05): reset FAILED tasks to PENDING —
+   * bounded + scoped + terminal-safe.
+   * - `projectScope` is REQUIRED: no cross-project bulk mutation (JWT pid scope).
+   * - Terminal errors (`budget_error:` / `llm_auth:`) are excluded server-side.
+   * - At most `limit` rows (default/max 500) are re-queued per call.
+   * Uses an id subquery instead of `UPDATE ... LIMIT` — that syntax is not
+   * portable to PostgreSQL nor the sqlite-wasm build (same semantics, TDD §7.1).
+   * @returns resetCount — number of rows re-queued.
+   */
+  async retryAllFailed(options: { projectScope: string; limit?: number }): Promise<number> {
+    if (!options?.projectScope) throw new Error('retryAllFailed: projectScope is required (D-SEC-02/D-SEC-03)');
+    const raw = typeof options.limit === 'number' && Number.isFinite(options.limit) ? Math.trunc(options.limit) : RETRY_ALL_MAX_LIMIT;
+    const limit = Math.min(Math.max(raw, 1), RETRY_ALL_MAX_LIMIT);
+    const eligibleSelect = `SELECT id FROM pending_tasks
+         WHERE status = ?
+           AND project_id = ?
+           AND (error IS NULL
+                OR (error NOT LIKE 'budget_error:%'
+                    AND error NOT LIKE 'llm_auth:%'))
+         ORDER BY id
+         LIMIT ?`;
     const result = await this.db.runAsync(
-      `UPDATE pending_tasks SET status = ?, started_at = NULL, error = NULL, retry_count = 0 WHERE status = ?`,
-      [TaskStatus.PENDING, TaskStatus.FAILED],
+      `UPDATE pending_tasks
+          SET status = ?, started_at = NULL, error = NULL, retry_count = 0
+        WHERE id IN (${eligibleSelect})`,
+      [TaskStatus.PENDING, TaskStatus.FAILED, options.projectScope, limit],
     );
     return result.changes;
   }
