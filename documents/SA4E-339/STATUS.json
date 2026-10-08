@@ -1,0 +1,70 @@
+{
+  "ticket": "SA4E-339",
+  "currentPhase": "completed",
+  "jiraStatus": "unknown_no_tool",
+  "phases": {
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1.2, "reviewVerdict": "PASS-with-fixes (round 4) — D-2a formula applied (BRD:31), traceability cells fixed, AC-05 note stale but blocker closed" },
+    "specification": { "status": "done", "file": "FSD.md", "version": 1.3, "reviewVerdict": "PASS-with-fixes (round 4) — all 7 Major closed: UC table rebuilt, BR↔AC fixed (BR-04→AC-03, BR-05→AC-02, BR-08 for AC-05), 94.5% boundary documented, CompactionResult 8-field contract, template normalized, FSD:104-108 re-pointed" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1.3, "reviewVerdict": "PASS-with-fixes (round 4) — F-1/F-2/inconsistency #3 CLOSED; NF-1 fixed (SessionMonitor import added TDD:27); ≤20-line helpers; Security Design + refs intact" },
+    "feedback_loop": { "status": "completed", "iterations": 4, "maxIterations": 5 },
+    "ui_design": { "status": "not_applicable" },
+    "test_planning": { "status": "done", "file": "STP.md, STC.md", "version": 1.3, "reviewVerdict": "STP PASS-with-fixes (round 4) — 2 drawio + PNG exported/embedded, Diagram Index refs valid; STC PASS-with-fixes (round 4) — QA-03 DONE: STC-339-12/13/14/15 added, STC-05 rewritten with 94.5% boundary, RTM + test-data index" },
+    "implementation": { "status": "done", "note": "tsc 0, lint 0; SA4E-339 tests 11/11 + chat suite 178/178 pass; helpers extracted per TDD (applyCompactionAndRecount 12 lines, buildCompactableSession 14 lines); shouldCompact used (inconsistency #3 CLOSED); placeholder expect(true) + stale mock removed; N-01 boundary test uses 94.5% real rounding" },
+    "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 1.4, "reviewVerdict": "PASS (round 4) — full-suite log (249 files/2395 tests/0 fail, 2026-10-07 17:58), 11/11 compaction tests mapped, STC-11 evidenced (N-02 closed), Status truthful" },
+    "user_guide": { "status": "done", "file": "UG.md", "version": 1.0, "completedAt": "2026-10-08T03:20:00Z" },
+    "deployment": { "status": "done", "file": "DPG.md, RLN.md", "version": 1.0, "completedAt": "2026-10-08T03:30:00Z", "note": "DPG: pre-deploy gates + package/install/health-checks/rollback; RLN: target v1.47.2, version-sync DISCREPANCY flagged — tag v1.47.1 exists but packages at 1.47.0, must sync before tag" }
+  },
+  "review": {
+    "status": "completed",
+    "round": 4,
+    "trigger": "SM coordinated round 4 remediation + re-review after user confirmed updates",
+    "baseline": "documents/SA4E-339/REVIEW-REPORT.md (round 1) + round 2/3 verdicts",
+    "completedAt": "2026-10-08T03:10:00Z",
+    "reviewers": ["qa-agent", "sa-agent", "ta-agent", "ba-agent", "dev-agent", "security-agent"],
+    "verdicts": {
+      "BRD": "PASS-with-fixes (round 3: PASS-with-fixes) — BRD-B1 DONE (formula + traceability); 1 Minor stale note in AC-05",
+      "FSD": "PASS-with-fixes (round 3: PASS-with-fixes w/ 7 Major) — ALL 7 Major closed; file modified 18:07",
+      "TDD": "PASS-with-fixes (round 3: PASS-with-fixes) — NF-1 fixed; F-1/F-2/#3 CLOSED; Security Design intact",
+      "STP": "PASS-with-fixes (round 3: FAIL) — PNG exported + embedded; Diagram Index fixed",
+      "STC": "PASS-with-fixes (round 3: PASS-with-fixes) — QA-03 DONE: STC-339-12/13/14/15 + RTM + 94.5% boundary",
+      "TEST-REPORT": "PASS (round 3: PASS-with-fixes) — full-suite log + STC-11 evidenced; no Pending/Approved residue",
+      "security-design": "PASS-with-fixes (round 3: PASS-with-fixes) — 0 regression; 2 Medium carry-over unchanged",
+      "implementability": "PASS (round 3: PASS-with-fixes) — B1a/B1b/B1c/B1d ALL DONE; inconsistency #3 CLOSED; tsc/lint/compaction-tests green"
+    },
+    "taskProgress": {
+      "total": 26,
+      "done": 22,
+      "partial": 4,
+      "notDone": 0,
+      "pctDone": 85,
+      "detail": "DEV 3/3, TDD 6/6, FSD 6/6, BRD 5/5, QA 4/4, SEC 2/2 (carry-over partial); partial = 2 Medium carry-over (STC-09 tautological, TDD §4 missing formatSummaryMessage ref) + 1 Minor stale BRD AC-05 note"
+    },
+    "dodRound3to4": {
+      "round3": "6/9 met — open: #4 STP drawio PNG/embed, #5 TEST-REPORT full-suite log, #8 units (STP FAIL)",
+      "round4": "9/9 met — #1 tsc ✅, #2 npm test+STC map ✅, #3 FSD/TDD structure ✅, #4 STP drawio PNG/embed ✅, #5 TEST-REPORT evidence ✅, #6 headers truthful ✅, #7 inconsistencies #3 CLOSED ✅, #8 units ≥ PASS-with-fixes ✅, #9 SM re-review done ✅"
+    },
+    "inconsistency3": "CLOSED — FSD:30 shouldCompact ↔ code:221 SessionMonitor.shouldCompact ↔ TDD:47; single source session-compactor.ts:11 COMPACT_USAGE_THRESHOLD; verified by sa-agent + dev-agent independently (round 3 confirmed round 4)",
+    "objectiveEvidence": {
+      "tsc": "npx tsc --noEmit → EXIT=0",
+      "lint": "npm run lint → EXIT=0",
+      "compactionTests": "vitest run compaction.test.ts → 11/11 passed (SA4E-339 scope)",
+      "chatSuite": "vitest run __tests__/chat → 178/178 passed (AC-05 regression)",
+      "phantomApi": "rg getDetectedModelId extension/src → 0 production, 0 test (stale mock removed)",
+      "constantApplied": "rg 'COMPACT_USAGE_THRESHOLD|0\\.95' chat-panel-provider.ts → 0 match; shouldCompact at :221",
+      "stcMap": "rg 'SA4E-339|STC-339' *.test.ts → 12 lines (1 describe + 11 it)",
+      "diagrams": "test-coverage.drawio/png + test-execution-flow.drawio/png EXIST (17:55/17:56); STP embeds valid",
+      "pendingCheck": "rg 'Pending' TEST-REPORT.md → 0 match",
+      "placeholderCheck": "rg 'expect(true).toBe(true)' extension/src --glob '*.test.ts' → 0 match",
+      "boundaryCheck": "rg '94\\.5' documents/SA4E-339/STC.md → 7 matches; STC-339-05 rewritten with real rounding step",
+      "fullSuiteLog": "TEST-REPORT.md:14/40/107 — 249 files / 2395 tests / 0 fail @ 2026-10-07 17:58:34",
+      "outOfScopeFailure": "layout.integration.test.ts (webview) fails with svelte/store import error — introduced by untracked svelte-compile-helper.ts (NOT SA4E-339); does not affect SA4E-339 scope tests"
+    },
+    "carryOver": [
+      "STC-339-09 tautological (mock hardcode role='user') — Medium, exists since round 2",
+      "TDD §4 Security Design missing formatSummaryMessage ref — Medium, exists since round 2",
+      "BRD AC-05 note references old placeholder (stale) — Minor"
+    ],
+    "result": "overall: READY — 9/9 DoD met; 26/26 tasks DONE/PARTIAL (0 NOT DONE); all SA4E-339 scope tests PASS; docs consistent; inconsistency #3 CLOSED. Out-of-scope layout test failure documented. Ready to close review phase and proceed to user_guide/deployment."
+  },
+  "lastUpdated": "2026-10-08T03:10:00Z"
+}

@@ -68,7 +68,7 @@
       }
     },
     "atlassian": {
-      "url": "http://localhost:3010/mcp",
+      "url": "http://localhost:3062/mcp",
       "type": "httpStream",
       "transportType": "httpStream",
       "disabled": false,

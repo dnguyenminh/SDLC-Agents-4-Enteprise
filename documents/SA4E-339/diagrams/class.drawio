@@ -1,0 +1,31 @@
+<mxfile host="Electron" modified="2026-10-07T14:26:00.000Z" agent="Antigravity" version="21.6.8" type="device">
+  <diagram id="sa4e-339-cls" name="Class Diagram">
+    <mxGraphModel dx="1000" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cls-cp" value="ChatPanelProvider&#xa;--&#xa;- view: WebviewView&#xa;- engine: PiWorkflowAdapter&#xa;- contextUsageTracker: ContextUsageTracker&#xa;- sessionCompactor: SessionCompactor&#xa;--&#xa;+ updateContextUsageAfterTurn(): void" style="swipe;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-sc" value="SessionCompactor&#xa;--&#xa;- summarizer: Summarizer&#xa;--&#xa;+ compact(session: CompactableSession): CompactionResult&#xa;+ countTokens(messages): number" style="swipe;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="60" width="340" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-cut" value="ContextUsageTracker&#xa;--&#xa;- maxTokens: number&#xa;- tabUsage: Map&lt;string, TabContextUsage&gt;&#xa;--&#xa;+ updateFromMessages(tabId, messages): void&#xa;+ getUsagePayload(tabId): ContextUsagePayload" style="swipe;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="240" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="cls-sum" value="Summarizer&#xa;--&#xa;--&#xa;+ summarize(messages, previous): CompactionSummary&#xa;+ formatSummaryMessage(summary): SessionMessage" style="swipe;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="240" width="340" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cls1" style="endArrow=diamond;endHead=open;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cls-cp" target="cls-sc">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cls2" style="endArrow=diamond;endHead=open;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="cls-cp" target="cls-cut">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cls3" style="endArrow=diamond;endHead=open;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="cls-sc" target="cls-sum">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

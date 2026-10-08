@@ -43,7 +43,7 @@ At the very beginning of your execution, use `find_tools` to discover tools. Use
 
 Fallbacks:
 - **Project tracker unavailable** → Skip transitions, manage status via STATUS.json only
-- **KB unavailable** → Skip KB verification, rely on file checks
+- **KB unavailable** → Attempt MCP bootstrap first (tool-usage-dynamic Step 0). If still down → report to user explicitly ("⚠️ KB unavailable — fallback to file checks, KB verification skipped"), then rely on file checks
 - **DOCX export unavailable** → Skip DOCX export, attach markdown or skip attachment
 
 ### Discovery Report
@@ -546,7 +546,14 @@ invokeSubAgent(
    - If exists → resume from `currentPhase`
    - If not exists → scan for existing files to build initial status
 
-2. **Scan existing files** (when STATUS.json doesn't exist):
+2. **KB-first check** (MANDATORY — before deciding next steps):
+   - Use the discovered KB "search" tool (query: "{TICKET} BRD FSD TDD") — cross-check STATUS.json against documents actually in KB (detect stale/corrupt status)
+   - Use the discovered KB "search" tool (query: "personalized rules preferences conventions") — load user's personalized rules (agent-self-learning Rule #7)
+   - Use the discovered KB "search" tool (query: "{PROJECT} lessons learned") — check prior lessons/error patterns relevant to this ticket
+   - If any KB finding contradicts STATUS.json → report the conflict to user before proceeding
+   - If KB unavailable → attempt MCP bootstrap first, then report to user before falling back to file checks
+
+3. **Scan existing files** (when STATUS.json doesn't exist):
    ```
    documents/{TICKET}/BRD.md exists?     → requirements: done
    documents/{TICKET}/FSD.md exists?     → specification: done
@@ -556,7 +563,7 @@ invokeSubAgent(
    ```
    Create STATUS.json from scan results.
 
-3. **Check Jira ticket status** (MANDATORY on every resume):
+4. **Check Jira ticket status** (MANDATORY on every resume):
    ```
    issue = the discovered project tracker "get issue" tool (issue_key: "{TICKET}")
    jiraStatus = issue.status  // "To Do", "Docs Review", "In Progress", "In Review", "QA Test", "UAT", "Ready For Product", "Done"
@@ -577,7 +584,7 @@ invokeSubAgent(
    
    **Quan trọng:** Nếu Jira status đã advance (ví dụ: reviewer đã chuyển DOCS REVIEW → IN PROGRESS), SM tự động tiếp tục phase tương ứng mà KHÔNG cần user nói lại.
 
-4. **Read Jira comments** (MANDATORY on every resume):
+5. **Read Jira comments** (MANDATORY on every resume):
    ```
    the discovered project tracker "get issue" tool (issue_key: "{TICKET}", comment_limit: 10)
    ```
@@ -615,7 +622,7 @@ invokeSubAgent(
    - If comment contains rejection/feedback → SM MUST report to user before taking action
    - Store last processed comment timestamp in STATUS.json: `"lastCommentProcessed": "2026-05-01T18:00:00Z"`
 
-5. **Report current status to user:**
+6. **Report current status to user:**
    ```
    📋 {TICKET} — Status Report
    
@@ -633,7 +640,7 @@ invokeSubAgent(
    ➡️ Tiếp tục Phase 3 (Design)?
    ```
 
-6. **Wait for user confirmation** before proceeding.
+7. **Wait for user confirmation** before proceeding.
 
 ### Step 1: Execute Phase — Requirements (BA → BRD)
 

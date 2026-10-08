@@ -1,0 +1,52 @@
+<mxfile host="Electron" modified="2026-10-07T14:26:00.000Z" agent="Antigravity" version="21.6.8" type="device">
+  <diagram id="sa4e-339-seq" name="Sequence Diagram">
+    <mxGraphModel dx="1000" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="seq-ui" value="Webview (chat.js)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-cp" value="ChatPanelProvider" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="60" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-eg" value="PiWorkflowAdapter" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="440" y="60" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="seq-sc" value="SessionCompactor" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="60" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="line-ui" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1" source="seq-ui">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="130" y="400" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="line-cp" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1" source="seq-cp">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="320" y="400" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="line-eg" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1" source="seq-eg">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="510" y="400" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="line-sc" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1" source="seq-sc">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="700" y="400" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m-1" value="1: turn complete" style="endArrow=classic;html=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="510" y="130" as="sourcePoint"/><mxPoint x="320" y="130" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m-2" value="2: getChatHistory()" style="endArrow=classic;html=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="320" y="170" as="sourcePoint"/><mxPoint x="510" y="170" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m-3" value="3: compact(session) [usage >= 0.95]" style="endArrow=classic;html=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="320" y="220" as="sourcePoint"/><mxPoint x="700" y="220" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m-4" value="4: CompactionResult" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="700" y="260" as="sourcePoint"/><mxPoint x="320" y="260" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m-5" value="5: setChatHistory(compacted)" style="endArrow=classic;html=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="320" y="300" as="sourcePoint"/><mxPoint x="510" y="300" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="m-6" value="6: tab:contextUpdate (<70%)" style="endArrow=classic;html=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry"><mxPoint x="320" y="350" as="sourcePoint"/><mxPoint x="130" y="350" as="targetPoint"/></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

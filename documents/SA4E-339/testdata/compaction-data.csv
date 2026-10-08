@@ -1,0 +1,18 @@
+test_case_id,true_usage_percent,payload_percentage,total_tokens,max_tokens,message_count,expected_action,expected_result,description
+STC-339-01,10,10,12800,128000,5,none,"History unchanged; compact() not called",Safe usage well below warn threshold
+STC-339-02,97.66,98,125000,128000,5,compact,"History = summary + 2 recent messages; usageAfter < 0.70",High usage with >2 messages triggers compaction
+STC-339-03,97.66,98,125000,128000,5,compact,"tab:contextUpdate broadcast with tokenCount/maxTokens/breakdown",Webview context meter payload contract
+STC-339-04,97.66,98,125000,128000,5,compact,"setChatHistory throws -> caught by try/catch, non-fatal, no crash",Error resilience BR-06
+STC-339-05,94.5,95,120960,128000,5,compact,"Math.round(94.5)=95 -> normalizeUsageToFraction(95)=0.95 -> 0.95 >= 0.95 -> COMPACT",BOUNDARY: true usage 94.5% rounds UP to 95% and triggers compaction
+STC-339-05-CTRL,94.4,94,120832,128000,5,warn,"Math.round(94.4)=94 -> 0.94 -> action 'warn' -> NO compaction",Control just below the 94.5% round-up boundary
+STC-339-06,97.66,98,125000,128000,2,none,"messages.length > 2 is false -> compact() never called",Exactly 2 messages cannot compact further
+STC-339-07,97.66,98,125000,128000,5,none,"engine = null -> early return, getUsagePayload not called, no throw",Null engine guard
+STC-339-08,97.66,98,125000,128000,5,none,"compact() mocked to action 'none' -> setChatHistory NOT called",Non-compact result leaves history untouched
+STC-339-09,97.66,98,125000,128000,5,compact,"summary message role == 'user' and content starts with '[compaction]', never 'system'",SEC-330-01 role elevation prevention
+STC-339-10,105,105,134400,128000,5,normalize,"normalizeUsageToFraction(150) returns value in [0,1]; percent > 100 clamps to 1",SEC-330-02 percent-scale normalization
+STC-339-11,0,0,0,0,0,regression,"npm test -> 0 failures; src/__tests__/chat -> 26 files / 178 tests passed",AC-05 pre-existing suite regression
+STC-339-12,96,96,122880,128000,20,compact,"result.latencyMs < 300 (COMPACTION_TIME_BUDGET_MS)",BR-07 performance budget
+STC-339-13,10,10,12800,128000,5,none,"action 'none' -> setChatHistory not called, message count still 5, no truncation",UC-06 work-order run A: below warn band
+STC-339-13-B,86,86,110080,128000,5,warn,"action 'warn' -> setChatHistory not called, message count still 5, no truncation",UC-06 work-order run B: warn band 85-95%
+STC-339-14,97.66,98,125000,128000,5,compact,"usageAfter still >= 0.95 -> still compact-eligible; compact() invoked again on next turn; payload refetched (chat-panel-provider.ts:225)",UC-07 usage still >= threshold after compaction
+STC-339-15,97.66,98,125000,128000,5,compact,"engine has no setChatHistory -> guard typeof check skips write, no throw, recount + broadcast still run",FSD UC-06 missing setChatHistory guard

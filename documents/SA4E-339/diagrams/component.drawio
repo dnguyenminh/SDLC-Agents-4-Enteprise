@@ -1,0 +1,31 @@
+<mxfile host="Electron" modified="2026-10-07T14:26:00.000Z" agent="Antigravity" version="21.6.8" type="device">
+  <diagram id="sa4e-339-comp" name="Component Diagram">
+    <mxGraphModel dx="1000" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cmp-cp" value="ChatPanelProvider&#xa;(chat-panel-provider.ts)" style="shape=module;align=left;spacingLeft=15;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-cut" value="ContextUsageTracker&#xa;(context-usage-tracker.ts)" style="shape=module;align=left;spacingLeft=15;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="80" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-sc" value="SessionCompactor&#xa;(session-compactor.ts)" style="shape=module;align=left;spacingLeft=15;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="220" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cmp-sum" value="Summarizer&#xa;(summarizer.ts)" style="shape=module;align=left;spacingLeft=15;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="220" width="220" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cmp1" style="endArrow=open;dashed=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cmp-cp" target="cmp-cut">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cmp2" style="endArrow=open;dashed=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="cmp-cp" target="cmp-sc">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-cmp3" style="endArrow=open;dashed=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cmp-sc" target="cmp-sum">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,40 @@
+<mxfile host="Electron" modified="2026-10-07T14:26:00.000Z" agent="Antigravity" version="21.6.8" type="device">
+  <diagram id="sa4e-339-state" name="Context State Machine">
+    <mxGraphModel dx="1000" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="st-init" value="" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#ff0000;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="st-safe" value="Safe State&#xa;(&lt; 60% usage)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="85" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="st-warn" value="Warning State&#xa;(60% - 80% usage)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="85" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="st-crit" value="Critical State&#xa;(80% - 95% usage)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="85" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="st-compact" value="Auto-Compacting&#xa;(>= 95% usage)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="220" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e-st1" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="st-init" target="st-safe">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-st2" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="st-safe" target="st-warn">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-st3" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="st-warn" target="st-crit">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-st4" value="usage >= 95%" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontStyle=1;fontColor=#B20000;" edge="1" parent="1" source="st-crit" target="st-compact">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-st5" value="compacted (< 70%)" style="endArrow=classic;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontStyle=1;fontColor=#006600;" edge="1" parent="1" source="st-compact" target="st-safe">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
