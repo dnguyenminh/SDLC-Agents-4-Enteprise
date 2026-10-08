@@ -8,9 +8,15 @@ import { Hono } from 'hono';
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
 import { jwtAuth } from '../middleware/jwt-auth.js';
+import { rateLimiter } from '../middleware/rate-limiter.js';
+import { recordAudit } from '../../admin/admin-db.js';
+import { resolveJwtIdentity, requireEnrichmentAdmin, identityDenied } from './enrichment-auth-guard.js';
 import { deriveEnrichmentState } from '../../shared/schemas/EnrichmentStatusSchema.js';
 import type { EnrichmentStatusResponse } from '../../shared/schemas/EnrichmentStatusSchema.js';
 import type { TaskWorker } from '../../modules/memory/task-queue/TaskWorker.js';
+
+/** SA4E-338 S1 (D-SEC-02): max FAILED tasks re-queued per retry call. */
+const RETRY_FAILED_LIMIT = 500;
 
 /**
  * Create enrichment status route group.
@@ -44,62 +50,93 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
 
   /**
    * GET /api/v1/enrichment/failures?limit=N — full list of FAILED enrichment tasks,
-   * scoped to the request's project. Unlike the status endpoint's recentFailures (capped
-   * at 10), this returns every failure (bounded by `limit`, default 200, max 1000) so the
-   * user can see exactly which rules/symbols failed and why. Each item carries the resolved
-   * source name, the stored error string, retry count, and completion timestamp.
+   * scoped to the caller's JWT project (`pid`). Unlike the status endpoint's
+   * recentFailures (capped at 10), this returns every failure (bounded by `limit`,
+   * default 200, max 1000) so the user can see exactly which rules/symbols failed
+   * and why. Each item carries the resolved source name, the stored error string,
+   * retry count, and completion timestamp.
+   * SA4E-338 S1 (D-SEC-01/03): rate-limited + admin-gated; the `X-Project-Id`
+   * header is ignored — scope comes from the verified JWT only.
    */
-  app.get('/enrichment/failures', jwtAuth, async (c) => {
+  app.get('/enrichment/failures', rateLimiter, jwtAuth, async (c) => {
     try {
+      const identity = await resolveJwtIdentity(c);
+      if (!identity.ok) return identityDenied(c, identity);
+      const denied = await requireEnrichmentAdmin(c, identity.identity.userId, logger);
+      if (denied) return denied;
       const taskWorker = getTaskWorker(registry);
       if (!taskWorker) {
         return c.json({ error: 'Enrichment service unavailable', details: 'TaskWorker not initialized' }, 503);
       }
-      const projectId = c.req.header('X-Project-Id') || '';
       // Clamp limit to [1, 1000] — guards against unbounded payloads and bad input.
       const rawLimit = Number(c.req.query('limit'));
       const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(Math.trunc(rawLimit), 1), 1000) : 200;
-      const repo = taskWorker.getRepository();
-      const failures = await repo.listFailedDetailed(limit, projectId || undefined);
-      return c.json({ projectId: projectId || null, count: failures.length, limit, failures }, 200);
+      const projectId = identity.identity.projectId;
+      const failures = await taskWorker.getRepository().listFailedDetailed(limit, projectId);
+      return c.json({ projectId, count: failures.length, limit, failures }, 200);
     } catch (err: any) {
       logger.error({ err }, '[EnrichmentStatus] Failed to list failures');
       return c.json({ error: 'Failed to list enrichment failures', details: err.message }, 500);
     }
   });
 
-  /** POST /api/v1/enrichment/retry-failed — reconcile orphans first, then reset failed tasks to pending. */
-  app.post('/enrichment/retry-failed', jwtAuth, async (c) => {
+  /**
+   * POST /api/v1/enrichment/retry-failed — reconcile orphans first, then reset FAILED
+   * tasks to pending. SA4E-338 S1 (D-SEC-01/02/03): admin-gated + rate-limited +
+   * JWT-pid-scoped; `retryAllFailed` excludes terminal `budget_error:`/`llm_auth:`
+   * tasks server-side and is bounded to 500 rows per call (OI-05). Each mutation
+   * writes an `enrichment_retry` audit entry.
+   */
+  app.post('/enrichment/retry-failed', rateLimiter, jwtAuth, async (c) => {
     try {
+      const identity = await resolveJwtIdentity(c);
+      if (!identity.ok) return identityDenied(c, identity);
+      const denied = await requireEnrichmentAdmin(c, identity.identity.userId, logger);
+      if (denied) return denied;
       const taskWorker = getTaskWorker(registry);
       if (!taskWorker) {
         return c.json({ error: 'Enrichment service unavailable', details: 'TaskWorker not initialized' }, 503);
       }
+      const { userId, username, projectId } = identity.identity;
       const repo = taskWorker.getRepository();
       // Auto-purge orphan tasks before retry (entries deleted but tasks remain)
       const purgedCount = await repo.reconcileOrphans();
       if (purgedCount > 0) {
         logger.info({ purgedCount }, '[EnrichmentStatus] Auto-purged orphan tasks before retry');
       }
-      const resetCount = await repo.retryAllFailed();
-      logger.info({ resetCount, purgedCount }, '[EnrichmentStatus] Retry failed tasks');
-      return c.json({ data: { resetCount, purgedCount, message: `${purgedCount} orphans purged, ${resetCount} failed tasks reset to pending` }, error: null });
+      const resetCount = await repo.retryAllFailed({ projectScope: projectId, limit: RETRY_FAILED_LIMIT });
+      await writeRetryAudit(logger, userId, username, projectId, resetCount, RETRY_FAILED_LIMIT);
+      logger.info({ actor: userId, projectScope: projectId, resetCount, purgedCount, limit: RETRY_FAILED_LIMIT }, '[EnrichmentStatus] Retry failed tasks');
+      return c.json({
+        data: {
+          resetCount, purgedCount, limit: RETRY_FAILED_LIMIT, excluded: 'terminal',
+          message: `${purgedCount} orphans purged, ${resetCount} failed tasks reset to pending (limit ${RETRY_FAILED_LIMIT}, terminal errors excluded)`,
+        },
+        error: null,
+      });
     } catch (err: any) {
       logger.error({ err }, '[EnrichmentStatus] Retry failed tasks error');
       return c.json({ error: 'Failed to retry tasks', details: err.message }, 500);
     }
   });
 
-  /** POST /api/v1/enrichment/reconcile-orphans — purge orphan tasks whose symbols/entries were deleted. */
-  app.post('/enrichment/reconcile-orphans', jwtAuth, async (c) => {
+  /**
+   * POST /api/v1/enrichment/reconcile-orphans — purge orphan tasks whose
+   * symbols/entries were deleted. SA4E-338 S1 (D-SEC-01): admin-gated + rate-limited.
+   */
+  app.post('/enrichment/reconcile-orphans', rateLimiter, jwtAuth, async (c) => {
     try {
+      const identity = await resolveJwtIdentity(c);
+      if (!identity.ok) return identityDenied(c, identity);
+      const denied = await requireEnrichmentAdmin(c, identity.identity.userId, logger);
+      if (denied) return denied;
       const taskWorker = getTaskWorker(registry);
       if (!taskWorker) {
         return c.json({ error: 'Enrichment service unavailable', details: 'TaskWorker not initialized' }, 503);
       }
       const repo = taskWorker.getRepository();
       const purgedCount = await repo.reconcileOrphans();
-      logger.info({ purgedCount }, '[EnrichmentStatus] Reconciled orphan tasks');
+      logger.info({ purgedCount, actor: identity.identity.userId }, '[EnrichmentStatus] Reconciled orphan tasks');
       return c.json({ data: { purgedCount, message: `${purgedCount} orphan tasks deleted` }, error: null });
     } catch (err: any) {
       logger.error({ err }, '[EnrichmentStatus] Reconcile orphans error');
@@ -108,6 +145,17 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
   });
 
   return app;
+}
+
+/** SA4E-338 S1 (D-SEC-02): audit trail for retry mutations — audit failure never blocks the operation. */
+async function writeRetryAudit(
+  logger: Logger, actor: string, username: string, projectScope: string, resetCount: number, limit: number,
+): Promise<void> {
+  try {
+    await recordAudit(actor, username, 'enrichment_retry', 'enrichment', projectScope, JSON.stringify({ resetCount, limit }));
+  } catch (err) {
+    logger.warn({ err, actor, projectScope }, '[EnrichmentStatus] audit write failed');
+  }
 }
 
 /** Extract TaskWorker from registry via memory module (same pattern as admin routes). */

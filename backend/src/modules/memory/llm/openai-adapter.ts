@@ -3,6 +3,7 @@
  */
 
 import type { LLMAdapter, LLMConfig, LLMMessage, LLMResponse } from './types.js';
+import { buildProviderHttpError } from './error-classifier.js';
 
 export class OpenAIAdapter implements LLMAdapter {
   async complete(messages: LLMMessage[], config: LLMConfig): Promise<LLMResponse> {
@@ -19,7 +20,8 @@ export class OpenAIAdapter implements LLMAdapter {
     if (config.apiKey) headers['Authorization'] = `Bearer ${config.apiKey}`;
 
     const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error(`OpenAI error: ${res.status} ${await res.text()}`);
+    // SA4E-338 S3 (D-SEC-07): redaction at construct — never throw the raw provider body.
+    if (!res.ok) throw buildProviderHttpError('OpenAI', res.status, await res.text());
     const data = await res.json() as any;
 
     const msg = data.choices?.[0]?.message;

@@ -63,3 +63,24 @@ export function sanitizeKbEntry(entry: Record<string, unknown>): Record<string, 
   }
   return clean;
 }
+
+/** Sentinel written in place of secret values in API responses, history and audit entries. */
+export const MASKED_VALUE = '***';
+
+/**
+ * SA4E-338 S4 (D-SEC-06): mask a secret value for any API / history / audit output.
+ * @returns `***` when a non-empty value is present, `''` when empty/absent.
+ */
+export function maskSecret(value: unknown): string {
+  if (value === undefined || value === null) return '';
+  const s = String(value);
+  return s.length > 0 ? MASKED_VALUE : '';
+}
+
+/**
+ * SA4E-338 S4 (D-SEC-06): config keys whose values are secrets — never returned,
+ * echoed or audited in plaintext.
+ */
+export function isSecretConfigKey(section: string, key: string): boolean {
+  return (section === 'llm' && key === 'apiKey') || (section === 'auth' && key === 'entraClientSecret');
+}

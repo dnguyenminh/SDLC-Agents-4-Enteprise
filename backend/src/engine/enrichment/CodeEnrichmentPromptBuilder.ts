@@ -185,10 +185,12 @@ FORMAT:
     // SA4E-106: rule body (steps/params/Java) extracted from rule.json
     if (ctx.bodyText) {
       const truncated = this.truncateToTokens(ctx.bodyText, MAX_BODY_TOKENS);
-      parts.push(`Rule Content:\n${truncated}`);
+      // S5: Wrap rule body in UNTRUSTED delimiters to prevent prompt injection
+      parts.push(`Rule Content:\n--- BEGIN UNTRUSTED RULE CONTENT ---\n${truncated}\n--- END UNTRUSTED RULE CONTENT ---`);
     }
     if (ctx.existingPseudoCode) {
-      parts.push(`Existing Pseudo Code:\n${ctx.existingPseudoCode}`);
+      // S5: Wrap existing pseudo code in UNTRUSTED delimiters to prevent re-injection
+      parts.push(`Existing Pseudo Code:\n--- BEGIN UNTRUSTED PREVIOUS OUTPUT ---\n${ctx.existingPseudoCode}\n--- END UNTRUSTED PREVIOUS OUTPUT ---`);
     }
     return parts.join('\n');
   }

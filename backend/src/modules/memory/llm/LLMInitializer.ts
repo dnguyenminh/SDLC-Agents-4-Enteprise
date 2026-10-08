@@ -28,6 +28,27 @@ async function buildLLMConfig() {
   const model = process.env.LLM_MODEL || '';
   const baseUrl = process.env.LLM_BASE_URL || 'http://localhost:1234/v1';
 
+  /** Validate HTTPS enforcement (SEC-338-03, D-SEC-05). */
+  function validateBaseUrl(url: string, context: string): void {
+    const parsed = new URL(url);
+    const isLocalhost = parsed.hostname === 'localhost' || 
+                        parsed.hostname === '127.0.0.1' || 
+                        parsed.hostname === '::1';
+    const allowInsecure = process.env.LLM_ALLOW_INSECURE_HTTP === '1';
+    
+    if (parsed.protocol !== 'https:' && !isLocalhost && !allowInsecure) {
+      const msg = `LLM baseUrl must use HTTPS (got ${parsed.protocol}//${parsed.host}). ` +
+        `Use LLM_ALLOW_INSECURE_HTTP=1 to override for local development.`;
+      throw new Error(`[${context}] ${msg}`);
+    }
+    if (parsed.protocol !== 'https:' && (isLocalhost || allowInsecure)) {
+      console.warn(`[LLMInitializer] Insecure HTTP allowed for ${parsed.host} (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)`);
+    }
+  }
+
+  // Validate baseUrl early (fail-fast at boot)
+  validateBaseUrl(baseUrl, 'boot');
+
   const envConfig = {
     provider: (provider || 'lmstudio') as any,
     model,

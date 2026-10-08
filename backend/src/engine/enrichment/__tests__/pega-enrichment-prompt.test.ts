@@ -54,7 +54,9 @@ describe('CodeEnrichmentPromptBuilder PEGA_SUMMARY (SA4E-106)', () => {
     const messages = builder.build('PEGA_SUMMARY', context({ bodyText: bigBody }));
     const user = messages.find(m => m.role === 'user')!;
     // MAX_BODY_TOKENS = 4000 words → 6000 words should be truncated with ellipsis
-    expect(user.content.endsWith('...')).toBe(true);
+    // The content is wrapped in UNTRUSTED delimiters, so check for truncation inside delimiters
+    expect(user.content).toContain('...');
+    expect(user.content).toContain('--- END UNTRUSTED RULE CONTENT ---');
   });
 
   it('system prompt requests summary, pseudo_code and tags', () => {

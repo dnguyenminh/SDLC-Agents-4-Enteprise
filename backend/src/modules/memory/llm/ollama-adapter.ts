@@ -4,6 +4,7 @@
  */
 
 import type { LLMAdapter, LLMConfig, LLMMessage, LLMResponse } from './types.js';
+import { buildProviderHttpError } from './error-classifier.js';
 
 export class OllamaAdapter implements LLMAdapter {
   async complete(messages: LLMMessage[], config: LLMConfig): Promise<LLMResponse> {
@@ -37,7 +38,8 @@ export class OllamaAdapter implements LLMAdapter {
       body: JSON.stringify(body),
     });
 
-    if (!res.ok) throw new Error(`Ollama error: ${res.status} ${await res.text()}`);
+    // SA4E-338 S3 (D-SEC-07): redaction at construct — never throw the raw provider body.
+    if (!res.ok) throw buildProviderHttpError('Ollama', res.status, await res.text());
     const data = await res.json() as any;
 
     // qwen3 puts response in "thinking" when content is empty

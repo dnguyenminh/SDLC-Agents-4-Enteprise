@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-338 |
 | Title | [pega][enrichment] AST digest thay text dump — fix vượt LLM context window cho Pega rule enrichment |
 | Author | SA Agent |
-| Version | 2.0 |
-| Date | 2026-10-05 |
+| Version | 2.1 |
+| Date | 2026-10-07 |
 | Status | Draft |
 | Related BRD | BRD-v2-SA4E-338.docx |
 | Related FSD | FSD-v1.1-SA4E-338.docx |
@@ -36,6 +36,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-05 | SA Agent | Initiate document — generated from BRD v2.0 + FSD v1.1; verified against real source (2026-10-05 direct reads of `backend/src`); resolves OI-01…OI-09 |
 | 2.0 | 2026-10-05 | SA | Amend §7 per SECURITY-REVIEW C1 (SEC-338-01/03/07/12/15) |
+| 2.1 | 2026-10-07 | SA Agent | Wave 2a Task 2 (bounded) — reconcile enrichment retry endpoint mismatch: canonical = `POST /api/v1/enrichment/retry-failed` (siblings `reconcile-orphans`, `failures` unchanged) per actual code mount; inline note §7.1 + explicit paths §10 S1. No other design change (STC sync by QA). |
 
 ---
 
@@ -938,6 +939,8 @@ const NON_RETRYABLE_PREFIXES = ['budget_error:', 'llm_auth:'];   // ← NEW entr
 
 ### 7.1 Retry/Reconcile Authorization & Terminal-Error Protection (SEC-338-01 High, SEC-338-02)
 
+> **Reconciled 2026-10-06:** canonical endpoint = `POST /api/v1/enrichment/retry-failed` — verified in code (`HttpServer.ts:185` mounts the route group at `/api/v1`; `enrichment-status-routes.ts:72` defines `/enrichment/retry-failed`). Siblings stay canonical in the same file: `POST /api/v1/enrichment/reconcile-orphans` (`:94`), `GET /api/v1/enrichment/failures` (`:52`), `GET /api/v1/enrichment/status` (`:27`). The STC path `/api/admin/pega/enrichment-retry` = **phantom (0 code matches)** — QA syncs STC separately; the route group is NOT relocated (churn: the VS Code extension already calls `/api/v1/enrichment/retry-failed`, `extension/src/extension.ts:374`). S1 hardens these routes **in place**: route-level rate limit + `requirePermission(ADMIN, CONFIG_EDIT)` + JWT `pid` scope — per D-SEC-01 `/api/admin/*` reuse refers to the limiter *configuration*, not the path prefix.
+
 **Gap (verified against code):** OI-05/§6.2 only guards the *automatic* retry loop (`TaskWorker.handleTaskError`). The pre-existing `POST /api/v1/enrichment/retry-failed` (`enrichment-status-routes.ts:72-91`) mounts just `jwtAuth` (no `requirePermission`, no `rateLimiter`) and calls `retryAllFailed()` (`PendingTaskRepository.ts:249-255`), which resets **every** `FAILED` row — any project, any error kind. Effect: terminal `budget_error:`/`llm_auth:` tasks are re-queued on demand (LLM cost storm / 401 storm — exactly what OI-05 exists to prevent) and other tenants' queues are mutated cross-project.
 
 > Unchanged from v1.0: task processing runs under the existing service identity (no new service accounts), and the re-enrichment scripts (`backend/scripts/reenrich-pega*.ts`) remain local-operator-only. The "no new endpoints → no new RBAC surface" statement stays true for *new* SA4E-338 endpoints — it never covered the pre-existing retry/status routes amended here.
@@ -1195,7 +1198,7 @@ Code rollback = revert commit; no schema down-migration strictly needed (orphan 
 | 6 | **C** | `BudgetGuard` + proactive path + `enrichment_meta` persist | NEW `enrichment/budget-guard.ts`; EDIT `CodeEnrichmentHandler.ts` (orchestration §4.9, `storeResults:309-313`), `token-budget-manager.ts` (OI-03), `graph-schema-ddl.ts` + `pg-schema-ensure.ts` (OI-02) | A3, D | UC-1/UC-3/UC-6, BR-01/02/07/09/10/12/15 |
 | 7 | **E** | Grammar outline fallback (Plan E) | NEW in `AstDigestBuilder.ts` (uses existing `grammar-registry.ts` java/jsp); `PegaContentExtractor` caps reused | B | UC-2, EF-2.2, OI-07 |
 | 8 | **F** | `chunkedReduce<T>` shared + analyzer refactor + env/docs | NEW `llm/chunked-reduce.ts`; EDIT `analyzer.ts:249-279` (delegate, behavior-preserving); `reduction-pipeline.ts` uses it | D | OI-04, UC-4 |
-| 9 | **S1** | Harden retry/status endpoints: `jwtAuth + rateLimiter + requirePermission(ADMIN, CONFIG_EDIT)`; project scope from JWT `pid` (ignore `X-Project-Id`); `retryAllFailed({projectScope, limit:500})` excludes `budget_error:`/`llm_auth:` (SQL `NOT LIKE`); audit log `{actor, projectScope, resetCount, limit}` | EDIT `backend/src/server/routes/enrichment-status-routes.ts`, EDIT `backend/src/modules/memory/task-queue/PendingTaskRepository.ts` | D | §7.1 (SEC-338-01/02), OI-05; TC-SEC-01a…e |
+| 9 | **S1** | Harden retry/status endpoints — **canonical paths (reconciled 2026-10-06): `POST /api/v1/enrichment/retry-failed`, `POST /api/v1/enrichment/reconcile-orphans`, `GET /api/v1/enrichment/failures`** — harden **in place** (no path move): `jwtAuth + rateLimiter + requirePermission(ADMIN, CONFIG_EDIT)`; project scope from JWT `pid` (ignore `X-Project-Id`); `retryAllFailed({projectScope, limit:500})` excludes `budget_error:`/`llm_auth:` (SQL `NOT LIKE`); audit log `{actor, projectScope, resetCount, limit}` | EDIT `backend/src/server/routes/enrichment-status-routes.ts`, EDIT `backend/src/modules/memory/task-queue/PendingTaskRepository.ts` | D | §7.1 (SEC-338-01/02), OI-05; TC-SEC-01a…e |
 | 10 | **S2** | HTTPS enforcement at `LLMInitializer.buildLLMConfig()`: reject non-https unless localhost carve-out or `LLM_ALLOW_INSECURE_HTTP=1`; fail-fast boot, 400 on config save, warn while flag active | EDIT `backend/src/modules/memory/llm/LLMInitializer.ts` | A1 | §7.2 (SEC-338-03), §9.1; TC-SEC-03a…d |
 | 11 | **S3** | Redaction at construct: `buildProviderHttpError()` (secret scrub + 200-char cap); `providerBody` classification-only (never logged/persisted/returned); no `apiKey`/full `modelKey`/credential-bearing `baseUrl` in logs | EDIT `ollama-adapter.ts`, `openai-adapter.ts`, EDIT `llm/error-classifier.ts` | A1 | §7.4 (SEC-338-07), §6.4; TC-SEC-07a…d |
 | 12 | **S4** | Mask DB apiKey: `maskSecret()` (`***`) in `GET /api/admin/config`, config history and audit writer (no plaintext `old_value`/`new_value` for `llm.apiKey`); `Cache-Control: no-store` on `/api/admin/config*` | EDIT `backend/src/server/routes/admin/config.ts`, EDIT `backend/src/admin/db/config.ts` | — | §7.3 (SEC-338-12); TC-SEC-12a…c |

@@ -4,6 +4,7 @@
  */
 
 import { getDbAdapter } from './core.js';
+import { maskSecret, isSecretConfigKey } from '../sanitize.js';
 
 export interface ConfigChange {
   id: number;
@@ -16,14 +17,15 @@ export interface ConfigChange {
   requiresRestart: boolean;
 }
 
-/** Map raw DB row to typed ConfigChange. */
+/** Map raw DB row to typed ConfigChange. SA4E-338 S4 (D-SEC-06): secret rows are masked on read. */
 function rowToConfigChange(r: any): ConfigChange {
+  const secret = isSecretConfigKey(r.section, r.key);
   return {
     id: r.id,
     section: r.section,
     key: r.key,
-    oldValue: r.old_value,
-    newValue: r.new_value,
+    oldValue: secret ? maskSecret(r.old_value) : r.old_value,
+    newValue: secret ? maskSecret(r.new_value) : r.new_value,
     changedBy: r.changed_by,
     changedAt: r.changed_at,
     requiresRestart: !!r.requires_restart,

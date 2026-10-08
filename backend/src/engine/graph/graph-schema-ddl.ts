@@ -29,6 +29,7 @@ const ENRICHMENT_COLUMNS = [
   { name: 'llm_tags', type: 'TEXT' },
   { name: 'enrichment_status', type: 'TEXT' },
   { name: 'enriched_at', type: 'TEXT' },
+  { name: 'enrichment_meta', type: 'TEXT' },
 ] as const;
 
 /** Build cross-engine DDL for the relationships table. */
