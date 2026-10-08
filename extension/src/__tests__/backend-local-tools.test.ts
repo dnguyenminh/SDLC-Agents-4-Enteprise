@@ -109,10 +109,26 @@ describe('Backend Local Tools (E2E Tests)', () => {
       fs.unlinkSync(absolutePath);
     });
 
-    it('TC-07: Should reject path outside workspace - skipped in unit test', async () => {
-      // Safety check requires vscode workspace mock which is integration-level.
-      // Covered by QA verification and manual testing.
-      expect(true).toBe(true);
+    it('TC-07: Should reject path outside workspace', async () => {
+      // Safety check (backend-local-tools.ts handleStreamWriteFile): absolute
+      // paths resolving outside the workspace root must be refused — the
+      // vscode workspace mock above sets the root to process.cwd().
+      const outsidePath = path.resolve(process.cwd(), '..', 'sa4e-tc07-outside-workspace.txt');
+      try {
+        const result = await executeLocalTool('stream_write_file', {
+          file_path: outsidePath,
+          content: 'Must not be written',
+          mode: 'write'
+        });
+
+        expect(result.isError).toBe(true);
+        expect(result.content[0].text).toContain('Path rejected');
+        expect(result.content[0].text).toContain('is outside workspace');
+        expect(fs.existsSync(outsidePath)).toBe(false);
+      } finally {
+        // Defensive cleanup so a regression never pollutes the parent dir.
+        if (fs.existsSync(outsidePath)) fs.unlinkSync(outsidePath);
+      }
     });
   });
 

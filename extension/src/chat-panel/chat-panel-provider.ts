@@ -12,6 +12,7 @@ import { createLlmProvider } from "../mcp/providers";
 import { MessageHandler } from "./message-handler";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage } from "./message-protocol";
 import { ContextUsageTracker } from "./context-usage-tracker";
+import { SessionCompactor, CompactableSession, normalizeUsageToFraction, SessionMonitor } from "../pi-agent/session-compactor";
 import { ChatStatusManager } from "./ChatStatusManager";
 import { ChatModelManager } from "./ChatModelManager";
 import { ChatStateManager } from "./ChatStateManager";
@@ -24,6 +25,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   private messageHandler: MessageHandler | null = null;
   private messageBuffer: ChatExtToWebviewMessage[] = [];
   private contextUsageTracker: ContextUsageTracker = new ContextUsageTracker();
+  private sessionCompactor: SessionCompactor = new SessionCompactor();
   private steeringCounted = false;
   private toolDefinitionsCounted = false;
 
@@ -212,7 +214,17 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       }
 
       // Send tab:contextUpdate with breakdown
-      const payload = this.contextUsageTracker.getUsagePayload(tabId);
+      let payload = this.contextUsageTracker.getUsagePayload(tabId);
+      const usageFraction = normalizeUsageToFraction(payload.total.percentage);
+
+      // SA4E-339: Auto-trigger compaction when context usage reaches threshold
+      if (SessionMonitor.shouldCompact(usageFraction) === 'compact' && messages.length > 2) {
+        debugLog(`[ChatPanel] Triggering auto-compaction: usageFraction=${usageFraction}, messages=${messages.length}`);
+        this.applyCompactionAndRecount(tabId, payload.maxTokens, usageFraction, messages);
+        // Refetch payload after recount (TDD F-1)
+        payload = this.contextUsageTracker.getUsagePayload(tabId);
+      }
+
       debugLog(`[ChatPanel] context payload: total=${payload.total.tokens}, conv=${payload.conversation.tokens}, mcp=${payload.mcpTools.tokens}, steer=${payload.steering.tokens}`);
       this.sendToWebview({
         type: "tab:contextUpdate",
@@ -230,6 +242,34 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     } catch (err) {
       debugLog(`[ChatPanel] updateContextUsageAfterTurn error (non-fatal): ${(err as Error).message}`);
     }
+  }
+
+  private applyCompactionAndRecount(tabId: string, maxTokens: number, usageFraction: number, messages: any[]): void {
+    const session = this.buildCompactableSession(maxTokens, usageFraction, messages);
+    const compResult = this.sessionCompactor.compact(session);
+    if (compResult.action === "compact" && compResult.session.messages.length > 0) {
+      if (typeof (this.engine as any).setChatHistory === "function") {
+        (this.engine as any).setChatHistory(compResult.session.messages);
+      }
+      this.contextUsageTracker.updateFromMessages(
+        tabId,
+        compResult.session.messages.map((m: any) => ({ content: m.content || "" }))
+      );
+      debugLog(`[ChatPanel] Auto-compaction complete: tokensSaved=${compResult.tokensSaved}`);
+    }
+  }
+
+  private buildCompactableSession(maxTokens: number, usageFraction: number, messages: any[]): CompactableSession {
+    return {
+      modelId: "default",
+      contextWindow: maxTokens,
+      usage: usageFraction,
+      messages: messages.map((m: any) => ({
+        role: m.role || "user",
+        content: typeof m.content === "string" ? m.content : JSON.stringify(m.content),
+        toolName: m.toolName,
+      })),
+    };
   }
 
   /**
