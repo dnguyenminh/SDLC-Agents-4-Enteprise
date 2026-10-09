@@ -42,7 +42,8 @@ export class PegaCodeIntelDiscovery {
 
   /**
    * Resolve application name/version for discovery.
-   * Priority: pega-project.json -> kiroSdlc config -> sane defaults.
+   * Priority: pega-project.json -> sdlcAgents config. Fails loud (SA4E-349)
+   * when neither source resolves — never falls back to a hardcoded app.
    */
   private resolveAppInfo(root: string): { appName: string; appVersion: string } {
     const candidates = [
@@ -51,21 +52,21 @@ export class PegaCodeIntelDiscovery {
     ];
     for (const p of candidates) {
       try {
-        if (fs.existsSync(p)) {
-          const json = JSON.parse(fs.readFileSync(p, "utf-8")) as {
-            appName?: string; version?: string; appVersion?: string;
-          };
-          const appName = json.appName || (json as any).applicationName;
-          const appVersion = json.version || json.appVersion;
-          if (appName && appVersion) return { appName, appVersion };
-        }
+        if (!fs.existsSync(p)) { continue; }
+        const json = JSON.parse(fs.readFileSync(p, "utf-8")) as Record<string, string>;
+        const appName = json.appName || json.applicationName;
+        const appVersion = json.version || json.appVersion || json.applicationVersion;
+        if (appName && appVersion) { return { appName, appVersion }; }
       } catch { /* ignore malformed */ }
     }
     const config = vscode.workspace.getConfiguration("sdlcAgents");
     const appName = config.get<string>("pegaAppName", "").trim();
     const appVersion = config.get<string>("pegaAppVersion", "").trim();
-    if (appName && appVersion) return { appName, appVersion };
-    return { appName: "HRAppsV2", appVersion: "01.01" };
+    if (appName && appVersion) { return { appName, appVersion }; }
+    throw new Error(
+      "Cannot resolve Pega application for discovery: no valid appName/appVersion in " +
+      "pega-project.json or sdlcAgents.pegaAppName/pegaAppVersion. Run 'Fetch Pega Context' first."
+    );
   }
 
   /**

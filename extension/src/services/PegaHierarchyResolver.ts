@@ -56,12 +56,18 @@ export async function resolvePegaHierarchy(
     client, appName, appVersion, workspaceRoot, log, seeds,
   );
 
+  if (!appName) {
+    throw new Error(
+      `Cannot resolve Pega Application for operator "${operatorId}" ` +
+      `(accessGroup="${accessGroup || "<empty>"}"). Verify credentials/permissions for the CodeIntelligence service.`
+    );
+  }
   return {
     seeds: Array.from(seeds),
     operatorId,
     accessGroup,
-    appName: appName || "PegaApp",
-    appVersion: appVersion || "",
+    appName,
+    appVersion,
     ruleSets: appResult.mergedRuleSets,
     dependedApps: appResult.dependedAppNames,
     accessGroups: appResult.accessGroups,
@@ -81,9 +87,19 @@ async function resolveOperator(
     log(`[PegaHierarchy] Step 1 OK: Access Group = "${ag}"`);
     return { insKey, accessGroup: ag };
   } catch (err: any) {
+    if (isAuthError(err)) {                                   // fail loud for auth errors
+      log(`[PegaHierarchy] Step 1 FAIL (auth): ${err.message}`);
+      throw new Error(`Pega authentication failed while resolving operator "${opId}": ${err.message}`);
+    }
     log(`[PegaHierarchy] Step 1 WARN: Could not fetch Operator: ${err.message}`);
     return { insKey, accessGroup: "" };
   }
+}
+
+/** True when a Pega error represents an authentication/authorization failure. */
+function isAuthError(err: { message?: string }): boolean {
+  const m = (err?.message || "").toLowerCase();
+  return m.includes("401") || m.includes("403") || m.includes("unauthorized") || m.includes("forbidden");
 }
 
 /** Step 2: Resolve access group and extract app name/version */
