@@ -82,9 +82,14 @@ export function registerCommands(context: vscode.ExtensionContext, deps: Command
       try {
         const client = new (await import("../services/PegaHttpClient")).PegaHttpClient(context.secrets);
         const res = await client.fetchAndSavePegaContext(root);
-        const { setProjectId, deriveProjectId } = await import("../extension");
-        const pid = await deriveProjectId(root);
-        setProjectId(pid);
+        // Always use the project id the extension ALREADY HOLDS — never re-derive
+        // from an arbitrary root. `root` may be a temp folder created by the LLM;
+        // re-deriving there mints a random uuid-hash id and overwrites the held
+        // id, so every later ingest (which correctly uses getProjectId()) posts
+        // under a phantom project. PegaContextClient.persistProjectId already
+        // persisted + set the Pega app id when the fetch succeeded.
+        const { getProjectId } = await import("../extension");
+        const pid = getProjectId();
         vscode.window.showInformationMessage(`✅ Fetched Pega Context: App "${res.applicationName}" (${res.caseTypesCount} CaseTypes) → projectId=${pid}`);
       } catch (err: any) {
         vscode.window.showErrorMessage(`Failed to fetch Pega Context: ${err.message}`);

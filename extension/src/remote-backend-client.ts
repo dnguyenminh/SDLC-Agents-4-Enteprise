@@ -10,6 +10,7 @@ import { AuthManager } from "./auth/AuthManager";
 import { getVisibleLocalToolDefinitions } from "./backend-local-tools";
 import { Base64ProxyService } from "./services/Base64ProxyService";
 import { WrapperServer } from "./services/WrapperServer";
+import { writeRuntimeSettings, clearRuntimeSettings } from "./utils/runtime-settings";
 import { httpGetJson, httpPostJson } from "./utils/http-client-utils";
 import { buildBackendAuthHeaders } from "./utils/backend-auth-headers";
 import { PegaMcpTools } from "./mcp/PegaMcpTools";
@@ -95,7 +96,11 @@ export class RemoteBackendClient implements vscode.Disposable {
   }
 
   async disconnect(): Promise<void> {
-    if (this.wrapperServer) { await this.wrapperServer.stop(); this.wrapperServer = null; }
+    if (this.wrapperServer) {
+      await this.wrapperServer.stop();
+      this.wrapperServer = null;
+      clearRuntimeSettings(this.workspaceFolder);
+    }
     this.setStatus("stopped");
   }
 
@@ -141,6 +146,7 @@ export class RemoteBackendClient implements vscode.Disposable {
       restCallTool: (name, args) => this.restCallTool(name, args),
     });
     await this.wrapperServer.start(port);
+    writeRuntimeSettings(this.workspaceFolder, { port: this.wrapperServer.listeningPort ?? port });
   }
 
   private async restGetTools(): Promise<any[]> {

@@ -2,7 +2,7 @@
   "mcpServers": {
     "code-intelligence": {
       "type": "httpStream",
-      "url": "http://127.0.0.1:9181/mcp",
+      "url": "http://127.0.0.1:9183/mcp",
       "autoApprove": [
         "mem_ingest",
         "execute_dynamic_tool",
@@ -53,34 +53,7 @@
       ],
       "transportType": "httpStream",
       "disabled": false,
-      "disabledTools": [],
-      "command": "npx",
-      "args": [
-        "tsx",
-        "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\index.ts"
-      ],
-      "cwd": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
-      "env": {
-        "CODE_INTEL_PORT": "9181",
-        "CODE_INTEL_WORKSPACE": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
-        "CODE_INTEL_VIEWER_PORT": "3200",
-        "FORCE_RESTART": "15"
-      }
-    },
-    "atlassian": {
-      "url": "http://localhost:3062/mcp",
-      "type": "httpStream",
-      "transportType": "httpStream",
-      "disabled": false,
-      "autoApprove": [
-        "jira_get_issue",
-        "jira_search",
-        "jira_get_transitions",
-        "jira_get_all_projects",
-        "jira_get_agile_boards",
-        "confluence_search",
-        "confluence_get_page"
-      ]
+      "disabledTools": []
     }
   }
 }
