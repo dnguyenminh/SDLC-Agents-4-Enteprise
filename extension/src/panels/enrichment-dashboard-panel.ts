@@ -81,6 +81,18 @@ export function getEnrichmentPanel(): vscode.WebviewPanel | undefined {
   return currentPanel;
 }
 
+/**
+ * Whether the "Retry All" button may be shown. SA4E-338 rev B: the backend scopes
+ * retry to the X-Project-Id header, so retry only makes sense with a real project.
+ * Hidden when there are no failures OR when the dashboard is unscoped (projectId
+ * null/empty — rendered as "all"), matching the extension-side guard that blocks a
+ * retry without a resolved project id.
+ */
+function canRetry(data: DashboardData): boolean {
+  const pid = (data.projectId || '').trim();
+  return data.failedRules > 0 && pid.length > 0;
+}
+
 /** Build full HTML for the webview with embedded SVG chart + JS. */
 function buildHtml(data: DashboardData): string {
   return `<!DOCTYPE html>
@@ -177,7 +189,7 @@ function buildHtml(data: DashboardData): string {
     <div class="stat-card"><div class="stat-value" id="completed">${data.completedRules}</div><div class="stat-label">Completed</div></div>
     <div class="stat-card"><div class="stat-value" id="pending">${data.pendingRules}</div><div class="stat-label">Pending</div></div>
     <div class="stat-card"><div class="stat-value" id="processing">${data.processingRules}</div><div class="stat-label">Processing</div></div>
-    <div class="stat-card"><div class="stat-value" id="failed">${data.failedRules}</div><div class="stat-label">Failed</div><button id="retryBtn" class="retry-btn" style="display:${data.failedRules > 0 ? 'inline-block' : 'none'}">↻ Retry All</button></div>
+    <div class="stat-card"><div class="stat-value" id="failed">${data.failedRules}</div><div class="stat-label">Failed</div><button id="retryBtn" class="retry-btn" style="display:${canRetry(data) ? 'inline-block' : 'none'}">↻ Retry All</button></div>
     <div class="stat-card"><div class="stat-value" id="rate">0.0</div><div class="stat-label">items/sec</div></div>
     <div class="stat-card"><div class="stat-value" id="total">${data.totalRules}</div><div class="stat-label">Total</div></div>
   </div>
@@ -284,7 +296,12 @@ function update(d) {
   document.getElementById('pending').textContent = d.pendingRules;
   document.getElementById('processing').textContent = d.processingRules;
   document.getElementById('failed').textContent = d.failedRules;
-  document.getElementById('retryBtn').style.display = d.failedRules > 0 ? 'inline-block' : 'none';
+  // SA4E-338 rev B: retry needs a real project scope (X-Project-Id). Hide when
+  // unscoped ("all") so the user can't trigger a 403.
+  const dPid = (d.projectId || '').trim();
+  const canRetry = d.failedRules > 0 && dPid.length > 0;
+  document.getElementById('projectId').textContent = dPid || 'all';
+  document.getElementById('retryBtn').style.display = canRetry ? 'inline-block' : 'none';
   document.getElementById('total').textContent = d.totalRules;
   document.getElementById('rate').textContent = d.ratePerSec.toFixed(1);
   document.getElementById('eta').textContent = formatEta(d.etaSeconds);

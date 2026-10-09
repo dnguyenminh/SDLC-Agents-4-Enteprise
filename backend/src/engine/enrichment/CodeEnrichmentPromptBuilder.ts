@@ -7,8 +7,27 @@ import type { LLMMessage } from '../../modules/memory/llm/types.js';
 import type { EnrichmentStrategy, SymbolContext } from './types.js';
 import { VALID_TAG_CATEGORIES } from './types.js';
 
+/**
+ * Approx characters per token (~4) — matches TokenBudgetManager.estimateTokens.
+ * Word-count was unreliable for dense code/JSON (a single space-free field could be
+ * tens of thousands of tokens yet count as one "word"), which caused prompts to blow
+ * past the model context window (exceed_context_size_error).
+ */
+const CHARS_PER_TOKEN = 4;
+
 /** Maximum token estimate for body text sent to LLM. */
 const MAX_BODY_TOKENS = 4000;
+
+/**
+ * Hard cap on the TOTAL prompt (system + user) in tokens, as a last-resort guard
+ * against accumulation (body + existing pseudo code + schema + signature). Sized well
+ * under a typical model input window (e.g. 65536), leaving headroom for the model's
+ * completion (`maxTokens`). Override via LLM_ENRICH_PROMPT_TOKEN_CAP.
+ */
+const PROMPT_TOKEN_CAP = (() => {
+  const parsed = parseInt(process.env.LLM_ENRICH_PROMPT_TOKEN_CAP || '', 10);
+  return Number.isFinite(parsed) && parsed > 500 ? parsed : 24000;
+})();
 
 /**
  * Builds LLM prompts for code enrichment based on strategy and context.
@@ -22,6 +41,14 @@ export class CodeEnrichmentPromptBuilder {
    * @returns Array of LLM messages (system + user)
    */
   build(strategy: EnrichmentStrategy, context: SymbolContext): LLMMessage[] {
+    const messages = this.buildForStrategy(strategy, context);
+    // Final safety net: cap the TOTAL prompt so no symbol can overflow the model
+    // context window, regardless of how body/pseudo-code/schema accumulated.
+    return this.capTotalPrompt(messages);
+  }
+
+  /** Dispatch to the per-strategy builder (pre-cap). */
+  private buildForStrategy(strategy: EnrichmentStrategy, context: SymbolContext): LLMMessage[] {
     switch (strategy) {
       case 'CLASS_SUMMARY': return this.buildClassSummary(context);
       case 'FUNCTION_SUMMARY': return this.buildFunctionSummary(context);
@@ -29,6 +56,28 @@ export class CodeEnrichmentPromptBuilder {
       case 'PEGA_SUMMARY': return this.buildPegaSummary(context);
       case 'METADATA_SUMMARY': return this.buildMetadataSummary(context);
     }
+  }
+
+  /**
+   * Enforce PROMPT_TOKEN_CAP across system + user messages. The system prompt is
+   * fixed instructions and kept intact; only the user message (which carries the
+   * variable, untrusted content) is truncated to fit the remaining budget. Truncation
+   * is char-based so dense/space-free content is also cut.
+   */
+  private capTotalPrompt(messages: LLMMessage[]): LLMMessage[] {
+    const total = messages.reduce((sum, m) => sum + this.estimateTokens(m.content), 0);
+    if (total <= PROMPT_TOKEN_CAP) return messages;
+
+    const systemTokens = messages
+      .filter((m) => m.role === 'system')
+      .reduce((sum, m) => sum + this.estimateTokens(m.content), 0);
+    // Reserve the system budget; give the rest to the (single) user message.
+    const userBudget = Math.max(200, PROMPT_TOKEN_CAP - systemTokens);
+    return messages.map((m) =>
+      m.role === 'user'
+        ? { ...m, content: this.truncateToTokens(m.content, userBudget) }
+        : m,
+    );
   }
 
   private buildMetadataSummary(ctx: SymbolContext): LLMMessage[] {
@@ -182,6 +231,9 @@ FORMAT:
     if (ctx.pegaClass) parts.push(`Class: ${ctx.pegaClass}`);
     if (ctx.pegaRuleset) parts.push(`RuleSet: ${ctx.pegaRuleset}`);
     if (ctx.signature) parts.push(`Signature: ${ctx.signature}`);
+    // Schema context is already wrapped in delimiters by the handler; include it so the
+    // loaded/created schema actually reaches the LLM (previously assembled but dropped).
+    if (ctx.schemaContext) parts.push(ctx.schemaContext);
     // SA4E-106: rule body (steps/params/Java) extracted from rule.json
     if (ctx.bodyText) {
       const truncated = this.truncateToTokens(ctx.bodyText, MAX_BODY_TOKENS);
@@ -195,10 +247,22 @@ FORMAT:
     return parts.join('\n');
   }
 
-  /** Estimate token count by whitespace split, truncate to max tokens. */
+  /** Estimate token count (~4 chars/token), consistent with TokenBudgetManager. */
+  private estimateTokens(text: string): number {
+    return Math.ceil(text.length / CHARS_PER_TOKEN);
+  }
+
+  /**
+   * Truncate text to an estimated token budget. Char-based (not word-based): a single
+   * space-free blob (e.g. minified JSON or inline Java) is a few "words" but many
+   * tokens, so word-count let huge bodies through — the root cause of context overflow.
+   * @param text Content to bound.
+   * @param maxTokens Max estimated tokens to keep.
+   * @returns The text if it fits, else a char-truncated prefix with an ellipsis marker.
+   */
   private truncateToTokens(text: string, maxTokens: number): string {
-    const words = text.split(/\s+/);
-    if (words.length <= maxTokens) return text;
-    return words.slice(0, maxTokens).join(' ') + '...';
+    if (this.estimateTokens(text) <= maxTokens) return text;
+    const maxChars = Math.max(0, maxTokens * CHARS_PER_TOKEN);
+    return text.slice(0, maxChars) + '...';
   }
 }

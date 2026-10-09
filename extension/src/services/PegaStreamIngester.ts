@@ -192,6 +192,7 @@ export class PegaStreamIngester {
    * @param ruleJson - Full Pega rule JSON
    * @param checksum - Optional content checksum for dedup
    * @param version - Optional rule version
+   * @param appName - Optional Pega application name (from pega-project.json) for registry display
    * @returns Response with status, ruleId, and unresolvedDependencies
    */
   async ingestSingleRule(
@@ -199,10 +200,14 @@ export class PegaStreamIngester {
     ruleJson: Record<string, unknown>,
     checksum?: string,
     version?: string,
+    appName?: string,
   ): Promise<IngestSingleRuleResult> {
     const endpoint = `${this.backendUrl}/api/v1/pega/ingest-rule`;
 
-    const body = JSON.stringify({ projectId, ruleJson, checksum, version });
+    // SA4E-338 B1: forward the Pega application name (read by the caller from
+    // pega-project.json) so the backend registers the project under its real app
+    // name instead of a random rule's class.
+    const body = JSON.stringify({ projectId, ruleJson, checksum, version, appName });
     const headers: Record<string, string> = { 'Content-Type': 'application/json', 'X-Project-Id': projectId };
     const token = this.authManager?.getTokenSync();
     if (token) { headers['Authorization'] = `Bearer ${token}`; }

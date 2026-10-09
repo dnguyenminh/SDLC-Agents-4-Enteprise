@@ -39,6 +39,14 @@ export interface PegaIngestRuleRequest {
   rulesetStack?: RulesetVersion[];
   checksum?: string;
   version?: string;
+  /**
+   * SA4E-338 B1: Pega application display name, read by the extension from the
+   * project's `pega-project.json` (`applicationName`). Used verbatim for
+   * project_registry.display_name so a project shows its real app name instead of a
+   * random rule's class. Optional for back-compat; falls back to rule `pyApplication`
+   * then projectId when absent.
+   */
+  appName?: string;
 }
 
 export interface PegaIngestRuleResponse {

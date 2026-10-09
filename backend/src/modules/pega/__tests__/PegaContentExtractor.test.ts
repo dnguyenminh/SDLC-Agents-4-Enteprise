@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { extractRuleContent } from '../PegaContentExtractor.js';
+import { extractRuleContent, extractRuleContentWithFlags } from '../PegaContentExtractor.js';
 import {
   MOCK_ACTIVITY_JSON,
   MOCK_DATA_TRANSFORM_JSON,
@@ -124,5 +124,42 @@ describe('PegaContentExtractor', () => {
     const out = extractRuleContent(MOCK_ACTIVITY_JSON);
     expect(out).toContain('LOGIC (Activity Steps):');
     expect(out).not.toContain('LOGIC (generic:');
+  });
+
+  it('SA4E-338 B2: drops an embedded base64 binary asset and flags it', () => {
+    // Simulate Data-Mobile-Application-Branding-Asset.pyAssetSource (a base64 ZIP).
+    const base64Zip = 'UEsDBAoAAAAAA' + 'A'.repeat(50000);
+    const { content, binaryStripped } = extractRuleContentWithFlags({
+      pxObjClass: 'Data-Mobile-Application-Branding-Asset',
+      pyClassName: '@baseclass',
+      pyRuleName: 'green',
+      pyAssetName: 'green.zip',
+      pyAssetSource: base64Zip,
+    });
+    expect(binaryStripped).toBe(true);
+    expect(content).not.toContain(base64Zip);
+    expect(content).toContain('[binary content omitted');
+    // Non-binary metadata is still indexed.
+    expect(content).toContain('pyAssetName: green.zip');
+    // Whole body stays small (no context overflow).
+    expect(content.length).toBeLessThan(5000);
+  });
+
+  it('SA4E-338 B2: truncates an unusually long but non-binary field', () => {
+    const longProse = 'the quick brown fox jumps over the lazy dog. '.repeat(500);
+    const { content, binaryStripped } = extractRuleContentWithFlags({
+      pxObjClass: 'Rule-Obj-Activity',
+      pyClassName: 'Work',
+      pyRuleName: 'A',
+      pyNote: longProse,
+    });
+    // Prose is not binary — kept but bounded, not flagged as binary.
+    expect(binaryStripped).toBe(false);
+    expect(content).toContain('…[truncated]');
+  });
+
+  it('SA4E-338 B2: ordinary short fields are not flagged as binary', () => {
+    const { binaryStripped } = extractRuleContentWithFlags(MOCK_ACTIVITY_JSON);
+    expect(binaryStripped).toBe(false);
   });
 });

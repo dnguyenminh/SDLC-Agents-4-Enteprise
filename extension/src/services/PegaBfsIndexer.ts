@@ -6,6 +6,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fs from "fs";
 import type { CrawlPlanItem } from "../models";
 import { computePegaChecksum } from "../code-intel/checksum/PegaRuleChecksumStrategy";
 import type { PegaHttpClient } from "./PegaHttpClient";
@@ -73,6 +74,24 @@ function readPipelineConfig(): PipelineTuning {
   return { fetchBatchSize, ingestConcurrency, channelCapacity };
 }
 
+/**
+ * SA4E-338 B1: Read the Pega application name from `<root>/pega-project.json`
+ * (`applicationName`) — the authoritative source the extension writes during
+ * "Fetch Pega Context". Returns undefined when the file is absent/unreadable, so
+ * the backend falls back to the rule's `pyApplication` then projectId.
+ * @param root - Workspace root of the Pega project.
+ */
+function readPegaAppName(root: string): string | undefined {
+  try {
+    const raw = fs.readFileSync(path.join(root, "pega-project.json"), "utf-8");
+    const json = JSON.parse(raw) as { applicationName?: unknown };
+    const name = typeof json.applicationName === "string" ? json.applicationName.trim() : "";
+    return name || undefined;
+  } catch {
+    return undefined; // missing/unreadable → backend fallback
+  }
+}
+
 /** Summary returned after BFS completes */
 export interface BfsIndexResult {
   totalIngested: number;
@@ -93,6 +112,12 @@ export class PegaBfsIndexer {
   private readonly seenRuleTypes = new Set<string>();
   /** Local file+checksum index written as rules are successfully ingested. */
   private localIndex?: PegaLocalRuleIndex;
+  /**
+   * SA4E-338 B1: Pega application name read once from `pega-project.json` at run
+   * start, forwarded with every rule ingest so the backend registers the project
+   * under its real app name (not a random rule's class).
+   */
+  private appName?: string;
 
   /**
    * @param resilient - When true, a per-rule 5xx does NOT abort the whole run.
@@ -129,6 +154,8 @@ export class PegaBfsIndexer {
     root: string,
   ): Promise<BfsIndexResult> {
     const initialCount = fetchQueue.length;
+    // SA4E-338 B1: resolve the app name from pega-project.json once per run.
+    this.appName = readPegaAppName(root);
     // Local skip source: records every rule that lands in the backend so the
     // next catalog run can skip it without touching the network.
     this.localIndex = new PegaLocalRuleIndex(root);
@@ -223,7 +250,7 @@ export class PegaBfsIndexer {
       const checksum = presetChecksum ?? this.computeChecksum(ruleJson);
       const version = (ruleJson.pyRuleSetVersion as string) || undefined;
 
-      const result = await this.ingester.ingestSingleRule(projectId, ruleJson, checksum, version);
+      const result = await this.ingester.ingestSingleRule(projectId, ruleJson, checksum, version, this.appName);
       const ingested = result.status === 'success' && result.ruleId !== undefined && result.ruleId !== -1;
       // Observability: ingestSingleRule is silent on success (to avoid per-rule log
       // spam across thousands of rules). Surface only backend-reported NON-success so

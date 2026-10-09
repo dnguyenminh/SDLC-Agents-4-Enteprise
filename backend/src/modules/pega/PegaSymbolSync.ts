@@ -10,7 +10,7 @@ import {
   resolveSymbolKind, buildVirtualPath, buildFqn, resolveRuleNameField,
   resolveClassNameField, resolveRuleSetName, resolveRuleSetVersion,
 } from './pega-mapping.js';
-import { extractRuleContent } from './PegaContentExtractor.js';
+import { extractRuleContentWithFlags } from './PegaContentExtractor.js';
 import { SchemaStorageService, type IDatabaseAdapter } from './schema/SchemaStorageService.js';
 import { TaskType, TaskStatus } from '../memory/task-queue/models.js';
 import pino from 'pino';
@@ -69,6 +69,7 @@ export async function syncRuleToSymbols(
   projectId: string,
   promptContext: string,
   checksum: string,
+  appName?: string,
 ): Promise<SymbolSyncResult | null> {
   const fields = extractRequiredFields(ruleJson);
   if (!fields) {
@@ -107,14 +108,31 @@ export async function syncRuleToSymbols(
 
   const fileId = await upsertVirtualFile(adapter, projectId, virtualPath, pyClassName, contentHash, ruleJsonStr.length);
   const symbolId = await upsertSymbol(adapter, projectId, fileId, pyRuleName, kind, fqn, pyClassName, docComment);
-  try { await new GraphRepository(adapter).registerProject(projectId, pyClassName, `pega://${pyClassName}`); } catch (err) { logger.warn({ err, projectId }, '[pega] project_registry register skipped (non-fatal)'); }
+  // Register the PROJECT (not the rule). Previously this wrote the current rule's
+  // pyClassName as display_name and `pega://<class>` as workspace_path — so a project's
+  // display name became whichever rule was processed LAST, and the path was a fake URI.
+  // Use the Pega application name (stable across all rules of the app) for display, and
+  // leave workspace_path empty (the backend has no real client path here) — matching the
+  // dedicated Pega crawler registration (pega-stream-helpers.ts / pega-api.ts).
+  try {
+    await new GraphRepository(adapter).registerProject(projectId, resolvePegaDisplayName(ruleJson, projectId, appName), '');
+  } catch (err) { logger.warn({ err, projectId }, '[pega] project_registry register skipped (non-fatal)'); }
   // SA4E-222: resolve learned schema paths (if any) and pass to extraction (no LLM at index time)
   const nestedLogicPaths = await resolveNestedLogicPaths(adapter, pxObjClass);
-  // SA4E-106: store extracted readable content (steps/params/Java) for LLM enrichment
-  await storeBodyEmbedding(adapter, projectId, symbolId, extractRuleContent(ruleJson, { nestedLogicPaths }));
-  await createEnrichmentTaskIfNeeded(
-    adapter, symbolId, pyRuleName, kind, virtualPath, projectId, pyClassName, resolveRuleSet(ruleJson),
-  );
+  // SA4E-106: store extracted readable content (steps/params/Java) for LLM enrichment.
+  // SA4E-338 B2: rules whose content is a binary/base64 asset (e.g.
+  // Data-Mobile-Application-Branding-Asset holding a ZIP) are still INDEXED (file +
+  // symbol + metadata body), but we DO NOT queue LLM enrichment — there is no logic to
+  // summarize and the raw blob overflowed the model context (exceed_context_size_error).
+  const extracted = extractRuleContentWithFlags(ruleJson, { nestedLogicPaths });
+  await storeBodyEmbedding(adapter, projectId, symbolId, extracted.content);
+  if (!extracted.binaryStripped) {
+    await createEnrichmentTaskIfNeeded(
+      adapter, symbolId, pyRuleName, kind, virtualPath, projectId, pyClassName, resolveRuleSet(ruleJson),
+    );
+  } else {
+    logger.info({ fqn, symbolId, kind }, 'Binary/asset rule indexed metadata-only — enrichment skipped');
+  }
 
   logger.debug({ fqn, symbolId, fileId, kind }, 'Rule synced to symbols');
   return { symbolId, fileId };
@@ -130,7 +148,8 @@ export async function refreshRuleSymbolBody(
   const fields = extractRequiredFields(ruleJson);
   if (!fields) return;
   const nestedLogicPaths = await resolveNestedLogicPaths(adapter, fields.pxObjClass);
-  await storeBodyEmbedding(adapter, projectId, symbolId, extractRuleContent(ruleJson, { nestedLogicPaths }));
+  const extracted = extractRuleContentWithFlags(ruleJson, { nestedLogicPaths });
+  await storeBodyEmbedding(adapter, projectId, symbolId, extracted.content);
 
   const kind = resolveSymbolKind(fields.pxObjClass);
   const virtualPath = buildVirtualPath(
@@ -150,10 +169,38 @@ export async function refreshRuleSymbolBody(
      llm_tags = NULL, enriched_at = NULL WHERE id = ? AND project_id = ?`,
     [symbolId, projectId],
   );
+  // SA4E-338 B2: binary/asset rules are re-indexed metadata-only — do not re-queue enrichment.
+  if (extracted.binaryStripped) {
+    logger.info({ symbolId, kind }, 'Binary/asset rule refreshed metadata-only — enrichment skipped');
+    return;
+  }
   await createEnrichmentTaskIfNeeded(
     adapter, symbolId, fields.pyRuleName, kind, virtualPath,
     projectId, fields.pyClassName, resolveRuleSet(ruleJson),
   );
+}
+
+/**
+ * Resolve a stable project display name for project_registry.
+ * Priority (SA4E-338 B1):
+ *   1. explicit `appName` — the extension reads it from the project's
+ *      `pega-project.json` (`applicationName`), the authoritative source.
+ *   2. rule `pyApplication` / `pyApplicationName` — best-effort when the client
+ *      did not send an app name (older extension).
+ *   3. projectId — last-resort label.
+ * This keeps the display name consistent across ALL rules of the app, instead of
+ * the previous behaviour where it became whichever rule's class was processed last.
+ * @param ruleJson - Raw Pega rule JSON.
+ * @param projectId - Tenant project id (fallback label).
+ * @param appName - Authoritative app name from pega-project.json (preferred).
+ * @returns Display name like `Pega: HRAppsV2`.
+ */
+function resolvePegaDisplayName(ruleJson: Record<string, unknown>, projectId: string, appName?: string): string {
+  const explicit = (appName ?? '').trim();
+  if (explicit) return `Pega: ${explicit}`;
+  const r = ruleJson as Record<string, unknown>;
+  const fromRule = String(r.pyApplication ?? r.pyApplicationName ?? '').trim();
+  return `Pega: ${fromRule || projectId}`;
 }
 
 /** Resolve "RuleSet Version" display string from rule JSON (both export casings). */

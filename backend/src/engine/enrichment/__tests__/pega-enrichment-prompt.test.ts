@@ -66,4 +66,25 @@ describe('CodeEnrichmentPromptBuilder PEGA_SUMMARY (SA4E-106)', () => {
     expect(system.content).toContain('pseudo_code');
     expect(system.content).toContain('tags');
   });
+
+  it('includes schema context in the user prompt when present (SA4E-338 B2)', () => {
+    const messages = builder.build('PEGA_SUMMARY', context({
+      schemaContext: '--- BEGIN SCHEMA CONTEXT ---\nRule Type: Activity\n--- END SCHEMA CONTEXT ---',
+    }));
+    const user = messages.find(m => m.role === 'user')!;
+    expect(user.content).toContain('--- BEGIN SCHEMA CONTEXT ---');
+    expect(user.content).toContain('Rule Type: Activity');
+  });
+
+  it('caps a dense, space-free body so the total prompt stays within the token cap (SA4E-338 B2)', () => {
+    // A single space-free blob: word-count estimated this as ~1 token (bug),
+    // char-based estimate correctly sees ~250k tokens → must be truncated.
+    const dense = 'x'.repeat(1_000_000);
+    const messages = builder.build('PEGA_SUMMARY', context({ bodyText: dense }));
+    const totalChars = messages.reduce((n, m) => n + m.content.length, 0);
+    // Char-based cap: PROMPT_TOKEN_CAP (24000) * 4 chars/token, plus small fixed overhead.
+    expect(totalChars).toBeLessThan(24000 * 4 + 2000);
+    const user = messages.find(m => m.role === 'user')!;
+    expect(user.content).toContain('...');
+  });
 });

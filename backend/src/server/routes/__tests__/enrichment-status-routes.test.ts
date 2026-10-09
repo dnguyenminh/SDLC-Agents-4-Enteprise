@@ -1,8 +1,8 @@
 /**
  * SA4E-157 — Unit/integration tests for enrichment-status-routes.
- * SA4E-338 S1 — hardened retry/reconcile/failures: JWT `pid` scope (X-Project-Id
- * header ignored, D-SEC-03), admin permission gate (D-SEC-01), rate limiting,
- * bounded/scoped retry + audit (D-SEC-02).
+ * SA4E-338 S1 — hardened retry/reconcile/failures: X-Project-Id scope (rev B —
+ * JWT supplies identity, header supplies scope), admin permission gate (D-SEC-01),
+ * rate limiting, bounded/scoped retry + audit (D-SEC-02).
  * Uses Hono's in-process app.request() against mocked TaskWorker/Repository.
  * Traces: TC-SEC-01a…e, STC UT (S1) + IT-09/11/12 specs.
  */
@@ -39,12 +39,18 @@ function makeJwt(payload: Record<string, unknown>): string {
   return `${header}.${body}.${sig}`;
 }
 
-/** Admin JWT bound to a project id. */
-function adminJwt(pid = 'proj-A'): string {
-  return makeJwt({ sub: 'admin-1', username: 'admin', pid });
+/** Admin JWT — identity only (SA4E-338 rev B: scope comes from X-Project-Id header). */
+function adminJwt(): string {
+  return makeJwt({ sub: 'admin-1', username: 'admin' });
 }
 
+/** Auth headers with a project scope (rev B default) plus any extras. */
 function authHeaders(jwt: string, extra: Record<string, string> = {}): Record<string, string> {
+  return { Authorization: `Bearer ${jwt}`, 'X-Project-Id': 'proj-A', ...extra };
+}
+
+/** Auth headers carrying only the Bearer token — no project scope header. */
+function authHeadersNoScope(jwt: string, extra: Record<string, string> = {}): Record<string, string> {
   return { Authorization: `Bearer ${jwt}`, ...extra };
 }
 
@@ -155,21 +161,21 @@ describe('createEnrichmentStatusRoutes', () => {
   });
 
   describe('GET /enrichment/failures — S1 hardening', () => {
-    it('scopes to the JWT pid and ignores a forged X-Project-Id header (TC-SEC-01c)', async () => {
+    it('scopes to the X-Project-Id header (rev B)', async () => {
       const res = await app.request('/enrichment/failures', {
         method: 'GET',
-        headers: authHeaders(adminJwt('proj-A'), { 'X-Project-Id': 'proj-B' }),
+        headers: authHeaders(adminJwt(), { 'X-Project-Id': 'proj-B' }),
       });
       expect(res.status).toBe(200);
       const body = await res.json();
-      expect(body.projectId).toBe('proj-A');
-      expect(repo.listFailedDetailed).toHaveBeenCalledWith(200, 'proj-A');
+      expect(body.projectId).toBe('proj-B');
+      expect(repo.listFailedDetailed).toHaveBeenCalledWith(200, 'proj-B');
     });
 
     it('clamps limit to [1,1000] with the default of 200', async () => {
       const res = await app.request('/enrichment/failures?limit=99999', {
         method: 'GET',
-        headers: authHeaders(adminJwt('proj-A')),
+        headers: authHeaders(adminJwt()),
       });
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -187,19 +193,30 @@ describe('createEnrichmentStatusRoutes', () => {
       mockGetUserPermissions.mockResolvedValue([]);
       const res = await app.request('/enrichment/failures', {
         method: 'GET',
-        headers: authHeaders(adminJwt('proj-A')),
+        headers: authHeaders(adminJwt()),
       });
       expect(res.status).toBe(403);
       expect(repo.listFailedDetailed).not.toHaveBeenCalled();
     });
 
-    it('returns 403 when the JWT carries no pid claim (D-SEC-03)', async () => {
+    it('returns 403 when no project scope is supplied (rev B)', async () => {
       const res = await app.request('/enrichment/failures', {
         method: 'GET',
-        headers: authHeaders(makeJwt({ sub: 'admin-1' })),
+        headers: authHeadersNoScope(makeJwt({ sub: 'admin-1' })),
       });
       expect(res.status).toBe(403);
       expect(repo.listFailedDetailed).not.toHaveBeenCalled();
+    });
+
+    it('falls back to a JWT pid claim when the header is absent (rev B back-compat)', async () => {
+      const res = await app.request('/enrichment/failures', {
+        method: 'GET',
+        headers: authHeadersNoScope(makeJwt({ sub: 'admin-1', username: 'admin', pid: 'proj-claim' })),
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.projectId).toBe('proj-claim');
+      expect(repo.listFailedDetailed).toHaveBeenCalledWith(200, 'proj-claim');
     });
 
     it('returns 503 when TaskWorker is missing (authorized caller)', async () => {
@@ -213,12 +230,12 @@ describe('createEnrichmentStatusRoutes', () => {
   });
 
   describe('POST /enrichment/retry-failed — S1 hardening', () => {
-    it('resets with JWT-pid scope, 500 limit + terminal exclusion info, writes audit', async () => {
+    it('resets with X-Project-Id scope, 500 limit + terminal exclusion info, writes audit', async () => {
       repo.reconcileOrphans.mockResolvedValue(2);
       repo.retryAllFailed.mockResolvedValue(4);
       const res = await app.request('/enrichment/retry-failed', {
         method: 'POST',
-        headers: authHeaders(adminJwt('proj-A')),
+        headers: authHeaders(adminJwt()),
       });
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -231,13 +248,13 @@ describe('createEnrichmentStatusRoutes', () => {
       );
     });
 
-    it('ignores a forged X-Project-Id header — JWT pid wins (TC-SEC-01c)', async () => {
+    it('scopes to the X-Project-Id header the client sends (rev B)', async () => {
       const res = await app.request('/enrichment/retry-failed', {
         method: 'POST',
-        headers: authHeaders(adminJwt('proj-A'), { 'X-Project-Id': 'proj-B' }),
+        headers: authHeaders(adminJwt(), { 'X-Project-Id': 'proj-B' }),
       });
       expect(res.status).toBe(200);
-      expect(repo.retryAllFailed).toHaveBeenCalledWith({ projectScope: 'proj-A', limit: 500 });
+      expect(repo.retryAllFailed).toHaveBeenCalledWith({ projectScope: 'proj-B', limit: 500 });
     });
 
     it('returns 401 without a JWT and mutates nothing (TC-SEC-01a)', async () => {
@@ -257,10 +274,10 @@ describe('createEnrichmentStatusRoutes', () => {
       expect(repo.retryAllFailed).not.toHaveBeenCalled();
     });
 
-    it('returns 403 when the JWT carries no pid claim (D-SEC-03)', async () => {
+    it('returns 403 when no project scope is supplied (rev B) and mutates nothing', async () => {
       const res = await app.request('/enrichment/retry-failed', {
         method: 'POST',
-        headers: authHeaders(makeJwt({ sub: 'admin-1' })),
+        headers: authHeadersNoScope(makeJwt({ sub: 'admin-1' })),
       });
       expect(res.status).toBe(403);
       expect(repo.retryAllFailed).not.toHaveBeenCalled();

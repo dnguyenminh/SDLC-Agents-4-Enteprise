@@ -79,6 +79,49 @@ describe('PegaSymbolSync', () => {
       expect(mockAdapter.runAsync).toHaveBeenCalled();
     });
 
+    it('registers the PROJECT by app name, not the last rule class (SA4E-338 B1)', async () => {
+      const rule = {
+        pxObjClass: 'Rule-Obj-Activity',
+        pyClassName: 'Work-HR',
+        pyRuleName: 'ApproveLeave',
+        pyApplication: 'HRAppsV2',
+      };
+      await syncRuleToSymbols(mockAdapter, rule, 'proj1', 'context', CHK);
+
+      const registryInsert = mockAdapter.runAsync.mock.calls.find(
+        (c: any[]) => typeof c[0] === 'string' && c[0].includes('project_registry'),
+      );
+      expect(registryInsert).toBeDefined();
+      const params = registryInsert![1] as unknown[];
+      // params: [projectId, display_name, workspace_path, created_by]
+      expect(params[1]).toBe('Pega: HRAppsV2');       // stable app name, not 'Work-HR'
+      expect(params[2]).toBe('');                      // no fake 'pega://Work-HR' URI
+    });
+
+    it('prefers the explicit appName (from pega-project.json) over rule pyApplication (SA4E-338 B1)', async () => {
+      const rule = {
+        pxObjClass: 'Rule-Obj-Activity',
+        pyClassName: 'Work-HR',
+        pyRuleName: 'ApproveLeave',
+        pyApplication: 'SomeRuleApp',
+      };
+      // 6th arg = appName resolved from pega-project.json
+      await syncRuleToSymbols(mockAdapter, rule, 'proj1', 'context', CHK, 'HRAppsV2');
+      const registryInsert = mockAdapter.runAsync.mock.calls.find(
+        (c: any[]) => typeof c[0] === 'string' && c[0].includes('project_registry'),
+      );
+      expect((registryInsert![1] as unknown[])[1]).toBe('Pega: HRAppsV2'); // explicit wins
+    });
+
+    it('falls back to projectId for display name when app field is absent (SA4E-338 B1)', async () => {
+      const rule = { pxObjClass: 'Rule-Obj-Activity', pyClassName: 'Work', pyRuleName: 'X' };
+      await syncRuleToSymbols(mockAdapter, rule, 'proj-xyz', 'context', CHK);
+      const registryInsert = mockAdapter.runAsync.mock.calls.find(
+        (c: any[]) => typeof c[0] === 'string' && c[0].includes('project_registry'),
+      );
+      expect((registryInsert![1] as unknown[])[1]).toBe('Pega: proj-xyz');
+    });
+
     it('should store extracted content (not raw JSON) in body_embeddings (SA4E-106)', async () => {
       const rule = {
         pxObjClass: 'Rule-Obj-Activity',

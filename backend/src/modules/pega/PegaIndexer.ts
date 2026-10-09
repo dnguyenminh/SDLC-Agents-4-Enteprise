@@ -96,7 +96,8 @@ export async function indexRule(
   try {
     result = await syncRuleToSymbols(
       // SA4E-241: pass the client checksum so content_hash == bulk-check value (INV-1).
-      memoryEngine.getAdapter(), req.ruleJson, req.projectId, promptCtx, req.checksum ?? '',
+      // SA4E-338 B1: pass the app name (from pega-project.json) for the registry display.
+      memoryEngine.getAdapter(), req.ruleJson, req.projectId, promptCtx, req.checksum ?? '', req.appName,
     );
   } catch (err) {
     // SA4E-241 (NT-4): a missing checksum is a hard, caller-facing failure — do NOT

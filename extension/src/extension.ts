@@ -367,14 +367,40 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
         openEnrichmentDashboard(context.extensionUri, enrichmentService.buildDashboardData(status));
       })
     );
-    // SA4E-160: Retry failed enrichment tasks command
+    // SA4E-160: Retry failed enrichment tasks command.
+    // SA4E-338 rev B: the backend admin-gates this route and scopes it to the
+    // X-Project-Id header. Guard client-side so the user gets a clear message
+    // instead of a raw 401/403: require a login token (→ CONFIG_EDIT check) and a
+    // resolved project id (no project = nothing to scope the retry to).
     context.subscriptions.push(
       vscode.commands.registerCommand('sa4e.retryFailedEnrichment', async () => {
         try {
+          const token = authManager?.getTokenSync() || '';
+          if (!token) {
+            vscode.window.showWarningMessage('Please sign in before retrying enrichment — this action requires an authenticated admin (CONFIG_EDIT).');
+            return;
+          }
+          const projectId = getProjectId();
+          if (!projectId) {
+            vscode.window.showWarningMessage('Retry All is unavailable without an active project. Open a workspace/project, then try again.');
+            return;
+          }
           const res = await fetch(`${backendUrl}/api/v1/enrichment/retry-failed`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authManager?.getTokenSync() || ''}` },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+              'X-Project-Id': projectId,
+            },
           });
+          if (res.status === 401) {
+            vscode.window.showErrorMessage('Retry failed: session expired. Please sign in again.');
+            return;
+          }
+          if (res.status === 403) {
+            vscode.window.showErrorMessage('Retry failed: your account lacks the required permission (CONFIG_EDIT).');
+            return;
+          }
           if (!res.ok) {
             vscode.window.showErrorMessage(`Retry failed: HTTP ${res.status}`);
             return;

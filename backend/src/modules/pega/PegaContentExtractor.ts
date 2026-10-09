@@ -27,8 +27,54 @@ const MAX_DUMP_ITEMS = 200;
 /** Max lines for the generic scalar fallback dump. */
 const MAX_DUMP_LINES = 250;
 
+/**
+ * Max characters kept per scalar field value in the dump. A single Pega data field
+ * can hold an embedded binary asset (e.g. a base64-encoded ZIP/image in
+ * Data-Mobile-Application-Branding-Asset.pyAssetSource) hundreds of KB long. Those
+ * blobs are not readable logic for the LLM and overflow the context window, so each
+ * field value is bounded. Logic blocks have their own item/line caps.
+ */
+const MAX_FIELD_VALUE_CHARS = 2000;
+
+/**
+ * A scalar value at/above this length is treated as a candidate "binary blob" and
+ * tested for base64 content. Below it, values are kept (possibly truncated) as-is.
+ */
+const BINARY_FIELD_MIN_CHARS = 1024;
+
 /** JSON-compatible object shape operated on (all values optional). */
 export type PegaRuleJson = Record<string, unknown>;
+
+/** Result of a content extraction that also reports binary stripping (SA4E-338 B2). */
+export interface ExtractResult {
+  /** Readable, bounded text for LLM enrichment. */
+  content: string;
+  /**
+   * True when at least one field value was dropped as binary/base64 blob. Callers
+   * (PegaSymbolSync) use this to index the rule metadata-only and skip LLM enrichment
+   * when there is no meaningful logic left to summarize.
+   */
+  binaryStripped: boolean;
+}
+
+/**
+ * Heuristic: does a long scalar string look like an embedded binary blob (base64)?
+ * Checks only sufficiently long values (perf) and requires a high ratio of base64
+ * characters, so ordinary long text (sentences, code) is NOT misclassified.
+ * @param value Candidate field value.
+ * @returns true when the value is long and overwhelmingly base64-like.
+ */
+export function looksLikeBinaryBlob(value: string): boolean {
+  if (value.length < BINARY_FIELD_MIN_CHARS) return false;
+  // Sample the head to avoid scanning hundreds of KB.
+  const sample = value.slice(0, 4096);
+  const base64ish = sample.replace(/[^A-Za-z0-9+/=\r\n]/g, '');
+  // >= 97% of sampled chars are in the base64 alphabet, and there is little whitespace
+  // → an encoded blob, not prose/code.
+  const ratio = base64ish.length / sample.length;
+  const whitespace = (sample.match(/\s/g)?.length ?? 0) / sample.length;
+  return ratio >= 0.97 && whitespace < 0.1;
+}
 
 /**
  * Extract readable content from a Pega rule JSON payload.
@@ -37,7 +83,20 @@ export type PegaRuleJson = Record<string, unknown>;
  * @returns Structured text covering identity, parameters, logic and Java code
  */
 export function extractRuleContent(ruleJson: PegaRuleJson, opts?: ExtractOptions): string {
+  return extractRuleContentWithFlags(ruleJson, opts).content;
+}
+
+/**
+ * Like {@link extractRuleContent}, but also reports whether binary/base64 field
+ * blobs were stripped (SA4E-338 B2). The caller decides whether the remaining
+ * content is worth enriching with the LLM.
+ * @param ruleJson - Raw Pega rule JSON.
+ * @param opts - Optional extraction options.
+ * @returns Readable content plus a `binaryStripped` flag.
+ */
+export function extractRuleContentWithFlags(ruleJson: PegaRuleJson, opts?: ExtractOptions): ExtractResult {
   const sections: string[] = [];
+  const flags = { binaryStripped: false };
 
   sections.push(buildHeader(ruleJson));
 
@@ -50,10 +109,10 @@ export function extractRuleContent(ruleJson: PegaRuleJson, opts?: ExtractOptions
   const java = buildJavaBlock(ruleJson);
   if (java) sections.push(java);
 
-  const fields = buildFieldDump(ruleJson);
+  const fields = buildFieldDump(ruleJson, flags);
   if (fields) sections.push(fields);
 
-  return sections.join('\n\n');
+  return { content: sections.join('\n\n'), binaryStripped: flags.binaryStripped };
 }
 
 /** Build the identity header: rule type, class, name, ruleset. */
@@ -199,8 +258,15 @@ function buildJavaBlock(ruleJson: PegaRuleJson): string | null {
   return out.length > 0 ? `JAVA:\n${out.join('\n\n')}` : null;
 }
 
-/** Scalar-only fallback dump; arrays/objects are covered by logic blocks. */
-function buildFieldDump(ruleJson: PegaRuleJson): string | null {
+/**
+ * Scalar-only fallback dump; arrays/objects are covered by logic blocks.
+ * Binary/base64 blobs are dropped (not readable logic; they overflow the LLM
+ * context), and every value is truncated to MAX_FIELD_VALUE_CHARS so a single huge
+ * field cannot blow the prompt budget. Dropped blobs set `flags.binaryStripped`.
+ * @param ruleJson - Raw Pega rule JSON.
+ * @param flags - Mutable sink; `binaryStripped` is set true when a blob is dropped.
+ */
+function buildFieldDump(ruleJson: PegaRuleJson, flags: { binaryStripped: boolean }): string | null {
   const lines: string[] = [];
   for (const [key, value] of Object.entries(ruleJson)) {
     if (lines.length >= MAX_DUMP_LINES) break;
@@ -209,7 +275,15 @@ function buildFieldDump(ruleJson: PegaRuleJson): string | null {
     if (Array.isArray(value) || typeof value === 'object') continue;
     const s = String(value).trim();
     if (!s) continue;
-    lines.push(`${key}: ${s}`);
+    // Drop embedded binary assets (e.g. base64 ZIP/image in branding-asset rules).
+    if (looksLikeBinaryBlob(s)) {
+      flags.binaryStripped = true;
+      lines.push(`${key}: [binary content omitted, ${s.length} chars]`);
+      continue;
+    }
+    // Bound each value so an unusually long (but non-binary) field cannot overflow.
+    const bounded = s.length > MAX_FIELD_VALUE_CHARS ? s.slice(0, MAX_FIELD_VALUE_CHARS) + '…[truncated]' : s;
+    lines.push(`${key}: ${bounded}`);
   }
   return lines.length > 0 ? `FIELDS:\n${lines.join('\n')}` : null;
 }

@@ -55,8 +55,9 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
    * default 200, max 1000) so the user can see exactly which rules/symbols failed
    * and why. Each item carries the resolved source name, the stored error string,
    * retry count, and completion timestamp.
-   * SA4E-338 S1 (D-SEC-01/03): rate-limited + admin-gated; the `X-Project-Id`
-   * header is ignored — scope comes from the verified JWT only.
+   * SA4E-338 S1 (D-SEC-01) + rev B: rate-limited + admin-gated; project scope comes
+   * from the `X-Project-Id` header (JWT supplies identity only — see
+   * enrichment-auth-guard.ts).
    */
   app.get('/enrichment/failures', rateLimiter, jwtAuth, async (c) => {
     try {
@@ -82,8 +83,8 @@ export function createEnrichmentStatusRoutes(registry: ModuleRegistry, logger: L
 
   /**
    * POST /api/v1/enrichment/retry-failed — reconcile orphans first, then reset FAILED
-   * tasks to pending. SA4E-338 S1 (D-SEC-01/02/03): admin-gated + rate-limited +
-   * JWT-pid-scoped; `retryAllFailed` excludes terminal `budget_error:`/`llm_auth:`
+   * tasks to pending. SA4E-338 S1 (D-SEC-01/02) + rev B: admin-gated + rate-limited +
+   * X-Project-Id-scoped; `retryAllFailed` excludes terminal `budget_error:`/`llm_auth:`
    * tasks server-side and is bounded to 500 rows per call (OI-05). Each mutation
    * writes an `enrichment_retry` audit entry.
    */
