@@ -68,25 +68,55 @@ describe('PostgresAdapter', () => {
     const adapter = makeAdapter();
     await adapter.connect();
     const res = await adapter.runAsync('INSERT INTO users (name, email) VALUES (?, ?)', ['a', 'e']);
-    expect(pgMocks.pool.query).toHaveBeenCalledWith(
-      'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id',
-      ['a', 'e'],
-    );
+    expect(pgMocks.pool.query).toHaveBeenCalledWith('INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id', ['a', 'e']);
     expect(res).toEqual({ changes: 1, lastInsertRowid: 7 });
   });
 
-  it('runAsync falls back without RETURNING when the table has no id column', async () => {
+  it('runAsync skips RETURNING when the table has no id column — no poisoned connection', async () => {
     const adapter = makeAdapter();
     await adapter.connect();
-    // First call (RETURNING id) fails
-    pgMocks.pool.query
-      .mockRejectedValueOnce(new Error('column "id" does not exist'));
-    // Fallback uses pool.connect() → client.query() with fresh connection
-    pgMocks.pool.connect.mockResolvedValueOnce(client);
-    client.query.mockResolvedValueOnce({ rows: [], rowCount: 1 });
+    pgMocks.pool.query.mockResolvedValue({ rows: [], rowCount: 1 });
     const res = await adapter.runAsync('INSERT INTO settings (key) VALUES (?)', ['k']);
-    expect(client.query).toHaveBeenCalledWith('INSERT INTO settings (key) VALUES ($1)', ['k']);
-    expect(client.release).toHaveBeenCalled();
+    const calls = pgMocks.pool.query.mock.calls.map((c) => c[0]);
+    expect(calls.some((sql) => String(sql).includes('information_schema.columns'))).toBe(true);
+    expect(calls).toContain('INSERT INTO settings (key) VALUES ($1)');
+    expect(calls.some((sql) => String(sql).includes('RETURNING'))).toBe(false);
+    expect(pgMocks.pool.connect).not.toHaveBeenCalled();
+    expect(res).toEqual({ changes: 1, lastInsertRowid: 0 });
+  });
+
+  it('runAsync inside a transaction skips RETURNING for id-less tables and still commits', async () => {
+    const adapter = makeAdapter();
+    await adapter.connect();
+    client.query.mockResolvedValue({ rows: [], rowCount: 1 });
+    const result = await adapter.transactionAsync(() => adapter.runAsync('INSERT INTO settings (key) VALUES (?)', ['k']));
+    expect(result).toEqual({ changes: 1, lastInsertRowid: 0 });
+    const clientSql = client.query.mock.calls.map((c) => c[0]);
+    expect(clientSql[0]).toBe('BEGIN');
+    expect(clientSql.some((sql) => String(sql).includes('information_schema.columns'))).toBe(true);
+    expect(clientSql.some((sql) => String(sql).includes('INSERT INTO settings (key) VALUES ($1)'))).toBe(true);
+    expect(clientSql).toContain('COMMIT');
+    expect(clientSql).not.toContain('ROLLBACK');
+  });
+
+  it('caches the id-column check per table', async () => {
+    const adapter = makeAdapter();
+    await adapter.connect();
+    pgMocks.pool.query.mockResolvedValue({ rows: [{ id: 5 }], rowCount: 1 });
+    await adapter.runAsync('INSERT INTO users (name) VALUES (?)', ['a']);
+    await adapter.runAsync('INSERT INTO users (name) VALUES (?)', ['b']);
+    const checkCalls = pgMocks.pool.query.mock.calls.filter((c) => String(c[0]).includes('information_schema.columns'));
+    expect(checkCalls).toHaveLength(1);
+  });
+
+  it('runAsync defaults to plain INSERT when the id-column check fails', async () => {
+    const adapter = makeAdapter();
+    await adapter.connect();
+    pgMocks.pool.query.mockRejectedValueOnce(new Error('permission denied'));
+    pgMocks.pool.query.mockResolvedValueOnce({ rows: [], rowCount: 1 });
+    const res = await adapter.runAsync('INSERT INTO settings (key) VALUES (?)', ['k']);
+    const calls = pgMocks.pool.query.mock.calls.map((c) => c[0]);
+    expect(calls.some((sql) => String(sql).includes('RETURNING'))).toBe(false);
     expect(res).toEqual({ changes: 1, lastInsertRowid: 0 });
   });
 
@@ -105,7 +135,6 @@ describe('PostgresAdapter', () => {
     pgMocks.pool.query.mockResolvedValue({ rows: [{ id: 1, name: 'a' }], rowCount: 1 });
     expect(await adapter.getAsync('SELECT * FROM users WHERE id = ?', [1])).toEqual({ id: 1, name: 'a' });
     expect(pgMocks.pool.query).toHaveBeenLastCalledWith('SELECT * FROM users WHERE id = $1', [1]);
-
     pgMocks.pool.query.mockResolvedValue({ rows: [{ id: 1 }, { id: 2 }], rowCount: 2 });
     expect(await adapter.allAsync('SELECT id FROM users')).toHaveLength(2);
   });
@@ -136,13 +165,8 @@ describe('PostgresAdapter', () => {
   it('transactionAsync rolls back when the fn throws', async () => {
     const adapter = makeAdapter();
     await adapter.connect();
-    await expect(
-      adapter.transactionAsync(async () => {
-        throw new Error('boom');
-      }),
-    ).rejects.toThrow('boom');
-    const clientSql = client.query.mock.calls.map((c) => c[0]);
-    expect(clientSql).toContain('ROLLBACK');
+    await expect(adapter.transactionAsync(async () => { throw new Error('boom'); })).rejects.toThrow('boom');
+    expect(client.query.mock.calls.map((c) => c[0])).toContain('ROLLBACK');
   });
 
   it('getTableNames and getRowCount query pg metadata', async () => {
@@ -153,6 +177,13 @@ describe('PostgresAdapter', () => {
       .mockResolvedValueOnce({ rows: [{ cnt: '42' }], rowCount: 1 });
     expect(await adapter.getTableNames()).toEqual(['users', 'files']);
     expect(await adapter.getRowCount('users')).toBe(42);
+  });
+
+  it('getRowCount rejects unsafe table identifiers', async () => {
+    const adapter = makeAdapter();
+    await adapter.connect();
+    await expect(adapter.getRowCount('users; DROP TABLE users')).rejects.toThrow('Unsafe table identifier');
+    expect(pgMocks.pool.query).not.toHaveBeenCalledWith(expect.stringContaining('DROP TABLE'));
   });
 
   it('sync stubs throw to force async usage', async () => {

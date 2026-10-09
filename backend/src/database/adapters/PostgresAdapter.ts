@@ -13,6 +13,7 @@ import type {
   ConnectionStatus,
   PreparedStatement,
 } from './DatabaseAdapter.js';
+import { parseInsertTarget, quoteIdentifier, translatePlaceholders } from './pg-sql-utils.js';
 
 export interface PostgresConfig {
   host: string;
@@ -31,6 +32,8 @@ export class PostgresAdapter implements DatabaseAdapter {
   private pool: any = null;
   private connected = false;
   private serverVersion = '';
+  /** Memoized per-table result of the information_schema `id` column check. */
+  private idColumnCache = new Map<string, boolean>();
 
   constructor(private readonly config: PostgresConfig) {}
 
@@ -88,53 +91,59 @@ export class PostgresAdapter implements DatabaseAdapter {
 
   // Async methods
   async runAsync(sql: string, params?: unknown[]): Promise<RunResult> {
-    const translated = this.translateParams(sql);
+    const translated = translatePlaceholders(sql);
     const queryFn = this.getQueryFn();
-    const inTransaction = !!txClientStorage.getStore();
-    // SA4E-104: If INSERT without RETURNING, add RETURNING id to get lastInsertRowid
     const isInsert = /^\s*INSERT/i.test(sql);
     const hasReturning = /RETURNING/i.test(sql);
-    if (isInsert && !hasReturning) {
-      const withReturning = translated + ' RETURNING id';
-      if (inTransaction) {
-        // Inside transaction: attempt RETURNING id — if table has no 'id' column,
-        // suppress that specific error and retry without RETURNING on same client.
-        // PostgreSQL aborts tx on error, BUT "column does not exist" is a planning error
-        // that does NOT actually abort the transaction in all PG versions.
-        // If it does abort: the error propagates → transactionAsync() ROLLBACK is correct.
-        const r = await queryFn(withReturning, params);
-        const insertedId = r.rows?.[0]?.id ?? 0;
-        return { changes: r.rowCount ?? 0, lastInsertRowid: insertedId };
-      }
-      // Outside transaction: attempt RETURNING id with dedicated client fallback.
-      // BUG FIX: pool.query() uses implicit transaction — if RETURNING id fails,
-      // the connection is "poisoned" (aborted tx). We MUST use a fresh client for fallback.
-      try {
-        const r = await queryFn(withReturning, params);
-        const insertedId = r.rows?.[0]?.id ?? 0;
-        return { changes: r.rowCount ?? 0, lastInsertRowid: insertedId };
-      } catch {
-        // Fallback: table may not have 'id' column — use dedicated client to avoid poisoned connection.
-        const client = await this.pool.connect();
-        try {
-          const r = await client.query(translated, params);
-          return { changes: r.rowCount ?? 0, lastInsertRowid: 0 };
-        } finally {
-          client.release();
-        }
-      }
+    // SA4E-104: append RETURNING id to get lastInsertRowid — but ONLY when the
+    // table actually has an `id` column. A failed RETURNING inside a transaction
+    // aborts it (25P02), so we never gamble: the memoized check decides upfront.
+    if (isInsert && !hasReturning && (await this.tableHasIdColumn(sql, queryFn))) {
+      const r = await queryFn(`${translated} RETURNING id`, params);
+      return { changes: r.rowCount ?? 0, lastInsertRowid: r.rows?.[0]?.id ?? 0 };
     }
+    // Id-less table / unparsable target / check failed → plain INSERT, which can
+    // never poison a transaction or a pooled connection.
     const r = await queryFn(translated, params);
     return { changes: r.rowCount ?? 0, lastInsertRowid: 0 };
   }
 
+  /**
+   * Memoized per-table check: does the target of this INSERT have an `id` column?
+   * Runs on the active query fn (tx client inside transactions) so tables created
+   * in the same transaction are visible. Check failure → false (plain INSERT is
+   * always safe); the cache costs one metadata query per table per lifetime.
+   */
+  private async tableHasIdColumn(
+    sql: string,
+    queryFn: (sql: string, params?: unknown[]) => Promise<any>,
+  ): Promise<boolean> {
+    const target = parseInsertTarget(sql);
+    if (!target) return false;
+    const cached = this.idColumnCache.get(target.key);
+    if (cached !== undefined) return cached;
+    try {
+      const r = await queryFn(
+        `SELECT 1 FROM information_schema.columns WHERE table_schema = $1 AND table_name = $2 AND column_name = 'id' LIMIT 1`,
+        [target.schema, target.table],
+      );
+      const exists = (r.rows?.length ?? 0) > 0;
+      this.idColumnCache.set(target.key, exists);
+      return exists;
+    } catch (err) {
+      console.warn('[PostgresAdapter] id-column lookup failed — defaulting to plain INSERT:', (err as Error).message);
+      this.idColumnCache.set(target.key, false);
+      return false;
+    }
+  }
+
   async getAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T | undefined> {
-    const r = await this.getQueryFn()(this.translateParams(sql), params);
+    const r = await this.getQueryFn()(translatePlaceholders(sql), params);
     return r.rows[0] as T | undefined;
   }
 
   async allAsync<T = unknown>(sql: string, params?: unknown[]): Promise<T[]> {
-    const r = await this.getQueryFn()(this.translateParams(sql), params);
+    const r = await this.getQueryFn()(translatePlaceholders(sql), params);
     return r.rows as T[];
   }
 
@@ -174,13 +183,8 @@ export class PostgresAdapter implements DatabaseAdapter {
   }
 
   async getRowCount(table: string): Promise<number> {
-    const r = await this.getQueryFn()(`SELECT COUNT(*) as cnt FROM "${table}"`);
+    const r = await this.getQueryFn()(`SELECT COUNT(*) as cnt FROM ${quoteIdentifier(table)}`);
     return parseInt(r.rows[0]?.cnt || '0', 10);
-  }
-
-  private translateParams(sql: string): string {
-    let idx = 0;
-    return sql.replace(/\?/g, () => `$${++idx}`);
   }
 }
 

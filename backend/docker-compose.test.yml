@@ -40,7 +40,13 @@ services:
       CODE_INTEL_MAX_BATCH_SIZE: "100"
     ports:
       - "48722:48721"
-    volumes: []
+    # Base compose keeps read_only: true — without a writable mount the test
+    # backend cannot write /app/.code-intel (database.json seeding fails fast
+    # and the container never boots). Named volume: first mount copies the
+    # image dir's sa4e ownership; teardown via `down -v` (project sa4e-test)
+    # wipes it — test data only, prod volumes stay untouched.
+    volumes:
+      - code_intel_test_data:/app/.code-intel
 
   # Vitest unit-test runner (target: test) — runs the full unit suite in-container.
   # Usage: docker compose -f docker-compose.yml -f docker-compose.test.yml run --rm vitest
@@ -68,3 +74,4 @@ services:
 
 volumes:
   postgres_test_data:
+  code_intel_test_data:

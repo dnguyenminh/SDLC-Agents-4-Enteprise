@@ -1,11 +1,13 @@
 /**
  * Knex.js configuration — supports SQLite (staging/dev) and PostgreSQL (production).
- * 
- * Dialect selection via DATABASE_ADAPTER env variable:
- *   - "sqlite"  → uses sql.js (pure JS, no native binding needed)
- *   - "pg"      → uses pg (node-postgres)
- *   - default   → sqlite for development, pg for production
- * 
+ *
+ * Dialect selection is driven by NODE_ENV only (this file does NOT read
+ * DATABASE_ADAPTER — that flag is consumed by the runtime bootstrap
+ * src/database/config/seedEngineFromEnv.ts to activate the postgres engine):
+ *   - development → SQLite file (.code-intel/index-staging.db default)
+ *   - staging     → SQLite file from CODE_INTEL_DB or explicit DB_PATH
+ *   - production  → PostgreSQL via DATABASE_URL
+ *
  * Environment mapping:
  *   - development → SQLite database file (or in-memory if DB_PATH ends with :memory:)
  *   - staging     → SQLite database file from CODE_INTEL_DB or explicit DB_PATH

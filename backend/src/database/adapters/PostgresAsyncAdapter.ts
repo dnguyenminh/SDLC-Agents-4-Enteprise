@@ -6,6 +6,7 @@
 
 import type { AsyncDatabaseAdapter } from './AsyncDatabaseAdapter.js';
 import type { DatabaseEngine, RunResult } from './DatabaseAdapter.js';
+import { translatePlaceholders } from './pg-sql-utils.js';
 
 export interface PostgresAsyncConfig {
   host: string;
@@ -85,9 +86,8 @@ export class PostgresAsyncAdapter implements AsyncDatabaseAdapter {
     }
   }
 
-  /** Convert ? placeholders to $1, $2, etc. for pg driver. */
+  /** Convert ? placeholders to $1, $2, etc. for pg driver — skips `?` in literals. */
   private translateParams(sql: string): string {
-    let idx = 0;
-    return sql.replace(/\?/g, () => `$${++idx}`);
+    return translatePlaceholders(sql);
   }
 }

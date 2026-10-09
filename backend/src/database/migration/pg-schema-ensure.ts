@@ -181,11 +181,20 @@ export async function ensurePostgresIndexSchema(adapter: DatabaseAdapter): Promi
   }
 }
 
-/** Execute SQL silently — log and continue on error. */
+/** PG SQLSTATE codes meaning "already exists / nothing to do" — safe to ignore. */
+const IDEMPOTENT_SQLSTATES = new Set(['42P07', '42710', '42701', '42P01']);
+
+/**
+ * Execute DDL: redundant statements (already exists) are ignored by SQLSTATE
+ * code; real errors (permission, syntax, …) are logged loudly, not swallowed.
+ */
 async function safeExec(adapter: DatabaseAdapter, sql: string): Promise<void> {
   try {
     await adapter.runAsync(sql, []);
-  } catch {
-    // Ignore — statement may be redundant (column/index already exists)
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code && IDEMPOTENT_SQLSTATES.has(code)) return;
+    logger.error({ err, sql: sql.trim().slice(0, 120) },
+      '[pg-schema-ensure] DDL failed — schema may be incomplete');
   }
 }
