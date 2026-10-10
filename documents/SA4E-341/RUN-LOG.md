@@ -118,6 +118,20 @@ Autonomy Level: L3 (Unattended) — branch main
 - Khác biệt then chốt vs VSCode: chromedriver PHẢI manual (service chỉ resolve qua cgmanifest VSCode — Kiro Chromium 152 vượt mọi VSCode release)
 - Follow-up wiring (thuộc epic): wdio.conf fork-support (E2E_CHROMEDRIVER_PATH env → inject binary), locator fallback risk (workbench 152 > service locators 1.123), Antigravity cũng có trên máy (chờ verify cùng quy trình)
 
+## SA4E-348 tune FINAL round (2026-10-10 tối)
+
+| Timestamp | Agent | Action | Output |
+|-----------|-------|--------|--------|
+| 2026-10-10T20:40Z | SM | Giả thuyết 1006: workspace trust dialog → window reload → socket chết (service KHÔNG có reload handling — verified bằng grep). Fix bundle (e4cd39d): security.workspace.trust.enabled=false + disable-dev-shm-usage + xvfb screen 1920x1080 (default 640x480 quá nhỏ) | ✅ pushed |
+| 2026-10-10T20:45Z | SM | Run 38053823485: command execute PASS ✓, execution 8-9s (cucumber timeout 60s hiệu lực) — NHƯNG 1006 vẫn sống → trust KHÔNG phải root cause duy nhất. Lỗi "5000ms" = downstream symptom (connection chết → page object waitforTimeout 5s timeout) | ⚠️ FINAL |
+| 2026-10-10T20:50Z | SM | **DỪNG theo cam kết "lần cuối"** — 1006 nằm ở wdio-vscode-service socket lifecycle/workbench proxy injection internals (VSCode 148/150 + service 8.0.0). Cần debug sâu: VSCode logs artifact, đọc service.ts socket lifecycle, cân nhắc fork/patch service | ✅ evidence đủ |
+
+### Tổng kết SA4E-348 (final)
+- ✅ CI headless VIABLE: launch + connect + steps PASS; unit-tests xanh mỗi push; report render OK
+- ✅ Đã fix 8 root cause qua 10 runs: env vars, serenity.crew (no service plugin), Node 22, pin version, serial per-feature, workspace mở, cucumber timeout 60s, eventually-assertions
+- ❌ 1006 flakiness KHÔNG thể fix bằng config surface — thuộc service internals (service.ts socket lifecycle + workbench proxy injection)
+- **Follow-up dev sâu (ticket riêng khuyến nghị)**: (1) upload VSCode log artifact + chẩn đoán service.ts socket lifecycle; (2) patch/fork wdio-vscode-service reconnect logic; (3) đánh giá @wdio/electron-service thay thế; (4) cân nhắc chỉ chạy E2E trên runner có desktop session thật (Windows CI)
+
 ## Tổng kết Epic SA4E-341 (L3, branch main)
 - **Deliverables**: e2e/ framework (wdio.conf.ts, 4 Gherkin features, Screenplay Pattern, step_definitions, 6 unit test files, vitest+wdio config), docs (BRD/FSD/TDD/STP/STC/UG/DPG/RLN/TEST-REPORT), 10 draw.io diagrams + PNG, 2 testdata CSV, CI headless workflow
 - **Chất lượng**: unit tests 16 passed / 14 failed (root cause chung: Serenity actor lifecycle + mock browser handle) — 3 defects cho DEV; config validation OK; STC matrix 6 verified / 16 deferred
