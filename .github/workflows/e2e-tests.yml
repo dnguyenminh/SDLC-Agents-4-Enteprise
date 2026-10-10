@@ -100,7 +100,21 @@ jobs:
         # CLI; the jar must be fetched before the WDIO run starts.
         run: npx serenity-bdd update
 
+      - name: Resolve VSCode binary (install via apt if missing — BR-01 requires E2E_IDE_BINARY_PATH)
+        # ubuntu-latest does NOT ship VSCode desktop — resolve via `command -v code`
+        # first, fall back to the official .deb install (DPG CI Headless Trigger).
+        run: |
+          if ! command -v code >/dev/null 2>&1; then
+            wget -qO /tmp/vscode.deb "https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+            sudo apt-get update && sudo apt-get install -y /tmp/vscode.deb
+          fi
+          echo "E2E_IDE_BINARY_PATH=$(command -v code)" >> "$GITHUB_ENV"
+
       - name: Run WDIO headless (xvfb-run — Electron needs a virtual display)
+        env:
+          E2E_IDE: code
+          E2E_IDE_BINARY_PATH: ${{ env.E2E_IDE_BINARY_PATH }}
+          E2E_HEADLESS: "true"
         run: xvfb-run -a npx wdio run wdio.conf.ts
 
       - name: Upload Serenity BDD report artifact
