@@ -87,6 +87,22 @@ Autonomy Level: L3 (Unattended) — branch main
 - ❌ 1006 flakiness: service↔workbench WebSocket chết ngẫu nhiên khi 4 workers song song; maxInstances (config + CLI) không serialize qua serenity adapter
 - **Follow-up**: (1) investigate serenity adapter config normalization (tại sao maxInstances bị bỏ qua); (2) run từng feature riêng tuần tự trong CI; (3) upgrade wdio-vscode-service khi có version support VSCode mới; (4) retry tăng connectionRetryCount
 
+## SPIKE-4 tune round 2 (2026-10-10 chiều)
+
+| Timestamp | Agent | Action | Output |
+|-----------|-------|--------|--------|
+| 2026-10-10T19:00Z | SM | Fix (97e6dcd): sequential per-feature WDIO runs — loop `--spec` từng feature. **SERIAL OK**: "Execution of 1 workers started", hết 4-parallel thrash | ✅ |
+| 2026-10-10T19:05Z | SM | Run 38050806783: hết 1006 thrash, giờ fail là assertion errors test-level: ActiveTabText immediate-assert race UI; IsPanelVisible panel cần thời gian; workspace chưa mở (thiếu E2E_BASE_URL) | ✅ Infra DONE |
+| 2026-10-10T19:10Z | SM | Fix (b9fc2c1): Wait.upTo eventually-assertions (tab 15s, panel 15s, reply 30s — Duration API); CI mở repo workspace (E2E_BASE_URL=github.workspace); connectionRetryCount 1→3 | ✅ pushed |
+| 2026-10-10T19:15Z | SM | Run 38051661193: Wait vẫn cắt ở 5s → root cause: cucumberOpts thiếu timeout (adapter default 5000ms). Fix (791aee7): timeout: 60_000 per handbook | ✅ pushed |
+| 2026-10-10T19:20Z | SM | Run 38052085408: **launch.feature steps PASS trên CI** (workbench ready 341ms + panel visible ✓, cucumber timeout có hiệu lực — execution 8s>5s). Còn lại: 1006 giữa scenario vẫn giết connection ngẫu nhiên (service socket lifecycle internals) | ⚠️ 1006 = blocker cuối |
+| 2026-10-10T19:25Z | SM | Dừng tune (loop-constraints): 1006 thuộc wdio-vscode-service socket internals — cần: (a) service reconnect logic/upgrade, (b) VSCode log dump artifact để điều tra, (c) hoặc pin VSCode cũ hơn (1.123 đã thử, vẫn flaky) | ✅ evidence ghi đủ |
+
+### Kết quả tune round 2
+- ✅ Serial per-feature (hết parallel thrash), ✅ cucumber step timeout 60s, ✅ eventually-assertions, ✅ workspace mở, ✅ launch steps PASS trên CI
+- ⚠️ 1006 flakiness còn lại: connection service↔workbench chết ngẫu nhiên giữa scenario — thuộc service internals, KHÔNG fix được bằng config surface
+- Follow-up cụ thể: (1) upload VSCode logs artifact để chẩn đoán; (2) patch/upgrade wdio-vscode-service reconnect; (3) cân nhắc @wdio/electron-service thay thế
+
 ## Tổng kết Epic SA4E-341 (L3, branch main)
 - **Deliverables**: e2e/ framework (wdio.conf.ts, 4 Gherkin features, Screenplay Pattern, step_definitions, 6 unit test files, vitest+wdio config), docs (BRD/FSD/TDD/STP/STC/UG/DPG/RLN/TEST-REPORT), 10 draw.io diagrams + PNG, 2 testdata CSV, CI headless workflow
 - **Chất lượng**: unit tests 16 passed / 14 failed (root cause chung: Serenity actor lifecycle + mock browser handle) — 3 defects cho DEV; config validation OK; STC matrix 6 verified / 16 deferred
