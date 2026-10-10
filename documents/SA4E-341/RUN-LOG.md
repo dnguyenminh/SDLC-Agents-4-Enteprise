@@ -60,6 +60,33 @@ Autonomy Level: L3 (Unattended) — branch main
 - **P3 ✅** Spike artifact đầy đủ evidence: VSCode = go (Chromium 150 verified), forks = blocked (chờ verify thực tế V1-V5)
 - Bonus fix: parseRow off-by-one bug, mapping rule chromedriver↔Chromium (không phải Electron)
 
+## Child stories sync (2026-10-10)
+
+| Timestamp | Agent | Action | Output |
+|-----------|-------|--------|--------|
+| 2026-10-10T08:00Z | SM | Phát hiện 7 child stories SA4E-342→348 còn "To Do" trên Jira (nội dung đã xong ở cấp epic nhưng chưa transition). Commit 1d299fd + ee9258e | ⚠️ Sync cần thiết |
+| 2026-10-10T08:05Z | SM | Transition Jira: SA4E-342/343/345/346/347 → Done (comment mapping deliverables); SA4E-344/348 → In Progress (344: chờ verify fork V1-V3; 348: chờ push để CI run thật) | ✅ 5 Done + 2 In Progress |
+
+## SPIKE-4: CI headless thực chiến (2026-10-10)
+
+| Timestamp | Agent | Action | Output |
+|-----------|-------|--------|--------|
+| 2026-10-10T08:10Z | SM | Push 1d299fd + ee9258e → CI trigger (run 38031285319). unit-tests PASS 35s | ✅ |
+| 2026-10-10T08:12Z | SM | Run 1 fail: e2e-headless thiếu E2E_IDE (BR-01 hoạt động đúng). Fix: env vars + resolve VSCode binary qua apt fallback (219f4e9) | ✅ pushed |
+| 2026-10-10T08:15Z | SM | Run 2 fail: "serenity-bdd service plugin not found" — wdio.conf.ts dùng services:['serenity-bdd'] SAI (handbook: không có plugin). Fix: serenity.crew + specDirectory + ArtifactArchiver, render report post-run CLI (dad184f) | ✅ pushed |
+| 2026-10-10T08:18Z | SM | Run 3 fail: fs.promises.glob not a function — Node 20 không có (thêm từ Node 22). Fix: bump Node 22 (98d8ce8) | ✅ pushed |
+| 2026-10-10T08:20Z | SM | Run 4 (38033190717): **VSCode LAUNCH + workbench connect + steps PASS trên CI** (workbench ready 254ms). Nhưng 1006 flaky — chromedriver 150 (latest) ≠ binary 1.123. Fix: pin .deb 1.123.0 + E2E_IDE_VERSION env (3f64810) | ✅ chromedriver 148 khớp |
+| 2026-10-10T08:25Z | SM | Run 5-7: 1006 vẫn flaky khi 4 workers song song — maxInstancesPerCapability + CLI --maxInstances 1 đều không serialize (serenity WebdriverIOConfig không honor). Workbench steps vẫn PASS khi worker sống đủ lâu | ❌ MAX RETRY ĐẠT |
+| 2026-10-10T08:30Z | SM | Dừng tune theo loop-constraints. Kết luận SPIKE-4 ghi vào spike matrix + TEST-REPORT. Jira comment evidence | ✅ |
+
+### Kết luận SPIKE-4 (evidence từ 7 CI runs)
+- ✅ VSCode desktop LAUNCH được trên Linux CI: xvfb-run + .deb apt install
+- ✅ Chromedriver auto-resolve qua cgmanifest hoạt động: 150 (1.140), 148 (1.123) — khớp matrix predict
+- ✅ Framework connect + chạy Gherkin steps thật: workbench ready PASS
+- ✅ Serenity BDD report render PASS (post-run CLI, ArtifactArchiver)
+- ❌ 1006 flakiness: service↔workbench WebSocket chết ngẫu nhiên khi 4 workers song song; maxInstances (config + CLI) không serialize qua serenity adapter
+- **Follow-up**: (1) investigate serenity adapter config normalization (tại sao maxInstances bị bỏ qua); (2) run từng feature riêng tuần tự trong CI; (3) upgrade wdio-vscode-service khi có version support VSCode mới; (4) retry tăng connectionRetryCount
+
 ## Tổng kết Epic SA4E-341 (L3, branch main)
 - **Deliverables**: e2e/ framework (wdio.conf.ts, 4 Gherkin features, Screenplay Pattern, step_definitions, 6 unit test files, vitest+wdio config), docs (BRD/FSD/TDD/STP/STC/UG/DPG/RLN/TEST-REPORT), 10 draw.io diagrams + PNG, 2 testdata CSV, CI headless workflow
 - **Chất lượng**: unit tests 16 passed / 14 failed (root cause chung: Serenity actor lifecycle + mock browser handle) — 3 defects cho DEV; config validation OK; STC matrix 6 verified / 16 deferred

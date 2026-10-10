@@ -178,3 +178,20 @@ Phân loại: **VERIFIED** = đã được unit test / config check chạy và c
 ---
 
 *Báo cáo tạo tự động bởi QA Agent — 2026-10-10 (04:02). Cập nhật 2026-10-10 sau vòng fix defects: số liệu lấy trực tiếp từ lần chạy `npx vitest run` (Vitest v4.1.11, workdir `e2e/`, 33/33 PASS) + `npx tsc --noEmit` (exit 0), không bịa thêm.*
+
+---
+
+## 6. CI Headless Run (SPIKE-4 — bổ sung 2026-10-10)
+
+Workflow `.github/workflows/e2e-tests.yml` đã push và chạy 7 CI runs trên GitHub Actions (ubuntu-latest, Node 22, xvfb-run):
+
+| Job | Kết quả | Ghi chú |
+|-----|---------|---------|
+| E2E framework — unit tests (vitest) | ✅ **PASS** (23-35s) | 33/33 tests xanh trên CI |
+| Resolve VSCode binary (apt) | ✅ PASS | Cài VSCode 1.123.0 (pinned) / 1.140.0 (latest) |
+| Run WDIO headless (xvfb-run) | ⚠️ FAIL (flaky) | VSCode LAUNCH + chromedriver kết nối OK (chrome 148/150); workbench ready + Gherkin steps PASS khi worker sống đủ lâu; 1006 connection flakiness khi 4 workers song song |
+| Generate Serenity BDD report | ✅ PASS | Post-run CLI + ArtifactArchiver (Serenity/JS handbook: không có WDIO serenity-bdd service plugin) |
+
+**Root causes đã fix qua 7 runs:** thiếu E2E_IDE (BR-01 hoạt động đúng) → env vars; wdio services:['serenity-bdd'] sai (plugin không tồn tại) → serenity.crew + ArtifactArchiver + post-run CLI; Node 20 thiếu fs.promises.glob → Node 22; chromedriver mismatch (launcher resolve từ channel 'stable' = latest, bỏ qua binary) → pin E2E_IDE_VERSION=1.123.0.
+
+**Còn mở:** 1006 flakiness khi 4 workers song song — maxInstances (config + CLI) không serialize qua serenity adapter. Follow-up: investigate config normalization / run từng feature riêng / upgrade service / tăng connectionRetryCount.

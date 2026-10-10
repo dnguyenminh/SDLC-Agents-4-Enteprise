@@ -73,9 +73,10 @@ Hai cơ chế mapping, tùy service:
 - `@wdio/electron-service` hỗ trợ **headless + auto Xvfb trên Linux** (cần WebdriverIO 9.19.1+, option `autoXvfb`) — evidence docs v10 "Features".
 - wdio-vscode-service: CI badge cho thấy pipeline của service chạy trên **Windows / macOS / ubuntu** (headful với desktop session; Linux cần Xvfb/xvfb-run — cấu hình chính xác trong CI của service cần verify).
 - Chrome/Chromium headless (`--headless`/`--disable-gpu` qua `vscodeArgs`) là kỹ thuật quen thuộc, nhưng với VSCode desktop workbench cần verify (workbench có thể cần GPU/renderer để render đầy đủ).
+- **✅ SPIKE-4 evidence (7 CI runs, 2026-10-10)**: VSCode desktop LAUNCH được trên Linux CI (xvfb-run + .deb apt); chromedriver auto-resolve qua cgmanifest OK (148 cho 1.123, 150 cho 1.140); workbench connect + Gherkin steps PASS; Serenity BDD report render PASS (post-run CLI + ArtifactArchiver). ⚠️ Còn lại: 1006 connection flakiness khi 4 workers song song — maxInstances (config + CLI) không serialize qua serenity WebdriverIOConfig; VSCode 1.140 (Modern UI) chết ngay, 1.123 flaky.
+- **Kết luận R4 (update):** VSCode baseline = **GO có điều kiện** — serialize workers cần fix (investigate adapter config normalization / run từng feature riêng). Fork = như trước (blocked chờ verify V1-V3).
 
-**Evidence:** docs wdio-electron-service (mục Features — Headless testing support, autoXvfb); CI badge wdio-vscode-service (Platform: Windows/macOS/ubuntu).
-**Kết luận R4:** Khả thi. Windows CI = ít rủi ro nhất (runner có desktop session). Linux CI = cần Xvfb. Cần verify thực tế trên runner thật.
+**Evidence:** docs wdio-electron-service (mục Features — Headless testing support, autoXvfb); CI badge wdio-vscode-service (Platform: Windows/macOS/ubuntu); SPIKE-4 CI runs 38031285319→38033873230 (GitHub Actions, ubuntu-latest).
 
 ## 4. Ma trận go/no-go
 
