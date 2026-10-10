@@ -114,13 +114,27 @@ jobs:
           fi
           echo "E2E_IDE_BINARY_PATH=$(command -v code)" >> "$GITHUB_ENV"
 
-      - name: Run WDIO headless (xvfb-run — Electron needs a virtual display)
+      - name: Run WDIO headless (xvfb-run — sequential per feature, SPIKE-4)
+        # Serial per-feature runs: the serenity WebdriverIOConfig ignores maxInstances
+        # (config + CLI), so 4 parallel VSCode instances thrash the runner and the
+        # service↔workbench WebSocket drops (1006). One wdio invocation per feature
+        # guarantees a single IDE session at a time (FSD 5.2 serialized sessions).
         env:
           E2E_IDE: code
           E2E_IDE_BINARY_PATH: ${{ env.E2E_IDE_BINARY_PATH }}
           E2E_IDE_VERSION: "1.123.0"
           E2E_HEADLESS: "true"
-        run: xvfb-run -a npx wdio run wdio.conf.ts --maxInstances 1
+        run: |
+          set +e
+          FAIL=0
+          for f in features/smoke/launch.feature \
+                   features/workbench/open-editor.feature \
+                   features/commands/run-extension-command.feature \
+                   features/webview/chat-panel.feature; do
+            echo "=== WDIO run: $f ==="
+            xvfb-run -a npx wdio run wdio.conf.ts --spec "$f" || FAIL=1
+          done
+          exit $FAIL
 
       - name: Generate Serenity BDD report (post-run CLI step — no WDIO service plugin)
         # serenity-bdd run reads the raw JSON artifacts archived by ArtifactArchiver
