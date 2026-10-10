@@ -21,6 +21,14 @@ const IDE_TOOL_NAMES = [
   "ide_evaluate",
   "ide_inspect",
   "ide_close",
+  "ide_current_executeCommand",
+  "ide_current_openFile",
+  "ide_current_getActiveTab",
+  "ide_current_getWorkspace",
+  "ide_current_getSelection",
+  "ide_current_getSelectionText",
+  "ide_current_runTask",
+  "ide_current_screenshot",
 ];
 
 describe("ide_* MCP tools — registry registration (SA4E-352)", () => {
