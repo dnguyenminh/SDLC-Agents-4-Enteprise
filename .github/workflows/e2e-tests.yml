@@ -123,6 +123,7 @@ jobs:
           E2E_IDE: code
           E2E_IDE_BINARY_PATH: ${{ env.E2E_IDE_BINARY_PATH }}
           E2E_IDE_VERSION: "1.123.0"
+          E2E_BASE_URL: ${{ github.workspace }}
           E2E_HEADLESS: "true"
         run: |
           set +e

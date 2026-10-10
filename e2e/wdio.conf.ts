@@ -93,6 +93,6 @@ export const config: WebdriverIOConfig = {
     baseUrl: env.workspacePath,                             // from E2E_BASE_URL (FSD 5.2)
 
     connectionRetryTimeout: 120000,                         // IDE launch budget; CI dumps logs on timeout (UC-07 EF-2)
-    connectionRetryCount: 1,                                // no silent retries beyond BR-03
+    connectionRetryCount: 3,                                // CI resilience: service↔workbench WebSocket drops (1006) recover on re-connect (SPIKE-4); scenario-level retries remain BR-03 (=2)
     logLevel: env.ci ? 'info' : 'warn',                     // FSD 5.2 (info in CI for diagnosis)
 };

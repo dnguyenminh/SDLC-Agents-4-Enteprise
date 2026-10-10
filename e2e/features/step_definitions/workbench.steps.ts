@@ -7,8 +7,8 @@
 // raises an AmbiguousStep error on duplicate step definitions, so other step-definition
 // files must not re-declare it.
 import { Given, Then, When } from '@cucumber/cucumber';
-import { actorCalled } from '@serenity-js/core';
-import { Ensure, equals, isTrue } from '@serenity-js/assertions';
+import { actorCalled, Duration, Wait } from '@serenity-js/core';
+import { equals, isTrue } from '@serenity-js/assertions';
 import { OpenWorkspace } from '../../src/screenplay/tasks/OpenWorkspace';
 import { OpenEditor } from '../../src/screenplay/tasks/OpenEditor';
 import { RunCommand } from '../../src/screenplay/tasks/RunCommand';
@@ -24,7 +24,9 @@ When('the editor opens the file {string}', async (path: string) => {
 });
 
 Then('the active editor tab shows {string}', async (expected: string) => {
-    await actorCalled('QA').attemptsTo(Ensure.that(ActiveTabText(), equals(expected)));
+    // Eventually-assertion: the editor tab needs a moment to activate after the
+    // open-file InputBox confirms (immediate Ensure races the UI on CI — BR flaky prevention)
+    await actorCalled('QA').attemptsTo(Wait.upTo(Duration.ofSeconds(15)).until(ActiveTabText(), equals(expected)));
 });
 
 When('the command {string} is executed', async (command: string) => {
@@ -32,5 +34,5 @@ When('the command {string} is executed', async (command: string) => {
 });
 
 Then('the panel area is visible', async () => {
-    await actorCalled('QA').attemptsTo(Ensure.that(IsPanelVisible('panel'), isTrue()));
+    await actorCalled('QA').attemptsTo(Wait.upTo(Duration.ofSeconds(15)).until(IsPanelVisible('panel'), isTrue()));
 });

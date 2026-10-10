@@ -6,8 +6,8 @@
 // NOTE: @cucumber/cucumber 13 exports only Given/When/Then — the Gherkin `And` keyword in
 // feature files is matched by its preceding keyword (When), so definitions use `When`.
 import { Then, When } from '@cucumber/cucumber';
-import { actorCalled } from '@serenity-js/core';
-import { Ensure, equals, not } from '@serenity-js/assertions';
+import { actorCalled, Duration, Wait } from '@serenity-js/core';
+import { equals, not } from '@serenity-js/assertions';
 import { OpenChatPanel } from '../../src/screenplay/tasks/OpenChatPanel';
 import { SendChatMessage } from '../../src/screenplay/tasks/SendChatMessage';
 import { ChatReplyText } from '../../src/screenplay/questions/ChatReplyText';
@@ -21,5 +21,10 @@ When('a chat message {string} is sent', async (message: string) => {
 });
 
 Then('the chat reply area renders a response', async () => {
-    await actorCalled('QA').attemptsTo(Ensure.that(ChatReplyText(), not(equals(''))));
+    // Eventually-assertion: the extension relays the message to the SDLC backend
+    // MCP server, which replies asynchronously — the reply area needs time to render.
+    // NOTE: requires a reachable backend; without one the wait times out (honest fail).
+    await actorCalled('QA').attemptsTo(
+        Wait.upTo(Duration.ofSeconds(30)).until(ChatReplyText(), not(equals(''))),
+    );
 });
