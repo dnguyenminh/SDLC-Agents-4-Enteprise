@@ -42,6 +42,7 @@ export const config: WebdriverIOConfig = {
     runner: 'local',                                        // FSD 5.2
     specs: [ join(__dirname, 'features', '**', '*.feature') ],
     maxInstances: 1,                                        // serialized IDE sessions (FSD 5.2)
+    maxInstancesPerCapability: 1,                           // WDIO v9: 1 VSCode per worker, serial — 4 parallel instances thrash CI runners (1006 flakiness, SPIKE-4)
 
     capabilities: [{
         browserName: 'vscode',                              // IDE selection (FSD 5.2)
