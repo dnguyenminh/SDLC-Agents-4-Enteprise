@@ -94,9 +94,12 @@ RUN npm install -g npm@${NPM_VERSION} --no-audit --no-fund --loglevel=error \
   && rm -rf /tmp/*.tgz \
   && node -e "require('${NM}/brace-expansion'); require('${NM}/undici')" \
   && npm --version \
-  # SEC-04: upgrade Debian packages to fix CVE-2026-103111 (libpcre2-8-0 HIGH) \
+  # SEC-04: upgrade Debian packages to fix CVE-2026-103111 (libpcre2-8-0 HIGH)
+  # and the perl CVE set found by Trivy on 2026-10-10 (CVE-2026-13221 CRITICAL,
+  # CVE-2026-42497 HIGH, CVE-2026-42496, CVE-2026-8376, CVE-2026-48962,
+  # CVE-2026-57432, CVE-2026-57433 — perl-base/perl-modules in node:XX-slim)
   && apt-get update \
-  && apt-get upgrade -y --no-install-recommends libpcre2-8-0 \
+  && apt-get upgrade -y --no-install-recommends libpcre2-8-0 perl-base perl-modules-5.36 \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
