@@ -86,6 +86,7 @@ export const config: WebdriverIOConfig = {
         retry: 2,                                           // BR-03
         failFast: env.failFast,                             // env-driven (FSD 5.2)
         strict: true,                                       // fail on undefined steps
+        timeout: 60_000,                                    // step timeout — 5s adapter default truncates Wait.upTo eventually-assertions (SPIKE-4, per Serenity/JS handbook)
     },
 
     outputDir: 'target/site/serenity',                      // FSD 5.2 — report output root (OI-3)
