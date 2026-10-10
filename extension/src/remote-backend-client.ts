@@ -18,6 +18,7 @@ import { registerPegaLocalTools } from "./mcp/pega-local-tools";
 import { AtlassianCredentialService } from "./services/AtlassianCredentialService";
 import { registerAtlassianLocalTools } from "./mcp/atlassian/index";
 import { registerDevtoolsTools } from "./mcp/devtools-bridge";
+import { registerIdeControlTools } from "./mcp/ide-control-tools";
 
 /** Health check timeout in milliseconds */
 const HEALTH_TIMEOUT_MS = 5000;
@@ -74,6 +75,12 @@ export class RemoteBackendClient implements vscode.Disposable {
       registerDevtoolsTools().catch((err) => {
         console.warn(`[RemoteBackendClient] DevTools tools registration failed: ${(err as Error).message}`);
       });
+      // Register hidden ide_* tools (puppeteer-core IDE control for AI agents — SA4E-352)
+      try {
+        registerIdeControlTools();
+      } catch (err) {
+        console.warn(`[RemoteBackendClient] IDE control tools registration failed: ${(err as Error).message}`);
+      }
     }
   }
 
