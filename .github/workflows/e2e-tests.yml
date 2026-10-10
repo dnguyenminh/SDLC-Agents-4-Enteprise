@@ -53,10 +53,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Setup Node 20
+      - name: Setup Node 22
         uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: e2e/package-lock.json
 
@@ -85,10 +85,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Setup Node 20
+      - name: Setup Node 22
         uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: e2e/package-lock.json
 
