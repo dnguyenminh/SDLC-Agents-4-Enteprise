@@ -101,11 +101,15 @@ jobs:
         run: npx serenity-bdd update
 
       - name: Resolve VSCode binary (install via apt if missing — BR-01 requires E2E_IDE_BINARY_PATH)
-        # ubuntu-latest does NOT ship VSCode desktop — resolve via `command -v code`
-        # first, fall back to the official .deb install (DPG CI Headless Trigger).
+        # ubuntu-latest does NOT ship VSCode desktop — install the official .deb.
+        # PINNED to 1.123.0: the newest VSCode version with dedicated locators in
+        # wdio-vscode-service 8.0.0 (locators max 1.123.0) — VSCode 1.140 (Modern UI,
+        # Chromium 150) breaks the service↔workbench WebSocket (1006) in CI (SPIKE-4
+        # evidence, run 38032125263). Chromedriver auto-resolves for the installed
+        # version via the VSCode release cgmanifest.json.
         run: |
           if ! command -v code >/dev/null 2>&1; then
-            wget -qO /tmp/vscode.deb "https://update.code.visualstudio.com/latest/linux-deb-x64/stable"
+            wget -qO /tmp/vscode.deb "https://update.code.visualstudio.com/1.123.0/linux-deb-x64/stable"
             sudo apt-get update && sudo apt-get install -y /tmp/vscode.deb
           fi
           echo "E2E_IDE_BINARY_PATH=$(command -v code)" >> "$GITHUB_ENV"
