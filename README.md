@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.47.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.48.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,14 @@ MIT
 ---
 
 ## Changelog
+
+### v1.48.0 (2026-10-10)
+
+- **SA4E-341: E2E testing framework** — New standalone `e2e/` package: WebdriverIO + wdio-vscode-service + Serenity/JS (Cucumber + Screenplay Pattern) for VSCode-based IDEs. 4 BDD Gherkin features (launch, open-editor, extension-command, chat-webview), Screenplay tasks/questions/interactions, 33 unit tests (all green), Serenity BDD HTML report + failure screenshots (Photographer), CI headless workflow (`.github/workflows/e2e-tests.yml`, xvfb-run on ubuntu-latest). Spike verified: Kiro 1.2.37 = GO (Chromium 152, chromedriver 152 manual via Chrome-for-Testing); 1006 flakiness on CI tracked in follow-up SA4E-351. Full docs in `documents/SA4E-341/` (BRD/FSD/TDD/STP/STC/UG/DPG/RLN/TEST-REPORT + 10 diagrams).
+- **SA4E-349: Fix 3 bugs hiding auth 401 failures** — auth-aware Test Connection, hierarchy resolver fail-loud (no PegaApp fallback), fetchContext error reporting, discovery removes HRAppsV2 hardcode.
+- **SA4E-350: Fix Pega rules/query strips '@baseclass' appliesTo** — passthrough verbatim + empty compat retry; handle-row follow-up fetches full rule via pzInsKey (6 unit tests + runtime verify 3/3).
+- **SA4E-335: Fix 6 DB-layer bugs from review** — memoized id-column check (no tx poisoning), literal-safe placeholder translation, identifier quoting (SQLi guard), safeExec SQLSTATE filter, writable test-backend data dir, knexfile comment sync.
+- **Enrichment: scope retry via X-Project-Id** — cap prompt tokens, skip binary Pega assets, register Pega project by app name; `fetchPegaContext` no longer overwrites held project id; runtime settings module added.
 
 ### v1.47.1 (2026-10-04)
 

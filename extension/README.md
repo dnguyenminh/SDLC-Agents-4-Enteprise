@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.47.1-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.48.0-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.47.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.48.0.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.47.1.vsix
+code --install-extension sdlc-agents-4-enterprise-1.48.0.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,12 @@ MIT
 ---
 
 ## Changelog
+
+### v1.48.0 (2026-10-10)
+
+- **SA4E-341: E2E testing framework** — New standalone `e2e/` package: WebdriverIO + wdio-vscode-service + Serenity/JS (Cucumber + Screenplay Pattern). 4 BDD Gherkin features, Screenplay pattern (tasks/questions/interactions), 33 unit tests green, Serenity BDD HTML report + failure screenshots, CI headless workflow. Kiro fork spike: GO (Chromium 152, chromedriver manual). Follow-up SA4E-351: 1006 socket flakiness on CI.
+- **SA4E-349: Fix 3 bugs hiding auth 401 failures** — auth-aware Test Connection, hierarchy resolver fail-loud, fetchContext error reporting, discovery removes HRAppsV2 hardcode.
+- **SA4E-350: Fix Pega rules/query strips '@baseclass' appliesTo** — passthrough verbatim + empty compat retry; handle-row follow-up fetch via pzInsKey.
 
 ### v1.47.1 (2026-10-04)
 

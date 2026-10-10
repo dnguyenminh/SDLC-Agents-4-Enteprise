@@ -1,6 +1,6 @@
 {
   "name": "@sa4e/e2e",
-  "version": "1.47.0",
+  "version": "1.48.0",
   "private": true,
   "description": "BDD E2E testing framework (SA4E-341) - WebdriverIO + wdio-vscode-service + Serenity/JS Screenplay for VSCode-based IDEs (Kiro/Antigravity/Kilo). Standalone package, NOT part of root npm workspaces (TDD 2.1).",
   "scripts": {
