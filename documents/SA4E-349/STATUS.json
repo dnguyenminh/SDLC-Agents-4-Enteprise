@@ -1,0 +1,70 @@
+{
+  "ticket": "SA4E-349",
+  "type": "Bug",
+  "summary": "Pega CodeIntelligence: 3 bugs hide auth 401 failures (Test Connection false-green, hierarchy fallback 'PegaApp', discovery hardcode HRAppsV2)",
+  "priority": "High",
+  "labels": ["pega", "auth", "fail-loud", "bugfix"],
+  "jiraUrl": "https://jiraassist.atlassian.net/browse/SA4E-349",
+  "jiraStatus": "In Progress",
+  "currentPhase": "deployment",
+  "documents": [
+    { "file": "STC.md", "version": 1, "author": "qa-agent", "kbEntryId": 434, "size": "40244 bytes / 760 lines", "note": "24 test cases (6 groups: F1/F2/F3/F4/SA/SB) + Traceability + RTM 100%" },
+    { "file": "TEST-REPORT.md", "version": 2, "author": "qa-agent", "kbEntryId": 435, "size": "~16KB / ~270 lines", "note": "Verdict PASS (v2) - runtime Scenario A/B 8/8 checks PASS với real server 8b99ujcj.pegaacademy.net (SSA@TGB), real fixed code, credentials qua env var (không ghi password)" },
+    { "file": "UG.md", "version": 1, "author": "dev-agent", "kbEntryId": 432, "size": "12187 bytes / 220 lines", "note": "8 sections - new behavior of 3 buttons, namespace sdlcAgents correct, error messages verbatim from code" },
+    { "file": "STATUS.json", "author": "sm-agent", "note": "SM file" },
+    { "file": "RUN-LOG.md", "author": "sm-agent", "note": "SM file" }
+  ],
+  "phases": {
+    "requirements": { "status": "done", "note": "Bugfix ticket - fix guide FIX-GUIDE-pega-auth-silent-failures.md (repo root, 386 lines) used instead of BRD", "completedAt": "2026-10-08T00:00:00Z" },
+    "implementation": {
+      "status": "done",
+      "branch": "main",
+      "committed": true,
+      "commitHash": "c6c6f33",
+      "note": "Fix applied directly on main per user request. Committed c6c6f33 (5 files: 4 fix + 2 test, 160+/30-).",
+      "fixes": {
+        "fix2": { "status": "applied", "file": "extension/src/services/PegaHierarchyResolver.ts", "detail": "resolveOperator() isAuthError re-throw (line 89-93); isAuthError helper (line 100-103); resolvePegaHierarchy() throws when !appName, fallback 'PegaApp' removed (line 59-64)" },
+        "fix3": { "status": "applied", "file": "extension/src/panels/settings/handlers/PegaSettingsHandler.ts + extension/src/services/pega/PegaContextClient.ts", "detail": "fetchContext() try/catch posts pegaContextFetched success:false (line 60-78); PegaContextClient verified - no swallow, writeFile only after resolve" },
+        "fix1": { "status": "applied", "file": "extension/src/panels/settings/handlers/PegaSettingsHandler.ts", "detail": "test() auth-aware: GET /api/v1/data/D_OperatorID with getAuthHeader() (line 31-46); buildTestResult helper (line 49-57)" },
+        "fix4": { "status": "applied", "file": "extension/src/services/PegaCodeIntelDiscovery.ts", "detail": "resolveAppInfo() reads applicationVersion, throws when unresolvable, hardcode HRAppsV2 removed (line 48-70). Deviation: config namespace sdlcAgents (guide said kiroSdlc - stale)" }
+      },
+      "tests": { "updated": "extension/src/__tests__/pega-codeintel-discovery.test.ts", "created": "extension/src/__tests__/pega-hierarchy-resolver.test.ts" },
+      "completedAt": "2026-10-08T00:00:00Z"
+    },
+    "verification": {
+      "status": "done",
+      "smVerified": true,
+      "build": "PASS (tsc exit 0)",
+      "lint": "PASS (eslint exit 0, only pre-existing warning)",
+      "tests": "PASS (2400/2400 full; 7/7 targeted verified independently)",
+      "fileMatch": "All 4 files match guide target code 100%",
+      "completedAt": "2026-10-08T00:00:00Z"
+    },
+    "documentation": {
+      "status": "done",
+      "smVerified": true,
+      "note": "STC.md + TEST-REPORT.md (qa-agent), UG.md (dev-agent). All 3 passed SM quality gates. KB ingested (432/434/435). Runtime Scenario A/B DEFERRED - blocked credential 401.",
+      "completedAt": "2026-10-09T00:00:00Z"
+    },
+    "deployment": {
+      "status": "deployed",
+      "version": "1.47.1",
+      "versionBumpCommitted": false,
+      "artifact": "extension/sdlc-agents-4-enterprise-1.47.1.vsix",
+      "installTarget": "Kiro (dnguyenminh.sdlc-agents-4-enterprise@1.47.1 confirmed via kiro --list-extensions)",
+      "qualityGates": { "tsc": "PASS exit 0 (after cleaning smoke-tmp leftover)", "lint": "PASS exit 0", "targetedTests": "7/7 PASS", "fullSuite": "2400/2400 PASS (verified earlier)", "smokeBundle": "FAIL - pre-existing broken harness (junction out dead + missing dist/babel.cjs, last touched SA4E-335/336) - post-deploy gate per DPG, not blocking; bundle validated via runtime verify" },
+      "runtimeVerify": {
+        "status": "PASS 8/8",
+        "method": "Temp vitest suite (deleted after) running REAL fixed code (getAuthHeader, resolvePegaHierarchy, fetchAndSavePegaContext, resolveAppInfo) via vscode alias mock; fetch NOT mocked - real HTTP; credentials via env var only (no password in any file/log/report)",
+        "server": "https://8b99ujcj.pegaacademy.net/prweb (Pega Academy), operator SSA@TGB",
+        "scenarioA": "4/4 PASS (wrong password): HTTP 401 -> Authentication failed; resolveOperator FAIL LOUD; fetchAndSavePegaContext THREW + pega-project.json NOT written; resolveAppInfo THREW (no HRAppsV2 hardcode)",
+        "scenarioB": "4/4 PASS (valid): HTTP 200; app HRAppsV2/01.01/HRAppsV2:Administrators resolved from server (real value, not hardcode); pega-project.json written with real app + 5 caseTypes; file-based resolve (VerifyApp99) + empty-probe throws",
+        "bonus": "CodeIntelligence custom API EXISTS on Academy server: POST /api/CodeIntelligence/v1/rules/instance -> 200 (12802 bytes) with valid creds; 401 (0 bytes) with wrong creds - consistent fail-loud",
+        "uiVerify": "Optional follow-up - buttons in Kiro with real credentials; underlying code paths verified end-to-end"
+      },
+      "completedAt": "2026-10-09T00:00:00Z"
+    }
+  },
+  "lastUpdated": "2026-10-09T00:00:00Z",
+  "lastCommentProcessed": "2026-10-09T00:00:00Z"
+}

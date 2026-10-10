@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "code-intelligence": {
-      "url": "http://127.0.0.1:9181/mcp",
+      "url": "http://127.0.0.1:9183/mcp",
       "autoApprove": [
         "mem_ingest",
         "execute_dynamic_tool",
@@ -60,7 +60,7 @@
       ],
       "cwd": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
       "env": {
-        "CODE_INTEL_PORT": "9186",
+        "CODE_INTEL_PORT": "9183",
         "CODE_INTEL_WORKSPACE": "c:\\projects\\kiro\\SDLC-Agents-4-Enterprise",
         "CODE_INTEL_VIEWER_PORT": "3200",
         "FORCE_RESTART": "15"

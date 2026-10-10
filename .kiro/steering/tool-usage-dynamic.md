@@ -1,9 +1,4 @@
----
-targets: langgraph
-inclusion: always
-title: Tool Usage - Dynamic Tool Execution Pattern
-priority: 10
----
+
 
 # Dynamic Tool Execution Pattern
 
@@ -17,25 +12,44 @@ The MCP server exposes tools from child servers (atlassian, markdown-exporter, e
 
 **Goal:** Establish connection to MCP server and load available tools list via HTTP JSON-RPC.
 
-### 0a. Detect OS and Read MCP URL
+### 0a. Read MCP URL (NO hardcoding — resolve from runtime settings)
 
-Read MCP server URL from `.kiro/settings/mcp.json` → `mcpServers.code-intelligence.url`
-Default: `http://127.0.0.1:9181/mcp`
+1. **PRIMARY**: `.code-intel/settings.json` → `mcpUrl` — file tự động được server ghi lúc startup (chứa port thật, pid, version, startedAt).
+2. **Fallback**: `.kiro/settings/mcp.json` → `mcpServers.code-intelligence.url`
+3. **Không tồn tại file nào** → server chưa chạy → làm theo phần Server Startup, chờ 5-10s, đọc lại `.code-intel/settings.json`.
+4. Kết nối tới URL thất bại → server DOWN → báo user. ⛔ KHÔNG loop restart.
+
+**PowerShell — resolve URL một lần, dùng lại ở mọi bước sau:**
+```powershell
+$s = Get-Content ".code-intel/settings.json" -Raw | ConvertFrom-Json
+$mcpUrl = $s.mcpUrl
+if (-not $mcpUrl) { $mcpUrl = ((Get-Content ".kiro/settings/mcp.json" -Raw | ConvertFrom-Json).mcpServers.'code-intelligence').url }
+$mcpUrl
+```
+
+**Linux/Mac:**
+```bash
+MCP_URL=$(jq -r '.mcpUrl // empty' .code-intel/settings.json)
+[ -z "$MCP_URL" ] && MCP_URL=$(jq -r '.mcpServers["code-intelligence"].url // empty' .kiro/settings/mcp.json)
+echo "$MCP_URL"
+```
+
+⛔ TUYỆT ĐỐI KHÔNG hardcode port/URL (cấm literal 9181/9186/9183 trong lệnh) — luôn resolve từ settings.
 
 ### 0b. Initialize MCP Session
 
 **Windows (PowerShell):**
 ```powershell
-$body = '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"kiro-agent","version":"1.0"}},"id":1}'
-$response = Invoke-WebRequest -Uri "http://127.0.0.1:9181/mcp" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 10
+$body = '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"SDLC-agent","version":"1.0"}},"id":1}'
+$response = Invoke-WebRequest -Uri "$mcpUrl" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 10
 $response.Content
 ```
 
 **Linux/Mac (curl):**
 ```bash
-curl -s -X POST http://127.0.0.1:9181/mcp \
+curl -s -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"kiro-agent","version":"1.0"}},"id":1}'
+  -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"SDLC-agent","version":"1.0"}},"id":1}'
 ```
 
 **Expected response:** JSON with `result.serverInfo` and `result.capabilities`. If error or timeout → server is DOWN.
@@ -45,13 +59,13 @@ curl -s -X POST http://127.0.0.1:9181/mcp \
 **Windows (PowerShell):**
 ```powershell
 $body = '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}'
-$response = Invoke-WebRequest -Uri "http://127.0.0.1:9181/mcp" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 10
+$response = Invoke-WebRequest -Uri "$mcpUrl" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 10
 $response.Content
 ```
 
 **Linux/Mac (curl):**
 ```bash
-curl -s -X POST http://127.0.0.1:9181/mcp \
+curl -s -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}'
 ```
@@ -71,13 +85,13 @@ $body = @{
     }
     id = 3
 } | ConvertTo-Json -Depth 5
-$response = Invoke-WebRequest -Uri "http://127.0.0.1:9181/mcp" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 30
+$response = Invoke-WebRequest -Uri "$mcpUrl" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 30
 $response.Content
 ```
 
 **Linux/Mac (curl):**
 ```bash
-curl -s -X POST http://127.0.0.1:9181/mcp \
+curl -s -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"mem_search","arguments":{"query":"test","limit":5}},"id":3}'
 ```
@@ -92,7 +106,7 @@ After `tools/list`:
 **Log bootstrap result:**
 ```
 🔧 MCP Bootstrap:
-- Server: http://127.0.0.1:9181/mcp — {CONNECTED/DOWN}
+- Server: $mcpUrl — {CONNECTED/DOWN}
 - Tools loaded: {N} tools
 - Core tools: {list first 5}
 ```
@@ -104,7 +118,7 @@ For servers using `httpStream` transport, the initial `initialize` call may retu
 **Windows (PowerShell — single request/response mode):**
 ```powershell
 $headers = @{ "Accept" = "application/json" }
-$response = Invoke-WebRequest -Uri "http://127.0.0.1:9181/mcp" -Method POST -ContentType "application/json" -Headers $headers -Body $body -TimeoutSec 10
+$response = Invoke-WebRequest -Uri "$mcpUrl" -Method POST -ContentType "application/json" -Headers $headers -Body $body -TimeoutSec 10
 ```
 
 ---
@@ -124,7 +138,7 @@ $body = @{
     }
     id = 4
 } | ConvertTo-Json -Depth 5
-Invoke-WebRequest -Uri "http://127.0.0.1:9181/mcp" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 10
+Invoke-WebRequest -Uri "$mcpUrl" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 10
 ```
 
 **If MCP tools are available natively in IDE:**
@@ -150,7 +164,7 @@ $body = @{
     }
     id = 5
 } | ConvertTo-Json -Depth 5
-Invoke-WebRequest -Uri "http://127.0.0.1:9181/mcp" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 30
+Invoke-WebRequest -Uri "$mcpUrl" -Method POST -ContentType "application/json" -Body $body -TimeoutSec 30
 ```
 
 **If MCP tools are available natively:**
@@ -187,24 +201,31 @@ execute_dynamic_tool(
 
 | Error | Action |
 |-------|--------|
-| Connection refused (Step 0) | Server DOWN → start server: `npx tsx backend/src/index.ts` |
+| Connection refused (Step 0) | Server DOWN → start server (phần Server Startup), chờ 5-10s, đọc lại `.code-intel/settings.json`, retry TỐI ĐA 1 lần. Vẫn fail → BÁO USER, ⛔ KHÔNG loop restart. |
 | Schema validation error | Check argument types against inputSchema from find_tools |
 | Tool not found on server | Child server may be DEAD → check `orchestration_status` |
 | Timeout | Retry once with simpler arguments |
 | Empty tools/list | Server running but plugins not loaded → check orchestration_status |
+| settings.json không tồn tại | Server chưa chạy HOẶC đã shutdown (file bị xoá lúc stop) → start server rồi đọc lại |
 
 ## Server Startup (if DOWN)
 
+Server có thể start ở BẤT KỲ port nào — sau khi start nó sẽ **tự ghi `.code-intel/settings.json`** chứa port thật. Đừng đoán port, chỉ cần start rồi đọc file.
+
+- **Extension mode (Kiro/VSCode — mặc định)**: server wrapper chạy trong extension host. Reload window (`Ctrl+Shift+P` → "Reload Window") → wrapper tự ghi `.code-intel/settings.json`.
+- **Standalone backend**: `npx tsx backend/src/index.ts` (nếu chạy chế độ này).
+
 **Windows (PowerShell):**
 ```powershell
-$env:CODE_INTEL_PORT = "9186"
-$env:CODE_INTEL_WORKSPACE = "c:\projects\kiro\SDLC-Agents-4-Enterprise"
-Start-Process -NoNewWindow npx -ArgumentList "tsx", "backend\src\index.ts" -WorkingDirectory "c:\projects\kiro\SDLC-Agents-4-Enterprise"
+$env:CODE_INTEL_WORKSPACE = "."
+Start-Process -NoNewWindow npx -ArgumentList "tsx", "backend\src\index.ts" -WorkingDirectory "."
 ```
 
 **Linux/Mac:**
 ```bash
-CODE_INTEL_PORT=9186 CODE_INTEL_WORKSPACE=/path/to/project npx tsx backend/src/index.ts &
+CODE_INTEL_WORKSPACE=/path/to/project npx tsx backend/src/index.ts &
 ```
 
-Wait 5-10 seconds, then retry Step 0.
+Wait 5-10 seconds, then re-read `.code-intel/settings.json` → retry Step 0 (tối đa 1 lần, vẫn fail → báo user).
+
+

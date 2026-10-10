@@ -6,6 +6,7 @@ node_modules/
 .code-intel/.jwt-secret
 .code-intel/database.json
 .code-intel/project.json
+.code-intel/settings.json
 
 # Build
 dist/
