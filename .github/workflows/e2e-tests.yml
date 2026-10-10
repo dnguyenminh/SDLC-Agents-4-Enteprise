@@ -118,6 +118,7 @@ jobs:
         env:
           E2E_IDE: code
           E2E_IDE_BINARY_PATH: ${{ env.E2E_IDE_BINARY_PATH }}
+          E2E_IDE_VERSION: "1.123.0"
           E2E_HEADLESS: "true"
         run: xvfb-run -a npx wdio run wdio.conf.ts
 

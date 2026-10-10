@@ -48,6 +48,7 @@ export const config: WebdriverIOConfig = {
         // SPIKE-1: actual capability key for wdio-vscode-service 8.0.0 (VSCODE_CAPABILITY_KEY)
         'wdio:vscodeOptions': {
             binary: env.ideBinaryPath,                      // SPIKE-1: option key is 'binary' (BR-01)
+            version: env.ideVersion,                        // pin so chromedriver matches the installed VSCode (SPIKE-4: 'stable' resolves latest → chromedriver/binary mismatch → 1006)
             extensionPath: join(__dirname, '..', 'extension'),   // extension under development
             workspacePath: env.workspacePath,               // E2E_BASE_URL (BR-01), undefined if absent
             vscodeArgs: env.headless

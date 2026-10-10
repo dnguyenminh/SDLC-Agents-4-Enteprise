@@ -14,6 +14,10 @@ export class EnvConfigError extends Error {
 export interface E2EEnv {
     ide: string;               // kiro | code | antigravity | kilo
     ideBinaryPath: string;     // must exist (BR-01)
+    ideVersion?: string;       // E2E_IDE_VERSION — pin the VSCode version so the service
+                               // resolves a MATCHING chromedriver (launcher.js resolves it
+                               // from the 'stable' channel otherwise = latest, which breaks
+                               // the session when the installed binary is older — SPIKE-4)
     workspacePath?: string;    // E2E_BASE_URL — must exist if provided
     headless: boolean;
     ci: boolean;               // drives logLevel info (FSD 5.2)
@@ -44,6 +48,7 @@ export function resolveE2EEnv(): E2EEnv {
     return {
         ide,
         ideBinaryPath,
+        ideVersion: process.env.E2E_IDE_VERSION || undefined,
         workspacePath,
         headless: process.env.E2E_HEADLESS === 'true',
         ci: process.env.CI === 'true' || Boolean(process.env.DISPLAY),
