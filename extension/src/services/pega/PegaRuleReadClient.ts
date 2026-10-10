@@ -14,19 +14,68 @@ const FATAL = ["HTTP 401", "HTTP 403", "HTTP 504", "HTTP 503", "HTTP 502", "HTTP
 export async function getObject(
   core: PegaHttpCore, className: string, key: string, appliesTo?: string,
 ): Promise<Record<string, unknown>> {
-  const cleanAppliesTo = (appliesTo && appliesTo !== "@baseclass") ? appliesTo : "";
+  // Keep '@baseclass' verbatim: the CodeIntelligence rules/query service matches
+  // appliesTo exactly — stripping it yields 0 results (SA4E-350 evidence).
+  const wasBaseclass = appliesTo === "@baseclass";
+  const cleanAppliesTo = appliesTo || "";
   const insKey = key.includes(" ") ? key
     : cleanAppliesTo ? `${className.toUpperCase()} ${cleanAppliesTo} ${key.toUpperCase()}`
     : `${className.toUpperCase()} ${key.toUpperCase()}`;
-  if (!insKey.includes("#") && !key.includes("#")) {
-    return queryRuleByTriple(core, className, cleanAppliesTo, key);
+  if (insKey.includes("#") || key.includes("#")) {
+    return getRuleByInsKeyWithTripleFallback(core, insKey, className, cleanAppliesTo, key, wasBaseclass);
   }
+  const row = await queryByTripleWithCompatRetry(core, className, cleanAppliesTo, key, wasBaseclass);
+  return fetchFullRuleIfHandleRow(core, row);
+}
+
+/** insKey path with triple fallback on non-fatal errors (fail-loud on auth/5xx). */
+async function getRuleByInsKeyWithTripleFallback(
+  core: PegaHttpCore, insKey: string, className: string, appliesTo: string, key: string, wasBaseclass: boolean,
+): Promise<Record<string, unknown>> {
   try {
     return await getRuleByInsKey(core, insKey);
   } catch (err: any) {
     if (FATAL.some((f) => err.message.includes(f))) { throw err; }
-    return queryRuleByTriple(core, className, cleanAppliesTo, key);
+    return queryByTripleWithCompatRetry(core, className, appliesTo, key, wasBaseclass);
   }
+}
+
+/**
+ * Triple query with the exact appliesTo first; when '@baseclass' misses, retry
+ * with an empty appliesTo (older service builds match empty-as-any). Auth/5xx
+ * failures rethrow without retry (fail-loud, SA4E-349 pattern).
+ */
+async function queryByTripleWithCompatRetry(
+  core: PegaHttpCore, className: string, appliesTo: string, key: string, wasBaseclass: boolean,
+): Promise<Record<string, unknown>> {
+  try {
+    return await queryRuleByTriple(core, className, appliesTo, key);
+  } catch (err: any) {
+    if (!wasBaseclass || FATAL.some((f) => err.message.includes(f))) { throw err; }
+    return queryRuleByTriple(core, className, "", key);
+  }
+}
+
+/** Handle-only fields returned by the rules/query service (no rule content). */
+const HANDLE_FIELDS = new Set([
+  "pxObjClass", "pxUpdateDateTime", "pxUpdateOperator", "pyClass", "pyClassName",
+  "pyRuleAvailable", "pyRuleName", "pyRuleSet", "pyRuleSetVersion", "pzInsKey",
+]);
+
+/**
+ * Follow up a triple-query handle row with a full instance fetch — the row has
+ * no rule content, and /rules/instance with the row's full pzInsKey returns the
+ * complete rule JSON (SA4E-350 evidence). Falls back to the row when the fetch
+ * fails (soft — the handle is still usable for indexing).
+ */
+async function fetchFullRuleIfHandleRow(
+  core: PegaHttpCore, row: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const keys = Object.keys(row);
+  if (keys.length === 0 || !keys.every((k) => HANDLE_FIELDS.has(k))) { return row; }
+  const insKey = (row.pzInsKey ?? row.insKey) as string | undefined;
+  if (!insKey) { return row; }
+  try { return await getRuleByInsKey(core, insKey); } catch { return row; }
 }
 
 /** Service 1: resolve a rule by its insKey handle across all prefixes. */
