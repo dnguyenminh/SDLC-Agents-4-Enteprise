@@ -1,0 +1,20 @@
+test_case_id,ide_target,E2E_IDE,E2E_IDE_BINARY_PATH,E2E_BASE_URL,E2E_HEADLESS,DISPLAY,expected_result,description
+TC-01,any,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,,false,,resolveE2EEnv returns valid E2EEnv,Baseline valid env for property tests (Windows dev)
+TC-01,invalid,jetbrains,,,false,,EnvConfigError: E2E_IDE must be one of kiro|code|antigravity|kilo,Invalid E2E_IDE enum value
+TC-01,invalid,,(unset),,false,,EnvConfigError naming E2E_IDE,Missing E2E_IDE
+TC-01,invalid,code,Z:\no-such-ide.exe,false,,EnvConfigError: E2E_IDE_BINARY_PATH does not exist,Non-existent binary path
+TC-07,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,%TEMP%\sa4e-341-fixture-workspace,true,,binaryPath + workspacePath + vscodeArgs(disable-gpu no-sandbox) mapped,Capabilities mapping with headless=true
+TC-09,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,,false,,IDE launched; 1 process; chromedriver auto-detected,VSCode baseline launch (SPIKE-1)
+TC-09,kiro,kiro,C:\Users\ASUS\AppData\Local\Programs\Kiro\Kiro.exe,,false,,Same behavior on Kiro fork — CDP attach go,Kiro fork launch (SPIKE-1)
+TC-10,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,%TEMP%\sa4e-341-fixture-workspace,false,,exit 0; report generated; scenario <= 60s,One-command skeleton run
+TC-11,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,%TEMP%\sa4e-341-fixture-workspace,false,,Workbench ready; tab shows extension.ts,Open-editor journey
+TC-12,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,%TEMP%\sa4e-341-fixture-workspace,false,,Command executed; extension responds,Extension command journey
+TC-15,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,%TEMP%\sa4e-341-fixture-workspace,false,,Reply area non-empty after sending Show status,Webview chat panel journey
+TC-16,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,%TEMP%\sa4e-341-fixture-workspace,false,,Screenshot in pages/; original error preserved,Failed-step screenshot capture
+TC-17,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,,false,,Auto-detected chromedriver matches Electron 32.2.0,VSCode chromedriver detection
+TC-17,kiro,kiro,C:\Users\ASUS\AppData\Local\Programs\Kiro\Kiro.exe,,false,,Chromedriver matches Kiro Electron runtime,Kiro chromedriver detection
+TC-18,kiro (CI),kiro,/usr/bin/kiro,/home/runner/sa4e-fixture-workspace,true,:99,Exit code reflects result; artifacts published; stage <= 15 min,Linux CI headless run (SPIKE-4)
+TC-18,code (CI),code,/usr/bin/code,/home/runner/sa4e-fixture-workspace,true,:99,Same on VSCode baseline in CI,Linux CI headless VSCode run
+TC-19,code,code,(unset),,false,,EnvConfigError before IDE launch; exit != 0,Fail-fast missing binary
+TC-19,code,code,Z:\no-such-ide.exe,,false,,EnvConfigError before IDE launch; exit != 0,Fail-fast non-existent binary
+TC-20,code,code,C:\Users\ASUS\AppData\Local\Programs\Microsoft VS Code\Code.exe,%TEMP%\sa4e-341-fixture-workspace,false,,Retry at most 2; defect raised,Flaky scenario retry policy

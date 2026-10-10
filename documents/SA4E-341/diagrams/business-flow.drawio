@@ -1,0 +1,96 @@
+<mxGraphModel adaptiveColors="auto" dx="1800" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1750" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="lane1" value="QA Engineer" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1620" height="260" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane2" value="Test Framework (WDIO + Serenity/JS)" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="300" width="1620" height="260" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane3" value="CI/CD Pipeline" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="560" width="1620" height="260" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="lane1">
+      <mxGeometry x="140" y="110" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_author" value="Author BDD feature files (Gherkin Given/When/Then)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="210" y="85" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_config" value="Configure wdio.conf.ts + Serenity/JS runner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="400" y="85" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_run" value="Run E2E locally (npm run e2e)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="590" y="85" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_dec" value="Local run stable?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane1">
+      <mxGeometry x="780" y="80" width="110" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_commit" value="Commit tests to main (L3 autonomy)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="930" y="85" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_launch" value="Launch IDE via wdio-vscode-service (VSCode / Kiro / Antigravity / Kilo)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="lane2">
+      <mxGeometry x="590" y="85" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_exec" value="Execute BDD scenarios (Screenplay tasks)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="lane2">
+      <mxGeometry x="780" y="85" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_shot" value="Capture screenshot on failure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="lane2">
+      <mxGeometry x="970" y="85" width="140" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_report" value="Generate Serenity BDD HTML report" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane2">
+      <mxGeometry x="1150" y="85" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_ci" value="CI triggers headless run (Linux xvfb / Windows runner)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="lane3">
+      <mxGeometry x="930" y="85" width="160" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_pub" value="Publish report + screenshots as artifacts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="lane3">
+      <mxGeometry x="1150" y="85" width="150" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_end" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="lane3">
+      <mxGeometry x="1400" y="110" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="n_start" target="n_author" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="n_author" target="n_config" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="n_config" target="n_run" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="n_run" target="n_dec" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="pass" edge="1" parent="1" source="n_dec" target="n_commit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;fontSize=11;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="fail: fix and re-run" edge="1" parent="1" source="n_dec" target="n_author" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontSize=11;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" edge="1" parent="1" source="n_commit" target="n_ci" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.1;exitY=1;exitDx=0;exitDy=0;entryX=0.1;entryY=0;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" edge="1" parent="1" source="n_ci" target="n_launch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" edge="1" parent="1" source="n_launch" target="n_exec" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" value="step fails" edge="1" parent="1" source="n_exec" target="n_shot" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" value="pass" edge="1" parent="1" source="n_exec" target="n_report" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=11;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" edge="1" parent="1" source="n_shot" target="n_report" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" edge="1" parent="1" source="n_report" target="n_pub" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" edge="1" parent="1" source="n_pub" target="n_end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

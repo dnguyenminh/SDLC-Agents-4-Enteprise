@@ -1,0 +1,113 @@
+name: SA4E-341 E2E — headless unit tests + Serenity report (wdio-vscode-service)
+
+# Per-ticket E2E CI pipeline for SA4E-341 (test-infrastructure deliverable:
+# BDD E2E framework at e2e/ — WebdriverIO v9 + wdio-vscode-service 8 +
+# Serenity/JS 3 Screenplay for VSCode-based IDEs).
+#
+# Scope (TDD v1.0 + DPG v1.0):
+#   - e2e/ only — NO backend jobs, NO Dockerfile/container, NO DB migration
+#     (no server runtime and no schema change in this epic, TDD §7).
+#   - unit-tests (vitest run) -> blocking check.
+#   - e2e-headless (xvfb-run npx wdio run wdio.conf.ts) -> optional,
+#     continue-on-error until SPIKE-4 validates CI Electron go/no-go (UC-07).
+#
+# ASSUMPTION (to be confirmed by SPIKE-4): running the real Electron-based
+# VSCode/IDE fork on a Linux CI runner requires a virtual display (xvfb-run).
+# The e2e-headless job is therefore gated as continue-on-error and uploads the
+# Serenity BDD report as an artifact for inspection regardless of run outcome.
+#
+# This workflow does NOT modify any existing pipeline (ci.yml, publish.yml,
+# auto-release.yml, ci-sa4e-336.yml). It only triggers on paths under e2e/.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "e2e/**"
+      - ".github/workflows/e2e-tests.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "e2e/**"
+      - ".github/workflows/e2e-tests.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: sa4e-341-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # unit-tests — vitest run for step definitions / Screenplay / page objects
+  # Fast, no IDE/Electron needed — blocking check for e2e/ changes.
+  # ---------------------------------------------------------------------------
+  unit-tests:
+    name: E2E framework — unit tests (vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Install dependencies (lockfile integrity — npm ci)
+        run: npm ci
+
+      - name: Unit tests (vitest run)
+        run: npx vitest run
+
+  # ---------------------------------------------------------------------------
+  # e2e-headless — WDIO v9 + wdio-vscode-service against a virtual display.
+  # OPTIONAL (continue-on-error) until SPIKE-4 validates the CI Electron
+  # go/no-go decision (UC-07 AF-1). Serenity BDD report is uploaded as an
+  # artifact so failures (with automatic screenshots) are always inspectable.
+  # ---------------------------------------------------------------------------
+  e2e-headless:
+    name: E2E headless — wdio run (xvfb, optional)
+    runs-on: ubuntu-latest
+    # ASSUMPTION: real Electron/VSCode on Linux CI needs xvfb-run (virtual
+    # display). continue-on-error = job does not block merge while SPIKE-4
+    # is pending; remove it once the headless run is validated as required.
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Install dependencies (lockfile integrity — npm ci)
+        run: npm ci
+
+      - name: Pre-download Serenity BDD jar
+        # Serenity/JS generates the HTML report with the local serenity-bdd
+        # CLI; the jar must be fetched before the WDIO run starts.
+        run: npx serenity-bdd update
+
+      - name: Run WDIO headless (xvfb-run — Electron needs a virtual display)
+        run: xvfb-run -a npx wdio run wdio.conf.ts
+
+      - name: Upload Serenity BDD report artifact
+        # Report at e2e/target/site/serenity/index.html with automatic failure
+        # screenshots (UC-06, BR-08). Opens standalone in any browser.
+        uses: actions/upload-artifact@v4
+        with:
+          name: sa4e-341-serenity-report
+          path: e2e/target/site/serenity/
+          if-no-files-found: ignore

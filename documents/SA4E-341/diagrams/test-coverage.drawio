@@ -1,0 +1,30 @@
+<mxGraphModel dx="1000" dy="700" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="560" math="0" shadow="0" adaptiveColors="auto">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-341 — Test Coverage Pyramid (6 Levels)" style="text;html=1;fontSize=18;fontStyle=1;align=center;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="225" y="10" width="400" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="lvl-pbt" value="PBT — Property-Based Tests (fast-check) | Automated | TC-01, TC-02" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="290" y="55" width="270" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="lvl-ut" value="UT — Unit Tests (vitest) | Automated | TC-03, TC-04, TC-05, TC-21" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="250" y="115" width="350" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="lvl-it" value="IT — Integration Tests (Hono app in-process) | Automated | TC-06, TC-07, TC-08" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="210" y="175" width="430" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="lvl-api" value="E2E-API — REST Endpoint E2E (vitest + fetch) | Automated | TC-09, TC-10, TC-17, TC-18, TC-19, TC-20, TC-22" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="170" y="235" width="510" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="lvl-ui" value="E2E-UI — Browser UI E2E (Playwright) | Automated | TC-11, TC-12, TC-15, TC-16" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="130" y="295" width="590" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="lvl-sit" value="SIT — Manual Exploratory Testing (Browser) | Manual only | TC-13, TC-14" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="90" y="355" width="670" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="note" value="22 test cases total | Automated: 20 (91%) | Manual SIT: 2 (9%)" style="text;html=1;fontSize=12;fontStyle=2;align=center;verticalAlign=middle;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="225" y="425" width="400" height="30" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

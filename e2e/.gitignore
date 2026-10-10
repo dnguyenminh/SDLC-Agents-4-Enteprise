@@ -1,0 +1,4 @@
+# E2E framework generated artifacts + dependencies (TDD §8.2 — never committed)
+node_modules/
+dist/
+target/

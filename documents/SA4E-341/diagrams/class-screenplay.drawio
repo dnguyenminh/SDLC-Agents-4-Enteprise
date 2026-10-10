@@ -1,0 +1,90 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="t1" value="SA4E-341 - Screenplay Class Design (Serenity/JS + WDIO)" style="text;html=1;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="240" y="20" width="680" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor" value="Actor (Serenity core) actorCalled('QA')" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="70" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="cast" value="Cast (e2e/src/cast.ts) configureCast(browser): Cast whoCan(BrowseTheWebWithWebdriverIO)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="180" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ability" value="Ability (Serenity core) BrowseTheWebWithWebdriverIO using(browser) - WDIO session binding" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="310" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="taskAbstract" value="Task (abstract - Serenity core) Task.where('#actor ...', ...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="420" y="70" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="openWorkspace" value="OpenWorkspace (task) WaitUntilWorkbenchReady()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="420" y="180" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="openEditor" value="OpenEditor (task) getEditorView().openFile(path)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="420" y="250" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="runCommand" value="RunCommand (task) workbench.executeCommand(cmd)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="420" y="320" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="openChatPanel" value="OpenChatPanel (task - UC-05) command sdlcAgents.openAgenticChat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="420" y="390" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="sendChatMessage" value="SendChatMessage (task - UC-05) webview locator setValue + click" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="420" y="460" width="220" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="questionAbstract" value="Question (abstract - Serenity core) Question.about('...', ...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e8;strokeColor=#9673a6;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="760" y="70" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="activeTabText" value="ActiveTabText (question) EditorView.getActiveTab().getTitle()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="760" y="180" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="isPanelVisible" value="IsPanelVisible (question) panel locator isDisplayed()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="760" y="250" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="chatReplyText" value="ChatReplyText (question - UC-05) webview .chat-messages getText()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="760" y="320" width="240" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="ensure" value="Ensure / equals (@serenity-js/assertions) Ensure.that(question, equals(x))" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="760" y="420" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="photographer" value="Photographer + TakePhotosOfFailures (Serenity core) - screenshot on EVERY failed step (BR-08)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="430" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="stepdefs" value="Step definitions (features/step_definitions/) actorCalled('QA').attemptsTo(task) delegation ONLY - no raw WDIO commands (BR-04)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="420" y="560" width="300" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="waitInter" value="WaitUntilWorkbenchReady (interaction) browser.waitUntil - no sleeps (flaky prevention)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="560" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="cl1" value="performs" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor" target="taskAbstract">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl2" value="reads state via" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="actor" target="questionAbstract">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl3" value="assigned by" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="cast" target="actor">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl4" value="grants" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="cast" target="ability">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl5" value="uses ability" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="openWorkspace" target="ability">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl6" value="verified by" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="activeTabText" target="ensure">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl7" value="delegates to" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stepdefs" target="openEditor">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl8" value="delegates to" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="stepdefs" target="chatReplyText">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl9" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="openWorkspace" target="waitInter">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="cl10" value="guards tasks" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="photographer" target="stepdefs">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

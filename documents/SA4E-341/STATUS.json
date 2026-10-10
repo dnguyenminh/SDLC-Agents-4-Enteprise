@@ -1,0 +1,42 @@
+{
+  "ticket": "SA4E-341",
+  "type": "Epic",
+  "title": "[E2E Testing] Serenity/JS + wdio-vscode-service cho VSCode-based IDEs (Kiro/Antigravity/Kilo)",
+  "currentPhase": "COMPLETED",
+  "autonomyLevel": "L3",
+  "branch": "main",
+  "jiraStatus": "Done",
+  "phases": {
+    "discovery": { "status": "DONE", "startedAt": "2026-10-08T00:00:00Z" },
+    "requirements": { "status": "DONE", "file": "BRD.md", "version": 1 },
+    "specification": { "status": "DONE", "file": "FSD.md", "version": 1 },
+    "design": { "status": "DONE", "file": "TDD.md", "version": 1 },
+    "test_planning": { "status": "DONE", "files": ["STP.md", "STC.md"], "review": "approved" },
+    "implementation": {
+      "status": "DONE",
+      "files": ["e2e/", "documents/SA4E-341/UG.md"],
+      "codeDone": true,
+      "attempts": 3,
+      "startedAt": "2026-10-09T09:00:00Z",
+      "note": "dev-agent: e2e/ skeleton DONE - wdio.conf.ts, vitest.config.ts, package.json (@sa4e/e2e), 4 Gherkin features, Screenplay tasks/questions/interactions, step_definitions (incl. commands.steps.ts), 6 unit test files, node_modules installed. UG.md created (retry #2, ~210 lines)."
+    },
+    "testing": {
+      "status": "DONE",
+      "file": "TEST-REPORT.md",
+      "startedAt": "2026-10-09T09:53:00Z",
+      "note": "qa-agent: vitest 16 passed / 14 failed / 3 skipped (33 tests, 6 files). 14 fails share root cause: Serenity actor lifecycle rejects mocked browser handle (3 defects logged for DEV). STC matrix: 6 verified / 16 deferred (need real VSCode / CI headless via e2e-tests.yml). wdio.conf.ts config validation OK."
+    },
+    "deployment": {
+      "status": "DONE",
+      "files": ["DPG.md", "RLN.md", ".github/workflows/e2e-tests.yml"],
+      "attempts": 3,
+      "note": "devops-agent: DPG.md (25KB), RLN.md (7KB, v0.1.0), CI headless workflow .github/workflows/e2e-tests.yml (4KB, ubuntu-latest + xvfb-run, vitest + wdio, artifact Serenity report). No real deploy (framework only)."
+    }
+  },
+  "followUps": {
+    "P1_fix_defects": "DONE — 3 defects CLOSED (actor lifecycle mock, audit scope, CI workflow); vitest 33/33 PASS, tsc exit 0",
+    "P2_ci_headless": "READY — workflow verified + DPG trigger section; thực chạy sau commit + push",
+    "P3_spike_ide_fork": "DONE — spikes/compatibility-matrix.md: VSCode=go (Chromium 150.0.7871.250), forks=blocked (chờ V1-V5)"
+  },
+  "lastUpdated": "2026-10-10T07:00:00Z"
+}

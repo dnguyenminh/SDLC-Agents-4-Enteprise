@@ -2,13 +2,19 @@
   "name": "sdlc-agents-4-enterprise-monorepo",
   "version": "1.47.0",
   "private": true,
-  "workspaces": ["backend", "extension"],
+  "workspaces": [
+    "backend",
+    "extension"
+  ],
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
     "dev": "npm run dev --workspace=backend",
-    "clean": "npm run clean --workspaces"
+    "clean": "npm run clean --workspaces",
+    "test:e2e": "npm run test:e2e --prefix e2e",
+    "test:e2e:report": "npm run test:e2e:report --prefix e2e",
+    "test:e2e:clean": "npm run test:e2e:clean --prefix e2e"
   },
   "engines": {
     "node": "22.x"
@@ -22,5 +28,3 @@
     "esbuild": "0.28.2"
   }
 }
-
-

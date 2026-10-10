@@ -1,0 +1,108 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="t1" value="SA4E-341 E2E Framework - Internal Components" style="text;html=1;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="220" y="20" width="720" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="pkg" value="e2e/ (standalone npm package - not a workspace)" style="swimlane;startSize=30;fillColor=none;strokeColor=#82b366;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="60" width="1000" height="620" as="geometry"/>
+    </mxCell>
+    <mxCell id="pkgjson" value="e2e/package.json - devDependencies (3.1) + scripts test:e2e / :report / :clean (FSD 6.4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="pkg">
+      <mxGeometry x="20" y="40" width="300" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="tsconfig" value="e2e/tsconfig.json - TS config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="pkg">
+      <mxGeometry x="340" y="40" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="wdioconf" value="e2e/wdio.conf.ts - config contract (FSD 5.2): env validation, capabilities, services, framework, reporters, timeouts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="pkg">
+      <mxGeometry x="540" y="40" width="440" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="support" value="e2e/src/support/env.ts - E2E env schema + fail-fast validation (BR-01)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="pkg">
+      <mxGeometry x="20" y="140" width="300" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="castc" value="e2e/src/cast.ts - Serenity cast: actor QA + BrowseTheWebWithWebdriverIO + Photographer (BR-08)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="pkg">
+      <mxGeometry x="340" y="140" width="300" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="features" value="e2e/features/ - Gherkin scenarios" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="pkg">
+      <mxGeometry x="20" y="240" width="460" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="f1" value="smoke/launch.feature (UC-01/UC-03)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="features">
+      <mxGeometry x="20" y="40" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="f2" value="workbench/open-editor.feature (UC-04)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="features">
+      <mxGeometry x="240" y="40" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="f3" value="commands/run-extension-command.feature (UC-04)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="features">
+      <mxGeometry x="20" y="100" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="f4" value="webview/chat-panel.feature (UC-05)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="features">
+      <mxGeometry x="240" y="100" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="stepdefs" value="e2e/features/step_definitions/ - glue (delegation only - BR-04)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="pkg">
+      <mxGeometry x="20" y="430" width="460" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" value="smoke.steps.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="stepdefs">
+      <mxGeometry x="20" y="40" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2" value="workbench.steps.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="stepdefs">
+      <mxGeometry x="240" y="40" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3" value="webview.steps.ts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="stepdefs">
+      <mxGeometry x="20" y="100" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="screenplayc" value="e2e/src/screenplay/ - Screenplay layer" style="swimlane;startSize=30;fillColor=none;strokeColor=#9673a6;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="pkg">
+      <mxGeometry x="520" y="240" width="460" height="350" as="geometry"/>
+    </mxCell>
+    <mxCell id="tasks" value="tasks/ - OpenWorkspace, OpenEditor, RunCommand, OpenChatPanel, SendChatMessage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="screenplayc">
+      <mxGeometry x="20" y="40" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="questions" value="questions/ - ActiveTabText, IsPanelVisible, ChatReplyText" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="screenplayc">
+      <mxGeometry x="240" y="40" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="interactions" value="interactions/ - WaitUntilWorkbenchReady, withWorkbench" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="screenplayc">
+      <mxGeometry x="20" y="150" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="assertions" value="Ensure / equals (@serenity-js/assertions) - verifications on Questions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="screenplayc">
+      <mxGeometry x="240" y="150" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="targetc" value="e2e/target/site/serenity/ - GENERATED artifacts (gitignored): index.html, pages/, screenshots, serenity-summary.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="pkg">
+      <mxGeometry x="520" y="500" width="460" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="deps" value="External: wdio-vscode-service + IDE binary (VSCode / Kiro / Antigravity / Kilo)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="80" y="720" width="1000" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce1" value="1. reads env" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="pkg" source="wdioconf" target="support">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="870" y="120"/>
+          <mxPoint x="170" y="120"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ce2" value="2. wires cast in before()" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.9;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="pkg" source="wdioconf" target="castc">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="ce3" value="3. runs Gherkin specs" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="pkg" source="wdioconf" target="features">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="660" y="220"/>
+          <mxPoint x="250" y="220"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ce4" value="4. maps steps to tasks" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="pkg" source="stepdefs" target="screenplayc">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="ce5" value="5. writes report after run" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="pkg" source="screenplayc" target="targetc">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="ce6" value="6. launches + controls IDE" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="wdioconf" target="deps">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1110" y="130"/>
+          <mxPoint x="1110" y="745"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
