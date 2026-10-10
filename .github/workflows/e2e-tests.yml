@@ -117,6 +117,12 @@ jobs:
           E2E_HEADLESS: "true"
         run: xvfb-run -a npx wdio run wdio.conf.ts
 
+      - name: Generate Serenity BDD report (post-run CLI step — no WDIO service plugin)
+        # serenity-bdd run reads the raw JSON artifacts archived by ArtifactArchiver
+        # (crew member) and renders the multi-page HTML report (UC-06, requires Java).
+        if: always()
+        run: npx serenity-bdd run --source target/site/serenity --destination target/site/serenity || true
+
       - name: Upload Serenity BDD report artifact
         # Report at e2e/target/site/serenity/index.html with automatic failure
         # screenshots (UC-06, BR-08). Opens standalone in any browser.

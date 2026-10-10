@@ -59,7 +59,6 @@ export const config: WebdriverIOConfig = {
 
     services: [
         'vscode',                                           // wdio-vscode-service (FSD 5.2)
-        ['serenity-bdd', { specDirectory: 'features' }],    // post-run HTML render (UC-06)
     ],
 
     framework: '@serenity-js/webdriverio',                  // Screenplay + reporting (FSD 5.2)
@@ -73,7 +72,8 @@ export const config: WebdriverIOConfig = {
         actors: new Actors(),                               // e2e/src/cast.ts (TDD §5.2)
         crew: [
             '@serenity-js/console-reporter',                // FSD §5.2 — console output
-            '@serenity-js/serenity-bdd',                    // UC-06 — Serenity BDD results
+            ['@serenity-js/serenity-bdd', { specDirectory: './features' }],            // UC-06 — Serenity BDD results
+            ['@serenity-js/core:ArtifactArchiver', { outputDirectory: './target/site/serenity' }],   // UC-06 — raw JSONs for the CLI render (Serenity/JS handbook: no WDIO 'serenity-bdd' service plugin exists — HTML render is a post-run CLI step)
             ['@serenity-js/web:Photographer', { strategy: 'TakePhotosOfFailures' }],   // BR-08 — screenshot on EVERY failed step
         ],
     },
