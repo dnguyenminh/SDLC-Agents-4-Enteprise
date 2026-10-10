@@ -120,7 +120,7 @@ jobs:
           E2E_IDE_BINARY_PATH: ${{ env.E2E_IDE_BINARY_PATH }}
           E2E_IDE_VERSION: "1.123.0"
           E2E_HEADLESS: "true"
-        run: xvfb-run -a npx wdio run wdio.conf.ts
+        run: xvfb-run -a npx wdio run wdio.conf.ts --maxInstances 1
 
       - name: Generate Serenity BDD report (post-run CLI step — no WDIO service plugin)
         # serenity-bdd run reads the raw JSON artifacts archived by ArtifactArchiver
