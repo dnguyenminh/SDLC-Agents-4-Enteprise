@@ -1,0 +1,99 @@
+# =============================================================================
+# Local KB PostgreSQL (pgvector) — I/O-friendly tuning for dev machines
+# -----------------------------------------------------------------------------
+# Replaces the manual `docker run` container (same name `pgvector-db`, same
+# volume `pgvector_data`) so the local code-intel KB is reproducible and tuned.
+#
+# Root causes fixed (heavy SSD I/O):
+#   - Default checkpoint every 5min + fsync-per-commit, amplified by the Docker
+#     Desktop VHDX on a nearly-full C: SSD → sustained I/O bursts.
+#   - Fixes: async commit (dev-safe), WAL compression, 30min smoothed
+#     checkpoints, throttled autovacuum, docker log rotation, resource limits.
+#
+# Data safety: reuses the existing `pgvector_data` named volume — no data loss.
+# Durability trade-off: synchronous_commit=off may lose the last commits on an
+# OS/power crash (KB/mem data is re-ingestible); fsync stays ON (no corruption).
+#
+# Usage:
+#   docker compose -f docker-compose.local-kb.yml up -d     # start
+#   docker compose -f docker-compose.local-kb.yml stop      # stop (persists)
+# =============================================================================
+
+# Isolated compose project — must NOT share the "backend" namespace with the
+# prod stack (docker-compose.yml), otherwise `compose up` on either file would
+# recreate/replace the other's `postgres` service container.
+name: local-kb
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: pgvector-db
+    environment:
+      POSTGRES_DB: sa4e_db
+      POSTGRES_USER: sa4e_user
+      POSTGRES_PASSWORD: ${LOCAL_KB_PASSWORD:-sa4e_local_dev_password}
+    command:
+      - postgres
+      # Durability kept ON (no corruption risk)
+      - -c
+      - fsync=on
+      - -c
+      - full_page_writes=on
+      # Commits do not wait for WAL fsync — kills the per-commit fsync storm
+      - -c
+      - synchronous_commit=off
+      # Fewer WAL bytes written to disk
+      - -c
+      - wal_compression=on
+      # Checkpoint every 30min, spread over 90% of the window (no I/O spikes)
+      - -c
+      - checkpoint_timeout=30min
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - max_wal_size=1GB
+      # More cache in RAM → fewer disk reads
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=768MB
+      # Throttle autovacuum I/O (smoother background writes)
+      - -c
+      - autovacuum_vacuum_cost_delay=10ms
+      # Quieter logs; log slow statements only
+      - -c
+      - log_min_duration_statement=2000
+      - -c
+      - log_min_messages=warning
+      # Enables pg_stat_io for future I/O diagnosis (negligible overhead)
+      - -c
+      - track_io_timing=on
+    # Loopback only — same access pattern as the manual container (localhost:5432)
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sa4e_user -d sa4e_db"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # Rotate container logs — default json-file is unbounded
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  # Explicit name → adopts the existing pgvector_data volume (396MB, intact)
+  pgvector_data:
+    name: pgvector_data
