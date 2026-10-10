@@ -132,6 +132,19 @@ Autonomy Level: L3 (Unattended) — branch main
 - ❌ 1006 flakiness KHÔNG thể fix bằng config surface — thuộc service internals (service.ts socket lifecycle + workbench proxy injection)
 - **Follow-up dev sâu (ticket riêng khuyến nghị)**: (1) upload VSCode log artifact + chẩn đoán service.ts socket lifecycle; (2) patch/fork wdio-vscode-service reconnect logic; (3) đánh giá @wdio/electron-service thay thế; (4) cân nhắc chỉ chạy E2E trên runner có desktop session thật (Windows CI)
 
+## EPIC CLOSED (2026-10-10 21:30)
+
+| Timestamp | Agent | Action | Output |
+|-----------|-------|--------|--------|
+| 2026-10-10T21:25Z | SM | Tạo follow-up ticket **SA4E-351**: Fix 1006 flakiness (bằng chứng điều tra + 5 hướng xử lý + acceptance criteria) | ✅ SA4E-351 created |
+| 2026-10-10T21:30Z | SM | Transition SA4E-348 → Done (deliverable delivered + viable; 1006 → SA4E-351). **7/7 child stories Done** — epic đóng | ✅ CLOSED |
+| 2026-10-10T21:32Z | SM | Jira final comment trên epic; STATUS.json closedAt + followUpTickets | ✅ |
+
+### Final state epic SA4E-341
+- **7/7 stories Done**, Jira epic Done
+- Framework E2E: local + CI sẵn sàng; unit-tests 33/33 PASS mỗi push
+- Follow-up: SA4E-351 (1006 service internals), SA4E-344 wiring Kiro chromedriver manual (khi triển khai fork E2E thật), Antigravity verify (cùng quy trình Kiro)
+
 ## Tổng kết Epic SA4E-341 (L3, branch main)
 - **Deliverables**: e2e/ framework (wdio.conf.ts, 4 Gherkin features, Screenplay Pattern, step_definitions, 6 unit test files, vitest+wdio config), docs (BRD/FSD/TDD/STP/STC/UG/DPG/RLN/TEST-REPORT), 10 draw.io diagrams + PNG, 2 testdata CSV, CI headless workflow
 - **Chất lượng**: unit tests 16 passed / 14 failed (root cause chung: Serenity actor lifecycle + mock browser handle) — 3 defects cho DEV; config validation OK; STC matrix 6 verified / 16 deferred

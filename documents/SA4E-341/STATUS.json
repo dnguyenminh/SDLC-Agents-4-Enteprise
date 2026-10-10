@@ -35,8 +35,10 @@
   },
   "followUps": {
     "P1_fix_defects": "DONE — 3 defects CLOSED (actor lifecycle mock, audit scope, CI workflow); vitest 33/33 PASS, tsc exit 0",
-    "P2_ci_headless": "READY — workflow verified + DPG trigger section; thực chạy sau commit + push",
-    "P3_spike_ide_fork": "DONE — spikes/compatibility-matrix.md: VSCode=go (Chromium 150.0.7871.250), forks=blocked (chờ V1-V5)"
+    "P2_ci_headless": "DELIVERED — CI pipeline viable (11 runs: unit-tests xanh, launch/connect/steps/report PASS); 1006 flakiness → SA4E-351 (follow-up ticket)",
+    "P3_spike_ide_fork": "DONE — spikes/compatibility-matrix.md: VSCode=go (Chromium 150.0.7871.250), Kiro=GO (Chromium 152.0.7977.130, chromedriver 152 manual session proof), Antigravity=blocked (chờ verify)"
   },
-  "lastUpdated": "2026-10-10T07:00:00Z"
+  "closedAt": "2026-10-10T21:30:00Z",
+  "followUpTickets": ["SA4E-351"],
+  "lastUpdated": "2026-10-10T21:30:00Z"
 }
