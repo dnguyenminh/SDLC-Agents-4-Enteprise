@@ -103,6 +103,21 @@ Autonomy Level: L3 (Unattended) — branch main
 - ⚠️ 1006 flakiness còn lại: connection service↔workbench chết ngẫu nhiên giữa scenario — thuộc service internals, KHÔNG fix được bằng config surface
 - Follow-up cụ thể: (1) upload VSCode logs artifact để chẩn đoán; (2) patch/upgrade wdio-vscode-service reconnect; (3) cân nhắc @wdio/electron-service thay thế
 
+## SPIKE-344: IDE fork Kiro (2026-10-10 tối)
+
+| Timestamp | Agent | Action | Output |
+|-----------|-------|--------|--------|
+| 2026-10-10T20:00Z | SM | V1: tìm Kiro binary — C:\Users\ASUS\AppData\Local\Programs\Kiro\Kiro.exe, app version 1.2.37 (product.json) | ✅ |
+| 2026-10-10T20:05Z | SM | V1+V2: launch Kiro --remote-debugging-port=19222 → GET /json/version → **Chrome/152.0.7977.130 + Electron/44.4.3 + Kiro/1.2.37**; DevTools API + WebSocketDebuggerUrl phản hồi → **CDP attach KHÔNG bị strip** | ✅ VÌNG VÀNG |
+| 2026-10-10T20:15Z | SM | V3: tải chromedriver-win64 152.0.7977.82 (Chrome-for-Testing); chromedriver --port=19515 + POST /session với goog:chromeOptions.binary=Kiro.exe → **sessionId tạo thành công, browserVersion 152.0.7977.130** | ✅ V3 PROVEN |
+| 2026-10-10T20:20Z | SM | Matrix update: Kiro row blocked → **GO** (evidence đầy đủ); cleanup spike instances (kill đúng profile temp, giữ nguyên Kiro IDE user); unit tests 33/33 vẫn xanh | ✅ |
+| 2026-10-10T20:25Z | SM | Jira transition SA4E-344 → Done + comment evidence; Jira SA4E-341 comment | ✅ |
+
+### Kết luận SPIKE-344
+- **Kiro 1.2.37 = GO** cho E2E: CDP attach ✓, chromedriver 152 manual (CfT) điều khiển được ✓
+- Khác biệt then chốt vs VSCode: chromedriver PHẢI manual (service chỉ resolve qua cgmanifest VSCode — Kiro Chromium 152 vượt mọi VSCode release)
+- Follow-up wiring (thuộc epic): wdio.conf fork-support (E2E_CHROMEDRIVER_PATH env → inject binary), locator fallback risk (workbench 152 > service locators 1.123), Antigravity cũng có trên máy (chờ verify cùng quy trình)
+
 ## Tổng kết Epic SA4E-341 (L3, branch main)
 - **Deliverables**: e2e/ framework (wdio.conf.ts, 4 Gherkin features, Screenplay Pattern, step_definitions, 6 unit test files, vitest+wdio config), docs (BRD/FSD/TDD/STP/STC/UG/DPG/RLN/TEST-REPORT), 10 draw.io diagrams + PNG, 2 testdata CSV, CI headless workflow
 - **Chất lượng**: unit tests 16 passed / 14 failed (root cause chung: Serenity actor lifecycle + mock browser handle) — 3 defects cho DEV; config validation OK; STC matrix 6 verified / 16 deferred
