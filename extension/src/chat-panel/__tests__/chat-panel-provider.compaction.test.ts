@@ -295,14 +295,26 @@ describe("ChatPanelProvider Compaction (SA4E-339)", () => {
       env,
     });
 
-    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+    // Strip ANSI escapes — CI runners may colorize child output (FORCE_COLOR /
+    // runner env), and escape codes between "Tests" and the count break the
+    // summary regex below (observed on GH Actions ubuntu-latest).
+    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`.replace(
+      /\x1B\[[0-9;]*[a-zA-Z]/g,
+      "",
+    );
     const tail = output.slice(-4000);
-    expect(result.error, String(result.error ?? "")).toBeUndefined();
+    expect(
+      result.error,
+      `status=${result.status} signal=${result.signal} error=${result.error} tail=${tail}`,
+    ).toBeUndefined();
     // Exit code 0 = the chat suite completed with zero failures.
     expect(result.status, tail).toBe(0);
 
     // The suite must actually have run tests (not silently matched nothing).
-    const passed = output.match(/Tests\s+([\d,]+)\s+passed/);
+    // Fallback matches "Test Files" in case the child reports only files.
+    const passed =
+      output.match(/Tests\s+([\d,]+)\s+passed/) ??
+      output.match(/Test Files\s+([\d,]+)\s+passed/);
     expect(passed, tail).not.toBeNull();
     expect(Number(passed![1].replace(/,/g, ""))).toBeGreaterThan(0);
   }, 180_000);
