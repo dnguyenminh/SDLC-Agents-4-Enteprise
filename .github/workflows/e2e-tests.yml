@@ -133,7 +133,7 @@ jobs:
                    features/commands/run-extension-command.feature \
                    features/webview/chat-panel.feature; do
             echo "=== WDIO run: $f ==="
-            xvfb-run -a npx wdio run wdio.conf.ts --spec "$f" || FAIL=1
+            xvfb-run -a --server-args="-screen 0 1920x1080x24" npx wdio run wdio.conf.ts --spec "$f" || FAIL=1
           done
           exit $FAIL
 

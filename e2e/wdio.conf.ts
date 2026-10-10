@@ -53,9 +53,16 @@ export const config: WebdriverIOConfig = {
             extensionPath: join(__dirname, '..', 'extension'),   // extension under development
             workspacePath: env.workspacePath,               // E2E_BASE_URL (BR-01), undefined if absent
             vscodeArgs: env.headless
-                ? { 'disable-gpu': true, 'no-sandbox': true }    // CI headless flags (UC-07)
+                ? { 'disable-gpu': true, 'no-sandbox': true, 'disable-dev-shm-usage': true }   // CI headless flags (UC-07); disable-dev-shm-usage: Chromium crash on small CI /dev/shm → workbench reload → 1006
                 : {},
-            userSettings: { 'update.mode': 'none', 'extensions.autoUpdate': false },   // test isolation (BR-05)
+            // Workspace trust prompt triggers a WINDOW RELOAD after consent — the
+            // service↔workbench WebSocket (VSCodeProxy) does not survive it (SPIKE-4
+            // 1006 root cause). Disabling trust removes the reload entirely.
+            userSettings: {
+                'update.mode': 'none',
+                'extensions.autoUpdate': false,
+                'security.workspace.trust.enabled': false,
+            },
         },
     }],
 
