@@ -1,0 +1,148 @@
+{
+  "lastUpdated": "2026-10-10T23:40:00Z",
+  "lastCommentProcessed": "2026-10-10T23:40:00Z",
+  "phases": {
+    "implementation": {
+      "status": "not_started"
+    },
+    "security_code_review": {
+      "status": "not_started"
+    },
+    "devops_pipeline_setup": {
+      "status": "not_started"
+    },
+    "requirements": {
+      "version": null,
+      "status": "in_progress",
+      "file": "BRD.md",
+      "startedAt": "2026-10-10T23:40:00Z"
+    },
+    "security_design_review": {
+      "status": "not_started"
+    },
+    "feedback_loop": {
+      "iterations": 0,
+      "status": "not_started",
+      "maxIterations": 5
+    },
+    "deployment": {
+      "status": "not_started"
+    },
+    "specification": {
+      "file": "FSD.md",
+      "status": "not_started"
+    },
+    "test_planning": {
+      "status": "not_started"
+    },
+    "pentest": {
+      "status": "not_started"
+    },
+    "testing": {
+      "status": "not_started"
+    },
+    "design": {
+      "file": "TDD.md",
+      "status": "not_started"
+    },
+    "security_deploy_review": {
+      "status": "not_started"
+    }
+  },
+  "ticket": "SA4E-351",
+  "circuitBreaker": {
+    "phase_design": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_security_deploy_review": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_pentest": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_security_design_review": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_implementation": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_security_code_review": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_testing": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_specification": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_requirements": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_devops_pipeline_setup": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_deployment": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    },
+    "phase_test_planning": {
+      "cooldownUntil": null,
+      "attempts": 0,
+      "lastError": null,
+      "lastFailure": null,
+      "state": "closed"
+    }
+  },
+  "tokenBudget": {
+    "mode": "normal",
+    "warningThreshold": 0.8,
+    "usedToday": 0,
+    "lastReset": "2026-10-10T00:00:00Z",
+    "dailyCap": 500000
+  },
+  "autonomyLevel": "L3",
+  "currentPhase": "requirements"
+}

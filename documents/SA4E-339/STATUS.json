@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-339",
-  "currentPhase": "completed",
+  "currentPhase": "uat",
   "jiraStatus": "unknown_no_tool",
   "phases": {
     "requirements": { "status": "done", "file": "BRD.md", "version": 1.2, "reviewVerdict": "PASS-with-fixes (round 4) — D-2a formula applied (BRD:31), traceability cells fixed, AC-05 note stale but blocker closed" },
@@ -11,8 +11,9 @@
     "test_planning": { "status": "done", "file": "STP.md, STC.md", "version": 1.3, "reviewVerdict": "STP PASS-with-fixes (round 4) — 2 drawio + PNG exported/embedded, Diagram Index refs valid; STC PASS-with-fixes (round 4) — QA-03 DONE: STC-339-12/13/14/15 added, STC-05 rewritten with 94.5% boundary, RTM + test-data index" },
     "implementation": { "status": "done", "note": "tsc 0, lint 0; SA4E-339 tests 11/11 + chat suite 178/178 pass; helpers extracted per TDD (applyCompactionAndRecount 12 lines, buildCompactableSession 14 lines); shouldCompact used (inconsistency #3 CLOSED); placeholder expect(true) + stale mock removed; N-01 boundary test uses 94.5% real rounding" },
     "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 1.4, "reviewVerdict": "PASS (round 4) — full-suite log (249 files/2395 tests/0 fail, 2026-10-07 17:58), 11/11 compaction tests mapped, STC-11 evidenced (N-02 closed), Status truthful" },
+    "uat": { "status": "failed", "note": "UAT fail - UI banner persists after auto-compaction, tab.breakdown not persisted in webview", "failedAt": "2026-10-11T00:00:00Z" },
     "user_guide": { "status": "done", "file": "UG.md", "version": 1.0, "completedAt": "2026-10-08T03:20:00Z" },
-    "deployment": { "status": "done", "file": "DPG.md, RLN.md", "version": 1.0, "completedAt": "2026-10-08T03:30:00Z", "note": "DPG: pre-deploy gates + package/install/health-checks/rollback; RLN: target v1.47.2, version-sync DISCREPANCY flagged — tag v1.47.1 exists but packages at 1.47.0, must sync before tag" }
+    "deployment": { "status": "blocked", "file": "DPG.md, RLN.md", "version": 1.0, "completedAt": "2026-10-08T03:30:00Z", "note": "Deployment paused due to UAT fail; DPG/RLN exist but deployment blocked until UAT passes; version-sync DISCREPANCY flagged — tag v1.47.1 exists but packages at 1.47.0, must sync before tag" }
   },
   "review": {
     "status": "completed",

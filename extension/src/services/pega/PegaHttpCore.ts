@@ -82,8 +82,6 @@ export class PegaHttpCore {
     const prefixes = [
       `${base}/api/CodeIntelligence/v1`,
       `${base}/PRRestService/CodeIntelligence/v1`,
-      `${base}/api/v1`,
-      `${base}/PRRestService/v1`,
     ];
     if (this.activePrefix) {
       return [this.activePrefix, ...prefixes.filter((p) => p !== this.activePrefix)];

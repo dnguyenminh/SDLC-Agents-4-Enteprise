@@ -1,0 +1,129 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1300" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-354 — Test Execution Flow: PBT → UT → IT → E2E-API → SIT with quality gates" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="150" y="10" width="700" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="Start: SA4E-354 code merged (feature branch)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="50" width="280" height="44" as="geometry" />
+    </mxCell>
+    <mxCell id="pbt" value="Level 1 — PBT&#10;fast-check properties (3 cases)&#10;Dead-endpoint absence · ordering · case-sensitive keys" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="130" width="320" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="g1" value="PBT pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="390" y="220" width="160" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="f1" value="Defect → DEV fix&#10;(STC case ID attached)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="225" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ut" value="Level 2 — UT (vitest)&#10;11 cases: prefix list · cache miss/hit · case-sensitivity&#10;no-operator · probe failure · caps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="310" width="320" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="g2" value="UT pass? (14/14 PBT+UT green)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="370" y="400" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="f2" value="Defect → DEV fix&#10;(STC case ID attached)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="405" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="it" value="Level 3 — IT (real modules + mocked fetch)&#10;3 cases: cross-pipeline dedup · parallel throttle&#10;read-path failover" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="490" width="320" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="g3" value="IT pass? (probe counts match STC)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="370" y="580" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="f3" value="Defect → DEV fix&#10;re-run FULL automated level" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="585" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e2e" value="Level 4 — E2E-API (vitest.e2e.config.ts)&#10;3 cases: URL audit (TDD TC-01) · calibration cycle (TC-02)&#10;duplicate probe reduction (TC-03)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="670" width="320" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="g4" value="E2E-API pass? (zero dead-endpoint URLs)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="370" y="760" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="f4" value="Defect → DEV fix&#10;re-run FULL automated level" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="765" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="sit" value="Level 5 — SIT manual (real Pega Academy 8b99ujcj)&#10;3 cases: no-404 logs (SIT-01) · cached probe log (SIT-02)&#10;indexing regression (SIT-03) · evidence → documents/SA4E-354/evidence/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="850" width="320" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="g5" value="Exit criteria met? (23/23 executed · 0 Critical/Major)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="360" y="950" width="220" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="f5" value="Defect → DEV fix&#10;SIT re-run after fix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="960" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="report" value="TEST-REPORT-SA4E-354.md compiled (final results + Appendix A re-test history)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="310" y="1050" width="320" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="Sign-off: BA review gate APPROVED → attach STP/STC/TEST-REPORT to Jira SA4E-354" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="1130" width="400" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="eStart" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="start" target="pbt">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e1a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="pbt" target="g1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e1yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#000000;fontSize=10;" edge="1" parent="1" source="g1" target="ut">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e1no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="g1" target="f1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e1fix" value="retest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="f1" target="pbt">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="ut" target="g2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#000000;fontSize=10;" edge="1" parent="1" source="g2" target="it">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="g2" target="f2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2fix" value="retest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="f2" target="ut">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="it" target="g3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#000000;fontSize=10;" edge="1" parent="1" source="g3" target="e2e">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="g3" target="f3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3fix" value="retest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="f3" target="it">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="e2e" target="g4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#000000;fontSize=10;" edge="1" parent="1" source="g4" target="sit">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="g4" target="f4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4fix" value="retest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="f4" target="e2e">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5a" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sit" target="g5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5yes" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#000000;fontSize=10;" edge="1" parent="1" source="g5" target="report">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5no" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="g5" target="f5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5fix" value="retest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontColor=#000000;fontSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="f5" target="sit">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="report" target="end">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

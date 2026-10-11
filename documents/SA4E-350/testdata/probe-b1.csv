@@ -1,0 +1,2 @@
+insKey,expectedHttpCode,description
+"RULE-HTML-SECTION @BASECLASS PZBULKACTIONS",404,"Probe B1: short insKey (no #timestamp) returns 404"

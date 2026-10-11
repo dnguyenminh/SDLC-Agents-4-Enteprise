@@ -1,0 +1,4 @@
+scenario,originalAppliesTo,firstQueryResults,retryAppliesTo,retryResults,expectedBehavior,description
+"exact-miss-then-retry","@baseclass",0,"",1,"retry triggered","Compat retry: exact @baseclass miss → empty retry succeeds"
+"non-baseclass-no-retry","Work-",0,"(none)","(none)","no retry","Non-@baseclass: exact miss → NO retry with empty"
+"baseclass-hit","@baseclass",1,"(none)","(none)","no retry","@baseclass hit on first try → NO retry"

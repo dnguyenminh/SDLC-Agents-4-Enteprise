@@ -1,0 +1,39 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="p1" value="Indexing Pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="40" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2" value="PegaHttpCore&#xa;getCustomRestPrefixes()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="40" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="p3" value="Pega Academy&#xa;8b99ujcj" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="560" y="40" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="l1" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=none;html=1;" edge="1" parent="1" source="p1" target="p1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="l2" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=none;html=1;" edge="1" parent="1" source="p2" target="p2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="l3" style="edgeStyle=orthogonalEdgeStyle;dashed=1;endArrow=none;html=1;" edge="1" parent="1" source="p3" target="p3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m1" value="getCustomRestPrefixes()" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="p1" target="p2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m2" value="prefix list&#xa;(without /api/v1, /PRRestService/v1)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="p2" target="p1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m3" value="rules/query request" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="p1" target="p3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="m4" value="200 OK / no 404 probe" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="p3" target="p1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note1" value="Dead endpoints removed → no permanent 404" style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="80" y="220" width="640" height="60" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

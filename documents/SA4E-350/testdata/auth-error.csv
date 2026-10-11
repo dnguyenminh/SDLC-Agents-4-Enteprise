@@ -1,0 +1,6 @@
+scenario,httpCode,errorType,expectedBehavior,description
+"unauthorized","401","AuthenticationError","immediate rethrow","401 Unauthorized → immediate rethrow, NO compat retry"
+"forbidden","403","AuthorizationError","immediate rethrow","403 Forbidden → immediate rethrow, NO compat retry"
+"server-error","500","ServerError","immediate rethrow","500 Internal Server Error → immediate rethrow, NO compat retry"
+"server-error-502","502","ServerError","immediate rethrow","502 Bad Gateway → immediate rethrow"
+"server-error-503","503","ServerError","immediate rethrow","503 Service Unavailable → immediate rethrow"

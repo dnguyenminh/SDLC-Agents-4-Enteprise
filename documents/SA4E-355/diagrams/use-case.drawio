@@ -1,0 +1,84 @@
+<mxGraphModel adaptiveColors="auto" dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1150" pageHeight="560" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="system" value="Pi Harness Context Budget Governance" style="swimlane;startSize=40;horizontal=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+      <mxGeometry x="160" y="60" width="780" height="420" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_user" value="User" style="shape=mxgraph.flowchart.person;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="40" y="120" width="70" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_dev" value="Developer" style="shape=mxgraph.flowchart.person;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="40" y="240" width="70" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="actor_qa" value="SM / QA" style="shape=mxgraph.flowchart.person;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="980" y="360" width="70" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1" value="Detect Context Window" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="system">
+      <mxGeometry x="140" y="70" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2" value="Calculate Budget" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="system">
+      <mxGeometry x="360" y="70" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3" value="Scope Resources by Role" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="system">
+      <mxGeometry x="580" y="70" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc4" value="Compress Prompt" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="system">
+      <mxGeometry x="140" y="190" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc5" value="Filter Tools" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="system">
+      <mxGeometry x="360" y="190" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc6" value="Budget Gate" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="system">
+      <mxGeometry x="580" y="190" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc7" value="Route by Tier" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="system">
+      <mxGeometry x="360" y="310" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc8" value="Run Integration Test (E2E)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="system">
+      <mxGeometry x="580" y="310" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_user" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_user" target="uc2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="75" y="108"/>
+          <mxPoint x="600" y="108"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_user" target="uc6">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="125" y="235"/>
+          <mxPoint x="700" y="235"/>
+          <mxPoint x="700" y="285"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_dev" target="uc3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="140" y="215"/>
+          <mxPoint x="820" y="215"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_dev" target="uc4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_dev" target="uc5">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="75" y="345"/>
+          <mxPoint x="600" y="345"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_qa" target="uc8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

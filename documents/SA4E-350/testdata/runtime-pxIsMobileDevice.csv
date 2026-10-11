@@ -1,0 +1,2 @@
+pyClassName,appliesTo,expectedFound,ruleType,description
+"pxIsMobileDevice","Work-",true,"Decision Table","Runtime regression: non-@baseclass rule pxIsMobileDevice resolves"

@@ -1,0 +1,5 @@
+appliesTo,expectedResults,expectedRetry,description
+"Work-",0,false,"Non-@baseclass: Work- appliesTo → 0 results, NO retry"
+"Data-Admin-Operator-ID",1,false,"Non-@baseclass: Data- appliesTo → 1 result, NO retry"
+"Assign-",0,false,"Non-@baseclass: Assign- appliesTo → 0 results, NO retry"
+"@baseclass",1,"conditional","@baseclass: conditional retry (covered in compat-retry.csv)"

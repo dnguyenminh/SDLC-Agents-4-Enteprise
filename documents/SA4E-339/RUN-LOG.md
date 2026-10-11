@@ -43,3 +43,8 @@
 | 2026-10-08 03:20 | User Guide | ba-agent | Created UG.md v1.0 (feature summary, how-it-works, thresholds + 94.5% boundary, verify guide, FAQ, limitations, 3 PNG embedded) + STATUS.json user_guide=done. | OK |
 | 2026-10-08 03:30 | Deployment | devops-agent | Created DPG.md v1.0 (pre-deploy gates, package/install/health-checks/rollback, dependencies, known issues) + RLN.md v1.0 (target v1.47.2, highlights, evidence, version-sync DISCREPANCY flagged: tag v1.47.1 exists but packages 1.47.0). | OK |
 | 2026-10-08 03:30 | Deployment | SM | Verified DPG/RLN vs TDD/FSD/TEST-REPORT (read-only): gates match verified evidence; rollback compatible; version-sync discrepancy documented per guardrail #4. STATUS.json: deployment=done, currentPhase=completed. | OK |
+
+| 2026-10-11 | UAT | SM | UAT feedback: user reported UAT FAIL - UI/tin nhắn bug: banner đỏ vẫn hiển thị sau auto-compaction, context meter không cập nhật ổn định. | FAILED |
+| 2026-10-11 | Investigation | dev-agent | Analyzed ChatPanelProvider and webview chat.js. Identified tab.breakdown not persisted in handleContextUpdate, causing stale UI state on tab switch. | ROOT CAUSE FOUND |
+| 2026-10-11 | Fix | dev-agent | Updated extension/webview-assets/chat/chat.js and resources/webview-assets/chat/chat.js to persist tab.breakdown = payload.breakdown in handleContextUpdate. Tests compaction 11/11 PASS, chat suite 79/79 PASS. Committed to branch SA4E-339. | DONE |
+| 2026-10-11 | Status Update | SM | STATUS.json updated: currentPhase=uat, uat status=failed, deployment status=blocked. RUN-LOG updated. | DONE |

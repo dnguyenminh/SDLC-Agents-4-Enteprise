@@ -1,0 +1,4 @@
+scenario,pzInsKey,expectedInstanceCall,description
+"empty-inskey","",false,"Handle row with empty pzInsKey → no instance follow-up"
+"missing-inskey","(undefined)",false,"Handle row missing pzInsKey → no instance follow-up"
+"null-inskey","null",false,"Handle row with null pzInsKey → no instance follow-up"

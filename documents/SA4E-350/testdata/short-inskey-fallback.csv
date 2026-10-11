@@ -1,0 +1,5 @@
+scenario,pzInsKey,instanceHttpCode,expectedResult,description
+"short-inskey-fallback","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS",404,"handle-row","Short insKey → instance 404 → soft fallback to handle row"
+"full-inskey-success","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",200,"full-rule","Full insKey → instance 200 → full rule returned"
+"instance-500-fallback","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",500,"handle-row","Instance 500 error → soft fallback to handle row"
+"instance-network-error","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT","ECONNREFUSED","handle-row","Network error → soft fallback to handle row"

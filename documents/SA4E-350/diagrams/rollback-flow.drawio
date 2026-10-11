@@ -1,0 +1,176 @@
+<mxGraphModel adaptiveColors="auto">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+
+<!-- Swimlanes -->
+<mxCell id="swimlane-trigger" value="Issue Detection" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#ffebee;strokeColor=#c62828;fontColor=#b71c1c;" vertex="1" parent="1">
+<mxGeometry x="20" y="20" width="1200" height="140" as="geometry"/>
+</mxCell>
+<mxCell id="swimlane-assess" value="Severity Assessment" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff3e0;strokeColor=#ef6c00;fontColor=#e65100;" vertex="1" parent="1">
+<mxGeometry x="20" y="180" width="1200" height="140" as="geometry"/>
+</mxCell>
+<mxCell id="swimlane-rollback" value="Rollback Execution" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fce4ec;strokeColor=#ad1457;fontColor=#880e4f;" vertex="1" parent="1">
+<mxGeometry x="20" y="340" width="1200" height="220" as="geometry"/>
+</mxCell>
+<mxCell id="swimlane-verify" value="Rollback Verification" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e8f5e9;strokeColor=#2e7d32;fontColor=#1b5e20;" vertex="1" parent="1">
+<mxGeometry x="20" y="580" width="1200" height="180" as="geometry"/>
+</mxCell>
+
+<!-- Issue Detection -->
+<mxCell id="trigger-1" value="Issue Detected:<br>- Extension fails to activate<br>- @baseclass rules show 'Not found'<br>- Indexing crashes/hangs<br>- Auth errors silent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontColor=#b71c1c;" vertex="1" parent="swimlane-trigger">
+<mxGeometry x="30" y="40" width="560" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="trigger-2" value="Alert Source:<br>- User report<br>- Automated monitoring<br>- CI/CD pipeline failure<br>- Manual testing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#ef6c00;fontColor=#e65100;" vertex="1" parent="swimlane-trigger">
+<mxGeometry x="620" y="40" width="560" height="80" as="geometry"/>
+</mxCell>
+
+<!-- Severity Assessment -->
+<mxCell id="assess-1" value="Assess Severity" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontColor=#f57f17;fontStyle=1;" vertex="1" parent="swimlane-assess">
+<mxGeometry x="30" y="200" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="assess-critical" value="CRITICAL:<br>- Extension fails to load<br>- Data integrity issue<br>- Complete indexing failure" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontColor=#b71c1c;" vertex="1" parent="swimlane-assess">
+<mxGeometry x="250" y="200" width="280" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="assess-major" value="MAJOR:<br>- @baseclass rules not found<br>- Indexing hangs<br>- Auth errors silent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontColor=#e65100;" vertex="1" parent="swimlane-assess">
+<mxGeometry x="570" y="200" width="280" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="assess-minor" value="MINOR:<br>- UI cosmetic issue<br>- Performance degradation < 50%<br>- Non-blocking bug" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;" vertex="1" parent="swimlane-assess">
+<mxGeometry x="890" y="200" width="280" height="80" as="geometry"/>
+</mxCell>
+
+<!-- Decision diamonds -->
+<mxCell id="decision-critical" value="Immediate<br>Rollback?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontColor=#b71c1c;fontStyle=1;" vertex="1" parent="swimlane-assess">
+<mxGeometry x="250" y="300" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="decision-major" value="Rollback<br>Required?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#ef6c00;fontColor=#e65100;fontStyle=1;" vertex="1" parent="swimlane-assess">
+<mxGeometry x="570" y="300" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="decision-minor" value="Hotfix<br>Instead?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;fontStyle=1;" vertex="1" parent="swimlane-assess">
+<mxGeometry x="890" y="300" width="120" height="60" as="geometry"/>
+</mxCell>
+
+<!-- Rollback Execution Steps -->
+<mxCell id="rb-1" value="1. Stop new version:<br>kiro --uninstall-extension dnguyenminh.sdlc-agents-4-enterprise" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#ad1457;fontColor=#880e4f;" vertex="1" parent="swimlane-rollback">
+<mxGeometry x="30" y="360" width="360" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="rb-2" value="2. No database rollback needed<br>(extension-only, no DB changes)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#ad1457;fontColor=#880e4f;" vertex="1" parent="swimlane-rollback">
+<mxGeometry x="420" y="360" width="360" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="rb-3" value="3. Deploy previous version:<br>kiro --install-extension sdlc-agents-4-enterprise-1.47.2.vsix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#ad1457;fontColor=#880e4f;" vertex="1" parent="swimlane-rollback">
+<mxGeometry x="810" y="360" width="360" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="rb-4" value="4. Reload window:<br>Ctrl+Shift+P &rarr; Developer: Reload Window" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#ad1457;fontColor=#880e4f;" vertex="1" parent="swimlane-rollback">
+<mxGeometry x="30" y="450" width="360" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="rb-5" value="5. Restore configuration:<br>Verify settings persist (no config changes in v1.48.0)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#ad1457;fontColor=#880e4f;" vertex="1" parent="swimlane-rollback">
+<mxGeometry x="420" y="450" width="360" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="rb-6" value="6. Notify stakeholders:<br>- GitHub Issue update<br>- Team Slack notification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8bbd0;strokeColor=#ad1457;fontColor=#880e4f;" vertex="1" parent="swimlane-rollback">
+<mxGeometry x="810" y="450" width="360" height="70" as="geometry"/>
+</mxCell>
+
+<!-- Rollback Verification -->
+<mxCell id="rv-1" value="Verify Rollback:<br>- Extension loads v1.47.2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;" vertex="1" parent="swimlane-verify">
+<mxGeometry x="30" y="600" width="360" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="rv-2" value="Health Check:<br>- kiro --list-extensions shows 1.47.2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;" vertex="1" parent="swimlane-verify">
+<mxGeometry x="420" y="600" width="360" height="70" as="geometry"/>
+</mxCell>
+<mxCell id="rv-3" value="Smoke Test:<br>- Index Source Code completes (old behavior)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;fontColor=#0d47a1;" vertex="1" parent="swimlane-verify">
+<mxGeometry x="810" y="600" width="360" height="70" as="geometry"/>
+</mxCell>
+
+<!-- Decision: Rollback Verified? -->
+<mxCell id="decision-rv" value="Rollback<br>Verified?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontColor=#f57f17;fontStyle=1;" vertex="1" parent="swimlane-verify">
+<mxGeometry x="500" y="690" width="140" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="rv-success" value="ROLLBACK SUCCESS &check;<br>v1.47.2 active, system stable<br>Create hotfix branch for fix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;fontColor=#1b5e20;fontStyle=1;" vertex="1" parent="swimlane-verify">
+<mxGeometry x="200" y="770" width="360" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="rv-fail" value="ROLLBACK FAILED &cross;<br>Escalate to DevOps lead<br>Manual intervention required" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#c62828;fontColor=#b71c1c;fontStyle=1;" vertex="1" parent="swimlane-verify">
+<mxGeometry x="750" y="770" width="360" height="60" as="geometry"/>
+</mxCell>
+
+<!-- Hotfix path from minor -->
+<mxCell id="hotfix" value="Create Hotfix Branch<br>Fix &rarr; Test &rarr; Release v1.48.1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1bee7;strokeColor=#7b1fa2;fontColor=#4a148c;" vertex="1" parent="swimlane-assess">
+<mxGeometry x="890" y="380" width="280" height="70" as="geometry"/>
+</mxCell>
+
+<!-- Edges -->
+<mxCell id="e1" edge="1" parent="1" source="trigger-1" target="assess-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c62828;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="trigger-2" target="assess-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e3" edge="1" parent="1" source="assess-1" target="assess-critical" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c62828;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="assess-1" target="assess-major" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="assess-1" target="assess-minor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e6" edge="1" parent="1" source="assess-critical" target="decision-critical" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c62828;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e7" edge="1" parent="1" source="assess-major" target="decision-major" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ef6c00;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e8" edge="1" parent="1" source="assess-minor" target="decision-minor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e9" edge="1" parent="1" source="decision-critical" target="rb-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ad1457;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e10" edge="1" parent="1" source="decision-major" target="rb-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ad1457;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e11" edge="1" parent="1" source="decision-minor" target="hotfix" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7b1fa2;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e12" edge="1" parent="1" source="rb-1" target="rb-2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ad1457;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e13" edge="1" parent="1" source="rb-2" target="rb-3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ad1457;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e14" edge="1" parent="1" source="rb-3" target="rb-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ad1457;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e15" edge="1" parent="1" source="rb-4" target="rb-5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ad1457;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e16" edge="1" parent="1" source="rb-5" target="rb-6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#ad1457;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e17" edge="1" parent="1" source="rb-6" target="rv-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e18" edge="1" parent="1" source="rv-1" target="rv-2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e19" edge="1" parent="1" source="rv-2" target="rv-3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e20" edge="1" parent="1" source="rv-3" target="decision-rv" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#fbc02d;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e21" edge="1" parent="1" source="decision-rv" target="rv-success" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e22" edge="1" parent="1" source="decision-rv" target="rv-fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c62828;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

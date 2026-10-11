@@ -1,0 +1,6 @@
+scenario,pzInsKey,instanceHttpCode,instanceError,expectedResult,description
+"instance-500","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",500,"Internal Server Error","handle-row","Instance 500 → fallback"
+"instance-502","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",502,"Bad Gateway","handle-row","Instance 502 → fallback"
+"instance-504","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",504,"Gateway Timeout","handle-row","Instance 504 → fallback"
+"network-error","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",0,"ECONNREFUSED","handle-row","Network error → fallback"
+"timeout","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",0,"ETIMEDOUT","handle-row","Timeout → fallback"

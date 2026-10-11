@@ -1,0 +1,2 @@
+pxObjClass,pxUpdateDateTime,pxUpdateOperator,pyClass,pyClassName,pyRuleAvailable,pyRuleName,pyRuleSet,pyRuleSetVersion,pzInsKey,description
+"Rule-HTML-Section","20180713T134741.673 GMT","SSA@TGB","@baseclass","pzBulkActions","Yes","pzBulkActions","Pega-UIEngine","08-01-01","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT","Handle-only row: 10 HANDLE_FIELDS + full pzInsKey"

@@ -1,0 +1,29 @@
+{
+  "epic": "context-budget-governance",
+  "guide": "IMPLEMENTATION-GUIDE.md",
+  "currentPhase": "planning",
+  "lastUpdated": "2026-10-11T10:09:19.811Z",
+  "tasks": {
+    "Task1_ContextBudgetResolver": {
+      "status": "not_started"
+    },
+    "Task2_RoleScopeWire": {
+      "status": "not_started"
+    },
+    "Task3_PromptCompressorWire": {
+      "status": "not_started"
+    },
+    "Task4_ToolLoadoutFilter": {
+      "status": "not_started"
+    },
+    "Task5_BudgetGate": {
+      "status": "not_started"
+    },
+    "Task6_ModelTiering": {
+      "status": "not_started"
+    },
+    "Task7_IntegrationE2E": {
+      "status": "not_started"
+    }
+  }
+}

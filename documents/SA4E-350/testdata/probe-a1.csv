@@ -1,0 +1,2 @@
+appliesTo,expectedResults,description
+"",0,"Probe A1: empty appliesTo returns 0 results (client bug before fix)"

@@ -1,0 +1,2 @@
+pxObjClass,pxUpdateDateTime,pxUpdateOperator,pyClass,pyClassName,pyRuleAvailable,pyRuleName,pyRuleSet,pyRuleSetVersion,pzInsKey,pyRuleHTML,pyRuleJSON,pyJavaScript,description
+"Rule-HTML-Section","20180713T134741.673 GMT","SSA@TGB","@baseclass","pzBulkActions","Yes","pzBulkActions","Pega-UIEngine","08-01-01","RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT","<div>HTML content</div>","{""json"": true}","console.log('js');","Full rule row: HANDLE_FIELDS + content fields (pyRuleHTML, pyRuleJSON, pyJavaScript)"

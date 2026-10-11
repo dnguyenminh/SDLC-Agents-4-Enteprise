@@ -1,0 +1,2 @@
+appliesTo,expectedResults,pzInsKey,ruleName,description
+"@baseclass",1,"RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT","pzBulkActions","Probe A2: @baseclass returns 1 handle-only row"

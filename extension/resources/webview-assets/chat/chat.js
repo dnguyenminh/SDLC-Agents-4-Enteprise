@@ -20,6 +20,8 @@
   var workingText = document.getElementById("working-text");
   var cancelBtn = document.getElementById("cancel-btn");
   var followBtn = document.getElementById("follow-btn");
+  var approveBtn = document.getElementById("approve-btn");
+  var rejectBtn = document.getElementById("reject-btn");
   var stopBtn = document.getElementById("stop-btn");
   var ctxBtn = document.getElementById("ctx-btn");
   var attachBtn = document.getElementById("attach-btn");
@@ -42,6 +44,8 @@
   var messageHistory = [];
   var historyIndex = -1;
   var pendingInput = "";
+  // Fix J: tool waiting for user consent (chat:toolApprovalPending) — Approve/Reject state.
+  var pendingApproval = null;
 
   // === Tab State (KSA-240) ===
   var defaultTabId = crypto.randomUUID();
@@ -610,6 +614,27 @@
     scrollToBottom();
   });
 
+  // === Fix J: tool approval (Approve / Reject on the working bar) ===
+  function hideApprovalButtons() {
+    pendingApproval = null;
+    approveBtn.style.display = "none";
+    rejectBtn.style.display = "none";
+  }
+
+  function respondApproval(decision) {
+    if (!pendingApproval) return;
+    vscode.postMessage({ type: "chat:toolApproval", toolId: pendingApproval.toolId, decision: decision });
+    hideApprovalButtons();
+  }
+
+  approveBtn.addEventListener("click", function () {
+    respondApproval("approve");
+  });
+
+  rejectBtn.addEventListener("click", function () {
+    respondApproval("reject");
+  });
+
   // === Context Menu (#) ===
   ctxBtn.addEventListener("click", function (e) {
     e.stopPropagation();
@@ -826,6 +851,13 @@
           setGraphDone();
         }
         break;
+      case "chat:toolApprovalPending":
+        // Fix J: a tool is blocked on consent — show Approve/Reject on the bar.
+        pendingApproval = { toolId: msg.toolId, toolName: msg.toolName };
+        setWorking(true, "Waiting approval: " + msg.toolName);
+        approveBtn.style.display = "inline-flex";
+        rejectBtn.style.display = "inline-flex";
+        break;
       case "chat:nodeDetails":
         break;
       case "serverStatus":
@@ -843,6 +875,9 @@
         break;
       case "chat:agentsLoaded":
         populateSlashAgents(msg.agents);
+        break;
+      case "chat:skillsLoaded":
+        populateSlashSkills(msg.skills);
         break;
       case "chat:hookTriggered":
         renderHookBadge(msg.hook);
@@ -924,6 +959,8 @@
       workingBar.classList.remove("active");
       stopBtn.style.display = "none";
       isStreaming = false;
+      // Fix J: no working bar = no approval prompt (timeout/auto-reject cleans up too).
+      hideApprovalButtons();
     }
   }
 
@@ -1038,15 +1075,10 @@
     var node = streamingNodes[msg.nodeId];
 
     if (msg.eventType === "token") {
-      // Skip pure whitespace/newline-only tokens entirely
-      var tokenContent = msg.content;
-      if (!tokenContent || !tokenContent.replace(/[\s\n\r]/g, "")) return;
-      // Trim leading whitespace from first meaningful token
-      if (!node.content) {
-        tokenContent = tokenContent.replace(/^[\s\n\r]+/, "");
-        if (!tokenContent) return;
-      }
-      node.content += tokenContent;
+      // Append verbatim — whitespace-only tokens carry markdown structure
+      // (blank lines between paragraphs, code indentation). Dropping them
+      // corrupts the final message (UAT: collapsed text, broken tables).
+      if (msg.content) node.content += msg.content;
       var contentSpan = node.el.querySelector(".stream-content");
       contentSpan.innerHTML = MarkdownRenderer.render(node.content);
       addCodeActions(contentSpan);
@@ -1466,12 +1498,21 @@
       (toolName ? toolName.textContent : "") + " - " + msg.status);
 
     // Update Response section content (KSA-281: keep Request visible)
-    if (msg.result || msg.error) {
+    // FIX F: a terminal status ALWAYS replaces "(waiting...)" — zero-output
+    // tools send no result text, so fall back instead of leaving the stub.
+    if (msg.status === "completed" || msg.status === "failed") {
+      // Fix J: the gated tool reached a terminal state (executed, blocked, or
+      // gate timed out) — drop any stale Approve/Reject for it.
+      if (pendingApproval && pendingApproval.toolId === msg.id) {
+        hideApprovalButtons();
+      }
       var resSection = block.querySelector(".tool-section-response");
       if (resSection) {
         var resContent = resSection.querySelector(".tool-section-content");
         if (resContent) {
-          resContent.textContent = msg.error || msg.result;
+          resContent.textContent =
+            msg.error || msg.result ||
+            (msg.status === "failed" ? "(failed — no output)" : "(no output)");
         }
         if (msg.status === "failed") {
           resSection.classList.add("failed");
@@ -1685,6 +1726,13 @@
     for (var i = 0; i < preBlocks.length; i++) {
       if (preBlocks[i].querySelector(".code-actions")) continue;
       var pre = preBlocks[i];
+      // Terminal output blocks (shell transcripts, listings) get Copy only —
+      // Apply/Insert on output spam every tool-heavy answer (UAT review flood).
+      var codeEl0 = pre.querySelector("code");
+      var lang0 = codeEl0 && codeEl0.className
+        ? (codeEl0.className.match(/language-(\w+)/) || [])[1] || ""
+        : "";
+      var isOutput = !lang0 || /^(shell|bash|sh|powershell|ps1|console|terminal|text|plaintext|txt|log|output)$/i.test(lang0);
       var actionsDiv = document.createElement("div");
       actionsDiv.className = "code-actions";
 
@@ -1694,18 +1742,20 @@
         navigator.clipboard.writeText(text || "");
       }));
 
-      actionsDiv.appendChild(createCodeBtn("Apply", pre, function (p) {
-        var code = p.querySelector("code");
-        var text = code ? code.textContent : p.textContent;
-        var filePath = extractFilePathFromContext(p);
-        vscode.postMessage({ type: "chat:applyCode", code: text || "", filePath: filePath || "" });
-      }));
+      if (!isOutput) {
+        actionsDiv.appendChild(createCodeBtn("Apply", pre, function (p) {
+          var code = p.querySelector("code");
+          var text = code ? code.textContent : p.textContent;
+          var filePath = extractFilePathFromContext(p);
+          vscode.postMessage({ type: "chat:applyCode", code: text || "", filePath: filePath || "" });
+        }));
 
-      actionsDiv.appendChild(createCodeBtn("Insert", pre, function (p) {
-        var code = p.querySelector("code");
-        var text = code ? code.textContent : p.textContent;
-        vscode.postMessage({ type: "chat:insertCode", code: text || "" });
-      }));
+        actionsDiv.appendChild(createCodeBtn("Insert", pre, function (p) {
+          var code = p.querySelector("code");
+          var text = code ? code.textContent : p.textContent;
+          vscode.postMessage({ type: "chat:insertCode", code: text || "" });
+        }));
+      }
 
       pre.appendChild(actionsDiv);
 
@@ -1825,6 +1875,9 @@
     if (tab) {
       tab.tokenCount = payload.tokenCount;
       tab.maxTokens = payload.maxTokens;
+      if (payload.breakdown) {
+        tab.breakdown = payload.breakdown;
+      }
     }
     // Always update icon for active tab when data arrives
     updateContextIcon(payload.tokenCount, payload.maxTokens, payload.breakdown);
@@ -1884,6 +1937,7 @@
   var slashPopup = document.getElementById("slash-popup");
   var slashAgentsList = document.getElementById("slash-agents-list");
   var slashSteeringList = document.getElementById("slash-steering-list");
+  var slashSkillsList = document.getElementById("slash-skills-list");
   var slashActiveIndex = -1;
   var slashVisible = false;
   var slashFilterText = "";
@@ -1902,6 +1956,23 @@
         '<span class="slash-label">' + escapeHtml(agents[i].name || agents[i].id) + '</span>' +
         '<span class="slash-desc">' + escapeHtml(agents[i].description || "") + '</span>';
       slashAgentsList.appendChild(btn);
+    }
+  }
+
+  // SA4E-188: Populate skills dynamically from Extension Host (own section)
+  function populateSlashSkills(skills) {
+    if (!slashSkillsList || !skills || skills.length === 0) return;
+    slashSkillsList.innerHTML = "";
+    for (var i = 0; i < skills.length; i++) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slash-item";
+      btn.setAttribute("data-slash", "/" + skills[i].id);
+      btn.setAttribute("role", "option");
+      btn.innerHTML = '<span class="slash-icon">\u{1F9E9}</span>' +
+        '<span class="slash-label">' + escapeHtml(skills[i].label || skills[i].id) + '</span>' +
+        '<span class="slash-desc">' + escapeHtml(skills[i].description || "") + '</span>';
+      slashSkillsList.appendChild(btn);
     }
   }
 
@@ -1935,7 +2006,7 @@
   (function initDefaultSteering() {
     var defaults = [];
     for (var i = 0; i < defaultSteeringNames.length; i++) {
-      defaults.push({ name: defaultSteeringNames[i], file: ".kiro/steering/" + defaultSteeringNames[i] + ".md" });
+      defaults.push({ name: defaultSteeringNames[i], file: ".code-intel/steering/" + defaultSteeringNames[i] + ".md" });
     }
     populateSlashSteering(defaults);
   })();

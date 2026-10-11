@@ -1,0 +1,186 @@
+<mxGraphModel adaptiveColors="auto" dx="1700" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="hUser" value="User" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="5" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="hPanel" value="Chat Panel Provider" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1">
+      <mxGeometry x="165" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="hAdapter" value="Pi Workflow Adapter" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1">
+      <mxGeometry x="325" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="hHost" value="Session Host (createHost)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+      <mxGeometry x="485" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="hResolver" value="Budget Resolver" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="1">
+      <mxGeometry x="645" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="hLoader" value="Resource Loader Overrides" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="1">
+      <mxGeometry x="805" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="hGate" value="Budget Gate (ThresholdGate)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+      <mxGeometry x="965" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="hSdk" value="Pi SDK DefaultResourceLoader" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+      <mxGeometry x="1125" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="hLlm" value="LLM Provider (qwen)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+      <mxGeometry x="1285" y="30" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="llUser" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="80" y="80" as="sourcePoint"/>
+        <mxPoint x="80" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="llPanel" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="240" y="80" as="sourcePoint"/>
+        <mxPoint x="240" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="llAdapter" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="400" y="80" as="sourcePoint"/>
+        <mxPoint x="400" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="llHost" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="80" as="sourcePoint"/>
+        <mxPoint x="560" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="llResolver" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="80" as="sourcePoint"/>
+        <mxPoint x="720" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="llLoader" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="880" y="80" as="sourcePoint"/>
+        <mxPoint x="880" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="llGate" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1040" y="80" as="sourcePoint"/>
+        <mxPoint x="1040" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="llSdk" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1200" y="80" as="sourcePoint"/>
+        <mxPoint x="1200" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="llLlm" style="endArrow=none;dashed=1;html=1;strokeColor=#666666;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1360" y="80" as="sourcePoint"/>
+        <mxPoint x="1360" y="720" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1: send turn (model = qwen)" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="80" y="110" as="sourcePoint"/>
+        <mxPoint x="240" y="110" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2: runTurn() → runTurnOnce()" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="240" y="140" as="sourcePoint"/>
+        <mxPoint x="400" y="140" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3: detectContextWindowEarly()" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="400" y="170" as="sourcePoint"/>
+        <mxPoint x="1360" y="170" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4: meta.n_ctx = 32768" style="html=1;rounded=0;endArrow=open;dashed=1;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1360" y="200" as="sourcePoint"/>
+        <mxPoint x="400" y="200" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5: createHost(role, phase, n_ctx)" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="400" y="230" as="sourcePoint"/>
+        <mxPoint x="560" y="230" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6: resolveContextBudget(n_ctx, tier)" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="260" as="sourcePoint"/>
+        <mxPoint x="720" y="260" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7: ContextBudget {nCtx, reserveOutput, safetyMargin, staticBudget, historyBudget}" style="html=1;rounded=0;endArrow=open;dashed=1;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="290" as="sourcePoint"/>
+        <mxPoint x="560" y="290" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8: skillsOverride — RoleScopeFilter.filterSkills(role, skills)" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="320" as="sourcePoint"/>
+        <mxPoint x="880" y="320" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9: appendSystemPromptOverride — scopedSteering(role, phase, budget)" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="350" as="sourcePoint"/>
+        <mxPoint x="880" y="350" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10: agentsFilesOverride — compressPrompt() if shouldCompress" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="380" as="sourcePoint"/>
+        <mxPoint x="880" y="380" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11: measure static (BudgetCalculator + ThresholdGate)" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="410" as="sourcePoint"/>
+        <mxPoint x="1040" y="410" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="12: ALLOW | WARN | REJECT" style="html=1;rounded=0;endArrow=open;dashed=1;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1040" y="440" as="sourcePoint"/>
+        <mxPoint x="560" y="440" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="13: createAgentSession(overrides) [ALLOW]" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="560" y="470" as="sourcePoint"/>
+        <mxPoint x="1200" y="470" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m14" value="14: prompt (system + steering + tools + history) ≤ n_ctx" style="html=1;rounded=0;endArrow=block;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1200" y="500" as="sourcePoint"/>
+        <mxPoint x="1360" y="500" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m15" value="15: turn 1 OK — no exceed_context_size_error" style="html=1;rounded=0;endArrow=open;dashed=1;fontSize=10;verticalAlign=bottom;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1360" y="530" as="sourcePoint"/>
+        <mxPoint x="80" y="530" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ef1" value="EF-1: REJECT → chat:error PI_CONTEXT_BUDGET_EXCEEDED (provider NOT called)" style="html=1;rounded=0;endArrow=open;dashed=1;fontSize=10;verticalAlign=bottom;fontColor=#B85450;strokeColor=#B85450;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1040" y="570" as="sourcePoint"/>
+        <mxPoint x="240" y="570" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="noteEsc" value="Escalation order (BR-08): 1) enable compression 2) drop lowest-priority steering 3) minimal tool loadout → re-measure. Absolute exceed → actionable error, never call LLM (BR-09)." style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="620" y="610" width="560" height="80" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

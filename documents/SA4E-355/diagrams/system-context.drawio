@@ -1,0 +1,176 @@
+<mxGraphModel adaptiveColors="auto" dx="1600" dy="950" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="user" value="User (SM / DEV via UI)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="100" width="40" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary" value="Pi Harness (VS Code Extension) — Context Budget Governance scope" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;dashed=1;verticalAlign=top;fontSize=13;fontStyle=1;strokeColor=#6C8EBF;" vertex="1" parent="1">
+      <mxGeometry x="140" y="60" width="920" height="800" as="geometry"/>
+    </mxCell>
+    <mxCell id="chatPanel" value="Chat Panel Provider&#10;(UI entry)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1">
+      <mxGeometry x="180" y="110" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="adapter" value="Pi Workflow Adapter&#10;runTurn / runTurnOnce&#10;detectContextWindowEarly()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1">
+      <mxGeometry x="180" y="240" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="host" value="Pi Agent Session Host&#10;createHost() — WIRE POINT&#10;(loader overrides + gate)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+      <mxGeometry x="180" y="400" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="resolver" value="Context Budget Resolver&#10;single source of truth for n_ctx&#10;provider → registry → default 8192" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="1">
+      <mxGeometry x="500" y="110" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="registry" value="Model Registry + Model Tier&#10;entry qwen n_ctx=32768&#10;SMALL_CONTEXT_WINDOW_THRESHOLD=16384" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="1">
+      <mxGeometry x="840" y="110" width="180" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="loader" value="Resource Loader Overrides&#10;skillsOverride / appendSystemPromptOverride&#10;agentsFilesOverride (compress)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="1">
+      <mxGeometry x="500" y="400" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="tools" value="Tool Loadout Filter&#10;role-aware + schema token cap&#10;core tools + find_tools always kept" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;" vertex="1" parent="1">
+      <mxGeometry x="500" y="530" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="gate" value="Budget Gate (fail-safe)&#10;BudgetCalculator + ThresholdGate&#10;ALLOW / WARN / REJECT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+      <mxGeometry x="500" y="660" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="sdk" value="Pi Coding Agent SDK (external)&#10;DefaultResourceLoader&#10;createAgentSession()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+      <mxGeometry x="1140" y="400" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="llm" value="LLM Provider (external)&#10;qwen via llama-server&#10;n_ctx = 32768" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+      <mxGeometry x="1140" y="530" width="220" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="mcp" value="MCP Bridge (external)&#10;jira_* / mem_* / find_tools&#10;dynamic discovery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="1">
+      <mxGeometry x="1140" y="660" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="user" target="chatPanel">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1l" value="select model&#10;+ send turn" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e1">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="chatPanel" target="adapter">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="adapter" target="host">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3l" value="createHost(role,&#10;phase, n_ctx)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e3">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="host" target="resolver">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="440" y="130"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e4l" value="resolveContext&#10;Budget()" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e4">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="resolver" target="registry">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5l" value="n_ctx lookup" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e5">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="resolver" target="host">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="460" y="440"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6l" value="ContextBudget&#10;{static, history}" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e6">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="host" target="loader">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7l" value="wire overrides" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e7">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="host" target="tools">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="280" y="570"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e8l" value="getSessionToolLoadout(role)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e8">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="host" target="gate">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="230" y="700"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e9l" value="measure static context" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e9">
+      <mxGeometry x="0.45" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#B85450;fontColor=#B85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gate" target="loader">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="780" y="700"/>
+          <mxPoint x="780" y="460"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e10l" value="escalate (BR-08)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e10">
+      <mxGeometry x="0.33" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.05;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="host" target="sdk">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="190" y="780"/>
+          <mxPoint x="1395" y="780"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e11l" value="createAgentSession(overrides)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e11">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="sdk" target="llm">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12l" value="static + tools + history ≤ n_ctx" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e12">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="llm" target="chatPanel">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1420" y="600"/>
+          <mxPoint x="1420" y="840"/>
+          <mxPoint x="110" y="840"/>
+          <mxPoint x="110" y="155"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e13l" value="response stream (turn 1 OK,&#10;no exceed_context_size_error)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e13">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.625;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="tools" target="mcp">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1115" y="580"/>
+          <mxPoint x="1115" y="700"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e14l" value="listTools / find_tools&#10;+ execute_dynamic_tool" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e14">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#D79B00;fontColor=#D79B00;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" parent="1" source="adapter" target="llm">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="230" y="215"/>
+          <mxPoint x="1100" y="215"/>
+          <mxPoint x="1100" y="566"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e15l" value="detectContextWindow&#10;Early() → meta.n_ctx" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=#ffffff;" vertex="1" connectable="0" parent="e15">
+      <mxGeometry x="0" y="0" relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

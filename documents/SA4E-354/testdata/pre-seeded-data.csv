@@ -1,0 +1,18 @@
+id,type,key,value,description
+ENV-001,BASE_URL,pega_academy,https://8b99ujcj.pega.com/prweb,Primary Pega Academy endpoint used in all test cases
+ENV-002,BASE_URL,localhost_default,http://localhost:8080/prweb,Default configured endpoint (HTTPS enforced by getPegaEndpoint before prefix build)
+ENV-003,BASE_URL,trailing_slash,https://8b99ujcj.pega.com/prweb/,Boundary variant — trailing slash must be trimmed
+ENV-004,BASE_URL,http_no_tls,http://8b99ujcj.pega.com/prweb,Negative variant — HTTPS enforcement applies before prefix resolution
+ENV-005,OPERATOR,main,SSA@TGB,Primary operator ID (matches BRD baseline scenario with 16 duplicate calls)
+ENV-006,OPERATOR,lowercase,ssa@tgb,Case-variant of main — must NOT share cache entry (BR-03)
+ENV-007,OPERATOR,empty,,Empty pegaUsername — probe must be skipped (UC-02 EF-1)
+ENV-008,PREFIX,valid_1,{base}/api/CodeIntelligence/v1,Valid CodeIntelligence prefix #1 (must be present)
+ENV-009,PREFIX,valid_2,{base}/PRRestService/CodeIntelligence/v1,Valid CodeIntelligence prefix #2 (must be present)
+ENV-010,PREFIX,dead_1,{base}/api/v1,Dead endpoint — must NEVER appear in prefix list (BR-01)
+ENV-011,PREFIX,dead_2,{base}/PRRestService/v1,Dead endpoint — must NEVER appear in prefix list (BR-01)
+ENV-012,CONSTANT,default_fetch_concurrency,10,Initial FETCH_CONCURRENCY before any measurement (PegaCrawlHelper line 14)
+ENV-013,CONSTANT,max_server_connections,15,Concurrency cap per TDD 8.2
+ENV-014,CONSTANT,measure_latency_sample_count,2,measureLatency sampleCount passed by calibrateFetchConcurrency (probe = 2 getObject calls)
+ENV-015,CONSTANT,cache_hit_log,🎯 Latency probe cached for {operatorId},Exact log fragment on cache hit (AC-2.2)
+ENV-016,CONSTANT,probe_target_class,DATA-ADMIN-OPERATOR-ID,Operator record class probed during latency measurement
+ENV-017,INSKEY,sample_rule,RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT,Sample rule insKey for read-path cases (IT-03/UT-11)

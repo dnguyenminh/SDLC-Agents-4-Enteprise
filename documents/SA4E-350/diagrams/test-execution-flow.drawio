@@ -1,0 +1,357 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <!-- Title -->
+    <mxCell id="title" value="SA4E-350 Test Execution Flow" style="html=1;fontSize=16;fontStyle=1;align=center;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+      <mxGeometry x="20" y="10" width="1360" height="30" as="geometry"/>
+    </mxCell>
+    <!-- Swimlanes -->
+    <mxCell id="lane-ut" value="UT (Unit Tests)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="20" y="50" width="250" height="750" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-it" value="IT (Integration)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="270" y="50" width="250" height="750" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-e2e" value="E2E-API (Real Server)" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="520" y="50" width="250" height="750" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-reg" value="Regression" style="swimlane;startSize=30;fillColor=none;strokeColor=#82b366;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="770" y="50" width="250" height="750" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-smoke" value="Smoke" style="swimlane;startSize=30;fillColor=none;strokeColor=#9673a6;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1020" y="50" width="250" height="750" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-sit" value="SIT (Manual UAT)" style="swimlane;startSize=30;fillColor=none;strokeColor=#d6b656;html=1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1270" y="50" width="250" height="750" as="geometry"/>
+    </mxCell>
+    <!-- UT Nodes -->
+    <mxCell id="ut-start" value="Start: vitest run" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="50" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-001" value="TC-001: Probe A1 empty→0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="110" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-002" value="TC-002: Probe A2 @baseclass→1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="170" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-003" value="TC-003: @baseclass verbatim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="230" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-004" value="TC-004: compat retry logic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="290" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-005" value="TC-005: short insKey 404" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="350" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-006" value="TC-006: full insKey 200" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="410" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-007" value="TC-007: short insKey fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="470" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-008" value="TC-008: insKey format detect" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="530" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-009" value="TC-009: handle-row follow-up" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="590" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-010" value="TC-010: instance fail fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="650" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-011" value="TC-011: full body no follow-up" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="710" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-012" value="TC-012: non-@baseclass no retry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="770" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-013" value="TC-013: 401 fail-loud" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="830" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut-end" value="UT Gate: 6/6 PASS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="lane-ut">
+      <mxGeometry x="20" y="890" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <!-- IT Nodes -->
+    <mxCell id="it-start" value="Start: Hono app.request()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane-it">
+      <mxGeometry x="20" y="50" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="it-009" value="TC-009: handle-row → instance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-it">
+      <mxGeometry x="20" y="130" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="it-010" value="TC-010: instance 500 → fallback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-it">
+      <mxGeometry x="20" y="190" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="it-011" value="TC-011: full body skip call" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-it">
+      <mxGeometry x="20" y="250" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="it-018" value="TC-018: full rule extra fields" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-it">
+      <mxGeometry x="20" y="310" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="it-end" value="IT Gate: 4/4 PASS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="lane-it">
+      <mxGeometry x="20" y="390" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <!-- E2E-API Nodes -->
+    <mxCell id="e2e-start" value="Start: fetch real server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="lane-e2e">
+      <mxGeometry x="20" y="50" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e-014" value="TC-014: pxIsMobileDevice" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-e2e">
+      <mxGeometry x="20" y="130" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e-015" value="TC-015: pzBulkActions full" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-e2e">
+      <mxGeometry x="20" y="190" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e-016" value="TC-016: pzModalButtonsConfig" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-e2e">
+      <mxGeometry x="20" y="250" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e-end" value="E2E Gate: 3/3 PASS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="lane-e2e">
+      <mxGeometry x="20" y="330" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <!-- Regression Nodes -->
+    <mxCell id="reg-start" value="Start: npm test (full)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-reg">
+      <mxGeometry x="20" y="50" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="reg-012" value="TC-012: non-@baseclass" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-reg">
+      <mxGeometry x="20" y="130" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="reg-014" value="TC-014: pxIsMobileDevice" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-reg">
+      <mxGeometry x="20" y="190" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="reg-suite" value="Full suite: 2405/2405" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="lane-reg">
+      <mxGeometry x="20" y="250" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="reg-end" value="Reg Gate: 2405 PASS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="lane-reg">
+      <mxGeometry x="20" y="310" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <!-- Smoke Nodes -->
+    <mxCell id="smoke-start" value="Start: package .vsix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="lane-smoke">
+      <mxGeometry x="20" y="50" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="smoke-install" value="Install in Kiro" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-smoke">
+      <mxGeometry x="20" y="130" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="smoke-014" value="TC-014: runtime pxIsMobile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-smoke">
+      <mxGeometry x="20" y="190" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="smoke-015" value="TC-015: runtime pzBulkActions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-smoke">
+      <mxGeometry x="20" y="250" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="smoke-016" value="TC-016: runtime pzModalBtn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="lane-smoke">
+      <mxGeometry x="20" y="310" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="smoke-end" value="Smoke Gate: 3/3 PASS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="lane-smoke">
+      <mxGeometry x="20" y="390" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <!-- SIT Nodes -->
+    <mxCell id="sit-start" value="Start: Extension 1.48.0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane-sit">
+      <mxGeometry x="20" y="50" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit-019" value="TC-019: Index finds @baseclass" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane-sit">
+      <mxGeometry x="20" y="130" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit-020" value="TC-020: KB full content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane-sit">
+      <mxGeometry x="20" y="190" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit-021" value="TC-021: non-@baseclass works" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="lane-sit">
+      <mxGeometry x="20" y="250" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit-end" value="SIT Gate: UAT 3/3 ✅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;" vertex="1" parent="lane-sit">
+      <mxGeometry x="20" y="330" width="210" height="40" as="geometry"/>
+    </mxCell>
+    <!-- Defect Loop (cross-lane) -->
+    <mxCell id="defect-loop" value="❌ FAIL → Defect → Fix → Retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="520" y="750" width="500" height="50" as="geometry"/>
+    </mxCell>
+    <!-- Edges UT -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-start" target="ut-001">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-001" target="ut-002">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-002" target="ut-003">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-003" target="ut-004">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-004" target="ut-005">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-005" target="ut-006">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-006" target="ut-007">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-007" target="ut-008">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-008" target="ut-009">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-009" target="ut-010">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-010" target="ut-011">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-011" target="ut-012">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-012" target="ut-013">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="ut-013" target="ut-end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Edges IT -->
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="it-start" target="it-009">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="it-009" target="it-010">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="it-010" target="it-011">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="it-011" target="it-018">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="it-018" target="it-end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Edges E2E -->
+    <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="e2e-start" target="e2e-014">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="e2e-014" target="e2e-015">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="e2e-015" target="e2e-016">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="e2e-016" target="e2e-end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Edges Regression -->
+    <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="reg-start" target="reg-012">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e25" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="reg-012" target="reg-014">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="reg-014" target="reg-suite">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e27" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="reg-suite" target="reg-end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Edges Smoke -->
+    <mxCell id="e28" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="smoke-start" target="smoke-install">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e29" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="smoke-install" target="smoke-014">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="smoke-014" target="smoke-015">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e31" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="smoke-015" target="smoke-016">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e32" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="smoke-016" target="smoke-end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Edges SIT -->
+    <mxCell id="e33" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="sit-start" target="sit-019">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e34" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="sit-019" target="sit-020">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e35" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="sit-020" target="sit-021">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e36" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="sit-021" target="sit-end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <!-- Cross-lane dependencies (dashed) -->
+    <mxCell id="e37" value="UT → IT" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="ut-end" target="it-start">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="270" y="910"/>
+          <mxPoint x="270" y="70"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e38" value="IT → E2E" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="it-end" target="e2e-start">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="520" y="410"/>
+          <mxPoint x="520" y="70"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e39" value="E2E → Reg" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="e2e-end" target="reg-start">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="770" y="350"/>
+          <mxPoint x="770" y="70"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e40" value="Reg → Smoke" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="reg-end" target="smoke-start">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1020" y="330"/>
+          <mxPoint x="1020" y="70"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e41" value="Smoke → SIT" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#666666;" edge="1" parent="1" source="smoke-end" target="sit-start">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1270" y="410"/>
+          <mxPoint x="1270" y="70"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <!-- Defect feedback edges -->
+    <mxCell id="e42" value="Fail" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="ut-end" target="defect-loop">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="270" y="910"/>
+          <mxPoint x="520" y="910"/>
+          <mxPoint x="520" y="750"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e43" value="Fix" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#82b366;" edge="1" parent="1" source="defect-loop" target="ut-start">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="520" y="800"/>
+          <mxPoint x="270" y="800"/>
+          <mxPoint x="270" y="70"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e44" value="Fail" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="e2e-end" target="defect-loop">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="770" y="350"/>
+          <mxPoint x="520" y="350"/>
+          <mxPoint x="520" y="750"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e45" value="Fail" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="sit-end" target="defect-loop">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1270" y="350"/>
+          <mxPoint x="520" y="350"/>
+          <mxPoint x="520" y="750"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

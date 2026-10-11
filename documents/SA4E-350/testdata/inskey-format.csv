@@ -1,0 +1,6 @@
+insKey,isFullInsKey,description
+"RULE-HTML-SECTION @BASECLASS PZBULKACTIONS",false,"Short insKey without #timestamp"
+"RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",true,"Full insKey with #timestamp"
+"",false,"Empty string"
+"RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT #extra",false,"Malformed: multiple # (only first counts)"
+"RULE-HTML-SECTION @BASECLASS PZBULKACTIONS#20180713T134741.673GMT",true,"No space before #"

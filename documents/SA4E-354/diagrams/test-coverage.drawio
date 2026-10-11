@@ -1,0 +1,189 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1160" pageHeight="720" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-354 — Test Coverage Matrix: BRD Acceptance Criteria × Test Levels" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="20" width="1040" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="hdrCorner" value="Requirement (BRD AC)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="240" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="hdrPBT" value="PBT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="300" y="80" width="130" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="hdrUT" value="UT (vitest)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="430" y="80" width="130" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="hdrIT" value="IT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="80" width="130" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="hdrE2E" value="E2E-API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="690" y="80" width="130" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="hdrUI" value="E2E-UI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="820" y="80" width="130" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="hdrSIT" value="SIT (manual)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="950" y="80" width="130" height="36" as="geometry" />
+    </mxCell>
+    <mxCell id="ac11Label" value="AC-1.1 Dead endpoints removed (BRD Story 1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="116" width="240" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac11PBT" value="PBT-01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="116" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac11UT" value="UT-01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="430" y="116" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac11IT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="116" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac11E2E" value="E2E-API-01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="116" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac11UI" value="N/A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="116" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac11SIT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="116" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac12Label" value="AC-1.2 No 404 probes for dead endpoints" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="168" width="240" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac12PBT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="168" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac12UT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="430" y="168" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac12IT" value="IT-03" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="168" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac12E2E" value="E2E-API-01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="168" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac12UI" value="N/A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="168" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac12SIT" value="SIT-01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="168" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac13Label" value="AC-1.3 SDLC documents created" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="220" width="240" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac13PBT" value="Review gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="220" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac13UT" value="Review gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="430" y="220" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac13IT" value="Review gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="220" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac13E2E" value="Review gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="220" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac13UI" value="Review gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="220" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac13SIT" value="Review gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="220" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac21Label" value="AC-2.1 probeLatencyCache populated on first probe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="272" width="240" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac21PBT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="272" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac21UT" value="UT-04" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="430" y="272" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac21IT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="272" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac21E2E" value="E2E-API-02" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="272" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac21UI" value="N/A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="272" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac21SIT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="272" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac22Label" value="AC-2.2 Cached reuse + log: Latency probe cached" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="324" width="240" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac22PBT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="324" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac22UT" value="UT-05" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="430" y="324" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac22IT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="324" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac22E2E" value="E2E-API-02" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="324" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac22UI" value="N/A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="324" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac22SIT" value="SIT-02" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="324" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac23Label" value="AC-2.3 Duplicate rules/query calls reduced" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="376" width="240" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac23PBT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="376" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac23UT" value="—" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="430" y="376" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac23IT" value="IT-01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="376" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac23E2E" value="E2E-API-03" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="376" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac23UI" value="N/A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="376" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac23SIT" value="SIT-02" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="376" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac24Label" value="AC-2.4 Memory ingestion completed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;align=left;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="428" width="240" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac24PBT" value="Process ✓" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="428" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac24UT" value="Process ✓" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="430" y="428" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac24IT" value="Process ✓" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="560" y="428" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac24E2E" value="Process ✓" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="690" y="428" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac24UI" value="Process ✓" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="428" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="ac24SIT" value="Process ✓" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="950" y="428" width="130" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="legendGreen" value="Covered (test case exists)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="500" width="200" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="legendYellow" value="Process / review gate (not code-testable)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="500" width="260" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="legendGray" value="Not applicable at this level" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#000000;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="800" y="500" width="200" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="summaryNote" value="RTM: 7/7 BRD ACs covered = 100% (see STC §7). Total 23 cases: PBT 3 · UT 11 · IT 3 · E2E-API 3 · E2E-UI 0 · SIT 3." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="545" width="1020" height="30" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

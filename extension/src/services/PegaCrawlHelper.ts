@@ -13,6 +13,9 @@ import type { MembershipSet } from "./DiskBackedSet";
 /** Computed at runtime — see computeFetchConcurrency() */
 let FETCH_CONCURRENCY = 10; // default until measured
 
+/** Cache latency probe result per operator to avoid duplicate probes across pipelines */
+const probeLatencyCache = new Map<string, number>();
+
 /** Rule types to crawl when a Class rule is encountered */
 const RULE_TYPES_TO_CRAWL = [
     "Rule-Obj-Property",
@@ -244,18 +247,25 @@ export async function calibrateFetchConcurrency(
     log: LogFn,
 ): Promise<number> {
     try {
-        // SA4E-241 SEC-03: probe uses the configured operator id (no hardcoded
-        // default). If none is configured, skip the operator-record probe and use
-        // the default concurrency (fail-safe, not fail-open).
         const probeOperatorId = pegaClient.getConfiguredUsername();
         if (!probeOperatorId) {
             log(`[Pega Indexer] ⚠️ No pegaUsername configured — skipping latency probe, using default FETCH_CONCURRENCY=${FETCH_CONCURRENCY}`);
             return FETCH_CONCURRENCY;
         }
-        const latency = await measureLatency(
-            () => pegaClient.getObject("DATA-ADMIN-OPERATOR-ID", probeOperatorId, "@baseclass").catch(() => null),
-            2,
-        );
+        let latency = probeLatencyCache.get(probeOperatorId);
+        if (!latency) {
+            // SA4E-241 SEC-03: probe uses the configured operator id (no hardcoded
+            // default). If none is configured, skip the operator-record probe and use
+            // the default concurrency (fail-safe, not fail-open).
+            latency = await measureLatency(
+                () => pegaClient.getObject("DATA-ADMIN-OPERATOR-ID", probeOperatorId, "@baseclass").catch(() => null),
+                2,
+            );
+            probeLatencyCache.set(probeOperatorId, latency);
+            log(`[Pega Indexer] 🎯 Auto-tuned: latency=${Math.round(latency)}ms → FETCH_CONCURRENCY recomputed`);
+        } else {
+            log(`[Pega Indexer] 🎯 Latency probe cached for ${probeOperatorId}`);
+        }
         FETCH_CONCURRENCY = computeOptimalConcurrency({
             measuredLatencyMs: latency,
             totalItems,

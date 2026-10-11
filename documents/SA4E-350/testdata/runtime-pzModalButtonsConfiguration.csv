@@ -1,0 +1,2 @@
+pyClassName,appliesTo,queryResults,instanceCalled,instanceHttpCode,fullRuleReturned,description
+"pzModalButtonsConfiguration","@baseclass",1,true,200,true,"Runtime: user-reported @baseclass rule → full rule resolved"

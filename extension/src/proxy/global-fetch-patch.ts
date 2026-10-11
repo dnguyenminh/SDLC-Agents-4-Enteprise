@@ -16,6 +16,7 @@
  * - If fetch already has a dispatcher option, it's NOT overridden (modes 3/4 only)
  */
 
+import { Agent } from "undici";
 import type { Dispatcher } from "undici";
 import { ProxyAgentFactory } from "./ProxyAgentFactory";
 import { CurlHttpAdapter } from "./CurlHttpAdapter";
@@ -26,6 +27,34 @@ const originalFetch = globalThis.fetch;
 
 /** Whether the patch has been applied */
 let patched = false;
+
+/**
+ * Direct-connection dispatcher with undici timeouts aligned to the OpenAI SDK
+ * default timeout (10 minutes). Node's built-in global undici dispatcher uses
+ * a 300s default headersTimeout, which aborts LLM requests queued behind busy
+ * llama-server slots BEFORE the SDK's own 10-minute budget elapses
+ * (SA4E-339: "Request timed out ... headersTimeout is at least the SDK timeout").
+ */
+const directFetchAgent = new Agent({
+  headersTimeout: 600_000,
+  bodyTimeout: 600_000,
+  connectTimeout: 15_000,
+});
+
+/** Test access to the shared direct-connection dispatcher */
+export function getDirectFetchDispatcher(): Dispatcher { return directFetchAgent; }
+
+/**
+ * Execute a direct (non-proxied) fetch with the raised-timeout dispatcher.
+ * Respects a caller-provided dispatcher; otherwise attaches directFetchAgent
+ * so headers/body timeouts match the SDK timeout instead of undici's 300s default.
+ */
+function directFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (init && (init as any).dispatcher) {
+    return originalFetch(input, init);
+  }
+  return originalFetch(input, { ...(init || {}), dispatcher: directFetchAgent } as RequestInit);
+}
 
 /** Shared adapter instances (stateless — safe to reuse) */
 const curlAdapter = new CurlHttpAdapter();
@@ -49,9 +78,10 @@ export function applyGlobalFetchPatch(): void {
       return originalFetch(input, init);
     }
 
-    // Check bypass list — bypassed URLs always go direct
+    // Check bypass list — bypassed URLs skip the proxy but still get the
+    // raised-timeout direct dispatcher (LLM localhost endpoints live here).
     if (shouldBypass(targetUrl)) {
-      return originalFetch(input, init);
+      return directFetch(input, init);
     }
 
     // Curl mode: route through curl.exe subprocess (handles NTLM SSO)
@@ -83,7 +113,8 @@ export function applyGlobalFetchPatch(): void {
 
     const dispatcher = await getProxyDispatcher(targetUrl);
     if (!dispatcher) {
-      return originalFetch(input, init);
+      // No proxy resolved — direct connection with raised-timeout dispatcher
+      return directFetch(input, init);
     }
 
     const patchedInit = { ...(init || {}), dispatcher } as RequestInit;

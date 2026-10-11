@@ -62,7 +62,7 @@ vi.mock("../PowerShellHttpAdapter", () => ({
   },
 }));
 
-import { applyGlobalFetchPatch, removeGlobalFetchPatch } from "../global-fetch-patch";
+import { applyGlobalFetchPatch, removeGlobalFetchPatch, getDirectFetchDispatcher } from "../global-fetch-patch";
 
 describe("global-fetch-patch", () => {
   beforeEach(() => {
@@ -121,7 +121,7 @@ describe("global-fetch-patch", () => {
   });
 
   describe("bypass behavior", () => {
-    it("does NOT inject dispatcher for bypassed URLs (localhost)", async () => {
+    it("injects direct (raised-timeout) dispatcher — NOT proxy — for bypassed URLs (localhost)", async () => {
       applyGlobalFetchPatch();
 
       await globalThis.fetch("http://localhost:48721/health");
@@ -129,17 +129,18 @@ describe("global-fetch-patch", () => {
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const [url, init] = fetchSpy.mock.calls[0];
       expect(url).toBe("http://localhost:48721/health");
-      expect(init).toBeUndefined();
+      expect((init as any).dispatcher).toBe(getDirectFetchDispatcher());
+      expect((init as any).dispatcher).not.toBe(mockDispatcher);
     });
 
-    it("does NOT inject dispatcher for bypassed URLs (127.0.0.1)", async () => {
+    it("injects direct dispatcher for bypassed URLs (127.0.0.1)", async () => {
       applyGlobalFetchPatch();
 
       await globalThis.fetch("http://127.0.0.1:9181/mcp");
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const [, init] = fetchSpy.mock.calls[0];
-      expect(init).toBeUndefined();
+      expect((init as any).dispatcher).toBe(getDirectFetchDispatcher());
     });
 
     it("bypassed URLs go direct even in curl mode", async () => {
@@ -156,7 +157,7 @@ describe("global-fetch-patch", () => {
   });
 
   describe("none mode", () => {
-    it("goes direct without any proxy when mode is none", async () => {
+    it("goes direct with raised-timeout dispatcher when mode is none", async () => {
       mockFactory.getConfig.mockReturnValue({ mode: "none", bypass: "" });
       applyGlobalFetchPatch();
 
@@ -164,7 +165,7 @@ describe("global-fetch-patch", () => {
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const [, init] = fetchSpy.mock.calls[0];
-      expect(init).toBeUndefined();
+      expect((init as any).dispatcher).toBe(getDirectFetchDispatcher());
     });
   });
 
@@ -283,7 +284,9 @@ describe("global-fetch-patch", () => {
 
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const [, init] = fetchSpy.mock.calls[0];
-      expect((init as any)?.dispatcher).toBeUndefined();
+      // Factory failure → no proxy dispatcher → falls back to the shared
+      // direct (raised-timeout) dispatcher instead of crashing.
+      expect((init as any)?.dispatcher).toBe(getDirectFetchDispatcher());
     });
   });
 });

@@ -1,0 +1,2 @@
+insKey,expectedHttpCode,expectedSizeBytes,description
+"RULE-HTML-SECTION @BASECLASS PZBULKACTIONS #20180713T134741.673 GMT",200,20451,"Probe B2: full insKey (with #timestamp) returns 200 + full rule JSON (~20KB)"

@@ -121,7 +121,12 @@ export class ProxyAgentFactory {
     proxyUrl: string,
     credentials?: ProxyCredentials
   ): ProxyAgent {
-    const opts: Record<string, unknown> = { uri: proxyUrl };
+    const opts: Record<string, unknown> = {
+      uri: proxyUrl,
+      headersTimeout: 600_000,
+      bodyTimeout: 600_000,
+      connectTimeout: 15_000,
+    };
     if (credentials) {
       opts.token = this.buildBasicToken(credentials);
     }
@@ -136,7 +141,14 @@ export class ProxyAgentFactory {
 
   private async buildAgent(proxyUrl: string): Promise<ProxyAgent> {
     const creds = await this.configService.getCredentials();
-    const opts: Record<string, unknown> = { uri: proxyUrl };
+    const opts: Record<string, unknown> = {
+      uri: proxyUrl,
+      // Aligned with the OpenAI SDK 10-minute timeout so proxied LLM requests
+      // are not aborted by undici before the SDK's own timeout elapses (SA4E-339).
+      headersTimeout: 600_000,
+      bodyTimeout: 600_000,
+      connectTimeout: 15_000,
+    };
     if (creds) {
       opts.token = this.buildBasicToken(creds);
     }

@@ -1,0 +1,2 @@
+pyClassName,appliesTo,queryResults,instanceCalled,instanceHttpCode,fullRuleReturned,description
+"pzBulkActions","@baseclass",1,true,200,true,"Runtime: @baseclass rule → query handle-row → instance follow-up → full rule (20KB)"
