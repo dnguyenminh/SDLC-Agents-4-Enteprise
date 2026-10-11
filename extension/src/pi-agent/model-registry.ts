@@ -29,6 +29,7 @@ export const DEFAULT_MODEL_REGISTRY_ENTRIES: ModelRegistryEntry[] = [
   { modelId: 'smollm2-360m', contextWindow: 1024, maxOutput: 256, costPer1k: 0, speed: 'fast', thinkingMap: { low: 64, medium: 128, high: 256 } },
   { modelId: 'llama3.1', contextWindow: 8192, maxOutput: 2048, costPer1k: 0, speed: 'medium', thinkingMap: { low: 512, medium: 1024, high: 2048 } },
   { modelId: 'qwen2.5-coder', contextWindow: 32768, maxOutput: 1024, costPer1k: 0, speed: 'medium', thinkingMap: { low: 256, medium: 512, high: 1024 } },
+  { modelId: 'qwen', contextWindow: 32768, maxOutput: 2048, costPer1k: 0, speed: 'medium', thinkingMap: { low: 256, medium: 512, high: 1024 } },
   { modelId: 'local-model', contextWindow: 4096, maxOutput: 1024, costPer1k: 0, speed: 'medium', thinkingMap: { low: 256, medium: 512, high: 1024 } },
 ];
 
