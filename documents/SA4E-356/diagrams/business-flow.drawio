@@ -1,0 +1,81 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="lane1" value="AI Agent (MCP Client)" style="swimlane;horizontal=0;startSize=110;fillColor=#e1f5fe;strokeColor=#0288d1;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1100" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane2" value="MCP Tool (Extension Host)" style="swimlane;horizontal=0;startSize=110;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="200" width="1100" height="330" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane3" value="File System" style="swimlane;horizontal=0;startSize=110;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="540" width="1100" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_start" value="Gọi MCP tool với file_path" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;fontColor=#ffffff;fontSize=11;" vertex="1" parent="lane1">
+      <mxGeometry x="160" y="45" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_ok" value="Nhận kết quả - thành công" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lane1">
+      <mxGeometry x="800" y="45" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_recv" value="Tool nhận file_path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane2">
+      <mxGeometry x="150" y="55" width="150" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d_abs" value="Là absolute path?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane2">
+      <mxGeometry x="330" y="25" width="140" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_passthrough" value="Absolute: path.resolve passthrough" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane2">
+      <mxGeometry x="560" y="15" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_resolve" value="Relative: resolve theo primary workspace folder" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane2">
+      <mxGeometry x="800" y="40" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d_escape" value="Nằm trong workspace root?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane2">
+      <mxGeometry x="330" y="195" width="140" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_reject" value="Từ chối - path ngoài workspace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="lane2">
+      <mxGeometry x="560" y="225" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_err" value="Trả error: absolute path đã resolve + gợi ý absolute path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="lane2">
+      <mxGeometry x="150" y="215" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="n_fs" value="Thao tác file (đọc / ghi / attach)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane3">
+      <mxGeometry x="340" y="50" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d_ok" value="Thành công?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane3">
+      <mxGeometry x="600" y="25" width="140" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="n_start" target="n_recv">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="n_recv" target="d_abs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="Có" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="d_abs" target="n_passthrough">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="Không" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="d_abs" target="n_resolve">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_passthrough" target="d_escape">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="n_resolve" target="d_escape">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="Không" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="d_escape" target="n_reject">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="Có" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="d_escape" target="n_fs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="n_fs" target="d_ok">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" value="Không (ENOENT)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="d_ok" target="n_err">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" value="Có" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="d_ok" target="n_ok">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
