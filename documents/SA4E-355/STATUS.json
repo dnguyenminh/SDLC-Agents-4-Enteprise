@@ -38,10 +38,14 @@
       "manual": 8
     },
     "implementation": {
+      "tasks": "Task 2+3 (role-scope wiring + conditional compression) + PBT gap-fill STC-300/301/302",
+      "wave": 2,
+      "startedAt": "2026-10-11T21:24:07Z",
       "status": "in_progress",
-      "task": "Task 1 Context Budget Resolver",
-      "startedAt": "2026-10-11T20:36:20Z",
-      "agentSession": "ses_ed3522e3bffefELFDMPNJMxdvX"
+      "completedTasks": [
+        "Task 1: Context Budget Resolver - commit 9cd5c5a, 10 UT + full suite 2427 pass, tsc clean"
+      ],
+      "agentSession": "ses_ed32e40ecffenHU3p0tcOOyvor"
     },
     "testing": {
       "status": "not_started"
@@ -57,9 +61,15 @@
   "relatedBugs": [
     "SA4E-357"
   ],
-  "lastUpdated": "2026-10-11T20:36:20Z",
+  "lastUpdated": "2026-10-11T21:24:21Z",
   "git": {
     "main": "30d6a67+315fa55",
     "note": "Phase 4 outputs + SA4E-356 consolidated onto local main"
+  },
+  "mcpIncident": {
+    "impact": "jira_* tools blocked (extension-local); KB via backend HTTP fallback 48721 OK",
+    "cause": "Kiro IDE closed -> extension wrapper (9183) dead -> opencode MCP down",
+    "detectedAt": "2026-10-11T21:24:21Z",
+    "recovery": "Reopen Kiro; rebuild vsix to activate runtime-settings fix"
   }
 }
