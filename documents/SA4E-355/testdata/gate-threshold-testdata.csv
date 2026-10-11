@@ -1,0 +1,18 @@
+test_case_id,mode,context_window,system_prompt_chars,tool_schema_tokens,history_tokens,reserve_tokens,input_usage_percent,expected_estimated,expected_usage_percent,expected_decision,expected_conservative,description
+STC-310a,direct-evaluate,,,,,,,85.0,,85.000,ALLOW,,Boundary: 85.0 is NOT > 85 → ALLOW
+STC-310b,direct-evaluate,,,,,,,85.01,,85.01,WARN,,Just above 85
+STC-310c,direct-evaluate,,,,,,,95.0,,95.000,WARN,,Boundary: 95.0 is NOT > 95 → WARN
+STC-310d,direct-evaluate,,,,,,,95.01,,95.01,REJECT,,Just above 95
+STC-310e,direct-evaluate,,,,,,,0,,0.000,ALLOW,,Zero usage
+STC-310f,direct-evaluate,,,,,,,100,,100.0,REJECT,,Full window
+STC-401a,calculator,10000,26000,0,0,2000,,8500,85.000,ALLOW,false,8500/10000 = exactly 85% → ALLOW
+STC-401b,calculator,10000,26004,0,0,2000,,8501,85.010,WARN,false,One token over 85%
+STC-401c,calculator,10000,30000,0,0,2000,,9500,95.000,WARN,false,9500/10000 = exactly 95% → WARN
+STC-401d,calculator,10000,30004,0,0,2000,,9501,95.010,REJECT,false,One token over 95%
+STC-402,calculator,10000,4000,0,0,500,,3000,30.000,ALLOW,true,Reserve 500 forced up to 2000; conservative=true
+STC-403a,calculator,0,26000,0,0,2000,,8500,100.0,REJECT,false,Window <= 0 → usagePercent=100 (fail-safe)
+STC-403b,calculator,-100,26000,0,0,2000,,8500,100.0,REJECT,false,Negative window → usagePercent=100
+STC-012,calculator,10000,28800,0,0,2000,,9200,92.000,WARN,false,WARN band 85-95: session proceeds with warning surfaced
+STC-406a,estimator,,400,,,,,,,100,,,estimateTokens(400 chars) = ceil(400/4) = 100
+STC-406b,estimator,,401,,,,,,,101,,,Ceil behavior: 401 chars → 101 tokens
+STC-406c,estimator,,0 / -5 / NaN / undefined,,,,,,,0,,,Invalid char inputs → 0 tokens; CHARS_PER_TOKEN=4 pinned

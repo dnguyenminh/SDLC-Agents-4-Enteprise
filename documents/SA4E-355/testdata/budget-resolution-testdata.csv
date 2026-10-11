@@ -1,0 +1,25 @@
+test_case_id,model_id,n_ctx_detected,reserve_override,expected_nCtx,expected_reserve,expected_safety,expected_usable,expected_static,expected_history,expected_log,description
+STC-001,qwen,32768,,32768,2048,2622,28098,19668,8430,source=provider,Detected 32k happy path — exact budget (TC-01)
+STC-002a,qwen,32768,,32768,2048,2622,28098,19668,8430,source=provider,Reserve from registry maxOutput (no override)
+STC-002b,qwen,32768,5000,32768,5000,2622,25146,17602,7544,source=provider,Explicit override 5000 wins (OI-2)
+STC-002c,qwen,32768,100,32768,2000,2622,28146,19702,8444,source=provider,Override 100 floored up to 2000
+STC-002d,llama-unknown,,none,8192,2000,656,5536,3875,1661,PI_CONTEXT_DETECT_DEFAULT,Registry miss → floor 2000
+STC-003a,llama3.1,8192,,8192,2048,656,5488,3841,1647,source=provider,Safety margin at 8k = ceil(655.36) (TC-04)
+STC-003b,gpt-4o-mini,128000,,128000,16384,10240,101376,70963,30413,source=provider,Safety margin at 128k = exact 10240
+STC-004,gpt-4o-mini,128000,,128000,16384,10240,101376,70963,30413,source=provider,"70/30 split at 128k; static+history === usable invariant"
+STC-016a,llama3.1,8192,,8192,2048,656,5488,3841,1647,source=provider,Integration size 1/3 — total prompt <= 5488
+STC-016b,qwen,32768,,32768,2048,2622,28098,19668,8430,source=provider,Integration size 2/3 — total prompt <= 28098
+STC-016c,gpt-4o-mini,128000,,128000,16384,10240,101376,70963,30413,source=provider,Integration size 3/3 — total prompt <= 101376
+STC-100,qwen,MISSING,,32768,2048,2622,28098,19668,8430,PI_CONTEXT_DETECT_FALLBACK,AF-1 detection fail → registry (TC-02)
+STC-101,llama-unknown,MISSING,,8192,2000,656,5536,3875,1661,PI_CONTEXT_DETECT_DEFAULT,AF-2 registry miss → default 8192 never 0 (TC-03)
+STC-111,qwen,65536,,65536,2048,5243,58245,40771,17474,source=provider,llama-server 65536 — budget scales (AF-1 UC-07)
+STC-200a,qwen,0,,32768,2048,2622,28098,19668,8430,PI_CONTEXT_DETECT_FALLBACK,EF-1 invalid 0 → skip to registry
+STC-200b,llama-unknown,-1,,8192,2000,656,5536,3875,1661,PI_CONTEXT_DETECT_DEFAULT,EF-1 invalid -1 → default
+STC-200c,llama-unknown,NaN,,8192,2000,656,5536,3875,1661,PI_CONTEXT_DETECT_DEFAULT,EF-1 NaN → default
+STC-200d,llama-unknown,Infinity,,8192,2000,656,5536,3875,1661,PI_CONTEXT_DETECT_DEFAULT,EF-1 Infinity → default
+STC-201,phi-3-mini,2048,,2048,2000,164,1,0,1,gate REJECT ~97.7%,EF-2 tiny model clamp: usable=max(2048-2000-164;1)=1
+STC-300,PBT-domain,"modelId in {qwen;llama3.1;gpt-4o-mini;llama-unknown;empty} x detected in {valid;0;NaN;Infinity;-Infinity}",any,,>0,>=2000,per-formula,per-formula,per-formula,nCtx>0 invariant,PBT never-0 property (fast-check; fixed seed; 100 runs)
+STC-301,PBT-domain,n in [1..1000000],any,,n,>=2000,ceil(n*0.08),n-reserve-safety,floor(usable*0.7),usable-static,PBT BR-02 formula property
+STC-302,PBT-domain,n in [1..1000000],any,,n,>=2000,ceil(n*0.08),max(n-reserve-safety;1),floor(usable*0.7),usable-static,PBT BR-03 split invariants
+STC-400,detected-1,1,,1,2000,1,1,0,1,gate REJECT >=100%,Extreme n_ctx=1: safety=ceil(0.08)=1; usable clamped to 1
+STC-404,empty-or-space,,(empty),8192,2000,656,5536,3875,1661,PI_CONTEXT_DETECT_DEFAULT,Empty/whitespace modelId → default; no crash

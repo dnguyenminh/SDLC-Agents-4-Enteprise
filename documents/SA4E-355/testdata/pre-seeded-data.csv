@@ -1,0 +1,18 @@
+id,kind,key,field_1,field_2,field_3,description
+model-qwen,registry_entry,qwen,contextWindow=32768,maxOutput=2048,costPer1k=0,"NEW entry (BR-14): speed=medium, thinkingMap low/medium/high = 256/512/1024"
+model-qwen25,registry_entry,qwen2.5-coder,contextWindow=32768,maxOutput=1024,costPer1k=0,Existing entry — plain qwen is the generic fallback (A-3 non-breaking)
+model-llama31,registry_entry,llama3.1,contextWindow=8192,maxOutput=2048,costPer1k=0,Small-size model for 8k integration tests
+model-gpt4omini,registry_entry,gpt-4o-mini,contextWindow=128000,maxOutput=16384,costPer1k=0.00015,Large-size model for 128k integration tests
+model-phi3mini,registry_entry,phi-3-mini,contextWindow=2048,maxOutput=512,costPer1k=0.0002,Tiny model for EF-2 clamp test (STC-201)
+core-tools,tool_group,core,read;write;edit;grep;find;ls;shell,,Core file tools always kept (BR-06)
+discovery-tools,tool_group,discovery,find_tools;execute_dynamic_tool,,Dynamic discovery pair always kept (BR-06)
+role-sm,role_allowlist,SM,sm;brd;sprint;backlog;coordination,,Skills token allowlist (role-scope.ts)
+role-ba,role_allowlist,BA,ba;brd;fsd;requirement;specification,,Skills token allowlist (role-scope.ts)
+role-sa,role_allowlist,SA,sa;tdd;design;architecture;discrepancy,,Skills token allowlist
+role-dev,role_allowlist,DEV,dev;code;implement;build,,Skills token allowlist
+role-qa,role_allowlist,QA,qa;test;quality;stp;stc,,Skills token allowlist
+role-devops,role_allowlist,DevOps,devops;deploy;release;pipeline;ci;cd,,Skills token allowlist
+role-ui,role_allowlist,UI,ui;ux;wireframe,,Skills token allowlist
+role-security,role_allowlist,Security,security;pentest;vulnerability,,Skills token allowlist
+steering-baseline,fixture,steering-files,"phase-1-requirements.md;phase-2-specification.md;phase-3-design.md;phase-4-test-planning.md;phase-5-implementation.md;phase-6-testing.md;phase-7-deployment.md;shared-jira.md;shared-quality-gates.md",,9-file steering base fixture (STC-007/103)
+mcp-tools-baseline,fixture,mcp-tools,"jira_get_issue:600;jira_create_issue:600;mem_search:300;mem_ingest:400;drawio_export_png:500",,MCP fixture with estimated schema tokens (OI-4 estimator)

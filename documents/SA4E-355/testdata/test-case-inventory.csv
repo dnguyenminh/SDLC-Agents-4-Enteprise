@@ -1,0 +1,80 @@
+stc_id,section,level,automated,priority,type,requirement,test_file,data_reference
+STC-001,1. Happy Path,UT,yes,High,Functional - Happy Path,Resolver exact budget for detected qwen 32k,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-002,1. Happy Path,UT,yes,High,Functional - Happy Path,reserveOutput order override-registry-floor,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-003,1. Happy Path,UT,yes,High,Functional - Happy Path,safetyMargin 8% ceil at 8k/128k,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-004,1. Happy Path,UT,yes,High,Functional - Happy Path,70/30 split at 128k with exact-sum invariant,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-005,1. Happy Path,UT,yes,High,Functional - Happy Path,qwen registry entry valid (BR-14),extension/src/pi-agent/__tests__/model-registry.test.ts,testdata/pre-seeded-data.csv
+STC-006,1. Happy Path,UT,yes,High,Functional - Happy Path,BA skills scoping keeps role tokens,extension/src/pi-agent/__tests__/role-scope.test.ts,testdata/role-scope-testdata.csv
+STC-007,1. Happy Path,UT,yes,Medium,Functional - Happy Path,Phase requirements loads phase-1 + shared only,extension/src/pi-agent/__tests__/scoped-steering.test.ts,testdata/role-scope-testdata.csv
+STC-008,1. Happy Path,UT,yes,High,Functional - Happy Path,Compression shrinks over-budget content; security lines survive,extension/src/pi-agent/__tests__/prompt-compressor.test.ts,testdata/compression-testdata.csv
+STC-009,1. Happy Path,UT,yes,High,Functional - Happy Path,BA loadout: no git/deploy; core+discovery kept,extension/src/pi-agent/__tests__/tool-loadout.test.ts,testdata/tool-loadout-testdata.csv
+STC-010,1. Happy Path,UT,yes,High,Functional - Happy Path,DEV has git/build; SM has jira+coordination,extension/src/pi-agent/__tests__/tool-loadout.test.ts,testdata/tool-loadout-testdata.csv
+STC-011,1. Happy Path,IT,yes,High,Functional - Happy Path,Gate ALLOW path - session created,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/escalation-testdata.csv
+STC-012,1. Happy Path,IT,yes,High,Functional - Happy Path,Gate WARN path (85-95) proceeds with warning,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/gate-threshold-testdata.csv
+STC-013,1. Happy Path,UT,yes,High,Functional - Happy Path,qwen 32768 classified NOT small - medium behaviors,extension/src/pi-agent/__tests__/model-router.test.ts + model-tier.test.ts,testdata/tiering-testdata.csv
+STC-014,1. Happy Path,UT,yes,High,Functional - Happy Path,Small tier 8k: forced compression + max scoping + minimal loadout,extension/src/pi-agent/__tests__/model-tier.test.ts,testdata/tiering-testdata.csv
+STC-015,1. Happy Path,UT,yes,High,Functional - Happy Path,Large tier 128k: no compression + full loadout,extension/src/pi-agent/__tests__/model-tier.test.ts,testdata/tiering-testdata.csv
+STC-016,1. Happy Path,IT,yes,High,Functional - Happy Path,Integration 3 sizes: total prompt < budget,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/budget-resolution-testdata.csv
+STC-017,1. Happy Path,IT,yes,High,Functional - Happy Path,SM regression keeps essential tools,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/tool-loadout-testdata.csv
+STC-018,1. Happy Path,UT,yes,High,Functional - Happy Path,Steering over cap: drop lowest priority first; security survives,extension/src/pi-agent/__tests__/scoped-steering.test.ts,testdata/role-scope-testdata.csv
+STC-019,1. Happy Path,UT,yes,Medium,Functional - Happy Path,Schema cap: total <= cap; lowest priority trimmed first,extension/src/pi-agent/__tests__/tool-loadout.test.ts,testdata/tool-loadout-testdata.csv
+STC-100,2. Alternative Flows,UT,yes,High,Functional - Alternative Flow,Detection fails -> registry fallback + warning,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-101,2. Alternative Flows,UT,yes,High,Functional - Alternative Flow,Registry miss -> default 8192 never 0,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-102,2. Alternative Flows,UT,yes,High,Functional - Alternative Flow,Unknown role keeps ALL skills (fail-open),extension/src/pi-agent/__tests__/role-scope.test.ts,testdata/role-scope-testdata.csv
+STC-103,2. Alternative Flows,UT,yes,Medium,Functional - Alternative Flow,Phase missing/unmapped -> shared-* only,extension/src/pi-agent/__tests__/scoped-steering.test.ts,testdata/role-scope-testdata.csv
+STC-104,2. Alternative Flows,UT,yes,Medium,Functional - Alternative Flow,"""Steering under cap -> no drops, unmodified""",extension/src/pi-agent/__tests__/scoped-steering.test.ts,testdata/role-scope-testdata.csv
+STC-105,2. Alternative Flows,IT,yes,High,Functional - Alternative Flow,Surplus + large tier -> compressPrompt NOT called,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/compression-testdata.csv
+STC-106,2. Alternative Flows,IT,yes,High,Functional - Alternative Flow,Small tier forces compression despite surplus,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/compression-testdata.csv
+STC-107,2. Alternative Flows,UT,yes,Medium,Functional - Alternative Flow,Absent tool discovered via find_tools + execute_dynamic_tool,extension/src/pi-agent/__tests__/tool-loadout.test.ts,testdata/tool-loadout-testdata.csv
+STC-108,2. Alternative Flows,UT,yes,High,Functional - Alternative Flow,Unknown role loadout: permissive default,extension/src/pi-agent/__tests__/tool-loadout.test.ts,testdata/tool-loadout-testdata.csv
+STC-109,2. Alternative Flows,UT,yes,Medium,Functional - Alternative Flow,detectModelTier null (qwen) -> window decides,extension/src/pi-agent/__tests__/model-tier.test.ts,testdata/tiering-testdata.csv
+STC-110,2. Alternative Flows,IT,yes,High,Functional - Alternative Flow,Escalation succeeds at step 1 only,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/escalation-testdata.csv
+STC-111,2. Alternative Flows,IT,yes,Medium,Functional - Alternative Flow,llama-server 65536: budget scales automatically,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/budget-resolution-testdata.csv
+STC-200,3. Exception Flows,UT,yes,High,Functional - Exception Flow,Invalid detected nCtx (0/-1/NaN/Infinity) -> chain skips,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-201,3. Exception Flows,UT,yes,High,Functional - Exception Flow,Tiny model 2048: usable clamped; gate REJECT actionable,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-202,3. Exception Flows,UT,yes,High,Functional - Exception Flow,Override throws -> fail-open to base content,extension/src/pi-agent/__tests__/scoped-steering.test.ts,testdata/role-scope-testdata.csv
+STC-203,3. Exception Flows,UT,yes,Medium,Functional - Exception Flow,Compression failure / empty result -> original kept,extension/src/pi-agent/__tests__/prompt-compressor.test.ts,testdata/compression-testdata.csv
+STC-204,3. Exception Flows,UT,yes,High,Functional - Exception Flow,Cap unreachable at min set -> PI_TOOL_SCHEMA_CAP,extension/src/pi-agent/__tests__/tool-loadout.test.ts,testdata/tool-loadout-testdata.csv
+STC-205,3. Exception Flows,IT,yes,High,Functional - Exception Flow,Escalation ladder fixed order with re-measure,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/escalation-testdata.csv
+STC-206,3. Exception Flows,IT,yes,High,Functional - Exception Flow,Absolute exceed -> exact error; provider NOT called,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/escalation-testdata.csv
+STC-207,3. Exception Flows,IT,yes,High,Functional - Exception Flow,Legacy-400 impossibility (original incident numbers),extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/escalation-testdata.csv
+STC-300,4. Business Rules,PBT,yes,High,Business Rule,BR-01 never-0 invariant (property-based),extension/src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts,testdata/budget-resolution-testdata.csv
+STC-301,4. Business Rules,PBT,yes,High,Business Rule,BR-02 ceil formula (property-based),extension/src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts,testdata/budget-resolution-testdata.csv
+STC-302,4. Business Rules,PBT,yes,High,Business Rule,BR-03 split invariants (property-based),extension/src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts,testdata/budget-resolution-testdata.csv
+STC-303,4. Business Rules,UT,yes,High,Business Rule,Security-line matrix survives compression AND drops,extension/src/pi-agent/__tests__/prompt-compressor.test.ts + scoped-steering.test.ts,testdata/compression-testdata.csv
+STC-304,4. Business Rules,UT,yes,High,Business Rule,Core+discovery tools never removed (9 roles + minimal),extension/src/pi-agent/__tests__/tool-loadout.test.ts,testdata/tool-loadout-testdata.csv
+STC-305,4. Business Rules,UT,yes,High,Business Rule,Fail-open combined: skills + tools + steering,extension/src/pi-agent/__tests__/role-scope.test.ts + tool-loadout.test.ts,testdata/role-scope-testdata.csv
+STC-306,4. Business Rules,IT,yes,High,Business Rule,No over-escalation: unused ladder steps never fire,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/escalation-testdata.csv
+STC-307,4. Business Rules,IT,yes,High,Business Rule,Provider call count zero after REJECT,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/escalation-testdata.csv
+STC-308,4. Business Rules,UT,yes,High,Business Rule,No automatic model switching,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/tiering-testdata.csv
+STC-309,4. Business Rules,IT,yes,High,Business Rule,detectContextWindowEarly runs BEFORE assembly,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/escalation-testdata.csv
+STC-310,4. Business Rules,UT,yes,High,Business Rule,Threshold boundaries 85.0/85.01/95.0/95.01,extension/src/pi-agent/__tests__/context-budget.test.ts,testdata/gate-threshold-testdata.csv
+STC-311,4. Business Rules,UT,yes,High,Business Rule,Registry validation rejects invalid; duplicates warned,extension/src/pi-agent/__tests__/model-registry.test.ts,testdata/pre-seeded-data.csv
+STC-312,4. Business Rules,UT,yes,High,Business Rule,Non-worsening compression (ratio 0.6),extension/src/pi-agent/__tests__/prompt-compressor.test.ts,testdata/compression-testdata.csv
+STC-313,4. Business Rules,UT,yes,High,Business Rule,Tier boundary matrix 16384/16385/127999/128000/unknown,extension/src/pi-agent/__tests__/model-router.test.ts,testdata/tiering-testdata.csv
+STC-314,4. Business Rules,SIT,no,Medium,Business Rule,Wire-only diff review (no new algorithms),Manual - recorded in TEST-REPORT-SA4E-355.csv,PR diff
+STC-400,5. Boundary/Negative,UT,yes,Medium,Boundary/Negative,Extreme nCtx=1: no throw; gate fails safe,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-401,5. Boundary/Negative,UT,yes,High,Boundary/Negative,Gate boundaries via real calculator inputs,extension/src/pi-agent/__tests__/context-budget.test.ts,testdata/gate-threshold-testdata.csv
+STC-402,5. Boundary/Negative,UT,yes,High,Boundary/Negative,reserveTokens below floor forced up; conservative set,extension/src/pi-agent/__tests__/context-budget.test.ts,testdata/gate-threshold-testdata.csv
+STC-403,5. Boundary/Negative,UT,yes,High,Boundary/Negative,contextWindow <= 0 -> usage 100 -> REJECT,extension/src/pi-agent/__tests__/context-budget.test.ts,testdata/gate-threshold-testdata.csv
+STC-404,5. Boundary/Negative,UT,yes,Medium,Boundary/Negative,Empty/whitespace modelId -> default 8192; no crash,extension/src/pi-agent/__tests__/context-budget-resolver.test.ts,testdata/budget-resolution-testdata.csv
+STC-405,5. Boundary/Negative,UT,yes,Medium,Boundary/Negative,Empty/whitespace AGENTS.md -> original kept,extension/src/pi-agent/__tests__/prompt-compressor.test.ts,testdata/compression-testdata.csv
+STC-406,5. Boundary/Negative,UT,yes,Medium,Boundary/Negative,Token estimator exact behavior (chars/4),extension/src/pi-agent/__tests__/context-budget.test.ts,testdata/gate-threshold-testdata.csv
+STC-500,6. UI/UX,E2E-UI,yes,Medium,UI/UX,Usage indicator reflects budgets,e2e/features/webview/context-usage-indicator.feature,testdata/escalation-testdata.csv
+STC-501,6. UI/UX,E2E-UI,yes,High,UI/UX,Error banner renders PI_CONTEXT_BUDGET_EXCEEDED with N/M/K,e2e/features/webview/budget-error-banner.feature,testdata/escalation-testdata.csv
+STC-502,6. UI/UX,SIT,no,Medium,UI/UX,Turn-1 usage bar: no red overflow,Manual - VS Code + llama-server,STC.md section 6
+STC-503,6. UI/UX,SIT,no,Medium,UI/UX,BA vs SM: static token share visibly lower,Manual - VS Code,STC.md section 6
+STC-504,6. UI/UX,SIT,no,Medium,UI/UX,qwen 32k compression demo: share drops,Manual - VS Code,STC.md section 6
+STC-600,7. Non-Functional,IT,yes,Medium,Non-Functional,Performance: resolve + gate < 50 ms,extension/src/pi-agent/__tests__/context-governance.integration.test.ts,testdata/budget-resolution-testdata.csv
+STC-601,7. Non-Functional,IT,yes,High,Non-Functional,Quality gates: npm test + tsc green,repo root - npm test / tsc,n/a (command gate)
+STC-602,7. Non-Functional,SIT,no,Medium,Non-Functional,Code standards review (200/20/TSDoc),Manual - PR review,PR diff
+STC-603,7. Non-Functional,UT,yes,High,Non-Functional,"""Error hygiene: counts only, no secrets""",extension/src/pi-agent/__tests__/context-governance.integration.test.ts,captured log corpus
+STC-700,8. Integration/E2E/SIT,E2E-API,yes,High,Integration/E2E/SIT,Turn-1 oversized static on 32k: NO exceed_context_size_error,extension/src/pi-agent/__tests__/context-governance.e2e.test.ts,testdata/escalation-testdata.csv
+STC-701,8. Integration/E2E/SIT,E2E-API,yes,High,Integration/E2E/SIT,Provider without meta.n_ctx: registry fallback E2E,extension/src/pi-agent/__tests__/context-governance.e2e.test.ts,testdata/escalation-testdata.csv
+STC-702,8. Integration/E2E/SIT,E2E-API,yes,High,Integration/E2E/SIT,Three sizes E2E: fits budget each,extension/src/pi-agent/__tests__/context-governance.e2e.test.ts,testdata/tiering-testdata.csv
+STC-703,8. Integration/E2E/SIT,E2E-UI,yes,High,Integration/E2E/SIT,"""VS Code turn-1 governance (select qwen, send)""",e2e/features/workbench/turn1-context-governance.feature,testdata/escalation-testdata.csv
+STC-720,8. Integration/E2E/SIT,SIT,no,High,Integration/E2E/SIT,Manual E2E real qwen 32k via llama-server,Manual - llama-server + VS Code,testdata/escalation-testdata.csv
+STC-721,8. Integration/E2E/SIT,SIT,no,Medium,Integration/E2E/SIT,Manual E2E variant llama-server 65536,Manual - llama-server + VS Code,testdata/escalation-testdata.csv
+STC-800,9. Regression,IT,yes,High,Regression,Existing test suites stay green,cd extension && npm test (all suites),n/a (suite gate)
+STC-801,9. Regression,IT,yes,Medium,Regression,Session compactor unaffected by governance wiring,extension/src/pi-agent/__tests__/session-compactor.test.ts,session-compactor fixture
+STC-802,9. Regression,SIT,no,Medium,Regression,Legacy fallback path unaffected,Manual - exploratory,PR diff

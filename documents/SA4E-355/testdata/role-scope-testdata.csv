@@ -1,0 +1,10 @@
+test_case_id,role,phase,input_fixture,expected_kept,expected_dropped,description
+STC-006,BA,any,"skills: ba-core-analysis;brd-writer;fsd-builder;requirement-tracer;specification-checklist;dev-code-generator;qa-stc-suite;deploy-pipeline",ba-core-analysis;brd-writer;fsd-builder;requirement-tracer;specification-checklist,dev-code-generator;qa-stc-suite;deploy-pipeline,BA keeps 5 role tokens; order preserved (TC-05)
+STC-102,intern-x,any,same 8-skill fixture as STC-006,all 8 kept,none,Unknown role fail-open keeps everything (BR-07 / TC-06)
+STC-305,intern-x,any,"skills + tools + steering base",all preserved,none,Fail-open across all three scoping paths (BR-07)
+STC-017,SM,coordination,"skills: sm-orchestrator;brd-writer;sprint-planner;backlog-groomer;coordination-hub","all 5 kept (tokens sm;brd;sprint;backlog;coordination)",none,SM regression keeps essential skills (TC-15)
+STC-007,BA,requirements,"steering 9-file base: 7 phase files + shared-jira.md + shared-quality-gates.md",phase-1-requirements.md;shared-jira.md;shared-quality-gates.md,phase-2..phase-7,Phase requirements → phase-1 + shared-* only (TC-08)
+STC-103,BA,"missing or empty",steering 9-file base,shared-jira.md;shared-quality-gates.md,phase-1..phase-7,Unmapped phase → shared-* only; info logged
+STC-104,QA,test-planning,"3 shared files x 400 tokens (1200 total) vs cap 3841",no drops; byte-identical pass-through,none,Under cap → unmodified (UC-02 AF-3)
+STC-018,QA,test-planning,"cap=3000; shared-quality-gates.md (prio 1; 2000 tok); phase-4-test-planning.md (prio 2; 2500 tok; contains line 'security: never skip the quality gate'); shared-jira.md (prio 3; 1500 tok) — total 6000 > 3000","shared-quality-gates.md; security line 'security: never skip the quality gate' preserved in output",shared-jira.md dropped first; then phase-4-test-planning.md,Lowest priority dropped first; BR-05 security line survives drops (TC-07)
+STC-202,BA,requirements,"internal estimator stub throws",base entries returned unchanged (fail-open),none,EF-1 override throws → fail-open + error logged; no exception escapes

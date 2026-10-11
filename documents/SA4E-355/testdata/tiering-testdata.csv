@@ -1,0 +1,14 @@
+test_case_id,model_id,context_window,detectModelTier_hint,classifyTier_window,three_tier_behavior,description
+STC-013,qwen,32768,null,large (not small),"medium: on-demand compression; standard scope; standard loadout; 70/30",qwen 32k → medium (OI-1 window decides; TC-16)
+STC-014,llama3.1,8192,small,small,"small: forced compression (preferredVariant 'compressed'); max scoping; minimal loadout; static-leaning",Small tier behaviors
+STC-015,gpt-4o-mini,128000,small (name 'mini') — window overrides,large,"large: no compression; full loadout; 70/30",Large tier behaviors — name hint overridden by window (OI-1 primary)
+STC-109a,phi-3-mini,2048,small,small,small behaviors,Name hint small — agrees with window
+STC-109b,claude-3-opus,200000,large,large,large behaviors,Name hint large — agrees with window
+STC-109c,qwen,32768,null,large (not small),medium behaviors,Name hint null → window-based classification decides
+STC-308,qwen,32768,,,no model switch: modelId stays qwen; only behavior flags change,BR-10 no auto-switching
+STC-313a,boundary-16384,16384,,small,small behaviors,Threshold boundary: <= 16384 → small
+STC-313b,boundary-16385,16385,,large (not small),medium behaviors,Just above threshold → not small
+STC-313c,boundary-127999,127999,,large (not small),medium behaviors,Just below 128k → medium
+STC-313d,boundary-128000,128000,,large,large behaviors,At 128k → large (no compression; full loadout)
+STC-313e,unknown-model,missing registry entry,,small (fail-safe),small behaviors,EF-1 UC-06: unknown window → safe side small
+STC-702,"{8192; 32768; 128000}",per simulated server,,per size,"8k: forced compression + minimal loadout; 32k: on-demand; 128k: none + full loadout",E2E-API three sizes — same fixture scales

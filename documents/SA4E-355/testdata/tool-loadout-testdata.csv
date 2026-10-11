@@ -1,0 +1,9 @@
+test_case_id,role,phase,expected_present,expected_absent,schema_cap,expected_total_tokens,description
+STC-009,BA,specification,read;write;edit;grep;find;ls;shell;find_tools;execute_dynamic_tool,git_diff;build_workspace;deploy_release;pipeline_run,,,"BA: core+discovery; NO git/build/deploy (TC-11)"
+STC-010a,DEV,implementation,core 7;find_tools;execute_dynamic_tool;git_diff;build_workspace,deploy_release;pipeline_run,,,"DEV: git/build present; still no deploy (TC-11)"
+STC-010b,SM,coordination,core 7;find_tools;execute_dynamic_tool;jira_get_issue;jira_create_issue + coordination set,,,,"SM: jira_* + coordination tools (TC-11)"
+STC-108,intern-x,requirements,core 7;find_tools;execute_dynamic_tool + permissive default set,none-forced-out,,,"Unknown role: permissive default loadout (BR-07)"
+STC-019,QA,test-planning,jira_get_issue;jira_create_issue;mem_search;mem_ingest,drawio_export_png,2000,1900,"Cap: drop lowest priority first (drawio 500) → 1900 <= 2000 (TC-12)"
+STC-204,QA,test-planning,read;write;edit;grep;find;ls;shell;find_tools;execute_dynamic_tool,all MCP and phase tools,500,2000,"EF-1: cap unreachable at min set → PI_TOOL_SCHEMA_CAP logged; gate decides remainder"
+STC-304,all 9 roles incl. intern-x + minimal-loadout escalation,any,read;write;edit;grep;find;ls;shell;find_tools;execute_dynamic_tool,never any of the 9 core+discovery tools,,,"BR-06 invariant across all roles and escalation step 3"
+STC-107,BA,specification,"absent tool drawio_export_png → find_tools('drawio export png') discovers → execute_dynamic_tool executes",no preloaded schema required,,,,"AF-1 runtime discovery (tool-usage-dynamic pattern)"

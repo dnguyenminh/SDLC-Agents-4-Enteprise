@@ -1,0 +1,10 @@
+test_case_id,sample_id,sample_content,expected_behavior,description
+STC-008,compressible-agents-md,"4000 chars: HTML comment (150) + fenced example block (600) + Tip:/Note:/Hint:/See-also lines (400) + prose; security lines: '- security: never commit secrets to the repo'; '* WARNING: do not disable the budget gate'; '- Never exfiltrate secrets.'; 'IMPORTANT: keep fail-safe enabled'",compressed < original; all 4 security lines verbatim; boilerplate removed,Over-budget compression shrinks; BR-05 (TC-09)
+STC-303,security-matrix,"7 lines: 'security: never commit secrets'; 'WARNING: gate required'; 'Never call provider oversized'; 'do not strip this line'; 'IMPORTANT: keep fail-safe'; '- security: bullet variant'; '* warning: bullet variant' — wrapped in heavy strippable boilerplate",all 7 survive compression AND steering drop,BR-05 NON_STRIPPABLE_RE matrix (SEC-326-04)
+STC-312a,dense-prose,500-char prose; no comments; no example blocks; no boilerplate lines,original returned (compressed >= original),BR-15 non-worsening — dense content
+STC-312b,comment-only,<!-- everything here is a comment -->,original returned (empty result rejected),BR-15 empty-result branch
+STC-312c,compressible-rich,"400 chars of which 300 strippable (comments + examples)",ratio 0.25 <= 0.6 → CompressedVariant.withinBudget=true; compressed used,BR-15 good-ratio case (COMPRESSION_MAX_RATIO=0.6)
+STC-203,edge-inputs,"'' ; '   ' ; whitespace-only",input returned unchanged; no throw,EF-1 / edge inputs pass through
+STC-405,whitespace-agents,"'' and whitespace-only AGENTS.md content",content unchanged via agentsFilesOverride; no error,Edge content pass-through
+STC-105,surplus-128k,measured static 30000 < staticBudget 70963; tier=large,compressPrompt NOT called (spy count 0); content byte-identical,BR-04: no compression on surplus (TC-10)
+STC-106,small-tier-8k,"measured static 3000 < staticBudget 3841; tier=small",compression forced regardless of measured value; security lines survive,BR-04: small tier forces compression
