@@ -52,11 +52,43 @@ export function chunkPrompt(text: string, maxTokens: number): string[] {
 }
 
 /**
- * Decide if auto-chunk should be applied for the given tier and prompt size.
+ * History-aware chunk threshold for medium/large tiers (SA4E-355 UAT fix).
+ * The UAT 400 came from promptTokens + ACCUMULATED HISTORY approaching n_ctx
+ * — a prompt-only check can never see that overflow.
  */
-export function shouldAutoChunk(tier: 'small' | 'medium' | 'large', promptTokens: number, cfg: AutoChunkConfig): boolean {
-  if (tier !== 'small') return false;
-  return promptTokens > cfg.maxTokensPerChunk;
+export interface AutoChunkThreshold {
+  /** Usable prompt budget for the model: nCtx − reserveOutput − safetyMargin (BR-02). */
+  usableTokens: number;
+  /** Tokens already consumed by accumulated conversation history. */
+  historyTokens?: number;
+}
+
+/**
+ * Approach ratio for medium/large tiers: chunk proactively once the request
+ * (prompt + history) exceeds 70% of the usable budget (SA4E-355 UAT fix #2).
+ */
+export const MEDIUM_AUTO_CHUNK_RATIO = 0.7;
+
+/**
+ * Decide if auto-chunk should be applied for the given tier and request size.
+ *
+ * - small: prompt alone exceeds the per-chunk cap (unchanged Wave-1 rule).
+ * - medium/large (SA4E-355 UAT fix): trigger when promptTokens + historyTokens
+ *   exceed {@link MEDIUM_AUTO_CHUNK_RATIO} of the usable budget. Without a
+ *   valid threshold (no resolved budget) the decision fails open → false.
+ */
+export function shouldAutoChunk(
+  tier: 'small' | 'medium' | 'large',
+  promptTokens: number,
+  cfg: AutoChunkConfig,
+  threshold?: AutoChunkThreshold
+): boolean {
+  if (tier === 'small') return promptTokens > cfg.maxTokensPerChunk;
+  if (!threshold || !Number.isFinite(threshold.usableTokens) || threshold.usableTokens <= 0) {
+    return false;
+  }
+  const historyTokens = Math.max(0, threshold.historyTokens ?? 0);
+  return promptTokens + historyTokens > threshold.usableTokens * MEDIUM_AUTO_CHUNK_RATIO;
 }
 
 /**

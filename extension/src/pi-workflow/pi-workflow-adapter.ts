@@ -19,6 +19,7 @@ import { runContextPipeline } from './pi-context-pipeline.js';
 import { buildCredentialResolver } from './pi-provider-config-bridge.js';
 import { detectContextWindowEarlyHelper, getDetectedContextWindowHelper, type ContextProbeState } from './pi-adapter-context-probe.js';
 import { isBudgetExceededError } from '../pi-agent/budget-gate.js';
+import { governLegacyTurn } from './legacy-turn-governance.js';
 import { PROVIDER_BASE_URL_KEYS } from '../models/LlmProviderConfig';
 import type { RemoteCheckpointerStore } from './checkpointer-adapter.js';
 import { debugLog, debugError } from '../debug-logger';
@@ -365,6 +366,50 @@ export class PiWorkflowAdapter {
     }
   }
 
+  /**
+   * SA4E-355 UAT fix #1: runs the legacy-turn governance gate. Detects the
+   * context window (fix #3: meta.n_ctx probe → registry chain) and measures
+   * the full request before the provider is ever called.
+   * Returns the governed (compacted) history, or null when the turn was
+   * REJECTED — the actionable chat:error has been emitted and the caller must
+   * stop the turn (BR-09).
+   */
+  private async governLegacyTurnOrReject(
+    state: PipelineState,
+    chatInput: string,
+    systemPrompt: string,
+    tools: unknown[]
+  ): Promise<{ history: Array<{ role: string; content: string }> } | null> {
+    try {
+      await this.detectContextWindowEarly();
+      const config = vscode.workspace?.getConfiguration?.('sdlcAgents');
+      // BR-01 window chain: probe meta.n_ctx → runtime (pi-ai) model registry —
+      // the resolved model's real window (gateway models carry context_length /
+      // meta.n_ctx parsed at registration). resolveContextBudget appends the
+      // static registry → default fallbacks when both are absent.
+      const runtimeWindow = this.engine.getProvider().getModelContextWindow?.();
+      return governLegacyTurn({
+        systemPrompt,
+        history: state.chatHistory ?? [],
+        chatInput,
+        tools,
+        modelId: config?.get?.<string>('llmModel', '') || '',
+        nCtxDetected: this.getDetectedContextWindow() ?? runtimeWindow,
+      });
+    } catch (err) {
+      if (!isBudgetExceededError(err)) throw err;
+      // SA4E-355 (BR-09/STC-307 parity): a REJECT claims the turn — the
+      // actionable chat:error is the ONLY output; the provider is never called.
+      this.onEvent({
+        type: 'chat:error',
+        code: 'PI_CONTEXT_BUDGET_EXCEEDED',
+        message: (err as Error).message,
+        retryable: false,
+      } as ChatExtToWebviewMessage);
+      return null;
+    }
+  }
+
   private async runTurnOnce(state: PipelineState, chatInput: string, ticketKey: string): Promise<void> {
     try {
       // Loop guard budget: REPETITION-ONLY by design (product decision).
@@ -439,13 +484,25 @@ export class PiWorkflowAdapter {
       const tools = [...byName.values()] as unknown as import('./types/executor.types.js').ExecuteTurnInput['tools'];
       const workspaceRoot = this.workspaceRoot;
       const onEvent = (msg: ChatExtToWebviewMessage) => this.onEvent(msg);
-      const { result, nextState } = await this.engine.executeTurn(state, chatInput, sessionRole, {
-        tools,
-        systemPrompt,
-        contextRunner: (msgs) => runContextPipeline(workspaceRoot, msgs, onEvent),
-        turnBudget,
-        onToolEvent: (e) => this.postToolLiveEvent(e),
-      });
+      // SA4E-355 UAT fix #1: govern the LEGACY turn before any provider call —
+      // the full request (system + accumulated history + prompt + tool schemas)
+      // is measured against the resolved budget (fix #3: detected meta.n_ctx →
+      // registry chain). Over-budget turns compact history; still-over turns
+      // REJECT with PI_CONTEXT_BUDGET_EXCEEDED and the provider is never invoked.
+      const governed = await this.governLegacyTurnOrReject(state, chatInput, systemPrompt, tools as unknown[]);
+      if (!governed) return;
+      const { result, nextState } = await this.engine.executeTurn(
+        { ...state, chatHistory: governed.history },
+        chatInput,
+        sessionRole,
+        {
+          tools,
+          systemPrompt,
+          contextRunner: (msgs) => runContextPipeline(workspaceRoot, msgs, onEvent),
+          turnBudget,
+          onToolEvent: (e) => this.postToolLiveEvent(e),
+        }
+      );
       debugLog(`[Chat] turn via=legacy ext=${getExtensionVersion()} workspace=${this.workspaceRoot} tools=${byName.size} used=${result.toolCalls.length} systemPrompt=${systemPrompt.length}ch`);
       this.store.save(ticketKey, nextState as PipelineState);
       this.store.setHistory(nextState.chatHistory || []);

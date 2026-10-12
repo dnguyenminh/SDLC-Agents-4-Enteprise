@@ -24,6 +24,7 @@ import { estimateToolSchemaTokens } from '../pi-agent/tool-schema-tokens.js';
 import { runSessionBudgetGate } from '../pi-agent/session-budget-gate.js';
 import { halveSteeringCap } from '../pi-agent/budget-gate.js';
 import { DEFAULT_AUTO_CHUNK_CONFIG, chunkPrompt, shouldAutoChunk, synthesizeChunks } from '../pi-agent/context-budget-auto-split.js';
+import { usableTokensOf } from '../pi-agent/models/ContextBudget.js';
 import { buildWorkspaceSystemPrompt } from './pi-coding-tools.js';
 import { createWorkspaceInfoTool, toSessionToolDefinition, WORKSPACE_INFO_TOOL_NAME } from './workspace-info-tool.js';
 import { getPiExtensionEntries, getPiExtensionAgentTools } from './pi-extension-runtime.js';
@@ -389,6 +390,18 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
   });
 
   debugLog(`[PiSessionHost] session ready (cwd=${workspaceRoot})`);
+  // SA4E-355 UAT fix #2: approximate conversation-history growth (prompts +
+  // assistant text) so shouldAutoChunk can trigger for medium/large tiers as
+  // the session approaches the usable budget. Tool results are NOT counted —
+  // a conservative under-estimate (the real transcript can only be larger).
+  let approxHistoryTokens = 0;
+  const recordHistoryGrowth = (turnText: string, replyText: string): void => {
+    approxHistoryTokens += estimateTokenCount(turnText) + estimateTokenCount(replyText);
+  };
+  const chunkThreshold = (): { usableTokens: number; historyTokens: number } => ({
+    usableTokens: usableTokensOf(budget),
+    historyTokens: approxHistoryTokens,
+  });
   const getFile = (): string | undefined => {
     try {
       return (sessionManager as { getSessionFile?: () => string })?.getSessionFile?.();
@@ -434,7 +447,11 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
       };
 
       const promptTokens = estimateTokenCount(text);
-      if (shouldAutoChunk(tier, promptTokens, DEFAULT_AUTO_CHUNK_CONFIG)) {
+      // SA4E-355 UAT fix #2: history-aware decision — medium/large tiers chunk
+      // once prompt + accumulated history pass 70% of the usable budget.
+      const shouldChunk = shouldAutoChunk(tier, promptTokens, DEFAULT_AUTO_CHUNK_CONFIG, chunkThreshold());
+      approxHistoryTokens += promptTokens; // this prompt joins the session history
+      if (shouldChunk) {
         const chunks = chunkPrompt(text, DEFAULT_AUTO_CHUNK_CONFIG.maxTokensPerChunk);
         const parts: string[] = [];
         for (const ch of chunks) {
@@ -443,6 +460,7 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
         }
         const combined = synthesizeChunks(parts);
         const final = await runOnce(`Synthesize the following parts into a coherent final answer:\n${combined}`);
+        recordHistoryGrowth(combined, final);
         return {
           text: final,
           toolCalls: [],
@@ -470,8 +488,10 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
       } finally {
         try { unsub(); } catch {}
       }
+      const replyText = collector.text;
+      recordHistoryGrowth(text, replyText); // SA4E-355 UAT fix #2: track history growth
       return {
-        text: collector.text,
+        text: replyText,
         toolCalls: (collector.toolCalls as NormalizedToolCall[]).map((t) => ({
           id: String(t.id),
           name: String(t.name),

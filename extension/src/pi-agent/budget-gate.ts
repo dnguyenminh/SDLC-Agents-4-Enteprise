@@ -57,10 +57,12 @@ export class PiContextBudgetExceededError extends Error {
   constructor(
     readonly staticTokens: number,
     readonly staticBudget: number,
-    readonly nCtx: number
+    readonly nCtx: number,
+    /** What overflowed — 'static context' (session gate) or 'request' (legacy turn). */
+    readonly label: string = 'static context'
   ) {
     super(
-      `PI_CONTEXT_BUDGET_EXCEEDED: static context ${staticTokens} tokens vượt budget ${staticBudget} cho model n_ctx=${nCtx}. Giảm steering/tools hoặc dùng model context lớn hơn.`
+      `PI_CONTEXT_BUDGET_EXCEEDED: ${label} ${staticTokens} tokens vượt budget ${staticBudget} cho model n_ctx=${nCtx}. Giảm steering/tools hoặc dùng model context lớn hơn.`
     );
     this.name = 'PiContextBudgetExceededError';
   }

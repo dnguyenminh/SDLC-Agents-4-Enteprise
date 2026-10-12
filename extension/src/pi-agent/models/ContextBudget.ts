@@ -17,3 +17,13 @@ export interface ContextBudget {
   /** Budget for conversation history — exact remainder of usable, ~30% (BR-03). */
   historyBudget: number;
 }
+
+/**
+ * Usable prompt tokens for a resolved budget: nCtx − reserveOutput −
+ * safetyMargin (BR-02), floored at 1 (BR-01: never 0/unbounded). Single
+ * source of truth for every consumer that thresholds against the window
+ * (session host auto-chunk, legacy turn governance).
+ */
+export function usableTokensOf(budget: ContextBudget): number {
+  return Math.max(1, budget.nCtx - budget.reserveOutput - budget.safetyMargin);
+}

@@ -136,6 +136,23 @@ export class PiProvider {
   }
 
   /**
+   * SA4E-355 UAT fix #3: context window of the CURRENTLY resolved model from
+   * the runtime (pi-ai) model registry — the registry link of the BR-01 chain
+   * (probe meta.n_ctx → runtime registry → default). Gateway-registered models
+   * carry the real context_length / meta.n_ctx parsed at registration.
+   */
+  getModelContextWindow(): number | undefined {
+    if (!this.models || !this.providerId || !this.modelId) return undefined;
+    try {
+      const model = this.models.getModel(this.providerId, this.modelId) as { contextWindow?: number } | undefined;
+      const w = model?.contextWindow;
+      return typeof w === 'number' && Number.isFinite(w) && w > 0 ? Math.floor(w) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * PI-MODEL-FALLBACK: set the ordered list of model ids to try (in order) when a
    * run fails with a transient/gateway error. Only ids that exist in the registry
    * for `providerId` are kept; unknown ids are dropped (they'd just error again).

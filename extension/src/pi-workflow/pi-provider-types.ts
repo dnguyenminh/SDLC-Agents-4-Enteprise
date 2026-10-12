@@ -67,6 +67,13 @@ export interface IPiProvider {
   registerGateway(providerId: string, baseUrl: string, apiKey?: string): Promise<void>;
   setModel(providerId: string, modelId: string): Promise<boolean>;
   resolveDefaultModel(providerId: string): string | undefined;
+  /**
+   * SA4E-355 UAT fix #3: context window of the currently resolved model from
+   * the runtime (pi-ai) model registry — the registry link of the BR-01
+   * window chain (probe meta.n_ctx → runtime registry → default).
+   * Optional: test fakes may omit it.
+   */
+  getModelContextWindow?(): number | undefined;
   setFallbackModels(providerId: string, modelIds: string[]): void;
   /** Fix J: optional pre-execution approval gate (implemented by PiProvider). */
   setToolApproval?(handler: ToolApprovalGateHandler): void;

@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ensureSessionHost, clearSessionHostCache } from '../pi-agent-session-host.js';
 
 // Mock pi-coding-agent
+const { promptCalls } = vi.hoisted(() => ({ promptCalls: [] as string[] }));
+
 vi.mock('@earendil-works/pi-coding-agent', () => ({
   getAgentDir: () => '/tmp/pi',
   ModelRuntime: {
@@ -15,12 +17,14 @@ vi.mock('@earendil-works/pi-coding-agent', () => ({
   SettingsManager: { create: () => ({}) },
   SessionManager: { create: () => ({ getSessionFile: () => '/tmp/s.jsonl' }) },
   DefaultResourceLoader: class { constructor() {} },
-  createAgentSession: async (_opts) => ({
+  createAgentSession: vi.fn(async () => ({
     session: {
       subscribe: () => () => {},
-      prompt: async (text: string) => { /* no-op */ },
+      prompt: async (text: string) => {
+        promptCalls.push(text);
+      },
     },
-  }),
+  })),
 }));
 
 vi.mock('../pi-extension-runtime.js', () => ({
@@ -56,6 +60,36 @@ describe('PiAgentSessionHost auto-chunk (SA4E-355)', () => {
     const largePrompt = Array.from({ length: 200 }, (_, i) => `Paragraph ${i} with some content. `).join('\n\n');
     const res = await host.promptTurn(largePrompt);
     expect(res.text).toBeDefined();
+    host.dispose();
+  });
+
+  // STC: SA4E-355 UAT fix #2 — medium tier (n_ctx 65536) must ALSO auto-chunk
+  // when the request (prompt + accumulated history) approaches the usable budget.
+  it('promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx', async () => {
+    promptCalls.length = 0;
+    const host = await ensureSessionHost({
+      workspaceRoot: '/ws',
+      providerId: 'anthropic',
+      apiKey: 'k',
+      nCtxDetected: 65536, // → tier medium (16k < 65536 < 128k)
+    });
+    // 50k-token prompt > 70% of the 58245-token usable budget → must chunk.
+    const hugePrompt = 'y'.repeat(50000 * 4);
+    await host.promptTurn(hugePrompt);
+    expect(promptCalls.length).toBeGreaterThan(1); // chunked into multiple provider calls
+    host.dispose();
+  });
+
+  it('promptTurn does NOT chunk a small prompt for medium tier (below threshold)', async () => {
+    promptCalls.length = 0;
+    const host = await ensureSessionHost({
+      workspaceRoot: '/ws',
+      providerId: 'anthropic',
+      apiKey: 'k',
+      nCtxDetected: 65536,
+    });
+    await host.promptTurn('just a normal question');
+    expect(promptCalls).toHaveLength(1); // single provider call — no chunking
     host.dispose();
   });
 });
