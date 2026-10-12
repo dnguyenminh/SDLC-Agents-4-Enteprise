@@ -54,9 +54,10 @@
       "completedAt": "2026-10-12T00:57:48Z"
     },
     "testing": {
-      "startedAt": "2026-10-12T00:57:39Z",
-      "note": "QA Phase 6: E2E-UI wdio (STC-500/501/703) + manual qwen 32k checklist (STC-720/721) + SIT manual per STC; full-suite gate blocked by SA4E-356 interference - rerun when that session lands",
-      "status": "pending_qa"
+      "startedAt": "2026-10-12T01:04:30Z",
+      "note": "QA Phase 6: governance regression 148/148 PASS, full suite 278/2660 PASS; E2E-UI wdio STC-500/501/703 BLOCKED (no display/VS Code), manual qwen STC-720/721 BLOCKED (no llama-server weights), SIT manual pending; verdict CONDITIONAL",
+      "status": "conditional_pass",
+      "agentSession": "ses_ed25cc14cffee2j2jo560IcjTw"
     },
     "deployment": {
       "status": "not_started"
@@ -69,7 +70,7 @@
   "relatedBugs": [
     "SA4E-357"
   ],
-  "lastUpdated": "2026-10-12T00:57:39Z",
+  "lastUpdated": "2026-10-12T06:01:31Z",
   "git": {
     "main": "30d6a67+315fa55",
     "note": "Phase 4 outputs + SA4E-356 consolidated onto local main"
@@ -87,3 +88,4 @@
     "FSD needs priority-table update (P1 shared-governance/P2 current-phase/P3 other steering - defined in Wave 2, STC-018 binding)"
   ]
 }
+
