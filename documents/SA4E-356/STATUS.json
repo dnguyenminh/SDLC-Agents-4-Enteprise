@@ -17,7 +17,7 @@
     "security_code_review": { "status": "done", "file": "SECURITY-ASSESSMENT.md", "version": 1, "verdict": "APPROVED_WITH_FINDINGS", "overallRisk": "low", "completedAt": "2026-10-12", "note": "0 Critical/High; SA-02 1-line fix in-progress; SA-01/SA-07 follow-ups deferred (Jira down)" },
     "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 1, "verdict": "CONDITIONAL_PASS", "completedAt": "2026-10-12", "note": "33/33 STC, 2660/2660 suite, 0 defects; REG-1/2 manual close-gate PENDING" },
     "pentest": { "status": "done", "file": "PENTEST-REPORT.md", "version": 1, "verdict": "SECURE_WITH_NOTES", "completedAt": "2026-10-12", "note": "92 attempts, 0 bypass, 2 Low (PT-01 residual design, PT-02 fixed inline); SA-01 live-confirmed -> SA4E-358" },
-    "uat": { "status": "not_started", "note": "HUMAN GATE — awaiting user" },
+    "uat": { "status": "in_progress", "note": "HUMAN GATE — extension 1.48.0 (SA4E-356 fix) deployed to Kiro, user UAT in progress" },
     "security_deploy_review": { "status": "not_started" },
     "deployment": { "status": "not_started" }
   },
