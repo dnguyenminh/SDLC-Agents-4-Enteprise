@@ -35,3 +35,8 @@ Wave 2 DONE + verified (commit 0b2ab57): Task 2+3 + PBT gap-fill. session-host w
 | 2026-10-11T23:53:09Z | SM | incident | Wave 3 background session 429 Too Many Requests -> error; user doi model moi, SM resume | ⚠️ Recovered | - |
 | 2026-10-11T23:53:09Z | SM | verify-partial | Wave 3 do dang: 6 files (tool-loadout 160, schema-tokens 49, budget-gate + 3 test files); 52 tests 49 pass/3 fail (budget-gate PI_CONTEXT_BUDGET_EXCEEDED); adapter+host diff TRONG (chua wire); test files 327/272 lines > 200 -> yeu cau tach | ⚠️ Partial | - |
 | 2026-10-11T23:53:09Z | dev-agent | phase-5-wave3-retry | Wave 3 resume background ses_ed29da97fffeanUvtShBNDAiqJ: fix 3 RED + tach test files + adapter wiring + gate wiring + full suite | 🔄 Running | - |
+
+| 2026-10-12T00:11:38Z | dev-agent | phase-5-wave3 | Wave 3 DONE: Task 4+5 + adapter (session-budget-gate 122, tool-loadout, OI-4 estimator, adapter +31 early-detect+wiring+REJECT claim); 10 files/58 new tests; full suite 268/2515 pass, tsc clean, eslint 0 | ✅ Done | - |
+| 2026-10-12T00:11:38Z | SM | phase-5-wave3-verify | SM verify: focused 64 pass, full 2515 pass, adapter wiring grep OK (early-detect/nCtx/REJECT claim/sessionRole), session-host gate grep OK; SM decision: ACCEPT sessionRole hardcode (PipelineState no role field -> follow-up product-level, fail-open safe); commit a8ba7b5 (19 files) | ✅ Done | - |
+| 2026-10-12T00:11:38Z | SM | jira | Wave 3 completion comment posted to SA4E-355 | ✅ Done | - |
+| 2026-10-12T00:11:38Z | dev-agent | phase-5-wave4 | Wave 4 (Task 6 tiering OI-1/OI-3) launched background ses_ed28cbeb1ffeZ0MD0NLdoUQem2 | 🔄 Running | - |

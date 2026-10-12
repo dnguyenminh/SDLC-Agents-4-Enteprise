@@ -15,6 +15,7 @@ import { debugLog } from '../debug-logger';
 import { logger } from '../logger';
 import { resolveContextBudget } from '../pi-agent/context-budget-resolver.js';
 import type { ContextBudget } from '../pi-agent/models/ContextBudget';
+import { SMALL_CONTEXT_WINDOW_THRESHOLD } from '../pi-agent/model-router.js';
 import { compressPrompt, estimateTokenCount } from '../pi-agent/prompt-compressor.js';
 import { RoleScopeFilter, type SkillRef } from '../pi-agent/role-scope.js';
 import { scopedSteering } from '../pi-agent/scoped-steering.js';
@@ -88,16 +89,56 @@ function pickDefaultModelId(
   return (models.find((m) => pref.test(m.id)) ?? models[0]).id;
 }
 
-/** SA4E-355 session governance decision (UC-01 + UC-03). */
+/** SA4E-355 session governance decision (UC-01 + UC-03 + UC-06 Task 6). */
 interface SessionGovernance {
   budget: ContextBudget;
   shouldCompress: boolean;
+  /** Window-based behavior tier from the resolved nCtx (OI-1). */
+  tier: SessionTier;
 }
 
 /**
- * SA4E-355 UC-01/UC-03: resolves the session ContextBudget via the Task-1
- * resolver (fallback chain provider → registry → 8192, never 0 — BR-01) and
- * the conditional compression flag (measured static > staticBudget — BR-04).
+ * SA4E-355 Task 6 (UC-06, OI-1): session behavior tier resolved from the
+ * REAL nCtx (window-based primary — deterministic on the actual constraint,
+ * not the model name). Applies the binary classifyTier rule
+ * (nCtx <= SMALL_CONTEXT_WINDOW_THRESHOLD → small) onto the 3-tier behavior
+ * scale from FSD §3.6.4: small ≤ 16,384; medium < 128,000; large ≥ 128,000.
+ */
+export type SessionTier = 'small' | 'medium' | 'large';
+
+/** Large-tier floor (FSD §3.6.4: large ≥ 128k — no compression, full loadout). */
+export const LARGE_CONTEXT_WINDOW_THRESHOLD = 128000;
+
+/**
+ * Resolves the behavior tier from the resolved nCtx.
+ * Invalid windows fail safe to small (EF-1 UC-06: unknown → safe side).
+ */
+export function resolveSessionTier(nCtx: number): SessionTier {
+  if (!Number.isFinite(nCtx) || nCtx <= 0) return 'small';
+  if (nCtx <= SMALL_CONTEXT_WINDOW_THRESHOLD) return 'small';
+  if (nCtx >= LARGE_CONTEXT_WINDOW_THRESHOLD) return 'large';
+  return 'medium';
+}
+
+/**
+ * BR-04 compression condition with Task 6 tier wiring: over-budget static OR
+ * small tier (forced even on surplus); medium/large on surplus stay
+ * byte-identical (Wave 2/3 behavior preserved).
+ */
+export function resolveShouldCompress(
+  measuredStaticTokens: number,
+  staticBudget: number,
+  tier: SessionTier
+): boolean {
+  return measuredStaticTokens > staticBudget || tier === 'small';
+}
+
+/**
+ * SA4E-355 UC-01/UC-03/UC-06: resolves the session ContextBudget via the
+ * Task-1 resolver (fallback chain provider → registry → 8192, never 0 —
+ * BR-01), the window-based behavior tier from the REAL nCtx (Task 6, OI-1),
+ * and the conditional compression flag (measured static > staticBudget OR
+ * small tier — BR-04).
  */
 function resolveSessionGovernance(
   piCoding: typeof import('@earendil-works/pi-coding-agent'),
@@ -112,12 +153,13 @@ function resolveSessionGovernance(
     modelId: resolvedModel.id ?? (opts.configuredModelId ?? ''),
     nCtxDetected: opts.nCtxDetected ?? resolvedModel.contextWindow,
   });
+  const tier = resolveSessionTier(budget.nCtx);
   const measuredStaticTokens = measureStaticTokens(piCoding, workspaceRoot, agentDir, workspacePrompt);
-  const shouldCompress = measuredStaticTokens > budget.staticBudget; // BR-04 budget condition
+  const shouldCompress = resolveShouldCompress(measuredStaticTokens, budget.staticBudget, tier);
   if (shouldCompress) {
-    logger.info('PI_COMPRESSION_ENABLED', { measuredStaticTokens, staticBudget: budget.staticBudget });
+    logger.info('PI_COMPRESSION_ENABLED', { measuredStaticTokens, staticBudget: budget.staticBudget, tier });
   }
-  return { budget, shouldCompress };
+  return { budget, shouldCompress, tier };
 }
 
 /** UC-03: measured static = context-file tokens + workspace prompt tokens (chars/4). */
