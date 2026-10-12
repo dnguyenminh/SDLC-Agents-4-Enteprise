@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-356",
-  "currentPhase": "user_guide+security_code_review",
+  "currentPhase": "testing+pentest",
   "autonomyLevel": "L3",
   "gitBranch": "main",
   "humanGates": ["uat", "deployment"],
@@ -15,8 +15,8 @@
     "implementation": { "status": "done", "completedAt": "2026-10-12", "commit": "bb17b39", "note": "TA APPROVED; 2660 tests PASS; REG-1/2 pending close-gate" },
     "user_guide": { "status": "done", "file": "UG.md", "version": 1, "review": "ba-approved+qa-verified", "completedAt": "2026-10-12" },
     "security_code_review": { "status": "done", "file": "SECURITY-ASSESSMENT.md", "version": 1, "verdict": "APPROVED_WITH_FINDINGS", "overallRisk": "low", "completedAt": "2026-10-12", "note": "0 Critical/High; SA-02 1-line fix in-progress; SA-01/SA-07 follow-ups deferred (Jira down)" },
-    "testing": { "status": "not_started" },
-    "pentest": { "status": "not_started" },
+    "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 1, "verdict": "CONDITIONAL_PASS", "completedAt": "2026-10-12", "note": "33/33 STC, 2660/2660 suite, 0 defects; REG-1/2 manual close-gate PENDING" },
+    "pentest": { "status": "in_progress", "startedAt": "2026-10-12" },
     "uat": { "status": "not_started" },
     "security_deploy_review": { "status": "not_started" },
     "deployment": { "status": "not_started" }
