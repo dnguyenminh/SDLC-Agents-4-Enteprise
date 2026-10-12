@@ -18,6 +18,7 @@ import { getPiExtensionAgentTools } from './pi-extension-runtime.js';
 import { runContextPipeline } from './pi-context-pipeline.js';
 import { buildCredentialResolver } from './pi-provider-config-bridge.js';
 import { detectContextWindowEarlyHelper, getDetectedContextWindowHelper, type ContextProbeState } from './pi-adapter-context-probe.js';
+import { isBudgetExceededError } from '../pi-agent/budget-gate.js';
 import { PROVIDER_BASE_URL_KEYS } from '../models/LlmProviderConfig';
 import type { RemoteCheckpointerStore } from './checkpointer-adapter.js';
 import { debugLog, debugError } from '../debug-logger';
@@ -250,9 +251,12 @@ export class PiWorkflowAdapter {
     state: PipelineState,
     chatInput: string,
     ticketKey: string,
+    role: string,
     timeoutMs = 0,
     turnStreamId: string
   ): Promise<boolean> {
+    // One stable stream identity per turn (streaming-identity fix).
+    const turnStart = Date.now();
     try {
       const config = vscode.workspace?.getConfiguration?.('sdlcAgents');
       const providerId = config?.get?.<string>('llmProvider', 'anthropic') || 'anthropic';
@@ -265,6 +269,9 @@ export class PiWorkflowAdapter {
       // Key-requiring providers without a key keep the fail-closed
       // PI_CREDENTIALS_MISSING error on the legacy path below.
       if (!apiKey) return false;
+      // SA4E-355 Task 5.1 (BR-12/STC-309): detect n_ctx BEFORE the host
+      // assembles static context — the resolver chain needs it first (UC-01).
+      await this.detectContextWindowEarly();
       const { ensureSessionHost } = await import('./pi-agent-session-host.js');
       const host = await ensureSessionHost({
         workspaceRoot: this.workspaceRoot,
@@ -272,8 +279,10 @@ export class PiWorkflowAdapter {
         apiKey,
         baseUrl,
         configuredModelId,
+        role, // UC-02/UC-04: executeTurn role drives skills + loadout scoping
+        phase: state.currentPhase, // UC-02: steering map (unmapped → shared-* only)
+        nCtxDetected: this.getDetectedContextWindow(), // UC-01 (absent → fail-open chain)
       });
-      const turnStart = Date.now();
       // One stable stream identity per turn (streaming-identity fix):
       // every token/complete/error of this turn shares turnStreamId so the
       // webview opens exactly ONE bubble and always closes it.
@@ -338,6 +347,19 @@ export class PiWorkflowAdapter {
       }
       return true;
     } catch (err) {
+      // SA4E-355 Task 5 (BR-09/STC-307): a gate REJECT claims the turn — the
+      // actionable chat:error is the ONLY output and the legacy engine (hence
+      // the provider) is NEVER invoked with the oversized prompt.
+      if (isBudgetExceededError(err)) {
+        this.streamHandler.emitComplete('pi', Date.now() - turnStart, turnStreamId);
+        this.onEvent({
+          type: 'chat:error',
+          code: 'PI_CONTEXT_BUDGET_EXCEEDED',
+          message: (err as Error).message,
+          retryable: false,
+        } as ChatExtToWebviewMessage);
+        return true;
+      }
       debugLog(`[PiWorkflowAdapter] session turn fallback: ${(err as Error).message.slice(0, 160)}`);
       return false;
     }
@@ -370,7 +392,10 @@ export class PiWorkflowAdapter {
       // Falls back to the legacy engine path below on any failure.
       // turnStreamId (below) is the single identity for every stream event.
       const turnStreamId = crypto.randomUUID();
-      if (await this.trySessionTurn(state, chatInput, ticketKey, chatTimeoutMs, turnStreamId)) return;
+      // SA4E-355 (UC-02/UC-04): the executeTurn role also drives session
+      // scoping — one value shared by the session path and the legacy path.
+      const sessionRole = 'sm-agent';
+      if (await this.trySessionTurn(state, chatInput, ticketKey, sessionRole, chatTimeoutMs, turnStreamId)) return;
       // FIX A + B: initialize + seed credentials + register gateway + resolve model (correct order).
       const { modelUnresolved, credentialsPresent } = await this.configurePiProvider();
       // FIX C: PI_MODEL_UNRESOLVED only for the true no-model case (registry has no model).
@@ -414,7 +439,7 @@ export class PiWorkflowAdapter {
       const tools = [...byName.values()] as unknown as import('./types/executor.types.js').ExecuteTurnInput['tools'];
       const workspaceRoot = this.workspaceRoot;
       const onEvent = (msg: ChatExtToWebviewMessage) => this.onEvent(msg);
-      const { result, nextState } = await this.engine.executeTurn(state, chatInput, 'sm-agent', {
+      const { result, nextState } = await this.engine.executeTurn(state, chatInput, sessionRole, {
         tools,
         systemPrompt,
         contextRunner: (msgs) => runContextPipeline(workspaceRoot, msgs, onEvent),

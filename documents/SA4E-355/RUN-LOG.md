@@ -21,3 +21,17 @@
 
 ## PENDING JIRA COMMENT (post khi wrapper back - SA4E-355):
 Task 1 Context Budget Resolver DONE + verified (commit 9cd5c5a): 10/10 UT, full suite 2427 pass 0 fail, tsc clean. New: models/ContextBudget.ts + context-budget-resolver.ts (98 lines) + test (196 lines, STC-001..201 traceability). model-registry +qwen entry validate pass. Deviations accepted: STC-005 in new file (ownership), STC-111 UT-level (IT thuoc T7), Math.floor robustness, PBT gap -> Wave 2. Wave 2 launched: Task 2+3 + PBT.
+
+| 2026-10-11T22:36:59Z | dev-agent | phase-5-wave2 | Wave 2 DONE: Task 2+3 + PBT (session-host +121, scoped-steering 156, 25 wired + 5 PBT tests); full suite 258/2457 pass, tsc clean, eslint 0 | ✅ Done | - |
+| 2026-10-11T22:36:59Z | SM | phase-5-wave2-verify | SM verify: 40 focused pass, tsc exit 0, git diff khop ownership; commit 0b2ab57 | ✅ Done | - |
+| 2026-10-11T22:36:59Z | SM | decision | Approve 5 deviations Wave 2: adapter gap -> giao Wave 3; 371 lines -> tech debt; role widening OK; cap semantics per STC-104; priority table -> FSD update pending | ✅ Decided | - |
+| 2026-10-11T22:36:59Z | dev-agent | phase-5-wave3 | Wave 3 (Task 4+5 + adapter wiring) launched background ses_ed2e38a07ffe5qJ3z4vM2W3nNx | 🔄 Running | - |
+
+## PENDING JIRA COMMENT (them - post khi wrapper back):
+Wave 2 DONE + verified (commit 0b2ab57): Task 2+3 + PBT gap-fill. session-host wired 3 DefaultResourceLoader overrides (skillsOverride RoleScopeFilter, appendSystemPromptOverride scopedSteering phase-map + priority drop + security-line preserve, agentsFilesOverride conditional compressPrompt by BudgetCalculator). scoped-steering.ts 156 lines. 30 wiring tests + 5 PBT (fast-check 4.10.2, STC-300/301/302). Full suite 2457 pass 0 fail, tsc clean, eslint 0. Fail-open verified (unknown role keeps all). Adapter role/phase wiring gap -> Wave 3. Wave 3 launched: Task 4+5 + adapter fix.
+
+| 2026-10-11T23:28:30Z | SM | incident-resolved | Kiro reopen -> wrapper 9183 back (PID 55472); .code-intel/settings.json TU GHI BOI extension moi (mcpUrl/pid/workspace dung) -> runtime-settings fix ACTIVE end-to-end; flush queued Jira comments thanh cong | ✅ Resolved | - |
+
+| 2026-10-11T23:53:09Z | SM | incident | Wave 3 background session 429 Too Many Requests -> error; user doi model moi, SM resume | ⚠️ Recovered | - |
+| 2026-10-11T23:53:09Z | SM | verify-partial | Wave 3 do dang: 6 files (tool-loadout 160, schema-tokens 49, budget-gate + 3 test files); 52 tests 49 pass/3 fail (budget-gate PI_CONTEXT_BUDGET_EXCEEDED); adapter+host diff TRONG (chua wire); test files 327/272 lines > 200 -> yeu cau tach | ⚠️ Partial | - |
+| 2026-10-11T23:53:09Z | dev-agent | phase-5-wave3-retry | Wave 3 resume background ses_ed29da97fffeanUvtShBNDAiqJ: fix 3 RED + tach test files + adapter wiring + gate wiring + full suite | 🔄 Running | - |

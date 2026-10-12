@@ -70,9 +70,12 @@ const COMPRESSIBLE_AGENTS = [
   'Regular prose that stays after compression.',
 ].join('\n');
 
-/** 120,000 chars = 30,000 tokens of context-file content (chars/4). */
+/** ~120,000 chars ≈ 30,000 tokens of HIGHLY COMPRESSIBLE content (chars/4). */
 function bigContextFile(): { path: string; content: string } {
-  return { path: '/ws/AGENTS.md', content: 'w'.repeat(120000) };
+  // DEVIATION (Wave 3 Task 5): repeats the strippable sample so the gate
+  // ladder succeeds via compression — a dense fixture now correctly REJECTs
+  // with PI_CONTEXT_BUDGET_EXCEEDED (BR-09) instead of creating the host.
+  return { path: '/ws/AGENTS.md', content: `${COMPRESSIBLE_AGENTS}\n`.repeat(280) };
 }
 
 function loaderOptsOf(): Record<string, unknown> {

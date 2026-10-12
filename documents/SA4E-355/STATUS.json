@@ -38,14 +38,16 @@
       "manual": 8
     },
     "implementation": {
-      "tasks": "Task 2+3 (role-scope wiring + conditional compression) + PBT gap-fill STC-300/301/302",
-      "wave": 2,
-      "startedAt": "2026-10-11T21:24:07Z",
+      "tasks": "Task 4+5 (tool loadout role-aware + budget gate) + adapter wiring fix",
+      "wave": 3,
+      "startedAt": "2026-10-11T23:53:09Z",
       "status": "in_progress",
       "completedTasks": [
-        "Task 1: Context Budget Resolver - commit 9cd5c5a, 10 UT + full suite 2427 pass, tsc clean"
+        "Task 1: Context Budget Resolver - commit 9cd5c5a, 10 UT + full suite 2427 pass, tsc clean",
+        "Wave 2: Task 2+3 + PBT - commit 0b2ab57, 40 focused pass, full suite 2457 pass, tsc clean"
       ],
-      "agentSession": "ses_ed32e40ecffenHU3p0tcOOyvor"
+      "agentSession": "ses_ed29da97fffeanUvtShBNDAiqJ",
+      "note": "Wave 3 retry (model moi): resume tu 6 files do dang, 52 tests 49 pass/3 fail, adapter+host chua wire"
     },
     "testing": {
       "status": "not_started"
@@ -61,7 +63,7 @@
   "relatedBugs": [
     "SA4E-357"
   ],
-  "lastUpdated": "2026-10-11T21:24:21Z",
+  "lastUpdated": "2026-10-11T23:53:18Z",
   "git": {
     "main": "30d6a67+315fa55",
     "note": "Phase 4 outputs + SA4E-356 consolidated onto local main"
@@ -70,6 +72,12 @@
     "impact": "jira_* tools blocked (extension-local); KB via backend HTTP fallback 48721 OK",
     "cause": "Kiro IDE closed -> extension wrapper (9183) dead -> opencode MCP down",
     "detectedAt": "2026-10-11T21:24:21Z",
-    "recovery": "Reopen Kiro; rebuild vsix to activate runtime-settings fix"
-  }
+    "recovery": "Reopen Kiro; rebuild vsix to activate runtime-settings fix",
+    "resolvedAt": "2026-10-11T23:28:38Z",
+    "status": "resolved"
+  },
+  "techDebt": [
+    "pi-agent-session-host.ts 371 lines > 200 standard (pre-existing 250 + wave additions) - refactor candidate: extract governance resolution",
+    "FSD needs priority-table update (P1 shared-governance/P2 current-phase/P3 other steering - defined in Wave 2, STC-018 binding)"
+  ]
 }

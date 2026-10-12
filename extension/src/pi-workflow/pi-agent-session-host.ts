@@ -18,6 +18,9 @@ import type { ContextBudget } from '../pi-agent/models/ContextBudget';
 import { compressPrompt, estimateTokenCount } from '../pi-agent/prompt-compressor.js';
 import { RoleScopeFilter, type SkillRef } from '../pi-agent/role-scope.js';
 import { scopedSteering } from '../pi-agent/scoped-steering.js';
+import { buildSessionToolLoadout, nameTools, toolSchemaTokenCap } from '../pi-agent/tool-loadout.js';
+import { estimateToolSchemaTokens } from '../pi-agent/tool-schema-tokens.js';
+import { runSessionBudgetGate } from '../pi-agent/session-budget-gate.js';
 import { buildWorkspaceSystemPrompt } from './pi-coding-tools.js';
 import { createWorkspaceInfoTool, toSessionToolDefinition, WORKSPACE_INFO_TOOL_NAME } from './workspace-info-tool.js';
 import { getPiExtensionEntries, getPiExtensionAgentTools } from './pi-extension-runtime.js';
@@ -124,14 +127,37 @@ function measureStaticTokens(
   agentDir: string,
   workspacePrompt: string
 ): number {
-  let contextFileTokens = 0;
+  const files = loadSessionContextFiles(piCoding, workspaceRoot, agentDir);
+  const contextFileTokens = files.reduce((sum, f) => sum + estimateTokenCount(f.content), 0);
+  return contextFileTokens + estimateTokenCount(workspacePrompt);
+}
+
+/**
+ * SA4E-355 Task 5 (UC-05): loads context-file contents for gate measurement.
+ * Never throws — an unloadable workspace measures as empty (fail-open).
+ */
+function loadSessionContextFiles(
+  piCoding: typeof import('@earendil-works/pi-coding-agent'),
+  workspaceRoot: string,
+  agentDir: string
+): Array<{ content: string }> {
   try {
-    const files = piCoding.loadProjectContextFiles({ cwd: workspaceRoot, agentDir });
-    contextFileTokens = files.reduce((sum, f) => sum + estimateTokenCount(f.content), 0);
+    const load = (piCoding as { loadProjectContextFiles?: unknown }).loadProjectContextFiles;
+    if (typeof load !== 'function') return [];
+    const files = (load as (args: { cwd: string; agentDir: string }) => Array<{ content: string }>)({
+      cwd: workspaceRoot,
+      agentDir,
+    });
+    return Array.isArray(files) ? files : [];
   } catch (err) {
     logger.warn('PI_CONTEXT_FILES_MEASURE_FAILED', { error: (err as Error).message }); // fail-open
+    return [];
   }
-  return contextFileTokens + estimateTokenCount(workspacePrompt);
+}
+
+/** UC-04: estimated schema tokens of bare tool names (OI-4 name estimate). */
+function tokensOfNames(names: readonly string[]): number {
+  return names.reduce((sum, name) => sum + estimateToolSchemaTokens({ name }), 0);
 }
 
 /** UC-02/BR-07: role-scoped skills via the existing RoleScopeFilter (wire-only, BR-11). */
@@ -225,6 +251,43 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
     agentDir,
     workspacePrompt
   );
+  // SA4E-355 Task 4 (UC-04): role-aware loadout — extension/MCP names are
+  // filtered by role + phase under the schema-token cap. Core file tools are
+  // NEVER dropped (BR-06); unknown role keeps the full pool (BR-07
+  // fail-open); discoveryTools: [] keeps the Wave-2 allowlist composition.
+  const baseTools = getSessionToolLoadout(workspaceRoot);
+  let extNames: string[] = [];
+  try {
+    const ext = await getPiExtensionAgentTools(workspaceRoot);
+    extNames = ext.tools.map((t) => t.name);
+    if (ext.loaded.length > 0 || ext.skipped.length > 0) {
+      debugLog(`[PiSessionHost] extensions: loaded=${ext.loaded.length} skipped=${ext.skipped.length}`);
+    }
+  } catch (err) {
+    debugLog(`[PiSessionHost] extension names skipped: ${(err as Error).message}`);
+  }
+  const loadout = buildSessionToolLoadout({
+    role: opts.role,
+    phase: opts.phase,
+    schemaTokenCap: toolSchemaTokenCap(budget),
+    coreTools: nameTools(baseTools),
+    discoveryTools: [],
+    mcpTools: nameTools(extNames),
+  });
+  // SA4E-355 Task 5 (UC-05): fail-safe gate BEFORE createAgentSession.
+  // REJECT throws PI_CONTEXT_BUDGET_EXCEEDED (provider never called, BR-09);
+  // WARN logs and proceeds (AF-1 UC-05). Escalation takes real effect below.
+  const gate = runSessionBudgetGate(budget, {
+    loadFiles: () => loadSessionContextFiles(piCoding, workspaceRoot, agentDir),
+    workspacePrompt,
+    toolSchemaTokens: loadout.schemaTokens,
+    minToolSchemaTokens: tokensOfNames(baseTools),
+    shouldCompress,
+  });
+  // Escalation takes real effect: forced compression, halved steering share,
+  // minimal allowlist (BR-08). Unescalated path keeps Wave-2 composition.
+  const finalCompress = gate.shouldCompress;
+  const steeringBudget = gate.steeringBudget;
   const resourceLoader =
     (opts.resourceLoader as never) ??
     new piCoding.DefaultResourceLoader({
@@ -236,40 +299,26 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
       // SA4E-355 Task 2 (UC-02): role-scoped skills + phase-scoped, capped steering.
       skillsOverride: (base) =>
         failOpenOverride(base, (b) => applyScopedSkills(b, opts.role), 'skillsOverride'),
-      // SA4E-355 Task 3 (UC-03): conditional compression of AGENTS.md context files.
+      // SA4E-355 Task 3+5 (UC-03/UC-05): conditional compression of AGENTS.md
+      // context files — forced when the gate escalated (BR-04/BR-08).
       agentsFilesOverride: (base) =>
-        failOpenOverride(base, (b) => applyCompressedAgentsFiles(b, shouldCompress), 'agentsFilesOverride'),
-      // SA4E-355 Task 2+3: scoped steering with the same conditional compression.
+        failOpenOverride(base, (b) => applyCompressedAgentsFiles(b, finalCompress), 'agentsFilesOverride'),
+      // SA4E-355 Task 2+3+5: scoped steering with the same conditional
+      // compression over the gate-halved share when step 2 fired (BR-08).
       appendSystemPromptOverride: (base) =>
         failOpenOverride(
           base,
-          (b) => scopedSteering(b, opts.role, opts.phase, budget, { compress: shouldCompress }),
+          (b) => scopedSteering(b, opts.role, opts.phase, steeringBudget, { compress: finalCompress }),
           'appendSystemPromptOverride'
         ),
     });
 
-  // Tool allowlist: ALWAYS the 7 cwd-bound builtins (grep/find/ls are NOT
-  // in pi's defaults — without explicit names the session would lack them)
-  // plus orientation plus best-effort extension names. Unconditional: a
-  // transient extension-load failure then only drops enhancement tools
-  // (search/todo/delegate), never the core file tools. Dedupe keeps AFT's
-  // hoisted overrides single-named.
-  let extNames: string[] = [];
-  try {
-    const ext = await getPiExtensionAgentTools(workspaceRoot);
-    extNames = ext.tools.map((t) => t.name);
-    if (ext.loaded.length > 0 || ext.skipped.length > 0) {
-      debugLog(`[PiSessionHost] extensions: loaded=${ext.loaded.length} skipped=${ext.skipped.length}`);
-    }
-  } catch (err) {
-    debugLog(`[PiSessionHost] extension names skipped: ${(err as Error).message}`);
-  }
-  // SA4E-336: OS-aware base loadout (powershell on win32, bash on non-win32)
-  // plus best-effort extension names + orientation tool, deduped.
-  const allowlist = [
-    ...getSessionToolLoadout(workspaceRoot),
-    ...extNames,
-  ].filter((n, i, all) => typeof n === 'string' && n && all.indexOf(n) === i);
+  // Tool allowlist: escalation step 3 (BR-08) drops back to the core
+  // file tools + orientation; otherwise the role-aware loadout above.
+  // Dedupe keeps AFT's hoisted overrides single-named.
+  const allowlist = (gate.minLoadout ? [...baseTools] : loadout.loadout).filter(
+    (n, i, all) => typeof n === 'string' && n && all.indexOf(n) === i
+  );
   debugLog(`[PiSessionHost] tool allowlist: ${allowlist.length} names`);
 
   const { session } = await piCoding.createAgentSession({
