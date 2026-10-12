@@ -22,6 +22,8 @@ import { scopedSteering } from '../pi-agent/scoped-steering.js';
 import { buildSessionToolLoadout, nameTools, toolSchemaTokenCap } from '../pi-agent/tool-loadout.js';
 import { estimateToolSchemaTokens } from '../pi-agent/tool-schema-tokens.js';
 import { runSessionBudgetGate } from '../pi-agent/session-budget-gate.js';
+import { halveSteeringCap } from '../pi-agent/budget-gate.js';
+import { DEFAULT_AUTO_CHUNK_CONFIG, chunkPrompt, shouldAutoChunk, synthesizeChunks } from '../pi-agent/context-budget-auto-split.js';
 import { buildWorkspaceSystemPrompt } from './pi-coding-tools.js';
 import { createWorkspaceInfoTool, toSessionToolDefinition, WORKSPACE_INFO_TOOL_NAME } from './workspace-info-tool.js';
 import { getPiExtensionEntries, getPiExtensionAgentTools } from './pi-extension-runtime.js';
@@ -285,7 +287,7 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
   // SA4E-355 (TDD §6.1): resolve the session budget + conditional compression
   // decision BEFORE wiring the loader overrides (UC-01 feeds UC-02/UC-03).
   const workspacePrompt = buildWorkspaceSystemPrompt(workspaceRoot);
-  const { budget, shouldCompress } = resolveSessionGovernance(
+  const { budget, shouldCompress, tier } = resolveSessionGovernance(
     piCoding,
     opts,
     model,
@@ -329,7 +331,12 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
   // Escalation takes real effect: forced compression, halved steering share,
   // minimal allowlist (BR-08). Unescalated path keeps Wave-2 composition.
   const finalCompress = gate.shouldCompress;
-  const steeringBudget = gate.steeringBudget;
+  let steeringBudget = gate.steeringBudget;
+  // SA4E-355 auto-fallback: tier small → incremental steering + lean loadout
+  const tierSmall = tier === 'small';
+  if (tierSmall && DEFAULT_AUTO_CHUNK_CONFIG.incrementalSteering) {
+    steeringBudget = halveSteeringCap(steeringBudget);
+  }
   const resourceLoader =
     (opts.resourceLoader as never) ??
     new piCoding.DefaultResourceLoader({
@@ -358,7 +365,11 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
   // Tool allowlist: escalation step 3 (BR-08) drops back to the core
   // file tools + orientation; otherwise the role-aware loadout above.
   // Dedupe keeps AFT's hoisted overrides single-named.
-  const allowlist = (gate.minLoadout ? [...baseTools] : loadout.loadout).filter(
+  // Auto-fallback lean loadout only for very small context (≤4k)
+  const verySmallCtx = budget.nCtx <= 4096;
+  const autoLean = tierSmall && verySmallCtx && DEFAULT_AUTO_CHUNK_CONFIG.leanLoadout;
+  const effectiveMinLoadout = gate.minLoadout || autoLean;
+  const allowlist = (effectiveMinLoadout ? [...baseTools] : loadout.loadout).filter(
     (n, i, all) => typeof n === 'string' && n && all.indexOf(n) === i
   );
   debugLog(`[PiSessionHost] tool allowlist: ${allowlist.length} names`);
@@ -398,6 +409,47 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
       onToken?: (t: string) => void,
       onToolEvent?: (e: import('./pi-event-mapper.js').ToolLiveEvent) => void
     ): Promise<SessionTurnResult> {
+      const runOnce = async (promptText: string): Promise<string> => {
+        const localCollector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+        const localTracker = new ToolEventTracker();
+        const unsub = (session as { subscribe: (l: (e: unknown) => void) => () => void }).subscribe(
+          (event) => {
+            try {
+              const live = localTracker.observe(event as never);
+              if (live && onToolEvent) {
+                try { onToolEvent(live); } catch {}
+              }
+              mapAgentEvent(event as never, localCollector);
+            } catch {}
+            const last = localCollector.chunks[localCollector.chunks.length - 1];
+            if (last?.type === 'text' && last.content) onToken?.(last.content);
+          }
+        );
+        try {
+          await (session as { prompt: (t: string) => Promise<void> }).prompt(promptText);
+        } finally {
+          try { unsub(); } catch {}
+        }
+        return localCollector.text;
+      };
+
+      const promptTokens = estimateTokenCount(text);
+      if (shouldAutoChunk(tier, promptTokens, DEFAULT_AUTO_CHUNK_CONFIG)) {
+        const chunks = chunkPrompt(text, DEFAULT_AUTO_CHUNK_CONFIG.maxTokensPerChunk);
+        const parts: string[] = [];
+        for (const ch of chunks) {
+          const part = await runOnce(ch);
+          parts.push(part);
+        }
+        const combined = synthesizeChunks(parts);
+        const final = await runOnce(`Synthesize the following parts into a coherent final answer:\n${combined}`);
+        return {
+          text: final,
+          toolCalls: [],
+          sessionFile: getFile(),
+        };
+      }
+
       const collector: EventCollector = { chunks: [], toolCalls: [], text: '' };
       const tracker = new ToolEventTracker();
       const unsub = (session as { subscribe: (l: (e: unknown) => void) => () => void }).subscribe(
@@ -405,14 +457,10 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
           try {
             const live = tracker.observe(event as never);
             if (live && onToolEvent) {
-              try {
-                onToolEvent(live);
-              } catch {
-                // Progress display must never break streaming.
-              }
+              try { onToolEvent(live); } catch {}
             }
             mapAgentEvent(event as never, collector);
-          } catch { /* collector must never break streaming */ }
+          } catch {}
           const last = collector.chunks[collector.chunks.length - 1];
           if (last?.type === 'text' && last.content) onToken?.(last.content);
         }
@@ -420,9 +468,7 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
       try {
         await (session as { prompt: (t: string) => Promise<void> }).prompt(text);
       } finally {
-        try {
-          unsub();
-        } catch { /* ignore */ }
+        try { unsub(); } catch {}
       }
       return {
         text: collector.text,
