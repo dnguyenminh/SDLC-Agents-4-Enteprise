@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-356",
-  "currentPhase": "testing+pentest",
+  "currentPhase": "uat_gate",
   "autonomyLevel": "L3",
   "gitBranch": "main",
   "humanGates": ["uat", "deployment"],
