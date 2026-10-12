@@ -38,16 +38,17 @@
       "manual": 8
     },
     "implementation": {
-      "tasks": "Task 6 (model tiering wiring OI-1/OI-3)",
-      "wave": 4,
-      "startedAt": "2026-10-12T00:11:38Z",
+      "tasks": "Task 7 (integration test + E2E qwen 32k) - FINAL + PROGRESS-Wave5.md protocol",
+      "wave": 5,
+      "startedAt": "2026-10-12T00:31:42Z",
       "status": "in_progress",
       "completedTasks": [
         "Task 1: Context Budget Resolver - commit 9cd5c5a, 10 UT + full suite 2427 pass, tsc clean",
         "Wave 2: Task 2+3 + PBT - commit 0b2ab57, 40 focused pass, full suite 2457 pass, tsc clean",
-        "Wave 3: Task 4+5 + adapter wiring - commit a8ba7b5, 64 focused pass, full suite 2515 pass, tsc clean"
+        "Wave 3: Task 4+5 + adapter wiring - commit a8ba7b5, 64 focused pass, full suite 2515 pass, tsc clean",
+        "Wave 4: Task 6 tiering - commit 18620e9, 8 new tests, full suite 2523 pass, tsc clean"
       ],
-      "agentSession": "ses_ed28cbeb1ffeZ0MD0NLdoUQem2",
+      "agentSession": "ses_ed27a620dffeXdKnEyHLZB9RJM",
       "note": "Wave 3 retry (model moi): resume tu 6 files do dang, 52 tests 49 pass/3 fail, adapter+host chua wire"
     },
     "testing": {
@@ -64,7 +65,7 @@
   "relatedBugs": [
     "SA4E-357"
   ],
-  "lastUpdated": "2026-10-12T00:11:38Z",
+  "lastUpdated": "2026-10-12T00:31:42Z",
   "git": {
     "main": "30d6a67+315fa55",
     "note": "Phase 4 outputs + SA4E-356 consolidated onto local main"

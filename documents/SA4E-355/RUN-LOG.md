@@ -40,3 +40,8 @@ Wave 2 DONE + verified (commit 0b2ab57): Task 2+3 + PBT gap-fill. session-host w
 | 2026-10-12T00:11:38Z | SM | phase-5-wave3-verify | SM verify: focused 64 pass, full 2515 pass, adapter wiring grep OK (early-detect/nCtx/REJECT claim/sessionRole), session-host gate grep OK; SM decision: ACCEPT sessionRole hardcode (PipelineState no role field -> follow-up product-level, fail-open safe); commit a8ba7b5 (19 files) | ✅ Done | - |
 | 2026-10-12T00:11:38Z | SM | jira | Wave 3 completion comment posted to SA4E-355 | ✅ Done | - |
 | 2026-10-12T00:11:38Z | dev-agent | phase-5-wave4 | Wave 4 (Task 6 tiering OI-1/OI-3) launched background ses_ed28cbeb1ffeZ0MD0NLdoUQem2 | 🔄 Running | - |
+
+| 2026-10-12T00:31:42Z | dev-agent | phase-5-wave4 | Wave 4 DONE: Task 6 tiering (SessionTier + LARGE 128000 + resolveShouldCompress, 8 tests boundary/matrix); full suite 269/2523 pass x2 confirm, tsc clean, eslint 0 | ✅ Done | - |
+| 2026-10-12T00:31:42Z | SM | phase-5-wave4-verify | SM verify: focused 26 pass, full 2523 pass (khong flake), wiring grep OK, model-tier.ts untouched; SM decision: ACCEPT 2 deviations (no ModelRouter direct - BR-12; no split change - BR-11); commit 18620e9 (4 files) | ✅ Done | - |
+| 2026-10-12T00:31:42Z | SM | jira | Wave 4 completion comment posted to SA4E-355 | ✅ Done | - |
+| 2026-10-12T00:31:42Z | dev-agent | phase-5-wave5 | Wave 5 FINAL (Task 7 integration+E2E) launched background ses_ed27a620dffeXdKnEyHLZB9RJM + PROGRESS-Wave5.md protocol | 🔄 Running | - |
