@@ -40,7 +40,10 @@ export async function handleDrawioLayout(args: Record<string, unknown>, workspac
       return error('file_path is required');
     }
     const sanitized = String(args.file_path).replace(/[\r\n\0]/g, '?');
-    const resolved = path.resolve(workspace, String(args.file_path));
+    // SA4E-356 (SEC-05/AD-19, SA-02): resolve from the sanitized value so the
+    // echoed `resolved` path cannot carry [\r\n\0] log-forging chars (TDD §10.1
+    // — same rule as extension PathResolver.ts sanitizeLogText, cross-ref).
+    const resolved = path.resolve(workspace, sanitized);
     return error(
       `Path rejected: ${sanitized} resolves to ${resolved} — outside backend ` +
       `workspace ${workspace}. Hint: use a path inside the backend workspace, or ` +
