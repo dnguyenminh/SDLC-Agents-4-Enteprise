@@ -388,6 +388,10 @@ export class PiWorkflowAdapter {
       // meta.n_ctx parsed at registration). resolveContextBudget appends the
       // static registry → default fallbacks when both are absent.
       const runtimeWindow = this.engine.getProvider().getModelContextWindow?.();
+      // SA4E-355 UAT bug 2: share the resolved BR-01 top link with the
+      // provider — the intra-turn streamFn gate must measure EVERY LLM
+      // request against the SAME budget chain as this turn-start gate.
+      this.engine.getProvider().setDetectedContextWindow?.(this.getDetectedContextWindow() ?? runtimeWindow);
       return governLegacyTurn({
         systemPrompt,
         history: state.chatHistory ?? [],

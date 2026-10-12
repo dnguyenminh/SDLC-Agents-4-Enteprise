@@ -12,6 +12,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createModels } from '@earendil-works/pi-ai';
 import { fauxProvider } from '@earendil-works/pi-ai/providers/faux';
 import { PiWorkflowAdapter } from '../pi-workflow-adapter.js';
+import { PiProvider } from '../pi-provider.js';
 import type { PipelineState } from '../types/pi-workflow-state.js';
 import type { ChatExtToWebviewMessage } from '../../chat-panel/message-protocol';
 
@@ -147,5 +148,19 @@ describe('PiWorkflowAdapter — legacy path governance (SA4E-355 UAT)', () => {
     expect(chatErrors(onEvent)).toEqual([]);
     adapter.dispose();
     adapter = undefined;
+  });
+
+  // SA4E-355 UAT bug 2: the probe window (BR-01 top link) is pushed into the
+  // provider so the intra-turn streamFn gate measures EVERY request against
+  // the SAME budget chain as the turn-start gate.
+  it('wires the detected window into the provider for the intra-turn gate', async () => {
+    adapter = makeAdapter(65536);
+    engineSpy(adapter);
+    const provider = (adapter as unknown as { engine: { getProvider: () => PiProvider } }).engine.getProvider();
+    const windowSpy = vi.spyOn(provider, 'setDetectedContextWindow');
+
+    await adapter.invoke('KEY-GOV', 'requirements', 'short question');
+
+    expect(windowSpy).toHaveBeenCalledWith(65536);
   });
 });

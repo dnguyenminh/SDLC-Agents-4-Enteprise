@@ -1,5 +1,5 @@
 import { Agent } from '@earendil-works/pi-agent-core';
-import type { AgentEvent, BeforeToolCallContext, BeforeToolCallResult } from '@earendil-works/pi-agent-core';
+import type { AgentEvent, BeforeToolCallContext, BeforeToolCallResult, StreamFn } from '@earendil-works/pi-agent-core';
 import type { SystemMessage } from '@earendil-works/pi-ai';
 import { InMemoryCredentialStore } from '@earendil-works/pi-ai';
 import type { MutableModels, CredentialStore } from '@earendil-works/pi-ai';
@@ -8,6 +8,7 @@ import { createGatewayProvider } from './pi-gateway-provider.js';
 import type { PiProviderConfig } from './pi-provider-config.js';
 import { mapAgentEvent, extractToolResultText, type EventCollector } from './pi-event-mapper.js';
 import { isRetryableLlmError } from './utils/classify-llm-error.js';
+import { governIntraTurnRequest } from './intra-turn-budget-gate.js';
 import { TurnBudgetGuard, buildStopNote, buildSteerCorrection, buildFailureSteerCorrection, buildTextSteerCorrection, splitCompletedBlocks } from './turn-budget-guard.js';
 import { ToolEventTracker } from './pi-event-mapper.js';
 import { debugLog, debugError } from '../debug-logger.js';
@@ -41,6 +42,10 @@ export class PiProvider {
   private toolApproval?: ToolApprovalGateHandler;
   private modelId?: string;
   private providerId?: string;
+  /** SA4E-355 UAT bug 2: probe-detected meta.n_ctx — first link of the BR-01 chain for the intra-turn gate. */
+  private detectedContextWindow?: number;
+  /** SA4E-355 UAT bug 2: model id of the CURRENT attempt (intra-turn gate budget label). */
+  private activeModelId?: string;
   /** PI-MODEL-FALLBACK: ordered fallback model ids tried when a run fails transiently. */
   private fallbackModelIds: string[] = [];
   /** CONCURRENCY-FIX: serializes run() so agent.prompt() never overlaps activeRun. */
@@ -115,6 +120,7 @@ export class PiProvider {
     }
     this.providerId = providerId;
     this.modelId = modelId;
+    this.activeModelId = modelId;
     if (this.agent) { this.agent.state.model = model; }
     return true;
   }
@@ -196,6 +202,37 @@ export class PiProvider {
     return chain;
   }
 
+  /**
+   * SA4E-355 UAT bug 2: hand the probe-detected context window (meta.n_ctx —
+   * the FIRST link of the BR-01 chain) to the provider so the intra-turn
+   * streamFn gate resolves the SAME budget as the turn-start governance gate
+   * (probe → runtime registry → static registry → default). Pass undefined to
+   * clear (fail-open chain re-resolves per request).
+   */
+  setDetectedContextWindow(nCtx?: number): void {
+    this.detectedContextWindow =
+      typeof nCtx === 'number' && Number.isFinite(nCtx) && nCtx > 0 ? Math.floor(nCtx) : undefined;
+  }
+
+  /**
+   * SDK `streamFn` wrapper — SA4E-355 UAT bug 2: the Agent loop calls this for
+   * EVERY intra-turn LLM request with the full transcript, so this is the one
+   * point where each request is measured against the context budget, compacted
+   * when over (trim-oldest-first at tool-unit granularity) or REJECTED with
+   * PI_CONTEXT_BUDGET_EXCEEDED (BR-09) — the provider never sees an oversized
+   * request. The gate never mutates the Agent's transcript; the delegated
+   * context is a new object when compaction changed the messages.
+   */
+  private streamWithBudgetGate(...args: Parameters<StreamFn>): ReturnType<StreamFn> {
+    const [model, context, options] = args;
+    const gated = governIntraTurnRequest({
+      messages: context.messages,
+      modelId: this.activeModelId ?? this.modelId ?? '',
+      nCtxDetected: this.detectedContextWindow ?? this.getModelContextWindow(),
+    });
+    return this.models!.streamSimple(model, { ...context, messages: gated.messages }, options);
+  }
+
   async initialize(config: PiProviderConfig): Promise<void> {
     if (!config || !config.transportType || !['WebSocket', 'HTTP'].includes(config.transportType)) {
       throw new Error('PI_CONFIG_INVALID: Invalid transport type');
@@ -231,7 +268,9 @@ export class PiProvider {
       }
 
       this.agent = new Agent({
-        streamFn: (model, context, options) => this.models!.streamSimple(model, context, options),
+        // SA4E-355 UAT bug 2: every intra-turn LLM request flows through the
+        // budget gate (measure → compact → REJECT) before the provider call.
+        streamFn: (model, context, options) => this.streamWithBudgetGate(model, context, options),
         getApiKey: this.credentialResolver,
         sessionId: config.sessionId,
         // Fix J: gates every tool BEFORE execution (reads this.toolApproval live,
@@ -313,8 +352,12 @@ export class PiProvider {
   private selectModelForAttempt(agent: Agent, providerId: string | undefined, modelId: string): void {
     if (!modelId || !providerId || !this.models) return;
     const model = this.models.getModel(providerId, modelId);
-    if (model) { agent.state.model = model; }
-    else { debugLog(`[PiProvider] Model '${modelId}' not found for '${providerId}' — using current default.`); }
+    if (model) {
+      agent.state.model = model;
+      this.activeModelId = modelId; // SA4E-355: the intra-turn gate labels the budget with the ACTIVE model
+    } else {
+      debugLog(`[PiProvider] Model '${modelId}' not found for '${providerId}' — using current default.`);
+    }
   }
 
   /**

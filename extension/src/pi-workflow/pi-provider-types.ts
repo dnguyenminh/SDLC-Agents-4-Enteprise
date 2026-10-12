@@ -74,6 +74,13 @@ export interface IPiProvider {
    * Optional: test fakes may omit it.
    */
   getModelContextWindow?(): number | undefined;
+  /**
+   * SA4E-355 UAT bug 2: push the probe-detected meta.n_ctx (the FIRST link of
+   * the BR-01 chain) into the provider so the intra-turn streamFn gate
+   * resolves the SAME budget as the turn-start governance gate.
+   * Optional: test fakes may omit it.
+   */
+  setDetectedContextWindow?(nCtx?: number): void;
   setFallbackModels(providerId: string, modelIds: string[]): void;
   /** Fix J: optional pre-execution approval gate (implemented by PiProvider). */
   setToolApproval?(handler: ToolApprovalGateHandler): void;
