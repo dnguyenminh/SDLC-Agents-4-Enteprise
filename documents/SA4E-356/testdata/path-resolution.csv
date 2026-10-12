@@ -1,0 +1,35 @@
+test_case_id,raw_path,root,expected_ok,expected_code,expected_resolved_contains,description
+UT-01,documents/SA4E-355/FSD.md,C:\fake-ws,true,,C:\fake-ws\documents\SA4E-355\FSD.md,T1 happy path — relative resolves under workspace root
+UT-01,sub/nested/note.md,C:\fake-ws,true,,C:\fake-ws\sub\nested\note.md,T1 happy path — nested relative resolves under workspace root
+UT-02,C:\fake-ws\documents\SA4E-355\FSD.md,C:\fake-ws,true,,C:\fake-ws\documents\SA4E-355\FSD.md,T2 absolute passthrough — position unchanged
+UT-02,C:\fake-ws\a\.\b\..\b\x.md,C:\fake-ws,true,,C:\fake-ws\a\b\x.md,T2 absolute with dot-segments — normalize only no relocate (UC-02 EF-3)
+UT-02,C:/fake-ws/sub/x.md,C:\fake-ws,true,,fake-ws,T2 absolute forward-slash on Windows — same location passthrough
+UT-03,../../outside.txt,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,outside workspace root,T3 escape blocked — Format 2 with code prefix
+UT-03,C:\other\evil.txt,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,outside workspace root,T3 absolute outside root blocked (FR-05 covers passthrough too)
+UT-04,C:\fake-ws-evil\x.md,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,outside workspace root,T3b prefix-collision blocked — proves trailing-separator compare
+UT-05,docs/x.md,"WS-A=C:\ws-a primary; WS-B=D:\ws-b",true,,C:\ws-a\docs\x.md,T4 multi-root — resolves under FIRST folder deterministically
+UT-06,docs/x.md,(no workspace; cwd=C:\kiro-install),false,PATH_NO_WORKSPACE,fallback root + open a workspace,T5 v1.1 — relative when cwd_fallback REJECTED Format 3 (BR-06b; obsoletes v1.0 ok:true)
+UT-06,D:\elsewhere\x.md,(no workspace; cwd=C:\kiro-install),true,,,T5 unchanged — absolute OUTSIDE cwd still ok:true (no containment on cwd_fallback; DISC-1)
+UT-06,docs/x.md,(workspaceFolders=[] empty; cwd=C:\kiro-install),false,PATH_NO_WORKSPACE,fallback root,A1 variant — empty folder list is also cwd_fallback; relative rejected
+UT-06,D:\elsewhere\x.md,(workspaceFolders=[] empty; cwd=C:\kiro-install),true,,cwd_fallback,A1 variant — absolute passes with empty list (no containment)
+UT-07,C:\FAKE-WS\sub\file.md,c:\fake-ws,true,,,T6 R-1 — uppercase caller vs lowercase fsPath passes on win32
+UT-07,c:\fake-ws\sub\file.md,C:\FAKE-WS,true,,,T6 R-1 reversed casing — passes on win32
+UT-08,docs/x.md,provider flips A->B per call,true,,provider call count = 2,T7 no-cache — call1 under A call2 under B
+UT-08,docs/x.md,provider throws (treated as no root),true,,cwd_fallback,T7 provider throw degrades to cwd_fallback never throws (UC-05 EF-2)
+UT-09,\\server\share\x.md,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,outside workspace root,T8 UNC outside drive-letter root rejected
+UT-09,,C:\fake-ws,false,PATH_EMPTY,non-empty string,T8 empty string fails loud BEFORE resolve
+UT-09,"   ",C:\fake-ws,false,PATH_EMPTY,non-empty string,T8 whitespace-only fails loud BEFORE resolve
+UT-09,null(non-string),C:\fake-ws,false,PATH_EMPTY,non-empty string,T8 null input fails loud never throws (C-1)
+UT-09,123(non-string),C:\fake-ws,false,PATH_EMPTY,non-empty string,T8 numeric input fails loud never throws (C-1)
+UT-10,(missing file_path: undefined),backend workspace N/A,error,file_path is required,,UT-10 backend branch A — truly missing param keeps old text
+UT-10,../escape.md (resolveFilePath->null),backend workspace=C:\be-ws,error,Path rejected,outside backend workspace,UT-10 backend branch B — rejected path gets disambiguated message (BR-12)
+UT-11,docs/y.md,(no workspace; cwd=C:\kiro-install),false,PATH_NO_WORKSPACE,"got relative + fallback root + open a workspace",T5b BR-06b — relative discriminated from absolute under fallback
+UT-11,<cwd-abs> z.md (absolute inside cwd),(no workspace; cwd=C:\kiro-install),true,,cwd_fallback,T5b — absolute inside fallback root passes
+UT-11,docs/y.md Format-3 shape,(no workspace),false,PATH_NO_WORKSPACE,"CODE prefix + got-relative + root",T5b Format 3 full-shape assert
+UT-12,a<NUL>b,C:\fake-ws,false,PATH_INVALID,invalid characters (NUL byte),T8-ext NUL byte fails loud before resolve never throws
+UT-12,..\<NUL>.. hidden escape,C:\fake-ws,false,PATH_INVALID,invalid characters,T8-ext NUL-hidden escape still PATH_INVALID never resolved
+UT-12,file<CRLF>INJECTED.txt,C:\fake-ws,true,,sanitized echo no raw CR LF,T8-ext CRLF resolves but message-log echo sanitized to ?
+UT-12,<NUL> rawPath echo check,C:\fake-ws,false,PATH_INVALID,rawPath shows ? not raw NUL,T8-ext rawPath field sanitized
+UT-15,C:\BE-WS\diagram.drawio,c:\be-ws (backend workspace),resolved,non-null,folded compare,Backend casing — uppercase caller vs lowercase workspace passes (SEC-04 win32)
+UT-15,c:\be-ws\diagram.drawio,C:\BE-WS (backend workspace),resolved,non-null,folded compare,Backend casing reversed — passes
+UT-15,C:\outside\evil.drawio,c:\be-ws (backend workspace),rejected,Path rejected,outside backend workspace,Backend casing does not loosen containment — genuine outside still rejected

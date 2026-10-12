@@ -1,0 +1,10 @@
+test_case_id,property,seed_input,seed_root,expected_seed_outcome,description
+PBT-01,absolute-passthrough,C:\fake-ws\docs\a.md,C:\fake-ws,ok:true resolved==path.resolve(raw),PBT-01 seed — plain absolute inside root
+PBT-01,absolute-passthrough,C:\fake-ws\a\.\b\..\b\x.md,C:\fake-ws,ok:true normalized same location,PBT-01 seed — dot-segment absolute
+PBT-01,absolute-passthrough,C:/fake-ws/sub/x.md,C:\fake-ws,ok:true same location (win32),PBT-01 seed — forward-slash absolute
+PBT-02,idempotent-no-cache,docs/x.md under rootA then rootB,roots flip A->B,r1 under A then r3 under B provider calls=2,PBT-02 seed — root switch proves no cache
+PBT-02,idempotent-no-cache,sub/y.md resolved twice same root,same root,second resolve equals first (fixed point),PBT-02 seed — idempotence fixed point
+PBT-03,containment-monotonic,C:\fake-ws\a\b\c.md,C:\fake-ws,ok:true,PBT-03 seed — nested inside stays inside
+PBT-03,containment-monotonic,..\..\evil.txt,C:\fake-ws,ok:false PATH_REJECTED_OUTSIDE_WORKSPACE,PBT-03 seed — escape never leaks
+PBT-03,containment-monotonic,C:\fake-ws-evil\x.md,C:\fake-ws,ok:false PATH_REJECTED_OUTSIDE_WORKSPACE,PBT-03 seed — prefix-collision never leaks
+PBT-04,win32-only-fold,C:\FAKE-WS\SUB\F.MD vs root c:\fake-ws,win32 run,within==true; posix run within==false unless byte-equal,PBT-04 seed — fold branch vs strict branch

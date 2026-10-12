@@ -1,0 +1,75 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="k1" value="«module» PathResolver.ts — extension/src/services/ (NEW — FR-01)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="530" y="40" width="430" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="k2" value="«types»&#10;PathRootSource = workspace | cwd_fallback&#10;WorkspaceRootProvider = () => string | undefined&#10;PathResolutionCode = PATH_EMPTY | PATH_REJECTED_OUTSIDE_WORKSPACE&#10;PathResolutionOk { ok: true; resolvedPath; rootSource; rootPath }&#10;PathResolutionErr { ok: false; code; message; rawPath; resolvedPath; rootSource; rootPath }&#10;PathResolutionResult = PathResolutionOk | PathResolutionErr «discriminated union»" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="530" y="80" width="430" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="k3" value="«functions»&#10;+ resolveWorkspacePath(rawPath: unknown, opts?: { rootProvider?: WorkspaceRootProvider }): PathResolutionResult&#10;+ isPathWithinRoot(root: string, candidate: string): boolean&#10;+ defaultWorkspaceRootProvider(): string | undefined" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="530" y="210" width="430" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="k4" value="«constants · errors»&#10;+ FILE_PATH_SCHEMA_DESCRIPTION: string — shared cho static schemas + rewrite path (M-4)&#10;+ PathResolverError extends Error — throw-path cho Base64ProxyService (TDD §5.5-5.6)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="530" y="310" width="430" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="h1" value="«handlers» backend-local-tools.ts&#10;handleStreamWriteFile — stream_write_file (REFACTOR)&#10;handleEmbedImage — embed_image (REFACTOR)&#10;resolve TRƯỚC fs.* (C-4) — default provider" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="400" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="«handlers» mcp/atlassian&#10;jira_attach_file — jira-attachment-tools.ts (REFACTOR)&#10;confluence_add_attachment — confluence-content-tools.ts (REFACTOR)&#10;fail → return TRƯỚC HTTP (I-3)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="160" width="400" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="«class» ToolProxy — proxy/ToolProxy.ts (REFACTOR)&#10;+ callTool(name, args): ToolResult&#10;- resolveWorkspacePath(filePath): string  «REMOVED — lines 62-66»&#10;chat path mem_ingest_file — thêm containment (mới)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="280" width="400" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="«class» Base64ProxyService — services/Base64ProxyService.ts (REFACTOR — vscode-free)&#10;+ constructor(workspaceRoot?: string | WorkspaceRootProvider) «back-compat»&#10;- resolveRoot(): string | undefined «provider mode: live read mỗi call»&#10;- resolvePath(filePath): string «delegate → resolveWorkspacePath; !ok → throw PathResolverError»&#10;- resolveOutputPath(toolName, args) — cả 2 đường qua helper (containment)&#10;- rewriteSingleSchema(tool) «merge M-1..M-4 — luôn ghi đè description»&#10;- proxyInput / proxyOutput — read-fail wrap PathResolverError" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="400" width="400" height="140" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="«class» WrapperServer — services/WrapperServer.ts (REFACTOR nhỏ)&#10;+ routeToolCall(params) — try/catch:&#10;PathResolverError → MCP tool error result (isError: true)&#10;không rò JSON-RPC -32603 (FSD §5.7)&#10;+ rewriteFindToolsResponse — schema surface AC-4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="570" width="400" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="h6" value="«static schemas» LocalToolDefinition&#10;streamWriteFileDefinition() · embedImageDefinition()&#10;jira / confluence registerTool(reg) schemas&#10;file_path.description = FILE_PATH_SCHEMA_DESCRIPTION" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="40" y="710" width="400" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="v1" value="«external» vscode — lazy require&#10;workspace.workspaceFolders[0].uri.fsPath&#10;per-call — UC-01 AF-2 (C-3)&#10;throw → undefined → fallback cwd (UC-05 EF-2)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="60" width="320" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="v2" value="«external» Node path (built-in)&#10;resolve · normalize · isAbsolute · sep&#10;pure string ops — no I/O (C-2)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="200" width="320" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="v3" value="«external» Host fs&#10;fs.*(resolvedPath) — chỉ tool handler&#10;PathResolver KHÔNG chạm fs (C-2)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="320" width="320" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="v4" value="«external» Backend drawio-tool.ts (BR-12)&#10;resolveFilePath() — KHÔNG đổi (OI-1)&#10;chỉ error disambiguation line 36" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;align=left;spacingLeft=10;verticalAlign=top;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="440" width="320" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke1" value="«use» resolveWorkspacePath — default provider" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="h1" target="k3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke2" value="«use» — fail → return trước HTTP" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="h2" target="k3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke3" value="«use» thay private method + containment mới" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="h3" target="k3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke4" value="«delegate» resolvePath / resolveOutputPath (rootProvider injected)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="h4" target="k3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke5" value="«import» FILE_PATH_SCHEMA_DESCRIPTION (M-1..M-4)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="h4" target="k4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke6" value="«import» FILE_PATH_SCHEMA_DESCRIPTION (static schemas)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="h6" target="k4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke7" value="«catch» PathResolverError → tool error result" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="h5" target="k4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke8" value="defaultWorkspaceRootProvider — lazy require" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="k3" target="v1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ke9" value="string ops" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;fontSize=9;dashed=1;" edge="1" parent="1" source="k3" target="v2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

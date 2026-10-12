@@ -1,0 +1,90 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="nAgent" value="AI Agent — SDLC Agents (MCP Client)&#10;gọi qua MCP wrapper hoặc Kiro chat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="460" y="30" width="320" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="nWrapper" value="WrapperServer — MCP JSON-RPC :9181 (Extension Host)&#10;routeToolCall · getToolsRewritten · rewriteFindToolsResponse" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="140" y="150" width="340" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="nToolProxy" value="ToolProxy — chat path&#10;callTool: mem_ingest_file pre-read&#10;[REFACTOR — xóa private resolveWorkspacePath 62-66]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="150" width="300" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="nLocalHandlers" value="Local Tool Handlers — LOCAL_TOOL_REGISTRY [REFACTOR]&#10;stream_write_file (113-149)&#10;embed_image (160-175)&#10;jira_attach_file · confluence_add_attachment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="30" y="300" width="330" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="nBase64Proxy" value="Base64ProxyService [REFACTOR]&#10;proxyInput · proxyOutput · resolveOutputPath&#10;constructor: string | WorkspaceRootProvider (back-compat)&#10;cover: mem_ingest_file (wrapper) · drawio_export_png" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="300" width="330" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="nBackend" value="Backend Child Server :48721&#10;drawio_export_png — content_base64 (qua proxy)&#10;drawio_auto_layout — raw file_path (BR-12 audit gap)&#10;sandbox_run — sandbox-internal (NO CHANGE)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="790" y="300" width="310" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="nPathResolver" value="PathResolver (NEW) — extension/src/services/PathResolver.ts&#10;resolveWorkspacePath — pipeline 5 bước: validate → root → resolve → containment → result&#10;isPathWithinRoot — boundary trailing-sep + case-fold win32 (BR-04/BR-05)&#10;defaultWorkspaceRootProvider — lazy require vscode, đọc mỗi call (C-3)&#10;FILE_PATH_SCHEMA_DESCRIPTION — shared schema text (AC-4) · PathResolverError&#10;No I/O · No throw (C-1, C-2) — Single source of truth (BR-01)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="330" y="490" width="420" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="nAtlassian" value="Atlassian REST — Jira / Confluence&#10;upload buffer đọc từ resolvedPath&#10;(resolve fail → KHÔNG gọi HTTP — I-3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="30" y="470" width="250" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="nError" value="Error envelope → agent (fail-loud — C-6)&#10;PATH_EMPTY: · PATH_REJECTED_OUTSIDE_WORKSPACE: (Format 2)&#10;FILE_NOT_FOUND: · FS_ERROR: (Format 1 — wrap tại tool layer)&#10;forward nguyên vẹn — isError: true (C-5)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="490" width="300" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="nVscodeApi" value="VS Code Workspace API (Extension Host)&#10;vscode.workspace.workspaceFolders[0].uri.fsPath&#10;đọc MỖI call — không cache (UC-01 AF-2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="660" width="300" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="nCwd" value="process.cwd() fallback (Kiro install dir)&#10;rootSource = cwd_fallback (BR-06)&#10;error khi fail ghi rõ gốc resolve" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="700" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="nFs" value="Host File System — fs.*&#10;CHỈ với resolvedPath sau containment pass (C-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="790" y="650" width="310" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="nWorkspaceFiles" value="Workspace Root — files (contained paths)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="790" y="750" width="310" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="tools/call — raw file_path" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nAgent" target="nWrapper">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="chat — callTool" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nAgent" target="nToolProxy">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="isLocalTool → executeLocalTool" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nWrapper" target="nLocalHandlers">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="callWithProxy · handleDynamic" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nWrapper" target="nBase64Proxy">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="resolveWorkspacePath(rawPath) — pattern §3.7" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nLocalHandlers" target="nPathResolver">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="resolvePath / resolveOutputPath — delegate (rootProvider injected)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nBase64Proxy" target="nPathResolver">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="resolveWorkspacePath — thay private method" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nToolProxy" target="nPathResolver">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="upload buffer — sau resolve OK" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nLocalHandlers" target="nAtlassian">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="default root provider — lazy require" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;dashed=1;" edge="1" parent="1" source="nVscodeApi" target="nPathResolver">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" value="fallback khi không mở workspace" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;dashed=1;" edge="1" parent="1" source="nCwd" target="nPathResolver">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" value="ok:true — resolvedPath (contained)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nPathResolver" target="nFs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" value="content_base64" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nBase64Proxy" target="nBackend">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" value="raw file_path — drawio_auto_layout (BR-12 — out of scope, OI-1)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="nWrapper" target="nBackend">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" value="!ok → Format 2 + CODE: prefix" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="nPathResolver" target="nError">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" value="thao tác file thật" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="nFs" target="nWorkspaceFiles">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

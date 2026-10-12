@@ -1,0 +1,99 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="c1" value="1 · stream_write_file — backend-local-tools.ts:113-149&#10;[REFACTOR] thay block resolve+containment inline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="40" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2" value="2 · embed_image — backend-local-tools.ts:160-175&#10;[REFACTOR] resolve file_path + output_path + baseDir fix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="108" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3" value="3 · jira_attach_file — jira-attachment-tools.ts:19-31&#10;[REFACTOR] thay resolve(file_path) 1 đối số — repro gốc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="176" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="c4" value="4 · confluence_add_attachment — confluence-content-tools.ts:18-32&#10;[REFACTOR] thay rs(a.file_path)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="244" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="c5" value="5a · ToolProxy.callTool — mem_ingest_file chat — ToolProxy.ts:42-50&#10;[REFACTOR] xóa private resolveWorkspacePath (62-66) — thêm containment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="312" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="c6" value="5b/6a/6b · Base64ProxyService — proxyInput (64-77) · resolveOutputPath (178-185)&#10;[REFACTOR] resolvePath delegate + constructor string | WorkspaceRootProvider" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="380" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="c7" value="8 · WrapperServer.routeToolCall — WrapperServer.ts:232-239&#10;[REFACTOR nhỏ] catch PathResolverError → MCP tool error result" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="448" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="c8" value="7 · drawio_auto_layout — backend drawio-tool.ts:36&#10;[BR-12] CHỈ error disambiguation (~10 dòng) — resolve behavior không đổi" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="516" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="c9" value="8 · sandbox_run — backend tool-handlers.ts:92-108&#10;[NO CHANGE] file là path bên trong sandbox session" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="30" y="584" width="380" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="pr" value="«component» PathResolver — NEW&#10;extension/src/services/PathResolver.ts&#10;&#10;+ resolveWorkspacePath(rawPath, opts?): PathResolutionResult&#10;+ isPathWithinRoot(root, candidate): boolean&#10;+ defaultWorkspaceRootProvider(): string | undefined&#10;+ FILE_PATH_SCHEMA_DESCRIPTION (shared const — M-4)&#10;+ PathResolverError (throw-path §5.6)&#10;+ types: PathResolutionResult (discriminated union),&#10;PathRootSource, WorkspaceRootProvider, PathResolutionCode&#10;&#10;invariants: no I/O (C-2) · no throw (C-1)&#10;provider per-call — no cache (C-3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+      <mxGeometry x="480" y="150" width="360" height="300" as="geometry"/>
+    </mxCell>
+    <mxCell id="vs" value="VS Code Workspace API — lazy require (vscode-free module)&#10;workspaceFolders[0].uri.fsPath — đọc mỗi call" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="40" width="360" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="pathtool" value="Node path module (built-in — không dependency mới)&#10;resolve · normalize · isAbsolute · sep" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="480" y="480" width="360" height="54" as="geometry"/>
+    </mxCell>
+    <mxCell id="fs" value="Host fs — fs.*&#10;chỉ tool handler chạm fs, với resolvedPath (C-4)&#10;PathResolver KHÔNG chạm fs (C-2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="920" y="150" width="300" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="atlassian" value="Atlassian REST — Jira / Confluence&#10;upload sau resolve OK (I-3 — fail trước mạng)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="920" y="270" width="300" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="backend" value="Backend child server :48721&#10;content_base64 (drawio_export_png · mem_ingest_file wrapper)&#10;raw file_path forward (drawio_auto_layout — OI-1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="920" y="380" width="300" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="schema" value="Schema surface — agent nhìn thấy (AC-4)&#10;static tool definitions (getLocalToolDefinitions) · rewriteSchemasForLlm (M-1..M-4)&#10;rewriteFindToolsResponse + getToolsRewritten (WrapperServer)&#10;cùng import FILE_PATH_SCHEMA_DESCRIPTION — anti-drift (M-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="480" y="620" width="740" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce1" value="resolveWorkspacePath" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c1" target="pr">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce2" value="resolveWorkspacePath" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c2" target="pr">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce3" value="resolveWorkspacePath" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c3" target="pr">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce4" value="resolveWorkspacePath" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c4" target="pr">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce5" value="resolve — thay private method" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c5" target="pr">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce6" value="delegate resolvePath / resolveOutputPath" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c6" target="pr">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce7" value="catch PathResolverError" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;" edge="1" parent="1" source="c7" target="pr">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce8" value="raw file_path — resolve out of scope (OI-1)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="c8" target="backend">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce9" value="upload buffer" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c3" target="atlassian">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce10" value="upload buffer" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c4" target="atlassian">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce11" value="content_base64" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="c6" target="backend">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce12" value="default provider — lazy require" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;" edge="1" parent="1" source="pr" target="vs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce13" value="resolvedPath (contained)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="pr" target="fs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce14" value="FILE_PATH_SCHEMA_DESCRIPTION (M-4)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;" edge="1" parent="1" source="pr" target="schema">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ce15" value="pure string ops (C-2)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;dashed=1;" edge="1" parent="1" source="pr" target="pathtool">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

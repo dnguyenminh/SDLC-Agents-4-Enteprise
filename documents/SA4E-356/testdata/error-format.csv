@@ -1,0 +1,11 @@
+test_case_id,scenario,input_path,expected_code_prefix,expected_contains_1,expected_contains_2,expected_contains_3,description
+IT-07,enoent-workspace,missing-doc.md,FILE_NOT_FOUND:,resolved absolute path under tmpdir,Resolved against workspace root,"Gợi ý: dùng absolute path",IT-07 Format 1 workspace branch — resolved path plus root plus hint
+IT-07,enoent-fallback,docs/x.md (no workspace mock),FILE_NOT_FOUND:,resolved absolute path under cwd,Resolved against process.cwd() fallback =,mở workspace hoặc dùng absolute path,IT-07 Format 1 fallback variant — cwd root named for diagnosis
+IT-07,other-fs-error,EISDIR-shaped mock on directory,FS_ERROR:,Failed <operation> <resolvedPath>,original err.message,,IT-07 non-ENOENT wrap keeps resolved path (UC-04 EF-1)
+IT-07,multiroot-folder2,docs/x.md (file only in folder 2),FILE_NOT_FOUND:,resolved path under folder ONE,Resolved against workspace root,"Gợi ý",IT-07 folder-2 miss degrades to Format 1 steering to absolute (UC-05 AF-1)
+IT-08,rejected-dotdot,../../../evil.txt,PATH_REJECTED_OUTSIDE_WORKSPACE:,raw ../../../evil.txt,resolved absolute path,outside workspace root,IT-08 Format 2 carries raw plus resolved plus root
+IT-08,rejected-absolute,C:\outside\evil.txt,PATH_REJECTED_OUTSIDE_WORKSPACE:,raw absolute,resolved absolute,outside workspace root,IT-08 absolute-outside rejected with same Format 2
+IT-08,rejected-sideeffects,../../../evil.txt via jira handler,PATH_REJECTED_OUTSIDE_WORKSPACE:,isError true,fs calls 0,http calls 0,IT-08 resolve-fail is a dead end — zero side-effects (C-6 I-2 I-3)
+UT-06,fallback-fields,docs/x.md (no workspace),(rootSource),cwd_fallback,(rootPath),process.cwd() value,UT-06 unit fields feeding the fallback wording (tested at helper level)
+IT-05,chat-marker-prefix,../escape.md via chat ToolProxy,Wrapper Error: + PATH_REJECTED_OUTSIDE_WORKSPACE:,helper CODE: intact inside marker,content-text shape + zero fs reads,IT-05 N-QA4 — chat resolve-fail starts with Wrapper Error: keeping CODE:
+UT-11,format3-no-workspace,docs/y.md (no workspace),PATH_NO_WORKSPACE:,got relative 'docs/y.md',fallback root + open a workspace,UT-11 Format 3 carries relative plus root plus hint (BR-06b)

@@ -1,0 +1,35 @@
+test_case_id,tool,call_path,file_path_arg,extra_args,expected_result,description
+IT-01,stream_write_file,local-handler,sub/note.md,"content=hello mode=write",Wrote file: <tmpdir>\sub\note.md; file created,INT-1 write relative creates file with preserved success text
+IT-01,stream_write_file,local-handler,sub/note.md,"content=more mode=append",Appended to: <tmpdir>\sub\note.md; content appended,INT-1 append relative works after refactor
+IT-01,stream_write_file,local-handler,<TMPDIR-ABS with flipped drive case>\cased.md,content=x,success — casing-insensitive containment (T6 spirit at tool level),INT-01 absolute opposite-casing passes
+IT-01,stream_write_file,local-handler,../escape.md,content=x,PATH_REJECTED_OUTSIDE_WORKSPACE Format 2; no file outside,INT-01 escape blocked no side-effect
+IT-02,embed_image,local-handler,doc.md (refs img.png same dir),"(no output_path)",output doc-embedded.md NEXT TO resolved input with data:image/png;base64 present,INT-2 default output beside resolved file; baseDir fix proven by data URI
+IT-02,embed_image,local-handler,doc.md (refs img.png same dir),output_path=out/e.md,output at <tmpdir>\out\e.md with embedded image,INT-2 explicit relative output_path follows same rule (BR-11)
+IT-02,embed_image,local-handler,missing.md,,FILE_NOT_FOUND Format 1 with resolved absolute path,INT-2 missing markdown yields self-correcting error
+IT-03,jira_attach_file,local-handler,documents/SA4E-355/FSD.md,issue_key=SA4E-355,upload from <tmpdir>\documents\SA4E-355\FSD.md basename FSD.md; no Kiro-dir ENOENT,INT-3 repro shape green — old single-arg resolve gone
+IT-03,jira_attach_file,local-handler,../escape.md,issue_key=SA4E-355,resolve-fail returns BEFORE http call count stays 0 (I-3),INT-3 escape never reaches network
+IT-04,confluence_add_attachment,local-handler,docs/page.md,page_id=12345,buffer from resolved tmpdir path; FormData built,INT-4 same-pattern fix symmetric to IT-03
+IT-04,confluence_add_attachment,local-handler,../escape.md,page_id=12345,return before FormData with verbatim helper message (C-5),INT-4 escape returns before side-effects
+IT-05,mem_ingest_file,chat-ToolProxy,ingest.txt,,newArgs.content from resolvedPath; newArgs.file_path=absolute (dedup key),INT-5 chat path resolves + preserves pre-read contract
+IT-05,mem_ingest_file,chat-ToolProxy,../escape.md,,Wrapper-Error payload carries helper message verbatim with code,INT-5 chat escape forwards code prefix intact
+IT-05,mem_ingest_file,wrapper-Base64Proxy provider-mode,ingest.txt,,content_base64 filled from resolved file; backend gets absolute,INT-5 wrapper provider mode resolves + fills base64
+IT-05,mem_ingest_file,wrapper-Base64Proxy string-mode,ingest.txt,,identical outcome to provider mode (back-compat; helpers.ts:60 unbroken),INT-5 string/provider parity
+IT-05,mem_ingest_file,wrapper-Base64Proxy,../escape.md,,PathResolverError caught by routeToolCall -> tool error result never -32603,INT-5 wrapper escape envelope correct (TDD 5.6)
+IT-06,drawio_export_png,wrapper-Base64Proxy,diagram.drawio,,content_base64 from resolved .drawio; backend render mocked,INT-6 relative .drawio input fills content_base64
+IT-06,drawio_export_png,wrapper-Base64Proxy,diagram.drawio,output_path=out/r.png,output resolved via helper with containment (BR-11),INT-6 explicit relative output contained
+IT-06,drawio_export_png,wrapper-Base64Proxy,diagram.drawio,(no output_path),derived sibling .png next to resolved input,INT-6 derived .drawio->.png output
+IT-06,drawio_export_png,wrapper-Base64Proxy,notes.txt,(no output_path),derived resolved + .out suffix (matches M-2 DISC-2 text),INT-6 non-drawio derived .out branch
+IT-06,drawio_export_png,nested-execute_dynamic_tool,diagram.drawio,,identical resolution via handleDynamic 6c delegation,INT-6 nested dynamic route covered with no extra code
+UT-13,embedMarkdownImages,unit-function,"md: ok=./img/a.png + evil=../../../../etc/passwd + abs=C:\Windows\f.png; root=tmpdir",baseDir=in-root dirname,embedded===1 skipped===2 outside refs byte-identical,T-SEC01 unit — per-ref containment fail-closed (red-before-fix)
+UT-13,embedMarkdownImages,unit-function,md with 2 in-root existing images,,embedded===2 skipped===0,T-SEC01 positive control — all-inside still embeds
+UT-14,stream_write_file,local-handler,doc.md,content=10MB+1 byte,"FS_ERROR payload too large (limit 10 MB) before resolve; no file created",T-size content cap rejects fail-loud
+UT-14,stream_write_file,local-handler,doc.md,content=exactly 10MB,writes normally (boundary pass),T-size exact-10MB boundary passes
+UT-14,proxyInput pre-read,wrapper-Base64Proxy,file 25MB+1 byte in workspace,"PathResolverError FS_ERROR file too large (limit 25 MB) + slice hint; nothing sent",T-size pre-read cap rejects with hint
+UT-14,proxyInput pre-read,wrapper-Base64Proxy,file exactly 25MB in workspace,pre-read succeeds (boundary pass),T-size exact-25MB boundary passes
+IT-09,embed_image,local-handler,"doc.md (1 in-root png + ../ escape ref + absolute outside ref)",(no output_path),"in-root embedded data URI; 2 outside refs verbatim; all fs reads under tmpdir (spy)",INT-2-ext tool-level per-ref containment
+IT-09,embed_image,local-handler,doc.md (same malicious md),output_path=out/e.md,same containment at explicit output; skipped===2 surfaced,INT-2-ext explicit-output variant
+IT-10,symlink-guard read,local-handler via symlink link-out -> outside,,"PATH_REJECTED_OUTSIDE_WORKSPACE (guard 3.5); SKIP with reason if creation EPERM",SQ-1a read-via-symlink blocked or skipped gracefully
+IT-10,symlink-guard write,local-handler via symlink-dir -> outside,,blocked same code nothing written outside; or SKIPPED same condition,SQ-1b write-via-symlink blocked or skipped
+IT-10,symlink-guard read-internal,local-handler via link-in -> in-root file,,succeeds (no false block on node_modules-style links); or SKIPPED,SQ-1c internal link passes
+IT-05,mem_ingest_file,chat-ToolProxy alias args.path,legal relative via args.path (no file_path),resolves via same helper no bypass; escape via alias rejected identically,SEC-08b alias documented variant
+IT-07,stream_write_file multiroot,local-handler folders [A B] file only in B,only-b.md (relative),"FILE_NOT_FOUND resolved under A + Resolved against workspace root + absolute-path hint",A2 multi-root — folder-2 miss degrades to Format 1 steering to absolute (UC-05 AF-1)

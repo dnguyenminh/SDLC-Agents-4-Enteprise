@@ -1,0 +1,10 @@
+test_case_id,issue_key,file_path_arg,mode,expected_outcome,evidence,description
+E2E-API-01,SA4E-355,documents/SA4E-355/FSD.md,relative-first-try,attach succeeds first attempt no retry,attachment ID on issue,REG-1 core repro — the call that ENOENT-ed against Kiro dir now green
+E2E-API-01,SA4E-355,documents/SA4E-355/BRD.md,relative,attach succeeds,attachment ID on issue,REG-1 extended file 2 mirrors 18-file absolute run
+E2E-API-01,SA4E-355,documents/SA4E-355/TDD.md,relative,attach succeeds,attachment ID on issue,REG-1 extended file 3 mirrors 18-file absolute run
+E2E-API-01,SA4E-355,(remaining SA4E-355 doc set),relative,all succeed; total tool calls <= 2x file count (N-6),call count log,REG-1 N-6 efficiency — systematic fail-retry pattern gone
+E2E-API-01,SA4E-355,(real markdown+image for embed_image),relative,embedded output created from workspace root,,REG-1 per-tool relative spot check embed_image (FR-10)
+E2E-API-01,SA4E-355,(real text file for mem_ingest_file),relative,ingest succeeds from workspace root,,REG-1 per-tool relative spot check mem_ingest_file (FR-10)
+E2E-API-01,SA4E-355,(real .drawio for drawio_export_png),relative,png exported from workspace-rooted input,,REG-1 per-tool relative spot check drawio_export_png (FR-10)
+E2E-API-02,SA4E-355,C:\projects\kiro\SDLC-Agents-4-Enterprise\documents\SA4E-355\FSD.md,absolute,attach succeeds resolved location identical to pre-fix,attachment ID,REG-2 control — absolute workaround byte-identical (N-4)
+E2E-API-02,SA4E-355,c:\projects\kiro\SDLC-Agents-4-Enterprise\documents\SA4E-355\FSD.md,absolute lowercase-drive,attach succeeds (R-1 robustness at tool level),attachment ID,REG-2 casing variant control

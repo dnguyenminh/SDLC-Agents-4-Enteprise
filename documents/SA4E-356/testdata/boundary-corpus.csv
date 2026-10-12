@@ -1,0 +1,24 @@
+test_case_id,raw_input,root,expected_ok,expected_code,description
+UT-03,..\..\..\a\b\c.txt,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Long dotdot chain escaping far above root — blocked
+UT-03,sub\..\..\..\evil.txt,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Nested then escape — blocked after normalize
+UT-03,..\..\Windows\System32\config,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Classic sensitive-target escape — blocked
+UT-03,..\..\secrets.env,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Canonical FSD example escape — Format 2 message
+UT-03,..\..\sub\..\sub2\..\..\evil.md,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Interleaved dotdot roundtrip still escaping — blocked
+UT-03,..\..\../mix-sep.txt,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Mixed separators backslash+slash escape — blocked
+UT-03,a\./../..\evil.txt,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Dot-segment camouflage escape — blocked
+UT-04,C:\fake-ws-evil\x.md,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Prefix-collision sibling dir — blocked (trailing-sep proof)
+UT-04,C:\fake-ws2\y.md,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Numbered sibling collision — blocked
+PBT-03,<fuzz: N x ../ arbitrary depth>,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Property fuzz — zero escapes may yield ok:true (N-3)
+PBT-03,<fuzz: absolute outside arbitrary>,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Property fuzz absolute-outside — zero leaks
+PBT-03,<fuzz: WS-evil arbitrary suffix>,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Property fuzz prefix-collision family — zero leaks
+UT-09,\\server\share\x.md,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,UNC vs drive-letter root — rejected (correct: outside)
+UT-09,\\?\C:\fake-ws\x.md,C:\fake-ws,false-or-platform,PATH_REJECTED_OUTSIDE_WORKSPACE,Extended-length prefix form — must not bypass containment
+UT-03,C:\fake-ws\sub\..\..\evil.txt,C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,Absolute with inner escape resolving outside — blocked
+UT-03,sub\,C:\fake-ws,true,,Trailing separator in-workspace — passes (boundary sanity)
+UT-09,secret. (trailing dot),C:\fake-ws,false-or-documented,PATH_REJECTED_OUTSIDE_WORKSPACE or fail-closed,N-QA2 trailing-dot quirk — fail-closed with clear log no silent pass
+UT-09,spaced-dir\.. (trailing space segment),C:\fake-ws,false-or-documented,PATH_REJECTED_OUTSIDE_WORKSPACE or fail-closed,N-QA2 trailing-space quirk — fail-closed with clear log
+UT-09,PROJEC~1\file.md (8.3-style short name),C:\fake-ws,false-or-documented,PATH_REJECTED_OUTSIDE_WORKSPACE or fail-closed,N-QA2 8.3-style quirk — treated literally never expanded
+UT-09,\\?\C:\outside\evil.md (prefix on candidate),C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,N-QA2 extended-prefix candidate side — must not bypass
+UT-09,C:\fake-ws\x.md (plain candidate),"root=\\?\C:\fake-ws (prefix on root)",false-or-platform,PATH_REJECTED_OUTSIDE_WORKSPACE or documented pass,N-QA2 prefix only on root side — fail-closed or documented pass
+UT-09,C:foo (drive-relative),C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE or PATH_INVALID,N-QA2 drive-relative C:foo — never resolves into root
+UT-09,C:/outside/evil.md (forward-slash absolute outside),C:\fake-ws,false,PATH_REJECTED_OUTSIDE_WORKSPACE,N-QA2 forward-slash absolute outside — blocked

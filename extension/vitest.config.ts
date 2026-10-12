@@ -24,5 +24,23 @@ export default defineConfig({
     // E2E tests depend on a real backend process booting up; allow a couple of
     // retries to absorb backend startup races without masking real failures.
     retry: 2,
+    // SA4E-356 N-7 coverage gate (STP §2.5 exit): PathResolver.ts >= 95%
+    // lines/functions/branches/statements. `include` is scoped to the new
+    // module ONLY so the thresholds never punish the pre-existing suite.
+    // Requires @vitest/coverage-v8 (devDependency). Run: npm run test:coverage.
+    // The CI N-7 step runs --coverage only after services/PathResolver.ts
+    // lands (TDD step C1), so this config is inert until then.
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary"],
+      reportsDirectory: "./coverage",
+      include: ["src/services/PathResolver.ts"],
+      thresholds: {
+        lines: 95,
+        functions: 95,
+        branches: 95,
+        statements: 95,
+      },
+    },
   },
 });

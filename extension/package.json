@@ -488,6 +488,7 @@
     "gen-checksums": "node scripts/gen-checksums.js",
     "test": "vitest run",
     "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:watch": "vitest watch",
     "lint": "npx eslint src/",
@@ -504,6 +505,7 @@
     "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^2.24.0",
+    "@vitest/coverage-v8": "4.1.8",
     "esbuild": "0.28.2",
     "fast-check": "^4.9.0",
     "glob": "^13.0.6",
@@ -516,7 +518,7 @@
     "typescript": "^5.4.0",
     "typescript-eslint": "^8.67.0",
     "uuid": "^14.0.1",
-    "vitest": "^4.1.8"
+    "vitest": "4.1.8"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",

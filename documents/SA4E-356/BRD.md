@@ -11,7 +11,7 @@
 | Jira Ticket | SA4E-356 |
 | Title | [Bug] MCP tools: relative file_path resolves against process CWD (Kiro install dir) instead of workspace root |
 | Author | BA Agent |
-| Version | 1.0 |
+| Version | 1.0.2 |
 | Date | 2026-10-12 |
 | Status | Draft |
 | Priority | High |
@@ -34,6 +34,8 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-12 | BA Agent | Khởi tạo tài liệu — tự động sinh từ Jira ticket SA4E-356 (bug được phát hiện khi thực hiện epic SA4E-355, tham chiếu KB lesson-learned #501) |
+| 1.0.1 | 2026-10-12 | BA Agent | Ghi chú bổ sung §1.5 (BA ack cho DISC-1 trong SA DISCREPANCY report — FSD v1.2): behavior change có chủ đích ở nhánh fallback không-mở-workspace của shared helper (bỏ containment — absolute path ngoài `process.cwd()` được cho phép, error vẫn ghi rõ gốc fallback) được approve trong scope ticket như hệ quả trực tiếp của AC-1/AC-3. Không thay đổi cấu trúc hay nội dung yêu cầu. |
+| 1.0.2 | 2026-10-12 | BA Agent | Ghi chú bổ sung §1.5 (BA ack cho N-BA2 trong TDD v1.2 §15.6 — FSD v1.3): behavior change thứ 2 ở nhánh fallback không-mở-workspace (BR-06b — relative path bị từ chối fail-loud `PATH_NO_WORKSPACE`, chỉ absolute passthrough) được approve trong scope ticket như hệ quả trực tiếp của AC-1/AC-3 + yêu cầu bảo mật SEC-02. Chỉ thêm ghi chú như v1.0.1, không thay đổi cấu trúc hay nội dung yêu cầu. |
 
 ---
 
@@ -110,6 +112,8 @@ Audit **TẤT CẢ** MCP tools nhận tham số `file_path`:
 - Không thay đổi MCP tool signature / protocol (chỉ thay đổi resolution behavior nội bộ + description).
 - Không sửa các tool KHÔNG nhận `file_path`.
 - Không thay đổi hành vi resolution tổng thể của `stream_write_file` (đã đúng — chỉ dùng làm pattern tham chiếu). Lỗi case-sensitive quan sát được ở containment check (mục 1.1) được xử lý trong shared helper mới; việc refactor `stream_write_file` để dùng helper nằm trong scope, nhưng hành vi resolve tổng thể không đổi.
+- *(Ghi chú v1.0.1 — BA ack cho DISC-1, 2026-10-12)* Ngoại lệ có chủ đích của dòng trên, đã được approve trong scope ticket: ở nhánh **không mở workspace** (fallback `process.cwd()` — edge case hiếm), shared helper theo FSD §6.3 / TDD v1.0 **không áp containment check** — absolute path ngoài `process.cwd()` hiện bị `stream_write_file` chặn ("Path rejected") sẽ được cho phép; error khi thao tác fail vẫn ghi rõ gốc fallback (AC-1). Behavior change này là hệ quả trực tiếp của AC-1/AC-3 (boundary theo thư mục cài Kiro là vô nghĩa về security và đang chặn oan path hợp lệ — xem FSD §6.3 Note DISC-1). Hành vi resolution tổng thể ở nhánh chính (có workspace) giữ nguyên.
+- *(Ghi chú v1.0.2 — BA ack cho N-BA2/BR-06b, 2026-10-12)* Behavior change thứ 2 ở cùng nhánh fallback, đã được approve trong scope ticket: ở nhánh **không mở workspace**, shared helper theo FSD v1.3 §6.3 (Note BR-06b) / TDD v1.2 (SEC-02, AD-16) **từ chối relative path fail-loud** (`PATH_NO_WORKSPACE` — "no workspace open — use an absolute path inside the intended folder or open a workspace"); chỉ absolute path được passthrough (DISC-1 giữ nguyên). Behavior change này là hệ quả trực tiếp của AC-1/AC-3 (relative resolve vào thư mục cài Kiro vừa vô nghĩa vừa nguy hiểm — pollute install dir / EACCES) + yêu cầu bảo mật SEC-02 — xem FSD §6.3 Note BR-06b. Như v1.0.1, chỉ ghi nhận tại đây; hành vi resolution tổng thể ở nhánh chính (có workspace) giữ nguyên.
 - Không xây dựng UI mới.
 - Các MCP server chạy ngoài extension host process (child orchestrator): nếu audit phát hiện tool nằm ngoài extension host, ticket này chỉ ghi nhận kết quả audit; việc fix tool đó tách thành ticket riêng nếu cần.
 

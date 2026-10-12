@@ -1,0 +1,97 @@
+# =============================================================================
+# SA4E-356 — PathResolver consistency rules (N-8)
+# -----------------------------------------------------------------------------
+# Enforces TDD v1.1 §9 N-8 in CI: after the call-site refactor (§5.4), no audit
+# tool handler may resolve a raw `file_path` with single-argument
+# `path.resolve(...)` or touch the filesystem with a raw `file_path`.
+# The single source of truth is `resolveWorkspacePath()` from
+# `extension/src/services/PathResolver.ts` (BR-01, C-4).
+#
+# Scope: `extension/src/` ONLY — `backend/` is deliberately excluded because
+# the backend duplicate `handleStreamWriteFile` (code-intel-handlers.ts) is
+# shadowed by the extension-local version and out of scope (TDD §1.5, OI-4).
+# Test files and PathResolver.ts itself are excluded.
+#
+# Triage notes (SECURITY-REVIEW.md INFO-02 — pre-triaged, do NOT reopen):
+#   * `readFile(resolvedPath)` / `writeFile(resolvedPath, ...)` = FALSE POSITIVE
+#     by construction (containment already passed + T3/T3b/T8 cover it). These
+#     rules only match args containing `file_path`, so resolved-path calls can
+#     never match.
+#   * Missing rate-limit on loopback tools = accepted (single-user local host).
+# =============================================================================
+
+rules:
+  # ---------------------------------------------------------------------------
+  # N-8a: forbid single-argument path.resolve(<...file_path...>)
+  # Catches: resolve(file_path), resolve(args.file_path), resolve(a.file_path),
+  #          path.resolve(file_path), rs(a.file_path)  (confluence alias)
+  # Does NOT match:
+  #   - resolveWorkspacePath(...) — the approved helper (name differs, and the
+  #     explicit pattern-not below double-guards it)
+  #   - two-argument path.resolve(root, raw) — correct root-anchored form
+  # ---------------------------------------------------------------------------
+  - id: sa4e356-no-single-arg-resolve-on-file-path
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      SA4E-356 N-8: single-argument path.resolve(<...file_path...>) bypasses
+      PathResolver containment (BR-01, C-4). Use resolveWorkspacePath() from
+      extension/src/services/PathResolver.ts instead.
+    metadata:
+      ticket: SA4E-356
+      nfr: N-8
+      tdd_ref: TDD v1.1 §9
+    patterns:
+      - pattern-either:
+          - pattern: path.resolve($P)
+          - pattern: resolve($P)
+          - pattern: rs($P)
+      - metavariable-regex:
+          metavariable: $P
+          regex: (?i)[\w$.]*file_path[\w$.\[\]"']*
+      - pattern-not: resolveWorkspacePath(...)
+    paths:
+      include:
+        - /extension/src/**/*.ts
+      exclude:
+        - /extension/src/**/__tests__/**
+        - /extension/src/services/PathResolver.ts
+
+  # ---------------------------------------------------------------------------
+  # N-8b: forbid raw fs.*(<...file_path...>) in audit tool handlers
+  # Every fs access must use `resolution.resolvedPath` AFTER `resolution.ok`
+  # (integration invariant I-4, C-4). `readFile(resolvedPath)` can never match
+  # this rule (no `file_path` token in the arg) — pre-triaged false positive,
+  # see file header.
+  # ---------------------------------------------------------------------------
+  - id: sa4e356-no-raw-fs-on-file-path
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      SA4E-356 N-8: raw fs.*(<...file_path...>) bypasses PathResolver
+      containment (I-4, C-4). Resolve first via resolveWorkspacePath(), then
+      touch fs ONLY with resolution.resolvedPath.
+    metadata:
+      ticket: SA4E-356
+      nfr: N-8
+      tdd_ref: TDD v1.1 §5.4, §9
+    patterns:
+      - pattern-either:
+          - pattern: fs.readFileSync($P, ...)
+          - pattern: fs.writeFileSync($P, ...)
+          - pattern: fs.appendFileSync($P, ...)
+          - pattern: fs.createReadStream($P, ...)
+          - pattern: fs.createWriteStream($P, ...)
+          - pattern: fs.promises.readFile($P, ...)
+          - pattern: fs.promises.writeFile($P, ...)
+          - pattern: readFile($P, ...)
+          - pattern: writeFile($P, ...)
+      - metavariable-regex:
+          metavariable: $P
+          regex: (?i)[\w$.]*file_path[\w$.\[\]"']*
+    paths:
+      include:
+        - /extension/src/**/*.ts
+      exclude:
+        - /extension/src/**/__tests__/**
+        - /extension/src/services/PathResolver.ts

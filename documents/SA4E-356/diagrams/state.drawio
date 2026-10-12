@@ -1,0 +1,92 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="920" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="startDot" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="85" width="20" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" value="Raw Path Received&#10;(file_path tu tool call - chua tin dung)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="90" y="60" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="d1" value="path.isAbsolute(rawPath)?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="400" y="50" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3" value="Absolute Passthrough&#10;path.resolve(rawPath) - backward compat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="60" width="280" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2" value="Resolve theo Workspace Root&#10;Primary Workspace Folder (workspaceFolders[0])&#10;khong mo workspace: fallback process.cwd()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="190" width="400" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="d2" value="Containment Check (case-insensitive tren Windows - R-1)&#10;resolved path nam trong Workspace Root?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="390" y="330" width="400" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4" value="Return Resolved Path&#10;absolute path chuan cho fs.* va error message" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="140" y="500" width="340" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s5" value="Return Error - Path Rejected (Format 2)&#10;raw + resolved + workspace root - isError: true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="800" y="500" width="300" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="endReject" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1150" y="525" width="20" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="op1" value="Tool thuc hien fs operation&#10;(readFile / writeFile / attach / export)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="140" y="630" width="340" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="d3" value="fs operation&#10;thanh cong?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="580" y="620" width="180" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="endSuccess" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="850" y="650" width="20" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="s6" value="Return Error - File Not Found (Format 1 - self-correcting)&#10;resolved absolute path + goc resolve + goi y absolute path - isError: true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="380" y="780" width="420" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="st1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="startDot" target="s1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1" target="d1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="absolute - yes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="d1" target="s3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="relative - no" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d1" target="s2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3" target="d2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2" target="d2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="contained - PASS" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d2" target="s4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="escape - REJECT" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d2" target="s5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s4" target="op1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="op1" target="d3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" value="yes - thanh cong ngay lan dau (AC-1)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="d3" target="endSuccess">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" value="no - ENOENT" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;strokeColor=#b85450;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="d3" target="s6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" value="isError: true" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s5" target="endReject">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" value="Agent retry dung 1 luot - absolute path theo goi y (AC-2)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;dashed=1;strokeColor=#b85450;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="s6" target="s1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="30" y="825"/>
+          <mxPoint x="30" y="105"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

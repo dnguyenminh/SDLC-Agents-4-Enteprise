@@ -1,0 +1,239 @@
+name: SA4E-356 CI — PathResolver workspace-root fix
+
+# Per-ticket CI pipeline for SA4E-356 (Phase 4.5, prepared BEFORE Phase 5 DEV).
+#
+# Scope (TDD v1.1 + STP v1.0 + SECURITY-REVIEW.md):
+#   - extension/ for the fix: typecheck (tsc --noEmit) -> lint -> test
+#     (vitest: PBT/UT/IT/SCAN under the default include glob) -> coverage gate
+#     N-7 (PathResolver.ts >= 95% lines/functions/branches/statements, enforced
+#     by coverage.thresholds in extension/vitest.config.ts) -> VSIX smoke.
+#   - backend/ minimal: build + targeted drawio-tool test for the ~10-line
+#     error-disambiguation change (BR-12, TDD §5.4 row 10, UT-10).
+#   - N-8 consistency gate (REQUIRED, blocking): grep script over
+#     extension/src/ — 0 x single-arg resolve(file_path), 0 x raw fs.*(file_path).
+#   - Semgrep custom rules (.semgrep/sa4e-356-pathresolver.yml): defense-in-depth,
+#     informational until the runner image pre-installs semgrep (see job note).
+#   - Supply-chain hygiene: npm audit --omit=dev --audit-level=high on extension
+#     (ticket adds ZERO new runtime deps — TDD §1.3 — so High/Critical = block).
+#
+# INSTALL STRATEGY — root workspaces install (NOT standalone `npm ci`):
+#   Standalone `npm ci` inside extension/ (or backend/) is RED on main TODAY for
+#   PRE-EXISTING reasons outside this ticket: extension/package.json has drifted
+#   far ahead of extension/package-lock.json (219 missing/invalid entries on
+#   2026-10-12 — e.g. the SA4E-336 0.99.1 tree, SA4E-341 E2E deps, aws-sdk /
+#   esbuild / yargs floats; owned by other tickets + SM to schedule a lock
+#   re-sync). Additionally npm resolves the monorepo workspace root even when
+#   CWD=extension/, so a bare `npm ci` there misbehaves (EUSAGE). Until the lock
+#   re-sync lands, per-ticket jobs use the repo-canonical root workspaces
+#   install from ci.yml (rm -rf node_modules + npm install --force + rolldown
+#   binding). The vitest/coverage-v8 pins below are EXACT so the N-7 gate stays
+#   version-aligned under float installs (vitest hard-requires provider == runner
+#   version): vitest 4.1.8 + @vitest/coverage-v8 4.1.8 — DEV must bump BOTH
+#   together when upgrading vitest.
+#
+# Explicitly N/A in this ticket (no jobs for these):
+#   - DB migration: no persistent model change (TDD §4 — PathResolutionResult is
+#     ephemeral, no DDL, no migration).
+#   - Dockerfile / containers: the extension runs INSIDE the Kiro Extension Host
+#     process (needs vscode API + loopback :9181); it cannot be containerized.
+#     Local test env = Node 22 + root npm install (see job steps).
+#   - Environment (dev/staging/prod) configs: none — extension config ships via
+#     VS Code contributes.configuration (package.json), no secrets, no .env.
+#   - Monitoring/alerting: Phase 6.7 DPG scope, not Phase 4.5.
+#   - REG-1/REG-2: manual on the real Kiro host (STP §2.4) — NOT automatable here.
+#
+# RED-BY-DESIGN note: the N-8 `--all` gate is RED until DEV completes the
+# call-site refactor (TDD steps C3–C8). The pre-fix code still contains
+# `resolve(file_path)` (jira-attachment-tools.ts:21) and `rs(a.file_path)`
+# (confluence-content-tools.ts:25). Do NOT "fix" the gate — fix the call sites.
+# The extension test job is GREEN at Phase 4.5 (no SA4E-356 tests exist yet;
+# N-7 arms automatically when services/PathResolver.ts lands at TDD step C1).
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: sa4e-356-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Extension — tsc + eslint + vitest (PBT/UT/IT/SCAN) + N-7 coverage gate
+  # Matrix ubuntu+windows: T6 has platform-conditional asserts (TDD §11.4 —
+  # win32 case-fold vs posix case-sensitive), both branches must run in CI.
+  # STP §2.4 entry: vitest alias vscode -> src/test/mocks/vscode.ts (config).
+  # ---------------------------------------------------------------------------
+  extension:
+    name: Extension — Typecheck / Lint / Test / Coverage N-7 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install (root workspaces — repo-canonical, see header)
+        shell: bash
+        run: |
+          rm -rf node_modules backend/node_modules extension/node_modules
+          npm cache clean --force
+          npm install --force --no-audit --no-fund
+          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+
+      - name: Type-check extension (tsc --noEmit, 0 errors)
+        run: npm run compile --workspace=extension
+        working-directory: .
+
+      - name: Lint extension (eslint src/)
+        # Relaxed config (only critical rules error); pre-existing warnings must
+        # not block the ticket gate — staged-file cleanliness is enforced by the
+        # pre-commit lint-staged hook instead. New SA4E-356 code must be clean.
+        run: npm run lint --workspace=extension
+        working-directory: .
+        continue-on-error: true
+
+      - name: Unit + integration + scans (vitest, no coverage)
+        # Runs PBT/UT/IT/SCAN (default include glob src/**/__tests__/**).
+        run: npm run test --workspace=extension
+        working-directory: .
+
+      - name: Coverage gate N-7 (vitest --coverage, arms when module lands)
+        # Enforces PathResolver.ts >= 95% lines/functions/branches/statements
+        # via coverage.thresholds in vitest.config.ts (STP §2.5 exit: N-7).
+        # The gate ARMS automatically once DEV lands services/PathResolver.ts
+        # (TDD step C1); before that it reports SKIP instead of failing on an
+        # empty coverage set.
+        shell: bash
+        working-directory: extension
+        run: |
+          if [ -f src/services/PathResolver.ts ]; then
+            npm run test:coverage
+          else
+            echo "SKIP N-7: src/services/PathResolver.ts not yet implemented (TDD step C1 pending) — gate arms on landing."
+          fi
+
+      - name: Package VSIX smoke (vsce, no dependencies)
+        working-directory: extension
+        run: npx @vscode/vsce package --no-dependencies
+        continue-on-error: true
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sa4e-356-extension-vsix-${{ matrix.os }}
+          path: extension/*.vsix
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
+  # N-8 consistency gate (REQUIRED, blocking) — TDD §9, STP §2.5 SCAN exit.
+  # Grep over extension/src/ (excl. __tests__, PathResolver.ts, backend/).
+  # Needs NO node_modules — runs on the raw tree.
+  # ---------------------------------------------------------------------------
+  n8-consistency-gate:
+    name: N-8 PathResolver consistency gate (grep, REQUIRED)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: N-8 scan — full tree
+        shell: bash
+        run: bash scripts/check-pathresolver-n8.sh --all
+
+  # ---------------------------------------------------------------------------
+  # Semgrep custom rules — defense-in-depth for N-8 (SECURITY-REVIEW §4.2.3).
+  # INFORMATIONAL (continue-on-error) until a green run proves the runner +
+  # rules stable; the grep gate above is the blocking enforcement. Promote to
+  # required after 1 green run on main post-refactor (DEV/SM decision).
+  # Pre-triaged per INFO-02: readFile(resolvedPath) CANNOT match (rules only
+  # match args containing the `file_path` token).
+  # ---------------------------------------------------------------------------
+  semgrep-n8:
+    name: Semgrep N-8 rules (informational)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install semgrep
+        run: pip install semgrep
+        continue-on-error: true
+
+      - name: Run SA4E-356 PathResolver rules
+        run: semgrep --config .semgrep/sa4e-356-pathresolver.yml --error --strict .
+        continue-on-error: true
+
+  # ---------------------------------------------------------------------------
+  # Backend — build + targeted drawio-tool test (BR-12 ~10-line change only).
+  # Full backend suite already runs in ci.yml; this job scopes to UT-10
+  # (error-disambiguation branches: missing param vs path-rejected).
+  # ---------------------------------------------------------------------------
+  backend-drawio:
+    name: Backend — Build + drawio-tool targeted test (BR-12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install (root workspaces — repo-canonical, see header)
+        shell: bash
+        run: |
+          rm -rf node_modules backend/node_modules extension/node_modules
+          npm cache clean --force
+          npm install --force --no-audit --no-fund
+          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+
+      - name: Build backend (tsc)
+        run: npm run build --workspace=backend
+        working-directory: .
+
+      - name: Targeted test — drawio-tool.test.ts (UT-10, 2 error branches)
+        # Before DEV lands the disambiguation change this runs the EXISTING
+        # drawio-tool tests (baseline green); the 2 new branch asserts arm it.
+        run: npx vitest run src/engine/tools/__tests__/drawio-tool.test.ts
+        working-directory: backend
+
+  # ---------------------------------------------------------------------------
+  # Supply-chain hygiene — ticket adds ZERO new RUNTIME deps (TDD §1.3: fs/path
+  # built-in only; @vitest/coverage-v8 is dev-only), so a High/Critical finding
+  # on runtime deps blocks. Runs after root install (same job pattern as ci.yml).
+  # ---------------------------------------------------------------------------
+  supply-chain:
+    name: Supply-chain hygiene (npm audit, extension runtime)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install (root workspaces — repo-canonical, see header)
+        shell: bash
+        run: |
+          rm -rf node_modules backend/node_modules extension/node_modules
+          npm cache clean --force
+          npm install --force --no-audit --no-fund
+          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+
+      - name: npm audit — fail on High/Critical (runtime deps)
+        run: npm audit --omit=dev --audit-level=high
+        working-directory: extension

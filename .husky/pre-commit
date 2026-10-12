@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# SA4E-223 / SA4E-241 pre-commit hook
+# SA4E-223 / SA4E-241 pre-commit hook (+ SA4E-356 N-8 gate)
 # Runs, in order, on staged files:
 #   1. lint-staged (eslint --fix + prettier on staged TS)
 #   2. hardcoded-secret gate (SA4E-241 / SEC-03): blocks SSA@TGB, pega123!,
 #      default-credential fallbacks, and hardcoded default 'PegaCollProj'
 #   3. line-count gate (BR-18 / AC7): staged backend/src .ts <= 200 lines
+#   4. path-resolver N-8 gate (SA4E-356 / TDD §9): blocks single-arg
+#      resolve(file_path) + raw fs.*(file_path) in extension/src
+#      (excl. __tests__, PathResolver.ts; backend/ out of scope per OI-4)
 # Installed automatically if husky is present, or manually via scripts/setup-git-hooks.sh.
 set -e
 ROOT="$(git rev-parse --show-toplevel)"
@@ -17,5 +20,8 @@ bash "$ROOT/scripts/check-secrets.sh" --staged
 
 echo "[pre-commit] line-count gate (BR-18 / AC7) on staged backend/src .ts files..."
 bash "$ROOT/scripts/check-line-count.sh" --staged
+
+echo "[pre-commit] path-resolver N-8 gate (SA4E-356 / TDD §9) on staged files..."
+bash "$ROOT/scripts/check-pathresolver-n8.sh" --staged
 
 echo "[pre-commit] OK"

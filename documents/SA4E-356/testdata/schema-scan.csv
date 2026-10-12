@@ -1,0 +1,16 @@
+test_case_id,tool,schema_surface,param,expected_keyword,expected_extra,description
+SCAN-01,stream_write_file,getLocalToolDefinitions,file_path,workspace,equals shared constant FILE_PATH_SCHEMA_DESCRIPTION,SCAN-01 static schema file_path carries rule
+SCAN-01,embed_image,getLocalToolDefinitions,file_path,workspace,equals shared constant,SCAN-01 static schema file_path carries rule
+SCAN-01,embed_image,getLocalToolDefinitions,output_path,workspace,plus -embedded default suffix preserved,SCAN-01 output_path rule plus existing default info
+SCAN-01,jira_attach_file,getLocalToolDefinitions,file_path,workspace,newly added (was missing),SCAN-01 previously description-less param now ruled
+SCAN-01,confluence_add_attachment,getLocalToolDefinitions,output_path-missing-N/A file_path,workspace,newly added (was missing),SCAN-01 previously description-less param now ruled
+SCAN-01,stream_write_file,getVisibleLocalToolDefinitions,file_path,workspace,same as full list,SCAN-01 visible-list surface consistent
+SCAN-01,mem_ingest_file,rewriteSchemasForLlm (backend schema had NO description),file_path,workspace,M-1 overwrite fills the verified hole,SCAN-01 rewrite hole 1 closed (tool-definitions.ts:9)
+SCAN-01,drawio_export_png,rewriteSchemasForLlm (backend said reference only),file_path,workspace,M-1 overwrite replaces stale text,SCAN-01 rewrite hole 2 closed (drawio-export-png.ts:21)
+SCAN-01,drawio_export_png,rewriteSchemasForLlm,output_path,workspace,M-2 suffix (.drawio->.png; non-.drawio get .out appended),SCAN-01 output suffix matches both resolveOutputPath branches (DISC-2)
+SCAN-01,mem_ingest_file,rewriteFindToolsResponse (find_tools surface),file_path,workspace,via shared rewrite funnel,SCAN-01 find_tools/nested dynamic surface covered
+SCAN-01,(all tools 1-6),pre/post snapshot deep-diff minus description,(stable),EMPTY diff — only descriptions changed (BR-09 N-5),SCAN-01 N-5 signature stability gate
+SCAN-02,(audit handlers),grep extension/src single-arg resolve,resolve(file_path)|resolve(args.file_path)|resolve(a.file_path),0 matches (excl tests backend/ PathResolver.ts),SCAN-02 N-8 pattern 1 clean
+SCAN-02,(audit handlers),grep raw fs with file_path,fs.(read|write|append)File*(file_path,0 matches — all fs take resolvedPath (C-4),SCAN-02 N-8 pattern 2 clean
+SCAN-02,ToolProxy,symbol check,private resolveWorkspacePath,symbol ABSENT — shared helper imported,SCAN-02 duplicate method deleted
+SCAN-02,Base64ProxyService,compile+tests,string-mode constructor,existing helpers.ts:60 callers still pass,SCAN-02 back-compat holds beside provider mode
