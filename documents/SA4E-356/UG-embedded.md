@@ -12,7 +12,7 @@
 | Title | [Bug] MCP tools: relative file_path resolves against process CWD (Kiro install dir) instead of workspace root |
 | Author | DEV Agent |
 | Reviewer | BA Agent |
-| Version | 1.0 |
+| Version | 1.1 |
 | Date | 2026-10-12 |
 | Status | Draft |
 | Related BRD | documents/SA4E-356/BRD.md (v1.0.2) |
@@ -27,6 +27,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-12 | DEV Agent | Initial document — UG cho các MCP file tools sau fix path resolution (SA4E-356): Path Rules, Error Codes + Format 1/2/3, troubleshooting, FAQ, behavior changes |
+| 1.1 | 2026-10-12 | DEV Agent | Bổ sung scenario multi-worktree/multi-root (§3.4) + FAQ Q11-Q13 theo yêu cầu user; facts verified từ PathResolver.ts + UT-05/UT-08 |
 
 ---
 
@@ -137,6 +138,28 @@ N/A — không có config mới. Tool tự đọc primary workspace folder từ 
 - **Image refs bên trong markdown** (`embed_image`): mỗi ref (`![alt](path)`) được containment-check **riêng lẻ**. Ref resolve ra ngoài workspace root → bị **skip** (giữ nguyên trong output, đếm vào `skipped`) — **không throw**, không ghi file ra ngoài (SEC-01, fail-closed).
 - **Alias legacy `args.path`**: vẫn được chấp nhận ở `stream_write_file`, `embed_image`, `mem_ingest_file` (chat) nhưng **KHÔNG nằm trong inputSchema** — hãy dùng `file_path`.
 - **Invariant quan trọng:** tool **không bao giờ** đưa raw path của bạn thẳng vào `fs.*` — mọi thao tác file dùng absolute path ĐÃ resolve. Do đó error message luôn in **resolved path** (không phải raw path bạn truyền) — dùng nó để chẩn đoán.
+
+### 3.4 Multi-worktree & Multi-root workspaces (v1.1)
+
+> **Quy tắc vàng:** *Workspace root = folder đang open trong cửa sổ Kiro đó — KHÔNG phải folder repo gốc, KHÔNG phải process CWD, KHÔNG phải worktree khác.* Root được đọc **mỗi lần gọi** (`vscode.workspace.workspaceFolders[0].uri.fsPath` — per-call, không cache — UT-08), nên mở/đóng/đổi workspace có hiệu lực ngay ở call kế tiếp.
+
+| Scenario | Workspace root được dùng để resolve | Relative path | Cách đúng |
+|----------|-------------------------------------|---------------|-----------|
+| **Mỗi git worktree mở 1 cửa sổ Kiro riêng** (vd repo chính `C:\projects\repo`, worktree `C:\worktrees\feat-x`) | **Worktree của cửa sổ đó** — mở worktree nào làm workspace thì root là worktree đó | ✅ Resolve đúng theo worktree đang mở | Dùng relative bình thường (1 worktree = 1 cửa sổ = 1 branch) |
+| **Multi-root — nhiều folder chung 1 cửa sổ** | **CHỈ folder đầu tiên** — Primary Workspace Folder `workspaceFolders[0]` (BR-07 — deterministic, không config) | File thuộc folder 2+ → không tìm thấy → `FILE_NOT_FOUND` (Format 1) in resolved path + root → tự sửa trong ≤ 1 retry | File ở folder khác → **absolute path**; đổi thứ tự folder trong workspace → root đổi ngay (per-call) |
+| **Không mở workspace** (cửa sổ trống / headless) | `cwd_fallback` = process CWD | ❌ Relative bị từ chối `PATH_NO_WORKSPACE` (BR-06b — Format 3) | **Absolute path** (passthrough, không containment — §3.1 row 7) hoặc mở workspace |
+
+**Điểm cần biết:**
+
+- **Git worktree = thư mục thực** (không phải symlink): mở worktree nào làm workspace thì root là worktree đó. PathResolver **không có logic đặc biệt** cho `git worktree` — cơ chế resolve chạy hoàn toàn như một folder thường.
+- **Không nhiễm chéo giữa các worktree:** mỗi cửa sổ Kiro có extension host + MCP wrapper riêng → root, session và lỗi path của window này không ảnh hưởng window kia.
+- **Cross-worktree** (đang mở worktree A, cần file ở worktree B): từ cửa sổ A, **cả relative lẫn absolute đều không chạm được worktree B** — relative resolve theo A → `FILE_NOT_FOUND` (Format 1, có resolved path + root để tự sửa); absolute trỏ sang B → bị containment chặn `PATH_REJECTED_OUTSIDE_WORKSPACE` (FR-05) vì containment so với root = **workspace đang mở**. Cách đúng: **mở worktree B trong cửa sổ Kiro riêng** rồi gọi tool ở đó. (Absolute ra ngoài root chỉ đi được ở nhánh không-workspace — §3.1 row 7.)
+- **State SDLC là per-worktree:** `documents/{TICKET}/STATUS.json`, `RUN-LOG.md`, BRD/FSD/TDD… nằm trong working tree của từng worktree — ghi ở worktree nào thì nằm ở worktree đó, không tự đồng bộ về repo gốc (đặc tính git worktree); đồng bộ qua git như code.
+
+> **✅ Best practices — multi-worktree:**
+> - **1 worktree = 1 cửa sổ Kiro = 1 branch** — relative path luôn resolve đúng trong cửa sổ đó.
+> - Cross-worktree → **mở cửa sổ riêng cho worktree đích**; đừng trỏ absolute sang worktree khác khi đang mở workspace (bị containment chặn — FR-05).
+> - `documents/` là **per-worktree** — đọc/ghi document trong worktree đang mở.
 
 ---
 
@@ -469,6 +492,15 @@ A: Resolve behavior của tool này nằm ở **backend child server** (ngoài e
 **Q10: Làm sao biết extension của tôi đã chứa fix?**
 A: Test nhanh §2.1: `stream_write_file` với relative path thành công ngay lần đầu và success message in absolute path **dưới workspace root** (không phải dưới thư mục cài Kiro). Thêm nữa: error messages có prefix `PATH_*:` / `FILE_NOT_FOUND:` / `FS_ERROR:` — format mới chỉ có sau fix.
 
+**Q11 (v1.1): Tôi chạy nhiều git worktree ở các folder khác nhau — relative path resolve theo đâu?**
+A: Theo **workspace đang mở trong cửa sổ Kiro đó** — KHÔNG phải folder repo gốc, KHÔNG phải process CWD, KHÔNG phải worktree khác. Git worktree là **thư mục thực** (không phải symlink) → **mở worktree nào làm workspace thì root là worktree đó** — dùng relative bình thường. PathResolver không có logic đặc biệt cho `git worktree`; root được đọc **mỗi lần gọi** (`workspaceFolders[0].uri.fsPath`, không cache — UT-08) nên đổi cửa sổ/folder có hiệu lực ngay ở call kế tiếp. Mỗi cửa sổ Kiro có extension host + MCP wrapper riêng → session các worktree **không nhiễm chéo** (chi tiết §3.4).
+
+**Q12 (v1.1): Đang ở worktree A mà muốn ghi file ở worktree B thì sao?**
+A: Từ cửa sổ đang mở worktree A, **relative sẽ không tìm thấy** — nó resolve theo root = worktree A, ra `FILE_NOT_FOUND` (Format 1) kèm **resolved path + root** để tự sửa trong ≤ 1 retry. **Absolute trỏ sang worktree B cũng bị chặn** — `PATH_REJECTED_OUTSIDE_WORKSPACE` (FR-05) vì containment so với root = workspace đang mở (worktree A), không phải theo ý định của bạn. Cách đúng: **mở worktree B trong cửa sổ Kiro riêng** (mỗi cửa sổ có extension host + MCP wrapper riêng) rồi gọi tool ở đó. Xem §3.4.
+
+**Q13 (v1.1): Multi-root workspace — relative path vào folder thứ 2 được không?**
+A: **Không.** Relative **luôn** resolve theo folder đầu tiên — Primary Workspace Folder `workspaceFolders[0]` (BR-07 — deterministic, không có config chọn folder; verify UT-05). File thuộc folder 2+ → `FILE_NOT_FOUND` (Format 1) in resolved path + root → **tự sửa** bằng absolute path trỏ đúng folder (§8.1 case 5). Đổi thứ tự folder trong workspace → root đổi ngay ở call kế tiếp (per-call — UT-08). File ở folder khác muốn thao tác qua cửa sổ này → dùng absolute path.
+
 ---
 
 ## 10. Behavior Changes (cho user cũ — đọc kỹ trước khi nâng cấp)
@@ -540,3 +572,5 @@ Bốn behavior change chính, tất cả được approve trong scope ticket (BR
 | `drawio_export_png` (+ nested dynamic) | ✅ | ✅ nếu trong root | ❌ `PATH_NO_WORKSPACE` | pre-read ≤ 25 MB |
 | `drawio_auto_layout` | ⚠️ resolve phía **backend** (`config.workspace`) — error đã đúng ngữ nghĩa | ⚠️ | ⚠️ | — (follow-up OI-1) |
 | `sandbox_run` | N/A — path sandbox-internal | N/A | N/A | — |
+
+> **Multi-worktree / multi-root (v1.1):** cột "Relative" áp cho root = **folder đang open trong cửa sổ Kiro hiện tại** — mỗi git worktree mở riêng 1 cửa sổ thì relative luôn đúng (§3.4). Cross-worktree → mở cửa sổ cho worktree đích (absolute ngoài root đang mở bị reject — FR-05); multi-root → chỉ Primary Workspace Folder `workspaceFolders[0]` (BR-07); không mở workspace → relative bị reject `PATH_NO_WORKSPACE` (BR-06b).
