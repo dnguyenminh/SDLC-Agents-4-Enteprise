@@ -344,7 +344,7 @@ function imageToDataUri(imagePath: string): string | null {
     const mime = IMAGE_MIME[path.extname(imagePath).toLowerCase()] || "application/octet-stream";
     return `data:${mime};base64,${fs.readFileSync(imagePath).toString("base64")}`;
   } catch (err) {
-    console.debug("[backend-local-tools] imageToDataUri failed for " + imagePath + ": " + (err as Error).message);
+    console.debug("[backend-local-tools] imageToDataUri failed for " + sanitizeLogText(imagePath) + ": " + sanitizeLogText((err as Error).message));
     return null;
   }
 }
