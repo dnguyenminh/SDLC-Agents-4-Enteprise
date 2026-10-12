@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-356",
-  "currentPhase": "test_planning",
+  "currentPhase": "implementation",
   "autonomyLevel": "L3",
   "gitBranch": "main",
   "humanGates": ["uat", "deployment"],
@@ -12,7 +12,7 @@
     "security_design_review": { "status": "done", "file": "SECURITY-REVIEW.md", "version": 1, "verdict": "PASS_WITH_FIXES", "completedAt": "2026-10-12", "note": "0 Critical/High; SEC-01/02/03 Medium → SA TDD v1.2 before Phase 5" },
     "test_planning": { "status": "done", "file": "STP.md + STC.md", "version": 1.0, "review": "approved-ba", "completedAt": "2026-10-12", "note": "26 cases RTM 100%; BA APPROVED + A1/A2 polish; STC v1.1 update pending (SEC tests); PNG/Jira deferred" },
     "devops_pipeline_setup": { "status": "done", "completedAt": "2026-10-12", "note": "7 files created/modified, verified local, NOT committed yet" },
-    "implementation": { "status": "not_started" },
+    "implementation": { "status": "in_progress", "startedAt": "2026-10-12" },
     "user_guide": { "status": "not_started" },
     "security_code_review": { "status": "not_started" },
     "testing": { "status": "not_started" },
@@ -37,12 +37,13 @@
     "phase_deployment": { "attempts": 0, "lastError": null, "state": "closed", "lastFailure": null, "cooldownUntil": null }
   },
   "tokenBudget": {
-    "dailyCap": 800000,
-    "usedToday": 339000,
+    "dailyCap": 1000000,
+    "usedToday": 556000,
     "lastReset": "2026-10-12T00:09:00+07:00",
     "warningThreshold": 0.8,
     "mode": "normal",
-    "capRaiseNote": "2026-10-12: SM raised cap 500k→800k — user explicitly ordered full L3 pipeline; conservative per-phase estimates would trip 80% report-only stop before DEV phase, defeating unattended run. Actual usage logged transparently in RUN-LOG."
+    "modeReason": "User approved cap raise 800k→1M for full L3 run (556k used = 55.6%)",
+    "capRaiseNote": "2026-10-12: caps 500k→800k (SM, L3 order) →1M (user-approved via budget gate question) — full L3 pipeline SA4E-356. Usage logged transparently in RUN-LOG."
   },
   "parallelPlan": {
     "note": "User requested parallelization to save time",

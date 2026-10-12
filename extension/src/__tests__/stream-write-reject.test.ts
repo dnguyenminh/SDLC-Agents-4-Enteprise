@@ -22,29 +22,44 @@ afterAll(() => {
   try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch {}
 });
 
-describe('stream_write_file path reject', () => {
-  it('rejects path outside workspace', async () => {
-    const outside = path.join(os.tmpdir(), 'outside-file.txt');
+describe('stream_write_file path reject (SA4E-356 envelopes)', () => {
+  // Format 2 rejection is covered at unit level (path-resolver.test.ts T3/T3b)
+  // and at handler level via an injected-workspace equivalent is impossible
+  // under vitest: require("vscode") cannot see the alias mock, so handlers
+  // always run with rootSource=cwd_fallback here (see backend-local-tools
+  // TC-05 note). This file pins the fallback-truth behaviors instead.
+  it('rejects empty file_path with PATH_EMPTY (single validation point)', async () => {
     const result = await executeLocalTool('stream_write_file', {
-      file_path: outside,
+      file_path: '   ',
       content: 'x',
       mode: 'write'
     });
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain('Path rejected');
+    expect(result.content[0].text).toContain('PATH_EMPTY:');
   });
 
-  // Inside path test requires vscode mock to work; covered by existing TC-05/TC-06 with cwd fallback
-  it('allows relative path with cwd fallback', async () => {
-    const rel = 'mock-reject-test.txt';
+  // BR-06b: relative with no visible workspace fails loud (never lands in the
+  // extension host cwd / Kiro install dir).
+  it('rejects relative path with PATH_NO_WORKSPACE on fallback', async () => {
     const result = await executeLocalTool('stream_write_file', {
-      file_path: rel,
+      file_path: 'mock-reject-test.txt',
+      content: 'ok',
+      mode: 'write'
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('PATH_NO_WORKSPACE:');
+    expect(fs.existsSync(path.join(process.cwd(), 'mock-reject-test.txt'))).toBe(false);
+  });
+
+  // DISC-1 (BA-acked): absolute paths pass through on fallback.
+  it('passes absolute paths through on fallback', async () => {
+    const abs = path.join(tmpDir, 'fallback-abs.txt');
+    const result = await executeLocalTool('stream_write_file', {
+      file_path: abs,
       content: 'ok',
       mode: 'write'
     });
     expect(result.isError).toBe(false);
-    const full = path.join(process.cwd(), rel);
-    expect(fs.existsSync(full)).toBe(true);
-    fs.unlinkSync(full);
+    expect(fs.readFileSync(abs, 'utf-8')).toBe('ok');
   });
 });

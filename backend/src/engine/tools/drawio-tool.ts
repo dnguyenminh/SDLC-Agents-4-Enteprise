@@ -33,7 +33,20 @@ export const DRAWIO_TOOL_DEFINITION = {
  */
 export async function handleDrawioLayout(args: Record<string, unknown>, workspace: string): Promise<string> {
   const filePath = resolveFilePath(args.file_path, workspace);
-  if (!filePath) return error('file_path is required');
+  if (!filePath) {
+    // SA4E-356 (BR-12): disambiguate "param missing" from "path rejected" —
+    // resolve behavior itself is intentionally UNCHANGED (OI-1 follow-up).
+    if (typeof args.file_path !== 'string' || (args.file_path as string).trim() === '') {
+      return error('file_path is required');
+    }
+    const sanitized = String(args.file_path).replace(/[\r\n\0]/g, '?');
+    const resolved = path.resolve(workspace, String(args.file_path));
+    return error(
+      `Path rejected: ${sanitized} resolves to ${resolved} — outside backend ` +
+      `workspace ${workspace}. Hint: use a path inside the backend workspace, or ` +
+      `route file-content tools through the extension proxy.`
+    );
+  }
   if (!fs.existsSync(filePath)) return error('File not found or not accessible');
   try {
     const { raw, graph } = parseDrawio(filePath);
@@ -65,7 +78,12 @@ export function resolveFilePath(filePath: unknown, workspace: string): string | 
   // Verify canonical path stays within workspace boundary
   const normalizedWorkspace = path.resolve(workspace);
   const sep = path.sep;
-  const isWithin = canonical.startsWith(normalizedWorkspace + sep) || canonical === normalizedWorkspace;
+  // SA4E-356 (SEC-04, AD-18): win32 case-fold on BOTH sides — same rule as
+  // extension/src/services/PathResolver.ts isPathWithinRoot (cross-ref).
+  // Fixes false-rejects when caller casing (`C:`) differs from config
+  // workspace (`c:`). Boundary semantics otherwise UNCHANGED (BR-12, OI-1).
+  const fold = (p: string): string => process.platform === 'win32' ? p.toLowerCase() : p;
+  const isWithin = fold(canonical).startsWith(fold(normalizedWorkspace + sep)) || fold(canonical) === fold(normalizedWorkspace);
   if (!isWithin) return null;
   return canonical;
 }

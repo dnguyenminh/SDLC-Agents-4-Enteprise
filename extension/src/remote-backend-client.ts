@@ -57,9 +57,13 @@ export class RemoteBackendClient implements vscode.Disposable {
     secrets?: vscode.SecretStorage
   ) {
     this._port = extractPort(backendUrl);
-    // Relative file_path args resolve against the workspace root (not the
-    // extension host's cwd, which is the Kiro install dir → ENOENT).
-    this.base64Proxy = new Base64ProxyService(workspaceFolder);
+    // Relative file_path args resolve against the live workspace root (not the
+    // extension host's cwd, which is the Kiro install dir → ENOENT). The live
+    // provider re-reads vscode.workspace per call (SA4E-356, UC-01 AF-2) and
+    // falls back to the activation-captured folder, then process.cwd().
+    this.base64Proxy = new Base64ProxyService(
+      () => vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? workspaceFolder,
+    );
     if (secrets) {
       try {
         registerPegaLocalTools(new PegaMcpTools(secrets));

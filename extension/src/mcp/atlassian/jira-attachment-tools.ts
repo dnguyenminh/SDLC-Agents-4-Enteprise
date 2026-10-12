@@ -6,22 +6,59 @@
  * Note: jira_attach_file requires file system access from extension host.
  */
 import { readFile } from "fs/promises";
-import { basename, extname, resolve } from "path";
-import { registerLocalTool, LocalToolDefinition } from "../../backend-local-tools";
+import { basename, extname } from "path";
+import {
+  registerLocalTool,
+  LocalToolDefinition,
+  checkSymlinkGuard,
+} from "../../backend-local-tools";
+import {
+  resolveWorkspacePath,
+  sanitizeLogText,
+  formatFileNotFound,
+  formatFsError,
+  FILE_PATH_SCHEMA_DESCRIPTION,
+} from "../../services/PathResolver";
 import { AtlassianHttpClient, toResult, toErrorResult } from "./atlassian-http-client";
 
 /** Register Jira attachment tools */
 export function registerJiraAttachmentTools(client: AtlassianHttpClient): void {
   registerTool("jira_attach_file", "Attach a file to a Jira issue", {
     type: "object",
-    properties: { issue_key: { type: "string" }, file_path: { type: "string" } },
+    properties: {
+      issue_key: { type: "string" },
+      file_path: { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION },
+    },
     required: ["issue_key", "file_path"],
   }, async (args) => {
-    const { issue_key, file_path } = args as any;
-    const resolved = resolve(file_path);
-    const fileBuffer = await readFile(resolved);
-    const fileName = basename(resolved);
+    // SA4E-356: resolve FIRST — before any fs.* and before any HTTP (I-1, I-3).
+    const resolution = resolveWorkspacePath(args.file_path);
+    if (!resolution.ok) {
+      console.warn(`[jira-attachment-tools] jira_attach_file resolve failed: ${resolution.message}`);
+      return toErrorResult(new Error(resolution.message));
+    }
+    // I-7 symlink/junction guard before the pre-upload read.
+    const guardError = checkSymlinkGuard(
+      resolution,
+      sanitizeLogText(String(args.file_path ?? "")),
+    );
+    if (guardError) {
+      console.warn(`[jira-attachment-tools] jira_attach_file guard blocked: ${guardError}`);
+      return toErrorResult(new Error(guardError));
+    }
+    // NOTE: inference (not `: Buffer`) is load-bearing — readFile's narrow
+    // return type stays BlobPart-assignable; a wide `: Buffer` annotation
+    // breaks `new Blob(...)` under @types/node 22 (ArrayBufferLike).
+    const fileBuffer = await readFile(resolution.resolvedPath).catch((err: any) => {
+      console.warn(`[jira-attachment-tools] jira_attach_file read failed: ${sanitizeLogText(err?.message ?? String(err))}`);
+      if (err?.code === "ENOENT") {
+        throw new Error(formatFileNotFound(resolution));
+      }
+      throw new Error(formatFsError("read", resolution, err));
+    });
+    const fileName = basename(resolution.resolvedPath);
     const mimeType = getMimeType(extname(fileName));
+    const { issue_key } = args as any;
     const blob = new Blob([fileBuffer], { type: mimeType });
     const formData = new FormData();
     formData.append("file", blob, fileName);

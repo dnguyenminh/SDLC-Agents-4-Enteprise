@@ -96,10 +96,51 @@ describe('handleDrawioLayout — input validation', () => {
     expect(parsed.error).toContain('file_path is required');
   });
 
+  it('returns error when file_path is blank', async () => {
+    for (const blank of ['', '   ']) {
+      const result = await handleDrawioLayout({ file_path: blank }, os.tmpdir());
+      expect(JSON.parse(result).error).toContain('file_path is required');
+    }
+  });
+
+  // STC: UT-10 branch (b) — path present but rejected (escape / workspace
+  // mismatch) yields the disambiguated message, not "file_path is required".
+  it('returns a Path-rejected error when the path escapes the workspace', async () => {
+    const result = await handleDrawioLayout({ file_path: '../escape.drawio' }, os.tmpdir());
+    const parsed = JSON.parse(result);
+    expect(parsed.error).toContain('Path rejected:');
+    expect(parsed.error).toContain('outside backend workspace');
+    expect(parsed.error).toContain('route file-content tools through the extension proxy');
+    expect(parsed.error).not.toContain('file_path is required');
+  });
+
   it('returns error when file does not exist', async () => {
     const result = await handleDrawioLayout({ file_path: path.join(os.tmpdir(), 'nonexistent-xyz.drawio') }, os.tmpdir());
     const parsed = JSON.parse(result);
     expect(parsed.error).toContain('File not found');
+  });
+});
+
+describe('resolveFilePath win32 fold (STC UT-15, SEC-04)', () => {
+  it('accepts drive-letter casing variants on win32', async () => {
+    if (process.platform !== 'win32') return;
+    const { resolveFilePath } = await import('../drawio-tool.js');
+    const ws = 'c:\\be-ws';
+    expect(resolveFilePath('C:\\BE-WS\\diagram.drawio', ws)).not.toBeNull();
+    expect(resolveFilePath('c:\\be-ws\\diagram.drawio', 'C:\\BE-WS')).not.toBeNull();
+  });
+
+  it('still rejects genuine outside paths on win32 (no loosening)', async () => {
+    if (process.platform !== 'win32') return;
+    const { resolveFilePath } = await import('../drawio-tool.js');
+    expect(resolveFilePath('C:\\outside\\evil.drawio', 'c:\\be-ws')).toBeNull();
+  });
+
+  it('compares strictly on posix (safe direction)', async () => {
+    if (process.platform === 'win32') return;
+    const { resolveFilePath } = await import('../drawio-tool.js');
+    expect(resolveFilePath('/BE-WS/diagram.drawio', '/be-ws')).toBeNull();
+    expect(resolveFilePath('/be-ws/diagram.drawio', '/be-ws')).not.toBeNull();
   });
 });
 

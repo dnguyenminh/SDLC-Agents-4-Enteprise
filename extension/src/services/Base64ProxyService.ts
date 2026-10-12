@@ -9,9 +9,26 @@
  * - Handles execute_dynamic_tool nested argument unwrapping
  *
  * SRP: This service ONLY handles base64 proxy logic.
+ *
+ * SA4E-356: path resolution is fully delegated to PathResolver
+ * (single source of truth). The constructor accepts a plain string (legacy
+ * callers/tests) or a live WorkspaceRootProvider (production wiring in
+ * RemoteBackendClient — UC-01 AF-2, no stale root).
  */
 import * as fs from "fs";
 import * as path from "path";
+import { checkSymlinkGuard } from "../backend-local-tools";
+import {
+  resolveWorkspacePath,
+  sanitizeLogText,
+  PathResolverError,
+  FILE_PATH_SCHEMA_DESCRIPTION,
+  type PathResolutionOk,
+  type WorkspaceRootProvider,
+} from "./PathResolver";
+
+/** Maximum proxy pre-read file size (N-9, SEC-07 — SA policy). */
+export const PROXY_PRE_READ_MAX_BYTES = 25 * 1024 * 1024;
 
 /** Describes a single tool's schema from the backend. */
 export interface ToolSchema {
@@ -26,10 +43,12 @@ export class Base64ProxyService {
 
   /**
    * @param workspaceRoot Project/workspace root used to resolve relative
-   *   file paths. Without it, relative paths fall back to process.cwd() —
-   *   which is the Kiro install dir for the wrapper host (ENOENT).
+   *   file paths — either a captured string (backward compatible) or a live
+   *   provider (production: reads vscode.workspace per call). Without a root,
+   *   relative paths fail with PATH_NO_WORKSPACE and absolute paths pass
+   *   through (PathResolver BR-06b / DISC-1).
    */
-  constructor(private readonly workspaceRoot?: string) {}
+  constructor(private readonly workspaceRoot?: string | WorkspaceRootProvider) {}
 
   /** Scan tool list from backend and auto-detect proxy requirements. */
   detectFromToolList(tools: ToolSchema[]): void {
@@ -66,12 +85,38 @@ export class Base64ProxyService {
     const filePath = args.file_path as string | undefined;
     if (!filePath || args.content_base64) return args;
     const newArgs = { ...args };
-    const resolvedPath = this.resolvePath(filePath);
+    // resolvePath throws PathResolverError on resolution failure —
+    // WrapperServer.routeToolCall converts it to a tool error result (§5.6).
+    const resolution = this.resolvePathOrThrow(filePath);
+    const resolvedPath = resolution.resolvedPath;
+    // STC IT-05 step 3: the backend receives the RESOLVED ABSOLUTE path (same
+    // contract as the chat path — backend dedup/scoping keys on absolute path).
+    newArgs.file_path = resolvedPath;
+    // I-7 symlink/junction guard before the pre-read.
+    const guardError = checkSymlinkGuard(resolution, sanitizeLogText(String(filePath)));
+    if (guardError) throw new PathResolverError(guardError);
+    // N-9 (SEC-07, AD-21): pre-read cap BEFORE loading bytes (base64 +33% OOM).
+    let size = 0;
+    try {
+      size = fs.statSync(resolvedPath).size;
+    } catch {
+      // Missing/unstatable file — the read below produces the Format 1 error.
+    }
+    if (size > PROXY_PRE_READ_MAX_BYTES) {
+      throw new PathResolverError(
+        `FS_ERROR: file too large for proxy pre-read (limit 25 MB): ${sanitizeLogText(resolvedPath)} — attach a smaller file or read a slice.`,
+      );
+    }
     try {
       const buf = fs.readFileSync(resolvedPath);
       newArgs.content_base64 = buf.toString("base64");
     } catch (err: any) {
-      throw new Error(`Failed to read file ${resolvedPath}: ${err.message}`);
+      // §5.6: read failures share the single PathResolverError catch point so
+      // they surface as MCP tool error results (never JSON-RPC -32603). One
+      // shape, no branching: FS_ERROR prefix + resolved path (E-1).
+      throw new PathResolverError(
+        `FS_ERROR: Failed to read file ${sanitizeLogText(resolvedPath)}: ${sanitizeLogText(err?.message ?? String(err))}`,
+      );
     }
     return newArgs;
   }
@@ -89,6 +134,13 @@ export class Base64ProxyService {
       if (!outputPath) return result;
       const buf = Buffer.from(parsed.output_base64, "base64");
       this.ensureDir(path.dirname(outputPath));
+      // I-7 guard for the proxy write (re-resolve is idempotent — PBT-02).
+      const outResolution = resolveWorkspacePath(outputPath, {
+        rootProvider: () => this.resolveRoot(),
+      });
+      if (!outResolution.ok) throw new PathResolverError(outResolution.message);
+      const guardError = checkSymlinkGuard(outResolution, sanitizeLogText(outputPath));
+      if (guardError) throw new PathResolverError(guardError);
       fs.writeFileSync(outputPath, buf);
       const updated = { ...parsed, file_path: outputPath, size_bytes: buf.length };
       delete updated.output_base64;
@@ -127,14 +179,25 @@ export class Base64ProxyService {
   // --- Private detection helpers ---
 
   /**
-   * Resolve a possibly-relative path against the workspace root.
-   * Absolute paths are returned unchanged. Relative paths resolve against the
-   * configured workspace root (falling back to process.cwd() only when no root
-   * is known) — process.cwd() of the wrapper host is the Kiro install dir.
+   * Resolve a path against the workspace root via the shared helper.
+   * Failures throw PathResolverError carrying the helper message verbatim
+   * (C-5) — caught by WrapperServer.routeToolCall (§5.6).
    */
   private resolvePath(filePath: string): string {
-    if (path.isAbsolute(filePath)) return filePath;
-    return path.resolve(this.workspaceRoot ?? process.cwd(), filePath);
+    return this.resolvePathOrThrow(filePath).resolvedPath;
+  }
+
+  private resolvePathOrThrow(filePath: string): PathResolutionOk {
+    const r = resolveWorkspacePath(filePath, { rootProvider: () => this.resolveRoot() });
+    if (!r.ok) throw new PathResolverError(r.message);
+    return r;
+  }
+
+  /** Live read in provider mode (UC-01 AF-2); plain value in string mode. */
+  private resolveRoot(): string | undefined {
+    return typeof this.workspaceRoot === "function"
+      ? this.workspaceRoot()
+      : this.workspaceRoot;
   }
 
   private hasBase64InputParam(tool: ToolSchema): boolean {
@@ -160,15 +223,23 @@ export class Base64ProxyService {
     const required = [...(schema.required as string[] || [])];
     if (isInput) {
       delete props.content_base64;
-      if (!props.file_path) {
-        props.file_path = { type: "string", description: "Local file path to read" };
-      }
+      // M-1: file_path description is ALWAYS overwritten with the shared rule
+      // (closes the mem_ingest_file no-description + drawio_export_png
+      // "reference only" holes — FSD §3.2.2).
+      props.file_path = { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION };
       if (!required.includes("file_path")) required.push("file_path");
       const idx = required.indexOf("content_base64");
       if (idx >= 0) required.splice(idx, 1);
     }
     if (isOutput && !props.output_path) {
-      props.output_path = { type: "string", description: "Output file path (optional, derived from file_path)" };
+      // M-2: suffix covers BOTH resolveOutputPath derived branches
+      // (.drawio→.png swap; non-.drawio gets .out appended — DISC-2).
+      props.output_path = {
+        type: "string",
+        description:
+          FILE_PATH_SCHEMA_DESCRIPTION +
+          " Defaults to <file_path> with extension swapped (.drawio→.png; non-.drawio inputs get .out appended).",
+      };
     }
     schema.properties = props;
     schema.required = required;

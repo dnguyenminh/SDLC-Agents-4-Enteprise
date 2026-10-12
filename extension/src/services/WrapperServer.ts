@@ -12,6 +12,7 @@ import * as http from "http";
 import * as vscode from "vscode";
 import { executeLocalTool, getLocalToolDefinitions, isLocalTool } from "../backend-local-tools";
 import { Base64ProxyService } from "./Base64ProxyService";
+import { PathResolverError } from "./PathResolver";
 
 /** Maximum body size (1MB) */
 const MAX_BODY_SIZE = 1024 * 1024;
@@ -230,12 +231,26 @@ export class WrapperServer {
   }
 
   async routeToolCall(params: any): Promise<any> {
-    const name = params.name as string;
-    const args = (params.arguments || {}) as Record<string, unknown>;
-    if (isLocalTool(name)) return executeLocalTool(name, args);
-    if (name === "find_tools") return this.handleFindTools(args);
-    if (name === "execute_dynamic_tool") return this.handleDynamic(args);
-    return this.callWithProxy(name, args);
+    try {
+      const name = params.name as string;
+      const args = (params.arguments || {}) as Record<string, unknown>;
+      // NOTE: every delegating return is `return await` — a bare `return promise`
+      // inside try/catch ADOPTS the promise OUTSIDE the try block, so a rejection
+      // (e.g. PathResolverError from proxyInput) would escape this catch entirely
+      // and leak as a JSON-RPC -32603 (classic async return-await gotcha).
+      if (isLocalTool(name)) return await executeLocalTool(name, args);
+      if (name === "find_tools") return await this.handleFindTools(args);
+      if (name === "execute_dynamic_tool") return await this.handleDynamic(args);
+      return await this.callWithProxy(name, args);
+    } catch (err: any) {
+      // SA4E-356 §5.6: path-resolution failures become MCP TOOL error results
+      // (agent-readable Format 1/2 with CODE: prefix) — never JSON-RPC -32603.
+      if (err instanceof PathResolverError) {
+        this.deps.outputChannel.appendLine(`[WrapperServer] Path resolution failed: ${err.message}`);
+        return { isError: true, content: [{ type: "text", text: err.message }] };
+      }
+      throw err;
+    }
   }
 
   private async handleFindTools(args: Record<string, unknown>): Promise<any> {

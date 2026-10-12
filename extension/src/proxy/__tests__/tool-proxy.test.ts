@@ -73,33 +73,59 @@ describe("ToolProxy", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  it("callTool resolves relative mem_ingest_file against the workspace root (D2 regression)", async () => {
-    const vscode = await import("vscode");
+  it("callTool resolves mem_ingest_file against the workspace root (D2 regression, SA4E-356)", async () => {
+    // SA4E-356: the chat path now resolves through the shared PathResolver.
+    // Under vitest no workspace is visible (require-mock note in
+    // backend-local-tools TC-05), so an ABSOLUTE path is used here to prove
+    // the pre-read + absolute-forward wiring; relative resolution is covered
+    // in services/__tests__/path-resolver.test.ts and the fallback rejection
+    // (BR-06b) is asserted below.
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "toolproxy-rel-"));
-    const prevFolders = vscode.workspace.workspaceFolders;
-    (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = [
-      { uri: { fsPath: dir, path: dir }, name: "ws", index: 0 },
-    ];
-    fs.writeFileSync(path.join(dir, "rel-notes.md"), "relative content", "utf-8");
+    const abs = path.join(dir, "rel-notes.md");
+    fs.writeFileSync(abs, "relative content", "utf-8");
     try {
-      await proxy.callTool("mem_ingest_file", { file_path: "rel-notes.md" });
+      await proxy.callTool("mem_ingest_file", { file_path: abs });
       expect(httpClient.callTool).toHaveBeenCalledWith(
         "mem_ingest_file",
         expect.objectContaining({
-          file_path: path.resolve(dir, "rel-notes.md"),
+          file_path: abs,
           content: "relative content",
         })
       );
     } finally {
-      (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = prevFolders;
       fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 
-  it("callTool wraps unreadable files in an error payload", async () => {
-    const result = await proxy.callTool("mem_ingest_file", { file_path: "C:/nothing/here.ts" });
-    expect(result.content[0].text).toContain("Cannot read local file");
-    expect(httpClient.callTool).not.toHaveBeenCalled();
+  it("callTool rejects relative mem_ingest_file with Wrapper Error + PATH_NO_WORKSPACE on fallback (BR-06b)", async () => {
+    const vscode = await import("vscode");
+    const prevFolders = vscode.workspace.workspaceFolders;
+    (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = undefined;
+    try {
+      const result = await proxy.callTool("mem_ingest_file", { file_path: "rel-notes.md" });
+      expect(result.content[0].text.startsWith("Wrapper Error:")).toBe(true);
+      expect(result.content[0].text).toContain("PATH_NO_WORKSPACE:");
+      expect(httpClient.callTool).not.toHaveBeenCalled();
+    } finally {
+      (vscode.workspace as { workspaceFolders?: unknown }).workspaceFolders = prevFolders;
+    }
+  });
+
+  it("callTool wraps unreadable files in an error payload (SA4E-356 envelope)", async () => {
+    // Platform-correct absolute missing path (a `C:/...` literal is relative
+    // on posix and would hit PATH_NO_WORKSPACE instead of the fs envelope).
+    const missingDir = fs.mkdtempSync(path.join(os.tmpdir(), "toolproxy-miss-"));
+    const missing = path.join(missingDir, "here.ts");
+    try {
+      const result = await proxy.callTool("mem_ingest_file", { file_path: missing });
+      // SEC-08a: chat failures carry the `Wrapper Error:` marker (no isError
+      // field on chat ToolResult); fs failures use the FS_ERROR envelope.
+      expect(result.content[0].text.startsWith("Wrapper Error:")).toBe(true);
+      expect(result.content[0].text).toContain("FS_ERROR:");
+      expect(httpClient.callTool).not.toHaveBeenCalled();
+    } finally {
+      fs.rmSync(missingDir, { recursive: true, force: true });
+    }
   });
 
   it("callTool handles registered local tools in-extension", async () => {
@@ -107,6 +133,29 @@ describe("ToolProxy", () => {
     hacked.localTools.add("embed_images");
     const result = await proxy.callTool("embed_images", {});
     expect(result.content[0].text).toContain("Unknown local tool");
+    expect(httpClient.callTool).not.toHaveBeenCalled();
+  });
+
+  // STC: IT-05 step 8 — SEC-08b: the `path` alias resolves via the SAME helper.
+  it("callTool accepts args.path alias for mem_ingest_file (no bypass)", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "toolproxy-alias-"));
+    const abs = path.join(dir, "alias.md");
+    fs.writeFileSync(abs, "alias content", "utf-8");
+    try {
+      await proxy.callTool("mem_ingest_file", { path: abs });
+      expect(httpClient.callTool).toHaveBeenCalledWith(
+        "mem_ingest_file",
+        expect.objectContaining({ content: "alias content" })
+      );
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("callTool rejects escape-shaped input via the path alias identically", async () => {
+    const result = await proxy.callTool("mem_ingest_file", { path: "../escape.md" });
+    expect(result.content[0].text.startsWith("Wrapper Error:")).toBe(true);
+    expect(result.content[0].text).toContain("PATH_NO_WORKSPACE:");
     expect(httpClient.callTool).not.toHaveBeenCalled();
   });
 

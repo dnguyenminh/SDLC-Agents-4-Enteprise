@@ -4,9 +4,9 @@
  */
 
 import * as fs from "fs";
-import * as path from "path";
-import * as vscode from "vscode";
 import { HttpClient, ToolResult } from "./HttpClient";
+import { checkSymlinkGuard } from "../backend-local-tools";
+import { resolveWorkspacePath, sanitizeLogText } from "../services/PathResolver";
 
 export interface ToolDefinition {
   name: string;
@@ -35,34 +35,39 @@ export class ToolProxy {
     if (this.localTools.has(name)) { return this.executeLocal(name, args); }
 
     // Wrapper: Read local file content before sending to remote backend.
-    // file_path may be relative to the project — resolve it against the VS Code
-    // workspace root, NOT the extension host's process.cwd() (which is the Kiro
-    // install dir). Resolving against cwd caused ENOENT under the Kiro folder.
+    // file_path may be relative to the project — resolve it against the
+    // primary workspace folder via the shared PathResolver (SA4E-356), NOT the
+    // extension host's process.cwd() (which is the Kiro install dir).
+    // Resolving against cwd caused ENOENT under the Kiro folder.
     const newArgs = { ...args };
-    if (name === "mem_ingest_file" && typeof args.file_path === "string") {
-      const resolved = this.resolveWorkspacePath(args.file_path);
+    // SA4E-356 (SEC-08b, AD-22): the `path` alias is accepted and resolved
+    // through the SAME helper (documented, no bypass).
+    const rawChatPath = (args.file_path ?? args.path) as unknown;
+    if (name === "mem_ingest_file" && typeof rawChatPath === "string") {
+      const resolution = resolveWorkspacePath(rawChatPath);
+      if (!resolution.ok) {
+        // SEC-08a (AD-22): the `Wrapper Error:` prefix is MANDATORY — chat
+        // ToolResult has no isError field, so consumers tell failure apart by
+        // this marker. The CODE: prefix inside is kept verbatim (C-5).
+        return { content: [{ type: "text", text: `Wrapper Error: ${resolution.message}` }] };
+      }
+      // I-7 symlink/junction guard before the pre-read.
+      const guardError = checkSymlinkGuard(resolution, sanitizeLogText(rawChatPath));
+      if (guardError) {
+        return { content: [{ type: "text", text: `Wrapper Error: ${guardError}` }] };
+      }
       try {
-        newArgs.content = fs.readFileSync(resolved, "utf-8");
-        newArgs.file_path = resolved; // send absolute path so the backend dedups/scopes consistently
+        newArgs.content = fs.readFileSync(resolution.resolvedPath, "utf-8");
+        newArgs.file_path = resolution.resolvedPath; // send absolute path so the backend dedups/scopes consistently
       } catch (err: any) {
-        return { content: [{ type: "text", text: `Wrapper Error: Cannot read local file ${resolved}: ${err.message}` }] };
+        return { content: [{ type: "text", text:
+          `Wrapper Error: FS_ERROR: Failed to read ${sanitizeLogText(resolution.resolvedPath)} (resolved against ` +
+          `${resolution.rootSource === "workspace" ? "workspace root " + sanitizeLogText(resolution.rootPath)
+            : "process.cwd() fallback = " + sanitizeLogText(resolution.rootPath)}): ${sanitizeLogText(String(err?.message ?? err))}` }] };
       }
     }
 
     return this.httpClient.callTool(name, newArgs);
-  }
-
-  /**
-   * Resolve a possibly-relative file path against the current VS Code workspace root.
-   * Absolute paths are returned unchanged. Falls back to the raw path when no
-   * workspace folder is open (better an explicit ENOENT than a wrong cwd resolve).
-   * @param filePath Absolute or workspace-relative file path from the tool call.
-   * @returns An absolute path suitable for fs access.
-   */
-  private resolveWorkspacePath(filePath: string): string {
-    if (path.isAbsolute(filePath)) { return filePath; }
-    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-    return root ? path.resolve(root, filePath) : filePath;
   }
 
   getAvailableTools(): ToolDefinition[] { return [...this.toolRegistry.values()]; }

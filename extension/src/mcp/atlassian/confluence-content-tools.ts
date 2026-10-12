@@ -2,7 +2,14 @@
  * SA4E-110 — Confluence content tools (7 tools) registered in-process.
  * Attachments, history, version, page_analytics, comments.
  */
-import { registerLocalTool, LocalToolDefinition } from "../../backend-local-tools";
+import { checkSymlinkGuard, registerLocalTool, LocalToolDefinition } from "../../backend-local-tools";
+import {
+  resolveWorkspacePath,
+  sanitizeLogText,
+  formatFileNotFound,
+  formatFsError,
+  FILE_PATH_SCHEMA_DESCRIPTION,
+} from "../../services/PathResolver";
 import { AtlassianHttpClient, toResult, toErrorResult } from "./atlassian-http-client";
 
 /** Register Confluence content and comment tools (7 tools) */
@@ -17,15 +24,39 @@ export function registerConfluenceContentTools(client: AtlassianHttpClient): voi
 
   reg("confluence_add_attachment", "Upload a file to a page", {
     type: "object",
-    properties: { page_id: { type: "string" }, file_path: { type: "string" } },
+    properties: {
+      page_id: { type: "string" },
+      file_path: { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION },
+    },
     required: ["page_id", "file_path"],
   }, async (a) => {
+    // SA4E-356: resolve FIRST — before FormData/HTTP (I-1, I-3).
+    const resolution = resolveWorkspacePath(a.file_path);
+    if (!resolution.ok) {
+      console.warn(`[confluence-content-tools] confluence_add_attachment resolve failed: ${resolution.message}`);
+      return toErrorResult(new Error(resolution.message));
+    }
+    // I-7 symlink/junction guard before the pre-upload read.
+    const guardError = checkSymlinkGuard(
+      resolution,
+      sanitizeLogText(String(a.file_path ?? "")),
+    );
+    if (guardError) {
+      console.warn(`[confluence-content-tools] confluence_add_attachment guard blocked: ${guardError}`);
+      return toErrorResult(new Error(guardError));
+    }
     const { readFile: rf } = await import("fs/promises");
-    const { basename: bn, resolve: rs } = await import("path");
-    const resolved = rs(a.file_path as string);
-    const buf = await rf(resolved);
+    const { basename: bn } = await import("path");
+    // NOTE: inference (not `: Buffer`) is load-bearing — see jira-attachment-tools.
+    const buf = await rf(resolution.resolvedPath).catch((err: any) => {
+      console.warn(`[confluence-content-tools] confluence_add_attachment read failed: ${sanitizeLogText(err?.message ?? String(err))}`);
+      if (err?.code === "ENOENT") {
+        throw new Error(formatFileNotFound(resolution));
+      }
+      throw new Error(formatFsError("read", resolution, err));
+    });
     const form = new FormData();
-    form.append("file", new Blob([buf]), bn(resolved));
+    form.append("file", new Blob([buf]), bn(resolution.resolvedPath));
     return toResult(await client.request("POST", `/wiki/rest/api/content/${a.page_id}/child/attachment`, form, {
       isUpload: true, headers: { "X-Atlassian-Token": "no-check" },
     }));
