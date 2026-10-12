@@ -50,7 +50,8 @@
         "Wave 5: Task 7 integration+E2E - commit 60360d3, 22/22 focused, ext+e2e tsc clean, 0 prod changes"
       ],
       "agentSession": "ses_ed27a620dffeXdKnEyHLZB9RJM",
-      "note": "Wave 3 retry (model moi): resume tu 6 files do dang, 52 tests 49 pass/3 fail, adapter+host chua wire"
+      "note": "Wave 3 retry (model moi): resume tu 6 files do dang, 52 tests 49 pass/3 fail, adapter+host chua wire",
+      "completedAt": "2026-10-12T00:57:48Z"
     },
     "testing": {
       "startedAt": "2026-10-12T00:57:39Z",
