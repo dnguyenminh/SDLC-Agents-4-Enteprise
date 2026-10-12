@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-355 |
 | Title | Implement Context Budget Governance for Pi Harness |
 | Author | SA Agent |
-| Version | 1.1 |
-| Date | 2026-10-11 |
+| Version | 1.2 |
+| Date | 2026-10-13 |
 | Status | Draft |
 | Related BRD | BRD-v1-SA4E-355.md |
 | Related FSD | FSD v1.0 — documents/SA4E-355/FSD.md |
@@ -34,6 +34,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-11 | SA Agent | Initial TDD (Task 1 scope, written pre-FSD) |
 | 1.1 | 2026-10-11 | SA Agent | Reconciled with FSD v1.0: full 7-module scope (UC-01..UC-07); corrected BudgetCalculator/ThresholdGate location to `extension/src/mcp/context-budget.ts`; removed all Mermaid blocks (Draw.io-only rule); resolved OI-1..OI-3; added BR-01..BR-16 traceability and Diagram Index |
+| 1.2 | 2026-10-13 | SA Agent | Added §13 Intra-Turn Request Governance appendix (UAT bug #2, TA review condition #1): third governance execution point in `Agent.streamFn` — per-request measure → compact → REJECT (commit `70a0a90`, verified against code); documented the `streamFn`-throw deviation (SDK `handleRunFailure`); no new diagrams (appendix-only) |
 
 ---
 
@@ -461,6 +462,8 @@ No infrastructure change: extension rebuild via `tsc`; `npm test` green per task
 | BR-15 | Non-worsening compression (ratio 0.6) | §3.4 |
 | BR-16 | Tier behavior mapping | §3.7, §11 (OI-1) |
 
+> **v1.2 note:** the intra-turn request gate (§13) re-enforces BR-01, BR-02, BR-09 and UC-03 at a THIRD governance execution point — every Agent-loop LLM request. The mapping above is unchanged.
+
 ## Implementation Checklist (7 tasks)
 
 - [ ] T1 — `models/ContextBudget.ts` + `context-budget-resolver.ts` (fallback chain, BR-01/02/03 formulas) + qwen registry entry (BR-14); unit tests for 32k / fallback / default 8192 / never 0
@@ -471,6 +474,105 @@ No infrastructure change: extension rebuild via `tsc`; `npm test` green per task
 - [ ] T6 — Wire tier utilities per OI-1 decision (UC-06)
 - [ ] T7 — `__tests__/context-budget-resolver.test.ts` + `__tests__/context-governance.integration.test.ts` + manual E2E qwen 32k (UC-07)
 - [ ] Every task — file ≤ 200 lines, function ≤ 20 lines, TSDoc, `npm test` green (NFR-2)
+
+## 13. Intra-Turn Request Governance (UAT-Driven Addition)
+
+> **v1.2 appendix — added per TA review condition #1 (UAT bug #2).** All content below describes SHIPPED code (commit `70a0a90` — "fix UAT bug 2: per-request intra-turn budget gate in Agent streamFn"), verified against the codebase. No new diagrams; this appendix is text-only by design.
+
+### 13.1 Problem — the Turn-Start Gate Cannot See Intra-Turn Growth
+
+TDD v1.0/v1.1 described governance at TWO execution points: the turn-start gate (legacy chat path via `governLegacyTurn`, §6.2, and session path via the `createHost` budget gate, §3.6) and the session budget gate with its escalation ladder (§3.6). Both measure ONCE, at turn assembly time.
+
+The pi-ai Agent loop, however, executes ONE turn as **N LLM requests**: every loop iteration appends tool results to the transcript before issuing the next request. Tool results accumulate:
+
+| Evidence (UAT bug #2) | Value |
+|-----------------------|-------|
+| Estimated request tokens at turn start | 4,245 |
+| Estimated request tokens after intra-turn tool results accumulated | 76,349 |
+| Model n_ctx | 65,536 |
+| Result | raw provider 400 `exceed_context_size_error` — the exact failure class this feature was mandated to eliminate (§1.1) |
+
+A turn-start gate structurally cannot see this growth. **After v1.2 the harness has THREE governance execution points:**
+
+| # | Execution point | Trigger | Gate flow | TDD ref |
+|---|-----------------|---------|-----------|---------|
+| 1 | Turn start — legacy chat path | `governLegacyTurn` before any provider call | measure → auto-chunk → compact → REJECT | §6.2 |
+| 2 | Turn start — session path | `createHost` budget gate before `createAgentSession` | measure → escalation ladder (BR-08) → REJECT | §3.6 |
+| 3 (**NEW v1.2**) | EVERY intra-turn LLM request | `Agent.streamFn` → `streamWithBudgetGate` | measure → compact transcript → REJECT | §13 |
+
+### 13.2 Third Execution Point — `Agent.streamFn` (Per-Request Gate)
+
+The ONLY interception point that sees every intra-turn request is the Agent's `streamFn` — pi-agent-core invokes it for EVERY LLM request with the full normalized transcript (`TranscriptContext.messages`) immediately before the provider call.
+
+**Gate flow per request — `governIntraTurnRequest` (`intra-turn-budget-gate.ts`):**
+
+1. **Resolve budget** — `resolveContextBudget` (BR-01 chain) + `usableTokensOf` (BR-02 math); same chain as the turn-start gates
+2. **Measure** — `measureIntraTurnRequest` REUSES `measureLegacyTurnTokens` accounting: replayed system prompt (parity constant included, via `getCurrentSystemPrompt`), tool declarations replayed from system messages (via `getCurrentTools` → OI-4 `estimateToolSchemaTokens`), every non-system message flattened (chars/4, BR-02)
+3. **PASS-THROUGH** — `totalTokens ≤ usable` → messages returned unchanged
+4. **COMPACT** — over budget → `compactTranscriptToFit` (§13.3) with `historyBudget = usable − (systemTokens + toolSchemaTokens)` → re-measure
+5. **REJECT (BR-09)** — compacted total still > usable, or the newest non-system unit had to be dropped → `throw PiContextBudgetExceededError` → the provider NEVER sees an oversized request
+
+**Wiring (verified):**
+
+| Wire point | File | What it does |
+|-----------|------|--------------|
+| `streamFn: (model, context, options) => this.streamWithBudgetGate(...)` at `Agent` construction | `pi-provider.ts` | Wraps every Agent-loop LLM request; delegates `models.streamSimple` with the gated (possibly compacted) messages; the Agent's transcript is never mutated |
+| `setDetectedContextWindow(nCtx?)` | `pi-provider.ts` (+ optional contract in `pi-provider-types.ts`) | Stores the probe-detected window (`meta.n_ctx` — the FIRST link of the BR-01 chain); the gate resolves `detectedContextWindow ?? getModelContextWindow()` so EVERY request measures against the SAME budget chain as the turn-start gate; pass `undefined` to clear (fail-open chain re-resolves per request) |
+| `setDetectedContextWindow?.(probe ?? runtimeWindow)` before `governLegacyTurn` | `pi-workflow-adapter.ts` | Pushes the resolved window from the adapter into the provider each turn — one BR-01 top link shared by both gates |
+
+### 13.3 Transcript Compaction Mechanics (Wire-Safe)
+
+`compactTranscriptToFit` (`transcript-compaction.ts`) is the boundary wiring that applies the existing mechanisms to a `Message[]` transcript without breaking the provider wire contract:
+
+| Rule | Rationale |
+|------|-----------|
+| Trim-oldest-first at TOOL-UNIT granularity — an assistant `toolCall` message plus the `toolResult` messages following it are ATOMIC | Separating a call/result pair makes the provider 400 on the orphaned pairing — the very error class this gate prevents |
+| System messages PINNED (always kept) | The system role carries the replayed prompt + tool declarations — the fixed part of every request |
+| A unit that does not fit raw is kept with its text/thinking COMPRESSED via `compressPrompt` (UC-03; non-worsening BR-15) | `toolCall` blocks stay intact for id pairing |
+| The NEWEST non-system unit is NEVER dropped | Anti-infinite-loop: dropping it leaves a system-only transcript that is not respondable, and the same request would repeat forever. When the newest unit cannot fit, the caller REJECTS instead (BR-09), reporting the ORIGINAL request total — the meaningful size that could not be made to fit |
+| Input transcript NEVER mutated | Returns a new array; the delegated context is a new object only when compaction changed the messages |
+
+### 13.4 Reuse Mapping — Wire-Only (BR-11)
+
+| Reused mechanism | Source (verified) | Role in the gate |
+|------------------|-------------------|------------------|
+| `resolveContextBudget` | `pi-agent/context-budget-resolver.ts` | BR-01 chain: probe `meta.n_ctx` → runtime registry → static registry → default 8192 |
+| `usableTokensOf` | `pi-agent/models/ContextBudget.ts` | BR-02 math: `usable = nCtx − reserveOutput − safetyMargin` |
+| `measureLegacyTurnTokens` | `pi-workflow/legacy-turn-governance.ts` | Same measurement accounting as the turn-start gate (system + tools + history, chars/4) |
+| `compressPrompt` / `estimateTokenCount` | `pi-agent/prompt-compressor.ts` | UC-03 unit compression (BR-05 security lines, BR-15 non-worsening preserved) |
+| `estimateToolSchemaTokens` | `pi-agent/tool-schema-tokens.ts` | OI-4 tool schema estimate |
+| `PiContextBudgetExceededError` | `pi-agent/budget-gate.ts` | BR-09 REJECT semantics — same error class and actionable message as the turn-start gates (label `'request'`) |
+
+**BR-11 scope note:** no new compression/budget/tier/role-filter algorithm. The only new logic is transcript grouping for wire-safe trimming (tool-unit atomicity) — boundary wiring required to apply the existing mechanisms to a `Message[]` transcript instead of a flat string prompt.
+
+### 13.5 New & Modified Modules (commit `70a0a90`)
+
+| File | Size | Change | Responsibility |
+|------|------|--------|----------------|
+| `extension/src/pi-workflow/intra-turn-budget-gate.ts` | 136 lines NEW | `governIntraTurnRequest`, `measureIntraTurnRequest` | Per-request gate: measure → compact → REJECT |
+| `extension/src/pi-workflow/transcript-compaction.ts` | 139 lines NEW | `compactTranscriptToFit`, `flattenContent` | Wire-safe compaction (tool-unit trim, pinned system, compress-fit) |
+| `extension/src/pi-workflow/pi-provider.ts` | +51 lines | `streamWithBudgetGate` wrapper, `streamFn` wiring at `Agent` construction, `setDetectedContextWindow` | Gate EVERY Agent-loop request; share the detected window |
+| `extension/src/pi-workflow/pi-provider-types.ts` | +7 lines | `setDetectedContextWindow?(nCtx?)` | Optional provider contract |
+| `extension/src/pi-workflow/pi-workflow-adapter.ts` | +4 lines | Push detected window to the provider before the turn-start gate | Same BR-01 top link for both gates |
+| `__tests__/intra-turn-budget-gate.test.ts` | 281 lines NEW | Unit tests | PASS-THROUGH / COMPACT / REJECT (BR-09), immutability, observability, BR-01 chain (unknown model → registry → default) |
+| `__tests__/pi-provider-intra-turn-gate.test.ts` | 166 lines NEW | Wiring tests | `streamFn` delegation; `setDetectedContextWindow` wins over / falls back to the registry window |
+| `__tests__/adapter-legacy-governance.test.ts` | +15 lines | Regression | Adapter pushes the detected window |
+
+### 13.6 Known Deviation — REJECT Throws from `streamFn`
+
+- pi-agent-core documents `streamFn` as a delegation point that RETURNS a stream; LLM failures normally come back as a message with `stopReason: 'error'`, and callers should not expect `streamFn` to throw.
+- The intra-turn gate deliberately deviates: REJECT (BR-09) is implemented as `throw PiContextBudgetExceededError` from inside `streamFn`.
+- **Verified against SDK behavior** (pi-agent-core `dist/agent.js`): `Agent.runWithLifecycle` wraps the whole run; a throw from the loop (including from `streamFn`) is caught and routed to `Agent.handleRunFailure(error, aborted)` — which emits a failed assistant message (`stopReason: 'error'`, `errorMessage = error.message`) followed by `message_end` / `turn_end` / `agent_end`. The extension event mapper surfaces it as `chat:error` — the actionable `PI_CONTEXT_BUDGET_EXCEEDED` message instead of the provider's raw 400. The provider is NEVER called.
+- **Accepted deviation** — verified, covered by tests (`intra-turn-budget-gate.test.ts` asserts the throw), and documented here per TA review condition.
+
+### 13.7 Observability
+
+No new event codes — the gate emits the SAME events as the turn-start gate (§9 table unchanged):
+
+| Event | Emitted from | Level | Shape |
+|-------|--------------|-------|-------|
+| `PI_LEGACY_HISTORY_COMPACTED` | intra-turn gate after compaction (`logCompaction`) | info | `{modelId, nCtx, usable, historyMessages, totalTokens}` — same shape as the turn-start gate |
+| `PI_CONTEXT_BUDGET_EXCEEDED` | `rejectIfUnfitting`, immediately before the throw | error | `{totalTokens, usable, nCtx}` — same event as §9 |
 
 ## Appendix
 
@@ -483,6 +585,7 @@ No infrastructure change: extension rebuild via `tsc`; `npm test` green per task
 | safetyMargin | ceil(nCtx × 8%) buffer covering chars/4 under-estimation for CJK/Vietnamese |
 | FAIL-OPEN | Unknown role/phase keeps capabilities (BR-07) |
 | ESCALATION LADDER | compress → drop steering → min loadout → error (BR-08) |
+| TOOL-UNIT | Atomic trim unit in transcript compaction (§13.3): an assistant toolCall message + the toolResult messages following it |
 
 ### Diagram Index
 
@@ -496,4 +599,4 @@ Shared with the FSD (not re-embedded here): [sequence.png](diagrams/sequence.png
 
 ---
 
-*End of TDD — SA4E-355 v1.1. Traceability: UC-01..UC-07 → §3.2–§3.8; BR-01..BR-16 → §12.*
+*End of TDD — SA4E-355 v1.2. Traceability: UC-01..UC-07 → §3.2–§3.8; BR-01..BR-16 → §12; intra-turn governance addition (UAT bug #2) → §13.*
