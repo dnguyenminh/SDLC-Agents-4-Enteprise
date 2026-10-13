@@ -1,0 +1,150 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="980" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-360 Happy Path — user prompt → skeleton build → budget measure (gate #2) → inject → agent turn → read_method → gate #3 → response" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="10" width="1320" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="h1" value="User /&#10;SM Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="60" y="50" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h2" value="Session Host&#10;(createHost)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="280" y="50" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h3" value="Skeleton Builder&#10;(SymbolOutline&#10;Extractor)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d5;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="490" y="50" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h4" value="Budget Gates&#10;SA4E-355&#10;(#2 / #3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="700" y="50" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h5" value="Reviewer LLM&#10;(Agent loop)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d5;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="910" y="50" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h6" value="read_method&#10;(code-intel FTS5)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="1110" y="50" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h7" value="LLM Provider&#10;(llama-server)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="1110" y="860" width="140" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="life1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="100" as="sourcePoint" />
+        <mxPoint x="130" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="100" as="sourcePoint" />
+        <mxPoint x="350" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="565" y="100" as="sourcePoint" />
+        <mxPoint x="565" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="770" y="100" as="sourcePoint" />
+        <mxPoint x="770" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="980" y="100" as="sourcePoint" />
+        <mxPoint x="980" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="life6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1180" y="100" as="sourcePoint" />
+        <mxPoint x="1180" y="860" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1: review prompt (turn start)" style="html=1;rounded=0;endArrow=block;endFill=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="140" as="sourcePoint" />
+        <mxPoint x="350" y="140" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2: build workspace skeleton (grammar path + regex fallback)" style="html=1;rounded=0;endArrow=block;endFill=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="190" as="sourcePoint" />
+        <mxPoint x="565" y="190" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3: measure @ gate #2 — estimateTokenCount + BudgetCalculator (BEFORE createAgentSession)" style="html=1;rounded=0;endArrow=block;endFill=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="565" y="240" as="sourcePoint" />
+        <mxPoint x="770" y="240" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note1" value="REJECT path: still > 70% staticBudget after module-priority truncation → PI_CONTEXT_BUDGET_EXCEEDED — provider NEVER called (BR-360-02 / BR-09)" style="shape=note;size=14;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="470" y="262" width="430" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="m4" value="4: PASS — skeleton ≤ 70% staticBudget" style="html=1;rounded=0;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="770" y="330" as="sourcePoint" />
+        <mxPoint x="565" y="330" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5: skeletonContent (gateDecision = PASS / TRUNCATED_PASS)" style="html=1;rounded=0;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="565" y="370" as="sourcePoint" />
+        <mxPoint x="350" y="370" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6: createAgentSession — skeleton + functional map injected as static context" style="html=1;rounded=0;endArrow=block;endFill=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="420" as="sourcePoint" />
+        <mxPoint x="980" y="420" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7: read_method(class, method)" style="html=1;rounded=0;endArrow=block;endFill=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="980" y="480" as="sourcePoint" />
+        <mxPoint x="1180" y="480" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8: sourceSlice (startLine..endLine, p95 ≤ 300ms)" style="html=1;rounded=0;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1180" y="530" as="sourcePoint" />
+        <mxPoint x="980" y="530" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9: intra-turn request + tool result @ gate #3 (Agent.streamFn)" style="html=1;rounded=0;endArrow=block;endFill=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="980" y="590" as="sourcePoint" />
+        <mxPoint x="770" y="590" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note2" value="gate #3: measure → COMPACT (atomic tool-unit drop, pinned newest user) → REJECT only if pinned user query cannot fit (BR-09). Loops bounded by TurnBudgetGuard (4× identical → steer → abort)." style="shape=note;size=14;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="700" y="604" width="440" height="56" as="geometry" />
+    </mxCell>
+    <mxCell id="m10" value="10: PASS-THROUGH / COMPACT" style="html=1;rounded=0;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="770" y="680" as="sourcePoint" />
+        <mxPoint x="980" y="680" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11: gated stream request (never oversized — BR-09)" style="html=1;rounded=0;endArrow=block;endFill=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="980" y="730" as="sourcePoint" />
+        <mxPoint x="1180" y="730" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="12: stream chunks" style="html=1;rounded=0;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1180" y="780" as="sourcePoint" />
+        <mxPoint x="980" y="780" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="13: review findings (loop steps 7–12 until done)" style="html=1;rounded=0;endArrow=block;endFill=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="980" y="840" as="sourcePoint" />
+        <mxPoint x="130" y="840" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

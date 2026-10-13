@@ -1,7 +1,7 @@
 {
   "ticket": "SA4E-360",
   "title": "Multi-Resolution Context Supply for Pi Harness — P1: Code Skeletonization + Agentic Context Loading",
-  "currentPhase": "requirements",
+  "currentPhase": "design",
   "phases": {
     "requirements": {
       "status": "done",
@@ -10,7 +10,11 @@
       "completedAt": "2026-10-13T09:10:00Z"
     },
     "specification": {
-      "status": "not_started"
+      "status": "done",
+      "file": "FSD.md",
+      "version": 1.1,
+      "completedAt": "2026-10-13T10:00:00Z",
+      "note": "BA draft v1.0 (921 lines, 4 diagrams) + TA enrichment v1.1 (API contracts C-360-S1..S3/R1/R2/M1/M2/F1, integration §5.4, pseudocode §6, NFR quantified §8, OI-1..6 §11.4, tool-result caps finalized)"
     },
     "design": {
       "status": "not_started"
@@ -44,16 +48,31 @@
     "attachments": [
       "BRD-v1.1-SA4E-360.docx (11614)",
       "use-case.drawio (11615)",
-      "business-flow.drawio (11616)"
+      "business-flow.drawio (11616)",
+      "FSD-v1.1-SA4E-360.docx (11629)",
+      "system-context.drawio (11630)",
+      "sequence.drawio (11631)",
+      "state.drawio (11632)",
+      "er-diagram.drawio (11633)"
     ],
-    "note": "project workflow has no Docs Review state — stays To Do until BRD approved, then In Progress"
+    "note": "project workflow has no Docs Review state — stays To Do until docs approved, then In Progress"
   },
   "verification": {
     "brdChecks": "6/6 critical pass",
     "mermaid": 0,
-    "diagrams": 2,
-    "docxAttached": true
+    "diagrams": 6,
+    "fsdChecks": "UCs with flows OK, BR table OK, UI-spec no-changes OK, system-context+sequence+state+er diagrams OK, API contracts OK, error handling OK, Diagram Index OK",
+    "docx": {
+      "brd": "1153653 bytes",
+      "fsd": "1005222 bytes, 4 embedded images"
+    }
   },
+  "kbIngested": [
+    "BRD.md (REQUIREMENT)",
+    "FSD.md v1.1 (REQUIREMENT)",
+    "4 FSD drawio (ARCHITECTURE)",
+    "2 BRD drawio (CONTEXT)"
+  ],
   "dormantFoundationToWire": [
     "SymbolOutlineExtractor.extractOutline (extension/src/pi-agent/context-retrieval/)",
     "ContextRetriever pipeline (extension/src/pi-agent/context-retriever.ts)",
@@ -62,5 +81,5 @@
     "tree-sitter + 16 grammars (backend/src/engine/parsers/)",
     "symbols table FTS5 with startLine/endLine"
   ],
-  "lastUpdated": "2026-10-13T09:12:00Z"
+  "lastUpdated": "2026-10-13T10:05:00Z"
 }

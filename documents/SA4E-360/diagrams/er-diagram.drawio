@@ -1,0 +1,51 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1160" pageHeight="560" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-360 ER — pre-existing code-intel index (consumed, not modified) + session-scoped artifacts (new wiring, not persisted)" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="10" width="1120" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="files" value="files «index table»" style="swimlane;startSize=26;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=0;whiteSpace=wrap;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="270" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="filesBody" value="id PK&#10;project_id&#10;path UNIQUE(project_id, path)&#10;relative_path&#10;language&#10;module&#10;content_hash / size_bytes" style="text;html=1;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;" vertex="1" parent="files">
+      <mxGeometry y="26" width="270" height="134" as="geometry" />
+    </mxCell>
+    <mxCell id="symbols" value="symbols «index table + FTS5»" style="swimlane;startSize=26;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=0;whiteSpace=wrap;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="400" y="60" width="290" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="symbolsBody" value="id PK&#10;project_id&#10;file_id FK → files.id&#10;name (method/class/interface)&#10;kind&#10;signature&#10;start_line / end_line&#10;docComment (FTS5 layer)" style="text;html=1;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;" vertex="1" parent="symbols">
+      <mxGeometry y="26" width="290" height="154" as="geometry" />
+    </mxCell>
+    <mxCell id="modules" value="modules «index table»" style="swimlane;startSize=26;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;rounded=0;whiteSpace=wrap;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="40" y="310" width="270" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="modulesBody" value="id PK&#10;project_id&#10;name UNIQUE(project_id, name)&#10;root_path / language&#10;file_count / symbol_count&#10;→ ModuleSummarizer metrics basis" style="text;html=1;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;" vertex="1" parent="modules">
+      <mxGeometry y="26" width="270" height="124" as="geometry" />
+    </mxCell>
+    <mxCell id="skeleton" value="SkeletonArtifact «session-scoped — NEW»" style="swimlane;startSize=26;html=1;fillColor=#d5e8d5;strokeColor=#82b366;rounded=0;whiteSpace=wrap;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="790" y="60" width="330" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="skeletonBody" value="skeletonContent&#10;skeletonTokens (≤ 70% staticBudget)&#10;staticBudget / usagePercent&#10;truncationApplied&#10;modulePriorityOrder&#10;measurementPoint = gate #2&#10;gateDecision: PASS / TRUNCATED_PASS / REJECT" style="text;html=1;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;" vertex="1" parent="skeleton">
+      <mxGeometry y="26" width="330" height="154" as="geometry" />
+    </mxCell>
+    <mxCell id="funcmap" value="FunctionalMapEntry «tool-scoped — NEW»" style="swimlane;startSize=26;html=1;fillColor=#d5e8d5;strokeColor=#82b366;rounded=0;whiteSpace=wrap;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="790" y="320" width="330" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="funcmapBody" value="module (real indexed path)&#10;summary (SummaryTreeBuilder as-is)&#10;keySymbols[] (exist in symbols)&#10;mapTokens (≤ tool-result cap)" style="text;html=1;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;" vertex="1" parent="funcmap">
+      <mxGeometry y="26" width="330" height="104" as="geometry" />
+    </mxCell>
+    <mxCell id="re1" value="1:N groups (truncation priority)" style="edgeStyle=entityRelationEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="modules" target="files">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="re2" value="1:N contains (slices start_line..end_line)" style="edgeStyle=entityRelationEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="files" target="symbols">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="re3" value="N:1 aggregated into (coverage ≥ 95% — M1)" style="edgeStyle=entityRelationEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="symbols" target="skeleton">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="re4" value="1:1 summarized (module → summary → keySymbols)" style="edgeStyle=entityRelationEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="modules" target="funcmap">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

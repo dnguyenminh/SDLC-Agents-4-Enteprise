@@ -1,0 +1,96 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="620" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-360 State Diagram — Skeleton Lifecycle (not-built → building → measured → injected → evicted/refreshed; error states: index-stale, over-budget → REJECT)" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="10" width="1320" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="50" y="105" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="notbuilt" value="NOT_BUILT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="130" y="95" width="130" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="building" value="BUILDING&#10;extractOutline per file (+ regex fallback / RAW_HEAD / SKIPPED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d5;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="320" y="85" width="190" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="measured" value="MEASURED&#10;estimateTokenCount + BudgetCalculator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="570" y="90" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="decision" value="≤ 70%&#10;staticBudget?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="810" y="70" width="170" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="truncating" value="TRUNCATING&#10;module-priority truncation (ModuleSummarizer)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="810" y="240" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="injected" value="INJECTED&#10;createHost override — session created" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d5;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="1060" y="90" width="180" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="active" value="SESSION_ACTIVE&#10;skeleton static; read_method slices grow transcript — absorbed by gate #3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d5;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="1060" y="240" width="190" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="refreshed" value="REFRESHED / EVICTED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="1080" y="390" width="160" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="rejected" value="REJECTED&#10;PI_CONTEXT_BUDGET_EXCEEDED — provider NEVER called (BR-360-02 / BR-09)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="770" y="400" width="230" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="stale" value="INDEX_STALE&#10;(mtime mismatch)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="90" y="250" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="degraded" value="DEGRADED_NO_SKELETON&#10;agentic fallback: get_workspace_info + read_method steering" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="330" y="250" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="1300" y="405" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="note1" value="Per-file SKIPPED (extraction error / unreadable) never blocks the session — skip + log + continue (BR-360-03)." style="shape=note;size=14;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="160" width="360" height="46" as="geometry" />
+    </mxCell>
+    <mxCell id="se0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="start" target="notbuilt">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se1" value="turn start — build requested" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="notbuilt" target="building">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se2" value="rendered" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="building" target="measured">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se3" value="mtime mismatch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="building" target="stale">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se4" value="on-demand re-index OK (retry once)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="stale" target="building">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se5" value="re-index failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="stale" target="degraded">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se6" value="gate #2 measure" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="measured" target="decision">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se7" value="PASS / TRUNCATED_PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="decision" target="injected">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se8" value="> 70% (first pass)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="decision" target="truncating">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se9" value="re-measure after truncation" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="truncating" target="decision">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se10" value="still > 70%" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="decision" target="rejected">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se11" value="createAgentSession" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="injected" target="active">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se12" value="session proceeds (no skeleton)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="degraded" target="active">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se13" value="turn end / index refresh / eviction" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="active" target="refreshed">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="se14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="rejected" target="end">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

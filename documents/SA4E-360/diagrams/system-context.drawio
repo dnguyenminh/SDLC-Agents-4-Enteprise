@@ -1,0 +1,81 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-360 System Context — Multi-Resolution Context Supply (content plane) inside SA4E-355 governance (3-point budget gate)" style="text;html=1;align=center;verticalAlign=middle;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="16" width="1320" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="actor" value="User / SM Agent (reviewer pipeline)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="40" y="340" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="boundary" value="Pi Harness Extension (VS Code / Kiro)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;verticalAlign=top;fontSize=13;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="250" y="60" width="700" height="640" as="geometry" />
+    </mxCell>
+    <mxCell id="chatpanel" value="ChatPanel&#10;(existing chatbox + usage indicators — no UI changes)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="280" y="110" width="190" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="sessionhost" value="Session Host&#10;budget resolution (BR-01/02/03)&#10;createHost overrides" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="280" y="230" width="190" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="skeleton" value="Skeleton Builder (WIRED by SA4E-360)&#10;SymbolOutlineExtractor.extractOutline&#10;+ regex fallback (UC-360-04)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d5;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="530" y="100" width="200" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="funcmap" value="Functional Map Provider (WIRED by SA4E-360)&#10;SummaryTreeBuilder → get_workspace_info&#10;(layout cached 60s)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d5;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="530" y="230" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="gates" value="Budget Gates — SA4E-355 (UNCHANGED)&#10;#2 turn-start createHost (BR-08 ladder)&#10;#3 intra-turn Agent.streamFn (TDD §13)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="530" y="360" width="200" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="agent" value="Agent Session (reviewer LLM loop)&#10;tools: read_method (NEW), get_workspace_info, find_tools&#10;TurnBudgetGuard (4× → steer → abort)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d5;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="280" y="360" width="200" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="backend" value="code-intel Backend&#10;FTS5 index: symbols / files / modules&#10;tree-sitter 16 grammars + signature-extractor.ts&#10;mtime freshness guardrail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="140" width="260" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="llm" value="Local LLM Provider&#10;llama-server — qwen 32k / 65k&#10;(provider NEVER called oversized — BR-09)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="440" width="260" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="legend" value="Legend: green = content plane wired by SA4E-360 · orange = governance plane SA4E-355 (unchanged) · yellow = external systems" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="660" width="640" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="1: review request (chat turn)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actor" target="chatpanel">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="2: turn start" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="chatpanel" target="sessionhost">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="3: build skeleton (UC-360-01)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sessionhost" target="skeleton">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="4: query symbols (FTS5 + mtime check)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="skeleton" target="backend">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="5: symbol rows (SearchCandidate)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="backend" target="skeleton">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="6: measure @ gate #2 (BudgetCalculator) BEFORE createAgentSession" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="skeleton" target="gates">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="7: PASS / TRUNCATED_PASS / REJECT" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="gates" target="sessionhost">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="8: createAgentSession (skeleton + map in system context)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sessionhost" target="agent">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="9: get_workspace_info (UC-360-03)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="agent" target="funcmap">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="10: EVERY request @ gate #3 (streamFn → compact → REJECT)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="agent" target="gates">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" value="11: gated stream request" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="gates" target="llm">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" value="12: read_method slice (UC-360-02)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="agent" target="backend">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" value="13: stream chunks → review findings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="llm" target="agent">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>
