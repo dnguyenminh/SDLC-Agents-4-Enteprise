@@ -14,17 +14,21 @@
  *   trim point is set and ALL older non-pinned units are dropped (non-greedy);
  * - a unit that does not fit raw is kept with its text/thinking COMPRESSED
  *   (UC-03 `compressPrompt`); toolCall blocks stay intact for id pairing;
- * - an incompressible over-budget unit is dropped — the module never emits an
- *   over-budget unit (the system-only-transcript REJECT lives in the caller,
- *   covered by intra-turn-budget-gate.test.ts BR-09 cases);
+ * - the NEWEST USER message is PINNED (SA4E-355 bug 3): its budget is
+ *   reserved before the tool-unit walk — it is kept raw when it fits,
+ *   compressed when only that fits, and kept compressed even when over
+ *   budget (the caller's BR-09 gate then REJECTS — never a userless
+ *   transcript, which llama-server's qwen template 500s with
+ *   "Jinja Exception: No user query found in messages.");
  * - never mutates the input; returns `{ messages, compacted }`.
  *
  * NOTE: `groupToolUnits` is private — its behavior (tool-unit atomicity,
  * multi-toolResult units, orphan toolResult units) is pinned through the
  * public `compactTranscriptToFit` API.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type { Message } from '@earendil-works/pi-ai';
+import { logger } from '../../logger';
 import { compactTranscriptToFit, flattenContent } from '../transcript-compaction.js';
 
 const systemMsg = (content: string): Message =>
@@ -107,7 +111,8 @@ describe('tool-unit atomicity (groupToolUnits via compactTranscriptToFit)', () =
     expect(res.compacted).toBe(true);
     expect(callIdsOf(res.messages)).toEqual([]); // no orphaned assistant call
     expect(resultIdsOf(res.messages)).toEqual([]); // no orphaned toolResult
-    expect(rolesOf(res.messages)).toEqual(['system']); // pinned fixed part only
+    // Bug 3: the newest user message is PINNED — it survives the trim point.
+    expect(rolesOf(res.messages)).toEqual(['system', 'user']);
   });
 
   it('keeps a MULTI-toolResult unit whole — one call + its two results survive together', () => {
@@ -123,7 +128,7 @@ describe('tool-unit atomicity (groupToolUnits via compactTranscriptToFit)', () =
     expect(res.compacted).toBe(true);
     expect(callIdsOf(res.messages)).toEqual(['tc-a']);
     expect(resultIdsOf(res.messages)).toEqual(['tc-a', 'tc-b']); // both results kept with their call
-    expect(rolesOf(res.messages)).toEqual(['system', 'assistant', 'toolResult', 'toolResult']);
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant', 'toolResult', 'toolResult']); // pinned user survives
   });
 
   it('drops a MULTI-toolResult unit whole — both results vanish together with their call', () => {
@@ -138,7 +143,7 @@ describe('tool-unit atomicity (groupToolUnits via compactTranscriptToFit)', () =
     expect(res.compacted).toBe(true);
     expect(callIdsOf(res.messages)).toEqual([]);
     expect(resultIdsOf(res.messages)).toEqual([]); // never just one of the two results
-    expect(rolesOf(res.messages)).toEqual(['system']);
+    expect(rolesOf(res.messages)).toEqual(['system', 'user']); // pinned newest user query survives
   });
 
   it('treats an ORPHAN toolResult (no preceding assistant toolCall) as its own unit', () => {
@@ -171,8 +176,9 @@ describe('compactTranscriptToFit — trim order and pinned system', () => {
     expect(res.compacted).toBe(true);
     expect(callIdsOf(res.messages)).toEqual(['tc-3']); // newest call kept…
     expect(resultIdsOf(res.messages)).toEqual(['tc-3']); // …with its result, oldest two units gone
-    expect(rolesOf(res.messages)).toEqual(['system', 'assistant', 'toolResult']);
-    expect(res.messages.some((m) => (m as { role?: string }).role === 'user')).toBe(false);
+    // Bug 3: the pinned newest user message survives the trim point (previously dropped).
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant', 'toolResult']);
+    expect(res.messages.some((m) => (m as { role?: string }).role === 'user')).toBe(true);
   });
 
   it('the trim point is a hard boundary — older units are dropped EVEN WHEN they would fit', () => {
@@ -189,7 +195,7 @@ describe('compactTranscriptToFit — trim order and pinned system', () => {
     expect(res.compacted).toBe(true);
     expect(resultIdsOf(res.messages)).toEqual(['tc-3']);
     expect(resultIdsOf(res.messages)).not.toContain('tc-1');
-    expect(rolesOf(res.messages)).toEqual(['system', 'assistant', 'toolResult']);
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant', 'toolResult']); // pinned user survives
   });
 
   it('system messages are PINNED — a mid-transcript system survives past the trim point', () => {
@@ -201,7 +207,10 @@ describe('compactTranscriptToFit — trim order and pinned system', () => {
     ];
     const res = compactTranscriptToFit(messages, 20);
     expect(res.compacted).toBe(true);
-    expect(rolesOf(res.messages)).toEqual(['system', 'system']);
+    // The newest user message is pinned too (kept compressed over the 20-token
+    // budget — the caller's BR-09 gate rejects such an overflow); both systems
+    // still survive past the trim point.
+    expect(rolesOf(res.messages)).toEqual(['system', 'system', 'user']);
     expect((res.messages[0] as { content?: string }).content).toBe('sys-start');
     expect((res.messages[1] as { content?: string }).content).toBe('sys-mid');
   });
@@ -243,14 +252,15 @@ describe('compactTranscriptToFit — text compression fallback (UC-03)', () => {
     expect(result.content[0].text).not.toBe(compressible(800)); // newest compressed
   });
 
-  it('drops an INCOMPRESSIBLE over-budget unit — never emits a unit over budget', () => {
-    // 'x'-wall has nothing strippable → compressed === raw → unit cannot fit → dropped.
-    // The module returns pinned systems only; the caller (intra-turn-budget-gate,
-    // BR-09) is responsible for REJECTING a system-only transcript.
+  it('drops an INCOMPRESSIBLE over-budget TOOL unit — the pinned user query still survives', () => {
+    // 'x'-wall has nothing strippable → compressed === raw → the unit cannot
+    // fit → dropped. The pinned newest user message survives (bug 3); the
+    // caller (intra-turn-budget-gate, BR-09) rejects an actually-unfitting
+    // request (e.g. an over-budget pinned user) — never a userless transcript.
     const messages: Message[] = [systemMsg('sys'), userMsg('go'), ...toolUnit('tc-1', 100)];
     const res = compactTranscriptToFit(messages, 50);
     expect(res.compacted).toBe(true);
-    expect(rolesOf(res.messages)).toEqual(['system']);
+    expect(rolesOf(res.messages)).toEqual(['system', 'user']);
     expect(resultIdsOf(res.messages)).toEqual([]);
   });
 
@@ -304,5 +314,130 @@ describe('compactTranscriptToFit — pass-through boundary and immutability', ()
     // produced a NEW message object in the output, not an in-place rewrite.
     const inputResult = messages[3] as { content: Array<{ text?: string }> };
     expect(inputResult.content[0].text).toBe(compressible(800));
+  });
+});
+
+describe('compactTranscriptToFit — pinned newest user message (SA4E-355 bug 3)', () => {
+  it('SURVIVES a huge tool history — the trim point never removes the newest user query', () => {
+    // UAT bug 3: 79 tool calls pushed the walk's trim point past the opening
+    // user message → the compacted transcript had NO user query → llama-server
+    // (qwen template) 500 "Jinja Exception: No user query found in messages.".
+    // Budget 410: without the pin tc-3 AND tc-4 fit raw and the user message
+    // is trimmed; with the pin its budget is reserved before the tool walk.
+    const messages: Message[] = [
+      systemMsg('sys'),
+      userMsg('go'),
+      ...toolUnit('tc-1', 200),
+      ...toolUnit('tc-2', 200),
+      ...toolUnit('tc-3', 200),
+      ...toolUnit('tc-4', 200),
+    ];
+    const res = compactTranscriptToFit(messages, 410);
+    expect(res.compacted).toBe(true);
+    const users = res.messages.filter((m) => (m as { role?: string }).role === 'user');
+    expect(users).toHaveLength(1);
+    expect((users[0] as { content?: string }).content).toBe('go');
+  });
+
+  it('ordering: the pinned user message lands after system and BEFORE the kept tool units', () => {
+    // Template validity (llama-server/qwen): the compacted transcript must
+    // never open with assistant/toolResult — system → user → tool units.
+    const messages: Message[] = [
+      systemMsg('sys'),
+      userMsg('go'),
+      ...toolUnit('tc-1', 200),
+      ...toolUnit('tc-2', 200),
+      ...toolUnit('tc-3', 200),
+      ...toolUnit('tc-4', 200),
+    ];
+    const res = compactTranscriptToFit(messages, 410);
+    const roles = rolesOf(res.messages);
+    expect(roles[0]).toBe('system');
+    expect(roles[1]).toBe('user');
+    expect(roles.indexOf('toolResult')).toBeGreaterThan(roles.indexOf('user'));
+  });
+
+  it('multi-turn: only the NEWEST user message is pinned — an older user message can still drop', () => {
+    // Both user messages are incompressible 80-token walls over budget 60:
+    // the newest is pinned (kept even over budget), the oldest is trimmed.
+    const messages: Message[] = [systemMsg('sys'), userMsg(textOfTokens(80)), userMsg(textOfTokens(80))];
+    const res = compactTranscriptToFit(messages, 60);
+    expect(res.compacted).toBe(true);
+    const users = res.messages.filter((m) => (m as { role?: string }).role === 'user');
+    expect(users).toHaveLength(1);
+    expect((users[0] as { content?: string }).content).toBe(textOfTokens(80));
+  });
+
+  it('multi-turn: the pinned newest user message is kept RAW when it fits its reservation', () => {
+    // Budget 60: the 50-token newest user reserves its full raw size; the
+    // older 80-token user cannot fit the 10-token leftover → dropped.
+    const messages: Message[] = [systemMsg('sys'), userMsg(textOfTokens(80)), userMsg(textOfTokens(50))];
+    const res = compactTranscriptToFit(messages, 60);
+    const users = res.messages.filter((m) => (m as { role?: string }).role === 'user');
+    expect(users).toHaveLength(1);
+    expect((users[0] as { content?: string }).content).toBe(textOfTokens(50)); // RAW — not compressed
+  });
+
+  it('reservation: a user message that fits the whole budget stays RAW — newer tool units are trimmed to make room', () => {
+    // Without the reservation the 85-token tool unit would eat the budget and
+    // force the 50-token user message into a (failing) compression — the UAT
+    // task-context loss the model showed by repeating identical ls calls.
+    const messages: Message[] = [systemMsg('sys'), userMsg(textOfTokens(50)), ...toolUnit('tc-1', 80)];
+    const res = compactTranscriptToFit(messages, 100);
+    expect(res.compacted).toBe(true);
+    const users = res.messages.filter((m) => (m as { role?: string }).role === 'user');
+    expect(users).toHaveLength(1);
+    expect((users[0] as { content?: string }).content).toBe(textOfTokens(50)); // raw, byte-identical
+    expect(resultIdsOf(res.messages)).toEqual([]); // the tool unit was trimmed instead
+  });
+
+  it('a user message too big raw is kept COMPRESSED when its compressed form fits the budget', () => {
+    const raw = compressible(800); // ≈220 tokens raw → ≈7 tokens compressed
+    const messages: Message[] = [systemMsg('sys'), userMsg(raw), ...toolUnit('tc-1', 55)];
+    const res = compactTranscriptToFit(messages, 60);
+    expect(res.compacted).toBe(true);
+    const users = res.messages.filter((m) => (m as { role?: string }).role === 'user');
+    expect(users).toHaveLength(1);
+    const content = (users[0] as { content?: string }).content ?? '';
+    expect(content).toContain('keep me'); // meaningful tail survives compression
+    expect(content.length).toBeLessThan(raw.length);
+    expect(resultIdsOf(res.messages)).toEqual([]); // tool unit trimmed to fund the reservation
+  });
+
+  it('a user message whose compressed form exceeds the WHOLE budget is still kept — the caller REJECTS, no drop', () => {
+    // 500-token incompressible user over budget 100: the pin keeps it (over
+    // budget) so the caller's BR-09 gate REJECTS — never a userless transcript
+    // (the llama-server 500 class). Ordering stays template-valid.
+    const messages: Message[] = [systemMsg('sys'), userMsg(textOfTokens(500)), ...toolUnit('tc-1', 30)];
+    const res = compactTranscriptToFit(messages, 100);
+    expect(res.compacted).toBe(true);
+    const users = res.messages.filter((m) => (m as { role?: string }).role === 'user');
+    expect(users).toHaveLength(1);
+    expect((users[0] as { content?: string }).content).toBe(textOfTokens(500));
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant', 'toolResult']);
+  });
+
+  it('never mutates the input when the pinned user message is compressed (JSON snapshot)', () => {
+    const raw = compressible(800);
+    const messages: Message[] = [systemMsg('sys'), userMsg(raw), ...toolUnit('tc-1', 55)];
+    const snapshot = JSON.stringify(messages);
+    compactTranscriptToFit(messages, 60);
+    expect(JSON.stringify(messages)).toBe(snapshot);
+    expect((messages[1] as { content?: string }).content).toBe(raw); // input user message untouched
+  });
+
+  it('post-check: a compaction that ends without any user message logs a warning and returns normally', () => {
+    // Exotic userless transcript (no pin target exists): compaction still
+    // returns — the warning flags the respondability risk instead of crashing.
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => undefined);
+    try {
+      const messages: Message[] = [systemMsg('sys'), asstText(textOfTokens(100))];
+      const res = compactTranscriptToFit(messages, 20);
+      expect(res.compacted).toBe(true);
+      expect(rolesOf(res.messages)).toEqual(['system']);
+      expect(warnSpy.mock.calls.some((c) => c[0] === 'PI_TRANSCRIPT_COMPACTED_NO_USER_QUERY')).toBe(true);
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 });

@@ -12,7 +12,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Message } from '@earendil-works/pi-ai';
 import { logger } from '../../logger.js';
-import { PiContextBudgetExceededError, isBudgetExceededError } from '../../pi-agent/budget-gate.js';
+import { PiContextBudgetExceededError } from '../../pi-agent/budget-gate.js';
 import { resolveContextBudget, DEFAULT_CONTEXT_WINDOW } from '../../pi-agent/context-budget-resolver.js';
 import { usableTokensOf } from '../../pi-agent/models/ContextBudget.js';
 import {
@@ -160,25 +160,27 @@ describe('governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09)', (
     expect(res.totalTokens).toBeLessThanOrEqual(usableOf(65536));
   });
 
-  it('REJECT: single newest unit alone over the usable budget → PI_CONTEXT_BUDGET_EXCEEDED', () => {
+  it('COMPACT (bug 3): an incompressible 70k tool unit alone over the budget is dropped ATOMICALLY — the pinned user query keeps the request respondable', () => {
     // UAT shape: one 70k-token tool result cannot fit 58293 even compressed.
+    // Bug 3 semantics: the oversized unit is dropped whole (never orphaned)
+    // while the PINNED user message survives — the compacted request stays
+    // respondable instead of 500ing on a userless transcript. REJECT (BR-09)
+    // now only fires when even the pinned user cannot fit (see the 70k-user
+    // REJECT cases below).
     const messages: Message[] = [
       systemMsg('sys'),
       userMsg('go'),
       asstToolCall('tc-1'),
       toolResult('tc-1', textOfTokens(70000)),
     ];
-    const attempt = () => governIntraTurnRequest({ messages, ...QWEN_INPUT });
-    expect(attempt).toThrow(PiContextBudgetExceededError);
-    try {
-      attempt();
-    } catch (err) {
-      expect(isBudgetExceededError(err)).toBe(true);
-      expect((err as PiContextBudgetExceededError).label).toBe('request');
-      expect((err as PiContextBudgetExceededError).staticTokens).toBeGreaterThan(
-        (err as PiContextBudgetExceededError).staticBudget
-      );
-    }
+    const res = governIntraTurnRequest({ messages, ...QWEN_INPUT });
+    expect(res.compacted).toBe(true);
+    const ids = res.messages
+      .filter((m) => (m as { role?: string }).role === 'toolResult')
+      .map((m) => (m as { toolCallId?: string }).toolCallId);
+    expect(ids).toEqual([]); // the oversized unit never reaches the wire
+    expect(res.messages.some((m) => (m as { role?: string }).role === 'user')).toBe(true); // pinned user query
+    expect(res.totalTokens).toBeLessThanOrEqual(usableOf(65536));
   });
 
   it('REJECT: error carries the nCtx of the resolved budget (BR-01 chain)', () => {

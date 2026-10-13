@@ -112,11 +112,15 @@ describe('PiProvider intra-turn budget gate — real Agent loop, growing tool re
     expect(toolResults).toHaveLength(5);
   });
 
-  it('REJECT: one 70k-token tool result cannot fit — PI_CONTEXT_BUDGET_EXCEEDED, never delegated', async () => {
-    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => undefined);
+  it('COMPACT (bug 3): one 70k-token tool result is dropped ATOMICALLY — the pinned user prompt keeps the turn alive', async () => {
+    // UAT bug 3: an incompressible 70k tool unit cannot fit the budget even
+    // compressed. With the newest user message pinned, the gate drops the
+    // oversized unit whole and the request STAYS respondable — the turn
+    // completes instead of the llama-server 500 ("No user query found") that
+    // the old drop-the-user behavior produced.
     faux.setResponses([
       fauxAssistantMessage([fauxToolCall('read_big', { path: 'huge' }, { id: 'tc-1' })], { stopReason: 'toolUse' }),
-      fauxAssistantMessage('unreachable — the oversized request must be rejected first'),
+      fauxAssistantMessage('continued without the huge result'),
     ]);
 
     const result = await provider.run({
@@ -126,13 +130,17 @@ describe('PiProvider intra-turn budget gate — real Agent loop, growing tool re
       tools: [bigReadTool(70000)],
     });
 
-    // The turn ended with the actionable REJECT — not a raw provider 400.
-    expect(String(result.errorMessage)).toContain('PI_CONTEXT_BUDGET_EXCEEDED');
-    // (c) The oversized request NEVER reached the provider boundary.
+    // The turn COMPLETED — no PI_CONTEXT_BUDGET_EXCEEDED, no provider 500.
+    expect(result.errorMessage).toBeUndefined();
+    expect(result.text).toContain('continued without the huge result');
+    // (a) The provider NEVER saw an oversized request.
     const usable = usableFor(QWEN_NCTX);
     for (const total of delegated) expect(total).toBeLessThanOrEqual(usable);
-    expect(errorSpy.mock.calls.some((c) => c[0] === 'PI_CONTEXT_BUDGET_EXCEEDED')).toBe(true);
-    errorSpy.mockRestore();
+    // (d) PI_LEGACY_HISTORY_COMPACTED proves the gate compacted intra-turn.
+    expect(infoSpy.mock.calls.some((c) => c[0] === 'PI_LEGACY_HISTORY_COMPACTED')).toBe(true);
+    // The agent transcript keeps the 70k result — the gate never mutated agent state.
+    const toolResults = result.messages.filter((m) => (m as { role?: string }).role === 'toolResult');
+    expect(toolResults).toHaveLength(1);
   });
 
   it('BR-01 chain: without setDetectedContextWindow the runtime REGISTRY window governs (faux-1 → 128000)', async () => {
