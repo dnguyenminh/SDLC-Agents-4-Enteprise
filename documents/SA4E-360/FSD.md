@@ -14,9 +14,9 @@
 | Labels | context-governance, pi-harness, wire-only |
 | Project | SA4E — SDLC Agents 4 Enterprise |
 | Author | BA Agent |
-| Version | 1.1 (TA-ENRICHED) |
-| Date | 2026-10-13 |
-| Status | TA enrichment applied (v1.1) — API contracts (§3.x.5), integration parameters (§5.4), pseudocode (§6), quantified NFRs (§8), open issues (§11.4). Ready for SA (TDD) |
+| Version | 1.2 (SA-DISCREPANCY-ALIGNED) |
+| Date | 2026-10-14 |
+| Status | SA discrepancy corrections applied (v1.2 — DISC-1..7 per documents/SA4E-360/DISCREPANCY.md) — aligned with TDD v1.0 §3/§4. Ready for QA (STP/STC) |
 | Related BRD | documents/SA4E-360/BRD.md (v1.1) |
 
 ---
@@ -37,6 +37,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-13 | BA Agent | Initiate FSD draft — business sections only. Derived from BRD SA4E-360 v1.1 (5 user stories, BR-360-01..05, metrics M1–M6), TA Review T1–T6 (documents/SA4E-355/context_compaction_strategies.md), SA4E-355 TDD v1.3 §13 (3-point budget gate architecture), and codebase verification (extension/src/pi-agent/context-retrieval/, extension/src/pi-workflow/workspace-info-tool.ts, backend/src/engine/parsers/signature-extractor.ts, symbols table schema). API contracts (§3.x.5) intentionally RESERVED for TA enrichment per plan. |
 | 1.1 | 2026-10-13 | TA Agent | TA enrichment pass — business sections untouched. Filled §3.1.5/§3.2.5/§3.3.5/§3.4.5/§3.5.5 API contracts (C-360-S1..S3, C-360-R1/R2, C-360-M1/M2, C-360-F1, gate-interaction contract); finalized tool-result cap (§3.3.5: map ≤ 1,500 tokens = SummaryTreeBuilder default maxTokens; whole result ≤ 16,000 chars = MAX_TOOL_RESULT_CHARS); added §5.4 index query path + light freshness guardrail; added pseudocode (§6.1 sizing loop, §6.2 read_method disambiguation); added missing AF/EF flows (UC-360-01/02/03); quantified NFRs (§8); Open Issues §11.4 (OI-1..OI-6). All signatures verified against codebase 2026-10-13. |
+| 1.2 | 2026-10-14 | BA Agent | Applied SA discrepancy corrections DISC-1..7 (documents/SA4E-360/DISCREPANCY.md v1) — cosmetic/factual alignment with TDD v1.0; High/Medium resolved by design in TDD §3/§4. DISC-1: §5.4 note — read_method served by NEW thin tool `code_symbol_locate` + QueryLayer `locateSymbol` (TDD §4.2); existing `code_symbols` insufficient (startLine-only output, name-PREFIX match). DISC-2: UC-360-04 wiring note — fallback extraction runs backend-side via MCP bridge `code_extract_signatures` (TDD §4.3, OI-1 RESOLVED); RAW_HEAD degradation stays extension-local. DISC-3: grammar count 16→21 (backend/src/engine/parsers/grammar-config.json: + salesforce-meta, visualforce, aura, pega, lwc-html; Svelte still absent → fallback still required) across §1.2/§2.2/§3.4/§6.1. DISC-4: `symbols_fts` covers (name, signature, doc_comment, kind) ONLY; start_line/end_line in base `symbols` via JOIN (§1.3/§4.1). DISC-5: dormant inventory `ContextRetriever` path corrected to extension/src/pi-agent/context-retriever.ts (parent dir, not context-retrieval/). DISC-6: index is dual-engine (SQLite `symbols_fts` MATCH OR PostgreSQL ILIKE fallback); `code_search` uses ILIKE substring, NOT FTS5 MATCH; all symbol queries via QueryLayer (§1.3/§5.1). DISC-7: re-verified against shipped resolver — DISC-7's intermediate arithmetic (ceil(2,622.14)=2,623) is itself an error (32,768×0.08 = 2,621.44 → 2,622); FSD retains resolver-true 2,622/28,098/19,668 @32k and states caps exactly (13,767 @32k / 28,539 @65k); SA to align TDD §2.2 accordingly (user decision 2026-10-14). |
 
 ---
 
@@ -61,20 +62,22 @@ SA4E-355 (shipped, v1.52.0) is the **governance plane** — it decides *how many
 
 > **TA enrichment (v1.1):** the reserved sections are now specified — §3.x.5 API contracts (functional view, C-360-* identifiers), §5.4 technical parameters (index query path, timeouts, light freshness guardrail), §6 pseudocode for the two complex algorithms, and §11.4 open issues. All code signatures re-verified against the codebase on 2026-10-13; BA content above is unchanged.
 
+> **SA alignment (v1.2):** SA discrepancy corrections DISC-1..7 applied (documents/SA4E-360/DISCREPANCY.md) — cosmetic/factual alignment with TDD v1.0; the High/Medium findings (DISC-1 `code_symbol_locate`, DISC-2 `code_extract_signatures`) are resolved by design in TDD §4.2/§4.3. See Revision History.
+
 ### 1.2 Scope
 
 **In scope (per BRD §1.1 — P1, two strategies, wire-only per BR-11):**
 
 1. **Agentic Context Loading completion (proposal Strategy 2):**
-   - New core tool `read_method(class, method)` returning a single symbol slice (startLine/endLine from the `symbols` FTS5 table) instead of whole files (§3.2).
+   - New core tool `read_method(class, method)` returning a single symbol slice (startLine/endLine from the base `symbols` table, obtained via the symbols ⋈ files JOIN — §4.1) instead of whole files (§3.2).
    - Wire the dormant `SummaryTreeBuilder` functional map into the production tool `get_workspace_info` (§3.3).
 2. **Code Skeletonization, budget-aware (proposal Strategy 1):**
    - Wire the dormant `SymbolOutlineExtractor.extractOutline` (extension/src/pi-agent/context-retrieval/symbol-outline-extractor.ts, tests-only today) into session creation (§3.1).
    - Inject the workspace skeleton into system context via `createHost` overrides, measured at budget gate #2 BEFORE `createAgentSession`.
-   - Mandatory budget-aware sizing: skeleton ≤ 70% of staticBudget (~13.8K tokens @32k), module-priority truncation on overflow, REJECT per BR-09 if persisting.
+   - Mandatory budget-aware sizing: skeleton ≤ 70% of staticBudget (13,767 tokens @32k), module-priority truncation on overflow, REJECT per BR-09 if persisting.
    - Regex fallback (`signature-extractor.ts`) for languages without a bundled tree-sitter grammar (§3.4).
 
-**Out of scope (per BRD §1.2):** P2 Contextual RAG wire, P3 Map-Reduce wire, P4 call-graph pruning, hybrid retrieval latency optimization, any new Tree-sitter dependency (16 grammars already bundled), any new router/engine/algorithm. **No UI changes** (§3.1.6).
+**Out of scope (per BRD §1.2):** P2 Contextual RAG wire, P3 Map-Reduce wire, P4 call-graph pruning, hybrid retrieval latency optimization, any new Tree-sitter dependency (21 grammars already bundled — backend/src/engine/parsers/grammar-config.json), any new router/engine/algorithm. **No UI changes** (§3.1.6).
 
 **Technical clarifications (verified against codebase):**
 
@@ -83,9 +86,10 @@ SA4E-355 (shipped, v1.52.0) is the **governance plane** — it decides *how many
 | `SymbolOutlineExtractor.extractOutline(filePath, symbols, maxTokens)` | extension/src/pi-agent/context-retrieval/symbol-outline-extractor.ts | Tests-only (dormant) | UC-360-01 |
 | `FsContentReader.readHead` + `MAX_READ_BYTES = 1_048_576` (SEC-325-D3) | same file | Dormant | UC-360-01/04 |
 | `SummaryTreeBuilder.build(rootDir, options) → { text, tokens }` | extension/src/pi-agent/context-retrieval/summary-tree.ts | Dormant | UC-360-03 |
+| `ContextRetriever` (dormant context-supply foundation) | extension/src/pi-agent/context-retriever.ts (parent dir — DISC-5; the `context-retrieval/` subfolder holds only its sub-components) | Dormant — NOT wired in P1 (P2 scope); P1 wires its sub-components individually (TDD §2.1) | — (P2) |
 | `get_workspace_info` (`WORKSPACE_INFO_TOOL_NAME`, zero-arg, layout cached 60s, `clearLayoutCache`) | extension/src/pi-workflow/workspace-info-tool.ts | Wired production | UC-360-03 (extended) |
-| `signature-extractor.ts` (regex multi-language) | backend/src/engine/parsers/signature-extractor.ts | Shipped | UC-360-04 |
-| `symbols` table (FTS5: name, kind, signature, start_line, end_line, docComment) | backend engine index | Shipped | UC-360-01/02/04 |
+| `signature-extractor.ts` (regex multi-language) | backend/src/engine/parsers/signature-extractor.ts | Shipped — invoked backend-side via the MCP bridge tool `code_extract_signatures` (TDD §4.3, OI-1 decision) | UC-360-04 |
+| `symbols` table (base table: name, kind, signature, start_line, end_line, docComment; FTS5 twin `symbols_fts` covers name/signature/doc_comment/kind ONLY — DISC-4) | backend engine index | Shipped | UC-360-01/02/04 |
 | Turn-start gate #2 (`createHost` + `BudgetCalculator.calculateBudget` + escalation ladder BR-08) | extension/src/pi-workflow/ | Shipped (SA4E-355) | UC-360-01 (consumer) |
 | Intra-turn gate #3 (`Agent.streamFn` → `governIntraTurnRequest` → `compactTranscriptToFit`) | extension/src/pi-workflow/intra-turn-budget-gate.ts, transcript-compaction.ts | Shipped (SA4E-355 TDD v1.3 §13) | UC-360-02 (consumer) |
 | `TurnBudgetGuard` (4× identical tool+args → steer → abort, `DEFAULT_MAX_SAME_TOOL_REPEATS = 4`) | extension/src/pi-workflow/ (pi-provider.ts L399/424/436) | Shipped | UC-360-02 (consumer) |
@@ -103,7 +107,8 @@ SA4E-355 (shipped, v1.52.0) is the **governance plane** — it decides *how many
 | TOOL-UNIT | Atomic trim unit in transcript compaction: an assistant toolCall message + the toolResult messages following it. |
 | Escalation Ladder (BR-08) | compress → drop steering → min loadout → error. |
 | TurnBudgetGuard | Anti-livelock backstop: identical tool+args signature ×4 (`DEFAULT_MAX_SAME_TOOL_REPEATS`) → steer correction; persistent repetition → abort. |
-| FTS5 | SQLite full-text search layer over the `symbols` index (name, kind, signature, start_line, end_line, docComment). |
+| FTS5 (`symbols_fts`) | SQLite external-content FTS5 table over the `symbols` index covering (name, signature, doc_comment, kind) ONLY; start_line/end_line live in the base `symbols` table and are obtained via JOIN (DISC-4). FTS5 MATCH serves only the memory/pega search path; the `code_search` tool uses ILIKE substring matching — NOT FTS5 MATCH (DISC-6). |
+| Index Engine (dual-engine) | The index runs on SQLite (SCHEMA_V1 + `symbols_fts` + sync triggers) OR PostgreSQL (`pg-schema-ensure.ts`, ILIKE fallback) depending on the configured adapter engine. ALL symbol queries MUST go through `QueryLayer` methods (dialect-handled) — no raw FTS5 SQL in consumers (DISC-6, TDD P-8). |
 | Index Freshness Guardrail | mtime check + on-demand re-index before serving symbols; prevents stale startLine/endLine slices. |
 | SearchCandidate | Symbol record shape consumed by the extractor: { name, kind, startLine?, signature?, docComment? } (extension/src/pi-agent/context-retrieval/types.ts). |
 | fallbackMode | Skeleton extraction mode per file: REGEX_SIGNATURES / RAW_HEAD / SKIPPED (UC-360-04). |
@@ -123,6 +128,8 @@ SA4E-355 (shipped, v1.52.0) is the **governance plane** — it decides *how many
 | Production workspace info tool | extension/src/pi-workflow/workspace-info-tool.ts |
 | Regex signature fallback | backend/src/engine/parsers/signature-extractor.ts |
 | Intra-turn gate + transcript compaction (shipped) | extension/src/pi-workflow/intra-turn-budget-gate.ts; transcript-compaction.ts |
+| TDD (design authority for DISC-1/DISC-2 tools) | documents/SA4E-360/TDD.md (v1.0) |
+| SA Discrepancy Report (source of v1.2 corrections) | documents/SA4E-360/DISCREPANCY.md (v1) |
 | Jira ticket SA4E-360 | https://jiraassist.atlassian.net/browse/SA4E-360 |
 
 ---
@@ -143,13 +150,13 @@ SA4E-360 operates entirely inside the Pi Harness extension session lifecycle. Th
 | 1 | User / SM Agent → ChatPanel (existing UI) | Workspace review request as a chat turn | — |
 | 2 | ChatPanel → Session Host | Turn start; budget resolution (BR-01 chain) | UC-360-01 |
 | 3 | Session Host → Skeleton Builder | Build workspace skeleton | UC-360-01 |
-| 4 | Skeleton Builder → code-intel Backend | Query symbols (FTS5: name, kind, signature, start_line, end_line, docComment); mtime freshness check | UC-360-01/04 |
+| 4 | Skeleton Builder → code-intel Backend | Query symbols via QueryLayer (base `symbols`: name, kind, signature, start_line, end_line, docComment); mtime freshness check | UC-360-01/04 |
 | 5 | code-intel Backend → Skeleton Builder | Symbol rows (SearchCandidate) | UC-360-01 |
 | 6 | Skeleton Builder → Budget Gates | Measure skeleton at gate #2 (`estimateTokenCount` + `BudgetCalculator.calculateBudget`) BEFORE `createAgentSession` | UC-360-01 |
 | 7 | Budget Gates → Session Host | PASS / TRUNCATED_PASS / REJECT (escalation ladder BR-08) | UC-360-01 |
 | 8 | Session Host → Agent Session | `createAgentSession` with skeleton + functional map in system context | UC-360-01/03 |
 | 9 | Agent Session → Functional Map Provider | `get_workspace_info` (layout + functional map, 60s cache) | UC-360-03 |
-| 10 | Agent Session → code-intel Backend | `read_method` symbol-slice lookup (FTS5) | UC-360-02 |
+| 10 | Agent Session → code-intel Backend | `read_method` symbol-slice lookup (exact-match via `code_symbol_locate` — §5.4) | UC-360-02 |
 | 11 | Agent Session → Budget Gates | EVERY intra-turn LLM request at gate #3 (`Agent.streamFn`) | UC-360-02 |
 | 12 | Budget Gates → Local LLM Provider | Gated stream request — the provider is NEVER called oversized (BR-09) | — |
 | 13 | Local LLM Provider → Agent Session → User | Stream chunks → review findings | — |
@@ -177,7 +184,7 @@ SA4E-360 operates entirely inside the Pi Harness extension session lifecycle. Th
 1. INV-1 — The skeleton and functional map are STATIC context: measured once at gate #2, never grow during the turn. Only tool results grow intra-turn and are absorbed by gate #3 + compaction (BRD §2.3 note).
 2. INV-2 — Every new content path measures tokens via the existing `estimateTokenCount` / `BudgetCalculator` — no parallel estimation (BR-360-05, BR-11).
 3. INV-3 — Fail-safe, never fail-open: persisting overflow → REJECT `PI_CONTEXT_BUDGET_EXCEEDED`; the provider is NEVER called with an oversized prompt (BR-09, BR-360-02).
-4. INV-4 — No new dependency, no new engine/router/estimator (BR-11; tree-sitter + 16 grammars already bundled in backend/src/engine/parsers/).
+4. INV-4 — No new dependency, no new engine/router/estimator (BR-11; tree-sitter + 21 grammars already bundled per backend/src/engine/parsers/grammar-config.json).
 
 ---
 
@@ -213,7 +220,7 @@ At session assembly time (before `createAgentSession`), the harness builds a wor
 
 | Step | Actor | System | Description |
 |------|-------|--------|-------------|
-| 1 | Actor sends review turn | Session Host | Turn starts; budget resolved: provider `meta.n_ctx` → ModelRegistry → default 8192 (BR-01); `usable = nCtx − reserveOutput − ceil(nCtx × 8%)` (BR-02); 70/30 static/history split (BR-03). @32k: usable 28,098 / static 19,668 / skeleton cap ~13.8K. @65k: usable 58,245 / static 40,771 / cap ~28.5K. |
+| 1 | Actor sends review turn | Session Host | Turn starts; budget resolved: provider `meta.n_ctx` → ModelRegistry → default 8192 (BR-01); `usable = nCtx − reserveOutput − ceil(nCtx × 8%)` (BR-02); 70/30 static/history split (BR-03). @32k: usable 28,098 / static 19,668 / skeleton cap 13,767. @65k: usable 58,245 / static 40,771 / cap 28,539 (resolver-authoritative — §3.1.4). |
 | 2 | | Session Host | Requests skeleton build for workspace source files. |
 | 3 | | Skeleton Builder | Per file: resolve language; query `symbols` (FTS5) after mtime freshness check; call `extractOutline(filePath, symbols, maxTokens = floor(0.70 × staticBudget))`. Grammar-less language → regex fallback (UC-360-04). |
 | 4 | | Skeleton Builder | Measures `skeletonTokens = estimateTokenCount(skeletonContent)`. |
@@ -228,7 +235,7 @@ At session assembly time (before `createAgentSession`), the harness builds a wor
 |----|-----------|-------|
 | AF-1 | Raw skeleton exceeds 70% staticBudget | Truncate by module priority (metrics from `ModuleSummarizer`) → re-measure (Step 4–6) → fits → gateDecision = TRUNCATED_PASS → inject (Step 7). |
 | AF-2 | File language has no bundled grammar | Route to UC-360-04 (regex fallback / RAW_HEAD / SKIPPED); same 70% cap applies. |
-| AF-3 | 65k window (qwen secondary target) | Same flow with staticBudget 40,771 and cap ~28.5K. |
+| AF-3 | 65k window (qwen secondary target) | Same flow with staticBudget 40,771 and cap 28,539. |
 | AF-4 | Functional map build fails at assembly | Inject skeleton alone; log `PI_FUNCTIONAL_MAP_UNAVAILABLE` (§3.3.5); session proceeds — the map is optional static content, never a gate blocker. |
 | AF-5 | Turn N+1 on the same workspace (sections cached) | Skeleton/map sections reused from the 60s cache (C-360-M2) — measurement at gate #2 still runs per session (INV-1); only the build is skipped. |
 
@@ -246,7 +253,7 @@ At session assembly time (before `createAgentSession`), the harness builds a wor
 
 | Rule ID | Rule | Source |
 |---------|------|--------|
-| BR-360-01 | Injected skeleton MUST satisfy `skeletonTokens ≤ 70% staticBudget` (~13.8K @32k, ~28.5K @65k), measured with `estimateTokenCount` + `BudgetCalculator.calculateBudget` BEFORE `createAgentSession` (gate #2). Fixed-size skeletons are prohibited. | BRD §2.4.2; TA Review T2 |
+| BR-360-01 | Injected skeleton MUST satisfy `skeletonTokens ≤ 70% staticBudget` (13,767 @32k, 28,539 @65k), measured with `estimateTokenCount` + `BudgetCalculator.calculateBudget` BEFORE `createAgentSession` (gate #2). Fixed-size skeletons are prohibited. | BRD §2.4.2; TA Review T2 |
 | BR-360-02 | Persisting overflow after module-priority truncation → session REJECTED per BR-09 — fail-safe, never fail-open; provider never called oversized. | BRD §2.4.2 |
 | BR-360-05 | Skeleton construction MUST reuse `SymbolOutlineExtractor`, `signature-extractor.ts`, `SummaryTreeBuilder`, `QueryRouter` — building a new skeleton engine, router, or token estimator is prohibited. | BRD §2.4.2 (specialization of BR-11) |
 | BR-01 (inherited) | `nCtx` > 0 via fallback chain: provider detection → ModelRegistry → default 8192; never 0/unbounded. | SA4E-355 FSD §3.8 |
@@ -285,8 +292,10 @@ At session assembly time (before `createAgentSession`), the harness builds a wor
 
 | n_ctx | reserveOutput | margin 8% | usable | staticBudget (70%) | historyBudget (30%) | Skeleton cap (70% of static) |
 |-------|---------------|-----------|--------|--------------------|---------------------|------------------------------|
-| 32,768 (qwen) | 2,048 | 2,622 | 28,098 | 19,668 | 8,430 | ~13.8K |
-| 65,536 | 2,048 | 5,243 | 58,245 | 40,771 | 17,474 | ~28.5K |
+| 32,768 (qwen) | 2,048 | 2,622 | 28,098 | 19,668 | 8,430 | 13,767 |
+| 65,536 | 2,048 | 5,243 | 58,245 | 40,771 | 17,474 | 28,539 |
+
+> **Resolver-authoritative (DISC-7, re-verified against code 2026-10-14):** `resolveContextBudget` (context-budget-resolver.ts L47-49; SAFETY_MARGIN_RATIO = 0.08, STATIC_BUDGET_RATIO = 0.70) computes `safetyMargin = Math.ceil(nCtx × 0.08)` → `usable = nCtx − reserveOutput − safetyMargin` → `staticBudget = floor(usable × 0.70)`; skeleton cap = `floor(0.70 × staticBudget)`. @32k (qwen: contextWindow 32,768 / maxOutput 2,048 — model-registry.ts L32): margin 2,622 → usable 28,098 → staticBudget 19,668 → cap 13,767. @65k: 5,243 / 58,245 / 40,771 / 28,539. **Note:** DISCREPANCY DISC-7's intermediate arithmetic ("ceil(2,622.14) = 2,623") is itself an arithmetic slip — 32,768 × 0.08 = 2,621.44 → ceil = 2,622; the shipped resolver (single source of truth, INV-2) yields exactly the numbers above. TDD §2.2 values (2623 / 28,097 / 19,667 / 13,766) inherit this slip and require the same correction by SA.
 
 #### 3.1.5 API Contract (Functional View)
 
@@ -357,7 +366,7 @@ buildWorkspaceSkeleton(input: SkeletonBuildInput): SkeletonBuildResult;
 
 #### 3.2.1 Description
 
-A new core tool `read_method(class, method)` is supplied in the existing toolset (BR-06 core tools + `get_workspace_info` + `find_tools` chain). It resolves the target symbol in the `symbols` FTS5 table (name, kind, signature, start_line, end_line) and returns ONLY that line range from the source file — the primary replacement for whole-file reads during review. Results are ordinary tool results: measured by intra-turn gate #3 (`Agent.streamFn`) and droppable atomically by transcript compaction (pin-newest-user rule, TDD v1.3 §13.3). Read loops are bounded by the shipped `TurnBudgetGuard` — no new loop protection may be written (BR-11).
+A new core tool `read_method(class, method)` is supplied in the existing toolset (BR-06 core tools + `get_workspace_info` + `find_tools` chain). It resolves the target symbol in the `symbols` index (name, kind, signature, start_line, end_line — exact-match served by the NEW `code_symbol_locate` tool, §5.4) and returns ONLY that line range from the source file — the primary replacement for whole-file reads during review. Results are ordinary tool results: measured by intra-turn gate #3 (`Agent.streamFn`) and droppable atomically by transcript compaction (pin-newest-user rule, TDD v1.3 §13.3). Read loops are bounded by the shipped `TurnBudgetGuard` — no new loop protection may be written (BR-11).
 
 #### 3.2.2 Use Case UC-360-02
 
@@ -497,7 +506,7 @@ parameters: Type.Object({
 | `FILE_UNREADABLE` | slice read fails (permissions/IO) | actionable error text inside the tool result (EF-2) |
 | `INDEX_UNAVAILABLE` | retrieval backend unreachable (timeout ×2, §5.4) | actionable error + steer to `get_workspace_info` (EF-3) |
 
-**Resolution semantics:** exact-match `method` within enclosing type `class` against the `symbols` FTS5 table, joined to `files` for `path` + `line_count` (bounds-checks `endLine ≤ fileLines` WITHOUT reading the file — §4.2 files entity). Overloads (same class + same method name, multiple rows) → AMBIGUOUS even when kinds differ. Loops are bounded by the shipped `TurnBudgetGuard` (`DEFAULT_MAX_SAME_TOOL_REPEATS = 4`, turn-budget-guard.ts L24) — no new loop protection (BR-11). Resolution p95 ≤ 300 ms (M4); disambiguation pseudocode in §6.2.
+**Resolution semantics:** exact-match `method` within enclosing type `class` against the `symbols` table (served by `code_symbol_locate` — §5.4), joined to `files` for `path` + `line_count` (bounds-checks `endLine ≤ fileLines` WITHOUT reading the file — §4.2 files entity). Overloads (same class + same method name, multiple rows) → AMBIGUOUS even when kinds differ. Loops are bounded by the shipped `TurnBudgetGuard` (`DEFAULT_MAX_SAME_TOOL_REPEATS = 4`, turn-budget-guard.ts L24) — no new loop protection (BR-11). Resolution p95 ≤ 300 ms (M4); disambiguation pseudocode in §6.2.
 
 #### 3.2.6 UI Specifications
 
@@ -612,13 +621,13 @@ The dormant `SummaryTreeBuilder` (extension/src/pi-agent/context-retrieval/summa
 
 #### 3.4.1 Description
 
-For a file whose language has no bundled tree-sitter grammar (16 grammars shipped: ts, js, py, go, java, kotlin, c, cpp, c#, php, ruby, rust, scala, swift, apex, jsp — Svelte is the named example), signatures are extracted with the existing regex multi-language extractor `backend/src/engine/parsers/signature-extractor.ts` instead of failing. Regex-extracted symbols feed the SAME skeleton renderer (`SymbolOutlineExtractor.extractOutline`) and are subject to the SAME 70% staticBudget cap. Fallback coverage counts toward the ≥ 95% coverage metric (M1) and is reported separately in telemetry.
+For a file whose language has no bundled tree-sitter grammar (21 grammars shipped per backend/src/engine/parsers/grammar-config.json: the 16 listed — ts, js, py, go, java, kotlin, c, cpp, c#, php, ruby, rust, scala, swift, apex, jsp — PLUS salesforce-meta, visualforce, aura, pega, lwc-html; Svelte is NOT bundled and remains the named fallback example), signatures are extracted with the existing regex multi-language extractor `backend/src/engine/parsers/signature-extractor.ts` instead of failing. Regex-extracted symbols feed the SAME skeleton renderer (`SymbolOutlineExtractor.extractOutline`) and are subject to the SAME 70% staticBudget cap. Fallback coverage counts toward the ≥ 95% coverage metric (M1) and is reported separately in telemetry.
 
 #### 3.4.2 Use Case UC-360-04
 
 **Use Case ID:** UC-360-04
 **Actor:** Skeleton Builder
-**Preconditions:** File language detected; grammar availability resolvable from the bundled grammar list (16 languages) — never per-extension guesswork outside existing detection.
+**Preconditions:** File language detected; grammar availability resolvable from the bundled grammar registry (21 languages — backend/src/engine/parsers/grammar-config.json) — never per-extension guesswork outside existing detection.
 **Postconditions:** File contributes skeleton output via REGEX_SIGNATURES or RAW_HEAD, or is marked SKIPPED; session creation never blocked by a missing grammar (BR-360-03).
 
 **Main Flow:**
@@ -630,6 +639,8 @@ For a file whose language has no bundled tree-sitter grammar (16 grammars shippe
 | 3 | | Skeleton Builder | Converts extracted signatures to `SearchCandidate` records (name, kind, line) with REAL line numbers (1 ≤ line ≤ fileLines). |
 | 4 | | Skeleton Builder | Feeds records into the same `extractOutline` renderer as grammar-based symbols (UC-360-01 Step 3). |
 | 5 | | Skeleton Builder | Records fallbackMode + extracted symbol count in skeleton telemetry (fallback share visible in logs). |
+
+> **Implementation wiring note (SA discrepancy DISC-2 — resolved in TDD §4.3, OI-1 decision):** `signature-extractor.ts` is physically unreachable from the extension host (extension/package.json has no dependency on the backend package). Fallback extraction therefore runs BACKEND-SIDE via the existing MCP bridge — NEW thin tool `code_extract_signatures` (≤ 50 files/batch, fail-soft, 1 MB read cap server-side, parseSearchText-compatible text output; TDD §4.3). Step 2 above executes through this bridge; the functional contract C-360-F1 (§3.4.5) is unchanged (BR-11-compatible boundary wiring). RAW_HEAD degradation stays EXTENSION-LOCAL (`FsContentReader.readHead`) so the fallback ladder never blocks on backend availability.
 
 **Alternative Flows:**
 
@@ -660,7 +671,7 @@ For a file whose language has no bundled tree-sitter grammar (16 grammars shippe
 | Field | Type | Required | Validation | Description |
 |-------|------|----------|------------|-------------|
 | language | string | Yes | Detected by existing language detection | e.g. "svelte" |
-| grammarAvailable | boolean | Yes | Resolved from the bundled 16-grammar list | false triggers fallback |
+| grammarAvailable | boolean | Yes | Resolved from the bundled 21-grammar registry (backend/src/engine/parsers/grammar-config.json) | false triggers fallback |
 | fallbackMode | enum | Yes | REGEX_SIGNATURES / RAW_HEAD / SKIPPED | Degradation level |
 | extractedSymbols | list | Yes (unless SKIPPED) | name, kind, line with 1 ≤ line ≤ fileLines | Regex-extracted signatures, e.g. "export function load(...)" |
 
@@ -672,7 +683,7 @@ For a file whose language has no bundled tree-sitter grammar (16 grammars shippe
 
 | Step | Mechanism | Verified signature / constant |
 |------|-----------|-------------------------------|
-| 1 | Grammar availability | `grammarAvailable = language ∈ bundled 16-grammar list` (backend/src/engine/parsers/ — ts, js, py, go, java, kotlin, c, cpp, c#, php, ruby, rust, scala, swift, apex, jsp); resolved via existing language detection — never per-extension guesswork (BRD validation rule) |
+| 1 | Grammar availability | `grammarAvailable = language ∈ bundled 21-grammar registry` (backend/src/engine/parsers/grammar-config.json — ts, js, py, go, java, kotlin, c, cpp, c#, php, ruby, rust, scala, swift, apex, jsp, salesforce-meta, visualforce, aura, pega, lwc-html); resolved via existing language detection — never per-extension guesswork (BRD validation rule) |
 | 2 | Regex extraction | `extractSymbols(content, language): ExtractedSymbol[]` (signature-extractor.ts L43) — `ExtractedSymbol { name, kind, signature, startLine, endLine, parentSymbol, visibility, docComment }`; per-language `PatternDef[]` from `LANGUAGE_PATTERNS` (./languages); ReDoS guard C2: lines > `MAX_LINE_LENGTH = 8192` chars blanked before matching |
 | 3 | Mapping | `ExtractedSymbol` → `SearchCandidate` (name, kind, filePath, startLine, signature, source: 'code_search') — kinds map onto the extractor's `SymbolKind` union (function/class/interface/method/...) |
 | 4 | Render | Same `extractOutline(filePath, candidates, maxTokens)` as the grammar path (UC-360-01 Step 3) — identical ≤ 70% staticBudget cap |
@@ -683,7 +694,7 @@ For a file whose language has no bundled tree-sitter grammar (16 grammars shippe
 - RAW_HEAD: `FsContentReader.readHead(filePath, maxLines)` (symbol-outline-extractor.ts L17) — stat-first, hard cap `MAX_READ_BYTES = 1_048_576` (SEC-325-D3), returns `''` on any failure → SKIPPED. RAW_HEAD content is token-trimmed by the extractor's `trimToTokenBudget`.
 - Regex throw / malformed file → `PI_SKELETON_FILE_SKIPPED` (warn) + SKIPPED (EF-1/EF-2); session creation NEVER blocked (BR-360-03).
 
-> **TA Note (physical location — Open Issue OI-1, §11.4):** `signature-extractor.ts` lives in `backend/src/engine/parsers/`; the skeleton builder runs in the extension host. The reuse path (backend-side extraction behind the existing MCP bridge vs shared-module promotion) is an SA/TDD decision — the functional contract above is binding regardless of the physical wiring chosen; neither option adds a new algorithm (BR-11).
+> **TA Note (physical location — RESOLVED: Open Issue OI-1 / SA discrepancy DISC-2, TDD §4.3):** `signature-extractor.ts` lives in `backend/src/engine/parsers/` and is not importable from the extension host. Decision (TDD §4.3): backend-side extraction behind the existing MCP bridge — NEW thin tool `code_extract_signatures` (≤ 50 files/batch, fail-soft, 1 MB read cap server-side, `code_search`-style text lines parsed by the existing `parseSearchText`). RAW_HEAD degradation stays extension-local. The functional contract C-360-F1 above is binding and unchanged; no new algorithm (BR-11).
 
 #### 3.4.6 UI Specifications
 
@@ -765,6 +776,8 @@ All three governance execution points remain enforced and unchanged after the co
 ![ER Diagram](diagrams/er-diagram.png)
 *[Edit in draw.io](diagrams/er-diagram.drawio)*
 
+> **Index layer note (DISC-4/DISC-6, verified — schema.ts L43-60):** the FTS5 twin `symbols_fts` is an external-content table over (name, signature, doc_comment, kind) ONLY. `start_line`/`end_line` live in the base `symbols` table and are obtained via the `symbols ⋈ files` JOIN every SA4E-360 query already performs. PostgreSQL deployments have no FTS twin (ILIKE fallback — pega-search.ts L126); all symbol queries go through `QueryLayer` methods (dialect-handled — no raw FTS5 SQL in consumers).
+
 ### 4.2 Logical Entities
 
 #### Entity: symbols (pre-existing index table — consumed, not modified)
@@ -839,15 +852,15 @@ All three governance execution points remain enforced and unchanged after the co
 
 > **Note:** Business view of the interfaces SA4E-360 touches. SA4E-360 introduces NO new external system and NO new network integration — it composes existing in-process and loopback connections. Technical parameters (timeouts, retries, circuit breakers) are specified in the TDD (TA/SA enrichment).
 
-### 5.1 code-intel Backend Index (FTS5)
+### 5.1 code-intel Backend Index (dual-engine: SQLite `symbols_fts` / PostgreSQL ILIKE)
 
 | Attribute | Value |
 |-----------|-------|
 | Purpose | Source of symbol truth for skeleton build (UC-360-01/04) and read_method resolution (UC-360-02) |
 | Direction | Inbound queries from the extension host |
-| Data Format | SQLite FTS5 rows → SearchCandidate { name, kind, startLine, signature, docComment } |
+| Data Format | QueryLayer rows (engine-agnostic: SQLite `symbols_fts` MATCH OR PostgreSQL ILIKE fallback — DISC-6) → SearchCandidate { name, kind, startLine, signature, docComment } |
 | Frequency | On-demand: per session build (skeleton) and per tool call (read_method); mtime freshness check before each serve |
-| Business Rules | Index Freshness Guardrail: stale mtime → on-demand re-index → retry once (UC-360-01 EF-2, UC-360-02 AF-2); p95 ≤ 300 ms (M4) |
+| Business Rules | Index Freshness Guardrail: stale mtime → on-demand re-index → retry once (UC-360-01 EF-2, UC-360-02 AF-2); ALL symbol queries via `QueryLayer` methods — `code_search` is ILIKE substring, NOT FTS5 MATCH (DISC-6, TDD P-8); p95 ≤ 300 ms (M4) |
 
 **Data Exchange:**
 
@@ -889,7 +902,7 @@ Skeleton Builder / read_method tool (extension host)
         · loopback-only URL validation (fail-closed)   — validateLoopbackWrapperUrl (L171)
         · X-Session-Nonce header on every call         — SESSION_NONCE_HEADER (L19)
         · MCP_WRAPPER_FETCH_TIMEOUT_MS = 5_000         — AbortSignal.timeout (L16)
-        → backend code-intel tools over the SQLite FTS5 index
+        → backend code-intel tools over the QueryLayer index (SQLite symbols_fts / PostgreSQL ILIKE)
           → symbols rows → parseSearchText → SearchCandidate[]
 ```
 
@@ -902,6 +915,8 @@ Skeleton Builder / read_method tool (extension host)
 | Wrapper timeout | `MCP_WRAPPER_FETCH_TIMEOUT_MS = 5,000 ms`, loopback-only, per-session nonce | search-provider.ts L16-19, L171-194 |
 
 **read_method resolution query (C-360-R2 input path):** targeted exact-match against `symbols` (name = `method` within enclosing type `class`; join `files` for `path` + `line_count`) — not the fuzzy `code_search` path; same loopback wrapper + timeout/retry values apply. p95 ≤ 300 ms (M4).
+
+> **Tool availability note (SA discrepancy DISC-1):** the exact-match resolution above is served by the NEW thin MCP tool `code_symbol_locate` + QueryLayer method `locateSymbol` (SQL-only over the existing `symbols`/`files` tables — no schema change), designed in TDD §4.2 and created by DEV at implementation time. The existing `code_symbols` tool is NOT sufficient for `read_method`: its text output exposes `startLine` only (no `endLine` / `line_count` / enclosing-type scoping) and `QueryLayer.findSymbols` is name-PREFIX (`LIKE 'name%'`), not exact-match.
 
 **Index staleness — LIGHT check (stat mtime first; hash only on change; never a whole-workspace reindex per call):**
 
@@ -935,8 +950,8 @@ checkFresh(file):                                  // session-scoped lastKnownGo
 |------|-------------|----------------|
 | 1 | Resolve budget: provider `meta.n_ctx` → ModelRegistry → default 8192 (BR-01); usable/staticBudget per BR-02/BR-03 | Default 8192 fallback keeps nCtx > 0 |
 | 2 | Freshness check: mtime of indexed files vs workspace | Stale → on-demand re-index → retry once → fail: DEGRADED (no skeleton, agentic steering) |
-| 3 | Per file: resolve grammarAvailable from bundled 16-grammar list | Unknown language → treated as grammar-less (fallback path) |
-| 4 | Grammar path: query symbols (FTS5) → `extractOutline(filePath, symbols, maxTokens = floor(0.70 × staticBudget))` | Single-file error → skip file, log, continue (EF-3) |
+| 3 | Per file: resolve grammarAvailable from the bundled 21-grammar registry (backend/src/engine/parsers/grammar-config.json) | Unknown language → treated as grammar-less (fallback path) |
+| 4 | Grammar path: query symbols (QueryLayer) → `extractOutline(filePath, symbols, maxTokens = floor(0.70 × staticBudget))` | Single-file error → skip file, log, continue (EF-3) |
 | 5 | Fallback path (no grammar): `signature-extractor.ts` regex → SearchCandidate records (real line numbers) → same renderer | Regex throws → SKIPPED; nothing usable → RAW_HEAD (≤ 1 MB read cap) |
 | 6 | Measure: skeletonTokens = estimateTokenCount(skeletonContent) | Estimation fails → conservative overflow path (EF-4) |
 | 7 | Gate #2: BudgetCalculator.calculateBudget incl. skeleton (+ map) | usagePercent > 0.70 → Step 8 |
@@ -955,7 +970,7 @@ State semantics: NOT_BUILT → BUILDING (per-file extraction; per-file SKIPPED n
 ```ts
 // Implements: BRD Story 1 req 3–5; TA Review T2. Language: TypeScript (project stack).
 function buildAndGateSkeleton(input: SkeletonBuildInput): GateDecision {
-  const cap = Math.floor(0.70 * input.staticBudget);            // ~13.8K @32k, ~28.5K @65k
+  const cap = Math.floor(0.70 * input.staticBudget);            // 13,767 @32k, 28,539 @65k
 
   // BUILD: one batched symbols query (§5.4), render per file (extractOutline enforces
   // its incremental token bound per file at `cap` — §3.1.4), grammar path + fallback path (UC-360-04).
@@ -1000,7 +1015,7 @@ function buildAndGateSkeleton(input: SkeletonBuildInput): GateDecision {
 | Step | Description | Error Handling |
 |------|-------------|----------------|
 | 1 | Validate arguments (both non-empty) | Invalid → actionable validation error result; turn continues |
-| 2 | FTS5 resolution: name = method within enclosing type class; prefer exactly-one match | Ambiguous → candidate list (AF-1) |
+| 2 | Exact-match resolution (`code_symbol_locate` → QueryLayer, §5.4): name = method within enclosing type class; prefer exactly-one match | Ambiguous → candidate list (AF-1) |
 | 3 | Freshness check (file mtime vs index) | Stale → re-index → retry once (AF-2) |
 | 4 | Read sourceSlice = lines startLine..endLine | Unreadable → actionable error result (EF-2) |
 | 5 | Return result; measured by gate #3; loop bounded by TurnBudgetGuard (4× identical → steer → abort) | Over budget → COMPACT (atomic tool-unit drop) → REJECT only if pinned user query cannot fit (BR-09) |
@@ -1013,7 +1028,7 @@ async function resolveSymbol(cls: string, method: string): Promise<ReadMethodRes
   if (!isNonEmptyTrimmedString(cls) || !isNonEmptyTrimmedString(method))
     return validationError('INVALID_ARGS');                    // actionable; turn continues (never throws)
 
-  let rows = querySymbolsExact(cls, method);                   // symbols FTS5 ⋈ files (path, line_count) — §5.4
+  let rows = querySymbolsExact(cls, method);                   // symbols ⋈ files (path, line_count) via QueryLayer — §5.4
   if (rows.length === 0 && anyRelevantFileStale(rows, files)) {
     await reindexChangedFilesOnly();                           // light check: stat mtime → hash on change (§5.4)
     rows = querySymbolsExact(cls, method);                     // retry ONCE (AF-2)
@@ -1142,7 +1157,7 @@ No new authentication or authorization surfaces. All tool execution runs inside 
 
 | ID | Scenario | Input | Expected Output | Priority | Source |
 |----|----------|-------|-----------------|----------|--------|
-| TC-360-01 | Happy-path skeleton injection @32k | Workspace review turn on qwen 32k | Skeleton injected; gateDecision = PASS; skeletonTokens ≤ 13.8K; 0 × exceed error | High | UC-360-01 Main; M5/M6 |
+| TC-360-01 | Happy-path skeleton injection @32k | Workspace review turn on qwen 32k | Skeleton injected; gateDecision = PASS; skeletonTokens ≤ 13,767; 0 × exceed error | High | UC-360-01 Main; M5/M6 |
 | TC-360-02 | 70% cap enforcement | Skeleton raw > 70% staticBudget | Truncation by module priority → TRUNCATED_PASS with usagePercent ≤ 0.70 | High | UC-360-01 AF-1; BR-360-01 |
 | TC-360-03 | REJECT fail-safe | Forced oversized skeleton (test harness), truncation insufficient | `PI_CONTEXT_BUDGET_EXCEEDED`; provider NEVER called | High | UC-360-01 EF-1; BR-360-02; BR-09 |
 | TC-360-04 | Measurement before session creation | Instrumented session creation | estimateTokenCount + BudgetCalculator execute BEFORE createAgentSession | High | UC-360-01 Step 5; BR-360-01 |
@@ -1193,6 +1208,7 @@ No new authentication or authorization surfaces. All tool execution runs inside 
 | 7 | §3.x.5 contracts FILLED by TA enrichment (v1.1): skeleton build/inject (C-360-S1..S3), read_method tool contract (C-360-R1/R2), extended get_workspace_info (C-360-M1/M2), fallback invocation (C-360-F1), gate-interaction contract (§3.5.5) | Plan item executed; all signatures code-verified 2026-10-13 |
 | 8 | Tool-result cap FINALIZED: map section ≤ 1,500 tokens (SummaryTreeBuilder default `maxTokens ?? 1500`, summary-tree.ts L34); whole tool-result text ≤ 16,000 chars (`MAX_TOOL_RESULT_CHARS`, pi-event-mapper.ts L29) | BRD Story 3 asked the FSD to quantify — resolved from verified code, no new bound invented (BR-11) |
 | 9 | Index freshness specified as LIGHT mtime-first → hash-confirm check (§5.4); `files` table has `content_hash` but no mtime column (verified DDL) | BRD guardrail kept cheap per BR-11 — stat is O(1), hash only on mtime change, re-index only changed files |
+| 10 | Skeleton cap stated EXACTLY: 13,767 @32k / 28,539 @65k (BRD uses ~13.8K/~28.5K approximations; margin/usable/staticBudget unchanged at 2,622/28,098/19,668 @32k) | DISC-7 re-verified resolver-authoritative: shipped `resolveContextBudget` yields exactly the BRD numbers; DISC-7's "ceil(2,622.14)=2,623" is an arithmetic slip (32,768×0.08 = 2,621.44 → 2,622) — SA to align TDD §2.2 (v1.2 user decision) |
 
 ### 11.3 Traceability
 
@@ -1214,7 +1230,7 @@ No new authentication or authorization surfaces. All tool execution runs inside 
 
 | # | Issue | Impact | Recommendation | Owner | Target |
 |---|-------|--------|----------------|-------|--------|
-| OI-1 | `signature-extractor.ts` is a backend module (backend/src/engine/parsers/); the skeleton builder runs in the extension host — cross-package reuse path undefined | UC-360-04 wiring | Prefer backend-side extraction behind the existing MCP bridge (same loopback path as code_search, §5.4) OR promote the pure module to a shared package; both are wire-only-compatible (no new algorithm). SA decides at TDD. | SA | Phase 3 (TDD) |
+| OI-1 | `signature-extractor.ts` is a backend module (backend/src/engine/parsers/); the skeleton builder runs in the extension host — cross-package reuse path undefined | UC-360-04 wiring | RESOLVED (TDD §4.3 — SA discrepancy DISC-2): backend-side extraction behind the existing MCP bridge via NEW thin tool `code_extract_signatures` (≤ 50 files/batch, fail-soft, 1 MB read cap server-side); RAW_HEAD degradation stays extension-local. | SA | RESOLVED — TDD §4.3 |
 | OI-2 | Skeleton artifact lifetime across turns of the same session (rebuild per session creation vs reuse while index unchanged) | UC-360-01 performance | Tie reuse to index freshness (no time-based TTL): rebuild only when the §5.4 staleness sweep detects changes — keeps INV-1 (measured at gate #2 per session) intact. | SA | Phase 3 (TDD) |
 | OI-3 | Multi-root workspace behavior: which root feeds skeleton/map when multiple workspace folders are open | UC-360-01/03 | Ship P1 single-active-root (the root already used by get_workspace_info; layoutCache is keyed per root, so multi-root cache is safe by construction); merged-root skeleton deferred to P3 scope. | SA / Product | Phase 3 (TDD) |
 | OI-4 | Fallback-extracted symbols (UC-360-04) are TRANSIENT — not persisted to the `symbols` table, so `read_method` cannot resolve them | M2 hit-rate scope | Scope M2 measurement to indexed (grammar-parsed) symbols; grammar-less files keep the `read`/`grep` path. Document in STP. | QA (measurement), SA (design) | Phase 4 |
@@ -1223,4 +1239,4 @@ No new authentication or authorization surfaces. All tool execution runs inside 
 
 ---
 
-*End of FSD — SA4E-360 v1.1 (TA-ENRICHED). TA enrichment complete: §3.x.5 API contracts (C-360-*), §5.4 technical parameters, §6 pseudocode, quantified NFRs (§8), Open Issues (§11.4) — business sections (v1.0) unchanged. Next: SA (TDD). All diagrams are draw.io sources exported to PNG per project rule.*
+*End of FSD — SA4E-360 v1.2 (SA-DISCREPANCY-ALIGNED). v1.1 TA enrichment complete: §3.x.5 API contracts (C-360-*), §5.4 technical parameters, §6 pseudocode, quantified NFRs (§8), Open Issues (§11.4). v1.2 applies SA discrepancy corrections DISC-1..7 aligned with TDD v1.0 §3/§4 (DISC-7 resolver-authoritative re-verification — see Revision History and §3.1.4 note). Next: QA (STP/STC). All diagrams are draw.io sources exported to PNG per project rule.*

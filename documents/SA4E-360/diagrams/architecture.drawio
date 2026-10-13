@@ -1,0 +1,153 @@
+<mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1080" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-360 — Skeleton Supply Pipeline + Agentic Runtime (Architecture Overview)" style="text;html=1;fontSize=18;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="350" y="10" width="800" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="laneTurn" value="Turn Assembly — createHost (extension host, cached per workspaceRoot)" style="swimlane;html=1;horizontal=0;startSize=26;fillColor=none;strokeColor=#666666;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="30" y="50" width="680" height="960" as="geometry" />
+    </mxCell>
+    <mxCell id="chat" value="ChatPanel / SM Agent&#10;review turn (existing UI)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="laneTurn">
+      <mxGeometry x="90" y="40" width="200" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="adapter" value="PiWorkflowAdapter&#10;(MODIFIED: passes mcpBridge into ensureSessionHost)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="laneTurn">
+      <mxGeometry x="90" y="130" width="220" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="host" value="ensureSessionHost → createHost&#10;(pi-agent-session-host.ts L240; hosts Map cached)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="laneTurn">
+      <mxGeometry x="90" y="230" width="220" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="budget" value="resolveSessionGovernance&#10;resolveContextBudget (BR-01/02/03)&#10;staticBudget = 70% usable" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="laneTurn">
+      <mxGeometry x="70" y="330" width="260" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="fresh" value="IndexFreshnessChecker (NEW)&#10;stat mtime sweep vs lastKnownGoodMtime&#10;changed → hash confirm → reindex changed only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="laneTurn">
+      <mxGeometry x="70" y="430" width="260" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="provider" value="SkeletonProvider (NEW)&#10;build + freshness-keyed cache per workspaceRoot" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" vertex="1" parent="laneTurn">
+      <mxGeometry x="70" y="530" width="260" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="grammar" value="Grammar path:&#10;batched symbols query (code_symbols/locate)&#10;→ SymbolOutlineExtractor.extractOutline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="laneTurn">
+      <mxGeometry x="40" y="630" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="regex" value="Fallback path (no grammar):&#10;code_extract_signatures via MCP&#10;→ RAW_HEAD (FsContentReader) → SKIPPED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="laneTurn">
+      <mxGeometry x="240" y="630" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="trunc" value="SkeletonTruncator (NEW)&#10;cap = floor(0.70 × staticBudget)&#10;module-priority drop → re-measure (BR-360-01)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="laneTurn">
+      <mxGeometry x="70" y="750" width="260" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="gate2" value="Budget Gate #2 (SHIPPED, SA4E-355 — UNTOUCHED)&#10;runSessionBudgetGate: skeleton+map as measured context files&#10;escalation ladder BR-08 → REJECT = PI_CONTEXT_BUDGET_EXCEEDED (BR-09)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" vertex="1" parent="laneTurn">
+      <mxGeometry x="40" y="850" width="320" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="inject" value="SkeletonInjector (NEW)&#10;virtual agentsFile '.pi/workspace-skeleton.md'&#10;+ appendSystemPrompt composition (measure = inject)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="laneTurn">
+      <mxGeometry x="390" y="850" width="260" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="session" value="createAgentSession&#10;(customTools: + read_method; allowlist + READ_ONLY_TOOLS)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="laneTurn">
+      <mxGeometry x="390" y="740" width="260" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="laneRuntime" value="Agent Loop — runtime (per turn)" style="swimlane;html=1;horizontal=0;startSize=26;fillColor=none;strokeColor=#666666;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="760" y="50" width="710" height="700" as="geometry" />
+    </mxCell>
+    <mxCell id="agent" value="AgentSession.promptTurn&#10;(history-aware auto-chunk, shipped)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="laneRuntime">
+      <mxGeometry x="90" y="40" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="tools" value="Reviewer LLM tool calls&#10;read_method (NEW) · get_workspace_info (EXTENDED)&#10;read/grep/find/ls unchanged" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="laneRuntime">
+      <mxGeometry x="80" y="130" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="rmt" value="ReadMethodTool (NEW)&#10;resolve → bounds check → contained slice read&#10;envelopes: ok / ambiguous / not_found (turn never crashes)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="laneRuntime">
+      <mxGeometry x="80" y="240" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="fmp" value="FunctionalMapProvider (NEW)&#10;SummaryTreeBuilder (dormant→wired) + keySymbols from corpus&#10;rides layoutCache 60s (C-360-M2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="laneRuntime">
+      <mxGeometry x="80" y="350" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="guard" value="TurnBudgetGuard (SHIPPED)&#10;identical tool+args ×4 → steer → abort" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="laneRuntime">
+      <mxGeometry x="420" y="240" width="230" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="gate3" value="Budget Gate #3 (SHIPPED, SA4E-355 — UNTOUCHED)&#10;Agent.streamFn → governIntraTurnRequest&#10;measure → compactTranscriptToFit (atomic tool-unit drop, pinned user) → REJECT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;" vertex="1" parent="laneRuntime">
+      <mxGeometry x="400" y="120" width="260" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="llm" value="Local LLM Provider (llama-server qwen 32k/65k)&#10;NEVER called oversized (BR-09)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1" vertex="1" parent="laneRuntime">
+      <mxGeometry x="420" y="40" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="backend" value="code-intel Backend (loopback MCP wrapper)" style="swimlane;html=1;horizontal=0;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="760" y="780" width="710" height="230" as="geometry" />
+    </mxCell>
+    <mxCell id="bTools" value="code_symbol_locate (NEW thin tool)&#10;QueryLayer.locateSymbol: symbols ⋈ files&#10;endLine + line_count + classMethods (AF-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="backend">
+      <mxGeometry x="30" y="50" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="bExtract" value="code_extract_signatures (NEW thin tool)&#10;signature-extractor regex (ReDoS C2: 8192-char line guard)&#10;parseSearchText-compatible text (OI-1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="backend">
+      <mxGeometry x="260" y="50" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="bIndex" value="Index (SQLite FTS5 / PostgreSQL ILIKE — engine-agnostic via QueryLayer)&#10;files(content_hash, line_count, module) · symbols(start_line, end_line)&#10;incremental re-index = checksum-based changed-files-only (existing)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="backend">
+      <mxGeometry x="490" y="40" width="200" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="chat" target="adapter">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="adapter" target="host">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="host" target="budget">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="1 batched query" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="laneTurn" source="fresh" target="provider">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="provider" target="grammar">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="grammarAvailable=false" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="laneTurn" source="provider" target="regex">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="grammar" target="trunc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="regex" target="trunc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="skeleton ≤ 70% staticBudget" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="trunc" target="gate2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="inject after PASS/TRUNCATED_PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="gate2" target="inject">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneTurn" source="inject" target="session">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="laneTurn" source="session" target="host">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneRuntime" source="agent" target="tools">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneRuntime" source="tools" target="rmt">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneRuntime" source="tools" target="fmp">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e16" value="every request" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneRuntime" source="agent" target="gate3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="laneRuntime" source="gate3" target="llm">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e18" value="loop bound" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="laneRuntime" source="guard" target="tools">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e19" value="McpBridgeCaller (loopback, nonce, 5s)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9673a6;" edge="1" parent="1" source="rmt" target="bTools">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e20" value="regex fallback (OI-1)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;dashed=1;strokeColor=#9673a6;" edge="1" parent="1" source="regex" target="bExtract">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9673a6;" edge="1" parent="backend" source="bTools" target="bIndex">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9673a6;" edge="1" parent="backend" source="bExtract" target="bIndex">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="legend" value="LEGEND — green: NEW module (SA4E-360) · yellow: MODIFIED wire point · blue: REUSED dormant component · orange: SHIPPED governance (SA4E-355, UNTOUCHED) · purple: backend · grey: external" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="30" y="1020" width="1430" height="24" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

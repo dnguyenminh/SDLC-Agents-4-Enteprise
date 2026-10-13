@@ -1,0 +1,126 @@
+<mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="980" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-360 — read_method Runtime Sequence (UC-360-02) with SA4E-355 gates" style="text;html=1;fontSize=18;fontStyle=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="300" y="10" width="800" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="llm" value="Reviewer LLM" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#f5f5f5;strokeColor=#666666;size=40;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="120" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="agent" value="Agent loop&#10;(pi-agent-core)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#dae8fc;strokeColor=#6c8ebf;size=40;" vertex="1" parent="1">
+      <mxGeometry x="250" y="60" width="120" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="rmt" value="ReadMethodTool&#10;(NEW)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#d5e8d4;strokeColor=#82b366;size=40;" vertex="1" parent="1">
+      <mxGeometry x="440" y="60" width="140" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="fresh" value="IndexFreshnessChecker&#10;(NEW)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#d5e8d4;strokeColor=#82b366;size=40;" vertex="1" parent="1">
+      <mxGeometry x="640" y="60" width="150" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="backend" value="code_symbol_locate&#10;(backend, loopback MCP)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#e1d5e7;strokeColor=#9673a6;size=40;" vertex="1" parent="1">
+      <mxGeometry x="850" y="60" width="160" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="fs" value="Workspace FS&#10;(path-containment)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;fillColor=#fff2cc;strokeColor=#d6b656;size=40;" vertex="1" parent="1">
+      <mxGeometry x="1090" y="60" width="140" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="1: read_method(class, method)" style="html=1;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="llm" target="agent">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="180" y="150" as="sourcePoint" />
+        <mxPoint x="250" y="150" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s2" value="2: execute(toolCallId, params)" style="html=1;rounded=0;edgeStyle=none;" edge="1" parent="1" source="agent" target="rmt">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="370" y="190" as="sourcePoint" />
+        <mxPoint x="440" y="190" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s3" value="3: validate args — INVALID_ARGS envelope if empty (turn continues)" style="html=1;rounded=0;" edge="1" parent="1" source="rmt" target="rmt">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="510" y="230" as="sourcePoint" />
+        <mxPoint x="560" y="230" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="620" y="230" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s4" value="4: locate(class, method) — callMcpWrapper, 2s timeout, 1 retry" style="html=1;rounded=0;" edge="1" parent="1" source="rmt" target="backend">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="580" y="290" as="sourcePoint" />
+        <mxPoint x="850" y="290" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s5" value="5: rows = symbols ⋈ files (name = method, enclosing class; endLine + line_count)" style="html=1;rounded=0;" edge="1" parent="1" source="backend" target="backend">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="930" y="330" as="sourcePoint" />
+        <mxPoint x="980" y="330" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="1030" y="330" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s6" value="6: rows (JSON text)" style="html=1;rounded=0;dashed=1;" edge="1" parent="1" source="backend" target="rmt">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="850" y="380" as="sourcePoint" />
+        <mxPoint x="580" y="380" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s7" value="7: ambiguous → candidates envelope · not_found → suggestions + classMethods (AF-4)" style="html=1;rounded=0;dashed=1;" edge="1" parent="1" source="rmt" target="agent">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="430" as="sourcePoint" />
+        <mxPoint x="310" y="430" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s8" value="8: checkFile(filePath) — stat mtime vs lastKnownGood" style="html=1;rounded=0;" edge="1" parent="1" source="rmt" target="fresh">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="580" y="480" as="sourcePoint" />
+        <mxPoint x="640" y="480" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s9" value="9: STALE → hash confirm → reindex changed only → retry locate ONCE (AF-2/EF-4)" style="html=1;rounded=0;dashed=1;strokeColor=#d79b00;" edge="1" parent="1" source="fresh" target="backend">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="790" y="530" as="sourcePoint" />
+        <mxPoint x="850" y="530" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s10" value="10: boundsOk(endLine ≤ lineCount)? corrupt → INDEX_STALE path (never wrong slice)" style="html=1;rounded=0;" edge="1" parent="1" source="rmt" target="rmt">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="510" y="580" as="sourcePoint" />
+        <mxPoint x="560" y="580" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="620" y="580" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s11" value="11: resolveContainedPath → read lines startLine..endLine" style="html=1;rounded=0;" edge="1" parent="1" source="rmt" target="fs">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="580" y="630" as="sourcePoint" />
+        <mxPoint x="1090" y="630" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s12" value="12: sourceSlice" style="html=1;rounded=0;dashed=1;" edge="1" parent="1" source="fs" target="rmt">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1090" y="680" as="sourcePoint" />
+        <mxPoint x="580" y="680" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s13" value="13: ok envelope { filePath, symbolKind, name, signature, startLine, endLine, sourceSlice }" style="html=1;rounded=0;dashed=1;" edge="1" parent="1" source="rmt" target="agent">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="730" as="sourcePoint" />
+        <mxPoint x="310" y="730" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="gate3" value="Budget Gate #3 (SHIPPED): governIntraTurnRequest measures EVERY request&#10;over → compactTranscriptToFit (atomic tool-unit drop, pinned newest user)&#10;pinned query cannot fit → REJECT PI_CONTEXT_BUDGET_EXCEEDED (provider never called)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="770" width="620" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="guard" value="TurnBudgetGuard (SHIPPED): identical (read_method, args) ×4 → steer → abort (BR-11 — no new loop protection)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="200" y="860" width="620" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="s14" value="14: next LLM request with tool result" style="html=1;rounded=0;" edge="1" parent="1" source="agent" target="llm">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="250" y="745" as="sourcePoint" />
+        <mxPoint x="120" y="745" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
