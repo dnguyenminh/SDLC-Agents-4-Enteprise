@@ -11,8 +11,8 @@
 | Jira Ticket | SA4E-358 |
 | Title | [Follow-up SA4E-356/SA-01] CORS * + no authN trên loopback :9181 — Origin/Host validation |
 | Author | BA Agent |
-| Version | 1.0 |
-| Date | 2026-10-13 |
+| Version | 1.1 |
+| Date | 2026-10-14 |
 | Status | Draft |
 | Issue Type | Task |
 | Priority | Medium |
@@ -37,6 +37,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-13 | BA Agent | Khởi tạo tài liệu — tự động sinh từ Jira ticket SA4E-358 + SECURITY-ASSESSMENT.md SA4E-356 finding SA-01 (Medium, pre-existing) + PENTEST-REPORT.md SA4E-356 (live-confirmed) + xác minh code WrapperServer.ts trên main |
+| 1.1 | 2026-10-14 | BA Agent | **V-4 closure (verify plan FSD §3.1.4.3 — HOÀN THÀNH):** A-1 status → **VERIFIED (assumption turned fact)** — native MCP HTTP client KHÔNG gửi Origin. Evidence: V-1a static grep `@modelcontextprotocol/sdk` = 0 Origin emission + V-1b N-QA2 dev-host LH-08 native session `flow=[200,202,200,200,200]`, deny-log delta=0 (VERDICT 15/15 PASS, 0 FAIL) + V-1c `testdata/pentest-results.csv` PASS. Chỉ sửa mục 5.2 A-1 + metadata revision — KHÔNG đổi yêu cầu/scope. |
 
 ---
 
@@ -425,7 +426,7 @@ Sơ đồ luồng nghiệp vụ chi tiết (swimlane 3 bên: Browser máy user �
 
 ### 5.2 Assumptions
 
-- **A-1:** Native MCP HTTP clients (VS Code/Kiro) không gửi header `Origin` cho request initialize/tools — cần verify ở Phase 2/6 (nếu có gửi thì là localhost → vẫn pass allowlist).
+- **A-1 — ✅ VERIFIED (2026-10-14 — assumption turned fact):** Native MCP HTTP clients (VS Code/Kiro) KHÔNG gửi header `Origin` cho request initialize/tools (nếu có gửi thì là localhost → vẫn pass allowlist — lớp bảo vệ phụ, không cần kích hoạt). **Evidence (verify plan V-1..V-4 hoàn thành — FSD §3.1.4.3):** (a) **V-1a static** — grep `@modelcontextprotocol/sdk` client layer (`streamableHttp.js`/`sse.js`/`auth.js`/`middleware.js`): **0 dòng set header `Origin`** (`testdata/native-client-headers.md`); (b) **V-1b dev-host live** — N-QA2 harness trên server wrapper thật (log `evidence/n-qa2-devhost-9183.log`): **LH-08** native session đầy đủ 5 calls (initialize/notifications/tools-list/tools-call/SSE, không Origin) — `flow=[200,202,200,200,200]`, **deny-log delta=0** — không có `reason=origin-not-allowed` nào; **VERDICT 15/15 PASS, 0 FAIL**; (c) **V-1c CSV** — `testdata/pentest-results.csv` LH-08 verdict PASS. → R-3 (A-1 sai → chặn oan client hiện có) không còn là risk mở; không còn open assumption trước merge.
 - **A-2:** Stdio clients không đi qua HTTP server → không chịu tác động của gate.
 - **A-3:** Binding hiện trạng `127.0.0.1` (WrapperServer.ts:98) là chủ đích design và giữ nguyên — verified 2026-10-13.
 - **A-4:** Wrapper không dùng cookie/session browser → không có bề mặt CSRF kinh điển; Origin validation là mitigation đúng và đủ cho vector browser (cơ sở cho quyết định out-of-scope đề xuất #4).

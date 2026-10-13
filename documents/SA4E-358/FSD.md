@@ -11,11 +11,11 @@
 | Jira Ticket | SA4E-358 |
 | Title | [Follow-up SA4E-356/SA-01] CORS * + no authN trên loopback :9181 — Origin/Host validation |
 | Author | BA Agent (business sections — draft v1.0) + TA Agent (technical enrichment — v1.1) + BA Agent (sync N-BA2 — v1.2) |
-| Version | 1.2 (sync TDD v1.1 — SEC-358-01 Option A: Phase 1.5 Host-check-mọi-request-có-Host, I-8, AD-10) |
-| Date | 2026-10-13 |
-| Status | Synced với TDD v1.1 — DEV implement từ TDD §3 + §5; FSD v1.2 đồng bộ theo N-BA2 (TDD §15.6) |
+| Version | 1.3 (V-4 closure — verify plan §3.1.4.3 V-1..V-4 hoàn thành, A-1 VERIFIED 2026-10-14) |
+| Date | 2026-10-14 |
+| Status | Synced với TDD v1.1 — DEV implement từ TDD §3 + §5; FSD v1.2 đồng bộ theo N-BA2 (TDD §15.6); v1.3 — V-4 closure (A-1 VERIFIED) |
 | Issue Type / Priority | Task / Medium |
-| Related BRD | documents/SA4E-358/BRD.md (v1.0) |
+| Related BRD | documents/SA4E-358/BRD.md (v1.1) |
 
 ---
 
@@ -26,6 +26,7 @@
 | 1.0 | 2026-10-13 | BA Agent | Initiate draft — business sections: Functional Requirements (FR-01..FR-12 map AC-1..AC-8), Use Cases (UC-01..UC-07 đủ Main/AF/EF), Business Rules (BR-01..BR-10), bảng audit endpoints/paths của WrapperServer, Error Handling (403 shape + CORS headers on denial + log format), Data Specs (allowlist config shape hardcoded vs config — đánh giá; R-3 verify plan), Traceability matrix AC ↔ FR ↔ UC ↔ BR, 3 diagram (system-context, sequence, state). Xây TRÊN code hiện tại sau fix SA4E-356 (routeToolCall envelope + return-await đã live — KHÔNG mô tả lại). Chờ TA enrich (xem §11.3). |
 | 1.1 | 2026-10-13 | TA Agent | Targeted enrichment 6/6 gaps §11.3 — KHÔNG tạo lại, chỉ bổ sung: **§3.1.6.1** Technical Contract Origin Gate (module placement `extension/src/services/OriginGate.ts`, TS signatures discriminated union, injection-for-test 2 mức, contract rules G-1..G-8); **§6.1** pseudocode gate logic (parse/normalize Origin, multiple-Origin fail-closed qua `rawHeaders`, Host parsing IPv6/port/case, precedence Origin > Host, Referer cấm); **§10.1** test matrix chi tiết T1..T14 (unit pure + integration server-thật, systematic no-ACAO sweep, raw-socket duplicate header); **§5.3** Node http header API; **§3.1.4.3** V-1 verify steps cụ thể; **§8** benchmark NFR. TA Notes: sửa inconsistency UC-05 Step 4 (Host check chỉ khi có Origin — FR-04/BR-06), clarify FR-10 "byte-level", chốt 403-uniform (Change Log #3). |
 | 1.2 | 2026-10-13 | BA Agent | **Sync N-BA2 (TDD v1.1 §15.6 — SEC-358-01 Option A, SM chốt 2026-10-13):** (1) §6.1 pseudocode — thêm **Phase 1.5** Host-validate cho MỌI request có Host (TRƯỚC nhánh no-Origin; `host === ""` → defer), Phase 2 bỏ invariant "browser LUÔN gắn Origin" làm lớp bảo vệ, Phase 5 chỉ còn EF-1; (2) FR-02a/FR-04 + BR-05/BR-06 wording "Host check khi có Origin" → "mọi request có Host" (I-8); (3) UC-05 AF-1 viết lại — scenario browser-thật rebinding same-origin no-Origin (`Host: evil.com:9181`, KHÔNG Origin) → DENY; TA Note UC-05 + TA Note §6.1 (~dòng 963) viết lại theo AD-10; (4) UC-04 Step 2, UC-06, UC-07 (row 1b), §2.1 (4th caller row), §3.1.4.2, §5.3 row 5, G-6, Business Error Scenarios, §9.1 — cross-refs nhất quán; (5) State diagram (mermaid + state.drawio node stale "không check Host chặt") cập nhật + re-export PNG; (6) Traceability AC-5 + Change Log #10. KHÔNG đổi: §3.1.6.1 contract types (deny reason `host-mismatch` tái sử dụng — không thêm enum), test matrix core, TDD/BRD. |
+| 1.3 | 2026-10-14 | BA Agent | **V-4 closure — verify plan §3.1.4.3 V-1..V-4 HOÀN THÀNH, BRD A-1 → VERIFIED (assumption turned fact):** §3.1.4.3 thêm status line + §3.1.4.3.1 thêm closure note (V-1a static grep `@modelcontextprotocol/sdk` = 0 Origin emission; V-1b N-QA2 dev-host LH-08 native session `flow=[200,202,200,200,200]` deny-log delta=0 — VERDICT 15/15 PASS, 0 FAIL; V-1c `testdata/pentest-results.csv` PASS); §11.2 Change Log #11. KHÔNG đổi: FR/UC/BR, pseudocode §6.1, test matrix, data specs. |
 
 ---
 
@@ -524,6 +525,8 @@ Match semantics: so khớp **scheme + host chính xác** (host case-insensitive)
 
 > Nếu V-1..V-4 không chạy đủ → KHÔNG được merge (R-3 impact High — điều kiện security review AC-3).
 
+> **✅ Status (2026-10-14 — V-4 closure):** V-1..V-4 **HOÀN THÀNH** — A-1 **VERIFIED** (assumption turned fact). Evidence chi tiết: §3.1.4.3.1 closure note; BRD v1.1 §5.2; §11.2 Change Log #11.
+
 <!-- TA enrichment (v1.1) — gap §11.3-5: chi tiết hóa V-1 thành steps chạy được -->
 
 ##### 3.1.4.3.1 V-1 Detail — Static Analysis Steps (TA thực hiện / DEV phối hợp)
@@ -542,6 +545,19 @@ Match semantics: so khớp **scheme + host chính xác** (host case-insensitive)
 **V-1b — Runtime capture (evidence mạnh hơn static):** deny log của chính gate **là** capture mechanism — sau khi enable gate, chạy 1 session MCP đầy đủ (initialize → tools/list → tools/call → SSE) bằng client thật: nếu client gửi Origin lạ → deny log xuất hiện `reason=origin-not-allowed origin=<sanitized>` (FR-09) → A-1 refuted ngay lập tức. Không cần thêm proxy trung gian. Optional bổ sung: one-off listener (`nc -l 9181` / script Node) trước khi enable gate để dump raw headers.
 
 **V-1c — Evidence lưu:** `documents/SA4E-358/testdata/native-client-headers.md` (grep output + kết luận từng client) + 1 dòng CSV trong `pentest-results.csv` (V-1 pass/fail). Tiêu chí PASS V-1: (a) static grep không thấy Origin được set bởi client, VÀ (b) 1 session live không sinh deny log. Nếu V-1b sinh deny log → chuyển AF-2 UC-04 (thêm pattern allowlist, BR-10) + update BRD A-1 = refuted.
+
+> **✅ V-4 closure (2026-10-14 — BA): Verify plan V-1..V-4 HOÀN THÀNH — A-1 VERIFIED (assumption turned fact; BRD v1.1 §5.2, §11.2 Change Log #11).** Dev-host confirmation (N-QA2) đã đóng mục "PENDING dev-host" của V-1b:
+
+| Bước | Trạng thái | Kết quả / Evidence |
+|------|-----------|--------------------|
+| V-1a (static) | ✅ PASS | Grep `@modelcontextprotocol/sdk` client layer (`streamableHttp.js`/`sse.js`/`auth.js`/`middleware.js`): **0 dòng set header `Origin`** (chỉ match "original"/`URL.origin` property — đọc, không set) — `testdata/native-client-headers.md` |
+| V-1b (runtime dev-host) | ✅ PASS | N-QA2 harness trên server wrapper thật — dev-host (log `evidence/n-qa2-devhost-9183.log`): **LH-08** native session đầy đủ 5 calls (initialize/notifications/tools-list/tools-call/SSE, không Origin) — `flow=[200,202,200,200,200]`, **deny-log delta=0** (không có `reason=origin-not-allowed` nào); VERDICT **15/15 PASS, 0 FAIL** |
+| V-1c (CSV) | ✅ PASS | `testdata/pentest-results.csv` — LH-08 (`V-1b native session`) verdict PASS |
+| V-2 (live regression) | ✅ PASS | Thỏa bởi chính LH-08 — 100% flow pass không đổi config + deny log KHÔNG có `origin-not-allowed` cho native client (đúng tiêu chí pass của V-2) |
+| V-3 (capture thêm) | ✅ N/A — không cần | Evidence V-1a + V-1b đủ rõ (deny-log delta=0), không còn "mờ" để capture thêm |
+| V-4 (chốt giả định) | ✅ DONE | BRD A-1 → **VERIFIED** (2026-10-14); FSD §11.2 Change Log #11 — **không còn open assumption trước merge** |
+
+> Điều kiện merge "V-1..V-4 không chạy đủ → KHÔNG merge" (R-3 / security review AC-3) — **ĐÃ THỎA**.
 
 #### 3.1.5 UI Specifications
 
@@ -1179,6 +1195,7 @@ stateDiagram-v2
 | 8 | FR-10 "byte-level" | FR-10 | TA clarify §3.1.6.1-E: semantic equivalence (body/status/SSE frames); CORS headers thay đổi có chủ đích | Ngăn QA assert sai (không yêu cầu ACAO trên native responses); native client ignore CORS headers — zero impact |
 | 9 | 403-vs-404 verdict | FSD v1.0 Change Log #3 | TA Note §3.1.6 (sau bảng audit): **CHỐT 403 uniform** mọi path/method từ caller bị deny + rationale (không leak route map; route-agnostic gate; status không phải control — no-ACAO mới là control) | BA đề xuất đúng — TA confirm + bổ sung lý do; SA chốt lần cuối tại review AC-3 |
 | 10 | **FSD v1.2 — sync N-BA2 (TDD v1.1 §15.6)** | — (SECURITY-REVIEW v1.0 SEC-358-01 + SM chốt **Option A** 2026-10-13) | §6.1 pseudocode 7 phases (Phase 1.5 Host-validate-mọi-request-có-Host, I-8, AD-10); FR-02a/FR-04; BR-05/BR-06; UC-05 (Main Step 4, AF-1 browser-thật, EF-1); UC-04 Step 2; UC-06/UC-07 (row 1b); §2.1 (4th caller row); §3.1.4.2; §5.3 row 5; G-6; Business Error Scenarios; §9.1; T12 step 4/T13 row 1b; state diagram (mermaid + drawio) | Host check unconditional-when-present — đóng DNS rebinding same-origin no-Origin (deny reason `host-mismatch` tái sử dụng, không thêm enum); nhất quán TDD v1.1 / STP v1.1 / STC v1.0 (UT-32..34, IT-12 step 4, IT-13 row 1b, LH-13..15) |
+| 11 | **V-4 closure — verify plan §3.1.4.3 hoàn thành, A-1 VERIFIED (BRD v1.1 / FSD v1.3)** | BRD §5.2 A-1 → **VERIFIED (2026-10-14 — assumption turned fact)** | §3.1.4.3 status + §3.1.4.3.1 closure note: V-1a static grep `@modelcontextprotocol/sdk` = 0 Origin emission; V-1b N-QA2 dev-host LH-08 native session `flow=[200,202,200,200,200]` deny-log delta=0 (VERDICT 15/15 PASS, 0 FAIL); V-1c `testdata/pentest-results.csv` PASS | Đóng giả định A-1 bằng evidence 3 lớp — native client KHÔNG gửi Origin → R-3 hết risk mở; điều kiện V-4 "không có open assumption trước merge" thỏa. Evidence: `evidence/n-qa2-devhost-9183.log`, `testdata/pentest-results.csv`, `testdata/native-client-headers.md` |
 
 ### 11.3 Open Items for TA Enrichment (draft v1.0 → v1.1)
 

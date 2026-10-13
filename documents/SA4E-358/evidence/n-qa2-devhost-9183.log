@@ -1,0 +1,22 @@
+Dev-host probe: /health → 200
+
+━━━ SA4E-358 CORS LIVE HARNESS — mode=DEV-HOST (:9181 extension) — target 127.0.0.1:9183 ━━━
+PASS   LH-01 — 403, headers=[content-type, date, connection, keep-alive, transfer-encoding]
+PASS   LH-02 — 403, zero CORS
+PASS   LH-03 — 403, no SSE bytes
+PASS   LH-04 — 403, zero CORS (side-effect check = dev-host step)
+PASS   LH-05 — 204, ACAO=vscode-webview://pentest-abc123
+PASS   LH-06 — 200 + echo OK (side-effect check = dev-host step)
+PASS   LH-07 — 200 text/event-stream
+PASS   LH-08 — flow=[200,202,200,200,200] denyLog delta=0
+SKIP   LH-09 — SKIPPED — baseline P6-15/16/17 (SA4E-356 PENTEST-REPORT) su dung, khong git-stash replay
+PASS   LH-10 — 403 (raw)
+PASS   LH-11 — 403 (raw)
+PASS   LH-12 — 403
+PASS   LH-13 — 403 (deny log kiem tra thu cong tren outputChannel dev host)
+PASS   LH-14 — 403
+PASS   LH-15 — 403
+
+Evidence written: C:\projects\kiro\SDLC-Agents-4-Enterprise\documents\SA4E-358\testdata\pentest-results.csv (mode=DEV-HOST (:9181 extension))
+
+VERDICT: 15/15 PASS, 0 FAIL

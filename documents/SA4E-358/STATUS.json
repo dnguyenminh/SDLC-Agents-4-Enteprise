@@ -80,8 +80,8 @@
       "note": "53 attempts, 0 bypass; PT-51 live-confirmed SA358-R1 (Low pre-existing); standalone mode"
     },
     "uat": {
-      "status": "not_started",
-      "note": "HUMAN GATE — can build combined (356+358) roi deploy cho UAT"
+      "status": "in_progress",
+      "note": "Build combined 1.52.0 deployed + reloaded; N-QA2 15/15 PASS dev-host :9183 (gate live); V-1 evidence complete 7/7 merge conditions; cho user confirm"
     },
     "security_deploy_review": {
       "status": "not_started"
