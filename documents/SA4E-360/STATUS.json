@@ -1,0 +1,53 @@
+{
+  "ticket": "SA4E-360",
+  "title": "Multi-Resolution Context Supply for Pi Harness — P1: Code Skeletonization + Agentic Context Loading",
+  "currentPhase": "requirements",
+  "phases": {
+    "requirements": {
+      "status": "in_progress",
+      "startedAt": "2026-10-13T08:26:00Z"
+    },
+    "specification": {
+      "status": "not_started"
+    },
+    "design": {
+      "status": "not_started"
+    },
+    "feedback_loop": {
+      "status": "not_started",
+      "iterations": 0,
+      "maxIterations": 5
+    },
+    "test_planning": {
+      "status": "not_started"
+    },
+    "implementation": {
+      "status": "not_started"
+    },
+    "testing": {
+      "status": "not_started"
+    },
+    "deployment": {
+      "status": "not_started"
+    }
+  },
+  "sourceInputs": [
+    "documents/SA4E-355/context_compaction_strategies.md (proposal + TA Review T1-T6)",
+    "documents/SA4E-355/TDD.md v1.3 (§13 budget gate architecture)",
+    "SA4E-355 UAT bug fixes #1-#3 (commits 5663d11, 70a0a90, c11f461)"
+  ],
+  "jira": {
+    "key": "SA4E-360",
+    "status": "To Do",
+    "note": "project workflow has no Docs Review state — stays To Do until BRD approved"
+  },
+  "dormantFoundationToWire": [
+    "SymbolOutlineExtractor.extractOutline (extension/src/pi-agent/context-retrieval/)",
+    "ContextRetriever pipeline (extension/src/pi-agent/context-retriever.ts)",
+    "McpSearchProvider (extension/src/pi-agent/context-retrieval/search-provider.ts)",
+    "SummaryTreeBuilder functional map",
+    "tree-sitter + 16 grammars (backend/src/engine/parsers/)",
+    "symbols table FTS5 with startLine/endLine"
+  ],
+  "lastUpdated": "2026-10-13T08:26:00Z"
+}

@@ -1,0 +1,135 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="1160">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="l1" value="User / SM Agent" style="swimlane;horizontal=0;startSize=110;fillColor=#dae8fc;html=1;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1280" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="l2" value="Pi Harness - Skeleton Injection (Session Host)" style="swimlane;horizontal=0;startSize=110;fillColor=#d5e8d4;html=1;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="240" width="1280" height="360" as="geometry" />
+    </mxCell>
+    <mxCell id="l3" value="DEV Agent (Reviewer LLM) - Agentic Loading" style="swimlane;horizontal=0;startSize=110;fillColor=#ffe6cc;html=1;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="600" width="1280" height="260" as="geometry" />
+    </mxCell>
+    <mxCell id="l4" value="Tool Service and Budget Gate" style="swimlane;horizontal=0;startSize=110;fillColor=#e1d5e7;html=1;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="860" width="1280" height="260" as="geometry" />
+    </mxCell>
+    <mxCell id="st" value="" style="ellipse;fillColor=#000000;html=1;" vertex="1" parent="l1">
+      <mxGeometry x="140" y="80" width="40" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="a1" value="1. Send review request (turn)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l1">
+      <mxGeometry x="240" y="70" width="210" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="b1" value="2. Resolve context budget (BR-01 / BR-02)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l2">
+      <mxGeometry x="140" y="60" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="b2" value="3. Generate workspace skeleton (SymbolOutlineExtractor / regex fallback)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l2">
+      <mxGeometry x="410" y="50" width="220" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="b3" value="4. Measure skeleton tokens (BudgetCalculator - BEFORE createAgentSession)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l2">
+      <mxGeometry x="690" y="50" width="220" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="d1" value="5. skeleton within 70% staticBudget?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="l2">
+      <mxGeometry x="960" y="50" width="180" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="b4" value="6. Truncate skeleton by module priority (ModuleSummarizer)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l2">
+      <mxGeometry x="410" y="230" width="220" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="d2" value="7. Still over budget?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="l2">
+      <mxGeometry x="690" y="230" width="170" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="b5" value="8. Inject skeleton + functional map into system context (createHost overrides) - createAgentSession" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l2">
+      <mxGeometry x="920" y="215" width="300" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="c1" value="9. Receive skeleton + functional map as system context" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l3">
+      <mxGeometry x="410" y="70" width="240" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c2" value="10. Analyze architecture, select review targets" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l3">
+      <mxGeometry x="700" y="70" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c3" value="11. Call read_method(class, method) / get_workspace_info" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l3">
+      <mxGeometry x="950" y="70" width="250" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="c4" value="15. Produce review findings" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l3">
+      <mxGeometry x="700" y="180" width="200" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="end1" value="" style="ellipse;fillColor=#000000;html=1;" vertex="1" parent="l3">
+      <mxGeometry x="1150" y="190" width="40" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="e1srv" value="12. Serve symbol slice (symbols FTS5, startLine/endLine)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l4">
+      <mxGeometry x="950" y="40" width="250" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="e2gate" value="13. Intra-turn gate #3 (streamFn): measure - compact transcript" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="l4">
+      <mxGeometry x="950" y="160" width="250" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="d3" value="14. Fits now?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="l4">
+      <mxGeometry x="690" y="165" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="e3rej" value="REJECT: PI_CONTEXT_BUDGET_EXCEEDED (BR-09) - provider never called" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="l4">
+      <mxGeometry x="400" y="165" width="250" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="end2" value="" style="ellipse;fillColor=#000000;html=1;" vertex="1" parent="l4">
+      <mxGeometry x="280" y="180" width="40" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="f1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="st" target="a1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="a1" target="b1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="b1" target="b2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="b2" target="b3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="b3" target="d1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f6" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d1" target="b5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f7" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d1" target="b4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="b4" target="d2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f9" value="No - fits" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d2" target="b5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f10" value="Yes - persisting overflow" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d2" target="e3rej">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f11" value="system context injected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="b5" target="c1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="c1" target="c2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="c2" target="c3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f14" value="tool call" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="c3" target="e1srv">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="e1srv" target="e2gate">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="e2gate" target="d3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f17" value="Yes - result delivered" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d3" target="c4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f18" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="d3" target="e3rej">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="c4" target="end1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f20" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="e3rej" target="end2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>
