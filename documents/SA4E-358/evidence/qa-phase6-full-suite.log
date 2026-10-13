@@ -1,0 +1,13 @@
+
+> sdlc-agents-4-enterprise@1.52.0 test
+> vitest run
+
+
+ RUN  v4.1.8 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+
+ Test Files  286 passed (286)
+      Tests  2808 passed (2808)
+   Start at  01:34:04
+   Duration  249.01s (transform 10.78s, setup 0ms, import 113.93s, tests 65.27s, environment 7.16s)
+

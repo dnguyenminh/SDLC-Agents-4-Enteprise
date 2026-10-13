@@ -1,0 +1,23 @@
+=== QA Phase 6 static gates — SA4E-358 — run 2026-10-14 ===
+--- 1) npx tsc -p ./ --noEmit (extension) ---
+EXIT=0 (output empty = 0 errors)
+--- 2) check-cors-gate-sa4e358.sh --all ---
+== CORS gate-first consistency gate (SA4E-358 / TDD §8.6, STP §2.5 SCAN) ==
+mode=all
+PASSED: scanned 529 in-scope production file(s); CORS emission is gate-first (SCAN-01/02 + I-1 clean).
+EXIT=0
+--- 3) check-cors-gate-sa4e358.sh --staged ---
+== CORS gate-first consistency gate (SA4E-358 / TDD §8.6, STP §2.5 SCAN) ==
+mode=staged
+No in-scope source files to scan. Gate PASSED.
+EXIT=0
+--- 4) check-pathresolver-n8.sh --all ---
+== path-resolver N-8 consistency gate (SA4E-356 / TDD §9) ==
+mode=all
+PASSED: scanned 528 in-scope production file(s); no N-8 violations.
+EXIT=0
+--- 5) semgrep --config .semgrep/sa4e-358-cors.yml --quiet extension/src ---
+EXIT=0 (0 = no findings)
+--- 6) coverage perFile thresholds (vitest json-summary) ---
+OriginGate.ts   stmts=100 branches=96.42 funcs=100 lines=100 (>=95 PASS)
+PathResolver.ts stmts=100 branches=100 funcs=100 lines=100 (>=95 PASS)

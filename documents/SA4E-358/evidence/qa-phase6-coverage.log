@@ -1,0 +1,28 @@
+
+> sdlc-agents-4-enterprise@1.52.0 test:coverage
+> vitest run --coverage
+
+
+ RUN  v4.1.8 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+      Coverage enabled with v8
+
+
+ Test Files  286 passed (286)
+      Tests  2808 passed (2808)
+   Start at  01:40:49
+   Duration  187.32s (transform 9.69s, setup 0ms, import 64.39s, tests 39.26s, environment 7.11s)
+
+ % Coverage report from v8
+-----------------|---------|----------|---------|---------|-------------------
+File             | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-----------------|---------|----------|---------|---------|-------------------
+All files        |     100 |    97.82 |     100 |     100 |                   
+ OriginGate.ts   |     100 |    96.42 |     100 |     100 | 145,148           
+-----------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 106/106 )
+Branches     : 97.82% ( 90/92 )
+Functions    : 100% ( 12/12 )
+Lines        : 100% ( 98/98 )
+================================================================================

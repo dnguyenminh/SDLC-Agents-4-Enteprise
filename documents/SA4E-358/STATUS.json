@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-358",
-  "currentPhase": "implementation",
+  "currentPhase": "uat_gate",
   "autonomyLevel": "L3",
   "gitBranch": "main",
   "humanGates": [
@@ -64,13 +64,24 @@
       "note": "0 Crit/High/Med; merge 6/7 - con N-QA2 dev-host + V-4 (Phase 6)"
     },
     "testing": {
-      "status": "not_started"
+      "status": "done",
+      "file": "TEST-REPORT.md",
+      "version": 1,
+      "verdict": "CONDITIONAL_PASS",
+      "completedAt": "2026-10-14",
+      "note": "62 PASS / 0 FAIL / 2 PENDING (dev-host build combined); 2808 suite; 0 defects"
     },
     "pentest": {
-      "status": "not_started"
+      "status": "done",
+      "file": "PENTEST-REPORT.md",
+      "version": 1,
+      "verdict": "SECURE_WITH_NOTES",
+      "completedAt": "2026-10-14",
+      "note": "53 attempts, 0 bypass; PT-51 live-confirmed SA358-R1 (Low pre-existing); standalone mode"
     },
     "uat": {
-      "status": "not_started"
+      "status": "not_started",
+      "note": "HUMAN GATE — can build combined (356+358) roi deploy cho UAT"
     },
     "security_deploy_review": {
       "status": "not_started"

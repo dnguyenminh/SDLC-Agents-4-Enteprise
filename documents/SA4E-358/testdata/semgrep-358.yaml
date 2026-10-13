@@ -1,0 +1,57 @@
+# SA4E-358 Phase 6.3 — custom semgrep rules for CORS Origin/Host gate (HEAD 65feabf)
+rules:
+  - id: sa4e358-acao-wildcard
+    message: "ACAO wildcard '*' residue — vi phạm AC-8/BR-07 (merge cond #6)"
+    severity: ERROR
+    languages: [typescript, javascript]
+    patterns:
+      - pattern: $RES.setHeader("Access-Control-Allow-Origin", "*")
+  - id: sa4e358-acao-outside-echo-block
+    message: "setHeader Access-Control nằm ngoài block echo (phải nằm sau gate, trong if echoOrigin !== null) — C-2/I-1"
+    severity: WARNING
+    languages: [typescript, javascript]
+    pattern: $RES.setHeader("Access-Control-Allow-$HDR", $V)
+  - id: sa4e358-referer-trust
+    message: "Referer được dùng trong trust path — vi phạm BR-05 (Gap-1)"
+    severity: ERROR
+    languages: [typescript, javascript]
+    pattern-regex: (?i)headers\[["']referer["']\]|get\(["']referer["']\)
+  - id: sa4e358-x-forwarded-trust
+    message: "X-Forwarded-* được đọc trong WrapperServer/OriginGate — gate không được tin header proxy"
+    severity: WARNING
+    languages: [typescript, javascript]
+    pattern-regex: (?i)(headers|rawHeaders)[^;]{0,40}x-forwarded
+  - id: sa4e358-url-constructor-in-gate
+    message: "new URL(req.url) ngoài try/catch = SA358-R1 crash-surface (đã documented — chỉ informational; verify gate-first vẫn chạy trước)"
+    severity: INFO
+    languages: [typescript]
+    pattern-regex: new URL\(req\.url
+  - id: sa4e358-req-headers-trust
+    message: "req.headers (join semantics) dùng làm nguồn truth — vi phạm C-3/I-4 (phải dùng rawHeaders)"
+    severity: WARNING
+    languages: [typescript]
+    patterns:
+      - pattern-either:
+          - pattern: req.headers["origin"]
+          - pattern: req.headers["host"]
+          - pattern: req.headers.origin
+          - pattern: req.headers.host
+  - id: sa4e358-eval-exec
+    message: "Dangerous sink (eval/child_process) trong surface :9181"
+    severity: ERROR
+    languages: [typescript, javascript]
+    pattern-either:
+      - pattern: eval($X)
+      - pattern: require("child_process").exec($X)
+      - pattern: child_process.exec($X)
+  - id: sa4e358-raw-html-reflection
+    message: "Reflected user-controlled header vào response body (XSS/log surface)"
+    severity: WARNING
+    languages: [typescript]
+    patterns:
+      - pattern: $RES.end($ORIGIN)
+      - metavariable-pattern:
+          metavariable: $ORIGIN
+          pattern-either:
+            - pattern: gate.echoOrigin
+            - pattern: $H.origin
