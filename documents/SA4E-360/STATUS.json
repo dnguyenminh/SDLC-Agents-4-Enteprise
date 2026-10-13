@@ -31,7 +31,16 @@
       "note": "Iteration 1: BA applied DISC-1..7 to FSD v1.2 (discovered DISC-7 arithmetic error). Iteration 2: SA corrected TDD §2.2 to resolver-true values, DISCREPANCY.md ALL RESOLVED. 0 Critical throughout"
     },
     "security_design_review": {
-      "status": "not_started"
+      "status": "done",
+      "file": "SECURITY-REVIEW.md",
+      "version": 1,
+      "completedAt": "2026-10-14T01:00:00Z",
+      "verdict": "PASS WITH NOTES",
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 4,
+      "note": "SEC-360-01 skeleton redaction + SEC-360-02 global budget accounting = MANDATORY DEV requirements at Phase 5 (SA at 2-invocation cap for TDD; mitigations enforced via implementation prompt + STC coverage)"
     },
     "test_planning": {
       "status": "not_started"
@@ -75,5 +84,10 @@
     "oiDecisions": "OI-1 backend-side extraction; OI-2 freshness-keyed cache no TTL; OI-3 single-active-root P1; OI-4 fallback symbols transient; OI-5 keep shipped PI_GATE_DECISION values; OI-6 no-TTL accepted, monitor Phase 6",
     "implChecklist": "T1-T9 test-first, 13 files, ~70 tests estimated"
   },
-  "lastUpdated": "2026-10-14T00:35:00Z"
+  "lastUpdated": "2026-10-14T01:05:00Z",
+  "securityRequirementsForDev": [
+    "SEC-360-01 (Medium): add redactSecretLike() pass + secret-file name exclusion in skeleton builder + RAW_HEAD path",
+    "SEC-360-02 (Medium): remaining-global-budget bound + incremental token accounting in skeleton sizing loop (fix O(parts^2) re-join)",
+    "SEC-360-04 (Low): backend path-containment twin with 4 test vectors (null-byte/UNC/dotdot/symlink) — mandatory at Phase 5.7 re-verify"
+  ]
 }
