@@ -1,0 +1,13 @@
+scenario_id,test_case_id,parts_count,total_tokens,static_budget,cap,module_priority,expected_behavior,description
+TRC-01,UT-01,6,18000,19668,13767,engine>extension>backend,TRUNCATED_PASS tokens<=cap,Cap enforcement on oversized joined skeleton
+TRC-02,UT-02,5,20000,19668,13767,engine>extension>backend,lowest-priority-dropped-first,Module priority order (backend first); file-level within module afterwards
+TRC-03,UT-03,4,16000,19668,13767,engine>extension>backend,re-measure-per-drop+PI_SKELETON_TRUNCATED,Event payload {skeletonTokensBefore; skeletonTokensAfter; modulesDropped; staticBudget}
+TRC-04,UT-04,1,25000,19668,13767,(empty),REJECT,Forced-harness single oversized part with no droppable victim — fail-safe (BR-360-02)
+TRC-05,UT-05,3,19000,19668,13767,(single),DEGRADED_NO_SKELETON,All parts dropped -> parts.length==0 -> NOT REJECT
+TRC-06,PBT-04,random(1..200),random(1..30000 each),random,random,random,strict-shrink-property,parts.length decreases exactly 1 per iteration; total monotonically non-increasing
+TRC-07,PBT-05,random,random,random,random,random,terminates<=parts.length-iterations,Termination proof incl. all-oversized and empty-priority inputs
+TRC-08,PBT-06,random,random,random,random,random,tokens<=cap-XOR-REJECT,Post-condition: (tokens<=cap) XOR gateDecision==REJECT
+TRC-09,PBT-07,random,random,random,random,random,usagePercent<=0.70-when-not-REJECT,M6 invariant: skeletonTokens/staticBudget <= 0.70 for PASS/TRUNCATED_PASS
+TRC-10,PBT-10,random(1..300),random,random,random,random,global-incremental-bound,measuredSoFar never exceeds cap at any file boundary; estimateTokenCount calls <= 2xparts+1 (O(parts))
+TRC-11,IT-03,harness-forced,30000,19668,13767,mixed,REJECT-provider-never-called,Forced oversized skeleton end-to-end through createHost — PiContextBudgetExceededError; fake provider 0 calls
+TRC-12,PBT-10,150,1999950,19668,13767,mixed,wall-clock<1s-drops<=500,SEC-360-02 stress: 150 RAW_HEAD-class parts; hard iteration cap 500; no O(parts^2) blowup

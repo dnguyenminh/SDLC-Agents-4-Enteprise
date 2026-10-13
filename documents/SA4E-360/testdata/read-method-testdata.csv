@@ -1,0 +1,21 @@
+case_id,test_case_id,class_arg,method_arg,locator_fixture,expected_status,expected_fields,description
+RM-01,UT-17,"","",none,INVALID_ARGS,validation-text+usage-hint,Empty class argument — execute() never throws
+RM-02,UT-17,"   ",read,stub,INVALID_ARGS,validation-text+usage-hint,Whitespace-only class — invalid after trim (FSD 3.2.4)
+RM-03,UT-17,SymbolOutlineExtractor,(missing),stub,INVALID_ARGS,validation-text+usage-hint,Missing method argument
+RM-04,UT-18,SymbolOutlineExtractor,extractOutline,FIX-02,ok,"filePath; symbolKind=method; name=extractOutline; signature; startLine=35; endLine=48; sourceSlice=lines 35..48 byte-equal",Happy path exact slice (BRD Story 2 AC 1)
+RM-05,UT-19,Parser,parse,2-rows-different-files,ambiguous,"candidates[{name;kind;filePath;startLine} x2]; NO sourceSlice",Ambiguous across files — no arbitrary pick (AF-1)
+RM-06,UT-19,BudgetCalculator,calculate,2-overloads-same-class,ambiguous,candidates x2,Overloads in same class ambiguous even when kinds differ (AF-1)
+RM-07,UT-20,SymbolOutlineExtractor,nonexistentMethod,class-match-0-method-rows,not_found,"suggestions=[get_workspace_info; find_tools; code_search]; classMethods top10",AF-4 enrichment in one call
+RM-08,UT-20,NonexistentClass,foo,0-rows,not_found,suggestions-only,Unknown class — no classMethods key; turn continues
+RM-09,UT-21,StaleBounds,read,endLine=500>lineCount=120,INDEX_STALE,bounds-checked-from-index-before-read,Corrupt bounds route to freshness path — never a wrong slice (EF-4)
+RM-10,UT-22,UnreadableTarget,read,contained-but-unreadable,FILE_UNREADABLE,actionable-error-text-in-result,Unreadable file — turn continues (EF-2)
+RM-11,UT-23,AnyTarget,read,locator-timeout-2-attempts,INDEX_UNAVAILABLE,steer-to-get_workspace_info,Backend unavailable after 2s timeout + 1 retry (EF-3)
+RM-12,UT-24,EscapeTarget,read,symlink-or-absolute-outside-root,containment-rejected,0-bytes-outside-read; actionable-error,Extension-side path containment before any read (SEC-325-D1; SEC-360-08)
+RM-13,UT-25,HugeSpanTarget,read,symbol-spanning-5000-lines,ok-truncated,"sliceTruncated=true; totalLines=5000; slice<=2000 lines/256KB",MAX_SLICE cap (SEC-360-06)
+RM-14,IT-04,ReadMethodTool,create,FIX-11,ok,full-chain-envelope-through-in-process-hono,Extension tool -> McpSymbolLocator -> JSON-RPC -> QueryLayer.locateSymbol
+RM-15,IT-05,(mixed),(mixed),oversized-tool-units,compactable,atomic-tool-unit-drop; pinned-user-preserved; REJECT-only-if-pinned-cannot-fit,Gate #3 absorption of read_method results (BR-360-04)
+RM-16,IT-06,X,Y,identical-x4,steer-then-abort,steer-at-4th-identical; different-args-not-counted,TurnBudgetGuard interplay (BR-11 — shipped guard only)
+RM-17,E2E-API-02,ReadMethodTool,create,FIX-11,ok,"JSON row: startLine=40; endLine=88; lineCount=120; parentSymbol=ReadMethodTool",Real-server locate exact match (SQLite)
+RM-18,E2E-API-03,Parser,parse,FIX-overloads,2-rows,ambiguous-at-tool-level,Real-server ambiguity
+RM-19,E2E-API-03,SymbolOutlineExtractor,missingMethod,class-match,0-rows+classMethods,not-found-tool-level,Real-server not_found + AF-4 classMethods
+RM-20,E2E-API-04,ReadMethodTool,create,FIX-12,ok,row-identical-to-sqlite,PostgreSQL adapter parity (dual-engine)

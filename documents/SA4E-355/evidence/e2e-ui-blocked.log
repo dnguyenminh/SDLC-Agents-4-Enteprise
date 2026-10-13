@@ -1,0 +1,17 @@
+
+> @sa4e/e2e@1.48.0 test:e2e
+> wdio run wdio.conf.ts
+
+2026-10-12T01:08:06.709Z ERROR @wdio/config:ConfigParser: Failed loading configuration file: file:///C:/projects/kiro/SDLC-Agents-4-Enterprise/e2e/wdio.conf.ts: E2E_IDE must be one of: kiro | code | antigravity | kilo (got "undefined"). Setup: set E2E_IDE and E2E_IDE_BINARY_PATH before running (BR-01).
+2026-10-12T01:08:06.720Z ERROR @wdio/config:ConfigParser: Failed loading configuration file: file:///C:/projects/kiro/SDLC-Agents-4-Enterprise/e2e/wdio.conf.ts: E2E_IDE must be one of: kiro | code | antigravity | kilo (got "undefined"). Setup: set E2E_IDE and E2E_IDE_BINARY_PATH before running (BR-01).
+EnvConfigError: E2E_IDE must be one of: kiro | code | antigravity | kilo (got "undefined"). Setup: set E2E_IDE and E2E_IDE_BINARY_PATH before running (BR-01).
+    at resolveE2EEnv (C:\projects\kiro\SDLC-Agents-4-Enterprise\e2e\src\support\env.ts:32:15)
+    at <anonymous> (C:\projects\kiro\SDLC-Agents-4-Enterprise\e2e\wdio.conf.ts:39:13)
+    at Object.<anonymous> (C:\projects\kiro\SDLC-Agents-4-Enterprise\e2e\wdio.conf.ts:106:1)
+    at Module._compile (node:internal/modules/cjs/loader:1760:14)
+    at Object.transformer (C:\projects\kiro\SDLC-Agents-4-Enterprise\e2e\node_modules\tsx\dist\register-B1c7OH6V.cjs:22:2188)
+    at Module.load (node:internal/modules/cjs/loader:1480:32)
+    at Module._load (node:internal/modules/cjs/loader:1299:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:244:24)
+    at cjsLoader (node:internal/modules/esm/translators:329:5)

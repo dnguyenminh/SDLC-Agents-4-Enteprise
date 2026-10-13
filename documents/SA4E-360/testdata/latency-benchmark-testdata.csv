@@ -1,0 +1,15 @@
+bench_id,test_case_id,query_ref,class_arg,method_arg,iterations,threshold_p95_ms,warm_index_required,expected_result,description
+LAT-01,E2E-API-12,GQ-01,SymbolOutlineExtractor,extractOutline,20,300,true,p95 slice recorded in latency table (evidence for TEST-REPORT),Benchmark slice for GQ-01 — 20 iterations of read_method against the real server (STC E2E-API-12 step 1)
+LAT-02,E2E-API-12,GQ-02,ReadMethodTool,create,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-02
+LAT-03,E2E-API-12,GQ-03,IndexFreshnessChecker,sweep,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-03
+LAT-04,E2E-API-12,GQ-04,SkeletonTruncator,truncate,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-04
+LAT-05,E2E-API-12,GQ-05,FunctionalMapProvider,buildSection,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-05
+LAT-06,E2E-API-12,GQ-06,QueryLayer,locateSymbol,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-06 — backend SQL path
+LAT-07,E2E-API-12,GQ-07,McpSymbolLocator,locate,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-07 — loopback adapter path
+LAT-08,E2E-API-12,GQ-08,SummaryTreeBuilder,build,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-08
+LAT-09,E2E-API-12,GQ-09,TurnBudgetGuard,register,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-09
+LAT-10,E2E-API-12,GQ-10,resolveContextBudget,resolve,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-10
+LAT-11,E2E-API-12,GQ-11,compactTranscriptToFit,compact,20,300,true,p95 slice recorded in latency table,Benchmark slice for GQ-11
+LAT-12,E2E-API-12,GQ-12,GhostClass,ghostMethod,20,300,true,p95 slice recorded in latency table (not_found latency still measured),Benchmark slice for GQ-12 — negative control included in the 240-latency set
+LAT-13,E2E-API-12,AGGREGATE,(all 12 golden queries),n-a,240,300,true,"aggregate p95 across 240 measured fetch round-trips <= 300 ms — gate passes only if true (STC E2E-API-12 step 2; BRD M4)"
+LAT-14,E2E-API-12,(hybrid engine),n-a,n-a,0,n-a,n-a,hybrid p95 NOT measured — P2 scope (BRD §2.5),"Excluded-scope row — Hybrid <= 1.5 s target not benchmarked (STC E2E-API-12 postcondition)"

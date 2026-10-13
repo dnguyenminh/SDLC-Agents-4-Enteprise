@@ -1,0 +1,10 @@
+scenario_id,test_case_id,file_state,mtime_vs_index,content_hash_vs_index,expected_action,expected_status,description
+FRS-01,UT-06,unchanged,same,same,none(1-stat-only),FRESH,Hot path — exactly 1 stat per file; 0 hash; 0 reindex
+FRS-02,UT-07,touch-only,changed,equal,refresh-cached-mtime,FRESH,Touch-only change — hash confirms equal; NO reindex
+FRS-03,UT-08,content-changed,changed,differs,reindex-changed-files-only-then-retry-once,FRESH,Stale file — PI_SKELETON_INDEX_STALE {action:'reindex'}; resolution retried exactly once
+FRS-04,UT-09,content-changed,changed,differs,reindex-fails,DEGRADED,Report action 'degrade'; no second retry; session proceeds WITHOUT skeleton
+FRS-05,UT-10,content-changed,changed,differs,cooldown-blocked(30s),FRESH-after-first,Repeated stale events within 30s cooldown trigger only ONE reindex (SEC-360-03)
+FRS-06,IT-09,backend-unavailable,n-a,n-a,fail-fast-no-retry-loop,DEGRADED_NO_SKELETON,mcpBridge absent or unreachable — session still created; steering to get_workspace_info+read_method
+FRS-07,E2E-API-08,slow-response-3s,n-a,n-a,retry-once-after-200ms-backoff,INDEX_UNAVAILABLE,Loopback wrapper timeout 2s x2 attempts then give up (real delay stub on 127.0.0.1)
+FRS-08,E2E-API-08,connection-refused,n-a,n-a,fail-fast,INDEX_UNAVAILABLE,Wrapper unreachable — fail fast; no retry loop (TDD 7.4)
+FRS-09,SIT-03,mutated-file-live,live-mutation,n-a,manual-observation,recovered-then-degradable,Manual SIT — edit file then new session; then force reindex failure for fallback demo

@@ -11,7 +11,7 @@
 | Jira Ticket | SA4E-355 |
 | Title | Implement Context Budget Governance for Pi Harness |
 | Author | SA Agent |
-| Version | 1.2 |
+| Version | 1.3 |
 | Date | 2026-10-13 |
 | Status | Draft |
 | Related BRD | BRD-v1-SA4E-355.md |
@@ -35,6 +35,7 @@
 | 1.0 | 2026-10-11 | SA Agent | Initial TDD (Task 1 scope, written pre-FSD) |
 | 1.1 | 2026-10-11 | SA Agent | Reconciled with FSD v1.0: full 7-module scope (UC-01..UC-07); corrected BudgetCalculator/ThresholdGate location to `extension/src/mcp/context-budget.ts`; removed all Mermaid blocks (Draw.io-only rule); resolved OI-1..OI-3; added BR-01..BR-16 traceability and Diagram Index |
 | 1.2 | 2026-10-13 | SA Agent | Added §13 Intra-Turn Request Governance appendix (UAT bug #2, TA review condition #1): third governance execution point in `Agent.streamFn` — per-request measure → compact → REJECT (commit `70a0a90`, verified against code); documented the `streamFn`-throw deviation (SDK `handleRunFailure`); no new diagrams (appendix-only) |
+| 1.3 | 2026-10-13 | SA Agent | Pin newest user message in compaction + REJECT→COMPACT for incompressible tool units (UAT bug #3, commit `c11f461`, TA condition): §13.2/§13.3 replace "newest non-system unit is NEVER dropped" with the pin rule (`userReserveTokens` — raw → compressed → kept over-budget so the BR-09 gate REJECTs); tool units droppable atomically incl. the newest; anti-livelock backstop documented (`TurnBudgetGuard`, pi-provider.ts L399/424/436 — identical tool+args signature ×4 → steer, persistent → abort); §13.7 adds `PI_TRANSCRIPT_COMPACTED_NO_USER_QUERY` warn (defensive post-check); §13.5 module sizes + test counts refreshed (transcript-compaction.ts 139→200 lines; direct 29 / integration 19 tests; full suite 285 files / 2,748 tests) |
 
 ---
 
@@ -478,6 +479,7 @@ No infrastructure change: extension rebuild via `tsc`; `npm test` green per task
 ## 13. Intra-Turn Request Governance (UAT-Driven Addition)
 
 > **v1.2 appendix — added per TA review condition #1 (UAT bug #2).** All content below describes SHIPPED code (commit `70a0a90` — "fix UAT bug 2: per-request intra-turn budget gate in Agent streamFn"), verified against the codebase. No new diagrams; this appendix is text-only by design.
+> **v1.3 update — TA review condition (UAT bug #3):** the compaction rules in §13.2/§13.3 were updated to commit `c11f461` — "fix UAT bug 3 - pin newest user message in transcript compaction (llama-server Jinja template validity)"; §13.5 sizes/test counts and §13.7 observability refreshed accordingly.
 
 ### 13.1 Problem — the Turn-Start Gate Cannot See Intra-Turn Growth
 
@@ -510,7 +512,9 @@ The ONLY interception point that sees every intra-turn request is the Agent's `s
 2. **Measure** — `measureIntraTurnRequest` REUSES `measureLegacyTurnTokens` accounting: replayed system prompt (parity constant included, via `getCurrentSystemPrompt`), tool declarations replayed from system messages (via `getCurrentTools` → OI-4 `estimateToolSchemaTokens`), every non-system message flattened (chars/4, BR-02)
 3. **PASS-THROUGH** — `totalTokens ≤ usable` → messages returned unchanged
 4. **COMPACT** — over budget → `compactTranscriptToFit` (§13.3) with `historyBudget = usable − (systemTokens + toolSchemaTokens)` → re-measure
-5. **REJECT (BR-09)** — compacted total still > usable, or the newest non-system unit had to be dropped → `throw PiContextBudgetExceededError` → the provider NEVER sees an oversized request
+5. **REJECT (BR-09)** — compacted total still > usable. The PINNED newest user unit is kept even OVER-BUDGET when it cannot fit compressed (`userReserveTokens` = 0), so a persisting overflow always means the user query itself does not fit → `throw PiContextBudgetExceededError` → the provider NEVER sees an oversized request. Tool units — including the newest — are droppable atomically instead (§13.3)
+
+> **v1.3 — REJECT→COMPACT decision (UAT bug #3, commit `c11f461`):** under v1.2, one huge incompressible tool unit forced a whole-request REJECT (the "newest non-system unit is NEVER dropped" rule). In practice that was strictly WORSE: the turn died at the gate although a compacted `[system, user]` transcript would have been respondable — and the UAT-observed outcome of the old behavior was a provider 500 (llama-server Jinja `No user query found`). v1.3 inverts the rule: the newest USER message is pinned with a reserved budget, tool units are droppable atomically (even the newest), and REJECT fires only when the pinned user query itself cannot fit (§13.3). The anti-infinite-loop concern of the old rule is covered by the `TurnBudgetGuard` backstop (§13.3) — see the ⛔ constraint there before re-introducing the old rule.
 
 **Wiring (verified):**
 
@@ -529,8 +533,11 @@ The ONLY interception point that sees every intra-turn request is the Agent's `s
 | Trim-oldest-first at TOOL-UNIT granularity — an assistant `toolCall` message plus the `toolResult` messages following it are ATOMIC | Separating a call/result pair makes the provider 400 on the orphaned pairing — the very error class this gate prevents |
 | System messages PINNED (always kept) | The system role carries the replayed prompt + tool declarations — the fixed part of every request |
 | A unit that does not fit raw is kept with its text/thinking COMPRESSED via `compressPrompt` (UC-03; non-worsening BR-15) | `toolCall` blocks stay intact for id pairing |
-| The NEWEST non-system unit is NEVER dropped | Anti-infinite-loop: dropping it leaves a system-only transcript that is not respondable, and the same request would repeat forever. When the newest unit cannot fit, the caller REJECTS instead (BR-09), reporting the ORIGINAL request total — the meaningful size that could not be made to fit |
+| The NEWEST USER unit is PINNED — budget reserved up-front (`userReserveTokens`: raw size when it fits the whole budget, else compressed size, else 0) and kept raw → compressed → OVER-BUDGET, NEVER dropped | A transcript without a user query is not respondable: the provider's chat template fails on it (UAT bug #3 — llama-server Jinja `No user query found` 500). Keeping it over-budget by design means the caller's BR-09 gate REJECTS — the gate stays the fail-safe, never the compactor |
+| Tool units are droppable ATOMICALLY — INCLUDING the NEWEST tool unit (**v1.3; replaces the v1.2 "newest non-system unit is NEVER dropped" rule**) | One huge incompressible tool unit is now DROPPED — the kept `[system, user]` transcript stays respondable and the turn survives — instead of REJECTing the whole request (REJECT→COMPACT decision, §13.2). The v1.2 anti-infinite-loop rationale is superseded by the `TurnBudgetGuard` backstop below |
 | Input transcript NEVER mutated | Returns a new array; the delegated context is a new object only when compaction changed the messages |
+
+**Anti-livelock backstop (v1.3 — pre-existing, verified `pi-provider.ts` L399/L424/L436):** the pi-ai Agent loop is a `while(true)` with NO iteration cap. The loop-livelock concern that motivated the v1.2 "never drop the newest unit" rule is covered — independently of compaction — by `TurnBudgetGuard`: an identical tool+args signature repeated `maxSameToolRepeats` times (default **4**, `DEFAULT_MAX_SAME_TOOL_REPEATS` in `turn-budget-guard.ts`) triggers a steer correction; persistent repetition aborts the run. Dropping tool units (including the newest) therefore cannot livelock the loop. **⛔ Constraint: nobody may "fix back" the old never-drop rule without re-evaluating this backstop.**
 
 ### 13.4 Reuse Mapping — Wire-Only (BR-11)
 
@@ -545,18 +552,21 @@ The ONLY interception point that sees every intra-turn request is the Agent's `s
 
 **BR-11 scope note:** no new compression/budget/tier/role-filter algorithm. The only new logic is transcript grouping for wire-safe trimming (tool-unit atomicity) — boundary wiring required to apply the existing mechanisms to a `Message[]` transcript instead of a flat string prompt.
 
-### 13.5 New & Modified Modules (commit `70a0a90`)
+### 13.5 New & Modified Modules (commits `70a0a90`, `c11f461` — sizes/test counts refreshed in v1.3)
 
 | File | Size | Change | Responsibility |
 |------|------|--------|----------------|
 | `extension/src/pi-workflow/intra-turn-budget-gate.ts` | 136 lines NEW | `governIntraTurnRequest`, `measureIntraTurnRequest` | Per-request gate: measure → compact → REJECT |
-| `extension/src/pi-workflow/transcript-compaction.ts` | 139 lines NEW | `compactTranscriptToFit`, `flattenContent` | Wire-safe compaction (tool-unit trim, pinned system, compress-fit) |
+| `extension/src/pi-workflow/transcript-compaction.ts` | 200 lines (139 at `70a0a90` → 200 at `c11f461`) | `compactTranscriptToFit`, `flattenContent`, `userReserveTokens`, `warnIfNoUserQuery` | Wire-safe compaction (tool-unit trim, pinned system + pinned newest user with reserved budget, compress-fit, no-user-query defensive post-check) |
 | `extension/src/pi-workflow/pi-provider.ts` | +51 lines | `streamWithBudgetGate` wrapper, `streamFn` wiring at `Agent` construction, `setDetectedContextWindow` | Gate EVERY Agent-loop request; share the detected window |
 | `extension/src/pi-workflow/pi-provider-types.ts` | +7 lines | `setDetectedContextWindow?(nCtx?)` | Optional provider contract |
 | `extension/src/pi-workflow/pi-workflow-adapter.ts` | +4 lines | Push detected window to the provider before the turn-start gate | Same BR-01 top link for both gates |
-| `__tests__/intra-turn-budget-gate.test.ts` | 281 lines NEW | Unit tests | PASS-THROUGH / COMPACT / REJECT (BR-09), immutability, observability, BR-01 chain (unknown model → registry → default) |
-| `__tests__/pi-provider-intra-turn-gate.test.ts` | 166 lines NEW | Wiring tests | `streamFn` delegation; `setDetectedContextWindow` wins over / falls back to the registry window |
+| `__tests__/transcript-compaction.test.ts` | 443 lines NEW (v1.3) | 29 direct tests | Tool-unit atomicity, pinned system, compression fallback (UC-03), pinned newest user (bug 3), pass-through/immutability, no-user-query warn |
+| `__tests__/intra-turn-budget-gate.test.ts` | 283 lines, 15 tests | Unit tests | PASS-THROUGH / COMPACT / REJECT (BR-09), immutability, observability, BR-01 chain (unknown model → registry → default) |
+| `__tests__/pi-provider-intra-turn-gate.test.ts` | 174 lines, 4 tests | Wiring tests | `streamFn` delegation; `setDetectedContextWindow` wins over / falls back to the registry window |
 | `__tests__/adapter-legacy-governance.test.ts` | +15 lines | Regression | Adapter pushes the detected window |
+
+Test inventory at v1.3: **29 direct** compaction tests + **19 integration** (15 gate unit + 4 provider wiring); full extension suite recorded at **285 test files / 2,748 tests** (commit `c11f461`).
 
 ### 13.6 Known Deviation — REJECT Throws from `streamFn`
 
@@ -567,12 +577,13 @@ The ONLY interception point that sees every intra-turn request is the Agent's `s
 
 ### 13.7 Observability
 
-No new event codes — the gate emits the SAME events as the turn-start gate (§9 table unchanged):
+One new event in v1.3 — otherwise the gate emits the SAME events as the turn-start gate (§9 table unchanged):
 
 | Event | Emitted from | Level | Shape |
 |-------|--------------|-------|-------|
 | `PI_LEGACY_HISTORY_COMPACTED` | intra-turn gate after compaction (`logCompaction`) | info | `{modelId, nCtx, usable, historyMessages, totalTokens}` — same shape as the turn-start gate |
 | `PI_CONTEXT_BUDGET_EXCEEDED` | `rejectIfUnfitting`, immediately before the throw | error | `{totalTokens, usable, nCtx}` — same event as §9 |
+| `PI_TRANSCRIPT_COMPACTED_NO_USER_QUERY` (**NEW v1.3**) | `warnIfNoUserQuery` — defensive post-check after compaction (`transcript-compaction.ts`) | warn | `{outputMessages}` — the compacted transcript contains NO user message (exotic userless transcript). Warn-only, never crashes: a userless request would make the provider's chat template 500 (UAT bug #3) — this event makes such a transcript visible in logs instead of surfacing as an opaque provider error |
 
 ## Appendix
 
@@ -599,4 +610,4 @@ Shared with the FSD (not re-embedded here): [sequence.png](diagrams/sequence.png
 
 ---
 
-*End of TDD — SA4E-355 v1.2. Traceability: UC-01..UC-07 → §3.2–§3.8; BR-01..BR-16 → §12; intra-turn governance addition (UAT bug #2) → §13.*
+*End of TDD — SA4E-355 v1.3. Traceability: UC-01..UC-07 → §3.2–§3.8; BR-01..BR-16 → §12; intra-turn governance addition (UAT bug #2) → §13; compaction pin rule + REJECT→COMPACT (UAT bug #3) → §13.2–§13.3.*

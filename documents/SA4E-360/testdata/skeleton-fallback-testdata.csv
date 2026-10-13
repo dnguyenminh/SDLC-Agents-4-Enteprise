@@ -1,0 +1,10 @@
+file_id,test_case_id,file_path,language,grammar_available,expected_fallback_mode,expected_outcome,description
+FB-01,UT-13,src/components/WorkspaceWidget.svelte,svelte,false,REGEX_SIGNATURES,signatures-rendered-with-real-line-numbers,Grammar-less file — regex extraction via code_extract_signatures (BR-360-03)
+FB-02,UT-13,src/app.ts,ts,true,GRAMMAR,ast-symbols-rendered,Control — grammar path unchanged
+FB-03,UT-13,src/templates/Page.template,unknown-lang,false,RAW_HEAD,head-of-file-imports+declarations; token-trimmed,Empty regex result -> straight to RAW_HEAD (skip doomed pass); readHead <=1MB (SEC-325-D3)
+FB-04,UT-13,src/corrupt/Corrupt.svelte,svelte,false,SKIPPED,PI_SKELETON_FILE_SKIPPED-warn; never-fatal,Regex extraction throws -> SKIPPED (UC-360-04 EF-1)
+FB-05,UT-14,src/assets/Binary.bin,unknown,false,SKIPPED,skip+warn; other-4-files-rendered,Single-file failure does not fail the session (UC-360-01 EF-3)
+FB-06,UT-15,(empty workspace),n-a,n-a,n-a,DEGRADED_NO_SKELETON skeletonTokens=0,Empty index — session proceeds with agentic steering (UC-360-01 EF-5)
+FB-07,E2E-API-05,backend/tests/e2e/fixtures/Component.svelte,svelte,false,REGEX_SIGNATURES,parseSearchText-compatible-text,"[function] load / File: Component.svelte:12 / Sig: export function load(...)"
+FB-08,E2E-API-06,"1 healthy + 1 unreadable + 1 >1MB",mixed,false,mixed,"skipped[] reports 2; healthy extracted; HTTP 200",Fail-soft batch + 1MB server-side read cap (TDD 4.3)
+FB-09,SIT-07,"svelte + ts mixed workspace",mixed,mixed,mixed,PI_SKELETON_FALLBACK-per-file; fallbackFiles-count,Manual telemetry check — fallback share visible (UC-360-04 AC 2)

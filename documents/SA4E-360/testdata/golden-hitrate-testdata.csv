@@ -1,0 +1,4 @@
+metric_id,test_case_id,metric,queries_total,designed_misses,expected_ok_count_min,expected_hit_rate_pct,threshold_pct,status_basis,evidence,description
+GHR-01,IT-11,M2-top-5-hit-rate,12,1,11,91.7,80,ok-status-per-query,PI_READ_METHOD_RESULT events,Hit-rate = ok count / 12 >= 80% — 11 resolvable queries (GQ-01..GQ-11) + 1 designed miss (STC IT-11 step 2; BRD M2)
+GHR-02,IT-11,negative-control-discrimination,12,1,0,0,n-a,GQ-12-must-be-not_found,PI_READ_METHOD_RESULT events,"GQ-12 (GhostClass.ghostMethod) returns not_found WITH suggestions — counted as miss in the denominator; proves the set discriminates (STC IT-11 step 3)"
+GHR-03,IT-11,per-query-status-recording,12,1,12,100,n-a,status-recorded-per-query,PI_READ_METHOD_RESULT events,Every query status (ok/ambiguous/not_found) recorded through the REAL locator chain — no exception swallowed (STC IT-11 step 1)

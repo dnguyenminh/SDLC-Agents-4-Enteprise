@@ -1,0 +1,13 @@
+query_id,test_case_id,class_arg,method_arg,expected_status,module,notes
+GQ-01,IT-11;E2E-API-12,SymbolOutlineExtractor,extractOutline,ok,extension/pi-agent,Primary skeleton renderer
+GQ-02,IT-11;E2E-API-12,ReadMethodTool,create,ok,extension/pi-workflow,New SA4E-360 tool
+GQ-03,IT-11;E2E-API-12,IndexFreshnessChecker,sweep,ok,extension/pi-workflow,Freshness guardrail
+GQ-04,IT-11;E2E-API-12,SkeletonTruncator,truncate,ok,extension/pi-workflow,Module-priority truncation
+GQ-05,IT-11;E2E-API-12,FunctionalMapProvider,buildSection,ok,extension/pi-workflow,Functional map wrapper
+GQ-06,IT-11;E2E-API-12,QueryLayer,locateSymbol,ok,backend/engine,New SQL-only method
+GQ-07,IT-11;E2E-API-12,McpSymbolLocator,locate,ok,extension/pi-workflow,Loopback port adapter
+GQ-08,IT-11;E2E-API-12,SummaryTreeBuilder,build,ok,extension/pi-agent,Functional map builder (dormant -> wired)
+GQ-09,IT-11;E2E-API-12,TurnBudgetGuard,register,ok,extension/pi-workflow,Shipped anti-livelock guard
+GQ-10,IT-11;E2E-API-12,resolveContextBudget,resolve,ok,extension/pi-agent,Governance resolver
+GQ-11,IT-11;E2E-API-12,compactTranscriptToFit,compact,ok,extension/pi-workflow,Shipped compaction
+GQ-12,IT-11;E2E-API-12,GhostClass,ghostMethod,not_found,negative-control,Designed miss — counts in denominator; must return suggestions

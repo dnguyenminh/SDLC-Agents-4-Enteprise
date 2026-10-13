@@ -1,0 +1,13 @@
+vector_id,test_case_id,tool,input,attack_vector,expected_result,description
+BV-01,UT-24,(extension resolveContainedPath),symlink-inside-root-pointing-outside,symlink-follow,REJECTED-before-read,Extension-side containment layer 4 — realpath follow-within (SEC-325-D1)
+BV-02,UT-24,(extension resolveContainedPath),C:\projects\outside\secrets.ts,absolute-outside,REJECTED-before-read,Extension-side lexical isWithin rejection
+BV-03,E2E-API-07,code_extract_signatures,C:\projects\secrets.txt,absolute-outside-root,file-in-skipped[]-zero-signature-lines,Backend containment twin — absolute escape rejected server-side (SEC-360-04)
+BV-04,E2E-API-07,code_extract_signatures,fixture\0.txt,null-byte-injection,REJECTED,null-byte check (containment layer 1)
+BV-05,E2E-API-07,code_extract_signatures,\\server\share\file.ts,UNC-path,REJECTED,UNC check (containment layer 2)
+BV-06,E2E-API-07,code_extract_signatures,..\..\secrets.txt,dotdot-traversal,REJECTED,lexical isWithin after path.resolve (containment layer 3)
+BV-07,E2E-API-07,code_extract_signatures,symlink-inside-root-pointing-outside,symlink-follow,REJECTED,realpathSync follow-within (containment layer 4); NO outside content in response
+BV-08,E2E-API-09,code_symbol_locate,"{class;method} with __projectId=A where row is in B",cross-tenant,0-rows,Same query with __projectId=B returns 1 row (SA4E-41 tenant scope)
+BV-09,E2E-API-10,/mcp rate-limit,60 rapid tools/list calls,burst,429-beyond-threshold,rateLimiter attached to /mcp/* (SEC-360-03 remediation #1)
+BV-10,E2E-API-10,/mcp rate-limit,legitimate call after window,recovery,200-ok,Limiter recovers — no permanent lockout
+BV-11,E2E-API-11,code_symbols,"{name: '%'}",wildcard-enumeration,0-rows,sanitizeLikeQuery applied — no full-table scan (SEC-360-05)
+BV-12,E2E-API-11,code_symbols,"{name: 'alpha_method%'}",wildcard-escalation,0-rows,% treated literally after sanitization; prefix behavior for clean names preserved

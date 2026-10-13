@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+
+ Test Files  23 passed (23)
+      Tests  148 passed (148)
+   Start at  08:06:21
+   Duration  11.53s (transform 876ms, setup 0ms, import 6.61s, tests 218ms, environment 2ms)
+

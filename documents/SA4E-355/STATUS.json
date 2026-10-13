@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-355",
-  "currentPhase": "testing",
+  "currentPhase": "done",
   "phases": {
     "requirements": {
       "status": "done",
@@ -64,7 +64,14 @@
       "uat": "PASSED 2026-10-13 (user confirmed, ext 1.52.0 with bug-fix chain #1-#3) — Phase 7 deployment pending user go"
     },
     "deployment": {
-      "status": "not_started"
+      "status": "done",
+      "completedAt": "2026-10-14T02:00:00Z",
+      "releasedVersion": "v1.52.0",
+      "tag": "v1.52.0 -> commit 3f4af4e (pushed)",
+      "readme": "changelog entry added (9c04427)",
+      "sanity": "npm test 286 files / 2808 tests GREEN",
+      "jira": "Done (transition Complete 2026-10-14)",
+      "attachments": "DPG.md+RLN.md+2 drawio+2 png (11652-11657), DOCX skipped - orchestrator wrapper down, markdown fallback per policy"
     }
   },
   "attachments": {
@@ -74,7 +81,7 @@
   "relatedBugs": [
     "SA4E-357"
   ],
-  "lastUpdated": "2026-10-12T14:50:00Z",
+  "lastUpdated": "2026-10-14T02:00:00Z",
   "git": {
     "main": "30d6a67+315fa55",
     "note": "Phase 4 outputs + SA4E-356 consolidated onto local main"
@@ -92,4 +99,3 @@
     "FSD needs priority-table update (P1 shared-governance/P2 current-phase/P3 other steering - defined in Wave 2, STC-018 binding)"
   ]
 }
-

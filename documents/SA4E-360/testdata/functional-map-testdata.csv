@@ -1,0 +1,9 @@
+case_id,test_case_id,module,summary,key_symbols,map_tokens_expected,cap_behavior,description
+FM-01,UT-26,extension/src/pi-agent,agent session + query routing,"QueryRouter; SymbolOutlineExtractor",<=1500,served,Real indexed module — keySymbols exist in symbols table
+FM-02,UT-26,extension/src/pi-workflow,workflow tools + budget gates,"TurnBudgetGuard; SessionHost",<=1500,served,Real indexed module
+FM-03,UT-26,backend/src/engine,parsers + index + MCP tools,"signature-extractor; QueryLayer",<=1500,served,Real indexed module
+FM-04,UT-27,(40 modules synthetic),oversized map,(mixed),>16000-chars,trim-by-module-priority-until-<=16000-chars; re-measure-mapTokens,Cap pressure (AF-1; MAX_TOOL_RESULT_CHARS=16000)
+FM-05,UT-28,(1 broken module of 3),failing-module,(mixed),<=1500,entry-omitted-debug-log-no-event,EF-1 per-module failure — rest served
+FM-06,UT-29,(builder throws),total-failure,(none),0,layout-only+PI_FUNCTIONAL_MAP_UNAVAILABLE-warn,EF-2 — reviewer keeps read_method/find_tools steering
+FM-07,IT-10,extension/src/pi-workflow,shared-build-assembly+tool,(mixed),<=1500,ONE-SummaryTreeBuilder-build-per-60s-TTL-window,C-360-M2 AF-3; layout text byte-identical (TC-360-16)
+FM-08,SIT-02,(live workspace),manual-chat-demo,(mixed),<=1500,map-visible-in-tool-result,Manual verification inside get_workspace_info result

@@ -1,0 +1,7 @@
+render_id,test_case_id,module,file_path,symbol_name,symbol_kind,expected_render_line,fixture_ref,description
+REN-01,UT-11,extension,extension/src/pi-agent/context-retrieval/symbol-outline-extractor.ts,(file-header),n-a,// symbol-outline-extractor.ts,FIX-01,"Line 1 of each file block = '// <basename>' per FSD §3.1.4 (STC UT-11 step 2)"
+REN-02,UT-11,extension,extension/src/pi-agent/context-retrieval/symbol-outline-extractor.ts,SymbolOutlineExtractor,class,class SymbolOutlineExtractor,FIX-01,Kind + name line — no implements clause rendered (STC UT-11 step 2)
+REN-03,UT-11,extension,extension/src/pi-agent/context-retrieval/symbol-outline-extractor.ts,extractOutline,method,"method extractOutline(filePath, symbols, maxTokens)",FIX-02,Signature line — kind + name + params; exact string from STC UT-11 step 2
+REN-04,UT-11,extension,extension/src/pi-agent/context-retrieval/symbol-outline-extractor.ts,(all-symbols),n-a,(no method bodies rendered),FIX-01;FIX-02,Declarations only — body lines excluded from corpus render (FSD §3.1.4)
+REN-05,UT-11,extension,extension/src/pi-agent/context-retrieval/symbol-outline-extractor.ts,SymbolOutlineExtractor,class,(>120-char signature → first 117 + '...'),FIX-01,"Signature normalization inside render (STC UT-11 step 3; shared invariant with PBT-08 — samples in signature-normalization-testdata.csv)"
+REN-06,UT-11,extension+backend,(both modules in one call),(batched corpus),n-a,(locator.fetchSymbolCorpus called exactly once),FIX-01;FIX-02,ONE batched corpus query for [extension, backend] — never per-file (STC UT-11 step 1)

@@ -1,0 +1,9 @@
+scenario_id,test_case_id,n_ctx,reserve_output,expected_margin,expected_usable,expected_static_budget,expected_skeleton_cap,description
+BUD-01,PBT-01,32768,2048,2622,28098,19668,13767,qwen 32k oracle (resolver-true — DISC-7); historyBudget 8430
+BUD-02,PBT-02,65536,2048,5243,58245,40771,28539,65k oracle (secondary target); historyBudget 17474
+BUD-03,PBT-03,8192,2048,656,5488,3841,2688,default-8192 fallback chain (BR-01): ceil(8192x0.08)=656
+BUD-04,PBT-03,4096,512,328,3256,2279,1595,small window: ceil(4096x0.08)=328
+BUD-05,PBT-03,131072,4096,10486,116490,81543,57080,large window: ceil(131072x0.08)=10486
+BUD-06,PBT-03,1,0,1,0,0,0,boundary nCtx=1 — usable clamps to 0 -> DEGRADED path; no NaN (BR-01: never 0 nCtx input, but usable may be 0)
+BUD-07,IT-01,32768,2048,2622,28098,19668,13767,measure==inject wiring at 32k (C-360-S2 byte-identical)
+BUD-08,"IT-02;IT-07",32768,2048,2622,28098,19668,13767,gate ordering (measure BEFORE createAgentSession) + BR-08 escalation ladder harness
