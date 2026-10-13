@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-358",
-  "currentPhase": "uat_gate",
+  "currentPhase": "deployment",
   "autonomyLevel": "L3",
   "gitBranch": "main",
   "humanGates": [
@@ -79,10 +79,9 @@
       "completedAt": "2026-10-14",
       "note": "53 attempts, 0 bypass; PT-51 live-confirmed SA358-R1 (Low pre-existing); standalone mode"
     },
-    "uat": {
-      "status": "in_progress",
-      "note": "Build combined 1.52.0 deployed + reloaded; N-QA2 15/15 PASS dev-host :9183 (gate live); V-1 evidence complete 7/7 merge conditions; cho user confirm"
-    },
+    "uat": { "status": "done", "completedAt": "2026-10-14", "note": "User confirmed 'UAT pass' - N-QA2 15/15 dev-host live + V-1 complete + V-4 closed" },
+    "security_deploy_review": { "status": "done", "file": "covered-by-SA4E-356-combined-review", "verdict": "GO", "completedAt": "2026-10-14", "note": "Combined build 1.52.0 reviewed in SA4E-356 SDR (gate markers + 0 ACAO verified); DPG-358 conditions apply" },
+    "deployment": { "status": "in_progress", "startedAt": "2026-10-14", "note": "Phase 7 - RLN + release (v1.52.0 da release boi session SA4E-355/360 - RLN 356/358 fold vao)" },
     "security_deploy_review": {
       "status": "not_started"
     },

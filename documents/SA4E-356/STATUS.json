@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-356",
-  "currentPhase": "security_deploy_review",
+  "currentPhase": "deployment",
   "autonomyLevel": "L3",
   "gitBranch": "main",
   "humanGates": ["uat", "deployment"],
