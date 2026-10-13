@@ -1,6 +1,6 @@
 {
   "ticket": "SA4E-356",
-  "currentPhase": "deployment",
+  "currentPhase": "done",
   "autonomyLevel": "L3",
   "gitBranch": "main",
   "humanGates": ["uat", "deployment"],
@@ -19,7 +19,7 @@
     "pentest": { "status": "done", "file": "PENTEST-REPORT.md", "version": 1, "verdict": "SECURE_WITH_NOTES", "completedAt": "2026-10-12", "note": "92 attempts, 0 bypass, 2 Low (PT-01 residual design, PT-02 fixed inline); SA-01 live-confirmed -> SA4E-358" },
     "uat": { "status": "done", "completedAt": "2026-10-14", "note": "User confirmed 'UAT pass' - REG-1/REG-2 verified on deployed 1.48.0" },
     "security_deploy_review": { "status": "done", "file": "SECURITY-DEPLOY-REVIEW.md", "version": 1, "verdict": "APPROVED_WITH_CONDITIONS_GO", "completedAt": "2026-10-14", "note": "0 Crit/High; C1 verified tren combined 1.52.0; C2-C4 cho Phase 7; public-release blockers rieng (SD-01/02/09/03)" },
-    "deployment": { "status": "not_started", "note": "Phase 7 — RLN + release, cho user approve deploy" }
+    "deployment": { "status": "done", "completedAt": "2026-10-14", "note": "RLN v1.0 fold vao release v1.52.0; README changelog updated; Jira DONE" }
   },
   "circuitBreaker": {
     "phase_requirements": { "attempts": 0, "lastError": null, "state": "closed", "lastFailure": null, "cooldownUntil": null },
