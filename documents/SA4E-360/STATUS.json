@@ -4,8 +4,10 @@
   "currentPhase": "requirements",
   "phases": {
     "requirements": {
-      "status": "in_progress",
-      "startedAt": "2026-10-13T08:26:00Z"
+      "status": "done",
+      "file": "BRD.md",
+      "version": 1.1,
+      "completedAt": "2026-10-13T09:10:00Z"
     },
     "specification": {
       "status": "not_started"
@@ -39,7 +41,18 @@
   "jira": {
     "key": "SA4E-360",
     "status": "To Do",
-    "note": "project workflow has no Docs Review state — stays To Do until BRD approved"
+    "attachments": [
+      "BRD-v1.1-SA4E-360.docx (11614)",
+      "use-case.drawio (11615)",
+      "business-flow.drawio (11616)"
+    ],
+    "note": "project workflow has no Docs Review state — stays To Do until BRD approved, then In Progress"
+  },
+  "verification": {
+    "brdChecks": "6/6 critical pass",
+    "mermaid": 0,
+    "diagrams": 2,
+    "docxAttached": true
   },
   "dormantFoundationToWire": [
     "SymbolOutlineExtractor.extractOutline (extension/src/pi-agent/context-retrieval/)",
@@ -49,5 +62,5 @@
     "tree-sitter + 16 grammars (backend/src/engine/parsers/)",
     "symbols table FTS5 with startLine/endLine"
   ],
-  "lastUpdated": "2026-10-13T08:26:00Z"
+  "lastUpdated": "2026-10-13T09:12:00Z"
 }
