@@ -94,6 +94,12 @@ export async function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  // Register the sidebar tree view EARLY and UNCONDITIONALLY so the
+  // "sdlcAgentsTree" view always has a data provider — even with no workspace
+  // folder open, or when workspace init later fails. (Fixes "There is no data
+  // provider registered that can provide view data.")
+  registerTreeView(context);
+
   // Initialize proxy support (machine-specific, works without workspace)
   const proxyConfigService = new ProxyConfigService(context.secrets);
   const proxyDetectionService = new ProxyDetectionService();
@@ -168,11 +174,12 @@ export async function deriveProjectId(workspaceRoot: string): Promise<string> {
     projectId = crypto.createHash("sha256").update(`${userId}:${folderName}:${uuidComponent}`).digest("hex").slice(0, 12);
   }
 
-  // 4. JWT Secret Validation (CRIT-2)
-  const tokenSecret = process.env.TOKEN_SECRET;
-  if (!tokenSecret) {
-    throw new Error("[KRIO] CRITICAL: TOKEN_SECRET environment variable is not set. Cannot authenticate.");
-  }
+  // NOTE (CRIT-2): project-id derivation must NOT depend on any auth secret.
+  // JWT authentication is enforced server-side (fail-closed) in
+  // backend/src/server/middleware/jwt-auth.ts (validateJwtConfig +
+  // verifyHs256 keyed on KB_TOKEN_SECRET); the extension authenticates via
+  // AuthManager bearer tokens. No client-side TOKEN_SECRET gate is required
+  // here, and crashing activation is the wrong place to enforce it.
 
   // Persist derived project ID for stability across reloads
   try {
@@ -221,7 +228,8 @@ async function initializeWorkspace(context: vscode.ExtensionContext, workspaceRo
   (globalThis as any).__authTokenProvider = () => authManager?.getTokenSync() || "";
 
   setupAuthStateHandlers();
-  setupTreeView(context);
+  // Tree view is already registered in activate(); bind it to the live manager.
+  treeProvider?.attachMcpManager(mcpManager!);
 
   const chatPanelProvider = new ChatPanelProvider(context.extensionUri, mcpManager, workspaceRoot, context.secrets, context.workspaceState);
   context.subscriptions.push(
@@ -551,8 +559,15 @@ function applyBackendUrlChange(
     .catch((err) => outputChannel.appendLine(`[Kiro] Backend reconnect after URL change failed: ${(err as Error).message}`));
 }
 
-function setupTreeView(context: vscode.ExtensionContext): void {
-  treeProvider = new KiroTreeViewProvider(mcpManager!);
+/**
+ * Create the sidebar tree view + provider at activation time, with NO
+ * mcpManager yet (none exists before a workspace is initialized). The
+ * provider renders a valid "server stopped / KB inactive" tree. When a
+ * workspace is initialized, initializeWorkspace() calls
+ * treeProvider.attachMcpManager() to bind live status.
+ */
+function registerTreeView(context: vscode.ExtensionContext): void {
+  treeProvider = new KiroTreeViewProvider();
   const treeView = vscode.window.createTreeView("sdlcAgentsTree", { treeDataProvider: treeProvider });
   treeProvider.setTreeView(treeView);
   context.subscriptions.push(treeView);

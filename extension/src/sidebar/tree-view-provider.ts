@@ -18,12 +18,32 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
   private isAuthenticated = false;
   private username = "";
 
-  constructor(private readonly mcpManager: McpServerManager) {
-    mcpManager.onStatusChange((status) => {
+  constructor(private mcpManager?: McpServerManager) {
+    // The provider is created at activation BEFORE a workspace exists, so the
+    // manager may be absent. Only wire status updates when one is present.
+    if (mcpManager) { this.subscribeToStatus(mcpManager); }
+  }
+
+  /** Wire server-status updates from the manager into the tree + badge. */
+  private subscribeToStatus(manager: McpServerManager): void {
+    manager.onStatusChange((status) => {
       this.serverStatus = status;
       this.updateBadge();
       this._onDidChangeTreeData.fire(undefined);
     });
+  }
+
+  /**
+   * Attach the MCP server manager after construction (workspace init path).
+   * The provider is created at activation BEFORE a workspace/mcpManager exists;
+   * this binds the real manager once initializeWorkspace() builds it.
+   * @param mcpManager Live server manager to source status from.
+   */
+  attachMcpManager(mcpManager: McpServerManager): void {
+    this.mcpManager = mcpManager;
+    this.subscribeToStatus(mcpManager);
+    this.updateBadge();
+    this.refresh();
   }
 
   /**
