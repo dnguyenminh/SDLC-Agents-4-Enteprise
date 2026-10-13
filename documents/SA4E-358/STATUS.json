@@ -48,10 +48,20 @@
     },
     "implementation": { "status": "done", "completedAt": "2026-10-14", "note": "TA APPROVED (iteration 2); 2808 tests PASS; all CI gates GREEN; V-1a+V-1b-standalone PASS" },
     "user_guide": {
-      "status": "not_started"
+      "status": "done",
+      "file": "UG.md",
+      "version": 1,
+      "completedAt": "2026-10-14",
+      "note": "368 dong; [::1] DENY by design corrected per code+STC; ingested KB"
     },
     "security_code_review": {
-      "status": "not_started"
+      "status": "done",
+      "file": "SECURITY-ASSESSMENT.md",
+      "version": 1,
+      "verdict": "APPROVED_WITH_FINDINGS",
+      "overallRisk": "low",
+      "completedAt": "2026-10-14",
+      "note": "0 Crit/High/Med; merge 6/7 - con N-QA2 dev-host + V-4 (Phase 6)"
     },
     "testing": {
       "status": "not_started"
