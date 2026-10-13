@@ -10,10 +10,10 @@
 |-------|-------|
 | Jira Ticket | SA4E-358 |
 | Title | [Follow-up SA4E-356/SA-01] CORS * + no authN trên loopback :9181 — Origin/Host validation |
-| Author | BA Agent (business sections — draft v1.0) + TA Agent (technical enrichment — v1.1) |
-| Version | 1.1 (TA enriched — technical contract §3.1.6.1, pseudocode §6.1, test matrix §10.1, Node http integration §5.3, verify plan V-1, benchmark §8) |
+| Author | BA Agent (business sections — draft v1.0) + TA Agent (technical enrichment — v1.1) + BA Agent (sync N-BA2 — v1.2) |
+| Version | 1.2 (sync TDD v1.1 — SEC-358-01 Option A: Phase 1.5 Host-check-mọi-request-có-Host, I-8, AD-10) |
 | Date | 2026-10-13 |
-| Status | Enriched — chờ SA review (AC-3 gate) rồi chuyển Phase 3 (TDD) |
+| Status | Synced với TDD v1.1 — DEV implement từ TDD §3 + §5; FSD v1.2 đồng bộ theo N-BA2 (TDD §15.6) |
 | Issue Type / Priority | Task / Medium |
 | Related BRD | documents/SA4E-358/BRD.md (v1.0) |
 
@@ -25,6 +25,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-13 | BA Agent | Initiate draft — business sections: Functional Requirements (FR-01..FR-12 map AC-1..AC-8), Use Cases (UC-01..UC-07 đủ Main/AF/EF), Business Rules (BR-01..BR-10), bảng audit endpoints/paths của WrapperServer, Error Handling (403 shape + CORS headers on denial + log format), Data Specs (allowlist config shape hardcoded vs config — đánh giá; R-3 verify plan), Traceability matrix AC ↔ FR ↔ UC ↔ BR, 3 diagram (system-context, sequence, state). Xây TRÊN code hiện tại sau fix SA4E-356 (routeToolCall envelope + return-await đã live — KHÔNG mô tả lại). Chờ TA enrich (xem §11.3). |
 | 1.1 | 2026-10-13 | TA Agent | Targeted enrichment 6/6 gaps §11.3 — KHÔNG tạo lại, chỉ bổ sung: **§3.1.6.1** Technical Contract Origin Gate (module placement `extension/src/services/OriginGate.ts`, TS signatures discriminated union, injection-for-test 2 mức, contract rules G-1..G-8); **§6.1** pseudocode gate logic (parse/normalize Origin, multiple-Origin fail-closed qua `rawHeaders`, Host parsing IPv6/port/case, precedence Origin > Host, Referer cấm); **§10.1** test matrix chi tiết T1..T14 (unit pure + integration server-thật, systematic no-ACAO sweep, raw-socket duplicate header); **§5.3** Node http header API; **§3.1.4.3** V-1 verify steps cụ thể; **§8** benchmark NFR. TA Notes: sửa inconsistency UC-05 Step 4 (Host check chỉ khi có Origin — FR-04/BR-06), clarify FR-10 "byte-level", chốt 403-uniform (Change Log #3). |
+| 1.2 | 2026-10-13 | BA Agent | **Sync N-BA2 (TDD v1.1 §15.6 — SEC-358-01 Option A, SM chốt 2026-10-13):** (1) §6.1 pseudocode — thêm **Phase 1.5** Host-validate cho MỌI request có Host (TRƯỚC nhánh no-Origin; `host === ""` → defer), Phase 2 bỏ invariant "browser LUÔN gắn Origin" làm lớp bảo vệ, Phase 5 chỉ còn EF-1; (2) FR-02a/FR-04 + BR-05/BR-06 wording "Host check khi có Origin" → "mọi request có Host" (I-8); (3) UC-05 AF-1 viết lại — scenario browser-thật rebinding same-origin no-Origin (`Host: evil.com:9181`, KHÔNG Origin) → DENY; TA Note UC-05 + TA Note §6.1 (~dòng 963) viết lại theo AD-10; (4) UC-04 Step 2, UC-06, UC-07 (row 1b), §2.1 (4th caller row), §3.1.4.2, §5.3 row 5, G-6, Business Error Scenarios, §9.1 — cross-refs nhất quán; (5) State diagram (mermaid + state.drawio node stale "không check Host chặt") cập nhật + re-export PNG; (6) Traceability AC-5 + Change Log #10. KHÔNG đổi: §3.1.6.1 contract types (deny reason `host-mismatch` tái sử dụng — không thêm enum), test matrix core, TDD/BRD. |
 
 ---
 
@@ -44,10 +45,10 @@ FSD dịch BRD v1.0 (AC-1..AC-8, 4 stories) thành: functional requirements chi 
 
 **In scope** (theo BRD §1.4 — 2 giải pháp được duyệt):
 
-1. **Origin/Host validation gate** tại `handleRequest` (extension/src/services/WrapperServer.ts:124) chạy trước mọi route handling và trước khi set CORS headers (FR-01): no-Origin → pass (native MCP client); Origin ∈ allowlist → pass; còn lại → **403 Forbidden** (FR-02).
+1. **Origin/Host validation gate** tại `handleRequest` (extension/src/services/WrapperServer.ts:124) chạy trước mọi route handling và trước khi set CORS headers (FR-01): no-Origin → pass (native MCP client — Host vẫn được validate ở Phase 1.5 nếu request có header Host — FR-04 v1.2); Origin ∈ allowlist → pass; còn lại → **403 Forbidden** (FR-02).
 2. **Allowlist origin hợp lệ** (FR-03): `vscode-webview://*`, `http(s)://localhost:<mọi port>`, `http://127.0.0.1:<mọi port>` — constant có cấu trúc trong code (BR-09).
 3. **Bỏ `ACAO: *` vô điều kiện** (FR-05): ACAO chỉ được echo khi Origin ∈ allowlist; không còn `*` ở bất kỳ response nào (403/404/health kể cả).
-4. **Host validation khi có Origin** (FR-04): Host phải là `127.0.0.1:<port>` / `localhost:<port>` (port = port đang listen) — chặn DNS rebinding.
+4. **Host validation cho MỌI request có Host** (FR-04 — v1.2 theo TDD v1.1 §3 Phase 1.5, SEC-358-01 Option A): Host phải là `127.0.0.1:<port>` / `localhost:<port>` (port = port đang listen) — chặn DNS rebinding cả nhánh cross-origin lẫn same-origin no-Origin (invariant I-8); Host **thiếu** chỉ được pass khi request no-Origin (carve-out HTTP/1.0 legacy).
 5. **Gate áp mọi route** (FR-07): /mcp POST, /mcp GET (SSE), /health, fallback 404 — fail-closed.
 6. **Deny response + deny log** chuẩn hóa (FR-08, FR-09) — chống log-forging theo pattern `sanitizeLogText` đã có (PathResolver.ts:189).
 7. **Binding invariant verify-only** (FR-11): giữ nguyên `listen(port, "127.0.0.1")` (WrapperServer.ts:98) + thêm unit test assert — không có code change cho binding.
@@ -117,7 +118,8 @@ WrapperServer chạy trong **Extension Host** (VS Code/Kiro), listen loopback `1
 |--------|----------|------------------|
 | Browser tab độc hại (drive-by) | Cross-origin fetch từ trang web bất kỳ; browser **luôn** gắn header `Origin` (JS không thể giả mạo — glossary "Origin") | **DENY 403** — không ACAO → browser chặn cả request lẫn readback (AC-1, AC-8) |
 | vscode-webview / localhost web client | Origin `vscode-webview://*` hoặc `http(s)://localhost:*`, `http://127.0.0.1:*` | **ALLOW** — preflight 204 + ACAO echo, tool call + SSE bình thường (AC-2) |
-| Native MCP client (VS Code/Kiro HTTP; SDLC agents stdio) | Không gửi header Origin (A-1 — verify plan §3.1.4.3); stdio không đi qua HTTP | **ALLOW pass-through** — không cần ACAO, hành vi byte-level không đổi (AC-4) |
+| Native MCP client (VS Code/Kiro HTTP; SDLC agents stdio) | Không gửi header Origin (A-1 — verify plan §3.1.4.3); stdio không đi qua HTTP; HTTP/1.1 luôn gửi `Host: 127.0.0.1:<port>` đúng → Phase 1.5 pass (H-8/UT-33) | **ALLOW pass-through** — không cần ACAO, hành vi byte-level không đổi (AC-4) |
+| Browser DNS-rebinding same-origin (v1.2 — SEC-358-01) | Trang serve từ chính domain attacker trên :9181 → rebind DNS → 127.0.0.1 → GET/EventSource trở thành **same-origin** → KHÔNG mang Origin + `Host: evil.com:9181` | **DENY 403 host-mismatch** (Phase 1.5 chặn TRƯỚC nhánh no-Origin — I-8, AD-10; v1.1 đã để PASS — gap Medium được Option A đóng) |
 
 Mọi traffic qua gate mới chạm được MCP tools (local Extension Host + backend REST). Mỗi lần deny ghi 1 dòng log sanitized vào outputChannel.
 
@@ -186,7 +188,7 @@ graph TB
 
 #### 3.1.1 Description
 
-Thêm một **gate Origin/Host validation** tại đầu `handleRequest` (extension/src/services/WrapperServer.ts:124) — điểm vào duy nhất của server — chạy **trước mọi route handling** và **trước khi set bất kỳ CORS header nào**. Gate đọc 2 request header (Origin, Host), phân loại caller theo 3 nhánh (no-Origin / Origin ∈ allowlist / còn lại), và quyết định pass hay 403 theo FR-02/FR-04. Gate **thay thế** behavior CORS hiện tại (ACAO `*` vô điều kiện :126-129) bằng cơ chế echo-when-allowed (FR-05/FR-06).
+Thêm một **gate Origin/Host validation** tại đầu `handleRequest` (extension/src/services/WrapperServer.ts:124) — điểm vào duy nhất của server — chạy **trước mọi route handling** và **trước khi set bất kỳ CORS header nào**. Gate đọc 2 request header (Origin, Host) từ `rawHeaders` — **Host validation áp cho MỌI request có header Host** (Phase 1.5 — I-8, v1.2 theo TDD v1.1: đóng DNS rebinding same-origin qua nhánh no-Origin) — rồi phân loại caller theo 3 nhánh (no-Origin / Origin ∈ allowlist / còn lại) và quyết định pass hay 403 theo FR-02/FR-04. Gate **thay thế** behavior CORS hiện tại (ACAO `*` vô điều kiện :126-129) bằng cơ chế echo-when-allowed (FR-05/FR-06).
 
 Gate là pure header-check: không đọc body, không I/O, không đổi state — overhead < 1ms/request (NFR §8).
 
@@ -195,9 +197,9 @@ Gate là pure header-check: không đọc body, không I/O, không đổi state 
 | FR | Requirement | Source (AC / BRD) | Verify |
 |----|-------------|-------------------|--------|
 | FR-01 | Gate đặt tại `handleRequest` (:124) chạy **TRƯỚC** mọi route handling (/mcp, /health, 404) và **TRƯỚC** khi set bất kỳ CORS header nào — đảm bảo không có response nào thoát ra ngoài gate | BRD Story 1 Req 1; AC-1, AC-8 | T1, T2, T7 + code review |
-| FR-02 | Quy tắc Origin theo thứ tự: (a) request **không có header Origin** → pass (native MCP client); (b) Origin ∈ allowlist (FR-03) → pass; (c) Origin khác → **403 Forbidden**, không route tiếp, không set ACAO | BRD Story 1 Req 2; AC-1, AC-4 | T1, T3, T4, T5 |
+| FR-02 | Quy tắc Origin theo thứ tự: (a) request **không có header Origin** → pass (native MCP client; Host vẫn validate ở Phase 1.5 nếu request có header Host — FR-04 v1.2/I-8); (b) Origin ∈ allowlist (FR-03) → pass; (c) Origin khác → **403 Forbidden**, không route tiếp, không set ACAO | BRD Story 1 Req 2; AC-1, AC-4 | T1, T3, T4, T5 |
 | FR-03 | Allowlist mặc định (constant có cấu trúc — §3.1.4.1): `vscode-webview://*` (mọi webview ID); `http://localhost:<mọi port>`; `https://localhost:<mọi port>`; `http://127.0.0.1:<mọi port>` | BRD Story 2 Req 1; AC-2 | T4, T5 |
-| FR-04 | Quy tắc Host (chặn DNS rebinding): khi request **CÓ** Origin, `Host` phải là `127.0.0.1:<port>` hoặc `localhost:<port>` với port = port đang listen; Host khác → **403** (reason=host-mismatch). Request không-Origin không bị check Host chặt (giữ hành vi native client — BR-06) | BRD Story 1 Req 3; AC-5 | T6 |
+| FR-04 | Quy tắc Host (chặn DNS rebinding — **v1.2 theo TDD v1.1 §3 Phase 1.5, SEC-358-01 Option A, invariant I-8**): Host check áp cho **MỌI request CÓ header Host** — kể cả no-Origin (rebinding same-origin, H-7/UT-32): `Host` phải là `127.0.0.1:<port>` hoặc `localhost:<port>` với port = port đang listen; Host khác → **403** (reason=host-mismatch). Host **thiếu** chỉ được pass khi request no-Origin (carve-out HTTP/1.0 legacy — H-9/UT-34); có-Origin thiếu Host → 403 (EF-1 UC-05) | BRD Story 1 Req 3; AC-5; SEC-358-01 Option A | T6, T12 step 4, T13 row 1b, H-7..H-9 (UT-32..34), LH-13..15 |
 | FR-05 | **Bỏ `ACAO: *` vô điều kiện** (:126): ACAO chỉ được set khi Origin ∈ allowlist, giá trị = **echo đúng Origin đó** (không dùng `*` kể cả cho allowlist). Mọi response khác (403 deny, 404, /health cho caller lạ, 500) **KHÔNG chứa ACAO** | BRD Story 1 Req 4; AC-8 | T1, T2, T7 + assert "không ACAO" mọi response |
 | FR-06 | Preflight OPTIONS: chỉ trả **204 + Allow-Methods (GET, POST, OPTIONS) + Allow-Headers (Content-Type) + ACAO echo** khi Origin được phép (và Host pass FR-04); còn lại → **403** (không 204) | BRD Story 1 Req 5; AC-1, AC-2 | T2, T4 |
 | FR-07 | Gate áp cho **MỌI method/route**: /mcp POST, /mcp GET (SSE — chặn trước khi stream mở), /health, fallback 404 — fail-closed (glossary: fail-closed) | BRD Story 1 Req 6, Story 2 Req 4; AC-1, AC-6 | T1, T6, T7 |
@@ -324,7 +326,7 @@ Gate là pure header-check: không đọc body, không I/O, không đổi state 
 | Step | Actor | System | Description |
 |------|-------|--------|-------------|
 | 1 | Native client | | Gửi POST /mcp `initialize` — KHÔNG có header Origin |
-| 2 | | Gate (FR-02a) | Không có Origin → nhánh no-Origin → **pass** (không check Host chặt — BR-06, giữ hành vi hiện tại cho native client) |
+| 2 | | Gate (FR-02a) | Không có Origin → nhánh no-Origin → **pass** (v1.2: Host vẫn được validate ở Phase 1.5 nếu request có header Host — native HTTP/1.1 luôn gửi `Host: 127.0.0.1:<port>` đúng → pass, H-8/UT-33; Host thiếu (HTTP/1.0 legacy) → pass — carve-out BR-06, H-9/UT-34) |
 | 3 | | handleMcp (FR-10) | Protocol negotiation trả protocolVersion + serverInfo như hiện tại (:170-182) |
 | 4 | Native client | | Gửi tools/list → nhận schema đã rewrite (Base64Proxy) như hiện tại |
 | 5 | Native client | | Gửi tools/call → routeToolCall thực thi (local tool hoặc backend REST), envelope PathResolverError của SA4E-356 giữ nguyên |
@@ -359,23 +361,23 @@ Gate là pure header-check: không đọc body, không I/O, không đổi state 
 | 1 | Browser (trang attacker) | | Gửi POST /mcp — request đi tới 127.0.0.1:9181 (do DNS rebinding) nhưng header `Host: attacker.com:9181` (HTTP/1.1 Host = hostname user đã gõ) và `Origin: http://attacker.com` |
 | 2 | | Gate (FR-02, FR-03) | Origin `http://attacker.com` ∉ allowlist → đủ điều kiện deny ngay |
 | 3 | | Gate (FR-04) | (Independent layer) Host `attacker.com:9181` ≠ `127.0.0.1:9181`/`localhost:9181` → vi phạm Host rule |
-| 4 | | Gate (FR-08, FR-09) | 403 Forbidden + `{"error":"Forbidden"}` + log `reason=origin-not-allowed` (Origin check chạy trước; nếu attacker bỏ Origin, Host check vẫn chặn với reason=host-mismatch) |
+| 4 | | Gate (FR-08, FR-09) | 403 Forbidden + `{"error":"Forbidden"}` + log `reason=origin-not-allowed` (v1.2: Origin check + Phase 1.5 Host check đều chạy trước route — "deny đầu tiên định reason"; nếu attacker bỏ Origin — same-origin sau rebind — Phase 1.5 vẫn chặn với reason=host-mismatch, H-7/UT-32) |
 
 **Alternative Flows:**
 
 | ID | Condition | Steps |
 |----|-----------|-------|
-| AF-1 | Attacker setup để Host header = 127.0.0.1:9181 (rebinding hoàn hảo) | Host check pass — NHƯNG browser vẫn gắn `Origin: http://attacker.com` (cross-origin theo quan điểm browser) → Origin check chặn → 403. Hai lớp độc lập: một lớp bị qua thì lớp kia còn (defense theo depth chi phí thấp) |
+| AF-1 | **Kịch bản browser-thật — rebinding same-origin (v1.2 — SEC-358-01 Option A):** attacker rebind DNS `evil.com` → `127.0.0.1` sau khi user visit trang serve từ chính `evil.com:9181` → fetch/EventSource `http://evil.com:9181/mcp` trở thành **same-origin** theo quan điểm browser → GET **KHÔNG mang Origin** (browser chỉ gắn Origin cho cross-origin/non-GET); browser tự set Host theo URL nên attacker KHÔNG kiểm soát Host header (scenario "attacker set `Host: 127.0.0.1:9181` hoàn hảo" của v1.0 **không khả thi với browser** — đã loại) | Request rơi nhánh no-Origin với `Host: evil.com:9181` → **Phase 1.5 (I-8) chặn TRƯỚC nhánh no-Origin → 403 reason=host-mismatch** (H-7/UT-32, IT-12 step 4, live LH-13 — điều kiện merge #4). FSD v1.1 đã cho request này PASS qua nhánh no-Origin — gap Medium được Option A đóng (SECURITY-REVIEW v1.0). GET surface từng lộ: SSE /mcp, /health |
 
 **Exception Flows:**
 
 | ID | Condition | Steps |
 |----|-----------|-------|
-| EF-1 | Host header thiếu (HTTP/1.0 client) | Request không-Origin rơi nhánh no-Origin (pass — BR-06); request CÓ-Origin thiếu Host → FR-04 fail → 403 reason=host-mismatch (fail-closed) |
+| EF-1 | Host header thiếu (HTTP/1.0 client) | Request no-Origin + không Host → pass (carve-out duy nhất của Phase 1.5 — HTTP/1.0 legacy, TDD H-9/UT-34); request CÓ-Origin thiếu Host → FR-04 fail → 403 reason=host-mismatch (fail-closed) |
 | EF-2 | Port trong Host khác port listen (`Host: 127.0.0.1:9999`) | FR-04 — so khớp port **chính xác** với port đang listen → 403 reason=host-mismatch (BR-03) |
 
-<!-- TA enrichment (v1.1) — correction -->
-> **TA Note (v1.1 — điều chỉnh Main Flow Step 4):** câu parenthetical *"nếu attacker bỏ Origin, Host check vẫn chặn với reason=host-mismatch"* **mâu thuẫn với FR-04/BR-06 và với EF-1 của chính UC này**: request BỎ Origin → nhánh no-Origin → **PASS** (không Host check). Scenario "bỏ Origin + Host lạ" chỉ khả thi từ client non-browser (browser luôn gắn Origin cho cross-origin fetch/XHR — invariant mà thiết kế dựa vào; curl tự set tự do là out of threat model BRD §1.1.1 + AF-1/AF-2 UC-01). Behavior đúng: Step 4 parenthetical rút gọn thành *"Origin check chạy trước và đủ điều kiện deny; Host check là lớp xác nhận độc lập khi Origin hiện diện"*. Danh sách full origin-test cases: §6.1 pseudocode Phase 3-5 + §10.1 T1-T12.
+<!-- BA sync (v1.2) — N-BA2/TDD v1.1: SEC-358-01 Option A (supersede TA Note v1.1) -->
+> **BA Note (v1.2 — viết lại TA Note v1.1 theo N-BA2, TDD §3.3 + AD-10):** TA Note v1.1 (rằng "bỏ Origin + Host lạ chỉ khả thi từ non-browser; browser luôn gắn Origin cho cross-origin fetch") **KHÔNG còn đúng cho DNS rebinding same-origin (SEC-358-01)**: sau rebind, fetch/EventSource của browser trở thành **same-origin** → GET KHÔNG mang Origin NHƯNG `Host: evil.com:9181` vẫn đi kèm — giả định "no-Origin ⇒ non-browser" bị phá vỡ đúng ở đây (request vẫn do browser phát sinh). FSD v1.1 đã cho request này PASS qua nhánh no-Origin (gap Medium — SECURITY-REVIEW v1.0). v1.2 áp **Option A (SM chốt 2026-10-13)**: **Phase 1.5 (TDD §3) Host check áp cho MỌI request có Host, TRƯỚC nhánh no-Origin (I-8)** → 403 host-mismatch (H-7/UT-32, live LH-13). Main Flow Step 4 parenthetical được khôi phục ở dạng đúng: "nếu attacker bỏ Origin (same-origin sau rebind), Phase 1.5 vẫn chặn với reason=host-mismatch". Ghi chú v1.1 "siết thêm là scope creep" bị AD-10 supersede: Option A rẻ (~5-8 dòng + 3 unit cases) hơn Option B (residual risk + follow-up shared-secret BẮT BUỘC trước release public). Danh sách full test cases: §6.1 pseudocode Phase 1.5-6 + §10.1 T1-T14 + H-7..H-9 (UT-32..34).
 
 ---
 
@@ -383,7 +385,7 @@ Gate là pure header-check: không đọc body, không I/O, không đổi state 
 **Tên:** SSE GET /mcp được gate như mọi route khác
 **Actor:** Bất kỳ caller nào mở GET /mcp (Streamable HTTP SSE channel)
 **Preconditions:** Wrapper đang listen; caller muốn nhận server-initiated messages.
-**Postconditions:** Chỉ caller được phép (no-Origin hoặc Origin ∈ allowlist + Host loopback) mở được stream; origin lạ nhận 403 TRƯỚC khi stream mở (không rò header SSE).
+**Postconditions:** Chỉ caller được phép (no-Origin với Host hợp lệ ở Phase 1.5 hoặc không có Host — carve-out HTTP/1.0; hoặc Origin ∈ allowlist + Host loopback) mở được stream; origin lạ nhận 403 TRƯỚC khi stream mở (không rò header SSE).
 
 **Main Flow:**
 
@@ -419,13 +421,14 @@ Gate là pure header-check: không đọc body, không I/O, không đổi state 
 | Step | Actor | System | Description |
 |------|-------|--------|-------------|
 | 1 | Browser | | OPTIONS /mcp với Origin + Access-Control-Request-Method/Headers |
-| 2 | | Gate | Áp cùng 3 nhánh như request thường (FR-02): no-Origin → 204 hiện trạng giữ nguyên cho native client (OPTIONS không-Origin hiếm nhưng không hại — không leak gì); Origin ∈ allowlist + Host pass → 204 + ACAO echo + Allow-Methods + Allow-Headers (FR-06); còn lại → 403 + log |
+| 2 | | Gate | Áp cùng các nhánh như request thường (FR-02): no-Origin (Host hợp lệ ở Phase 1.5 hoặc thiếu — carve-out HTTP/1.0) → 204 hiện trạng giữ nguyên cho native client (không leak gì); Origin ∈ allowlist + Host pass → 204 + ACAO echo + Allow-Methods + Allow-Headers (FR-06); còn lại → 403 + log |
 
 **Alternative Flows — ma trận đầy đủ:**
 
 | # | Origin | Host | Gate result | Response |
 |---|--------|------|-------------|----------|
-| 1 | (không có) | bất kỳ | PASS (native — FR-02a) | 204 hiện trạng (không ACAO) |
+| 1 | (không có) | 127.0.0.1/localhost:port-listen hoặc thiếu (HTTP/1.0) | PASS (native — FR-02a; Host validate P1.5 pass hoặc carve-out H-9) | 204 hiện trạng (không ACAO) |
+| 1b | (không có) | attacker.com:9181 (Host lạ) | **DENY (P1.5 — I-8, SEC-358-01 v1.2)** | **403 host-mismatch**, zero CORS (IT-13 row 1b — TDD v1.1) |
 | 2 | vscode-webview://abc | 127.0.0.1:9181 | PASS (FR-03 + FR-04) | 204 + ACAO echo + Allow-* (FR-06) |
 | 3 | http://localhost:3000 | localhost:9181 | PASS | 204 + ACAO echo |
 | 4 | https://evil.com | bất kỳ | DENY | **403**, không ACAO, không Allow-* (AC-1) |
@@ -448,8 +451,8 @@ Gate là pure header-check: không đọc body, không I/O, không đổi state 
 | BR-02 | **Allowlist so khớp chính xác scheme + host** (pattern-based theo scheme cho vscode-webview; scheme+host cho localhost/127.0.0.1 với port bất kỳ). KHÔNG dùng substring matching (chặn bypass `http://localhost.evil.com` hay query-string tricks). | BRD Story 1 Validation Rules |
 | BR-03 | **Host check:** hostname so khớp case-insensitive; port so khớp **chính xác** với port đang listen (đọc từ server address, không hardcode 9181). | BRD Story 1 Validation Rules |
 | BR-04 | **Deny log không chứa dữ liệu nguy hiểm:** không log full request body; không echo raw header attacker; mọi giá trị header đưa vào log PHẢI qua `sanitizeLogText` (PathResolver.ts:189) thay ký tự control [\r\n\0] → "?" (anti log-forging — R-4, pattern SEC-05 SA4E-356). | BRD R-4 |
-| BR-05 | **Header precedence Origin > Host:** khi request CÓ Origin → Origin quyết định allow/deny (tín hiệu tin cậy — browser kiểm soát, JS không giả mạo được — glossary Origin); Host là lớp xác nhận độc lập request nhắm loopback (chặn DNS rebinding). Khi request KHÔNG có Origin → không áp Host check chặt (BR-06). Không bao giờ dùng Referer thay Origin. | BRD Story 1 Req 2-3; glossary DNS Rebinding |
-| BR-06 | **No-Origin = native client signal:** request không header Origin được coi là native MCP client → pass không cần ACAO, không check Host chặt (giữ hành vi hiện tại — giả định A-1, verify plan §3.1.4.3). | BRD Story 2 Req 2; A-1 |
+| BR-05 | **Header precedence Origin > Host (v1.2 — theo TDD v1.1 §3, AD-10):** Origin ∈ allowlist quyết định pass + echo (tín hiệu tin cậy — browser kiểm soát, JS không giả mạo được — glossary Origin); Host check (Phase 1.5) áp cho **MỌI request CÓ header Host** — kể cả no-Origin (SEC-358-01 Option A, invariant I-8): Host phải nhắm loopback đúng port đang listen (chặn DNS rebinding cả cross-origin lẫn same-origin no-Origin). Host hỏng → deny bất kể Origin (P1.5 chạy trước nhánh no-Origin — "deny đầu tiên định reason"); Host hợp lệ + Origin lạ → deny reason=origin-not-allowed. Không bao giờ dùng Referer thay Origin. | BRD Story 1 Req 2-3; glossary DNS Rebinding; SEC-358-01 Option A (TDD v1.1 §3, I-8) |
+| BR-06 | **No-Origin = native client signal (v1.2 — siết theo SEC-358-01 Option A):** request không header Origin được coi là native MCP client → pass không cần ACAO — **NHƯNG vẫn chịu Host validation ở Phase 1.5 nếu request có header Host** (I-8): native HTTP/1.1 bắt buộc Host (RFC 7230 §5.4) và MCP SDK/undici luôn gửi `Host: 127.0.0.1:<port>`/`localhost:<port>` đúng → pass (H-8/UT-33 — zero breakage). Carve-out duy nhất: no-Origin + KHÔNG Host (HTTP/1.0 legacy) → pass (H-9/UT-34). Giả định A-1 (native không gửi Origin) vẫn verify theo §3.1.4.3. | BRD Story 2 Req 2; A-1; SEC-358-01 Option A (TDD v1.1 §3, I-8, AD-10) |
 | BR-07 | **ACAO chỉ echo, không `*`:** kể cả cho origin trong allowlist, ACAO = giá trị Origin cụ thể (echo). Không còn `Access-Control-Allow-Origin: *` ở bất kỳ response nào. | BRD Story 1 Req 4; AC-8; glossary ACAO |
 | BR-08 | **Byte-level behavior không đổi cho caller được phép:** MCP handshake, envelope lỗi, schema rewrite, SSE format, keep-alive, body limit, port retry — không thay đổi. Gate chỉ thêm nhánh deny. | BRD Story 3; FR-10 |
 | BR-09 | **Allowlist là constant có cấu trúc trong code** (không setting runtime / không contributes.configuration — đánh giá §3.1.4.1); mở rộng = code change nhỏ + unit test. | BRD A-6, Out-of-scope |
@@ -494,7 +497,7 @@ Match semantics: so khớp **scheme + host chính xác** (host case-insensitive)
 | Field | Type | Required | Validation | Description |
 |-------|------|----------|------------|-------------|
 | Origin | HTTP request header | No (browser gắn cho cross-origin; native client không gửi) | Parse thành URL hợp lệ (scheme+host+port); malformed → deny (FR-12); nhiều giá trị → deny (FR-12); so allowlist FR-03 | Tín hiệu quyết định allow/deny (BR-05) |
-| Host | HTTP request header | Yes (HTTP/1.1 bắt buộc) | Khi CÓ Origin: phải `127.0.0.1:<port>`/`localhost:<port>` với port = port đang listen (FR-04, BR-03); hostname case-insensitive | Chặn DNS rebinding (AC-5) |
+| Host | HTTP request header | Yes (HTTP/1.1 bắt buộc — RFC 7230 §5.4) | **MỌI request có Host** phải là `127.0.0.1:<port>`/`localhost:<port>` với port = port đang listen (FR-04, BR-03 — Phase 1.5/I-8 v1.2); hostname case-insensitive; Host thiếu chỉ pass khi request no-Origin (carve-out HTTP/1.0 — H-9/UT-34) | Chặn DNS rebinding cả cross-origin lẫn same-origin no-Origin (AC-5, SEC-358-01) |
 | Access-Control-Request-Method / -Headers | HTTP request header | No | Không validate giá trị — chỉ dùng bởi browser cho preflight; gate không đọc | Ngữ cảnh preflight (UC-07) |
 
 **Output Data:**
@@ -592,7 +595,7 @@ sequenceDiagram
 | Scenario | User Message (client nhận) | Trigger Condition |
 |----------|---------------------------|-------------------|
 | Cross-origin không-được-phép | HTTP 403 + `{"error":"Forbidden"}` — KHÔNG ACAO (browser hiển thị CORS error phía console) | Origin ∉ allowlist (FR-02c — UC-01) |
-| DNS rebinding | HTTP 403 + `{"error":"Forbidden"}` | CÓ Origin + Host ≠ loopback:port (FR-04 — UC-05) |
+| DNS rebinding | HTTP 403 + `{"error":"Forbidden"}` | Host ≠ loopback:port — **bất kể có Origin hay không** (FR-04 Phase 1.5 v1.2 — UC-05: cross-origin Main Flow lẫn same-origin no-Origin AF-1 — SEC-358-01) |
 | Header hỏng / nhiều Origin | HTTP 403 + `{"error":"Forbidden"}` | Origin không parse được / >1 giá trị (FR-12 — UC-01 EF-1/EF-2) |
 | Method không hỗ trợ (caller được phép) | 405 `{"error":"Method not allowed"}` — hành vi hiện tại giữ nguyên | POST/GET ngoài /mcp-methods, sau khi pass gate (FR-10) |
 
@@ -722,7 +725,7 @@ private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse)
 | G-3 | `OriginGateDeny.originSanitized/hostSanitized` ĐÃ qua `sanitizeLogText` **bên trong gate** — WrapperServer không thể log giá trị raw dù muốn (BR-04, anti log-forging R-4) | T9 — inject `\r\n\0` vào header → log không chứa control char |
 | G-4 | `echoOrigin` = giá trị Origin RAW đã trim (echo đúng browser gửi) — KHÔNG dùng `url.origin` hay URL serialization: non-special scheme (`vscode-webview`) có `url.origin === "null"`; browser so ACAO byte-equal với Origin của nó | T4 — ACAO response === `vscode-webview://abc` chính xác |
 | G-5 | Echo semantics uniform: Origin ∈ allowlist → ACAO echo + Allow-* set trên **mọi response** của caller đó (200/202/204/400/404/405/500 — kể cả 404 fallback); no-Origin → KHÔNG có CORS header nào; deny → KHÔNG có CORS header nào; KHÔNG BAO GIỜ `*` (BR-07) | T11 sweep — scan mọi response, assert theo 3 nhánh |
-| G-6 | Fail-closed + route-agnostic: duplicate Origin/Host, malformed, Host thiếu khi có Origin → deny; gate không biết route table → 403 uniform mọi path (TA Note §3.1.6) | T10, T12 |
+| G-6 | Fail-closed + route-agnostic: duplicate Origin/Host, malformed, Host thiếu khi có Origin (EF-1), **Host hỏng kể cả khi no-Origin (Phase 1.5 — I-8, SEC-358-01 Option A v1.2)** → deny; gate không biết route table → 403 uniform mọi path (TA Note §3.1.6) | T10, T12 (step 4), T13 (row 1b) + **H-7 (UT-32)** |
 | G-7 | `listenPort` từ `srv.address().port` (đã lưu `this.port` :99) — không hardcode 9181; `start(0)` test-safe | T6 với server port ngẫu nhiên |
 | G-8 | So khớp scheme + hostname **case-insensitive** (fold lowercase — RFC 3986 §3.1/3.2.2; URL constructor đã lowercase hostname của special scheme, nhưng vscode-webview opaque host GIỮ case → gate tự fold); port so **numeric** (parseInt — `:09181` === `:9181`); KHÔNG substring matching (BR-02) | T5b — `HTTPS://LOCALHOST:3000` → allow; `http://localhost.evil.com` → deny |
 
@@ -815,7 +818,7 @@ N/A — không có thay đổi data model (theo BRD Out-of-scope: không đổi 
 | 2 | `req.rawHeaders` (mảng phẳng) | `[name, value, name, value, ...]` — **giữ nguyên case gốc, KHÔNG join, KHÔNG sắp lại** — ổn định mọi phiên bản Node | Nguồn authoritative cho: giá trị header + đếm duplicate Origin/Host (R-6, G-6). Key compare lowercase; value giữ nguyên (gate tự fold khi so khớp — G-8) |
 | 3 | Duplicate Origin | Node server-side: >1 dòng `Origin:` → `req.headers.origin` chứa `", "` (join) hoặc giữ first (tùy version) — **không đoán được** | Dual-check fail-closed: (a) `extractGateHeaders` đếm key trên `rawHeaders` → `duplicateOrigin` → deny; (b) `evaluateOriginGate` deny mọi giá trị Origin chứa `,` (single Origin hợp lệ không có comma — Phase 3 pseudocode) |
 | 4 | Duplicate Host | Tương tự — thêm bề mặt **request smuggling** | `duplicateHost` → deny reason=host-mismatch (Phase 1 pseudocode) |
-| 5 | Host header thiếu (HTTP/1.0 client) | `req.headers.host === undefined`; HTTP/1.1 bắt buộc Host | Có-Origin + thiếu Host → **deny host-mismatch** (EF-1 UC-05 — fail-closed); no-Origin + thiếu Host → pass (BR-06) |
+| 5 | Host header thiếu (HTTP/1.0 client) | `req.headers.host === undefined`; HTTP/1.1 bắt buộc Host | Có-Origin + thiếu Host → **deny host-mismatch** (EF-1 UC-05 — fail-closed); no-Origin + thiếu Host → pass (carve-out HTTP/1.0 legacy — BR-06, H-9/UT-34). **v1.2:** no-Origin + CÓ Host → vẫn validate ở Phase 1.5 (I-8 — Host lạ deny H-7/UT-32, Host loopback đúng port pass H-8/UT-33) |
 | 6 | `res.setHeader(name, value)` | Tích lũy vào header list; **KHÔNG gửi ngay** — materialize khi `writeHead`/`end` | ⚠️ Dòng `setHeader("ACAO","*")` cũ (:126) chạy TRƯỚC routing → nếu chỉ "ghi đè sau" mà không xóa thì 403 vẫn kèm ACAO — **phải dời/xóa setHeader cũ, chỉ set sau gate pass** (G-5) |
 | 7 | `res.writeHead(status, headersObj)` | Headers trong object **merge** với các `setHeader` trước đó (writeHead ưu tiên khi trùng key); gọi `headersSent` = true, status khóa | Deny path: `writeHead(403, {"Content-Type": "application/json"})` trên res SẠCH (không setHeader nào trước đó) → response đúng FR-08 |
 | 8 | SSE (`handleMcpGet` :207-225) | `res.writeHead(200, {Content-Type: text/event-stream, ...})` rồi `res.write(...)` — sau write đầu, `headersSent=true`, KHÔNG đổi được status/header nữa | Gate phải chặn **TRƯỚC** `handleMcpGet` — 403 phải đi ra trước khi 1 byte SSE nào được write (P6-17 đóng — AC-6). Không được "chặn trong stream" |
@@ -840,17 +843,18 @@ N/A — không có thay đổi data model (theo BRD Out-of-scope: không đổi 
 | Step | Description | Error Handling |
 |------|-------------|----------------|
 | 1 | Nhận request tại handleRequest — CHƯA set bất kỳ CORS header nào (FR-01) | — |
-| 2 | Đọc header Origin. **Không có** → nhánh no-Origin: pass qua route (BR-06) | — |
-| 3 | Có Origin → parse URL. Fail (malformed / rỗng / >1 giá trị) → **DENY 403** reason=malformed-origin (FR-12, fail-closed) | sanitizeLogText + log; không crash (FR-12) |
-| 4 | So allowlist (FR-03, BR-02 — scheme+host chính xác, không substring). Không khớp → **DENY 403** reason=origin-not-allowed | 403 + log (FR-08, FR-09) |
-| 5 | Host check (FR-04, BR-03): Host = 127.0.0.1/localhost : port-listen (hostname case-insensitive, port chính xác). Sai → **DENY 403** reason=host-mismatch | 403 + log |
-| 6 | OPTIONS (preflight) → **204** + ACAO echo + Allow-Methods + Allow-Headers (FR-06) | — |
-| 7 | Method khác → route như hiện tại: /mcp POST → handleMcp; /mcp GET → SSE; /health → 200; khác → 404 (FR-07, FR-10) | 500 handler hiện tại :138-143 giữ nguyên làm chốt chặn cuối |
-| 8 | Set ACAO **chỉ trên response thành công của caller được phép** — echo Origin (FR-05) | Không bao giờ `*` (BR-07) |
+| 2 | **Phase 1.5 (v1.2 — SEC-358-01 Option A, I-8):** Validate Host cho MỌI request CÓ header Host — TRƯỚC nhánh no-Origin: Host = 127.0.0.1/localhost : port-listen (hostname case-insensitive, port chính xác). Sai → **DENY 403** reason=host-mismatch (kể cả no-Origin — rebinding same-origin, H-7/UT-32). Host rỗng/thiếu → **defer** (quyết định ở Step 3 hoặc Step 6) | 403 + log |
+| 3 | Đọc header Origin. **Không có** → nhánh no-Origin: pass qua route (BR-06 — v1.2: chỉ tới được đây khi Host đã validate OK ở Step 2 hoặc không có Host — carve-out HTTP/1.0, H-9/UT-34) | — |
+| 4 | Có Origin → parse URL. Fail (malformed / rỗng / >1 giá trị) → **DENY 403** reason=malformed-origin (FR-12, fail-closed) | sanitizeLogText + log; không crash (FR-12) |
+| 5 | So allowlist (FR-03, BR-02 — scheme+host chính xác, không substring). Không khớp → **DENY 403** reason=origin-not-allowed | 403 + log (FR-08, FR-09) |
+| 6 | Host-required khi có Origin (P5a — v1.2 chỉ còn EF-1): Host rỗng (defer từ Step 2) → **DENY 403** reason=host-mismatch. Các check P5b..e (IPv6 literal/hostname/port/effectivePort) đã chạy ở Step 2 — idempotent, không lặp | 403 + log |
+| 7 | OPTIONS (preflight) → **204** + ACAO echo + Allow-Methods + Allow-Headers (FR-06) | — |
+| 8 | Method khác → route như hiện tại: /mcp POST → handleMcp; /mcp GET → SSE; /health → 200; khác → 404 (FR-07, FR-10) | 500 handler hiện tại :138-143 giữ nguyên làm chốt chặn cuối |
+| 9 | Set ACAO **chỉ trên response thành công của caller được phép** — echo Origin (FR-05) | Không bao giờ `*` (BR-07) |
 
 <!-- TA enrichment (v1.1) — gap §11.3-2: pseudocode gate logic (TS, đúng ngữ nghĩa WHATWG URL + Node http) -->
 
-**Pseudocode gate — `evaluateOriginGate(rawHeaders, listenPort)` (§3.1.6.1 signature):**
+**Pseudocode gate — `evaluateOriginGate(rawHeaders, listenPort)` (§3.1.6.1 signature — v1.2: 7 phases, Phase 1.5 theo TDD v1.1 §3 / SEC-358-01 Option A):**
 
 ```
 function evaluateOriginGate(rawHeaders: readonly string[], listenPort: number): OriginGateResult:
@@ -868,11 +872,37 @@ function evaluateOriginGate(rawHeaders: readonly string[], listenPort: number): 
   origin = h.origin?.trim() ?? ""            # trim — phòng OWS padding từ client thô
   host   = h.host?.trim()  ?? ""
 
+  # ── Phase 1.5 — Host validate — MỌI request CÓ Host (v1.2 — SEC-358-01
+  #    Option A, TDD v1.1 §3, invariant I-8) — TRƯỚC nhánh no-Origin ────────
+  if host != "":
+      # validateHost(host, listenPort) — 1 hàm chung, idempotent, tái sử dụng cho P5
+      if host starts with "[":               # Host IPv6 literal "[::1]:9181"
+          return DENY("host-mismatch")       # allowlist Host chỉ có 127.0.0.1/localhost (bind 127.0.0.1 — ::1 không chạm được server)
+      idx = host.lastIndexOf(":")
+      if idx < 0:  hostName = host;  hostPort = NONE
+      else:        hostName = host[0..idx);  hostPort = host[idx+1..]
+      if hostName.toLowerCase() not in {"127.0.0.1", "localhost"}:
+          return DENY("host-mismatch")       # DNS rebinding (UC-05 — cả cross-origin lẫn same-origin no-Origin H-7/UT-32), "localhost.evil.com" (BR-02)
+          # KHÔNG normalize shorthand "127.1"/"0.0.0.0" trên Host path — Host parse
+          # thủ công, KHÔNG qua URL constructor (live LH-14/15)
+      if hostPort == NONE:
+          effectivePort = 80                 # HTTP/1.1 default khi Host không có port
+      else if hostPort matches /^\d+$/:  effectivePort = parseInt(hostPort)   # "09181" === 9181 (numeric — G-8)
+      else: return DENY("host-mismatch")     # ":", "abc", "9181:extra" — malformed port
+      if effectivePort != listenPort:
+          return DENY("host-mismatch")       # BR-03 — port CHÍNH XÁC port đang listen (không hardcode)
+  # host == "" → DEFER — KHÔNG deny ở phase này; quyết định ở Phase 2 (no-Origin
+  # + không Host = carve-out HTTP/1.0 legacy — PASS, H-9/UT-34) hoặc Phase 5
+  # (có-Origin + Host rỗng → DENY — EF-1)
+
   # ── Phase 2 — nhánh no-Origin (FR-02a, BR-06) ───────────────────────────
   if origin == "":
-      return PASS(echoOrigin = null)         # native client: pass, KHÔNG Host check, KHÔNG CORS headers
-      # (Invarian dựa vào: browser LUÔN gắn Origin cho cross-origin fetch/XHR —
-      #  drive-by không thể "ẩn Origin"; non-browser tự chịu trách nhiệm — AF-1/AF-2 UC-01)
+      return PASS(echoOrigin = null)         # native client: pass, KHÔNG CORS headers
+      # v1.2: tới được đây nghĩa là Host ĐÃ validate OK (Phase 1.5) hoặc KHÔNG có
+      # Host (carve-out HTTP/1.0 — H-9). Invariant v1.0 "browser LUÔN gắn Origin
+      # cho cross-origin fetch/XHR" KHÔNG còn là lớp bảo vệ của nhánh này — SAI
+      # cho same-origin GET/EventSource sau DNS rebind (SEC-358-01); bảo vệ thật
+      # của nhánh no-Origin là Phase 1.5 (I-8, AD-10)
 
   # ── Phase 3 — parse/normalize Origin (FR-12) ────────────────────────────
   if origin contains ",":                    # defense-in-depth: Node có thể join duplicates
@@ -897,36 +927,26 @@ function evaluateOriginGate(rawHeaders: readonly string[], listenPort: number): 
       # KHÔNG substring matching: "http://localhost.evil.com:3000" → hostname "localhost.evil.com"
       # ≠ "localhost" (exact set membership) → deny (chặn bypass BR-02)
 
-  # ── Phase 5 — Host check (FR-04, BR-03) — CHỈ chạy khi CÓ Origin ────────
+  # ── Phase 5 — Host required khi có Origin (FR-04, BR-03)
+  #    v1.2: chỉ còn EF-1 — validate P5b..e ĐÃ chạy ở Phase 1.5 cho mọi request ─
   HostCheck:
   if host == "":
-      return DENY("host-mismatch")           # fail-closed (EF-1 UC-05 — HTTP/1.0 thiếu Host)
-  if host starts with "[":                   # Host IPv6 literal "[::1]:9181"
-      return DENY("host-mismatch")           # allowlist Host chỉ có 127.0.0.1/localhost (bind 127.0.0.1 — ::1 không chạm được server)
-  idx = host.lastIndexOf(":")
-  if idx < 0:  hostName = host;  hostPort = NONE
-  else:        hostName = host[0..idx);  hostPort = host[idx+1..]
-  if hostName.toLowerCase() not in {"127.0.0.1", "localhost"}:
-      return DENY("host-mismatch")           # DNS rebinding (UC-05), "localhost.evil.com" (BR-02)
-  if hostPort == NONE:
-      effectivePort = 80                     # HTTP/1.1 default khi Host không có port
-  else if hostPort matches /^\d+$/:  effectivePort = parseInt(hostPort)   # "09181" === 9181 (numeric — G-8)
-  else: return DENY("host-mismatch")         # ":", "abc", "9181:extra" — malformed port
-  if effectivePort != listenPort:
-      return DENY("host-mismatch")           # BR-03 — port CHÍNH XÁC port đang listen (không hardcode)
+      return DENY("host-mismatch")           # fail-closed (EF-1 UC-05 — HTTP/1.0 thiếu Host khi có Origin)
+  # P5b..P5e (IPv6 literal / hostname / port / effectivePort) đã validate ở
+  # Phase 1.5 (I-8) — validateHost idempotent, KHÔNG branch mới ở đây
 
   # ── Phase 6 — pass ──────────────────────────────────────────────────────
   return PASS(echoOrigin = origin)           # echo RAW đã trim — G-4 (KHÔNG url.origin — "null" cho non-special)
 ```
 
-> **Pseudocode ↔ BA processing steps mapping:** Phase 1 = Step 1 (FR-12 mở rộng duplicate Host); Phase 2 = Step 2; Phase 3 = Step 3; Phase 4 = Step 4; Phase 5 = Step 5; Phase 6 = Steps 6-8. Mọi DENY đi qua cùng exit: 403 + `{"error":"Forbidden"}` + 1 dòng log (FR-08/FR-09) — **không có exception path nào thoát gate** (G-1).
+> **Pseudocode ↔ BA processing steps mapping (v1.2):** Phase 1 = Step 1 (FR-12 mở rộng duplicate Host); **Phase 1.5 = Step 2 (Host-validate-mọi-request-có-Host — I-8)**; Phase 2 = Step 3; Phase 3 = Step 4; Phase 4 = Step 5; Phase 5 = Step 6 (chỉ EF-1); Phase 6 = Steps 7-9. Mọi DENY đi qua cùng exit: 403 + `{"error":"Forbidden"}` + 1 dòng log (FR-08/FR-09) — **không có exception path nào thoát gate** (G-1).
 
 **Precedence & thứ tự check — quyết định TA (trả lời câu hỏi BA ở note cuối §6.1):**
 
 | Quyết định | Chọn | Lý do |
 |------------|------|-------|
-| Thứ tự Origin → Host | **GIỮ nguyên (không đảo)** | (1) Origin ∉ allowlist đã đủ deny theo AC-1 — thoát sớm nhất, chi phí trung bình thấp nhất cho traffic độc hại; (2) Origin là tín hiệu quyết định (BR-05 — browser kiểm soát), Host chỉ là lớp xác nhận độc lập; (3) đảo thứ tự không tăng security (cả 2 đều chạy trước route) mà chỉ đổi reason trong log. Semantics BR-05 giữ nguyên. |
-| Origin vs Host precedence khi CẢ HAI fail | Origin reason thắng (origin-not-allowed) | Origin check chạy trước — deny đầu tiên định reason (UC-05 Step 4 giữ nguyên behavior) |
+| Thứ tự check | **ĐỔI v1.2 (AD-10 — TDD §3.3):** Extract → **Host validate (Phase 1.5 — mọi request có Host)** → no-Origin pass / Origin parse → allowlist → Host-required (P5) | Host validate phải chạy TRƯỚC nhánh no-Origin — nếu chạy sau thì no-Origin đã PASS trước khi Host được soi (đúng lỗ hổng SEC-358-01 của thiết kế v1.0/v1.1). Chi phí: vài string compare — không đổi NFR <1ms; nhánh no-Origin không tốn `new URL`. Precedence "Origin > Host" trong BR-05 giữ nguyên ý nghĩa trust (Origin quyết định pass + echo; Host là lớp độc lập chống rebinding) — chỉ đổi thứ tự thực thi |
+| Origin vs Host precedence khi CẢ HAI fail | **v1.2: Host hỏng → `host-mismatch` thắng (Phase 1.5 chạy trước — "deny đầu tiên định reason" giữ nguyên); Host hợp lệ → Origin reason (`origin-not-allowed`/`malformed-origin`)** | Khác biệt chỉ nằm trong deny LOG (reason không leak ra response — §9.2). Không test nào trong STC/STP assert reason cho input cả Origin lẫn Host cùng hỏng → zero test impact (TDD cross-check corpus) |
 | Multiple-Origin policy | **REJECT (fail-closed) — không first-wins** | First-wins = attacker inject Origin thứ 2 hợp lệ hy vọng Node giữ giá trị đầu; reject an toàn trên MỌI phiên bản Node bất kể join/discard behavior (đo bằng `rawHeaders` — không phụ thuộc `req.headers` join semantics thay đổi theo version/option `joinDuplicateHeaders`) |
 | Referer làm fallback khi thiếu Origin | **CẤM** | Referer do client tự set (curl/postman set tự do — KHÔNG như Origin mà browser kiểm soát); dùng làm tín hiệu trust = mở bypass; BR-05 ghi rõ |
 | `Sec-Fetch-Site` làm tín hiệu bổ sung | Không dùng (v1.1) | Chỉ Chromium gửi; Firefox/Safari khác behavior; tăng độ phức tạp không tăng coverage — Origin là đủ cho threat model; có thể xem xét ở follow-up shared-secret nếu AC-3 yêu cầu |
@@ -939,14 +959,18 @@ function evaluateOriginGate(rawHeaders: readonly string[], listenPort: number): 
 ```mermaid
 stateDiagram-v2
     [*] --> Received: request chạm handleRequest
-    Received --> ParseOrigin: có header Origin
-    Received --> NoOriginPath: không có Origin (native client)
-    NoOriginPath --> RouteHandling: PASS — không check Host chặt (BR-06)
+    Received --> Extract: extractGateHeaders(rawHeaders)
+    Extract --> DenyMalformed: duplicateOrigin / duplicateHost (FR-12)
+    Extract --> HostPreCheck: origin + host tách xong
+    HostPreCheck --> DenyHost: Host ≠ 127.0.0.1/localhost:port (P1.5 — I-8, mọi request có Host — SEC-358-01 v1.2)
+    HostPreCheck --> NoOriginCheck: Host rỗng (defer) hoặc Host đã validate OK
+    NoOriginCheck --> RouteHandling: Origin rỗng → PASS echoOrigin=null (BR-06 + carve-out HTTP/1.0 H-9)
+    NoOriginCheck --> ParseOrigin: có Origin
     ParseOrigin --> DenyMalformed: URL hỏng / >1 giá trị (FR-12)
     ParseOrigin --> AllowlistCheck: URL hợp lệ
     AllowlistCheck --> DenyOrigin: ∉ allowlist (FR-02)
     AllowlistCheck --> HostCheck: ∈ allowlist (FR-03)
-    HostCheck --> DenyHost: Host ≠ 127.0.0.1/localhost:port (FR-04)
+    HostCheck --> DenyHost: Host rỗng khi có Origin (P5a — EF-1; validate P5b..e đã chạy ở P1.5)
     HostCheck --> PreflightDecision: loopback OK
     PreflightDecision --> PreflightPass: OPTIONS → 204 + ACAO echo (FR-06)
     PreflightDecision --> RouteHandling: POST / GET / khác
@@ -957,10 +981,10 @@ stateDiagram-v2
     DenyLog --> [*]: sanitizeLogText (FR-09)
 ```
 
-> **Thứ tự check (Origin trước Host)** là quyết định business: Origin ∉ allowlist đã đủ điều kiện deny theo AC-1; Host check là lớp độc lập bắt đúng trường hợp Origin bị lược bỏ (AF-1 UC-05). TA có thể đề xuất đảo thứ tự nếu tối ưu hơn — miễn là cả 2 lớp đều chạy trước route (BR-05).
+> **Thứ tự check (v1.2 — Host-validate P1.5 chạy TRƯỚC nhánh no-Origin):** quyết định business AD-10 (TDD v1.1 §3): Host check phải soi mọi request có Host trước khi nhánh no-Origin được pass — ngược lại rebinding same-origin đi lọt (SEC-358-01). Trong nhánh có-Origin, thứ tự Origin-parse → allowlist → Host-required giữ nguyên. Cả 2 lớp đều chạy trước route (BR-05).
 
-<!-- TA enrichment (v1.1) — correction -->
-> **TA Note (v1.1 — sửa 1 claim trong blockquote trên):** câu *"Host check là lớp độc lập bắt đúng trường hợp Origin bị lược bỏ"* **KHÔNG chính xác** theo FR-04/BR-06: Host check **chỉ chạy khi request CÓ Origin** — request BỎ Origin rơi nhánh no-Origin → PASS (kể cả Host lạ, vì non-browser client tự chịu trách nhiệm header — AF-1/AF-2 UC-01, BRD §1.1.1). Vai trò đúng của Host check: **lớp xác nhận độc lập khi Origin HIỆN DIỆN** (DNS rebinding — UC-05: Origin attacker.com fail Ở LỚP ORIGIN rồi, nhưng Host check vẫn chạy để chặn trường hợp Origin hợp lệ + Host rebinding, vd `Origin: vscode-webview://x` + `Host: attacker.com`). Giữ nguyên quyết định không Host-check no-Origin requests — siết thêm là scope creep so với BRD Story 1 Req 3; ghi nhận như candidate hardening cho follow-up shared-secret (nếu AC-3 yêu cầu). Tham chiếu decision table mới ngay trên (§6.1 v1.1).
+<!-- BA sync (v1.2) — N-BA2 item 5: viết lại TA Note v1.1 -->
+> **BA Note (v1.2 — viết lại TA Note v1.1 theo N-BA2/TDD v1.1 §15.1 AD-10):** TA Note v1.1 (claim *"Host check chỉ chạy khi request CÓ Origin... non-browser client tự chịu trách nhiệm header... siết thêm là scope creep"*) **đã bị SEC-358-01 + SM chốt Option A (2026-10-13) supersede**: request no-Origin VẪN do browser phát sinh trong kịch bản DNS rebinding same-origin (GET/EventSource sau rebind không mang Origin) — giả định "no-Origin ⇒ non-browser" sai. v1.2: **Phase 1.5 Host check áp cho MỌI request có Host (I-8)** — nhánh no-Origin không còn lối thoát ngoài carve-out HTTP/1.0 (no-Origin + không Host, H-9/UT-34). Option A rẻ (~5-8 dòng + 3 unit cases) hơn Option B (residual risk Medium + follow-up shared-secret BẮT BUỘC trước release public). Tham chiếu decision table (§6.1 v1.2) + TDD §3.3 + §15.1 AD-10.
 
 ---
 
@@ -972,7 +996,7 @@ stateDiagram-v2
 
 | Caller | "Quyền" | Surface |
 |--------|---------|---------|
-| Native MCP client (no-Origin) | Full MCP access (pass-through) — như hiện tại | /mcp POST + GET SSE (BR-06) |
+| Native MCP client (no-Origin) | Full MCP access (pass-through) — như hiện tại; Host phải hợp lệ nếu request có header Host (Phase 1.5/I-8 — v1.2) | /mcp POST + GET SSE (BR-06) |
 | vscode-webview://* / localhost:* / 127.0.0.1:* | Full MCP access + CORS readback (ACAO echo) | /mcp POST + GET SSE (FR-03) |
 | Origin khác (mọi web origin) | **NONE** — 403, không ACAO, không route | Mọi route (FR-02, FR-07) |
 | Shared-secret / token authN | Follow-up — chốt tại security review AC-3 (BRD §1.4) | — |
@@ -1035,7 +1059,7 @@ stateDiagram-v2
 | Scenario | Severity | User Message (client nhận) | Expected Behavior |
 |----------|----------|---------------------------|-------------------|
 | Cross-origin bị deny (Origin ∉ allowlist) | Info (an toàn) | HTTP **403** + `{"error":"Forbidden"}`; **KHÔNG có header ACAO** (browser hiển thị CORS error console phía caller) | Tool không thực thi; không readback; log `reason=origin-not-allowed` (FR-02, FR-08) |
-| DNS rebinding bị deny (Host mismatch) | Info | HTTP **403** + `{"error":"Forbidden"}` — không ACAO | Log `reason=host-mismatch` (FR-04) |
+| DNS rebinding bị deny (Host mismatch) | Info | HTTP **403** + `{"error":"Forbidden"}` — không ACAO | Log `reason=host-mismatch` (FR-04 — Phase 1.5 áp MỌI request có Host, kể cả no-Origin sau rebind — SEC-358-01 Option A v1.2, H-7/UT-32) |
 | Header hỏng / nhiều Origin | Warning | HTTP **403** + `{"error":"Forbidden"}` — không ACAO | Fail-closed, không crash; log `reason=malformed-origin` qua sanitizeLogText (FR-12) |
 | Client hợp lệ bị chặn oan (R-1/R-2) | Warning | 403 phía client + deny log phía server → chẩn đoán | Theo BR-10: thêm pattern allowlist (code change nhỏ) — KHÔNG nới `*` |
 | Method không hỗ trợ (caller được phép) | Info | 405 `{"error":"Method not allowed"}` | Hành vi hiện tại giữ nguyên sau gate (FR-10) |
@@ -1104,8 +1128,8 @@ stateDiagram-v2
 | T9 | 1 + 2 | `Origin: "https://evil.com\r\nX-Injected: 1\0more"` + `Host: "localhost\r\n:9181"` | Deny (malformed); **log KHÔNG chứa `\r`, `\n`, `\0`** — tất cả thành `?` (G-3: sanitize BÊN TRONG gate); response vẫn `{"error":"Forbidden"}` sạch |
 | T10 | 1 + 2 | `Origin: "%%"` / `Origin: ""` (empty sau trim) / `Origin: "   "` / `Origin` chứa `,` / **duplicate `Origin:` keys (rawHeaders 2 cặp)** / `Origin: "localhost:3000"` (thiếu scheme) | `403` `reason=malformed-origin` (empty-Origin → nhánh no-Origin PASS — assert riêng); duplicate → deny dù 1 trong 2 giá trị hợp lệ (KHÔNG first-wins); server không crash (request tiếp theo vẫn xử lý được) |
 | T11 (TA) | 2 — sweep | Với MỖI route × MỖI nhánh caller: `(GET /health, GET /mcp, POST /mcp, OPTIONS /mcp, GET /nonexistent) × (Origin evil, Origin webview, no-Origin)` = 15 response | Bảng assert G-5: evil → 403 + zero CORS headers (mọi route, kể cả 404); webview → ACAO echo mọi status (kể cả 404 — G-5); no-Origin → zero CORS headers + behavior hiện trạng. **Đây là assert systematic "không ACAO trên MỌI denied response (kể cả 404)" — AC-8** |
-| T12 (TA) | 2 — raw socket | `net.connect` → ghi raw `POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:<port>\r\nOrigin: vscode-webview://abc\r\nOrigin: https://evil.com\r\n...` (duplicate Origin — client API chuẩn không gửi được) | `403` `reason=malformed-origin` (duplicate reject — KHÔNG first-wins); variant duplicate `Host:` → 403 host-mismatch; variant `origin:` lowercase key → vẫn detect (key compare case-insensitive) |
-| T13 (TA) | 1 + 2 — preflight matrix | 6-row ma trận UC-07 × ACAM có/không: `(no-Origin, webview+Host-ok, webview+Host-evil, localhost, evil, malformed) × (ACAM: POST+Content-Type, rỗng)` | Row 1: 204 bare (không ACAO — hiện trạng giữ); row 2 + row 4 (localhost): 204 + echo + Allow-*; **row 3 (webview+Host-evil): 403 reason=host-mismatch — Origin pass KHÔNG đủ (FR-04, UC-07 row 5)**; row 5-6: 403 + zero CORS. ACAM có hay không KHÔNG đổi kết quả — gate không đọc ACAM (§3.1.4.2) |
+| T12 (TA) | 2 — raw socket | `net.connect` → ghi raw `POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:<port>\r\nOrigin: vscode-webview://abc\r\nOrigin: https://evil.com\r\n...` (duplicate Origin — client API chuẩn không gửi được) | `403` `reason=malformed-origin` (duplicate reject — KHÔNG first-wins); variant duplicate `Host:` → 403 host-mismatch; variant `origin:` lowercase key → vẫn detect (key compare case-insensitive); **variant 4 (v1.2 — IT-12 step 4): raw request KHÔNG Origin + `Host: attacker.com:<port>` → 403 host-mismatch — Host-check-mọi-request qua raw socket thật (I-8; counterpart integration của H-7/UT-32)** |
+| T13 (TA) | 1 + 2 — preflight matrix | Ma trận UC-07 (gồm **row 1b v1.2: no-Origin + Host evil**) × ACAM có/không: `(no-Origin+Host-ok, no-Origin+Host-evil, webview+Host-ok, webview+Host-evil, localhost, evil, malformed) × (ACAM: POST+Content-Type, rỗng)` | Row 1: 204 bare (không ACAO — hiện trạng giữ); **row 1b (v1.2 — IT-13 row 1b): 403 host-mismatch — no-Origin + Host lạ bị chặn (SEC-358-01 Option A/I-8)**; row 2 + row 4 (localhost): 204 + echo + Allow-*; **row 3 (webview+Host-evil): 403 reason=host-mismatch — Origin pass KHÔNG đủ (FR-04, UC-07 row 5)**; row 5-6: 403 + zero CORS. ACAM có hay không KHÔNG đổi kết quả — gate không đọc ACAM (§3.1.4.2) |
 | T14 (TA) | 1 — bench | §8.1 benchmark pattern — `evaluateOriginGate` × 10⁶/each input class | p99 < 1ms (kỳ vọng thực tế < 10µs) — threshold rộng để CI không flaky |
 
 **Regression bắt buộc song song:** full `wrapper-server.test.ts` hiện có (TC-22..TC-31, TC-37...) + `tool-proxy.test.ts` + live harness §10.2 — pass 100% trước security review (FR-10/AC-4). Lưu ý QA: các test hiện có KHÔNG assert ACAO nên không break; nếu có test nào assert `ACAO *` → cập nhật theo G-5 (change có chủ đích).
@@ -1137,7 +1161,7 @@ stateDiagram-v2
 |---------|------|----------|
 | System Context | [system-context.png](diagrams/system-context.png) / [system-context.drawio](diagrams/system-context.drawio) | 3 nhóm caller → gate → tools + deny log (§2.1) |
 | Sequence — Gate interaction | [sequence.png](diagrams/sequence.png) / [sequence.drawio](diagrams/sequence.drawio) | Browser drive-by → preflight → gate → 403 vs vscode-webview → allow → tool call → SSE (§3.1.6) |
-| State — Request lifecycle qua gate | [state.png](diagrams/state.png) / [state.drawio](diagrams/state.drawio) | nhận → parse Origin → allowlist → Host → allow/deny/log (§6.1) |
+| State — Request lifecycle qua gate | [state.png](diagrams/state.png) / [state.drawio](diagrams/state.drawio) | nhận → extract → **P1.5 Host validate (I-8)** → no-Origin/parse Origin → allowlist → Host-required → allow/deny/log (§6.1 v1.2) |
 | Use Case (BRD, tham chiếu) | [use-case.png](diagrams/use-case.png) / [use-case.drawio](diagrams/use-case.drawio) | Actors + capabilities (BRD §2.1) |
 | Business Flow (BRD, tham chiếu) | [business-flow.png](diagrams/business-flow.png) / [business-flow.drawio](diagrams/business-flow.drawio) | Threat flow trước/sau fix (BRD §2.1) |
 
@@ -1150,10 +1174,11 @@ stateDiagram-v2
 | 3 | 404 fallback | BRD note §2.3 — "404) theo nguyên tắc fail-closed" | Endpoint audit row 5: caller lạ nhận **403 thay vì 404** | Làm rõ: fail-closed có nghĩa là 403 (không tiết lộ route) — caller được phép vẫn nhận 404 như hiện tại |
 | 4 | OPTIONS no-Origin | BRD không nêu | UC-07 row 1: OPTIONS không-Origin → 204 hiện trạng (không ACAO) | Native client OPTIONS hiếm nhưng không hại — giữ hiện trạng, không leak |
 | 5 | Thứ tự check | BRD Story 1 Req 2-3 (Origin rule rồi Host rule) | §6.1 — Origin check trước Host check, 2 lớp độc lập | Làm rõ mechanics; TA có thể đề xuất đảo nếu tối ưu (BR-05 giữ nguyên semantics) |
-| 6 | UC-05 Step 4 + §6.1 note (TA correction) | — (BRD không nêu) | TA Note UC-05 + TA Note §6.1: Host check **chỉ chạy khi có Origin** (FR-04/BR-06); claim "bỏ Origin vẫn bị Host chặn" bị sửa | Nhất quán với EF-1 UC-05 + invariant "browser luôn gắn Origin cross-origin"; non-browser tự chịu trách nhiệm header (AF-1/AF-2 UC-01) |
+| 6 | UC-05 Step 4 + §6.1 note (TA correction v1.1 — **superseded bởi v1.2**) | — (BRD không nêu) | TA Note UC-05 + TA Note §6.1 v1.1: Host check **chỉ chạy khi có Origin** (FR-04/BR-06); claim "bỏ Origin vẫn bị Host chặn" bị sửa | v1.1 đúng theo thiết kế v1.0, NHƯNG SEC-358-01 (SECURITY-REVIEW v1.0) chứng minh thiết kế v1.0 có gap Medium (rebinding same-origin no-Origin đi lọt) — v1.2 fold Option A, claim "bỏ Origin vẫn bị Host chặn" **đúng trở lại** qua Phase 1.5 (I-8) — xem Change Log #10 |
 | 7 | ACAO echo scope | FR-05 (ngầm hiểu) | §3.1.6.1 G-5: echo set uniform trên MỌI response của caller có Origin ∈ allowlist (kể cả 404/500); no-Origin → không CORS headers | Làm rõ rule testable cho T11 sweep; 404 "caller lạ" trong FR-05 = 404 cho caller bị deny — không mâu thuẫn |
 | 8 | FR-10 "byte-level" | FR-10 | TA clarify §3.1.6.1-E: semantic equivalence (body/status/SSE frames); CORS headers thay đổi có chủ đích | Ngăn QA assert sai (không yêu cầu ACAO trên native responses); native client ignore CORS headers — zero impact |
 | 9 | 403-vs-404 verdict | FSD v1.0 Change Log #3 | TA Note §3.1.6 (sau bảng audit): **CHỐT 403 uniform** mọi path/method từ caller bị deny + rationale (không leak route map; route-agnostic gate; status không phải control — no-ACAO mới là control) | BA đề xuất đúng — TA confirm + bổ sung lý do; SA chốt lần cuối tại review AC-3 |
+| 10 | **FSD v1.2 — sync N-BA2 (TDD v1.1 §15.6)** | — (SECURITY-REVIEW v1.0 SEC-358-01 + SM chốt **Option A** 2026-10-13) | §6.1 pseudocode 7 phases (Phase 1.5 Host-validate-mọi-request-có-Host, I-8, AD-10); FR-02a/FR-04; BR-05/BR-06; UC-05 (Main Step 4, AF-1 browser-thật, EF-1); UC-04 Step 2; UC-06/UC-07 (row 1b); §2.1 (4th caller row); §3.1.4.2; §5.3 row 5; G-6; Business Error Scenarios; §9.1; T12 step 4/T13 row 1b; state diagram (mermaid + drawio) | Host check unconditional-when-present — đóng DNS rebinding same-origin no-Origin (deny reason `host-mismatch` tái sử dụng, không thêm enum); nhất quán TDD v1.1 / STP v1.1 / STC v1.0 (UT-32..34, IT-12 step 4, IT-13 row 1b, LH-13..15) |
 
 ### 11.3 Open Items for TA Enrichment (draft v1.0 → v1.1)
 
@@ -1178,7 +1203,7 @@ stateDiagram-v2
 | AC-2 | vscode-webview + localhost accepted (preflight 204 + echo, POST, SSE) | FR-03, FR-06 | UC-02, UC-03, UC-07 | BR-02, BR-07 | T4, T5 |
 | AC-3 | Security review pass (verdict không còn finding Medium+ về CORS/Origin trên :9181) | (process gate — §10.3) | — | — | §10.2 harness + §10.3 review |
 | AC-4 | MCP clients hiện có (stdio + http) hoạt động không lỗi, không đổi config | FR-02a (no-Origin), FR-10 | UC-04 | BR-06, BR-08, BR-10 | T3 + full regression + live smoke |
-| AC-5 | Host ≠ loopback khi có Origin → 403 (DNS rebinding) | FR-04 | UC-05 | BR-03, BR-05 | T6 |
+| AC-5 | Host ≠ loopback → 403 (v1.2 — kể cả no-Origin sau rebind; DNS rebinding chặn ở cả 2 kịch bản) | FR-04 | UC-05 | BR-03, BR-05 | T6, T12 step 4, T13 row 1b, H-7..H-9 (UT-32..34), LH-13..15 |
 | AC-6 | GET /mcp (SSE) áp cùng gate | FR-07 | UC-06 | BR-01 | T7 |
 | AC-7 | Binding 127.0.0.1 giữ nguyên + test assert | FR-11 | UC-04 (EF-2 stdio) | BR-08 | T8 |
 | AC-8 | Response denied KHÔNG chứa ACAO; không còn `ACAO: *` ở bất kỳ response nào | FR-01, FR-05, FR-08 | UC-01, UC-07 | BR-07, BR-01 | T1, T2, T7 + systematic no-ACAO assert |
@@ -1189,4 +1214,4 @@ stateDiagram-v2
 
 ---
 
-*— Hết FSD v1.1 (business v1.0 + TA technical enrichment) — SA4E-358 — TA enrichment 6/6 gaps §11.3 RESOLVED: §3.1.6.1 (contract), §6.1 (pseudocode), §10.1.1-10.1.2 (test), §5.3 (Node http), §3.1.4.3.1 (V-1), §8.1 (benchmark) — chờ SA review (AC-3) —*
+*— Hết FSD v1.2 (business v1.0 + TA enrichment v1.1 + BA sync v1.2/N-BA2) — SA4E-358 — v1.2: SEC-358-01 Option A folded (Phase 1.5 Host-check-mọi-request-có-Host — I-8, AD-10; deny reason `host-mismatch` tái sử dụng) — nhất quán TDD v1.1 / STP v1.1 / STC v1.0 (UT-32..34, IT-12 step 4, IT-13 row 1b, LH-13..15) — SA enrichment 6/6 gaps §11.3 RESOLVED giữ nguyên từ v1.1 —*

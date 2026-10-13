@@ -8,6 +8,9 @@
 #   4. path-resolver N-8 gate (SA4E-356 / TDD §9): blocks single-arg
 #      resolve(file_path) + raw fs.*(file_path) in extension/src
 #      (excl. __tests__, PathResolver.ts; backend/ out of scope per OI-4)
+#   5. CORS gate-first consistency gate (SA4E-358 / TDD §8.6, STP §2.5
+#      SCAN-01/02): blocks wildcard ACAO + Access-Control-* outside the
+#      WrapperServer echo block after evaluateOriginGate (staged scope)
 # Installed automatically if husky is present, or manually via scripts/setup-git-hooks.sh.
 set -e
 ROOT="$(git rev-parse --show-toplevel)"
@@ -23,5 +26,8 @@ bash "$ROOT/scripts/check-line-count.sh" --staged
 
 echo "[pre-commit] path-resolver N-8 gate (SA4E-356 / TDD §9) on staged files..."
 bash "$ROOT/scripts/check-pathresolver-n8.sh" --staged
+
+echo "[pre-commit] CORS gate-first consistency gate (SA4E-358 / TDD §8.6) on staged files..."
+bash "$ROOT/scripts/check-cors-gate-sa4e358.sh" --staged
 
 echo "[pre-commit] OK"

@@ -25,21 +25,28 @@ export default defineConfig({
     // retries to absorb backend startup races without masking real failures.
     retry: 2,
     // SA4E-356 N-7 coverage gate (STP §2.5 exit): PathResolver.ts >= 95%
-    // lines/functions/branches/statements. `include` is scoped to the new
-    // module ONLY so the thresholds never punish the pre-existing suite.
-    // Requires @vitest/coverage-v8 (devDependency). Run: npm run test:coverage.
-    // The CI N-7 step runs --coverage only after services/PathResolver.ts
-    // lands (TDD step C1), so this config is inert until then.
+    // lines/functions/branches/statements. `include` is scoped to the gated
+    // modules ONLY so the thresholds never punish the pre-existing suite.
+    // SA4E-358 adds OriginGate.ts to the same scoped gate (STP v1.1 §2.5 UT
+    // exit: OriginGate.ts >= 95% — TDD §11.8 target, N-7-standard 4 metrics).
+    // Requires @vitest/coverage-v8 (devDependency, pinned 4.1.8 == vitest).
+    // Run: npm run test:coverage. The CI steps run --coverage only after the
+    // gated module lands (356: C1 PathResolver / 358: C1 OriginGate), so this
+    // config is inert until then. `perFile: true` keeps each gated module
+    // individually >= 95% (a global aggregate would let a low file hide
+    // behind a high one now that TWO files are gated; with a single file
+    // global == per-file, so SA4E-356 semantics are unchanged).
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],
       reportsDirectory: "./coverage",
-      include: ["src/services/PathResolver.ts"],
+      include: ["src/services/PathResolver.ts", "src/services/OriginGate.ts"],
       thresholds: {
         lines: 95,
         functions: 95,
         branches: 95,
         statements: 95,
+        perFile: true,
       },
     },
   },

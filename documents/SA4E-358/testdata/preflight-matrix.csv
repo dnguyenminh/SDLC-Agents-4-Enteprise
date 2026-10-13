@@ -1,0 +1,15 @@
+row_id,origin,host,acam,acrh,expected_status,expected_acao,expected_allow_methods,expected_reason,maps_to,description
+1a,(none),127.0.0.1:{listen_port},POST,Content-Type,204,(none),,(none - pass nhanh no-Origin),IT-13 row 1a;UC-07 row1;BR-06;AD-8,no-Origin + Host loopback + ACAM co = 204 bare khong ACAO
+1a,(none),127.0.0.1:{listen_port},(khong),(khong),204,(none),,(none),IT-13 row 1a;UC-07 row1;BR-06;AD-8,no-Origin + Host loopback + ACAM khong = 204 bare (ACAM khong doi ket qua)
+1b,(none),attacker.com:{listen_port},POST,Content-Type,403,(none),,host-mismatch,IT-13 row 1b;SEC-358-01;I-8;FR-04,no-Origin + Host evil + ACAM co = 403 SAU Option A (rebinding same-origin)
+1b,(none),attacker.com:{listen_port},(khong),(khong),403,(none),,host-mismatch,IT-13 row 1b;SEC-358-01;I-8;FR-04,no-Origin + Host evil + ACAM khong = 403 (gate khong doc ACAM)
+2,vscode-webview://abc123,127.0.0.1:{listen_port},POST,Content-Type,204,vscode-webview://abc123,"GET, POST, OPTIONS",(none),IT-13 row 2;UC-07 row2;FR-06;AC-2,webview + Host ok + ACAM co = 204 + echo + Allow-*
+2,vscode-webview://abc123,127.0.0.1:{listen_port},(khong),(khong),204,vscode-webview://abc123,"GET, POST, OPTIONS",(none),IT-13 row 2;UC-07 row2;FR-06;AC-2,webview + Host ok + ACAM khong = 204 + echo van set (echo per origin; khong doc ACAM)
+3,http://localhost:3000,localhost:{listen_port},POST,Content-Type,204,http://localhost:3000,"GET, POST, OPTIONS",(none),IT-13 row 3;UC-07 row3,localhost + Host ok + ACAM co = 204 + echo
+3,http://localhost:3000,localhost:{listen_port},(khong),(khong),204,http://localhost:3000,"GET, POST, OPTIONS",(none),IT-13 row 3;UC-07 row3,localhost + Host ok + ACAM khong = 204 + echo
+4,https://evil.com,127.0.0.1:{listen_port},POST,Content-Type,403,(none),,origin-not-allowed,IT-13 row 4;UC-07 row4;AC-1,evil + ACAM co = 403 khong ACAO khong Allow-*
+4,https://evil.com,127.0.0.1:{listen_port},(khong),(khong),403,(none),,origin-not-allowed,IT-13 row 4;UC-07 row4;AC-1,evil + ACAM khong = 403 (ket qua giong)
+5,vscode-webview://abc,attacker.com:{listen_port},POST,Content-Type,403,(none),,host-mismatch,IT-13 row 5;UC-07 row5;FR-04,Origin PASS Phase 4 KHONG du - Host evil deny
+5,vscode-webview://abc,attacker.com:{listen_port},(khong),(khong),403,(none),,host-mismatch,IT-13 row 5;UC-07 row5;FR-04,Origin PASS + Host evil + ACAM khong = 403 host-mismatch
+6,%%,127.0.0.1:{listen_port},POST,Content-Type,403,(none),,malformed-origin,IT-13 row 6;UC-07 row6;FR-12,malformed + ACAM co = 403 fail-closed
+6,%%,127.0.0.1:{listen_port},(khong),(khong),403,(none),,malformed-origin,IT-13 row 6;UC-07 row6;FR-12,malformed + ACAM khong = 403 fail-closed

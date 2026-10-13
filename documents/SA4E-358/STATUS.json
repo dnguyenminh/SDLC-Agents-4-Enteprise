@@ -16,7 +16,7 @@
       "completedAt": "2026-10-13",
       "note": "Binding 127.0.0.1 da co san -> verify-only AC-7; shared-secret + CSRF -> follow-up; AC mo rong 1-8; 5 files attached Jira"
     },
-    "specification": { "status": "done", "file": "FSD.md", "version": 1.1, "completedAt": "2026-10-13", "note": "TA enrichment 6/6 gaps; 4 architecture decisions chờ SA confirm" },
+    "specification": { "status": "done", "file": "FSD.md", "version": 1.2, "completedAt": "2026-10-13", "note": "TA enrichment 6/6 gaps + BA sync SEC-358-01 (7 phases); DOCX + Jira attached" },
     "design": { "status": "done", "file": "TDD.md", "version": 1, "completedAt": "2026-10-13", "note": "0 discrepancy; 4/4 TA decisions confirmed + AD-5..9; C1-C12 implement order; V-1 verify là blocker trước merge" },
     "design": {
       "status": "not_started"
@@ -27,13 +27,24 @@
       "maxIterations": 5
     },
     "security_design_review": {
-      "status": "not_started"
+      "status": "done",
+      "file": "SECURITY-REVIEW.md",
+      "version": 1,
+      "verdict": "PASS_WITH_FIXES",
+      "completedAt": "2026-10-13",
+      "note": "0 Critical/High; SEC-358-01 Medium -> Option A (fold Host-check vao Phase 5); merge conditions: T1-T14 + V-1..V-4 + live harness + bench"
     },
     "test_planning": {
-      "status": "not_started"
+      "status": "done",
+      "file": "STP.md v1.1 + STC.md v1.0",
+      "version": 1.1,
+      "review": "ba-approved",
+      "completedAt": "2026-10-13",
+      "note": "63 cases RTM 100%; SEC-358-01 Option A folded (H-7..H-9, V-1..V-4 blocker); 2 hygiene fixes truoc Phase 6"
     },
     "devops_pipeline_setup": {
-      "status": "not_started"
+      "status": "in_progress",
+      "startedAt": "2026-10-13"
     },
     "implementation": {
       "status": "not_started"

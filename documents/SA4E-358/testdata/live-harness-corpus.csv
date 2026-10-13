@@ -1,0 +1,17 @@
+vector_id,harness_step,method,path,headers,expected,verdict_basis,maps_to
+LH-01 (P6-15 replay),green,GET,/health,"Origin: https://evil.com",403 + zero access-control headers (P6-15 closed),assertNoAccessControlHeaders,E2E-API-01;AC-8
+LH-02 (P6-16 replay),green,OPTIONS,/mcp,"Origin: https://evil.com; Access-Control-Request-Method: POST; Access-Control-Request-Headers: Content-Type",403 + zero CORS (KHONG 204),status + headers,E2E-API-01;AC-1
+LH-03 (P6-17 replay),green,GET,/mcp,"Origin: https://evil.com",403 + KHONG byte SSE nao (body khong chua event:/text/event-stream),status + body prefix,E2E-API-01;AC-6
+LH-04,green,POST,/mcp,"Origin: https://evil.com + JSON-RPC tools/call",403 + zero CORS + tool KHONG thuc thi (side-effect khong xay ra),status + headers + side-effect check,E2E-API-01;AC-1
+LH-05,green,OPTIONS,/mcp,"Origin: vscode-webview://<id-tu-V-3> + Host: 127.0.0.1:9181",204 + ACAO echo EXACT + Allow-Methods/Headers,headers,E2E-API-03;AC-2
+LH-06,green,POST,/mcp,"Origin: vscode-webview://<id> + JSON-RPC tools/call",200 + ACAO echo + tool thuc thi,status + headers,E2E-API-03;AC-2
+LH-07,green,GET,/mcp (SSE),"Origin: vscode-webview://<id>",200 text/event-stream + keep-alive 15s,content-type + stream mo,E2E-API-03;AC-2
+LH-08 (V-1b),green,POST+GET,/mcp (full session),"native session: initialize -> notifications/initialized -> tools/list -> tools/call -> SSE - KHONG Origin",100% flow pass KHONG doi config; deny log KHONG co reason=origin-not-allowed cho native client,outputChannel + status per step,E2E-API-02;AC-4;V-1b
+LH-09,red (optional - baseline P6 co san),GET,/health,"Origin: https://evil.com",pre-fix: 200 + ACAO * (xac nhan finding); post-fix: 403,git-stash red run,E2E-API-01 step 1
+LH-10 (R-6),green,raw,raw,"duplicate Origin: 2 dong (client API chuan khong gui duoc)",403 malformed-origin - KHONG first-wins (live),raw response + status,E2E-API-04;FR-12
+LH-11 (R-6),green,raw,raw,"duplicate Host: 2 dong",403 host-mismatch,raw response,E2E-API-04;FR-12
+LH-12 (R-6),green,POST,/mcp,"origin: https://evil.com (lowercase key)",403 origin-not-allowed - casing trick khong bypass,status + log,E2E-API-04
+LH-13 (SEC-358-01 live),green,GET,/mcp,"(KHONG Origin) + Host: evil.com:9181",403 + log reason=host-mismatch - DNS-rebind same-origin chan LIVE (dieu kien merge #4),status + log reason,E2E-API-04;AC-5;SEC-358-01
+LH-14,green,GET,/health,"(KHONG Origin) + Host: 0.0.0.0:9181",403 host-mismatch,status + log,E2E-API-04;FR-04
+LH-15,green,GET,/health,"(KHONG Origin) + Host: 127.1:9181",403 host-mismatch (shorthand khong trong Host allowlist - khong normalize tren Host path),status + log,E2E-API-04;FR-04
+LH-16 (V-1),evidence,session,full MCP session,"client that (VS Code/Kiro) per V-3 capture",V-1c CSV row: PASS = (a) static grep sach + (b) session live khong sinh deny log,checklist v1-evidence-checklist.csv,E2E-API-05;AC-3

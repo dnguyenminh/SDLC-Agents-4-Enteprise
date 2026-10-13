@@ -1,0 +1,19 @@
+id,type,value,required_for,description
+PS-01,server_host,127.0.0.1,ALL,WrapperServer bind address invariant (FR-11/AC-7) - verify-only
+PS-02,listen_port_it,{listen_port},IT-01..IT-14,Random port tu server.start(0) - KHONG hardcode 9181 (G-7)
+PS-03,listen_port_live,9181,E2E-API-01..05,Live wrapper server tren extension dev host (config sdlcAgents.mcpServerPort)
+PS-04,allowlist_pattern_1,"{ scheme: ""vscode-webview"", host: ""*"", port: ""*"" }",ALL,ALLOWED_ORIGIN_PATTERNS[0] - moi webview ID (BR-09 immutable)
+PS-05,allowlist_pattern_2,"{ scheme: ""http"", host: ""localhost"", port: ""*"" }",ALL,ALLOWED_ORIGIN_PATTERNS[1]
+PS-06,allowlist_pattern_3,"{ scheme: ""https"", host: ""localhost"", port: ""*"" }",ALL,ALLOWED_ORIGIN_PATTERNS[2]
+PS-07,allowlist_pattern_4,"{ scheme: ""http"", host: ""127.0.0.1"", port: ""*"" }",ALL,ALLOWED_ORIGIN_PATTERNS[3]
+PS-08,deny_body,"{""error"":""Forbidden""}",ALL,Exact deny body (FR-08) + Content-Type application/json
+PS-09,deny_log_format,"[WrapperServer] Denied request — reason=<r> origin=<s> host=<s> (<METHOD> <path>)",ALL,1 dong per deny - sanitized (FR-09/BR-04)
+PS-10,helper_requestWithHeaders,requestWithHeaders(port,opts),IT-01..IT-14,Raw http.request voi headers tuy y (TDD 11.5.1)
+PS-11,helper_assertNoAccessControlHeaders,assertNoAccessControlHeaders(headers),IT-01..IT-13,Assert zero header access-control-* (AC-8 systematic)
+PS-12,helper_sendRawRequest,sendRawRequest(port,rawBytes),IT-12;E2E-API-04,net.connect raw HTTP/1.1 - duplicate header/CRLF (R-6)
+PS-13,helper_createCapturingOutputChannel,createCapturingOutputChannel(),IT-01..IT-13,Mock outputChannel capture lines[] (deny log assert)
+PS-14,mock_deps,"restGetTools, restCallTool mocks",IT-01..IT-14,restCallToolMock.calls.length === 0 khi deny (tool khong thuc thi)
+PS-15,regression_suites,"TC-22..TC-31, TC-37, tool-proxy.test, mcp-handshake.regression",IT-03;IT-08,Phai 100% pass - dieu kien mo security review (FR-10/AC-4)
+PS-16,harness_script,documents/SA4E-358/testdata/cors-pentest-harness.ts,E2E-API-01..04,Live harness pattern SA4E-356 (Row/Verdict bookkeeping; self-cleaning tmp)
+PS-17,bench_script,documents/SA4E-358/testdata/bench-gate.ts,IT-14,Micro 10^6 x 4 input class + e2e delta median (FSD 8.1)
+PS-18,vitest_config,extension/vitest.config.ts,ALL,alias vscode:7; include src/**/__tests__/**:13; fileParallelism false:23; retry 2:26

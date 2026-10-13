@@ -1,0 +1,116 @@
+# =============================================================================
+# SA4E-358 — CORS gate consistency rules (defense-in-depth for the grep gate)
+# -----------------------------------------------------------------------------
+# Enforces TDD v1.1 §3.6/§8.6 + STP v1.1 §2.5 SCAN-01/SCAN-02 in CI:
+#   1. NO wildcard Access-Control-Allow-Origin ("*") anywhere (AC-8, FR-05).
+#   2. ACAO may ONLY be set to gate.echoOrigin — the raw allowlisted Origin —
+#      inside the WrapperServer echo block (G-4/G-5 echo-only semantics).
+#      Reflecting any other value (e.g. req.headers.origin) is equivalent to
+#      ACAO:* for browsers.
+#   3. NO Access-Control-* header literal outside WrapperServer.ts — the gate
+#      (evaluateOriginGate) owns ALL CORS emission (I-1, single entry point).
+#
+# Triage notes (pre-triaged, do NOT reopen — lesson SA4E-356 INFO-02):
+#   * The target implementation (TDD §3.6) emits ACAO/Allow-*/Vary ONLY via
+#     res.setHeader(..., gate.echoOrigin) AFTER the gate -> rule 2 pattern-nots
+#     exactly that shape; no false positive on green code.
+#   * Deny path (writeHead(403) + Content-Type only) contains no
+#     Access-Control token -> never matches rule 3.
+#   * "Vary: Origin" (SEC-358-03 recommendation) is NOT an Access-Control-*
+#     header -> rule 3 does not flag it (and it lives in WS anyway).
+#   * Rule 3 intentionally matches COMMENTS too — merge condition #6 (grep 0
+#     `ACAO: *`) is a raw grep; keep production files free of CORS literals
+#     outside WS, including comments.
+#   * RED by design pre-implementation: WrapperServer.ts:126-128 sets ACAO
+#     "*" unconditionally -> rules 1+2 match today. This file runs
+#     INFORMATIONAL (continue-on-error) until 1 green run post-C3; the
+#     BLOCKING enforcement is scripts/check-cors-gate-sa4e358.sh (same
+#     promotion policy as ci-sa4e-356.yml).
+#
+# Scope: extension/src/**/*.ts; __tests__ excluded (fixtures assert deny
+# shapes + helper scans header key prefixes); node_modules excluded
+# (gitignored — belt-and-braces); WrapperServer.ts excluded from rule 3 (it
+# is the ONLY sanctioned CORS site; its gate-first ordering is enforced by
+# the grep gate line-number checks).
+# =============================================================================
+
+rules:
+  # ---------------------------------------------------------------------------
+  # Rule 1 — no wildcard ACAO, all emission forms (setHeader + object literal).
+  # ---------------------------------------------------------------------------
+  - id: sa4e358-no-wildcard-acao
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      SA4E-358: Access-Control-Allow-Origin must NEVER be "*". The OriginGate
+      echoes only allowlisted Origins (TDD §3.6 / FR-05 / BR-07 / AC-8).
+    metadata:
+      ticket: SA4E-358
+      refs: TDD v1.1 §3.6, §8.6; STP v1.1 §2.5 SCAN-01
+    patterns:
+      - pattern-either:
+          - pattern: $RES.setHeader("Access-Control-Allow-Origin", "*")
+          - pattern: $RES.setHeader('Access-Control-Allow-Origin', '*')
+          - pattern: '"Access-Control-Allow-Origin": "*"'
+          - pattern: "'Access-Control-Allow-Origin': '*'"
+    paths:
+      include:
+        - /extension/src/**/*.ts
+      exclude:
+        - /extension/src/**/__tests__/**
+        - /extension/src/**/node_modules/**
+
+  # ---------------------------------------------------------------------------
+  # Rule 2 — ACAO value must be the gate echo (echo-only semantics).
+  # Only sanctioned shape: res.setHeader("Access-Control-Allow-Origin",
+  # gate.echoOrigin) — G-4 (RAW trimmed Origin) / G-5 (uniform echo).
+  # ---------------------------------------------------------------------------
+  - id: sa4e358-acao-echo-only
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      SA4E-358: ACAO may only be set to gate.echoOrigin (raw allowlisted
+      Origin) inside the WrapperServer echo block. Any other value —
+      especially a reflected request Origin — equals ACAO:* for browsers
+      (G-4/G-5, TDD §3.6).
+    metadata:
+      ticket: SA4E-358
+      refs: TDD v1.1 §3.6 (G-4/G-5); STP v1.1 §2.5 SCAN-02
+    patterns:
+      - pattern-either:
+          - pattern: $RES.setHeader("Access-Control-Allow-Origin", $V)
+          - pattern: $RES.setHeader('Access-Control-Allow-Origin', $V)
+      - pattern-not: $RES.setHeader("Access-Control-Allow-Origin", gate.echoOrigin)
+      - pattern-not: $RES.setHeader("Access-Control-Allow-Origin", $GATE.echoOrigin)
+    paths:
+      include:
+        - /extension/src/**/*.ts
+      exclude:
+        - /extension/src/**/__tests__/**
+        - /extension/src/**/node_modules/**
+
+  # ---------------------------------------------------------------------------
+  # Rule 3 — CORS headers are owned by the gated entry point only.
+  # Any Access-Control-* string literal outside WrapperServer.ts is a finding
+  # (regex form: also catches writeHead object-literal headers and template
+  # strings that typed patterns would miss).
+  # ---------------------------------------------------------------------------
+  - id: sa4e358-no-cors-outside-wrapper-server
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      SA4E-358: Access-Control-* header literal outside WrapperServer.ts.
+      The gate (evaluateOriginGate in WrapperServer.handleRequest) owns ALL
+      CORS emission (I-1 single entry point, TDD §3.6/§8.6).
+    metadata:
+      ticket: SA4E-358
+      refs: TDD v1.1 §8.6; STP v1.1 §2.5 SCAN-02
+    patterns:
+      - pattern-regex: '(?i)["'']Access-Control-[A-Za-z-]+["'']'
+    paths:
+      include:
+        - /extension/src/**/*.ts
+      exclude:
+        - /extension/src/**/__tests__/**
+        - /extension/src/**/node_modules/**
+        - /extension/src/services/WrapperServer.ts

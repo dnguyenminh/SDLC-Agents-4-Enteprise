@@ -1,0 +1,123 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-358 — Test Execution Flow: PBT → UT → IT → SCAN → E2E-API → V-1..V-4 → Security Review (exit criteria + defect loop)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="900" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="start" value="ENTRY: OriginGate.ts compiled (C1) + corpus CSVs + helpers C4 ready + extension dev host :9181 available" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="50" width="400" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="pbt" value="PBT-01..04 (fast-check, vitest)&#10;shape exhaustive · never-throw · log-safety · no-Origin monotonic" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="180" y="140" width="400" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d1" value="PBT 4/4 green?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="230" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut" value="UT-01..38 (vitest pure &lt;50ms, không server)&#10;7 nhóm: extract · no-Origin · malformed · allowlist · host-check · H-7/H-8/H-9 (SEC-358-01) · robustness" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="180" y="340" width="400" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="d2" value="UT 38/38 + coverage OriginGate ≥95%?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="440" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="it" value="IT-01..14 (server-thật start(0) port ngẫu nhiên — G-7)&#10;T11 sweep 15 · T12 raw-socket + no-Origin Host-evil · T13 preflight matrix 14 · T14 bench p99&lt;1ms&#10;Regression: TC-22..31 + TC-37 + tool-proxy + mcp-handshake" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="180" y="550" width="400" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="d3" value="IT 14/14 + regression 100%?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="660" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="scan" value="SCAN-01/02 (static)&#10;grep 0 ACAO * · gate-first ordering · allowlist readonly · Vary: Origin" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="180" y="770" width="400" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="d5" value="0 forbidden pattern?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="860" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e" value="E2E-API-01..04 — live harness :9181 (tsx, extension host thật)&#10;red/green replay P6-15/16/17 · webview-sim · R-6 vectors · DNS-rebind no-Origin (SEC-358-01 live)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="180" y="970" width="400" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="d6" value="Harness green toàn bộ?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="280" y="1070" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="v1" value="E2E-API-05 — V-3 header capture → V-1a static grep → V-1b runtime session → V-1c CSV → V-4 chốt A-1&#10;(MANUAL — BLOCKER MERGE: không chạy đủ → KHÔNG merge, R-3 impact High)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="1180" width="400" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="d4" value="Merge conditions đủ?&#10;(1) tests 100% (2) V-1..V-4 (3) harness green (4) H-7..H-9 PASS (5) bench p99&lt;1ms (6) 0 ACAO *" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="250" y="1280" width="260" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="review" value="SECURITY REVIEW AC-3 (C11) — Security Agent độc lập&#10;SEC-358-01 Option A verified · allowlist không quá rộng · log an toàn" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="180" y="1410" width="400" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="end" value="MERGE + evidence archive C12 — 7/7 điều kiện merge PASS · verdict PASS (0 finding Medium+ CORS/Origin :9181)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="180" y="1510" width="400" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="defect" value="DEFECT (P1 4h · P2 1d · P3 3d)&#10;Critical = 0-tolerance (origin lạ pass / còn ACAO * / tool thực thi khi deny / crash)&#10;Fix root cause — no-workaround-rule (KHÔNG nới * / bỏ gate)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;dashed=0;" vertex="1" parent="1">
+      <mxGeometry x="680" y="660" width="260" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="note-v1" value="A-1 refuted → AF-2 UC-04 + BR-10:&#10;thêm pattern allowlist (code change + test)&#10;update T4/T5 + corpus — KHÔNG nới *" style="text;html=1;strokeColor=#b85450;fillColor=#fff2cc;align=left;verticalAlign=middle;fontSize=9;spacingLeft=4;" vertex="1" parent="1">
+      <mxGeometry x="680" y="1180" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="start" target="pbt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="chạy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;" edge="1" parent="1" source="pbt" target="d1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#2d7600;" edge="1" parent="1" source="d1" target="ut">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="ut" target="d2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#2d7600;" edge="1" parent="1" source="d2" target="it">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="it" target="d3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#2d7600;" edge="1" parent="1" source="d3" target="scan">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="scan" target="d5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#2d7600;" edge="1" parent="1" source="d5" target="e2e">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="e2e" target="d6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" value="green" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#2d7600;" edge="1" parent="1" source="d6" target="v1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="v1" target="d4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" value="5/5 evidence + p99&lt;1ms + 0 ACAO *" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#2d7600;" edge="1" parent="1" source="d4" target="review">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" value="Verdict PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#2d7600;" edge="1" parent="1" source="review" target="end">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#b85450;strokeColor=#b85450;" edge="1" parent="1" source="d1" target="defect">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e16" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#b85450;strokeColor=#b85450;" edge="1" parent="1" source="d2" target="defect">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e17" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#b85450;strokeColor=#b85450;" edge="1" parent="1" source="d3" target="defect">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e18" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;fontColor=#b85450;strokeColor=#b85450;" edge="1" parent="1" source="d4" target="defect">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e19" value="fix → re-run failed level" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="defect" target="ut">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e20" value="fix → re-run" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;dashed=1;strokeColor=#b85450;" edge="1" parent="1" source="defect" target="e2e">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e21" value="A-1 refuted" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;strokeColor=#d6b656;fontColor=#996c00;" edge="1" parent="1" source="v1" target="note-v1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

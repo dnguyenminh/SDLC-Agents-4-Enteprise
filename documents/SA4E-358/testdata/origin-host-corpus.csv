@@ -1,0 +1,40 @@
+test_case_id,group,origin_header,host_header,listen_port,expected_result,expected_reason,expected_echo_origin,requirement_refs,description
+UT-01,extract,http://x.com,127.0.0.1:9181,9181,EXTRACT origin=http://x.com host=127.0.0.1:9181 dupOrigin=false dupHost=false,,,FR-12;G-2,extractGateHeaders single pair - origin/host dung; no duplicate
+UT-02,extract,(2 cap Origin: a; b),127.0.0.1:9181,9181,EXTRACT dupOrigin=true,,,R-6;FR-12,2 cap Origin key - duplicate detect
+UT-03,extract,http://x.com,(2 cap Host: h1; h2),9181,EXTRACT dupHost=true,,,FR-12;R-6,2 cap Host key - request smuggling surface
+UT-04,extract,(ORIGIN=a VA origin=b - casing khac),127.0.0.1:9181,9181,EXTRACT dupOrigin=true (key compare lowercase),,,C-3;FR-12,Header key casing - 2 value duoc gom
+UT-05,extract,(mang rong [] VA mang odd ["Origin"]),,9181,EXTRACT origin=undefined host=undefined - KHONG throw,,,G-1;E-5,Empty/odd-length array guard (loop i+1 < length)
+UT-06,no-origin,(khong co Origin),127.0.0.1:9181,9181,PASS,,(null),FR-02a;BR-06,N-1 - no Origin = native client
+UT-07,no-origin,(rong ""),127.0.0.1:9181,9181,PASS,,(null),FR-02a;BR-06,N-2 - Origin rong sau trim = no-Origin
+UT-08,no-origin,"   ",127.0.0.1:9181,9181,PASS,,(null),FR-02a;BR-06,N-3 - Origin whitespace; trim ve rong
+UT-09,malformed,%%,127.0.0.1:9181,9181,DENY,malformed-origin,,FR-12;G-1,M-1 - URL constructor throw
+UT-10,malformed,null,127.0.0.1:9181,9181,DENY,malformed-origin,,FR-12,M-2 - null literal URL throw
+UT-11,malformed,file://x,127.0.0.1:9181,9181,DENY,origin-not-allowed HOAC malformed-origin (KHONG pass),,FR-12;BR-02,M-3 - scheme file ngoai allowlist
+UT-12,malformed,localhost:3000,127.0.0.1:9181,9181,DENY,malformed-origin,,FR-12,M-4 - scheme-only; hostname rong (P3c)
+UT-13,malformed,"http://a.com,http://b.com",127.0.0.1:9181,9181,DENY,malformed-origin,,FR-12;C-3,M-5 - comma dual-check (chong Node join)
+UT-14,malformed,(duplicate: vscode-webview://abc VA https://evil.com),127.0.0.1:9181,9181,DENY,malformed-origin,,FR-12;AD-2,M-6 - KHONG first-wins du 1 gia tri hop le
+UT-15,malformed,vscode-webview://abc:9181,127.0.0.1:9181,9181,DENY,malformed-origin,,FR-12,M-7 - opaque host chua ":" URL throw (P3b)
+UT-16,allowlist,vscode-webview://abc123,127.0.0.1:9181,9181,PASS,,vscode-webview://abc123,FR-03;G-4,A-1 - echo RAW (khong url.origin)
+UT-17,allowlist,http://localhost:3000,127.0.0.1:9181,9181,PASS,,http://localhost:3000,FR-03,A-2 - origin port khac listenPort van PASS
+UT-18,allowlist,https://localhost:8443,127.0.0.1:9181,9181,PASS,,https://localhost:8443,FR-03,A-3 - https+localhost trong allowlist
+UT-19,allowlist,http://127.0.0.1:5173,127.0.0.1:9181,9181,PASS,,http://127.0.0.1:5173,FR-03,A-4 - dev server Vite
+UT-20,allowlist,HTTPS://LOCALHOST:3000,127.0.0.1:9181,9181,PASS,,HTTPS://LOCALHOST:3000,FR-03;G-8,A-5 - so khop fold lowercase; echo giu RAW
+UT-21,allowlist,http://localhost.evil.com:3000,127.0.0.1:9181,9181,DENY,origin-not-allowed,,BR-02,A-6 - exact membership; KHONG substring
+UT-22,allowlist,https://127.0.0.1:8443,127.0.0.1:9181,9181,DENY,origin-not-allowed,,FR-03,A-7 - https+127.0.0.1 KHONG trong FR-03 (chu dong)
+UT-23,allowlist,http://localhost.,127.0.0.1:9181,9181,DENY,origin-not-allowed,,FR-12;G-8,A-8 - trailing dot; khong DNS-normalize
+UT-24,allowlist,http://[::1]:3000,127.0.0.1:9181,9181,DENY,origin-not-allowed,,FR-03;R-1,A-9 - hostname ::1 khong thuoc allowlist
+UT-25,allowlist,http://localhost:3000/evil,127.0.0.1:9181,9181,PASS,,http://localhost:3000/evil,FR-03;G-4,A-10 - path ignored; echo nguyen value
+UT-26,host-check,vscode-webview://abc,attacker.com:9181,9181,DENY,host-mismatch,,FR-04;BR-03,H-1 - DNS rebinding (UC-05)
+UT-27,host-check,vscode-webview://abc,127.0.0.1:9182,9181,DENY,host-mismatch,,FR-04;BR-03;G-7,H-2 - port = listen+1 (port chinh xac; khong hardcode)
+UT-28,host-check,vscode-webview://abc,(khong co Host),9181,DENY,host-mismatch,,FR-04;EF-1-UC-05,H-3 - co Origin thieu Host = fail-closed
+UT-29,host-check,vscode-webview://abc,"[::1]:9181",9181,DENY,host-mismatch,,FR-04,H-4 - IPv6 literal host
+UT-30,host-check,vscode-webview://abc,127.0.0.1:abc (variant: 127.0.0.1:),9181,DENY,host-mismatch,,FR-04,H-5 - port khong match /^\d+$/
+UT-31,host-check,http://localhost:3000,LOCALHOST:9181 (variant: 127.0.0.1:09181),9181,PASS (ca 2 variant),,http://localhost:3000,FR-04;G-8,H-6 - hostname fold; port numeric (:09181 === 9181)
+UT-32,sec-358-01-option-a,(khong co Origin),attacker.com:9181,9181,DENY,host-mismatch (originSanitized="" hostSanitized=attacker.com:9181),,SEC-358-01;FR-04;I-8;AC-5,H-7 - no-Origin + Host evil = rebinding same-origin chan (Option A)
+UT-33,sec-358-01-option-a,(khong co Origin),127.0.0.1:9181 (variants: localhost:9181; LOCALHOST:9181),9181,PASS (ca 3 variant),,(null),SEC-358-01;FR-04;I-8;AC-4,H-8 - no-Origin + Host loopback dung port = PASS (native khong bi chan oan)
+UT-34,sec-358-01-option-a,(khong co Origin),(khong co Host - HTTP/1.0),9181,PASS,,(null),SEC-358-01;FR-04;I-8,H-9 - no-Origin + khong Host = legacy carve-out PASS (variant Host="" rong cung PASS)
+UT-35,robustness,"https://evil.com\r\nX-Injected: 1\0more","localhost\r\n:9181",9181,DENY,malformed-origin (sanitized khong con \r \n \0 - tat ca thanh ?),,G-3;BR-04;R-4,R-1 - control chars; sanitize BEN TRONG gate
+UT-36,robustness,vscode-webview://abc,127.0.0.1:9181,0,DENY,host-mismatch,,AD-7;BR-01,R-2 - listenPort=0 fail-closed (effectivePort 9181 !== 0)
+UT-37,robustness,javascript:alert(1),127.0.0.1:9181,9181,DENY,origin-not-allowed (KHONG pass; KHONG throw),,BR-02;G-1,R-3 - scheme javascript
+UT-38,robustness,(fuzz 100 rawHeaders arrays ngau nhien - odd/control/unicode/casing),random port,NO_THROW + result luon co property ok,,,G-1;FR-12,R-4 - fuzz khong throw
+UT-39,sec-358-05-optional,"vscode-webview://a\tb (variants \n \r \f \v)",127.0.0.1:9181,9181,DENY (neu guard implemented; SKIP neu khong),origin-not-allowed hoac malformed-origin (deny TRUOC new URL),,SEC-358-05;G-1;BR-01,OPTIONAL defense-in-depth (Gap-4 BA review) - deny Origin chua control chars; browser khong bao gio serialize Origin dang nay

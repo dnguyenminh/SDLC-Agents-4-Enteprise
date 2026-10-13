@@ -1,0 +1,10 @@
+scan_id,pattern,scope,expected_matches,rationale
+SCAN-01a,"setHeader(""Access-Control-Allow-Origin"", ""*"") / literal ACAO gia tri *",extension/src/**/*.ts (whitelist: test files; docs; vendored lighthouse-devtools-mcp-bundle.js),0,AC-8;BR-07 - grep 0 ACAO * (dieu kien merge #6)
+SCAN-01b,"setHeader(""Access-Control",extension/src/services/WrapperServer.ts,chi trong block if (gate.echoOrigin !== null) SAU gate,C-2 - dong :126-128 cu da XOA; khong setHeader nao truoc gate
+SCAN-02a,"evaluateOriginGate (statement dau tien cua handleRequest)",extension/src/services/WrapperServer.ts,1 - la statement dau; khong statement nao truoc (URL parse doi xuong sau gate),FR-01;I-1
+SCAN-02b,"ALLOWED_ORIGIN_PATTERNS (readonly; khong export mutable)",extension/src/services/OriginGate.ts,readonly constant; khong setter/push tu ben ngoai,BR-09;TDD-8.3
+SCAN-02c,"res.setHeader(""Vary"", ""Origin"") trong echo block",extension/src/services/WrapperServer.ts,1,SEC-358-03 (Informational - assert mem IT-04)
+SCAN-02d,"OriginGate.ts imports: chi import { sanitizeLogText } tu ./PathResolver",extension/src/services/OriginGate.ts,1 import - KHONG http; KHONG vscode,G-2 (pure module)
+SCAN-02e,"appendLine(`[WrapperServer] Denied request — reason=...`)",extension/src/services/WrapperServer.ts,1 format dung TDD 7.3 - 1 dong/deny; allowed KHONG log,FR-09;FSD-7.3
+SCAN-02f,"Host check Phase 1.5 (chay truoc nhanh no-Origin)",extension/src/services/OriginGate.ts,1 - host validate truoc khi return PASS no-Origin,SEC-358-01;I-8 (Option A implemented)
+SCAN-02g,"referer (case-insensitive)",extension/src/services/OriginGate.ts + WrapperServer.ts,0 - KHONG doc Referer o bat ky dau nao trong trust path (Origin/Host la 2 header quyet dinh duy nhat),BR-05 (Gap-1 BA review - traceability fix)
