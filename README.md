@@ -66,6 +66,10 @@ MIT
 
 ## Changelog
 
+### v1.52.0 (2026-10-13)
+
+- **SA4E-355: Context Budget Governance for Pi Harness** — 3-gate enforcement (turn-start gate + per-request intra-turn gate in Agent `streamFn` + REJECT claim `PI_CONTEXT_BUDGET_EXCEEDED`), auto-split (auto-chunk + incremental steering + lean tool loadout), and user-message pin in transcript compaction. Context Budget Resolver resolves real model n_ctx via 3-level fallback chain (provider `meta.n_ctx` → ModelRegistry → default 8192), 8% safety margin, 70/30 static/history split, model tiering (small/medium/large). UAT PASSED 2026-10-13 after bug-fix chain #1–#3 (legacy-path governance, intra-turn streamFn gate, user-message pin — journey 400→500→pass). Full suite 285 files / 2,748 tests green; governance regression 148/148. Known pending: E2E-UI wdio STC-500/501/703 (needs display env). Full docs in `documents/SA4E-355/` (BRD/FSD/TDD/STP/STC/TEST-REPORT/DPG/RLN + diagrams).
+
 ### v1.48.0 (2026-10-10)
 
 - **SA4E-341: E2E testing framework** — New standalone `e2e/` package: WebdriverIO + wdio-vscode-service + Serenity/JS (Cucumber + Screenplay Pattern) for VSCode-based IDEs. 4 BDD Gherkin features (launch, open-editor, extension-command, chat-webview), Screenplay tasks/questions/interactions, 33 unit tests (all green), Serenity BDD HTML report + failure screenshots (Photographer), CI headless workflow (`.github/workflows/e2e-tests.yml`, xvfb-run on ubuntu-latest). Spike verified: Kiro 1.2.37 = GO (Chromium 152, chromedriver 152 manual via Chrome-for-Testing); 1006 flakiness on CI tracked in follow-up SA4E-351. Full docs in `documents/SA4E-341/` (BRD/FSD/TDD/STP/STC/UG/DPG/RLN/TEST-REPORT + 10 diagrams).
