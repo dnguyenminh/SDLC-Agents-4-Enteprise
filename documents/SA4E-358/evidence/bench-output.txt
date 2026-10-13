@@ -1,0 +1,14 @@
+
+━━━ MICRO — evaluateOriginGate × 1,000,000 per class (warmup 10^4) ━━━
+PASS  no-Origin        p50=0.20µs p95=0.30µs p99=0.50µs
+PASS  allowed-webview  p50=0.70µs p95=0.90µs p99=1.40µs
+PASS  denied-evil      p50=0.70µs p95=0.90µs p99=1.40µs
+PASS  malformed        p50=12.20µs p95=23.50µs p99=43.90µs
+
+━━━ E2E — GET /health × 10^4 sequential, gate vs baseline ━━━
+baseline median=0.0911ms  post-fix median=0.0795ms  delta=-0.0116ms
+PASS  e2e delta median < 1ms
+
+Evidence written: C:\projects\kiro\SDLC-Agents-4-Enterprise\documents\SA4E-358\testdata\bench-results.csv
+
+VERDICT: micro p99<1ms=PASS  e2e delta<1ms=PASS

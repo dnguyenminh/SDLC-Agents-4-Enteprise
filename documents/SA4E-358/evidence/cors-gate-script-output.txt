@@ -1,0 +1,3 @@
+== CORS gate-first consistency gate (SA4E-358 / TDD §8.6, STP §2.5 SCAN) ==
+mode=all
+PASSED: scanned 528 in-scope production file(s); CORS emission is gate-first (SCAN-01/02 + I-1 clean).

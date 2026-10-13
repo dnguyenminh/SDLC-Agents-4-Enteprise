@@ -1,0 +1,6 @@
+
+ Test Files  286 passed (286)
+      Tests  2808 passed (2808)
+   Duration  241.37s (transform 12.28s, setup 0ms, import 98.00s, tests 70.13s, environment 6.23s)
+ OriginGate.ts   |     100 |    96.42 |     100 |     100 | 149,152           
+

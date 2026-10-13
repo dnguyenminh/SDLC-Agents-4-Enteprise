@@ -12,7 +12,8 @@ import * as http from "http";
 import * as vscode from "vscode";
 import { executeLocalTool, getLocalToolDefinitions, isLocalTool } from "../backend-local-tools";
 import { Base64ProxyService } from "./Base64ProxyService";
-import { PathResolverError } from "./PathResolver";
+import { evaluateOriginGate } from "./OriginGate";
+import { PathResolverError, sanitizeLogText } from "./PathResolver";
 
 /** Maximum body size (1MB) */
 const MAX_BODY_SIZE = 1024 * 1024;
@@ -50,6 +51,17 @@ export class WrapperServer {
   constructor(private readonly deps: WrapperServerDeps) {}
 
   get listeningPort(): number | null { return this.port; }
+
+  /**
+   * Raw bind address of the underlying http.Server — verify-only accessor for
+   * the 127.0.0.1 loopback invariant (AC-7 / T8 / STC IT-08). No code change
+   * to the bind call itself (FR-11).
+   */
+  get boundAddress(): string | null {
+    if (!this.server) return null;
+    const addr = this.server.address();
+    return addr !== null && typeof addr === "object" ? addr.address : String(addr);
+  }
 
   /** Number of attempts to bind before giving up. */
   private static readonly START_MAX_ATTEMPTS = 10;
@@ -122,11 +134,30 @@ export class WrapperServer {
   }
 
   private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-    const u = new URL(req.url || "/", "http://localhost");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    // ── SA4E-358 gate (FR-01) — FIRST statement: no header is set before it. ──
+    const gate = evaluateOriginGate(req.rawHeaders, this.port ?? 0);
+    if (!gate.ok) {
+      // Deny is the gate's happy path (AD-6) — 403 directly on a CLEAN res
+      // (no setHeader happened), zero CORS headers (I-2/AC-8), reason stays
+      // in the log only (FR-09). req.url sanitized at the call site (BR-04).
+      this.deps.outputChannel.appendLine(
+        `[WrapperServer] Denied request — reason=${gate.reason} origin=${gate.originSanitized} ` +
+        `host=${gate.hostSanitized} (${req.method} ${sanitizeLogText(req.url ?? "/")})`
+      );
+      res.writeHead(403, { "Content-Type": "application/json" });
+      res.end('{"error":"Forbidden"}');
+      return;
+    }
+    // ── CORS headers ONLY for callers with an allowlisted Origin (G-5) ──
+    if (gate.echoOrigin !== null) {
+      res.setHeader("Access-Control-Allow-Origin", gate.echoOrigin); // echo RAW (G-4) — never "*"
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader("Vary", "Origin"); // SEC-358-03
+    }
+    // ── current behavior from here on UNCHANGED (FR-10 / I-7) ──
     if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
+    const u = new URL(req.url || "/", "http://localhost");
     try {
       if (u.pathname === "/mcp") { await this.handleMcp(req, res); return; }
       if (u.pathname === "/health") {

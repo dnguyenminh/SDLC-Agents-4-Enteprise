@@ -1,0 +1,7 @@
+input_class,p50_ns,p95_ns,p99_ns,e2e_delta_median_ms
+no-Origin,200,300,600,
+allowed-webview,700,1400,2900,
+denied-evil,800,1800,3300,
+malformed,13700,21200,38800,
+e2e-get-health,101000,82500,,-0.018500
+# F2 fix (TA D8): e2e leg = ALLOW branch (webview-sim Host 127.0.0.1:<listenPort> + Origin vscode-webview://bench-sim); all 10000 gated + 10000 baseline requests asserted HTTP 200; real listenPort=63975 passed to the gate

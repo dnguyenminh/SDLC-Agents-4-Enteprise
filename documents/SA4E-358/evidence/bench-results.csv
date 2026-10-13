@@ -1,0 +1,6 @@
+input_class,p50_ns,p95_ns,p99_ns,e2e_delta_median_ms
+no-Origin,200,300,500,
+allowed-webview,700,900,1400,
+denied-evil,700,900,1400,
+malformed,12200,23500,43900,
+e2e-get-health,91100,79500,,-0.011600

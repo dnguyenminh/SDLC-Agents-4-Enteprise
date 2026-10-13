@@ -7,10 +7,12 @@ import * as fc from 'fast-check';
 import * as fs from 'fs';
 import * as path from 'path';
 import { WrapperServer } from '../services/WrapperServer';
+import { evaluateOriginGate } from '../services/OriginGate';
 import { Base64ProxyService } from '../services/Base64ProxyService';
 import {
-  createTestServer, postMcp, postRaw,
-  TMP_DIR, ensureTmpDir, cleanTmpDir, MockDeps,
+  createTestServer, postMcp, postRaw, requestWithHeaders,
+  assertNoAccessControlHeaders, sendRawRequest, createCapturingOutputChannel,
+  openSse, TMP_DIR, ensureTmpDir, cleanTmpDir, MockDeps,
 } from './wrapper-server.helpers';
 
 describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
@@ -478,5 +480,432 @@ describe('WrapperServer SA4E-356 (STC IT-05 wrapper, IT-06, envelope)', () => {
     );
     expect(JSON.parse(out.content[0].text).file_path).toBe(input + '.out');
     expect(fs.existsSync(input + '.out')).toBe(true);
+  });
+});
+
+/**
+ * SA4E-358 Origin Gate — integration matrix T1..T14 (STC IT-01..14, mức 2).
+ * Real WrapperServer on a RANDOM port (G-7 — never hardcoded 9181) with a
+ * capturing outputChannel for deny-log assertions. T14 micro-sanity mirrors
+ * bench-gate.ts; the full bench (10^6/class + e2e delta, evidence CSV) runs
+ * on-demand per STC IT-14/FSD §8.1 — NOT in the default CI suite.
+ */
+describe('SA4E-358 Origin Gate (T1..T14)', () => {
+  let server: WrapperServer;
+  let deps: MockDeps;
+  let port: number;
+  let logLines: string[];
+
+  beforeAll(async () => {
+    ensureTmpDir();
+    const channel = createCapturingOutputChannel();
+    logLines = channel.lines;
+    ({ server, deps } = createTestServer({ outputChannel: channel } as Partial<MockDeps>));
+    await server.start(0);
+    port = server.listeningPort!;
+  });
+
+  afterAll(async () => {
+    await server.stop();
+    cleanTmpDir();
+  });
+
+  beforeEach(() => {
+    deps.restCallToolMock.calls = [];
+    deps.restCallToolMock.result = { content: [{ type: 'text', text: '{}' }] };
+  });
+
+  /** Deny log lines emitted so far — each deny appends exactly 1 line (FR-09). */
+  const deniedLogs = () => logLines.filter((l) => l.startsWith('[WrapperServer] Denied request'));
+  /** Assert the deny-log count grew by exactly `n` with the expected reason + format (§7.3). */
+  function expectDeniedLog(n: number, reason: string, from: number): void {
+    const fresh = deniedLogs().slice(from);
+    expect(fresh).toHaveLength(n);
+    for (const line of fresh) {
+      expect(line).toContain(`reason=${reason}`);
+      expect(line).toMatch(/^\[WrapperServer\] Denied request — reason=\S+ origin=.* host=.* \(\S+ \S+\)$/);
+    }
+  }
+
+  const rpc = (id: number, method: string, params?: unknown) =>
+    JSON.stringify({ jsonrpc: '2.0', id, method, ...(params === undefined ? {} : { params }) });
+
+  // ── T1 / IT-01: POST /mcp evil Origin — full deny before handleMcp ──
+  it('T1 (IT-01): POST /mcp Origin evil → 403 + zero CORS + tool NOT executed + deny log', async () => {
+    const before = deniedLogs().length;
+    const res = await requestWithHeaders(port, {
+      method: 'POST', path: '/mcp',
+      headers: { Origin: 'https://evil.com', Host: `127.0.0.1:${port}`, 'Content-Type': 'application/json' },
+      body: rpc(1, 'tools/call', { name: 'mem_search', arguments: { query: 'x' } }),
+    });
+    expect(res.status).toBe(403);
+    assertNoAccessControlHeaders(res.headers);
+    expect(res.body).toBe('{"error":"Forbidden"}');
+    expect(res.headers['content-type']).toContain('application/json');
+    expect(deps.restCallToolMock.calls).toHaveLength(0); // deny BEFORE handleMcp (AC-1/BO-2)
+    expectDeniedLog(1, 'origin-not-allowed', before);
+  });
+
+  // ── T2 / IT-02: preflight evil → 403 (NOT 204), no Allow-* (P6-16 closed) ──
+  it('T2 (IT-02): OPTIONS preflight evil → 403 + zero access-control headers', async () => {
+    const before = deniedLogs().length;
+    const res = await requestWithHeaders(port, {
+      method: 'OPTIONS', path: '/mcp',
+      headers: {
+        Origin: 'https://evil.com', Host: `127.0.0.1:${port}`,
+        'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'Content-Type',
+      },
+    });
+    expect(res.status).toBe(403);
+    assertNoAccessControlHeaders(res.headers); // includes Allow-Method*/Allow-Headers
+    expect(res.body).toBe('{"error":"Forbidden"}');
+    expectDeniedLog(1, 'origin-not-allowed', before);
+  });
+
+  // ── T3 / IT-03: native no-Origin session — pass-through, zero regression ──
+  it('T3 (IT-03): full native session (no Origin) → current behavior + zero CORS (AC-4)', async () => {
+    const before = deniedLogs().length;
+    const session = async (body: string) => {
+      const res = await requestWithHeaders(port, {
+        method: 'POST', path: '/mcp',
+        headers: { Host: `127.0.0.1:${port}`, 'Content-Type': 'application/json' },
+        body,
+      });
+      // requestWithHeaders returns the RAW body string (helper spec) — 202 has
+      // an empty body; parse only when present.
+      return { ...res, body: res.body ? JSON.parse(res.body) : res.body };
+    };
+    const init = await session(rpc(20, 'initialize', { protocolVersion: '2024-11-05', capabilities: {} }));
+    expect(init.status).toBe(200);
+    expect(init.body.result.protocolVersion).toBe('2024-11-05');
+    assertNoAccessControlHeaders(init.headers); // zero CORS for native (G-5, no ACAO assert)
+
+    const notif = await session(rpc(0, 'notifications/initialized'));
+    expect(notif.status).toBe(202);
+    assertNoAccessControlHeaders(notif.headers);
+
+    const list = await session(rpc(21, 'tools/list', {}));
+    expect(list.status).toBe(200);
+    expect(Array.isArray(list.body.result.tools)).toBe(true);
+    assertNoAccessControlHeaders(list.headers);
+
+    for (let i = 0; i < 3; i++) {
+      const call = await session(rpc(22 + i, 'tools/call', { name: 'mem_search', arguments: { query: `q${i}` } }));
+      expect(call.status).toBe(200);
+      assertNoAccessControlHeaders(call.headers);
+    }
+    expect(deps.restCallToolMock.calls).toHaveLength(3); // tools execute normally (UT-33 counterpart)
+    expect(deniedLogs().length).toBe(before); // allowed session → NO new deny line (FSD §7.3)
+  });
+
+  // ── T4 / IT-04: preflight webview → 204 + echo EXACT + Allow-* + Vary ──
+  it('T4 (IT-04): OPTIONS webview → 204 + ACAO echo EXACT + Allow-* + Vary: Origin', async () => {
+    const res = await requestWithHeaders(port, {
+      method: 'OPTIONS', path: '/mcp',
+      headers: { Origin: 'vscode-webview://abc123', Host: `127.0.0.1:${port}` },
+    });
+    expect(res.status).toBe(204);
+    expect(res.headers['access-control-allow-origin']).toBe('vscode-webview://abc123'); // RAW echo (G-4)
+    expect(res.headers['access-control-allow-methods']).toBe('GET, POST, OPTIONS');
+    expect(res.headers['access-control-allow-headers']).toBe('Content-Type');
+    expect(res.headers['vary']).toBe('Origin'); // SEC-358-03 (assert mềm per STC — implemented)
+    for (const [k, v] of Object.entries(res.headers)) {
+      if (k.startsWith('access-control-')) expect(String(v)).not.toContain('*'); // BR-07
+    }
+  });
+
+  // ── T5 / IT-05: localhost origin → pass + echo + tool executes ──
+  it('T5 (IT-05): POST localhost origin → 200 + echo + tool executes (origin port ≠ listen)', async () => {
+    const res = await requestWithHeaders(port, {
+      method: 'POST', path: '/mcp',
+      headers: { Origin: 'http://localhost:3000', Host: `localhost:${port}`, 'Content-Type': 'application/json' },
+      body: rpc(30, 'tools/call', { name: 'mem_search', arguments: { query: 'x' } }),
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+    expect(deps.restCallToolMock.calls).toHaveLength(1);
+
+    const variant = await requestWithHeaders(port, {
+      method: 'POST', path: '/mcp',
+      headers: { Origin: 'http://127.0.0.1:5173', Host: `127.0.0.1:${port}`, 'Content-Type': 'application/json' },
+      body: rpc(31, 'tools/call', { name: 'mem_search', arguments: { query: 'y' } }),
+    });
+    expect(variant.status).toBe(200);
+    expect(variant.headers['access-control-allow-origin']).toBe('http://127.0.0.1:5173');
+  });
+
+  // ── T6 / IT-06: Host variants with Origin — rebinding blocked + precedence ──
+  it('T6 (IT-06): Host evil/port+1/missing/[::1] → 403 host-mismatch; both-fail precedence', async () => {
+    const WEBVIEW = 'vscode-webview://abc';
+    const post = (origin: string, host: string) => requestWithHeaders(port, {
+      method: 'POST', path: '/mcp',
+      headers: { Origin: origin, Host: host, 'Content-Type': 'application/json' },
+      body: rpc(40, 'tools/call', { name: 'mem_search', arguments: {} }),
+    });
+
+    // 1) Host attacker.com
+    let before = deniedLogs().length;
+    let res = await post(WEBVIEW, `attacker.com:${port}`);
+    expect(res.status).toBe(403);
+    assertNoAccessControlHeaders(res.headers);
+    expectDeniedLog(1, 'host-mismatch', before);
+
+    // 2) Host port+1 (exact listen port — G-7 random port proves no hardcode)
+    before = deniedLogs().length;
+    res = await post(WEBVIEW, `127.0.0.1:${port + 1}`);
+    expect(res.status).toBe(403);
+    expectDeniedLog(1, 'host-mismatch', before);
+
+    // 3) NO Host at all (HTTP/1.0-style + Origin) — raw socket: http.request
+    //    always auto-adds Host (STC IT-06 step 3 note)
+    before = deniedLogs().length;
+    const raw = await sendRawRequest(port, `POST /mcp HTTP/1.0\r\nOrigin: ${WEBVIEW}\r\nConnection: close\r\n\r\n`);
+    expect(raw.status).toBe(403);
+    expect(raw.raw).not.toMatch(/access-control-/i);
+    expectDeniedLog(1, 'host-mismatch', before);
+
+    // 4) Host IPv6 literal
+    before = deniedLogs().length;
+    res = await post(WEBVIEW, `[::1]:${port}`);
+    expect(res.status).toBe(403);
+    expectDeniedLog(1, 'host-mismatch', before);
+
+    // 5) BOTH fail — TDD §3.3 v1.1 precedence: Phase 1.5 (Host) runs FIRST →
+    //    host-mismatch wins ("deny đầu tiên định reason"). NOTE for QA: STC
+    //    IT-06 step 5 still asserts origin-not-allowed (v1.0 ordering leftover,
+    //    superseded by AD-10/I-8) — TDD v1.1 + FSD BR-05 v1.2 are authoritative.
+    before = deniedLogs().length;
+    res = await post('https://evil.com', `attacker.com:${port}`);
+    expect(res.status).toBe(403);
+    expectDeniedLog(1, 'host-mismatch', before);
+
+    expect(deps.restCallToolMock.calls).toHaveLength(0); // no variant reached the tool
+  });
+
+  // ── T7 / IT-07: SSE GET evil → 403 BEFORE any byte of the stream ──
+  it('T7 (IT-07): GET /mcp SSE evil → 403, no SSE bytes; allowed branch still opens', async () => {
+    const before = deniedLogs().length;
+    const res = await requestWithHeaders(port, {
+      method: 'GET', path: '/mcp',
+      headers: { Origin: 'https://evil.com', Host: `127.0.0.1:${port}` },
+    });
+    expect(res.status).toBe(403);
+    assertNoAccessControlHeaders(res.headers);
+    expect(res.body).not.toContain('event:');
+    expect(res.body).not.toContain('text/event-stream'); // P6-17 closed (AC-6)
+    expectDeniedLog(1, 'origin-not-allowed', before);
+
+    // Allowed branch: native no-Origin SSE opens as before (FR-10)
+    const sse = await openSse(port);
+    expect(sse.status).toBe(200);
+    expect(sse.contentType).toContain('text/event-stream');
+    expect(sse.chunk).toContain('event: message');
+  });
+
+  // ── T8 / IT-08: bind address invariant 127.0.0.1 (AC-7, verify-only) ──
+  it('T8 (IT-08): server binds 127.0.0.1 with the real listen port (FR-11)', () => {
+    expect(server.boundAddress).toBe('127.0.0.1');
+    expect(server.listeningPort).toBe(port);
+    expect(port).toBeGreaterThan(0);
+  });
+
+  // ── T9 / IT-09: anti log-forging — both defense layers proven ──
+  it('T9 (IT-09): CRLF injection — client rejects; raw path 400; log sanitized', async () => {
+    // Layer 1 — Node client/llhttp rejects control chars in header values.
+    let rejected = false;
+    try {
+      await requestWithHeaders(port, {
+        method: 'POST', path: '/mcp',
+        headers: { Origin: 'https://evil.com\r\nX-Injected: 1\0more', Host: 'localhost\r\n:9181' },
+        body: rpc(50, 'ping'),
+      });
+    } catch { rejected = true; }
+    expect(rejected).toBe(true);
+
+    // Layer 1b — raw socket with injected CRLF: llhttp answers 400 (or drops)
+    // BEFORE the gate; the server must survive.
+    const raw = await sendRawRequest(port,
+      'POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:%PORT%\r\nOrigin: https://evil.com\r\nX-Injected: 1\0more\r\nConnection: close\r\n\r\n'
+        .replace('%PORT%', String(port)));
+    expect(raw.status === 400 || raw.status === null).toBe(true);
+
+    // Layer 2 — gate-internal sanitize: no captured log line carries \r \n \0.
+    for (const line of logLines) {
+      expect(/[\r\n\0]/.test(line)).toBe(false);
+    }
+    // Deny body shape is clean even for malformed callers (G-3/FR-08).
+    const after = await requestWithHeaders(port, {
+      method: 'POST', path: '/mcp',
+      headers: { Origin: '%%', Host: `127.0.0.1:${port}`, 'Content-Type': 'application/json' },
+      body: rpc(51, 'ping'),
+    });
+    expect(after.status).toBe(403);
+    expect(after.body).toBe('{"error":"Forbidden"}');
+  });
+
+  // ── T10 / IT-10: malformed matrix — fail-closed, server never crashes ──
+  it('T10 (IT-10): malformed origins → 403 malformed-origin; whitespace passes; server alive', async () => {
+    const post = (origin?: string) => requestWithHeaders(port, {
+      method: 'POST', path: '/mcp',
+      headers: {
+        Host: `127.0.0.1:${port}`, 'Content-Type': 'application/json',
+        ...(origin === undefined ? {} : { Origin: origin }),
+      },
+      body: rpc(60, 'ping'),
+    });
+
+    const cases: Array<[string, boolean]> = [
+      ['%%', true], ['http://a.com,http://b.com', true], ['localhost:3000', true],
+    ];
+    for (const [origin, deny] of cases) {
+      const before = deniedLogs().length;
+      const res = await post(origin);
+      expect(res.status, `origin=${origin}`).toBe(deny ? 403 : 200);
+      if (deny) {
+        expect(res.body).toBe('{"error":"Forbidden"}');
+        assertNoAccessControlHeaders(res.headers);
+        expectDeniedLog(1, 'malformed-origin', before);
+      }
+    }
+
+    // Whitespace-only Origin = absent after trim → no-Origin branch (NOT 403)
+    const ws = await post('   ');
+    expect(ws.status).toBe(200);
+    assertNoAccessControlHeaders(ws.headers);
+
+    // Duplicate Origin via raw socket — deny even though 1 value is valid
+    const raw = await sendRawRequest(port,
+      `POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nOrigin: vscode-webview://abc\r\nOrigin: https://evil.com\r\nContent-Type: application/json\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}`);
+    expect(raw.status).toBe(403);
+    expect(raw.raw).toContain('Forbidden');
+
+    // Server alive — next request processed (FR-12 / reliability)
+    const health = await requestWithHeaders(port, { method: 'GET', path: '/health', headers: { Host: `127.0.0.1:${port}` } });
+    expect(health.status).toBe(200);
+    expect(JSON.parse(health.body)).toEqual({ status: 'ok', mode: 'wrapper' });
+  });
+
+  // ── T11 / IT-11: zero-CORS sweep — 5 routes × 3 branches = 15 responses ──
+  it('T11 (IT-11): G-5 sweep — 15/15 responses match the no-CORS/echo matrix', async () => {
+    const routes = [
+      { method: 'GET', path: '/health', sse: false },
+      { method: 'GET', path: '/mcp', sse: true },
+      { method: 'POST', path: '/mcp', sse: false },
+      { method: 'OPTIONS', path: '/mcp', sse: false },
+      { method: 'GET', path: '/nonexistent', sse: false },
+    ];
+    const acKeys = (h: Record<string, unknown>) => Object.keys(h).filter((k) => k.startsWith('access-control-'));
+    const send = (r: typeof routes[number], origin?: string) => requestWithHeaders(port, {
+      method: r.method, path: r.path, closeOnFirstData: r.sse,
+      headers: {
+        Host: `127.0.0.1:${port}`,
+        ...(r.method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
+        ...(origin === undefined ? {} : { Origin: origin }),
+      },
+      body: r.method === 'POST' ? rpc(70, 'ping') : undefined,
+    });
+
+    for (const r of routes) {
+      // evil → 403 + zero CORS on EVERY route (uniform — AD-3, AC-8)
+      const evil = await send(r, 'https://evil.com');
+      expect(evil.status, `evil ${r.method} ${r.path}`).toBe(403);
+      expect(acKeys(evil.headers)).toHaveLength(0);
+
+      // webview → ACAO echo on EVERY status (200/204/404 — G-5 uniform)
+      const web = await send(r, 'vscode-webview://abc123');
+      expect(web.headers['access-control-allow-origin']).toBe('vscode-webview://abc123');
+      expect(acKeys(web.headers).length).toBeGreaterThanOrEqual(1);
+
+      // no-Origin → zero CORS + current behavior (no ACAO assert — native)
+      const native = await send(r);
+      expect(acKeys(native.headers)).toHaveLength(0);
+      const expected = r.path === '/nonexistent' ? 404 : r.method === 'OPTIONS' ? 204 : 200;
+      expect(native.status, `native ${r.method} ${r.path}`).toBe(expected);
+    }
+  });
+
+  // ── T12 / IT-12: raw-socket duplicates + no-Origin Host-evil (SEC-358-01) ──
+  it('T12 (IT-12): raw socket — duplicate Origin/Host, lowercase key, no-Origin Host-evil', async () => {
+    const rawPost = (headers: string, body = '{}') => sendRawRequest(port,
+      `POST /mcp HTTP/1.1\r\n${headers}Content-Type: application/json\r\nContent-Length: ${Buffer.byteLength(body)}\r\nConnection: close\r\n\r\n${body}`);
+
+    // 1) duplicate Origin → malformed-origin (NO first-wins — C-3/I-4)
+    let before = deniedLogs().length;
+    let raw = await rawPost(`Host: 127.0.0.1:${port}\r\nOrigin: vscode-webview://abc\r\nOrigin: https://evil.com\r\n`);
+    expect(raw.status).toBe(403);
+    expect(raw.raw).not.toMatch(/access-control-/i);
+    expectDeniedLog(1, 'malformed-origin', before);
+
+    // 2) duplicate Host → host-mismatch (smuggling fail-closed)
+    before = deniedLogs().length;
+    raw = await rawPost(`Host: 127.0.0.1:${port}\r\nHost: evil.com:${port}\r\nOrigin: vscode-webview://abc\r\n`);
+    expect(raw.status).toBe(403);
+    expectDeniedLog(1, 'host-mismatch', before);
+
+    // 3) lowercase `origin:` key — still detected (case-insensitive keys)
+    before = deniedLogs().length;
+    raw = await rawPost(`Host: 127.0.0.1:${port}\r\norigin: https://evil.com\r\n`);
+    expect(raw.status).toBe(403);
+    expectDeniedLog(1, 'origin-not-allowed', before);
+
+    // 4) SEC-358-01 / I-8 — raw request WITHOUT Origin + Host attacker.com
+    before = deniedLogs().length;
+    raw = await rawPost(`Host: attacker.com:${port}\r\n`);
+    expect(raw.status).toBe(403);
+    expect(raw.raw).toContain('Forbidden');
+    expectDeniedLog(1, 'host-mismatch', before);
+
+    expect(deps.restCallToolMock.calls).toHaveLength(0);
+  });
+
+  // ── T13 / IT-13: preflight matrix — 7 rows × ACAM present/absent = 14 ──
+  it('T13 (IT-13): preflight matrix 14/14 matches preflight-matrix.csv (ACAM ignored)', async () => {
+    type Row = { id: string; origin?: string; host: string; status: number; acao?: string; reason?: string };
+    const P = String(port);
+    const rows: Row[] = [
+      { id: '1a', host: `127.0.0.1:${P}`, status: 204 }, // no-Origin + loopback (AD-8)
+      { id: '1b', host: `attacker.com:${P}`, status: 403, reason: 'host-mismatch' }, // SEC-358-01/I-8
+      { id: '2', origin: 'vscode-webview://abc123', host: `127.0.0.1:${P}`, status: 204, acao: 'vscode-webview://abc123' },
+      { id: '3', origin: 'http://localhost:3000', host: `localhost:${P}`, status: 204, acao: 'http://localhost:3000' },
+      { id: '4', origin: 'https://evil.com', host: `127.0.0.1:${P}`, status: 403, reason: 'origin-not-allowed' },
+      { id: '5', origin: 'vscode-webview://abc', host: `attacker.com:${P}`, status: 403, reason: 'host-mismatch' }, // FR-04
+      { id: '6', origin: '%%', host: `127.0.0.1:${P}`, status: 403, reason: 'malformed-origin' }, // FR-12
+    ];
+    for (const row of rows) {
+      for (const acam of [true, false]) {
+        const before = deniedLogs().length;
+        const res = await requestWithHeaders(port, {
+          method: 'OPTIONS', path: '/mcp',
+          headers: {
+            Host: row.host,
+            ...(row.origin === undefined ? {} : { Origin: row.origin }),
+            ...(acam ? { 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'Content-Type' } : {}),
+          },
+        });
+        expect(res.status, `row ${row.id} acam=${acam}`).toBe(row.status);
+        if (row.acao) {
+          expect(res.headers['access-control-allow-origin']).toBe(row.acao);
+          expect(res.headers['access-control-allow-methods']).toBe('GET, POST, OPTIONS');
+        } else {
+          assertNoAccessControlHeaders(res.headers);
+        }
+        if (row.reason) expectDeniedLog(1, row.reason, before);
+      }
+    }
+  });
+
+  // ── T14 / IT-14: gate overhead sanity (full bench = bench-gate.ts, on-demand) ──
+  it('T14 (IT-14): gate micro-overhead — p99 of a 20k-call sample < 1ms (NFR)', () => {
+    const headers = ['Host', `127.0.0.1:${port}`, 'Origin', 'vscode-webview://abc123'];
+    for (let i = 0; i < 2000; i++) evaluateOriginGate(headers, port); // warmup
+    const samples: number[] = [];
+    for (let i = 0; i < 20_000; i++) {
+      const t0 = process.hrtime.bigint();
+      evaluateOriginGate(headers, port);
+      samples.push(Number(process.hrtime.bigint() - t0) / 1000); // µs
+    }
+    samples.sort((a, b) => a - b);
+    const p99 = samples[Math.floor(samples.length * 0.99)];
+    expect(p99).toBeLessThan(1000); // < 1ms (expected <10µs)
   });
 });
