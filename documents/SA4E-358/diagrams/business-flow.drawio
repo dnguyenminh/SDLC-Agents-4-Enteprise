@@ -1,0 +1,84 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="820" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="lane1" value="Browser (máy user)" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1320" height="210" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="Start" style="ellipse;fillColor=#000000;fontColor=#ffffff;html=1;whiteSpace=wrap;" vertex="1" parent="lane1">
+      <mxGeometry x="130" y="85" width="60" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="p1" value="Request đến wrapper :9181 — 3 kiểu caller:&#10;(1) native client — không Origin&#10;(2) webview / localhost — allowlist&#10;(3) web evil — Origin lạ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="240" y="55" width="220" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="p2" value="Browser gửi preflight OPTIONS&#10;kèm Origin (chỉ với browser caller)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane1">
+      <mxGeometry x="520" y="55" width="220" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="lane2" value="WrapperServer Gate (bind 127.0.0.1, port 9181)" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="250" width="1320" height="330" as="geometry" />
+    </mxCell>
+    <mxCell id="g1" value="handleRequest —&#10;Gate Origin/Host&#10;(trước mọi route + ACAO)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="lane2">
+      <mxGeometry x="240" y="30" width="200" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="d1" value="Origin: không có Origin&#10;(hoặc ∈ allowlist)?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane2">
+      <mxGeometry x="500" y="15" width="230" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="d2" value="Host =&#10;127.0.0.1 / localhost : port?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="lane2">
+      <mxGeometry x="790" y="15" width="210" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="deny" value="403 Forbidden — KHÔNG set ACAO&#10;(browser chặn readback từ evil origin)&#10;+ deny log sanitized" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="lane2">
+      <mxGeometry x="500" y="200" width="230" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="ok" value="handleMcp như cũ:&#10;initialize / tools/list /&#10;tools/call / SSE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane2">
+      <mxGeometry x="1060" y="30" width="190" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="end1" value="End" style="ellipse;fillColor=#000000;fontColor=#ffffff;html=1;whiteSpace=wrap;" vertex="1" parent="lane2">
+      <mxGeometry x="1180" y="225" width="60" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="lane3" value="MCP Tools (extension host + backend)" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="580" width="1320" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="t1" value="Thực thi tool (local / Atlassian / backend)&#10;— containment SA4E-356 giữ nguyên" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane3">
+      <mxGeometry x="520" y="55" width="230" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="t2" value="Trả JSON-RPC result&#10;(chỉ cho caller được phép)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="lane3">
+      <mxGeometry x="800" y="55" width="200" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="f1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="s1" target="p1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="p1" target="p2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="p2" target="g1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="g1" target="d1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f5" value="Origin lạ (evil.com)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#b85450;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d1" target="deny">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f6" value="pass" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#82b366;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="d1" target="d2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f7" value="Host khác loopback (DNS rebinding)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#b85450;exitX=0.5;exitY=1;entryX=0.75;entryY=0;" edge="1" parent="1" source="d2" target="deny">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f8" value="Host = loopback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#82b366;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="d2" target="ok">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="ok" target="t1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="t1" target="t2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="deny" target="end1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="f12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="t2" target="end1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

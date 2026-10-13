@@ -1,0 +1,84 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="callers" value="Callers (máy user)" style="rounded=0;fillColor=#f5f5f5;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="280" height="380" as="geometry" />
+    </mxCell>
+    <mxCell id="evil" value="Browser tab evil.com&#10;cross-origin fetch&#10;Origin gắn tự động (JS không giả mạo)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="100" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="webview" value="vscode-webview / localhost web client&#10;Origin ∈ allowlist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="210" width="240" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="native" value="Native MCP client&#10;stdio (không qua HTTP) + http no-Origin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="310" width="240" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="wrapper" value="WrapperServer — Extension Host (loopback 127.0.0.1:9181)" style="rounded=0;fillColor=#fff2cc;strokeColor=#d6b656;verticalAlign=top;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="420" y="60" width="420" height="520" as="geometry" />
+    </mxCell>
+    <mxCell id="hs" value="handleRequest :124&#10;(điểm vào duy nhất)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="110" width="340" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="gate" value="OriginGate.ts (MỚI — pure module)&#10;extractGateHeaders + evaluateOriginGate&#10;G-1..G-8 — không throw, sanitize inside" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="460" y="200" width="340" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="cors" value="CORS echo layer&#10;setHeader ACAO/Methods/Headers&#10;CHỈ khi echoOrigin !== null" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="320" width="340" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="routes" value="Routes giữ nguyên (FR-10)&#10;/mcp POST → handleMcp :156-201 · /mcp GET SSE :207-225&#10;/health :132-136 · 404 :137 · 500 :138-143" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="420" width="340" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="tools" value="routeToolCall :233-254 — envelope SA4E-356 giữ nguyên" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="520" width="340" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="toolset" value="MCP Tools — Local tools + Backend REST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="920" y="420" width="240" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="log" value="outputChannel — deny log&#10;sanitizeLogText (PathResolver.ts:189)" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="920" y="110" width="240" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="evil" target="hs">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e1l" value="preflight + POST → 403, KHÔNG ACAO (AC-1/AC-8)" style="text;html=1;fontSize=10;fontColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="330" y="120" width="130" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="webview" target="hs">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2l" value="204/200 + ACAO echo (AC-2)" style="text;html=1;fontSize=10;fontColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="330" y="220" width="130" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="native" target="hs">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3l" value="no-Origin → pass-through (AC-4)" style="text;html=1;fontSize=10;fontColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="330" y="320" width="130" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="hs" target="gate">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;dashed=1;" edge="1" parent="1" source="gate" target="log">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5l" value="ok=false → 403 + deny log (reason=...)" style="text;html=1;fontSize=10;fontColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="830" y="170" width="90" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="gate" target="cors">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6l" value="ok=true, echoOrigin" style="text;html=1;fontSize=10;fontColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="810" y="260" width="100" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="cors" target="routes">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="routes" target="tools">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="tools" target="toolset">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

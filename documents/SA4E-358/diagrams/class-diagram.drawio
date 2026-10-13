@@ -1,0 +1,93 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="860" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="og" value="«pure module»&#10;OriginGate.ts" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="420" y="60" width="360" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="og1" value="+ ALLOWED_ORIGIN_PATTERNS : readonly AllowedOriginPattern[]&#10;+ extractGateHeaders(rawHeaders : readonly string[]) : GateHeaders&#10;+ evaluateOriginGate(rawHeaders : readonly string[], listenPort : number) : OriginGateResult" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="425" y="95" width="350" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="aop" value="«interface»&#10;AllowedOriginPattern" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="280" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="aop1" value="+ scheme : &quot;vscode-webview&quot; | &quot;http&quot; | &quot;https&quot;&#10;+ host : &quot;*&quot; | &quot;localhost&quot; | &quot;127.0.0.1&quot;&#10;+ port : &quot;*&quot;" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="65" y="95" width="270" height="55" as="geometry" />
+    </mxCell>
+    <mxCell id="gh" value="«interface»&#10;GateHeaders" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="60" y="210" width="280" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="gh1" value="+ origin : string | undefined&#10;+ host : string | undefined&#10;+ duplicateOrigin : boolean  (R-6 fail-closed)&#10;+ duplicateHost : boolean  (smuggling surface)" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="65" y="245" width="270" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="ug" value="«union»&#10;OriginGateResult" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="480" y="260" width="240" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="pass" value="OriginGatePass" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="330" y="380" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="pass1" value="+ ok : true&#10;+ echoOrigin : string | null&#10;(null = no-Origin → KHÔNG CORS headers — G-5)&#10;(echo RAW đã trim — KHÔNG url.origin — G-4)" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="335" y="410" width="210" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="deny" value="OriginGateDeny" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="600" y="380" width="220" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="deny1" value="+ ok : false&#10;+ reason : OriginDenyReason&#10;+ originSanitized : string  (G-3)&#10;+ hostSanitized : string  (G-3)" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="605" y="410" width="210" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="enum" value="«enum»&#10;OriginDenyReason" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="880" y="380" width="260" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="enum1" value="origin-not-allowed&#10;host-mismatch&#10;malformed-origin&#10;(chỉ trong server log — KHÔNG leak vào response)" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="885" y="415" width="250" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="wsv" value="WrapperServer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="420" y="540" width="360" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="wsv1" value="- port : number | null&#10;+ start(requestedPort) : Promise&lt;void&gt;   (listen 127.0.0.1 :98)&#10;- handleRequest(req, res) : Promise&lt;void&gt;  ← GATE đầu tiên&#10;- handleMcp(req, res) : Promise&lt;void&gt;  :156-201&#10;- handleMcpGet(res) : void  SSE :207-225&#10;+ routeToolCall(params) : Promise&lt;any&gt;  :233-254" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="425" y="570" width="350" height="115" as="geometry" />
+    </mxCell>
+    <mxCell id="dep" value="«interface»&#10;WrapperServerDeps" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="60" y="540" width="280" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="dep1" value="+ outputChannel : vscode.OutputChannel  (deny log)&#10;+ base64Proxy : Base64ProxyService&#10;+ restGetTools() : Promise&lt;any[]&gt;&#10;+ restCallTool(name, args) : Promise&lt;any&gt;" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="65" y="575" width="270" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="prv" value="«pure module»&#10;PathResolver.ts" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="880" y="540" width="260" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="prv1" value="+ sanitizeLogText(value : string) : string&#10;  [\r\n\0] → &quot;?&quot;  (:189-191 — SEC-05 reuse)" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;spacingLeft=6;" vertex="1" parent="1">
+      <mxGeometry x="885" y="575" width="250" height="45" as="geometry" />
+    </mxCell>
+    <mxCell id="rel1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#9673a6;endArrow=open;dashed=1;" edge="1" parent="1" source="og" target="aop">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel1l" value="ALLOWED_ORIGIN_PATTERNS" style="text;html=1;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="350" y="80" width="70" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="rel2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#9673a6;endArrow=open;dashed=1;" edge="1" parent="1" source="og" target="gh">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d79b00;endArrow=open;" edge="1" parent="1" source="ug" target="pass">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d79b00;endArrow=open;" edge="1" parent="1" source="ug" target="deny">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b85450;endArrow=open;dashed=1;" edge="1" parent="1" source="deny" target="enum">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel6" value="evaluateOriginGate(rawHeaders, this.port)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#d79b00;endArrow=block;fontSize=9;" edge="1" parent="1" source="wsv" target="ug">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel7" value="sanitizeLogText (một chiều)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#82b366;endArrow=open;dashed=1;fontSize=9;" edge="1" parent="1" source="og" target="prv">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel8" value="«use» deps.outputChannel (deny log)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#666666;endArrow=open;dashed=1;fontSize=9;" edge="1" parent="1" source="wsv" target="dep">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="note" value="Invariant: OriginGate KHÔNG import http / vscode (G-2) — WrapperServer extract req.rawHeaders rồi truyền vào. Dependency một chiều: WrapperServer → OriginGate → PathResolver." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;size=14;" vertex="1" parent="1">
+      <mxGeometry x="60" y="700" width="1080" height="50" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

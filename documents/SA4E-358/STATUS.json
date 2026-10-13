@@ -1,0 +1,143 @@
+{
+  "ticket": "SA4E-358",
+  "currentPhase": "security_review+test_planning",
+  "autonomyLevel": "L3",
+  "gitBranch": "main",
+  "humanGates": [
+    "uat",
+    "deployment"
+  ],
+  "parentFinding": "SA4E-356 SECURITY-ASSESSMENT SA-01 (Medium, pre-existing, live-confirmed by pentest Phase 6.3)",
+  "phases": {
+    "requirements": {
+      "status": "done",
+      "file": "BRD.md",
+      "version": 1,
+      "completedAt": "2026-10-13",
+      "note": "Binding 127.0.0.1 da co san -> verify-only AC-7; shared-secret + CSRF -> follow-up; AC mo rong 1-8; 5 files attached Jira"
+    },
+    "specification": { "status": "done", "file": "FSD.md", "version": 1.1, "completedAt": "2026-10-13", "note": "TA enrichment 6/6 gaps; 4 architecture decisions chờ SA confirm" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1, "completedAt": "2026-10-13", "note": "0 discrepancy; 4/4 TA decisions confirmed + AD-5..9; C1-C12 implement order; V-1 verify là blocker trước merge" },
+    "design": {
+      "status": "not_started"
+    },
+    "feedback_loop": {
+      "status": "not_started",
+      "iterations": 0,
+      "maxIterations": 5
+    },
+    "security_design_review": {
+      "status": "not_started"
+    },
+    "test_planning": {
+      "status": "not_started"
+    },
+    "devops_pipeline_setup": {
+      "status": "not_started"
+    },
+    "implementation": {
+      "status": "not_started"
+    },
+    "user_guide": {
+      "status": "not_started"
+    },
+    "security_code_review": {
+      "status": "not_started"
+    },
+    "testing": {
+      "status": "not_started"
+    },
+    "pentest": {
+      "status": "not_started"
+    },
+    "uat": {
+      "status": "not_started"
+    },
+    "security_deploy_review": {
+      "status": "not_started"
+    },
+    "deployment": {
+      "status": "not_started"
+    }
+  },
+  "circuitBreaker": {
+    "phase_requirements": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_specification": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_design": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_security_design_review": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_test_planning": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_devops_pipeline_setup": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_implementation": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_user_guide": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_security_code_review": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_testing": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_pentest": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_security_deploy_review": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    },
+    "phase_deployment": {
+      "attempts": 0,
+      "lastError": null,
+      "state": "closed"
+    }
+  },
+  "tokenBudget": {
+    "dailyCap": 1000000,
+    "usedToday": 0,
+    "lastReset": "2026-10-13T00:00:00+07:00",
+    "warningThreshold": 0.8,
+    "mode": "normal",
+    "note": "Fresh daily reset (Oct 13). Cap 1M per user approval precedent."
+  },
+  "related": {
+    "sa4e356": "Fix path resolution - DONE through Phase 6.3, UAT pending. SA4E-358 code touches WrapperServer (loopback) which SA4E-356 also touched (envelope) - SA4E-356 code-complete, no conflict expected; coordinate if 356 UAT fails.",
+    "sa4e357": "DUPLICATE of SA4E-356 - closed as duplicate this session."
+  },
+  "lastUpdated": "2026-10-13T00:00:00+07:00"
+}

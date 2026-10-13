@@ -1,0 +1,39 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="820" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="ext" value="extension/src/ (Extension Host)" style="rounded=0;fillColor=none;strokeColor=#666666;verticalAlign=top;fontStyle=1;fontSize=13;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="1120" height="560" as="geometry" />
+    </mxCell>
+    <mxCell id="og" value="OriginGate.ts [MỚI — pure module ~110 dòng]&#10;• types: OriginGateResult (union), GateHeaders, AllowedOriginPattern&#10;• ALLOWED_ORIGIN_PATTERNS (readonly constant — BR-09)&#10;• extractGateHeaders(rawHeaders): GateHeaders&#10;• evaluateOriginGate(rawHeaders, listenPort): OriginGateResult&#10;G-1 không throw · G-2 pure · G-3 sanitize inside · G-4 echo RAW&#10;G-5 echo uniform · G-6 fail-closed route-agnostic · G-7 port thật · G-8 fold" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="80" y="90" width="500" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="ws" value="WrapperServer.ts [EXTEND]&#10;• handleRequest :124-144 rewrite — gate TRƯỚC mọi route + TRƯỚC setHeader&#10;• XÓA :126-128 (setHeader ACAO * vô điều kiện)&#10;• deny: log 1 dòng + writeHead(403, JSON) — res sạch&#10;• echo: 3 setHeader CHỈ khi echoOrigin !== null&#10;• GIỮ NGUYÊN: OPTIONS 204 :129 · routes :130-143 · handleMcp :156-201&#10;• SSE :207-225 · routeToolCall :233-254 · readBody :314-326" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="80" y="290" width="500" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="pr" value="PathResolver.ts [KHÔNG ĐỔI]&#10;sanitizeLogText :189-191 — thay [\r\n\0] thành &quot;?&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="80" y="490" width="500" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="rbc" value="remote-backend-client.ts [KHÔNG ĐỔI]&#10;• startWrapper :151-161 — new WrapperServer(deps) + start(9181)&#10;• invokeTool :120 — routeToolCall in-process (KHÔNG qua HTTP — ngoài gate)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="640" y="290" width="480" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="tp" value="proxy/ToolProxy.ts + tool layer [KHÔNG ĐỔI]&#10;chat path + local tools — ngoài bề mặt HTTP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="640" y="420" width="480" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="tests" value="Tests&#10;• services/__tests__/origin-gate.test.ts [MỚI] — unit ~30 case&#10;• __tests__/wrapper-server.helpers.ts [EXTEND] — +requestWithHeaders, +assertNoAccessControlHeaders, +sendRawRequest, +createCapturingOutputChannel&#10;• __tests__/wrapper-server.test.ts [EXTEND] — T1..T14&#10;• testdata/cors-pentest-harness.ts + bench-gate.ts [MỚI — on-demand]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="640" y="90" width="480" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="c1" value="evaluateOriginGate(rawHeaders, this.port ?? 0)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;strokeColor=#9673a6;" edge="1" parent="1" source="ws" target="og">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="c2" value="sanitizeLogText (một chiều — không circular)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;strokeColor=#82b366;" edge="1" parent="1" source="og" target="pr">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="c3" value="deny log (FR-09)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;strokeColor=#82b366;dashed=1;" edge="1" parent="1" source="ws" target="pr">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="c4" value="constructor injection (deps)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=10;strokeColor=#666666;" edge="1" parent="1" source="rbc" target="ws">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

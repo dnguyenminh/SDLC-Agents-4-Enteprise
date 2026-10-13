@@ -1,0 +1,123 @@
+<mxGraphModel adaptiveColors="auto" dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1160" pageHeight="880" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="h1" value="Attacker Page&#10;(evil.com — drive-by)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="75" y="40" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h2" value="vscode-webview&#10;(origin hợp lệ)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="335" y="40" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h3" value="WrapperServer Gate&#10;handleRequest :9181" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="610" y="40" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="h4" value="MCP Handler&#10;handleMcp / tools" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="915" y="40" width="170" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="ll1" style="html=1;dashed=1;endArrow=none;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="160" y="90" as="sourcePoint" />
+        <mxPoint x="160" y="830" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ll2" style="html=1;dashed=1;endArrow=none;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="90" as="sourcePoint" />
+        <mxPoint x="420" y="830" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ll3" style="html=1;dashed=1;endArrow=none;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="90" as="sourcePoint" />
+        <mxPoint x="720" y="830" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="ll4" style="html=1;dashed=1;endArrow=none;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1000" y="90" as="sourcePoint" />
+        <mxPoint x="1000" y="830" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. OPTIONS /mcp (preflight) · Origin: https://evil.com" style="html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="160" y="125" as="sourcePoint" />
+        <mxPoint x="720" y="125" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a1" value="2. Gate: Origin ∉ allowlist&#10;→ DENY (trước khi set ACAO)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="148" width="240" height="46" as="geometry" />
+    </mxCell>
+    <mxCell id="m2" value="3. 403 Forbidden — KHÔNG có header ACAO (browser chặn readback — AC-8)" style="html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="222" as="sourcePoint" />
+        <mxPoint x="160" y="222" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="4. POST /mcp (simple request / non-browser client)" style="html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="160" y="270" as="sourcePoint" />
+        <mxPoint x="720" y="270" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="5. 403 Forbidden + log deny (sanitizeLogText)" style="html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="315" as="sourcePoint" />
+        <mxPoint x="160" y="315" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="6. OPTIONS /mcp (preflight) · Origin: vscode-webview://abc" style="html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="370" as="sourcePoint" />
+        <mxPoint x="720" y="370" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="a2" value="7. Gate: Origin ∈ allowlist ∧ Host = 127.0.0.1:&lt;port&gt; → PASS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="600" y="393" width="240" height="46" as="geometry" />
+    </mxCell>
+    <mxCell id="m6" value="8. 204 + ACAO echo + Allow-Methods · Allow-Headers" style="html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="467" as="sourcePoint" />
+        <mxPoint x="420" y="467" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="9. POST /mcp tools/call (JSON-RPC)" style="html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="515" as="sourcePoint" />
+        <mxPoint x="720" y="515" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="10. handleMcp → routeToolCall(name, args)" style="html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="555" as="sourcePoint" />
+        <mxPoint x="1000" y="555" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="11. tool result" style="html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1000" y="595" as="sourcePoint" />
+        <mxPoint x="720" y="595" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="12. 200 JSON-RPC result + ACAO echo → browser CHO PHÉP đọc response (AC-2)" style="html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="640" as="sourcePoint" />
+        <mxPoint x="420" y="640" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="13. GET /mcp (SSE stream) — cùng gate" style="html=1;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="420" y="695" as="sourcePoint" />
+        <mxPoint x="720" y="695" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="14. 200 text/event-stream (stream chỉ mở cho caller được phép — AC-6)" style="html=1;dashed=1;endArrow=open;endFill=0;labelBackgroundColor=#ffffff;whiteSpace=wrap;fontSize=11;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="720" y="735" as="sourcePoint" />
+        <mxPoint x="420" y="735" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n1" value="/health, 404 fallback và native client không-Origin (UC-03/UC-04) áp cùng gate — fail-closed mọi route (FR-07). Không có ACAO cho bất kỳ response nào ngoài allowlist (FR-05)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="75" y="770" width="1010" height="44" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>
