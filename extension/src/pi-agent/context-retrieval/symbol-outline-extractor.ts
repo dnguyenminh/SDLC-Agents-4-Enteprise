@@ -62,7 +62,7 @@ export class SymbolOutlineExtractor {
   }
 }
 
-function trimSignature(signature: string): string {
+export function trimSignature(signature: string): string {
   const single = signature.replace(/\s+/g, ' ').trim();
   return single.length > 120 ? `${single.slice(0, 117)}...` : single;
 }
