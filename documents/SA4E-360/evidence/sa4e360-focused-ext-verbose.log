@@ -1,0 +1,613 @@
+ ✓ src/pi-workflow/skeleton/__tests__/functional-map-provider.test.ts > FunctionalMapProvider shape (UT-26) > serves real indexed modules with corpus keySymbols and TTL fields 15ms
+ ✓ src/pi-workflow/skeleton/__tests__/functional-map-provider.test.ts > FunctionalMapProvider cap pressure (UT-27, AF-1) > trims lowest-priority entries until the composed text fits the char cap 528ms
+ ✓ src/pi-workflow/skeleton/__tests__/functional-map-provider.test.ts > FunctionalMapProvider EF-1 (UT-28) > omits the failing module entry and serves the rest (debug, no event) 4ms
+ ✓ src/pi-workflow/skeleton/__tests__/functional-map-provider.test.ts > FunctionalMapProvider EF-2 (UT-29) > returns undefined (layout-only) and emits PI_FUNCTIONAL_MAP_UNAVAILABLE once 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/functional-map-provider.test.ts > FunctionalMapProvider EF-2 (UT-29) > measures mapTokens with the shipped estimator (INV-2) 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-chain.integration.test.ts > IT-04: read_method → code_symbol_locate real chain > resolves ReadMethodTool.create end-to-end with the exact slice 54ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-chain.integration.test.ts > IT-11: golden query set hit-rate (M2) > records every query status through the REAL chain; hit-rate ≥ 80% 95ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-chain.integration.test.ts > IT-12: skeleton coverage (M1) > renders ≥ 95% of indexed symbols through the real corpus query 218ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-chain.integration.test.ts > IT-05: gate #3 absorbs read_method tool results > compacts atomically (toolCall + toolResult together), preserves the pinned user 5ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-chain.integration.test.ts > IT-06: TurnBudgetGuard counts identical read_method calls > steers at the 4th identical call; different args are not counted 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-chain.integration.test.ts > chain estimator parity > estimateTokenCount is chars/4 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > TC-001/TC-701: decomposer feeds map workers with batches of 20 23ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > TC-002: each batch is summarized by the small model 15ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > TC-101: parallelism is limited to 5 concurrent sub-agents 60ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > TC-003/TC-702: reduce aggregates partial summaries into a final answer 16ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > TC-102: timed-out batches are skipped while partial results are used 90ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > retries a failed batch once before giving up 14ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > REDUCE_FAIL: falls back to concatenated partial summaries 1ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > TC-301: 100 files complete under 60s without errors (no OOM) 14ms
+ ✓ src/pi-agent/map-reduce/__tests__/map-reduce-orchestrator.test.ts > MapReduceOrchestrator > circuit breaker skips batches after consecutive failures 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > verified answer passes without retry 2ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > low faithfulness triggers a retry 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > wrong facts are caught and retried (computeFaithfulness default grader) 2ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > retry still low → fallback accepts the best answer 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > no regenerate dependency → accepts original after first attempt 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > original answer wins when retry scores worse 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > loop invokes the injected grader with answer and sources 2ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > loop timeout → returns original answer with 0 attempts 105ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > grader internal GRADE_TIMEOUT → score 0 → accepts original (fallback) 60ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > regenerate throwing → returns original answer 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > custom maxRetries=2 retries twice before accepting 0ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > SEC-328-04: regenerate returning non-string breaks the retry loop 0ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > SEC-328-04: regenerate returning oversized text breaks the retry loop 0ms
+ ✓ src/pi-agent/__tests__/verification-loop.test.ts > VerificationLoop > SEC-328-04: regenerate output within the cap is graded normally 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.property.test.ts > PBT-04: truncation strict-shrink property > drops exactly one part per iteration; running total never increases 21ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.property.test.ts > PBT-05: truncation loop termination > terminates within ≤ parts.length iterations for arbitrary inputs 7ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.property.test.ts > PBT-06: post-truncation budget post-condition > tokens ≤ cap XOR gateDecision REJECT holds for every run 9ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.property.test.ts > PBT-07: usagePercent ≤ 0.70 invariant (M6) > skeletonTokens / staticBudget ≤ 0.70 for PASS/TRUNCATED_PASS outcomes 8ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.property.test.ts > PBT-10: global incremental budget + O(parts) accounting (SEC-360-02) > measuredSoFar never exceeds cap at any file boundary; measure calls stay O(parts) 93ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.property.test.ts > PBT-10: global incremental budget + O(parts) accounting (SEC-360-02) > completes 150 RAW_HEAD-class parts well under 1s in-process (TRC-12 wall-clock guard) 11ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > TC-001: grade returns a faithfulness score with issues list 2ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > uses default threshold 0.7 and 2s grading timeout (FSD 12.3/12.5) 0ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > supports custom config 0ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > accepts an injected LLM grader function (DI) 1ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > grader function throwing → GRADE_ERROR → score 0 2ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > invalid grader output → score 0 0ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > SEC-328-04: non-object grader output → score 0 0ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > SEC-328-04: array-shaped grader output → score 0 0ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > SEC-328-04: non-numeric score in shape → score 0 0ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > SEC-328-04: non-string issues element → score 0 (shape abuse) 0ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > SEC-328-04: hostile grader issues[] is capped (memory amplification guard) 1ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > clamps and rounds out-of-range scores 0ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > grading timeout resolves within the configured budget (<2s) 109ms
+ ✓ src/pi-agent/__tests__/hallucination-grader.test.ts > HallucinationGrader > default grader completes well under 2s (FSD 12.5 latency) 0ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > discovers full and compressed variants as separate templates 8ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > TC-001: small tier returns compressed variant, smaller than full 5ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > TC-702: medium and large tiers return the full variant 7ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > TC-403: unknown tier falls back to full variant 4ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > small tier falls back to full when compressed variant missing (NOT_FOUND → fallback full) 9ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > TC-101: discoverForTier lists metadata without reading content (lazy) 4ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > getPromptForTier works without prior discover (on-demand discovery) 4ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > TC-301: discovery of 100 templates completes <500ms 50ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > TC-401: empty template set degrades gracefully 14ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > compress() returns compressed prompt (COMPRESSION_FAIL → original) 2ms
+ ✓ src/pi-agent/__tests__/prompt-template-tiers.test.ts > PromptTemplateService — tier variants (SA4E-326) > tokenCount metadata is attached to discovered templates 4ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-01: gate #2 measure == inject > measures the same strings it injects as virtual context files 9ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-02: gate order + OI-5 telemetry > resolves budget → builds sections → measures → creates session (in order) 3ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-03: forced oversized skeleton → REJECT > throws PiContextBudgetExceededError after the full ladder; no session, no provider call 3ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-07: escalation ladder order over skeleton content > within-share sessions run NO escalation (ladder order proven in IT-03) 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-08: multi-root cache isolation > keeps per-root artifacts and layoutCache entries isolated 6ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-09: bridge-absent degradation — fail-safe, never crash > creates the session with DEGRADED_NO_SKELETON + layout-only map + steering tool 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-10: one SummaryTreeBuilder build per 60s TTL window > serves the assembly path and the tool result from the same cache window 3ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > TA Finding A: hoisted corpus memo (C-360-M1) > keySymbolsFor over 2 modules fires exactly ONE batched corpus pass, then serves real symbols 59ms
+ ✓ src/pi-agent/context-retrieval/__tests__/path-containment.test.ts > resolveContainedPath (SEC-325-D1) > accepts relative paths inside the workspace 5ms
+ ✓ src/pi-agent/context-retrieval/__tests__/path-containment.test.ts > resolveContainedPath (SEC-325-D1) > accepts absolute paths inside the workspace 3ms
+ ✓ src/pi-agent/context-retrieval/__tests__/path-containment.test.ts > resolveContainedPath (SEC-325-D1) > rejects traversal outside the workspace 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/path-containment.test.ts > resolveContainedPath (SEC-325-D1) > rejects absolute paths outside the workspace (poisoned KB entry) 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/path-containment.test.ts > resolveContainedPath (SEC-325-D1) > rejects symlink escapes pointing outside the workspace 4ms
+ ✓ src/pi-agent/context-retrieval/__tests__/path-containment.test.ts > resolveContainedPath (SEC-325-D1) > rejects UNC, null-byte, and empty paths 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/path-containment.test.ts > filterContainedCandidates (SEC-325-D1) > treats mem_search output as untrusted (same containment rule) 3ms
+ ✓ src/pi-agent/context-retrieval/__tests__/path-containment.test.ts > filterContainedCandidates (SEC-325-D1) > isPathContained mirrors resolveContainedPath 3ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-001: happy path populates contextFiles within budget 14ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-002/TC-302: progressive disclosure upgrades readable files to chunk tier within budget 13ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > SEC-325-D1: MCP-derived paths escaping rootDir never reach contextFiles 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > SEC-325-D1: fully-poisoned results degrade to empty context (no file read) 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-003/TC-705: excluded paths never appear in contextFiles 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-101: GLOBAL intent returns a summary tree instead of per-file scan 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-102/TC-202: search failure falls back to summary tree 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-201: no results returns empty context with warning 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-301: topK > 20 is capped to 20 4ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-401: topK = 0 raises a validation error 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-402: empty query raises a validation error 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-703: token counter totals match the sum of context file tokens 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > TC-303/TC-802: 1000-file repo retrieval completes under 500ms and 6k tokens 4ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > SA4E-327 TC-703: GLOBAL intent is routed to map-reduce when processor is configured 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/context-retriever.test.ts > ContextRetriever.retrieve > SA4E-327: map-reduce failure falls back to summary tree 0ms
+ ✓ src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-700: turn-1 on 32k — no exceed_context_size_error, tool call completes 24ms
+ ✓ src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-701: no meta.n_ctx — registry fallback, turn transparently completes 5ms
+ ✓ src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=8192 through the provider layer fits budget 3ms
+ ✓ src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=32768 through the provider layer fits budget 3ms
+ ✓ src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=128000 through the provider layer fits budget 3ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — workspace-trust gate for prompt templates > untrusted workspace skips workspace-local templates (poisoning surface closed) 4ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — workspace-trust gate for prompt templates > untrusted workspace still loads user-level agentDir templates 9ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — workspace-trust gate for prompt templates > trusted (default) workspace still loads workspace templates (no regression) 8ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — workspace-trust gate for prompt templates > oversized workspace template (>256 KB) is skipped, not read (SEC-326-02 DoS guard) 3ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — workspace-trust gate for prompt templates > oversized template is rejected on lazy load (getPromptForTier throws) 3ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — workspace-trust gate for prompt templates > symlinked .pi/prompts dir escaping the workspace is contained (junction) 6ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — workspace-trust gate for prompt templates > isPathContained rejects paths escaping the root (pure logic) 1ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — SYSTEM.md trust gate + size cap + symlink containment > untrusted workspace skips SYSTEM.md entirely 1ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — SYSTEM.md trust gate + size cap + symlink containment > trusted (default) appends SYSTEM.md (no regression) 11ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — SYSTEM.md trust gate + size cap + symlink containment > SYSTEM.md larger than 64 KB is skipped (sync-freeze DoS guard) 2ms
+ ✓ src/pi-agent/__tests__/prompt-template-security.test.ts > SEC-326-01 — SYSTEM.md trust gate + size cap + symlink containment > symlinked SYSTEM.md escaping the workspace is contained (junction) 2ms
+ ✓ src/pi-agent/map-reduce/__tests__/p-limit.test.ts > pLimit (SA4E-327 parallelism limiter) > TC-101: never runs more than 5 tasks concurrently 58ms
+ ✓ src/pi-agent/map-reduce/__tests__/p-limit.test.ts > pLimit (SA4E-327 parallelism limiter) > executes queued tasks in FIFO order 1ms
+ ✓ src/pi-agent/map-reduce/__tests__/p-limit.test.ts > pLimit (SA4E-327 parallelism limiter) > supports concurrency of 1 serializing all tasks 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/p-limit.test.ts > pLimit (SA4E-327 parallelism limiter) > rejects invalid concurrency values 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/p-limit.test.ts > pLimit (SA4E-327 parallelism limiter) > propagates task errors and continues processing the queue 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-17 — INVALID_ARGS validation > empty class → INVALID_ARGS envelope, no throw 5ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-17 — INVALID_ARGS validation > whitespace method → INVALID_ARGS envelope, no throw 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-17 — INVALID_ARGS validation > missing method → INVALID_ARGS envelope, no throw 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-17 — INVALID_ARGS validation > non-string class → INVALID_ARGS envelope, no throw 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-18 — ok envelope with exact slice > returns source lines 35..48 byte-equal + details parity 5ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-19 — ambiguous envelope > overloads in different files → 2 candidates, no slice/filePath choice 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-19 — ambiguous envelope > same-class overloads with differing kinds stay ambiguous (RM-06) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-20 — not_found envelope > class matched, method missing → suggestions + classMethods (top 10) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-20 — not_found envelope > class absent entirely → not_found WITHOUT classMethods (RM-08) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-21 — corrupt bounds route to freshness recovery > endLine < startLine → checkFile + ONE re-locate → ok 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-21 — corrupt bounds route to freshness recovery > endLine > lineCount → recovery; retry still corrupt → not_found guidance 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > TA Finding B: stale recovery reindexes before the retry (AF-2) > checkFile STALE → reindex exactly ONCE → ONE re-locate resolves the healthy row 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > TA Finding B: stale recovery reindexes before the retry (AF-2) > reindex failure is fail-safe: the single re-locate still runs → not_found steering, no throw 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > TA Finding B: stale recovery reindexes before the retry (AF-2) > checkFile FRESH → NO reindex (only the stale branch triggers the delegate) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-22 — FILE_UNREADABLE envelope > unreadable file → error envelope with actionable text, no throw 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-23 — INDEX_UNAVAILABLE envelope > locator rejection → INDEX_UNAVAILABLE steering to get_workspace_info, no throw 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-23 — INDEX_UNAVAILABLE envelope > McpSymbolLocator retries ONCE (2 attempts total, 200ms backoff) 21ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-24 — path containment on index-derived paths > absolute path outside root → FILE_UNREADABLE, zero bytes read 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-24 — path containment on index-derived paths > dotdot traversal → rejected; control contained path still resolves 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/read-method-tool.test.ts > UT-25 — MAX_SLICE cap on oversized symbol > 5000-line symbol → ok, sliceTruncated, totalLines 5000, ≤ 2000 lines read 11ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > parseSearchText > parses kind, name, file, line, signature and doc 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > parseSearchText > keeps the entry title as fallback path for mem_search results 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > parseSearchText > returns empty list for empty text 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > extractText > joins content text blocks 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > extractText > passes through raw strings 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > dedupeCandidates > removes duplicates by file and name 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > withTimeout (shared async-timeout used by retrieval + map-reduce) > rejects when the promise exceeds the timeout 17ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > withTimeout (shared async-timeout used by retrieval + map-reduce) > resolves when the promise is fast enough 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > McpSearchProvider > TC-701: calls code_search and mem_search with query and topK limit 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > McpSearchProvider > retries once with backoff when code_search fails then succeeds 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > McpSearchProvider > falls back to summary-tree path by throwing after final code_search failure 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > McpSearchProvider > continues without mem_search when it fails 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/search-provider.test.ts > McpSearchProvider > slices results to topK 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > UT-11 — batched corpus render format > calls fetchSymbolCorpus once and renders kind+name+signature lines, no bodies 11ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > UT-11 — batched corpus render format > normalizes signatures: whitespace collapsed, >120 chars trimmed to 117 + ... 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > UT-12 — per-file bound equals whole-skeleton cap > extractOutline receives the remaining GLOBAL budget, capped at floor(0.70 × staticBudget) 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > UT-13 — fallback ladder across four fixture files > grammar file rendered from corpus; regex/rawhead/skipped rungs degrade without blocking 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > UT-13 — fallback ladder across four fixture files > regex extraction throwing → files SKIPPED with warn, build completes 3ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > UT-14 — single bad file never blocks the build > 1 unreadable + good files → PI_SKELETON_FILE_SKIPPED, skippedFiles counted 3ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > UT-15 — empty index degrades without REJECT > empty workspace → skeletonTokens 0, DEGRADED_NO_SKELETON 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > UT-16 — OI-2 fingerprint cache reuse + rebuild > unchanged fingerprint serves cache (extractor not re-invoked); mtime change rebuilds 4ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-provider.test.ts > scale bound > SKELETON_MAX_FILES caps the corpus walk at 2000 files 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-exclusion-filter.test.ts > file-exclusion-filter > TC-003/TC-705: excluded paths never appear in context > filters .git, node_modules, out, dist paths 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-exclusion-filter.test.ts > file-exclusion-filter > TC-003/TC-705: excluded paths never appear in context > keeps normal paths untouched 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-exclusion-filter.test.ts > file-exclusion-filter > TC-404: exclusion is case-insensitive > excludes .GIT and Node_Modules 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-exclusion-filter.test.ts > file-exclusion-filter > TC-403: pagination never loads the full directory > pages through a large directory with cursor 19ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-exclusion-filter.test.ts > file-exclusion-filter > TC-403: pagination never loads the full directory > returns sorted entries and empty page for missing directory 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > small model + template service returns compressed template variant 8ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > unknown tier + template service returns full template variant 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > small model applies best-effort compression to bare role prompt 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > large model returns full role prompt 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > unknown model falls back to full role prompt 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > unknown role returns default prompt 2ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > replace mode appends workspace SYSTEM.md 4ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > replace mode without SYSTEM.md keeps role prompt only 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > append mode does not append SYSTEM.md 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > selectPrompt > missing template degrades to role prompt (graceful) 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > appendSystemMd > returns prompt unchanged when SYSTEM.md missing 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > buildResourceLoaderOptions — role scope integration > phase skills filter applies role scope for SM (only BRD skill) 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > buildResourceLoaderOptions — role scope integration > all skills filter keeps every skill 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > buildResourceLoaderOptions — role scope integration > small modelId applies compression to system prompt override 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > buildResourceLoaderOptions — role scope integration > large modelId keeps full prompt 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator-prompt-selection.test.ts > agent-configurator — prompt selection (SA4E-326) > buildResourceLoaderOptions — role scope integration > session receives the configured prompt 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.property.test.ts > PBT-09: redactSecretLike completeness property (SEC-360-01) > removes every spliced secret and preserves non-secret controls 14ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.property.test.ts > PBT-09: redactSecretLike completeness property (SEC-360-01) > preserves non-secret control strings byte-identical (no over-redaction) 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.property.test.ts > PBT-09: redactSecretLike completeness property (SEC-360-01) > is idempotent for arbitrary inputs (PBT-09 step 4) 3ms
+ ✓ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-111: 65,536 scales automatically — resolver + gate + tier in one flow 5ms
+ ✓ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=8192 — total prompt <= usable 5488, never REJECT 1ms
+ ✓ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=32768 — total prompt <= usable 28098, never REJECT 1ms
+ ✓ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=128000 — total prompt <= usable 101376, never REJECT 0ms
+ ✓ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-017: SM regression — essential skills kept, core tools in allowlist 1ms
+ ✓ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > tier spot-check: small forces compression, medium surplus passes through 2ms
+ ✓ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-600: budget resolution + gate average and p95 stay under 50 ms 4ms
+ ✓ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-603: error/log surface carries counts only — no paths, contents, secrets 4ms
+ ✓ src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-008 wiring: measured static > staticBudget → AGENTS.md compressed, security intact 12ms
+ ✓ src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-105 wiring: budget surplus → compressPrompt NOT called, content byte-identical 1ms
+ ✓ src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > BR-04: same 32k model with a tiny workspace → no compression (condition is measured, not tier) 1ms
+ ✓ src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-405 step 3: empty / whitespace-only contents pass through unchanged under compression 1ms
+ ✓ src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > UC-03 step 6 wiring: over-budget session also compresses scoped steering entries 3ms
+ ✓ src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > UC-03 step 6 wiring: surplus session keeps scoped steering byte-identical 1ms
+ ✓ src/pi-agent/__tests__/prompt-template.service.test.ts > PromptTemplateService > discovers templates from cwd 11ms
+ ✓ src/pi-agent/__tests__/prompt-template.service.test.ts > PromptTemplateService > validates template name BR-1 3ms
+ ✓ src/pi-agent/__tests__/prompt-template.service.test.ts > PromptTemplateService > template not found error message 1ms
+ ✓ src/pi-agent/__tests__/prompt-template.service.test.ts > PromptTemplateService > promptsOverride merges additional templates 5ms
+ ✓ src/pi-agent/__tests__/prompt-template.service.test.ts > PromptTemplateService > validatePath returns true for existing file 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts > TC-360-01: skeleton session happy path @32k > injects the measured skeleton and completes a turn without exceed errors 13ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts > TC-360-20: intra-turn growth absorbed by gate #3 > compacts oversized accumulated tool results; provider never errors 4ms
+ ✓ src/pi-agent/context-retrieval/__tests__/progressive-disclosure.test.ts > ProgressiveDisclosureManager > TC-002: applies three-tier disclosure within budget 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/progressive-disclosure.test.ts > ProgressiveDisclosureManager > TC-302: token budget <= 6000 is enforced (hard cap) 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/progressive-disclosure.test.ts > ProgressiveDisclosureManager > TC-303: 1000-file repo stays under 6k tokens and keeps the top-ranked file 8ms
+ ✓ src/pi-agent/context-retrieval/__tests__/progressive-disclosure.test.ts > ProgressiveDisclosureManager > truncates lowest-rank files when budget is exceeded 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/progressive-disclosure.test.ts > ProgressiveDisclosureManager > upgrades top files to chunk tier when budget allows 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/progressive-disclosure.test.ts > ProgressiveDisclosureManager > reports symbol tier when no chunk upgrade is possible 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/progressive-disclosure.test.ts > ProgressiveDisclosureManager > returns empty plan for no candidates 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/progressive-disclosure.test.ts > ProgressiveDisclosureManager > FsContentReader returns empty for unreadable files 0ms
+ ✓ src/pi-agent/__tests__/settings-manager.test.ts > SettingsManager > loads settings from JSON file 4ms
+ ✓ src/pi-agent/__tests__/settings-manager.test.ts > SettingsManager > falls back to defaults on parse error 3ms
+ ✓ src/pi-agent/__tests__/settings-manager.test.ts > SettingsManager > loads from memory 0ms
+ ✓ src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > wires skillsOverride + appendSystemPromptOverride into DefaultResourceLoader 5ms
+ ✓ src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > resolves the session budget in-host (Task 1 resolver wiring, UC-01) 2ms
+ ✓ src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > nCtxDetected option (adapter meta.n_ctx, BR-12) wins over the model catalog 1ms
+ ✓ src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-006 wiring: skillsOverride keeps only BA-token skills, order preserved 1ms
+ ✓ src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-305 wiring: unknown role and absent role keep ALL skills (BR-07 fail-open) 1ms
+ ✓ src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > UC-02 §6.1: role/phase flow into scopedSteering via appendSystemPromptOverride 1ms
+ ✓ src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-202/EF-1 wiring: a throwing override input fails open to base + error log 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > validateAgentRole > accepts valid roles 2ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > validateAgentRole > rejects invalid role 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > validateAgentRole > rejects empty role 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > validatePromptMode > accepts append and replace 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > validatePromptMode > rejects unknown mode 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > getSystemPromptForRole > returns prompt containing role name 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-001: Configure System Prompt Append Mode with Valid Agent Role 2ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-002: Configure System Prompt Replace Mode with Valid Agent Role 1ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-003: Load Project Skills via loader.getSkills() 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-004: Verify Prompt Replace Mode Does Not Append APPEND_SYSTEM.md 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-101: Configure Prompt for Different Agent Roles 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-201: Invalid Agent Role Returns Validation Error 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-202: Invalid PromptMode Returns Validation Error 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-301: BR-1 Agent Role Must Be From Defined List 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-302: BR-2 PromptMode Must Be Append Or Replace 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-303: BR-6 Replace Mode Returns Empty Append List 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-401: Empty Agent Role 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.test.ts > agent-configurator > buildResourceLoaderOptions > TC-402: PromptMode Null 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-render.property.test.ts > PBT-08: signature normalization invariant > keeps every rendered signature ≤ 120 chars with collapsed whitespace 13ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-render.property.test.ts > PBT-08: signature normalization invariant > trims >120-char signatures to first 117 chars + "..." exactly (SIG-01, FIX-01) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-render.property.test.ts > PBT-08: signature normalization invariant > leaves ≤120-char signatures unchanged apart from whitespace collapse (SIG-04) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-render.property.test.ts > PBT-08: signature normalization invariant > collapses whitespace-only signatures to a single space (SIG-05) 0ms
+ ✓ src/pi-agent/__tests__/session-tier-wiring.test.ts > SessionTier resolution from real nCtx (SA4E-355 Task 6, OI-1) > uses SMALL_CONTEXT_WINDOW_THRESHOLD=16384 as the small/not-small cut 1ms
+ ✓ src/pi-agent/__tests__/session-tier-wiring.test.ts > SessionTier resolution from real nCtx (SA4E-355 Task 6, OI-1) > STC-313 boundary matrix on the resolved window 0ms
+ ✓ src/pi-agent/__tests__/session-tier-wiring.test.ts > SessionTier resolution from real nCtx (SA4E-355 Task 6, OI-1) > fails safe to small on invalid windows (EF-1 UC-06) 0ms
+ ✓ src/pi-agent/__tests__/session-tier-wiring.test.ts > SessionTier resolution from real nCtx (SA4E-355 Task 6, OI-1) > BR-04 matrix: small forces compression on surplus; medium/large do not 0ms
+ ✓ src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-106 wiring: 8k small tier compresses even though the workspace fits the budget 6ms
+ ✓ src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-313 wiring: 16384 → small (forced), 16385 → medium (passthrough on surplus) 1ms
+ ✓ src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-013/STC-105 wiring: qwen 32768 → medium, surplus workspace stays byte-identical 1ms
+ ✓ src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-015 wiring: 128k large tier keeps full fidelity on surplus 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/ranker.test.ts > Ranker.rankSymbols > ranks symbol-name matches above unrelated symbols 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/ranker.test.ts > Ranker.rankSymbols > gives kind weight to classes and interfaces 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/ranker.test.ts > Ranker.rankSymbols > deduplicates candidates with same file and name 6ms
+ ✓ src/pi-agent/context-retrieval/__tests__/ranker.test.ts > Ranker.rankSymbols > assigns sequential ranks starting at 1 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/ranker.test.ts > Ranker.rankSymbols > uses file path match as a secondary signal 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/ranker.test.ts > Ranker.rankSymbols > handles empty input 0ms
+ ✓ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-011: qwen 32k turn 1 ALLOW — exact budget, session created once 7ms
+ ✓ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-011: promptTurn delivers the user message to the session 2ms
+ ✓ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-012: WARN proceeds — session created and PI_GATE_WARN logged 2ms
+ ✓ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-309: detected n_ctx reaches assembly (source=provider in budget log) 1ms
+ ✓ src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-207: incident math — 67,468 vs 65,536 is 106.1% → REJECT, no 400 possible 1ms
+ ✓ src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-206/207: oversized static → REJECT with exact N/M/K message (BR-09) 4ms
+ ✓ src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-307: provider NEVER called after REJECT; ALLOW control proves the spy 4ms
+ ✓ src/pi-agent/__tests__/resource-loader.factory.test.ts > resource-loader.factory > creates mock loader when SDK is unavailable 3ms
+ ✓ src/pi-agent/__tests__/resource-loader.factory.test.ts > resource-loader.factory > reloadResourceLoader succeeds for mock loader 1ms
+ ✓ src/pi-agent/__tests__/resource-loader.factory.test.ts > resource-loader.factory > reloadResourceLoader throws on error 1ms
+ ✓ src/pi-agent/__tests__/resource-loader.factory.test.ts > resource-loader.factory > logDiagnostics logs warnings when diagnostics present 0ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-011: small static → ALLOW, flags unchanged, no escalation 2ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-110: over-share static → compress escalates for real (shouldCompress) 1ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-205: drop-steering halves the steering share for scopedSteering 1ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-206: absolute exceed → throws PI_CONTEXT_BUDGET_EXCEEDED (BR-09) 1ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > STC-012: WARN resolves normally — the host proceeds (AF-1 UC-05) 0ms
+ ✓ src/pi-agent/__tests__/session-budget-gate.test.ts > runSessionBudgetGate — Task 5 wiring (UC-05 / BR-08 / BR-09) > unloadable workspace measures as empty — the turn never breaks 0ms
+ ✓ src/pi-agent/__tests__/context-governance-escalation.integration.test.ts > Escalation ladder integration (SA4E-355 Task 7) > STC-110/306: compression suffices → ALLOW, later steps never fired 6ms
+ ✓ src/pi-agent/__tests__/context-governance-escalation.integration.test.ts > Escalation ladder integration (SA4E-355 Task 7) > STC-205: dense over-budget fires all three steps in fixed order 2ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > STC-206: 8k model, huge dense static → throws the EXACT actionable message 3ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > STC-207: original incident 67,468 tokens vs n_ctx=65,536 → REJECT — the 400 is structurally impossible 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > STC-201: degenerate n_ctx=2048 (staticBudget 0) → REJECT with actionable message 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > ALLOW and WARN never throw 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > PiContextBudgetExceededError carries the counts for the banner (STC-501 N/M/K) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > enforceBudgetGate — absolute exceed (BR-09 / STC-206 / STC-207 / STC-201) > isBudgetExceededError: instanceof OR message prefix (module-instance safe) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > measureUsagePercent + measureStaticAssembly (UC-05 wiring support) > reuses the real BudgetCalculator: usage = (static + reserve) / nCtx × 100 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > measureUsagePercent + measureStaticAssembly (UC-05 wiring support) > measures context files + workspace prompt + SDK base + tool schemas (chars/4) 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > measureUsagePercent + measureStaticAssembly (UC-05 wiring support) > compression reduces the measurement only for compressible content (BR-04/BR-15) 1ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > halveSteeringCap — ladder step 2 (BR-08) > halves the steering share; other budget fields are preserved 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-enforce.test.ts > halveSteeringCap — ladder step 2 (BR-08) > keeps degenerate budgets degenerate (0 stays 0 — gate decides) 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/task-decomposer.test.ts > TaskDecomposer.decompose > TC-001: splits files into batches of 20 2ms
+ ✓ src/pi-agent/map-reduce/__tests__/task-decomposer.test.ts > TaskDecomposer.decompose > TC-001: every file is covered exactly once across batches 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/task-decomposer.test.ts > TaskDecomposer.decompose > TC-704: duplicate files are removed before batching 1ms
+ ✓ src/pi-agent/map-reduce/__tests__/task-decomposer.test.ts > TaskDecomposer.decompose > DECOMPOSE_FAIL: falls back to a single batch on invalid batchSize 2ms
+ ✓ src/pi-agent/map-reduce/__tests__/task-decomposer.test.ts > TaskDecomposer.decompose > DECOMPOSE_FAIL: falls back to a single batch when files is null 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/task-decomposer.test.ts > TaskDecomposer.decompose > returns empty list when there are no files 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/task-decomposer.test.ts > TaskDecomposer.decompose > respects custom batchSize 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/task-decomposer.test.ts > TaskDecomposer.decompose > NFR: decomposition of 5000 files completes under 200ms 3ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > Tool Registration > should register all defined tools 2ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > Tool Registration > should have unique tool names 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > Execute Handler > STC: TC-002 - should call MCP wrapper with valid params 2ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > Execute Handler > STC: TC-101 - should return validation error for invalid params 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > Execute Handler > STC: TC-102 - should return structured error when MCP unreachable 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > Execute Handler > STC: TC-303 - should return content array with type text 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > Execute Handler > STC: TC-304 - should propagate errors not swallow 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > SEC-324-03 - bridge allowlist and dynamic-chaining deny > allowlist contains the concrete tools but not execute_dynamic_tool 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > SEC-324-03 - bridge allowlist and dynamic-chaining deny > denies execute_dynamic_tool by default (no opt-in) 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > SEC-324-03 - bridge allowlist and dynamic-chaining deny > denies non-allowlisted chained targets even with opt-in 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > SEC-324-03 - bridge allowlist and dynamic-chaining deny > allows allowlisted chained targets with opt-in 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > SEC-324-03 - bridge allowlist and dynamic-chaining deny > routes approval-gated tools through the approval hook and audits 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > SEC-324-03 - bridge allowlist and dynamic-chaining deny > audits auto-approved read-only tools without param values 0ms
+ ✓ src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts > MCP Bridge Extension > SEC-324-03 - bridge allowlist and dynamic-chaining deny > validateParams rejects non-objects and oversized strings 0ms
+ ✓ src/pi-agent/__tests__/session-factory.test.ts > PiSessionFactory > creates session with cwd and sessionManager 4ms
+ ✓ src/pi-agent/__tests__/session-factory.test.ts > PiSessionFactory > TC-801: session works unchanged without context retriever 1ms
+ ✓ src/pi-agent/__tests__/session-factory.test.ts > PiSessionFactory > TC-702: session receives contextFiles from retriever 1ms
+ ✓ src/pi-agent/__tests__/session-factory.test.ts > PiSessionFactory > continues with empty context when retrieval fails 1ms
+ ✓ src/pi-agent/map-reduce/__tests__/large-query-processor.test.ts > LargeQueryProcessor (SA4E-327) > TC-703: routes GLOBAL intent to map-reduce 3ms
+ ✓ src/pi-agent/map-reduce/__tests__/large-query-processor.test.ts > LargeQueryProcessor (SA4E-327) > TC-703: routes STRUCTURAL intent to map-reduce 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/large-query-processor.test.ts > LargeQueryProcessor (SA4E-327) > TC-703: LOCAL intent is not routed to map-reduce 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/large-query-processor.test.ts > LargeQueryProcessor (SA4E-327) > returns null below the min-file threshold (small repo) 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/large-query-processor.test.ts > LargeQueryProcessor (SA4E-327) > caps scanned files at maxFiles 1ms
+ ✓ src/pi-agent/map-reduce/__tests__/large-query-processor.test.ts > LargeQueryProcessor (SA4E-327) > keeps total tokens within the 6000 budget 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/large-query-processor.test.ts > LargeQueryProcessor (SA4E-327) > returns null when map-reduce produces no partial summaries 2ms
+ ✓ src/pi-agent/map-reduce/__tests__/large-query-processor.test.ts > LargeQueryProcessor (SA4E-327) > propagates orchestrator failure so caller falls back to summary tree 1ms
+ ✓ src/pi-agent/__tests__/session-orchestrator.test.ts > SessionOrchestrator > creates session with explicit resource loader 6ms
+ ✓ src/pi-agent/__tests__/session-orchestrator.test.ts > SessionOrchestrator > aborts on reload failure 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/index-freshness-checker.test.ts > IndexFreshnessChecker (SA4E-360 T2) > reports FRESH for unchanged files with exactly 1 stat and no hash/reindex 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/index-freshness-checker.test.ts > IndexFreshnessChecker (SA4E-360 T2) > confirms touch-only changes by hash and skips the re-index delegate 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/index-freshness-checker.test.ts > IndexFreshnessChecker (SA4E-360 T2) > re-indexes once on content change and recovers to FRESH 3ms
+ ✓ src/pi-workflow/skeleton/__tests__/index-freshness-checker.test.ts > IndexFreshnessChecker (SA4E-360 T2) > degrades without a second retry when the re-index delegate fails 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/index-freshness-checker.test.ts > IndexFreshnessChecker (SA4E-360 T2) > treats a throwing delegate the same as a failed one (never crashes the sweep) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/index-freshness-checker.test.ts > IndexFreshnessChecker (SA4E-360 T2) > blocks repeat re-index calls within the 30s cooldown window 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/index-freshness-checker.test.ts > IndexFreshnessChecker (SA4E-360 T2) > marks a file missing from disk as STALE (indexed but deleted) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > truncates an oversized skeleton to ≤ cap keeping retained parts intact 2ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > drops the lowest-priority module first, then higher ones; engine retained last 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > drops file parts before the module-header part within the same module 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > re-measures after every drop and emits exactly one PI_SKELETON_TRUNCATED event 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > REJECTs a forced single oversized part with empty priority resolution 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > never returns an over-cap artifact marked PASS/TRUNCATED_PASS 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > degrades (not rejects) when every droppable part is dropped 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > marks a within-cap input PASS without truncation telemetry 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/skeleton-truncator.test.ts > SkeletonTruncator (SA4E-360 T1) > rejects after the hard 500-drop iteration cap (SEC-360-02 remediation #3) 3ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > STC-007: phase=requirements loads only phase-1 + shared-* steering 2ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > STC-103: phase missing/unmapped → shared-* only + info log 2ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > STC-104: steering under cap — no drops, byte-identical pass-through 0ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > STC-018: over cap — lowest priority dropped first; security lines survive (BR-05) 1ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > STC-303: all 7 NON_STRIPPABLE_RE variants survive scope drops AND cap drops 0ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > STC-202: internal failure → fail-open to base, error logged, no propagation 0ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > STC-305: unknown role → base unchanged even with a phase (BR-07 fail-open) 0ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > keeps non-steering entries (e.g. workspace prompt) untouched by scoping 0ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > never drops non-steering entries even when the cap cannot be met 0ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > UC-03 step 6: compress=true strips boilerplate, keeps security lines (BR-04/BR-05) 0ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > BR-15: non-worsening — dense steering stays byte-identical under compression 0ms
+ ✓ src/pi-agent/__tests__/scoped-steering.test.ts > scopedSteering (UC-02 + UC-03 step 6) > BR-04: compress flag default false → entries pass through byte-identical 0ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionMonitor > TC-001: usage >=95% triggers compact 1ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionMonitor > TC-002: usage >=85% and <95% warns 0ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionMonitor > usage below 85% takes no action 0ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionCompactor > TC-001/TC-701: compacts session at 96% usage 1ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionCompactor > TC-002: 86% usage issues no compaction 2ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionCompactor > TC-003/TC-702: summary captures intent, tools and last response 0ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionCompactor > TC-101: 20-turn dialogue compacts without intent loss, quality >=90% 0ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionCompactor > re-compaction preserves the original intent via merged summary 0ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionCompactor > COMPACT_FAIL: falls back to truncation without throwing 0ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > SessionCompactor > FSD 12.5: compaction completes under 300ms 0ms
+ ✓ src/pi-agent/__tests__/session-compactor.test.ts > Summarizer > truncates long fields for small context windows 0ms
+ ✓ src/pi-agent/__tests__/eval-harness.test.ts > keywordCoverage > computes the fraction of expected keywords present 1ms
+ ✓ src/pi-agent/__tests__/eval-harness.test.ts > EvalHarness > TC-301/TC-302: reports faithfulness and task success for a perfect runner 0ms
+ ✓ src/pi-agent/__tests__/eval-harness.test.ts > EvalHarness > TC-302: partial coverage lowers faithfulness and task success 0ms
+ ✓ src/pi-agent/__tests__/eval-harness.test.ts > EvalHarness > EVAL_ERROR: failing case is skipped without failing the run 2ms
+ ✓ src/pi-agent/__tests__/eval-harness.test.ts > EvalHarness > TC-301: small model passes only above 80% of the large baseline 0ms
+ ✓ src/pi-agent/__tests__/eval-harness.test.ts > EvalHarness > TC-102/TC-703: runs the real session runner end to end 0ms
+ ✓ src/pi-agent/__tests__/eval-harness.test.ts > EvalHarness > aggregates tokens saved across cases 0ms
+ ✓ src/pi-agent/__tests__/model-registry.test.ts > ModelRegistry > TC-001: seeds small-context models and queries phi-3-mini metadata 1ms
+ ✓ src/pi-agent/__tests__/model-registry.test.ts > ModelRegistry > TC-001: registry loads on start with all seeded models 1ms
+ ✓ src/pi-agent/__tests__/model-registry.test.ts > ModelRegistry > TC-301: rejects contextWindow=0 (BR-01) 0ms
+ ✓ src/pi-agent/__tests__/model-registry.test.ts > ModelRegistry > TC-301: rejects maxOutput > contextWindow (BR-02) 0ms
+ ✓ src/pi-agent/__tests__/model-registry.test.ts > ModelRegistry > TC-301: accepts a valid model entry 0ms
+ ✓ src/pi-agent/__tests__/model-registry.test.ts > ModelRegistry > TC-301 (EF-1): invalid metadata entry is rejected and not queryable 2ms
+ ✓ src/pi-agent/__tests__/model-registry.test.ts > ModelRegistry > BR-03: duplicate modelId is rejected 1ms
+ ✓ src/pi-agent/__tests__/model-registry.test.ts > ModelRegistry > BR-08: thinkingMap values must be positive and <= maxOutput 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > imports fast-check successfully (PBT precondition) 1ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > STC-300: BR-01 — resolved nCtx is always > 0, finite, integer (100 runs) 3ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > STC-301: BR-02 — safetyMargin === ceil(n × 0.08) for every n in [1, 1,000,000] 1ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > STC-302: BR-03 — split invariants hold for every n in [1, 1,000,000] 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.pbt.test.ts > resolveContextBudget property-based tests (STC-300/301/302) > STC-302 spot anchors: 8192 → {656, 3875, 1661}; 32768 → {2622, 19668, 8430} 0ms
+ ✓ src/pi-agent/__tests__/fallback-handler.test.ts > FallbackHandler > TC-301: phi-3 failure escalates to gpt-4o-mini with log 4ms
+ ✓ src/pi-agent/__tests__/fallback-handler.test.ts > FallbackHandler > TC-101/TC-704: thinkingLevel high maps maxTokens for escalation model 0ms
+ ✓ src/pi-agent/__tests__/fallback-handler.test.ts > FallbackHandler > TC-101/TC-704: thinkingLevel low maps smaller maxTokens 0ms
+ ✓ src/pi-agent/__tests__/fallback-handler.test.ts > FallbackHandler > blocks escalation after reaching max escalations per session 0ms
+ ✓ src/pi-agent/__tests__/fallback-handler.test.ts > FallbackHandler > blocks escalation when cost increase exceeds the 30% ceiling 0ms
+ ✓ src/pi-agent/__tests__/fallback-handler.test.ts > FallbackHandler > ESCALATE_FAIL: escalation error keeps original session and logs 0ms
+ ✓ src/pi-agent/__tests__/role-scope.test.ts > RoleScopeFilter > SM sees only the BRD skill 1ms
+ ✓ src/pi-agent/__tests__/role-scope.test.ts > RoleScopeFilter > DEV sees only the code skill 0ms
+ ✓ src/pi-agent/__tests__/role-scope.test.ts > RoleScopeFilter > QA sees only the test skill 0ms
+ ✓ src/pi-agent/__tests__/role-scope.test.ts > RoleScopeFilter > covers every role with a non-empty allowlist 0ms
+ ✓ src/pi-agent/__tests__/role-scope.test.ts > RoleScopeFilter > unknown role falls back to default (all skills visible) 0ms
+ ✓ src/pi-agent/__tests__/role-scope.test.ts > RoleScopeFilter > each role gets a disjoint, non-polluted tool list 0ms
+ ✓ src/pi-agent/__tests__/role-scope.test.ts > RoleScopeFilter > matches skill id segments exactly (no substring false positives) 0ms
+ ✓ src/pi-agent/__tests__/role-scope.test.ts > RoleScopeFilter > supports custom allowlist injection 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-001: returns exact budget for detected qwen 32k 3ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-002: reserveOutput order — override → registry maxOutput → floor 2000 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-003: safetyMargin = ceil(nCtx × 0.08) at 8k and 128k 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-004: 128k split — static 70% / history 30% sums exactly to usable 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-005: qwen registry entry present, valid; qwen2.5-coder unchanged (BR-14) 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-100: detection fails → registry fallback + PI_CONTEXT_DETECT_FALLBACK warn 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-101: registry miss → terminal default 8192 (never 0) 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-200: invalid detected n_ctx (0/-1/NaN/Infinity) — chain skips, never 0 (BR-01) 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-201: tiny model (2048) — usable clamped to positive floor, no throw (EF-2) 0ms
+ ✓ src/pi-agent/__tests__/context-budget-resolver.test.ts > resolveContextBudget > STC-111: 65,536 budget scales automatically (ceil/floor edge values) 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-cap.test.ts > buildSessionToolLoadout — schema cap + trim order (STC-019 / STC-204) > STC-019: drops the lowest-priority tool first and lands within the cap 2ms
+ ✓ src/pi-agent/__tests__/tool-loadout-cap.test.ts > buildSessionToolLoadout — schema cap + trim order (STC-019 / STC-204) > STC-019 order: ties keep trimming by pool order — drawio, then mem_ingest 1ms
+ ✓ src/pi-agent/__tests__/tool-loadout-cap.test.ts > buildSessionToolLoadout — schema cap + trim order (STC-019 / STC-204) > phase preference protects design-phase drawio over non-preferred mem tools 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-cap.test.ts > buildSessionToolLoadout — schema cap + trim order (STC-019 / STC-204) > STC-204: cap unreachable at min set → core + discovery kept, PI_TOOL_SCHEMA_CAP logged 2ms
+ ✓ src/pi-agent/__tests__/tool-loadout-cap.test.ts > buildSessionToolLoadout — schema cap + trim order (STC-019 / STC-204) > minimal mode (escalation step 3) keeps core + discovery only 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/symbol-outline-extractor.test.ts > SymbolOutlineExtractor > extracts outline with kind, name and signature 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/symbol-outline-extractor.test.ts > SymbolOutlineExtractor > caps the outline at the symbol-tier token budget (200) 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/symbol-outline-extractor.test.ts > SymbolOutlineExtractor > drops the last symbol that would exceed the budget 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/symbol-outline-extractor.test.ts > SymbolOutlineExtractor > extractChunk returns at most maxLines lines 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/symbol-outline-extractor.test.ts > SymbolOutlineExtractor > extractChunk trims to the chunk-tier token budget (800) 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/symbol-outline-extractor.test.ts > SymbolOutlineExtractor > returns empty chunk for unreadable files 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/symbol-outline-extractor.test.ts > FsContentReader > returns empty string for missing file 0ms
+ ✓ src/pi-agent/__tests__/session-configurator.budget.test.ts > SessionConfigurator budget gate > TC-001: getModelMetadata returns phi-3-mini registry entry 1ms
+ ✓ src/pi-agent/__tests__/session-configurator.budget.test.ts > SessionConfigurator budget gate > TC-101: unknown model falls back to default with diagnostics log 2ms
+ ✓ src/pi-agent/__tests__/session-configurator.budget.test.ts > SessionConfigurator budget gate > TC-002: within-limit budget allows session creation and stores diagnostics 0ms
+ ✓ src/pi-agent/__tests__/session-configurator.budget.test.ts > SessionConfigurator budget gate > TC-201: budget >95% rejects session before SDK call 1ms
+ ✓ src/pi-agent/__tests__/session-configurator.budget.test.ts > SessionConfigurator budget gate > TC-202: budget >85% warns but still creates session 0ms
+ ✓ src/pi-agent/__tests__/session-configurator.budget.test.ts > SessionConfigurator budget gate > TC-302: maps thinkingLevel high to maxTokens capped at maxOutput 0ms
+ ✓ src/pi-agent/__tests__/session-configurator.budget.test.ts > SessionConfigurator budget gate > calculateBudget warns on conservative estimation (EF-1) 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.integration.test.ts > agent-configurator integration > TC-701: Pi SDK Session Creation Integration 4ms
+ ✓ src/pi-agent/__tests__/agent-configurator.integration.test.ts > agent-configurator integration > TC-702: Skills Discovery Integration With File System 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.integration.test.ts > agent-configurator integration > TC-703: Prompt Override Integration With Session 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.integration.test.ts > agent-configurator integration > TC-801: Existing Loader Behavior Preserved 0ms
+ ✓ src/pi-agent/__tests__/agent-configurator.integration.test.ts > agent-configurator integration > TC-802: Append Mode Still Works After Replace Fix 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > TC-001/TC-701: routes request to small model first 1ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > TC-701: explicit modelId is routed and classified 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > TC-003/TC-703: routing decision is logged 2ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > ROUTE_ERROR: unknown model keeps original 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > TC-002/TC-702: low-confidence answer triggers escalation 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > SEC-329-01: injected `confidence: 1.0` cannot self-certify — escalation still fires 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > SEC-329-01: neutral (hedging-free) answer escalates — gate is not inert 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > SEC-329-01: trusted declaredConfidence from session state blocks escalation 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > TC-102/TC-302: easy confident answer stays on small model 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > max escalations reached: low confidence no longer escalates 0ms
+ ✓ src/pi-agent/__tests__/model-router.test.ts > ModelRouter > FSD 12.5: routing decision completes under 100ms 0ms
+ ✓ src/pi-agent/__tests__/workspace-root-resolver.test.ts > WorkspaceRootResolver > returns workspace root when available 1ms
+ ✓ src/pi-agent/__tests__/workspace-root-resolver.test.ts > WorkspaceRootResolver > falls back when workspaceFolders undefined 2ms
+ ✓ src/pi-agent/__tests__/workspace-root-resolver.test.ts > WorkspaceRootResolver > falls back when workspaceFolders empty 0ms
+ ✓ src/pi-agent/__tests__/workspace-root-resolver.test.ts > WorkspaceRootResolver > throws on relative path 1ms
+ ✓ src/pi-agent/__tests__/workspace-root-resolver.test.ts > WorkspaceRootResolver > handles Windows absolute path 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-011: qwen 32k with static 7,000 tokens → ALLOW, zero escalation events 3ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-012: n_ctx=10,000 with static 7,200 → 92% WARN — proceeds, warning logged 1ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-310/401 boundary: static 6500 → ALLOW 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-310/401 boundary: static 6501 → WARN 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-310/401 boundary: static 7500 → WARN 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-decisions.test.ts > runBudgetGate — decisions (BR-13 / STC-310 / STC-401) > STC-310/401 boundary: static 7501 → REJECT 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-escalation.test.ts > runBudgetGate — escalation ladder (BR-08 / STC-205 / STC-306) > STC-205: fires strictly in order compress → drop-steering → min-loadout, re-measuring after each 3ms
+ ✓ src/pi-agent/__tests__/budget-gate-escalation.test.ts > runBudgetGate — escalation ladder (BR-08 / STC-205 / STC-306) > STC-306/STC-110: compression alone suffices → steps 2–3 never fire 0ms
+ ✓ src/pi-agent/__tests__/budget-gate-escalation.test.ts > runBudgetGate — escalation ladder (BR-08 / STC-205 / STC-306) > a failing ladder step is logged and skipped — the gate never breaks the turn 0ms
+ ✓ src/pi-agent/__tests__/session-configurator.test.ts > SessionConfigurator > validates model BR-4 1ms
+ ✓ src/pi-agent/__tests__/session-configurator.test.ts > SessionConfigurator > validates thinkingLevel BR-3 0ms
+ ✓ src/pi-agent/__tests__/session-configurator.test.ts > SessionConfigurator > builds session config with model and thinkingLevel 0ms
+ ✓ src/pi-agent/__tests__/session-configurator.test.ts > SessionConfigurator > fallback to default model on invalid 2ms
+ ✓ src/pi-agent/__tests__/session-configurator.test.ts > SessionConfigurator > creates agent session with SDK 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=SM: loadout always contains the 9 non-negotiable tools 3ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=BA: loadout always contains the 9 non-negotiable tools 1ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=SA: loadout always contains the 9 non-negotiable tools 1ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=DEV: loadout always contains the 9 non-negotiable tools 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=QA: loadout always contains the 9 non-negotiable tools 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=DevOps: loadout always contains the 9 non-negotiable tools 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=UI: loadout always contains the 9 non-negotiable tools 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=Security: loadout always contains the 9 non-negotiable tools 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > role=intern-x: loadout always contains the 9 non-negotiable tools 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > STC-304 — BR-06 core + discovery invariant across every role > minimal mode keeps the same 9 tools for every role 1ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > cap derivation + defaults (FSD §3.4.4) > toolSchemaTokenCap derives the cap from the session budget (25% share) 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > cap derivation + defaults (FSD §3.4.4) > defaults: core file tools + discovery pair with no pool and no cap 1ms
+ ✓ src/pi-agent/__tests__/tool-loadout-invariants.test.ts > cap derivation + defaults (FSD §3.4.4) > nameTools wraps bare names as loadout entries 1ms
+ ✓ src/pi-agent/__tests__/tool-loadout-roles.test.ts > buildSessionToolLoadout — role mapping (UC-04 / Task 4) > STC-009: BA keeps core + discovery, never git/build/deploy/pipeline tools 3ms
+ ✓ src/pi-agent/__tests__/tool-loadout-roles.test.ts > buildSessionToolLoadout — role mapping (UC-04 / Task 4) > STC-010a: DEV keeps git/build, never deploy/pipeline 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-roles.test.ts > buildSessionToolLoadout — role mapping (UC-04 / Task 4) > STC-010b: SM keeps jira_* + coordination tools (full regression set) 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-roles.test.ts > buildSessionToolLoadout — role mapping (UC-04 / Task 4) > STC-017: SM regression — essential tools present across a broad pool 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-roles.test.ts > buildSessionToolLoadout — role mapping (UC-04 / Task 4) > STC-107: drawio_export_png absent from the BA loadout; discovery pair kept reachable 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-roles.test.ts > buildSessionToolLoadout — role mapping (UC-04 / Task 4) > STC-108 / STC-305: unknown role keeps the full pool (BR-07 fail-open) 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-roles.test.ts > buildSessionToolLoadout — role mapping (UC-04 / Task 4) > dedupes names when the MCP pool repeats a core tool (AFT hoist) 0ms
+ ✓ src/pi-agent/__tests__/verification-loop.integration.test.ts > resolveVerifyStrategy > small tier routes to external grader 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.integration.test.ts > resolveVerifyStrategy > large tier keeps self-verify 0ms
+ ✓ src/pi-agent/__tests__/verification-loop.integration.test.ts > resolveVerifyStrategy > medium and unknown tiers keep self-verify 0ms
+ ✓ src/pi-agent/__tests__/verification-loop.integration.test.ts > verifyAfterExecuteTools > TC-701: invoked after execute_tools with tool-derived sources 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.integration.test.ts > verifyAfterExecuteTools > small model routes to external-grader strategy 0ms
+ ✓ src/pi-agent/__tests__/verification-loop.integration.test.ts > verifyAfterExecuteTools > TC-704: low faithfulness triggers regeneration via the hook 1ms
+ ✓ src/pi-agent/__tests__/verification-loop.integration.test.ts > verifyAfterExecuteTools > accepts injected grader 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-scanner.test.ts > FileScanner > lists source files recursively and skips excluded dirs 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-scanner.test.ts > FileScanner > TC-403: respects pagination while scanning (listDir called with pageSize) 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-scanner.test.ts > FileScanner > caps the number of files at maxFiles 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/file-scanner.test.ts > FileScanner > returns empty list for missing root 0ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > tokenizes and splits claims 2ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > grounded answer scores high with no issues 1ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > matches the FSD example shape (answer + source citations → score) 0ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > hallucinated answer scores low with issues 0ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > mixed answer scores proportionally 1ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > empty answer scores 0 0ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > score is clamped to [0,1] and rounded to 2 decimals 0ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > path-only citations do not ground a claim (SEC-328-01) 0ms
+ ✓ src/pi-agent/__tests__/faithfulness.test.ts > faithfulness rubric > grounding uses only source excerpts, not paths (SEC-328-01 adversarial) 0ms
+ ✓ src/pi-agent/__tests__/faithfulness-metrics.test.ts > evaluateGoldenSet > TC-102: reports faithfulness metrics for the golden set 2ms
+ ✓ src/pi-agent/__tests__/faithfulness-metrics.test.ts > evaluateGoldenSet > TC-302: grounded cases pass, hallucinated cases fail at threshold 0.7 0ms
+ ✓ src/pi-agent/__tests__/faithfulness-metrics.test.ts > evaluateGoldenSet > empty golden set reports zeroed metrics gracefully 1ms
+ ✓ src/pi-agent/__tests__/faithfulness-metrics.test.ts > evaluateGoldenSet > works with a custom-threshold grader 0ms
+ ✓ src/pi-agent/__tests__/session-factory.integration.test.ts > PiSessionFactory integration > uses resolver output as cwd 3ms
+ ✓ src/pi-agent/context-retrieval/__tests__/summary-tree.test.ts > SummaryTreeBuilder > TC-101: builds a summary tree with file counts for GLOBAL queries 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/summary-tree.test.ts > SummaryTreeBuilder > excludes .git and node_modules from the tree 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/summary-tree.test.ts > SummaryTreeBuilder > respects the token cap and stops early 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/summary-tree.test.ts > SummaryTreeBuilder > TC-403: reads directories through the paginated lister 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/summary-tree.test.ts > SummaryTreeBuilder > limits depth to maxDepth 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/summary-tree.test.ts > SummaryTreeBuilder > handles missing root directory 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > TC-002/BR-05: converts chars to tokens with ceil heuristic (1 token ~ 4 chars) 1ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > TC-002: budget = system + tool + retrieval + history + reserve 2000 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > TC-201: smollm2-360m (1024) with large history rejects at >95% 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > TC-201: threshold message includes usage percent and reduction hint 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > TC-202: usage 90% returns WARN decision 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > boundary: 85% allows, 85.5% warns, 95% warns, 95.1% rejects 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > TC-401: reserve=1999 is forced to the 2000 minimum (BR-04) 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > TC-401: missing reserve defaults to 2000 without conservative flag 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > EF-1: invalid estimation input falls back conservatively with warn flag 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > non-positive contextWindow conservatively reports 100% usage 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > BudgetCalculator > TC-601: budget calculation averages <100ms over 100 runs 0ms
+ ✓ src/pi-agent/__tests__/context-budget.test.ts > ContextBudgetError > carries budget details for diagnostics 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/circuit-breaker.test.ts > CircuitBreaker (SA4E-327 sub-agent protection) > stays closed below the failure threshold 1ms
+ ✓ src/pi-agent/map-reduce/__tests__/circuit-breaker.test.ts > CircuitBreaker (SA4E-327 sub-agent protection) > opens after the failure threshold is reached 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/circuit-breaker.test.ts > CircuitBreaker (SA4E-327 sub-agent protection) > moves to half-open after the cooldown elapses 1ms
+ ✓ src/pi-agent/map-reduce/__tests__/circuit-breaker.test.ts > CircuitBreaker (SA4E-327 sub-agent protection) > closes again after a successful half-open trial 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/circuit-breaker.test.ts > CircuitBreaker (SA4E-327 sub-agent protection) > re-opens when a half-open trial fails 0ms
+ ✓ src/pi-agent/map-reduce/__tests__/circuit-breaker.test.ts > CircuitBreaker (SA4E-327 sub-agent protection) > resets the failure counter on success while closed 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > redactSecretLike (SEC-360-01) > redacts every deny-list family occurrence 1ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > redactSecretLike (SEC-360-01) > redacts case-insensitive assignment variants (Password:, API_KEY =) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > redactSecretLike (SEC-360-01) > preserves non-secret structure so signatures stay parseable (SEC-L) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > redactSecretLike (SEC-360-01) > is idempotent (PBT-09 step 4) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > stripControlChars (SEC-360-07) > strips U+200B, U+202E and C0 controls from signatures 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > stripControlChars (SEC-360-07) > leaves legitimate ASCII/Unicode identifiers unaffected 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > stripControlChars (SEC-360-07) > sanitizes end-to-end: secret + zero-width in one line (sanitizeCodeText) 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > isSecretFileName (SEC-360-01 #2) > excludes every secret-named fixture file 0ms
+ ✓ src/pi-workflow/skeleton/__tests__/secret-redaction.test.ts > isSecretFileName (SEC-360-01 #2) > keeps normal source files and directories exclusion untouched 0ms
+ ✓ src/pi-agent/__tests__/model-tier.test.ts > model-tier > detectModelTier > classifies small models 1ms
+ ✓ src/pi-agent/__tests__/model-tier.test.ts > model-tier > detectModelTier > classifies medium models 0ms
+ ✓ src/pi-agent/__tests__/model-tier.test.ts > model-tier > detectModelTier > classifies large models (param size wins over suffix) 0ms
+ ✓ src/pi-agent/__tests__/model-tier.test.ts > model-tier > detectModelTier > returns null for unknown models → full variant fallback 0ms
+ ✓ src/pi-agent/__tests__/model-tier.test.ts > model-tier > detectModelTier > matches FSD example payload (phi-3-mini → small) 0ms
+ ✓ src/pi-agent/__tests__/model-tier.test.ts > model-tier > preferredVariantForTier > small tier prefers compressed variant 0ms
+ ✓ src/pi-agent/__tests__/model-tier.test.ts > model-tier > preferredVariantForTier > medium/large tiers prefer full variant 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/query-router.test.ts > QueryRouter > TC-704: Intent Classification Integration > classifies LOCAL intent for fix/review queries 2ms
+ ✓ src/pi-agent/context-retrieval/__tests__/query-router.test.ts > QueryRouter > TC-704: Intent Classification Integration > classifies GLOBAL intent for whole-repo queries 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/query-router.test.ts > QueryRouter > TC-704: Intent Classification Integration > classifies STRUCTURAL intent for structure queries 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/query-router.test.ts > QueryRouter > UNKNOWN_INTENT falls back to LOCAL 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/query-router.test.ts > QueryRouter > empty query falls back to LOCAL 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/query-router.test.ts > QueryRouter > returns confidence 1 for pattern matches 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > context-budget-auto-split > estimateTokens approximates chars/4 1ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > context-budget-auto-split > chunkPrompt splits by paragraphs respecting max tokens 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > context-budget-auto-split > shouldAutoChunk returns true for small tier and large prompt 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > context-budget-auto-split > shouldAutoChunk returns false for medium tier 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > context-budget-auto-split > synthesizeChunks concatenates results 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > usableTokensOf applies the BR-02 math (nCtx − reserve − margin) 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > medium tier triggers when prompt + history exceed 70% of usable budget 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > medium tier stays false well below the threshold 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > history alone can push a small prompt over the threshold 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > boundary: exactly at the ratio is false (strictly-greater rule) 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > medium tier without threshold info fails open → false (back-compat) 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > invalid usableTokens (0 / NaN / negative) → false 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > large tier is guarded by the same ratio rule 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > small tier keeps its own rule regardless of threshold 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > negative historyTokens are clamped to 0 0ms
+ ✓ src/pi-agent/__tests__/context-budget-auto-split.test.ts > shouldAutoChunk — history-aware medium/large tiers (SA4E-355 UAT) > MEDIUM_AUTO_CHUNK_RATIO is 0.7 (documented approach threshold) 0ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > compressed output is smaller than full template 2ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > meets ≤60% budget for example-heavy template (BR-NFR) 0ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > strips example sections and boilerplate 0ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > keeps essential instructions and headings 0ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > collapses redundant whitespace 0ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > returns original on compression failure (empty input) 0ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > returns original when template is already terse (nothing gained) 0ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > CompressedVariant exposes ratio, budget and token metrics 0ms
+ ✓ src/pi-agent/__tests__/prompt-compressor.test.ts > prompt-compressor > estimateTokenCount approximates 4 chars per token 0ms
+ ✓ src/pi-agent/__tests__/thinking-level-mapper.test.ts > ThinkingLevelMapper > TC-302: high level maps to maxTokens capped at maxOutput 1ms
+ ✓ src/pi-agent/__tests__/thinking-level-mapper.test.ts > ThinkingLevelMapper > TC-302: low level maps to a smaller maxTokens than high 0ms
+ ✓ src/pi-agent/__tests__/thinking-level-mapper.test.ts > ThinkingLevelMapper > maps medium level and defaults undefined level to medium 0ms
+ ✓ src/pi-agent/__tests__/thinking-level-mapper.test.ts > ThinkingLevelMapper > maps all levels for phi-3-mini within maxOutput 0ms
+ ✓ src/pi-agent/__tests__/thinking-level-mapper.test.ts > ThinkingLevelMapper > unknown model falls back to the default model mapping 0ms
+ ✓ src/pi-agent/__tests__/thinking-level-mapper.test.ts > ThinkingLevelMapper > invalid level string falls back to medium 0ms
+ ✓ src/pi-agent/__tests__/thinking-level-mapper.test.ts > ThinkingLevelMapper > throws when registry has no default model entry 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > parseStructuredConfidence parses model metadata (FSD example: 0.62) 1ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > SEC-329-01: score() does NOT trust answer-embedded confidence 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > SEC-329-01: poisoned `confidence: 1.0` answer still fails toward escalation 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > SEC-329-01: trusted metadata channel (declaredConfidence) is honored 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > SEC-329-01: out-of-range declaredConfidence fails toward escalation 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > hedging language scores low (below 0.75 threshold) 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > confident language scores high 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > neutral answer gets the (below-threshold) default heuristic score 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > SCORE_FAIL: missing/empty answer returns 0.5 0ms
+ ✓ src/pi-agent/__tests__/confidence-scorer.test.ts > ConfidenceScorer > out-of-range structured pattern is undefined in the metadata parser 0ms
+ ✓ src/pi-agent/__tests__/credentials-manager.test.ts > CredentialsManager > rejects secret hardcode BR-5 1ms
+ ✓ src/pi-agent/__tests__/credentials-manager.test.ts > CredentialsManager > accepts env reference 0ms
+ ✓ src/pi-agent/__tests__/credentials-manager.test.ts > CredentialsManager > missing credential blocks session 0ms
+ ✓ src/pi-agent/__tests__/credentials-manager.test.ts > CredentialsManager > resolves env var 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-estimator.test.ts > estimateToolSchemaTokens (OI-4 — SA4E-355 Task 4) > respects precomputed schemaTokens (0 stays 0 for exact accounting) 1ms
+ ✓ src/pi-agent/__tests__/tool-loadout-estimator.test.ts > estimateToolSchemaTokens (OI-4 — SA4E-355 Task 4) > estimates name + description + serialized schema at chars/4 (STC-406 basis) 0ms
+ ✓ src/pi-agent/__tests__/tool-loadout-estimator.test.ts > estimateToolSchemaTokens (OI-4 — SA4E-355 Task 4) > never throws on malformed schemas — falls back to a name-only estimate 1ms
+ ✓ src/pi-agent/__tests__/agent-dir-resolver.test.ts > DefaultAgentDirResolver > returns default agent dir when none provided 1ms
+ ✓ src/pi-agent/__tests__/agent-dir-resolver.test.ts > DefaultAgentDirResolver > returns custom agent dir 0ms
+ ✓ src/pi-agent/__tests__/agent-dir-resolver.test.ts > DefaultAgentDirResolver > expands ~ to home dir 0ms
+ ✓ src/pi-agent/__tests__/agent-dir-resolver.test.ts > DefaultAgentDirResolver > isDirectoryExists returns false for non-existent path 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/token-counter.test.ts > TokenCounter > returns 0 for empty text 1ms
+ ✓ src/pi-agent/context-retrieval/__tests__/token-counter.test.ts > TokenCounter > returns at least 1 token for non-empty text 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/token-counter.test.ts > TokenCounter > estimates more tokens for longer text 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/token-counter.test.ts > TokenCounter > is deterministic for the same input 0ms
+ ✓ src/pi-agent/context-retrieval/__tests__/token-counter.test.ts > TokenCounter > fits checks budget correctly 0ms
+ Test Files  81 passed (81)
+      Tests  610 passed (610)
+   Duration  31.15s (transform 3.07s, setup 0ms, import 12.41s, tests 2.88s, environment 5ms)

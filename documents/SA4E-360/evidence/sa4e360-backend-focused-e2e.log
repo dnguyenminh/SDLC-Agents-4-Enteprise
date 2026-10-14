@@ -1,0 +1,99 @@
+
+ RUN  v4.1.9 C:/projects/kiro/SDLC-Agents-4-Enterprise/backend
+
+[E2E Setup] Temp data dir: C:\Users\ASUS\AppData\Local\Temp\sa4e-e2e-QEp13z
+[E2E Setup] Using free port: 60548
+(node:25156) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[E2E Server] {"level":50,"time":1791956444546,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Applying v1: Initial schema with FTS5"}
+[E2E Server] {"level":50,"time":1791956444548,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] v1 applied"}
+[E2E Server] {"level":50,"time":1791956444565,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"database-manager","msg":"[db] Initialized at C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e-e2e-QEp13z\\index.db"}
+[E2E Server] {"level":50,"time":1791956444567,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Tree-sitter initialized (21 langs)"}
+[E2E Server] {"level":50,"time":1791956444565,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] SA4E-336: added body_embeddings(project_id, symbol_id, chunk_index) unique index"}
+{"level":50,"time":1791956444548,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V2: Added 0 pattern columns"}
+{"level":50,"time":1791956444548,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Running graph schema migrations (SQLite sync)..."}
+{"level":50,"time":1791956444554,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Added 9 enhanced symbol columns"}
+{"level":50,"time":1791956444555,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Relationships table ready"}
+{"level":50,"time":1791956444555,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] File index table ready"}
+{"level":50,"time":1791956444555,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Graph metadata table ready"}
+{"level":50,"time":1791956444555,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Body embeddings table ready"}
+{"level":50,"time":1791956444555,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema version set to 3 (sync)"}
+{"level":50,"time":1791956444559,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] V4: Memory tables dropped and recreated"}
+{"level":30,"time":1791956444522,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"memory","msg":"Module registered"}
+{"level":30,"time":1791956444522,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"codeIntel","msg":"Module registered"}
+{"level":30,"time":1791956444523,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","msg":"Module registered"}
+{"level":30,"time":1791956444523,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"analytics","msg":"Module registered"}
+{"level":30,"time":1791956444523,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","msg":"Module registered"}
+{"level":30,"time":1791956444523,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"utility","msg":"Module registered"}
+{"level":30,"time":1791956444523,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"knowledge","msg":"Module registered"}
+{"level":30,"time":1791956444523,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"security","msg":"Module registered"}
+{"level":30,"time":1791956444523,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","msg":"Module registered"}
+{"level":30,"time":1791956444524,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"memory","msg":"Initializing module"}
+{"level":30,"time":1791956444524,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"memory","msg":"Initializing memory module"}
+{"level":30,"time":1791956444526,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"codeIntel","msg":"Initializing module"}
+{"level":30,"time":1791956444526,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"codeIntel","msg":"Initializing code intelligence module"}
+{"level":30,"time":1791956444527,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","msg":"Initializing module"}
+{"level":30,"time":1791956444527,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","msg":"Initializing orchestration module"}
+{"level":30,"time":1791956444527,"pid":27192,"hostname":"WIN-LK2TQOOAELR","component":"McpServerConfigLoader","configPath":"C:\\Users\\ASUS\\AppData\\Local\\Temp\\sa4e-e2e-QEp13z\\orchestration.json","msg":"No orchestration.json found, skipping child servers"}
+{"level":30,"time":1791956444528,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"analytics","msg":"Initializing module"}
+{"level":30,"time":1791956444528,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"analytics","msg":"Initializing analytics module"}
+{"level":30,"time":1791956444528,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"analytics","msg":"Analytics module ready"}
+{"level":30,"time":1791956444528,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","msg":"Initializing module"}
+{"level":30,"time":1791956444528,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","msg":"Initializing KB graph module"}
+{"level":30,"time":1791956444528,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"utility","msg":"Initializing module"}
+{"level":30,"time":1791956444528,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"utility","msg":"Initializing utility module"}
+{"level":30,"time":1791956444529,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"knowledge","msg":"Initializing module"}
+{"level":30,"time":1791956444529,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"knowledge","msg":"Initializing knowledge module"}
+{"level":30,"time":1791956444529,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"security","msg":"Initializing module"}
+{"level":30,"time":1791956444529,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"security","msg":"Initializing security module (GateGuard + AgentShield)"}
+{"level":30,"time":1791956444529,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","msg":"Initializing module"}
+{"level":30,"time":1791956444529,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","msg":"Initializing sandbox module"}
+{"level":40,"time":1791956444530,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","msg":"SecurityModule hardening helper unavailable — using built-in dockerode BR-12 hardening (graceful degradation)."}
+{"level":30,"time":1791956444530,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"analytics","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1791956444530,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"utility","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1791956444536,"pid":27192,"hostname":"WIN-LK2TQOOAELR","component":"McpServerConfigLoader","count":0,"source":"db","msg":"Discovered child MCP servers from DB"}
+{"level":30,"time":1791956444537,"pid":27192,"hostname":"WIN-LK2TQOOAELR","component":"HealthMonitor","interval":60000,"msg":"Health monitor started"}
+{"level":30,"time":1791956444537,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","component":"ReindexSubscriber","msg":"re-index subscriber started"}
+{"level":30,"time":1791956444537,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1791956444537,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","service":"graph-service","msg":"Graph and KB both empty at startup — scheduling delayed sync in 60s"}
+{"level":30,"time":1791956444537,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1791956444567,"pid":27192,"hostname":"WIN-LK2TQOOAELR","module":"codeIntel","status":"ready","msg":"Module initialized"}
+[E2E Server ERR] [LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+[E2E Server] {"level":50,"time":1791956444640,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"migrations","msg":"[migrations] Schema up to date"}
+[E2E Server] {"level":50,"time":1791956444640,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Running graph schema migrations (engine: sqlite)..."}
+[E2E Server] {"level":50,"time":1791956444645,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Added 6 enrichment columns"}
+[E2E Server] {"level":50,"time":1791956444645,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Relationships table ready"}
+{"level":50,"time":1791956444645,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] File index table ready"}
+{"level":50,"time":1791956444646,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Graph metadata table ready"}
+{"level":50,"time":1791956444646,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Body embeddings table ready"}
+{"level":50,"time":1791956444646,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"graph-migrator","msg":"[graph-migrator] Schema version set to 3"}
+{"level":30,"time":1791956444650,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","intervalMs":60000,"staleSeconds":600,"msg":"[startup-interrupt] periodic scheduler started"}
+[E2E Setup] Server ready on port 60548
+[E2E Server] {"level":50,"time":1791956446994,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Starting full index (project=default)..."}
+[E2E Server] {"level":50,"time":1791956447001,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Found 1 files to index"}
+[E2E Server] {"level":50,"time":1791956447014,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"grammar-registry","msg":"[grammar-registry] Tree-sitter WASM runtime initialized"}
+[E2E Server] {"level":50,"time":1791956447070,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"grammar-registry","msg":"[grammar-registry] Loaded grammar: typescript"}
+[E2E Server] {"level":50,"time":1791956447088,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Indexed 1 files via tree-sitter, 0 via regex fallback, 0 unchanged"}
+[E2E Server] {"level":50,"time":1791956447093,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Pattern detection: 2ms"}
+[E2E Server] {"level":50,"time":1791956447104,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Full index complete"}
+[E2E Server] {"level":50,"time":1791956447127,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Starting full index (project=default)..."}
+[E2E Server] {"level":50,"time":1791956447134,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Found 1 files to index"}
+[E2E Server] {"level":50,"time":1791956447135,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Indexed 0 files via tree-sitter, 0 via regex fallback, 1 unchanged"}
+[E2E Server] {"level":50,"time":1791956447136,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Pattern detection: 0ms"}
+[E2E Server] {"level":50,"time":1791956447141,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Full index complete"}
+[E2E Server] {"level":50,"time":1791956447173,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Starting full index (project=default)..."}
+[E2E Server] {"level":50,"time":1791956447182,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Found 2 files to index"}
+[E2E Server] {"level":50,"time":1791956447186,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Indexed 1 files via tree-sitter, 0 via regex fallback, 1 unchanged"}
+[E2E Server] {"level":50,"time":1791956447188,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Pattern detection: 1ms"}
+[E2E Server] {"level":50,"time":1791956447193,"pid":27192,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Full index complete"}
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  12:40:40
+   Duration  6.45s (transform 31ms, setup 15ms, import 72ms, tests 1.87s, environment 0ms)
+
+[E2E Teardown] Server stopped
+[E2E Teardown] Cleaned temp dir: C:\Users\ASUS\AppData\Local\Temp\sa4e-e2e-QEp13z
+close timed out after 10000ms
+Tests closed successfully but something prevents Vite server from exiting
+You can try to identify the cause by enabling "hanging-process" reporter. See https://vitest.dev/guide/reporters.html#hanging-process-reporter
