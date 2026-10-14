@@ -1,7 +1,7 @@
 {
   "ticket": "SA4E-360",
   "title": "Multi-Resolution Context Supply for Pi Harness — P1: Code Skeletonization + Agentic Context Loading",
-  "currentPhase": "implementation",
+  "currentPhase": "testing",
   "phases": {
     "requirements": {
       "status": "done",
@@ -71,7 +71,39 @@
       "completedAt": "2026-10-14T02:10:00Z"
     },
     "implementation": {
-      "status": "not_started"
+      "status": "done",
+      "completedAt": "2026-10-14T04:00:00Z",
+      "waves": [
+        {
+          "wave": 1,
+          "commit": "5d92322",
+          "tasks": "T1-T2 + SEC-360-01/02/03/07",
+          "tests": 38
+        },
+        {
+          "wave": 2,
+          "commit": "5225170",
+          "tasks": "T3-T6 + SEC-360-04/05/06, 2 backend tools",
+          "tests": 50
+        },
+        {
+          "wave": 3,
+          "commit": "9b44169+83c32ab",
+          "tasks": "T7-T9 functional map + createHost wiring + E2E",
+          "tests": 27
+        },
+        {
+          "wave": "TA-fix",
+          "commit": "f60999e",
+          "tasks": "Finding A memo bug + Finding B reindex stale-retry",
+          "tests": 4
+        }
+      ],
+      "fullSuite": "298 files / 2,896 tests GREEN + backend 303/3319 + E2E-API 7/7",
+      "taReview": "APPROVED (focused re-review 2 files pass, 28/28)",
+      "securityReqsCovered": "SEC-360-01..07 all mapped to tests",
+      "gaps": "E2E-API-08 defer (unit-proven), E2E-API-10 scope decision (SEC-360-03 #1 backlog), E2E-UI manual",
+      "userGuide": "skipped - internal harness feature, no user-facing surface (SA4E-355 precedent)"
     },
     "testing": {
       "status": "not_started"
@@ -109,7 +141,7 @@
     "oiDecisions": "OI-1 backend-side extraction; OI-2 freshness-keyed cache no TTL; OI-3 single-active-root P1; OI-4 fallback symbols transient; OI-5 keep shipped PI_GATE_DECISION values; OI-6 no-TTL accepted, monitor Phase 6",
     "implChecklist": "T1-T9 test-first, 13 files, ~70 tests estimated"
   },
-  "lastUpdated": "2026-10-14T02:10:00Z",
+  "lastUpdated": "2026-10-14T04:00:00Z",
   "securityRequirementsForDev": [
     "SEC-360-01 (Medium): add redactSecretLike() pass + secret-file name exclusion in skeleton builder + RAW_HEAD path",
     "SEC-360-02 (Medium): remaining-global-budget bound + incremental token accounting in skeleton sizing loop (fix O(parts^2) re-join)",
