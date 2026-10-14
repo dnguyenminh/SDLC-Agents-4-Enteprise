@@ -46,7 +46,13 @@ async function formatNameSymbols(ql: QueryLayer, projectId: string | undefined, 
   const symbols = await ql.findSymbols(projectId, name, kind, limit);
   if (symbols.length === 0) return `No symbols matching "${name}"`;
   const lines = [`Found ${symbols.length} symbols matching "${name}":\n`];
-  for (const s of symbols) lines.push(`[${s.kind}] ${s.name} - ${s.filePath}:${s.startLine}`);
+  for (const s of symbols) {
+    // SA4E-360: mirror code-symbols.ts formatSymbolList so BOTH surfaces emit
+    // the same text (em-dash separator + indented signature line) — the
+    // extension corpus parser (parseSymbolListText) consumes this contract.
+    lines.push(`[${s.kind}] ${s.name} — ${s.filePath}:${s.startLine}`);
+    if (s.signature) lines.push(`  ${s.signature.slice(0, 120)}`);
+  }
   return lines.join('\n');
 }
 

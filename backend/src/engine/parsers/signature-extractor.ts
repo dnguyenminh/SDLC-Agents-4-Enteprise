@@ -134,8 +134,10 @@ function getPatterns(language: string): PatternDef[] {
   return LANGUAGE_PATTERNS[language] ?? GENERIC_PATTERNS;
 }
 
-/** Fallback patterns used when no language-specific set is registered. */
+/** Fallback patterns used when no language-specific set is registered.
+ * SA4E-360 (UC-360-04): export-aware and indent-tolerant so grammar-less
+ * modules (e.g. Svelte) still surface their exported functions/classes. */
 const GENERIC_PATTERNS: PatternDef[] = [
-  { regex: /^(?:function|def|func|fn|sub)\s+(\w+)/m, kind: 'function', nameGroup: 1 },
-  { regex: /^(?:class|struct|type)\s+(\w+)/m, kind: 'class', nameGroup: 1 },
+  { regex: /^[ \t]*(?:export\s+)?(?:default\s+)?(?:async\s+)?(?:function|def|func|fn|sub)\s+(\w+)[^\n{;]*/m, kind: 'function', nameGroup: 1, signatureGroup: 0 },
+  { regex: /^[ \t]*(?:export\s+)?(?:default\s+)?(?:abstract\s+)?(?:class|struct|type)\s+(\w+)[^\n{;]*/m, kind: 'class', nameGroup: 1, signatureGroup: 0 },
 ];

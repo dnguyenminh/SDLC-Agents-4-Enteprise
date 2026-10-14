@@ -53,6 +53,18 @@ export interface IndexStatus {
   lastIndexed: string | null;
 }
 
+/** SA4E-360 — one located symbol row with slice bounds (TDD §4.2 output). */
+export interface LocateRow {
+  name: string;
+  kind: string;
+  signature: string | null;
+  filePath: string;
+  startLine: number;
+  endLine: number;
+  lineCount: number;
+  parentSymbol: string | null;
+}
+
 const MODULE_COLUMNS = `name, root_path as rootPath, language, description,
   file_count as fileCount, symbol_count as symbolCount,
   di_style as diStyle, error_handling as errorHandling,
@@ -175,8 +187,9 @@ export class QueryLayer {
     const scope = buildCodeScopeFilter(projectId, 's');
     let sql = `SELECT ${SYMBOL_COLUMNS} FROM symbols s
       JOIN files f ON s.file_id = f.id
-      WHERE s.name LIKE ? AND ${scope.clause}`;
-    const params: unknown[] = [`${name}%`, ...scope.params];
+      WHERE s.name LIKE ? ESCAPE '\\' AND ${scope.clause}`;
+    // SEC-360-05: escape LIKE wildcards so user input is matched literally.
+    const params: unknown[] = [`${sanitizeLikeQuery(name)}%`, ...scope.params];
     if (kind) { sql += ' AND s.kind = ?'; params.push(kind); }
     sql += ' ORDER BY s.name LIMIT ?';
     params.push(limit);
@@ -211,10 +224,78 @@ export class QueryLayer {
   ): Promise<ModuleInfo[]> {
     if (!name) return this.listModules(projectId);
     const scope = buildCodeScopeFilter(projectId, 'modules');
+    // SEC-360-05: escape LIKE wildcards (same treatment as findSymbols).
     return this.adapter.allAsync<ModuleInfo>(
-      `SELECT ${MODULE_COLUMNS} FROM modules WHERE ${scope.clause} AND name LIKE ? ORDER BY name`,
-      [...[...scope.params], `${name}%`],
+      `SELECT ${MODULE_COLUMNS} FROM modules WHERE ${scope.clause} AND name LIKE ? ESCAPE '\\' ORDER BY name`,
+      [...[...scope.params], `${sanitizeLikeQuery(name)}%`],
     );
+  }
+
+  /**
+   * SA4E-360 (C-360-R2 / TDD §4.2) — exact symbol locate for read_method.
+   * Equality-based (no LIKE wildcard vector) with enclosing-type scoping:
+   * `parent_symbol` match when populated (tree-sitter path) plus a
+   * same-file-membership fallback (class row shares file_id) so regex-indexed
+   * corpora with null parent_symbol still resolve. Returns endLine + the
+   * file's line_count so callers bounds-check BEFORE reading (EF-4).
+   */
+  async locateSymbol(
+    projectId: string | undefined,
+    cls: string,
+    method: string,
+    limit = 25,
+  ): Promise<LocateRow[]> {
+    const scope = buildCodeScopeFilter(projectId, 's');
+    const subScope = buildCodeScopeFilter(projectId, 'sub');
+    const bounded = Math.min(Math.max(1, Math.floor(limit)), 100);
+    const sql = `SELECT s.name, s.kind, s.signature,
+      f.relative_path AS filePath,
+      s.start_line AS startLine, s.end_line AS endLine,
+      f.line_count AS lineCount, s.parent_symbol AS parentSymbol
+      FROM symbols s
+      JOIN files f ON s.file_id = f.id
+      WHERE s.name = ?
+        AND s.kind IN ('method','function')
+        AND ${scope.clause}
+        AND ( s.parent_symbol = ?
+           OR s.file_id IN (SELECT id FROM symbols
+                            WHERE name = ?
+                              AND kind IN ('class','interface','struct','trait')
+                              AND ${subScope.clause}) )
+      ORDER BY f.relative_path, s.start_line
+      LIMIT ?`;
+    return this.adapter.allAsync<LocateRow>(sql, [
+      method, ...scope.params, cls, cls, ...subScope.params, bounded,
+    ]);
+  }
+
+  /**
+   * AF-4 enrichment (one call): top N distinct indexed method names of a
+   * matched class — served alongside an empty locate result.
+   */
+  async listClassMethods(
+    projectId: string | undefined,
+    cls: string,
+    limit = 10,
+  ): Promise<string[]> {
+    const scope = buildCodeScopeFilter(projectId, 's');
+    const subScope = buildCodeScopeFilter(projectId, 'sub');
+    const bounded = Math.min(Math.max(1, Math.floor(limit)), 50);
+    const sql = `SELECT DISTINCT s.name
+      FROM symbols s
+      WHERE s.kind IN ('method','function')
+        AND ${scope.clause}
+        AND ( s.parent_symbol = ?
+           OR s.file_id IN (SELECT id FROM symbols
+                            WHERE name = ?
+                              AND kind IN ('class','interface','struct','trait')
+                              AND ${subScope.clause}) )
+      ORDER BY s.name
+      LIMIT ?`;
+    const rows = await this.adapter.allAsync<{ name: string }>(sql, [
+      cls, ...scope.params, cls, cls, ...subScope.params, bounded,
+    ]);
+    return rows.map((r) => r.name);
   }
 
   /** Get index status and statistics, scoped to one tenant. */

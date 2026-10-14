@@ -67,16 +67,27 @@ export class IndexFreshnessChecker {
 
   /**
    * read_method hot path: 1 stat; mtime-unchanged ⇒ FRESH; changed ⇒ hash
-   * confirm → re-index once (cooldown-aware) → FRESH or DEGRADED.
+   * confirm. LIGHT check only — the CALLER (ReadMethodTool) drives the
+   * re-index + retry-once recovery via its locator (single recovery owner).
    */
   async checkFile(root: string, relativePath: string): Promise<FreshnessStatus> {
     const absolutePath = path.join(root, relativePath);
+    const stat = (this.deps.statFile ?? defaultStat)(absolutePath);
+    if (stat === undefined) return 'DEGRADED'; // indexed but gone from disk
+    const known = this.baseline.get(absolutePath);
+    if (known === undefined) {
+      this.baseline.set(absolutePath, stat.mtimeMs); // first sighting seeds — trust the index
+      return 'FRESH';
+    }
+    if (stat.mtimeMs === known) return 'FRESH'; // hot path: 1 stat, 0 hash
     const indexHash = this.deps.indexedHash?.(root, relativePath);
-    const first = this.statAndConfirm(absolutePath, indexHash);
-    if (first !== 'STALE') return first;
-    const files = new Map<string, FreshnessStatus>([[absolutePath, 'STALE']]);
-    const action = await this.recover(root, [{ relativePath, contentHash: indexHash }], files);
-    return action === 'reindex' ? (files.get(absolutePath) ?? 'FRESH') : 'DEGRADED';
+    if (indexHash === undefined) return 'STALE';
+    const currentHash = (this.deps.hashFile ?? defaultHash)(absolutePath);
+    if (currentHash === indexHash) {
+      this.baseline.set(absolutePath, stat.mtimeMs); // touch-only: refresh, no reindex
+      return 'FRESH';
+    }
+    return 'STALE';
   }
 
   /** Seeds the baseline from a stat sweep (session start trusts the index). */

@@ -28,6 +28,8 @@ import {
 import { ArtifactAnalyzerRegistry } from './artifact-analyzer/ArtifactAnalyzerRegistry.js';
 import { CODE_SEARCH_BY_TAG_DEFINITION, handleCodeSearchByTag } from './code-search-by-tag.js';
 import { CODE_ENRICHMENT_STATS_DEFINITION, handleCodeEnrichmentStats } from './code-enrichment-stats.js';
+import { CODE_LOCATE_TOOL_DEFINITION, handleCodeLocate } from './code-locate.js';
+import { CODE_EXTRACT_TOOL_DEFINITION, handleCodeExtract } from './code-extract.js';
 
 // Singleton registry for artifact analysis
 const artifactAnalyzerRegistry = new ArtifactAnalyzerRegistry();
@@ -85,6 +87,8 @@ export const CODE_INTEL_TOOL_DEFINITIONS = [
   ANALYZE_ARTIFACT_TOOL_DEFINITION,
   CODE_SEARCH_BY_TAG_DEFINITION,
   CODE_ENRICHMENT_STATS_DEFINITION,
+  CODE_LOCATE_TOOL_DEFINITION,
+  CODE_EXTRACT_TOOL_DEFINITION,
 ];
 
 /** Context bag injected into every code-intel tool handler. */
@@ -144,6 +148,8 @@ const TOOL_HANDLER_REGISTRY: Record<string, CodeIntelHandlerFn> = {
   analyze_artifact:    (a, _ctx) => handleAnalyzeArtifact(a, _ctx),
   code_search_by_tag:  (a, ctx) => p(handleCodeSearchByTag(ctx.adapter, a.tag as string, (a.limit as number) ?? 20, ctx.projectId)),
   code_enrichment_stats: (a, ctx) => p(handleCodeEnrichmentStats(ctx.adapter, ctx.projectId)),
+  code_symbol_locate:  (a, ctx) => p(handleCodeLocate(a, ctx.queryLayer, ctx.projectId)),
+  code_extract_signatures: (a, ctx) => p(handleCodeExtract(a, ctx.workspace)),
 };
 
 /**
