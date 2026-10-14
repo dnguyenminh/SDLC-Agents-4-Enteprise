@@ -1,14 +1,17 @@
 /**
  * SA4E-360 — redactSecretLike completeness property (STC PBT-09; SEC-360-01).
  * Fixture data: documents/SA4E-360/testdata/secret-redaction-testdata.csv
- * (SEC-A..SEC-F families + SEC-L non-secret control).
+ * (SEC-A..SEC-F families + SEC-L non-secret control) + the 11 F-2 expansion
+ * families (commit 0d33706 — SECURITY-ASSESSMENT §Detailed Findings F-2,
+ * scenario per evidence/f-fix-verification-2026-10-15.log §2).
  */
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { redactSecretLike, REDACTED_MARKER } from '../secret-redaction.js';
 
-/** Secret family samples (CSV SEC-A..SEC-F) the property splices into strings. */
+/** Secret family samples the property splices into strings. */
 const SECRET_SAMPLES: readonly string[] = [
+  // Baseline families (CSV SEC-A..SEC-F).
   'sk-live-abcdefgh1234567890',
   'AKIAIOSFODNN7EXAMPLE',
   'ghp_0123456789abcdefghijklmnopqrstuvwxyz',
@@ -17,6 +20,18 @@ const SECRET_SAMPLES: readonly string[] = [
   "password = 'Sup3rS3cret!'",
   'API_KEY = "abcdef1234567890"',
   'token: hunter2hunter2',
+  // F-2 (SA4E-360 remediation) — the new deny-list families.
+  'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+  'postgres://app_user:S3cretPassw0rd@db.example.com:5432/app',
+  'sk_live_51H8xQ2eZvKYlo2Cq7Tt',
+  'github_pat_11ABCDEFG0abcdefghij1234567890',
+  'glpat-AbCdEfGhIjKlMnOpQrSt12',
+  'npm_AbCdEfGhIjKlMnOpQrStUv',
+  'AIzaSyD-9tJqS2FvBJEuRPnlHbUMPvJYjKxGjSk',
+  'AccountKey="aZ9xK2mP5qR8sT3uV7wY1bN4cD6fH0jL=="',
+  "pwd = 'Sup3rS3cret!'",
+  'passphrase = "correct horse battery staple 123"',
+  'aws_secret_access_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"',
 ];
 
 /** Non-secret control fragments that must survive byte-identical (SEC-L). */

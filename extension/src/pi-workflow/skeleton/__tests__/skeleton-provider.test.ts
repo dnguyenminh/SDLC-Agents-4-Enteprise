@@ -1,7 +1,9 @@
 /**
- * SA4E-360 — SkeletonProvider tests (TDD task T6; STC UT-11..16).
+ * SA4E-360 — SkeletonProvider tests (TDD task T6; STC UT-11..16 + UT-35).
  * Batched corpus render, per-file bound = cap, fallback ladder (BR-360-03),
  * per-file skip (EF-3), empty index (EF-5), OI-2 freshness-keyed cache.
+ * UT-35 (DEFECT-QA-01) is the F-1 regression guard: the REGEX_SIGNATURES rung
+ * must sanitize candidates before outline rendering (SEC-360-01 vector 3/3).
  */
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import * as fs from 'node:fs';
@@ -65,6 +67,12 @@ beforeAll(() => {
   fs.mkdirSync(path.join(root, 'src'), { recursive: true });
   fs.writeFileSync(path.join(root, 'src', 'app.ts'), 'export class App {}\n');
   fs.writeFileSync(path.join(root, 'src', 'Widget.svelte'), '<script>\n  export function load(x) { return x; }\n</script>\n');
+  // UT-35 fixture — grammar-less file holding a credential literal; the REGEX
+  // rung must redact it BEFORE the outline render (F-1, commit 0d33706).
+  fs.writeFileSync(
+    path.join(root, 'src', 'Component.svelte'),
+    '<script lang="ts">\nconst API_KEY = \'sk-live-abcdefgh1234567890\';\nexport function load(input: string): string {\n  return input;\n}\n</script>\n'
+  );
   fs.writeFileSync(path.join(root, 'src', 'Template.hbs'), '<div>{{title}}</div>\n');
   fs.mkdirSync(path.join(root, 'empty-ws'), { recursive: true });
 });
@@ -145,6 +153,48 @@ describe('UT-13 — fallback ladder across four fixture files', () => {
     const skipped = events.filter((e) => e.event === 'PI_SKELETON_FILE_SKIPPED');
     expect(skipped.length).toBeGreaterThanOrEqual(1);
     expect(skeleton.skippedFiles).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// STC UT-35 (DEFECT-QA-01) — F-1 regression guard (SEC-360-01 vector 3/3).
+// skeleton-fallback.ts (commit 0d33706) maps REGEX candidates through
+// sanitizeCandidate BEFORE extractOutline. Pre-fix, the raw backend signature
+// line ("const API_KEY = 'sk-live-...'") flowed straight into the skeleton —
+// the assertions below FAIL on pre-fix code, so the test discriminates the bug.
+describe('UT-35 — F-1: fallback REGEX rung redacts secrets (SEC-360-01)', () => {
+  it('grammar-less file with a secret constant renders [REDACTED], never the secret', async () => {
+    const SECRET = 'sk-live-abcdefgh1234567890';
+    const locator = fakeLocator(
+      CORPUS_APP,
+      vi.fn(async (files: Array<{ path: string }>) =>
+        files
+          .filter((f) => f.path.includes('Component.svelte'))
+          .flatMap((f) => [
+            // Raw code_extract_signatures output — the regex extractor emits the
+            // full source line as the signature, NOT redacted (backend side).
+            sym('API_KEY', 'constant', f.path, 2, `const API_KEY = '${SECRET}';`),
+            // Non-secret control candidate — must survive rendering intact (F-1b).
+            sym('load', 'function', f.path, 3, 'export function load(input: string): string'),
+          ])
+      )
+    );
+    const { skeleton } = await makeProvider(locator).getSections(root, 19668, []);
+    // Sanitized render: marker in place of the assignment value, zero leak.
+    expect(skeleton.skeletonContent).toContain(`constant API_KEY const ${REDACTED_MARKER};`);
+    expect(skeleton.skeletonContent).not.toContain(SECRET);
+    expect(skeleton.skeletonContent).toContain('function load export function load(input: string): string');
+    // Pin the leak vector: the REGEX_SIGNATURES rung for this file (not grammar/
+    // RAW_HEAD). The shared events array accumulates across tests in this file,
+    // so assert presence rather than an exact count.
+    const regexRung = events.filter(
+      (e) =>
+        e.event === 'PI_SKELETON_FALLBACK' &&
+        (e.payload as { filePath?: string }).filePath === 'src/Component.svelte' &&
+        (e.payload as { fallbackMode?: string }).fallbackMode === 'REGEX_SIGNATURES'
+    );
+    expect(regexRung.length).toBeGreaterThan(0);
+    // Hygiene never blocks the session (BR-360-03).
+    expect(skeleton.gateDecision).not.toBe('REJECT');
   });
 });
 

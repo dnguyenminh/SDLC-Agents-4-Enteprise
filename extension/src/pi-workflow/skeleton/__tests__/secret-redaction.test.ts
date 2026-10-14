@@ -52,6 +52,47 @@ describe('redactSecretLike (SEC-360-01)', () => {
   });
 });
 
+// F-2 (SA4E-360 remediation, commit 0d33706; DEFECT-QA-01) — deny-list
+// expansion regression guard. Scenario per QA verification:
+// documents/SA4E-360/evidence/f-fix-verification-2026-10-15.log §2 — each of
+// the 11 new high-frequency families redacts; the 3 SEC-L non-secret controls
+// survive byte-identical (no over-redaction). Discriminates: pre-fix, every
+// family below leaked through redactSecretLike untouched.
+describe('F-2 deny-list expansion (SA4E-360; SEC-360-01)', () => {
+  /** [label, hostile line, substring that must NOT survive] — one per new family. */
+  const F2_FAMILIES: Array<[string, string, string]> = [
+    ['jwt', 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c', 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0'],
+    ['connstr', 'DATABASE_URL=postgres://app_user:S3cretPassw0rd@db.example.com:5432/app', 'postgres://app_user:S3cretPassw0rd@'],
+    ['stripe_live', 'stripe_key = sk_live_51H8xQ2eZvKYlo2Cq7Tt', 'sk_live_51H8xQ2eZvKYlo2Cq7Tt'],
+    ['github_pat', 'github_pat_11ABCDEFG0abcdefghij1234567890', 'github_pat_11ABCDEFG0abcdefghij1234567890'],
+    ['glpat', 'gitlab: glpat-AbCdEfGhIjKlMnOpQrSt12', 'glpat-AbCdEfGhIjKlMnOpQrSt12'],
+    ['npm_token', '_authToken=npm_AbCdEfGhIjKlMnOpQrStUv', 'npm_AbCdEfGhIjKlMnOpQrStUv'],
+    ['google_aiza', 'gmaps_key=AIzaSyD-9tJqS2FvBJEuRPnlHbUMPvJYjKxGjSk', 'AIzaSyD-9tJqS2FvBJEuRPnlHbUMPvJYjKxGjSk'],
+    ['azure_accountkey', 'AccountKey="aZ9xK2mP5qR8sT3uV7wY1bN4cD6fH0jL=="', 'aZ9xK2mP5qR8sT3uV7wY1bN4cD6fH0jL=='],
+    ['pwd', "pwd = 'Sup3rS3cret!'", 'Sup3rS3cret!'],
+    ['passphrase', 'passphrase = "correct horse battery staple 123"', 'correct horse battery staple 123'],
+    ['aws_secret', 'aws_secret_access_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"', 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'],
+  ];
+
+  it('redacts every new F-2 family occurrence', () => {
+    for (const [label, line, gone] of F2_FAMILIES) {
+      const out = redactSecretLike(line);
+      expect(out, `family ${label} must be redacted`).toContain(REDACTED_MARKER);
+      expect(out, `family ${label} secret must be gone`).not.toContain(gone);
+    }
+  });
+
+  it('keeps the 3 SEC-L non-secret controls byte-identical (no over-redaction)', () => {
+    for (const control of [
+      'export function calculateBudget(input: BudgetInput): ContextBudget',
+      'const total = parts.length + 1;',
+      'returns a mapped [REDACTED] marker document',
+    ]) {
+      expect(redactSecretLike(control), `control must survive: ${control}`).toBe(control);
+    }
+  });
+});
+
 // STC UT-34 — control-character / zero-width strip (SEC-360-07)
 describe('stripControlChars (SEC-360-07)', () => {
   it('strips U+200B, U+202E and C0 controls from signatures', () => {
