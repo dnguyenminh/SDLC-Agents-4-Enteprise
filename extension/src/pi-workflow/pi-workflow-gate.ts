@@ -99,5 +99,6 @@ export function createToolApprovalGateHandler(
   };
 }
 
-/** Tools that only read — safe to run without interrupting the turn (both modes). */
-const READ_ONLY_TOOLS = new Set(['read', 'grep', 'find', 'ls', 'get_workspace_info']);
+/** Tools that only read — safe to run without interrupting the turn (both modes).
+ *  SA4E-360: `read_method` is a symbol-level slice read (C-360-R1) — read-only. */
+const READ_ONLY_TOOLS = new Set(['read', 'grep', 'find', 'ls', 'get_workspace_info', 'read_method']);

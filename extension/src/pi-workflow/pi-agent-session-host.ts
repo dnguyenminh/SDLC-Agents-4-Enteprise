@@ -27,6 +27,8 @@ import { DEFAULT_AUTO_CHUNK_CONFIG, chunkPrompt, shouldAutoChunk, synthesizeChun
 import { usableTokensOf } from '../pi-agent/models/ContextBudget.js';
 import { buildWorkspaceSystemPrompt } from './pi-coding-tools.js';
 import { createWorkspaceInfoTool, toSessionToolDefinition, WORKSPACE_INFO_TOOL_NAME } from './workspace-info-tool.js';
+import { createSkeletonRuntime, buildSkeletonSections, type SkeletonRuntime } from './skeleton/skeleton-wiring.js';
+import { createReadMethodTool } from './skeleton/read-method-tool.js';
 import { getPiExtensionEntries, getPiExtensionAgentTools } from './pi-extension-runtime.js';
 import { mapAgentEvent, ToolEventTracker, type EventCollector } from './pi-event-mapper.js';
 import type { NormalizedToolCall } from './types/executor.types.js';
@@ -51,6 +53,12 @@ export interface SessionHostOptions {
   sessionManager?: unknown;
   settingsManager?: unknown;
   resourceLoader?: unknown;
+  /**
+   * SA4E-360 (§4.6): optional loopback MCP bridge for the skeleton supply +
+   * read_method. Absent ⇒ DEGRADED_NO_SKELETON + INDEX_UNAVAILABLE steering
+   * (fail-safe, never crash).
+   */
+  mcpBridge?: unknown;
 }
 
 export interface SessionTurnResult {
@@ -65,12 +73,14 @@ const hosts = new Map<string, Promise<SessionHost>>();
  * SA4E-336: OS-aware base tool loadout (TDD §3.6).
  * win32 → include `powershell`, exclude `bash`; non-win32 → the reverse.
  * A single shell tool per platform avoids model confusion / dual shell.
+ * SA4E-360 (C-360-R1): `read_method` joins the loadout as a core read-only
+ * symbol-slice tool (delta ⑥).
  * @param _workspaceRoot workspace root (reserved; loadout is platform-driven)
  * @returns ordered tool-name allowlist including the orientation tool
  */
 export function getSessionToolLoadout(_workspaceRoot: string): string[] {
   const shellTool = process.platform === 'win32' ? 'powershell' : 'bash';
-  return ['read', 'write', 'edit', shellTool, 'grep', 'find', 'ls', WORKSPACE_INFO_TOOL_NAME];
+  return ['read', 'write', 'edit', shellTool, 'grep', 'find', 'ls', WORKSPACE_INFO_TOOL_NAME, 'read_method'];
 }
 
 interface SessionHost {
@@ -296,6 +306,11 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
     agentDir,
     workspacePrompt
   );
+  // SA4E-360 (§6.4 ①②): skeleton runtime + sections BETWEEN budget resolution
+  // and gate #2 (BR-360-01 — measured BEFORE createAgentSession, provider never
+  // called oversized). Bridge-absent ⇒ DEGRADED sections (fail-safe, §4.6).
+  const skeletonRuntime = createSkeletonRuntime(opts.mcpBridge);
+  const sections = await buildSkeletonSections(skeletonRuntime, workspaceRoot, budget.staticBudget, []);
   // SA4E-355 Task 4 (UC-04): role-aware loadout — extension/MCP names are
   // filtered by role + phase under the schema-token cap. Core file tools are
   // NEVER dropped (BR-06); unknown role keeps the full pool (BR-07
@@ -322,13 +337,20 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
   // SA4E-355 Task 5 (UC-05): fail-safe gate BEFORE createAgentSession.
   // REJECT throws PI_CONTEXT_BUDGET_EXCEEDED (provider never called, BR-09);
   // WARN logs and proceeds (AF-1 UC-05). Escalation takes real effect below.
+  // SA4E-360 (§6.4 ③): skeleton + map sections enter as ADDITIONAL measured
+  // context-file entries — gate #2 remains the REJECT of record (P-5).
   const gate = runSessionBudgetGate(budget, {
-    loadFiles: () => loadSessionContextFiles(piCoding, workspaceRoot, agentDir),
+    loadFiles: () => [
+      ...loadSessionContextFiles(piCoding, workspaceRoot, agentDir),
+      ...skeletonRuntime.injector.gateEntries(sections),
+    ],
     workspacePrompt,
     toolSchemaTokens: loadout.schemaTokens,
     minToolSchemaTokens: tokensOfNames(baseTools),
     shouldCompress,
   });
+  // SA4E-360 (§6.4 ⑦): OI-5 enriched PI_GATE_DECISION (shipped event untouched).
+  skeletonRuntime.injector.telemetry(sections, gate);
   // Escalation takes real effect: forced compression, halved steering share,
   // minimal allowlist (BR-08). Unescalated path keeps Wave-2 composition.
   const finalCompress = gate.shouldCompress;
@@ -351,8 +373,18 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
         failOpenOverride(base, (b) => applyScopedSkills(b, opts.role), 'skillsOverride'),
       // SA4E-355 Task 3+5 (UC-03/UC-05): conditional compression of AGENTS.md
       // context files — forced when the gate escalated (BR-04/BR-08).
+      // SA4E-360 (§6.4 ④): composed AFTER the shipped compression — the
+      // injected virtual files carry the SAME measured strings (INV-2,
+      // measure == inject byte-identical; compression mirrors the ladder).
       agentsFilesOverride: (base) =>
-        failOpenOverride(base, (b) => applyCompressedAgentsFiles(b, finalCompress), 'agentsFilesOverride'),
+        failOpenOverride(
+          base,
+          (b) => {
+            const compressed = applyCompressedAgentsFiles(b, finalCompress);
+            return skeletonRuntime.injector.agentsFileOverride(sections, finalCompress)(compressed);
+          },
+          'agentsFilesOverride'
+        ),
       // SA4E-355 Task 2+3+5: scoped steering with the same conditional
       // compression over the gate-halved share when step 2 fired (BR-08).
       appendSystemPromptOverride: (base) =>
@@ -383,8 +415,11 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
     sessionManager: sessionManager as never,
     settingsManager: settingsManager as never,
     // Zero-arg orientation tool (same builder as the legacy path).
+    // SA4E-360 (§6.4 ⑤): read_method joins the session custom tools; the
+    // workspace-info tool gains the functional-map section (C-360-M1/M2).
     customTools: [
-      toSessionToolDefinition(createWorkspaceInfoTool(workspaceRoot)),
+      toSessionToolDefinition(createWorkspaceInfoTool(workspaceRoot, skeletonRuntime.mapProvider)),
+      toSessionToolDefinition(createReadMethodTool(workspaceRoot, skeletonRuntime.locator, skeletonRuntime.checker)),
     ] as never,
     tools: allowlist,
   });

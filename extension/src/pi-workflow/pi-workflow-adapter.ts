@@ -283,6 +283,7 @@ export class PiWorkflowAdapter {
         role, // UC-02/UC-04: executeTurn role drives skills + loadout scoping
         phase: state.currentPhase, // UC-02: steering map (unmapped → shared-* only)
         nCtxDetected: this.getDetectedContextWindow(), // UC-01 (absent → fail-open chain)
+        mcpBridge: this.mcpBridge, // SA4E-360 §6.4: skeleton supply + read_method (absent ⇒ degraded)
       });
       // One stable stream identity per turn (streaming-identity fix):
       // every token/complete/error of this turn shares turnStreamId so the

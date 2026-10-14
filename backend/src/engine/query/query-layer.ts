@@ -246,7 +246,9 @@ export class QueryLayer {
     limit = 25,
   ): Promise<LocateRow[]> {
     const scope = buildCodeScopeFilter(projectId, 's');
-    const subScope = buildCodeScopeFilter(projectId, 'sub');
+    // Subquery references the UNALIASED symbols table — the scope alias must
+    // be the table name itself (the outer query is aliased 's').
+    const subScope = buildCodeScopeFilter(projectId, 'symbols');
     const bounded = Math.min(Math.max(1, Math.floor(limit)), 100);
     const sql = `SELECT s.name, s.kind, s.signature,
       f.relative_path AS filePath,
@@ -279,7 +281,8 @@ export class QueryLayer {
     limit = 10,
   ): Promise<string[]> {
     const scope = buildCodeScopeFilter(projectId, 's');
-    const subScope = buildCodeScopeFilter(projectId, 'sub');
+    // Same unaliased-table scope as locateSymbol (§4.2).
+    const subScope = buildCodeScopeFilter(projectId, 'symbols');
     const bounded = Math.min(Math.max(1, Math.floor(limit)), 50);
     const sql = `SELECT DISTINCT s.name
       FROM symbols s
@@ -293,7 +296,7 @@ export class QueryLayer {
       ORDER BY s.name
       LIMIT ?`;
     const rows = await this.adapter.allAsync<{ name: string }>(sql, [
-      cls, ...scope.params, cls, cls, ...subScope.params, bounded,
+      cls, ...scope.params, cls, ...subScope.params, bounded,
     ]);
     return rows.map((r) => r.name);
   }
