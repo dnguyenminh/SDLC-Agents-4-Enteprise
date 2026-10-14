@@ -296,7 +296,11 @@ export class QueryLayer {
       ORDER BY s.name
       LIMIT ?`;
     const rows = await this.adapter.allAsync<{ name: string }>(sql, [
-      cls, ...scope.params, cls, ...subScope.params, bounded,
+      // F-3 (SA4E-360): placeholder order is [s.project_id, parent_symbol,
+      // subquery-name, symbols.project_id, LIMIT] — scope params FIRST, then
+      // both cls bindings. Binding cls before scope.params misaligned
+      // s.project_id → AF-4 enrichment silently empty when projectId defined.
+      ...scope.params, cls, cls, ...subScope.params, bounded,
     ]);
     return rows.map((r) => r.name);
   }

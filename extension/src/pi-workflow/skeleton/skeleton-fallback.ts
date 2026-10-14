@@ -8,7 +8,7 @@ import * as path from 'node:path';
 import { logger } from '../../logger.js';
 import type { SymbolOutlineExtractor } from '../../pi-agent/context-retrieval/symbol-outline-extractor.js';
 import type { SearchCandidate } from '../../pi-agent/context-retrieval/types.js';
-import { sanitizeRawHead } from './skeleton-renderer.js';
+import { sanitizeCandidate, sanitizeRawHead } from './skeleton-renderer.js';
 import type { FallbackFile, FallbackMode, SkeletonPart } from './skeleton-types.js';
 
 export interface FallbackEntry {
@@ -92,7 +92,16 @@ async function ladderForOne(
   const absolute = path.join(root, entry.relativePath.replaceAll('/', path.sep));
   try {
     if (candidates.length > 0) {
-      const outline = deps.extractor.extractOutline(entry.relativePath, candidates, remainingBudget());
+      // F-1 (SA4E-360 remediation; SEC-360-01 MANDATORY): candidates from the
+      // backend code_extract_signatures tool are NOT redacted — map them through
+      // sanitizeCandidate BEFORE extractOutline (same hygiene as the grammar
+      // path, skeleton-renderer.ts). The RAW_HEAD rung below is already covered
+      // by sanitizeRawHead, and SKIPPED renders nothing.
+      const outline = deps.extractor.extractOutline(
+        entry.relativePath,
+        candidates.map(sanitizeCandidate),
+        remainingBudget()
+      );
       const tokens = deps.measure(outline);
       deps.emit?.('PI_SKELETON_FALLBACK', { filePath: entry.relativePath, language: entry.language, fallbackMode: 'REGEX_SIGNATURES' satisfies FallbackMode });
       consume(tokens);

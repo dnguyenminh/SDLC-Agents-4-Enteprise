@@ -10,6 +10,7 @@ import * as os from 'node:os';
 import { SkeletonProvider, skeletonCap, SKELETON_MAX_FILES } from '../skeleton-provider.js';
 import { SymbolOutlineExtractor, FsContentReader } from '../../../pi-agent/context-retrieval/symbol-outline-extractor.js';
 import { TokenCounter } from '../../../pi-agent/context-retrieval/token-counter.js';
+import { REDACTED_MARKER } from '../secret-redaction.js';
 import type { SymbolLocator } from '../symbol-locator.js';
 import type { IndexFreshnessChecker } from '../index-freshness-checker.js';
 import type { SearchCandidate } from '../../../pi-agent/context-retrieval/types.js';

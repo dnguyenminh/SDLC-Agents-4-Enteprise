@@ -25,6 +25,17 @@ const SECRET_PATTERNS: readonly RegExp[] = [
   /\bxox[bap]-[A-Za-z0-9-]{10,}/g,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
   /(?i:(password|passwd|secret|token|api[_-]?key))\s*[:=]\s*(?:"[^"]{8,}"|'[^']{8,}'|[^"'\s]*\d[^"'\s]{7,})/g,
+  // F-2 (SA4E-360 remediation): high-frequency families missed by the baseline
+  // list — bypass hunt, SECURITY-ASSESSMENT §Detailed Findings F-2. The
+  // assignment pattern keeps the digit guard for unquoted values (SEC-L).
+  /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{5,}/g, // JWT (3 segments)
+  /[a-z][a-z0-9+.-]*:\/\/[^:\/\s]+:[^@\s\/]{6,}@/g, // URL userinfo credentials (postgres/mysql/mongodb://user:pass@)
+  /(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}/g, // Stripe live/test keys
+  /github_pat_[A-Za-z0-9_]{20,}/g, // GitHub fine-grained PAT
+  /glpat-[A-Za-z0-9_-]{15,}/g, // GitLab PAT
+  /npm_[A-Za-z0-9]{20,}/g, // npm token
+  /AIza[0-9A-Za-z_-]{35}/g, // Google API key
+  /(?:pwd|passphrase|accountkey|aws[_-]?secret[_-]?access[_-]?key)\s*[:=]\s*(?:"[^"]{8,}"|'[^']{8,}'|[^"'\s]*\d[^"'\s]{7,})/gi,
 ];
 
 /** Control / zero-width characters stripped (SEC-360-07: U+200B, U+202E, \x00-\x08…). */
