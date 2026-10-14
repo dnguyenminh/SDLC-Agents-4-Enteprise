@@ -1,7 +1,7 @@
-{
+﻿{
   "ticket": "SA4E-360",
   "title": "Multi-Resolution Context Supply for Pi Harness — P1: Code Skeletonization + Agentic Context Loading",
-  "currentPhase": "uat",
+  "currentPhase": "testing_pentest",
   "phases": {
     "requirements": {
       "status": "done",
@@ -106,19 +106,21 @@
       "userGuide": "skipped - internal harness feature, no user-facing surface (SA4E-355 precedent)"
     },
     "testing": {
-      "status": "conditional_pass",
-      "completedAt": "2026-10-14T05:00:00Z",
-      "verdict": "CONDITIONAL PASS",
-      "fullSuite": "ext 298/2896 + backend 330/3461 + E2E real-server 8/180 — 0 fail",
-      "stcExecution": "65 PASS / 13 NOT_RUN / 0 FAIL (100% executed pass rate)",
-      "security": "SEC-360-01..07 verified 6.5/7.5 (rate limit /mcp = backlog)",
-      "smGate6b": "PASS - real QueryLayer IT + boundary mocks only + real-server E2E",
-      "newFinding": "E2E-API-04 (Postgres parity) not in E2E suite - NOT_RUN + follow-up",
-      "rtm": "48/48 (M3 manual-only pending SIT)",
-      "attachments": "TEST-REPORT docx (11669) + CSV (11670)",
-      "jira": "In Review (11669-11670, comment 12205)"
+      "completedAt": "2026-10-15",
+      "verdict": "CONDITIONAL_PASS",
+      "status": "done",
+      "startedAt": "2026-10-14T22:15:00+07:00",
+      "note": "65 PASS/0 FAIL/13 PENDING (2 rounds); F-fixes verified live; DEFECT-QA-01 dedicated tests bo sung truoc CLOSE"
     },
     "deployment": {
+      "status": "not_started"
+    },
+    "pentest": {
+      "note": "Post F-1 fix redaction probe + containment twin + budget integrity",
+      "startedAt": "2026-10-14T22:15:00+07:00",
+      "status": "in_progress"
+    },
+    "uat": {
       "status": "not_started"
     }
   },

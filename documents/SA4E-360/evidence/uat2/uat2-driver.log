@@ -1,0 +1,12 @@
+[2026-10-14T22:33:52.703Z] Frame verified: title="Chat Panel" header="SDLC Pipeline" status=connected
+[2026-10-14T22:33:52.705Z] ========== SIT-01: new tab + review source code ==========
+[2026-10-14T22:33:52.720Z] [sit01] frame OK title="Chat Panel" status=connected
+[2026-10-14T22:36:54.762Z] [sit01] new tab: users 1->1, assts 0->0
+[2026-10-14T22:36:54.848Z] [sit01] WARN: new tab not empty (user=1, asst=0)
+[2026-10-14T22:36:54.936Z] [sit01] send: "Hãy review source code"
+[2026-10-14T22:41:19.856Z] [sit01] done ok=false 181s respLen=0 err=1 exceed=0 pi=8
+[2026-10-14T22:41:19.858Z] ========== SIT-02: get_workspace_info + cache ==========
+[2026-10-14T22:41:19.868Z] [sit02-t1] frame OK title="Chat Panel" status=connected
+[2026-10-14T22:44:21.892Z] [sit02-t1] new tab: users 1->1, assts 0->0
+[2026-10-14T22:44:21.975Z] [sit02-t1] WARN: new tab not empty (user=1, asst=0)
+[2026-10-14T22:44:22.061Z] [sit02-t1] send: "Gọi tool get_workspace_info và cho tôi biết nó trả về gì"

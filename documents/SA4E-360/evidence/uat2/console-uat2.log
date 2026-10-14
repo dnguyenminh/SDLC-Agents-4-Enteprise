@@ -1,0 +1,72 @@
+[2026-10-14T22:34:31.753Z] [log] [uat2] [chat.js] tab:contextUpdate received: {"tabId":"default","tokenCount":2146,"maxTokens":65536,"breakdown":{"conversation":0,"mcpTools":0,"steering":3}}
+[2026-10-14T22:36:08.605Z] [error] [uat2] %c  ERR color: #f33 [Extension Host] [MessageRouter] Handler error for "SEND_PROMPT": Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T22:36:08.606Z] [error] [uat2] %c[Extension Host] %c[MessageRouter] Handler error for "SEND_PROMPT": color: blue color:  Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T22:38:13.029Z] [warn] [uat2] %c[Extension Host] %cFailed to refresh token due to network/server issue. Keeping current session. color: blue color:  TypeError: fetch failed
+[2026-10-14T22:38:14.373Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T22:38:14.371Z"} color: blue color: 
+[2026-10-14T22:38:14.374Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T22:38:14.372Z"} color: blue color: 
+[2026-10-14T22:38:14.376Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":90,"totalTokens":57117,"timestamp":"2026-10-14T22:38:14.373Z"} color: blue color: 
+[2026-10-14T22:38:16.830Z] [driver] [uat2] MARKER sit01 SENT 2026-10-14T22:38:16.830Z
+[2026-10-14T22:38:53.830Z] [log] [uat2] [chat.js] tab:contextUpdate received: {"tabId":"default","tokenCount":2146,"maxTokens":65536,"breakdown":{"conversation":0,"mcpTools":0,"steering":3}}
+[2026-10-14T22:38:53.832Z] [log] [uat2] [chat.js] tab:contextUpdate received: {"tabId":"default","tokenCount":2146,"maxTokens":65536,"breakdown":{"conversation":0,"mcpTools":0,"steering":3}}
+[2026-10-14T22:39:01.495Z] [error] [uat2] %c  ERR color: #f33 [Extension Host] [MessageRouter] Handler error for "SEND_PROMPT": Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T22:39:01.495Z] [error] [uat2] %c[Extension Host] %c[MessageRouter] Handler error for "SEND_PROMPT": color: blue color:  Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T22:39:10.720Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T22:39:10.718Z"} color: blue color: 
+[2026-10-14T22:39:10.721Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":90,"totalTokens":56542,"timestamp":"2026-10-14T22:39:10.719Z"} color: blue color: 
+[2026-10-14T22:41:04.529Z] [log] [uat2] [chat.js] tab:contextUpdate received: {"tabId":"default","tokenCount":2146,"maxTokens":65536,"breakdown":{"conversation":0,"mcpTools":0,"steering":3}}
+[2026-10-14T22:41:04.551Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T22:41:04.548Z"} color: blue color: 
+[2026-10-14T22:41:04.553Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T22:41:04.549Z"} color: blue color: 
+[2026-10-14T22:41:04.554Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":88,"totalTokens":55571,"timestamp":"2026-10-14T22:41:04.551Z"} color: blue color: 
+[2026-10-14T22:41:55.235Z] [error] [uat2] %c  ERR color: #f33 [Extension Host] [MessageRouter] Handler error for "SEND_PROMPT": Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T22:41:55.235Z] [error] [uat2] %c[Extension Host] %c[MessageRouter] Handler error for "SEND_PROMPT": color: blue color:  Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T22:41:58.792Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T22:41:58.791Z"} color: blue color: 
+[2026-10-14T22:41:58.794Z] [log] [uat2] %c[Extension Host] %c{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":83,"totalTokens":55650,"timestamp":"2026-10-14T22:41:58.791Z"} color: blue color: 
+[2026-10-14T22:43:13.032Z] [warn] [uat2] %c[Extension Host] %cFailed to refresh token due to network/server issue. Keeping current session. color: blue color:  TypeError: fetch failed
+[2026-10-14T22:44:01.080Z] [log] [uat2] [chat.js] tab:contextUpdate received: {"tabId":"default","tokenCount":2146,"maxTokens":65536,"breakdown":{"conversation":0,"mcpTools":0,"steering":3}}

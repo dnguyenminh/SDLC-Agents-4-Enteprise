@@ -1,0 +1,159 @@
+{
+  "startedAt": "2026-10-14T22:14:52.128Z",
+  "sits": {
+    "SIT-01": {
+      "id": "SIT-01",
+      "prompt": "Hãy review source code",
+      "freshTab": {
+        "clicked": false,
+        "looksFresh": false
+      },
+      "turn": {
+        "ok": false,
+        "reason": "no-change-150s",
+        "t0": "2026-10-14T22:15:02.821Z",
+        "t1": "2026-10-14T22:17:37.774Z",
+        "ms": 152379,
+        "lastChangeMs": null,
+        "startLen": 561,
+        "endLen": 599,
+        "tail": " AM Hãy review source code Press Enter to send, Shift+Enter for new line. Start with / for commands. Approval Panel No pending approvals Status: [object Object]",
+        "errs": [],
+        "responded": true,
+        "convTail": "Pi Chat\nWorklist\nNo items\nNavigation\nAgentic Chat\nSelect Agent\nNo agents available\n0/128K\nAssistant\npi\n04:53 AM\nYou\n04:59 AM\n\nHãy review source code\n\nYou\n05:00 AM\n\nGọi tool get_workspace_info và cho tôi biết nó trả về gì\n\nYou\n05:01 AM\n\nGọi tool get_workspace_info và cho tôi biết nó trả về gì\n\nAssistant\npi\n05:06 AM\nAssistant\npi\n05:08 AM\nAssistant\npi\n05:09 AM\nAssistant\npi\n05:10 AM\nAssistant\npi\n05:10 AM\nAssistant\npi\n05:10 AM\nYou\n05:15 AM\n\nHãy review source code\n\nPress Enter to send, Shift+Enter for new line. Start with / for commands.\nApproval Panel\n\nNo pending approvals\n\nStatus: [object Object]"
+      },
+      "pi_skeleton_built": null,
+      "pi_budget": {
+        "t": "2026-10-14T22:15:03.612Z",
+        "nCtx": "65536,",
+        "staticBudget": "40805,",
+        "historyBudget": "17488,",
+        "raw": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T22:15:03.609Z\"} color: blue color: "
+      },
+      "pi_gate": null,
+      "piEventCount": 11,
+      "consoleErrors": [],
+      "errorBanners": [],
+      "checks": {
+        "responded": true,
+        "skeletonBuilt": false,
+        "budgetResolved": true,
+        "noErrorBanner": true,
+        "noExceedInConsole": true
+      },
+      "status": "FAIL"
+    },
+    "SIT-02": {
+      "id": "SIT-02",
+      "prompt": "Gọi tool get_workspace_info và cho tôi biết nó trả về gì",
+      "turn1": {
+        "ok": false,
+        "ms": 152334,
+        "lastChangeMs": null,
+        "responded": true,
+        "reason": "no-change-150s"
+      },
+      "contentChecks1": {
+        "layout": false,
+        "functionalMap": false,
+        "modules": false
+      },
+      "turn2": {
+        "ok": false,
+        "ms": 152299,
+        "lastChangeMs": null,
+        "responded": true,
+        "reason": "no-change-150s"
+      },
+      "gapMs": 33154,
+      "cacheEvents": [],
+      "checks": {
+        "turn1Responded": true,
+        "contentHasLayoutOrMap": false,
+        "turn2Within60s": true,
+        "turn2Faster": true,
+        "cacheEventSeen": false
+      },
+      "status": "FAIL"
+    },
+    "SIT-04": {
+      "id": "SIT-04",
+      "turns": [
+        {
+          "n": 1,
+          "prompt": "Đọc method ModuleFactory.ts hàm createModule rồi giải thích ngắn gọn",
+          "ok": false,
+          "reason": "no-change-150s",
+          "responded": false,
+          "ms": 152386,
+          "lastChangeMs": null,
+          "exceedDom": 0,
+          "exceedConsoleTotal": 0
+        },
+        {
+          "n": 2,
+          "prompt": "Gọi get_workspace_info",
+          "ok": true,
+          "reason": "stable",
+          "responded": false,
+          "ms": 96224,
+          "lastChangeMs": 76186,
+          "exceedDom": 0,
+          "exceedConsoleTotal": 0
+        },
+        {
+          "n": 3,
+          "prompt": "Review backend/src/modules/memory/MemoryModule.ts phần overview",
+          "ok": true,
+          "reason": "stable",
+          "responded": false,
+          "ms": 36079,
+          "lastChangeMs": 16041,
+          "exceedDom": 0,
+          "exceedConsoleTotal": 0
+        },
+        {
+          "n": 4,
+          "prompt": "Đọc method ModuleRegistry.ts hàm register rồi giải thích ngắn gọn",
+          "ok": false,
+          "reason": "no-change-150s",
+          "responded": true,
+          "ms": 152316,
+          "lastChangeMs": null,
+          "exceedDom": 0,
+          "exceedConsoleTotal": 0
+        },
+        {
+          "n": 5,
+          "prompt": "Đọc method ModuleFactory.ts hàm createModule rồi giải thích ngắn gọn",
+          "ok": false,
+          "reason": "no-change-150s",
+          "responded": true,
+          "ms": 152287,
+          "lastChangeMs": null,
+          "exceedDom": 0,
+          "exceedConsoleTotal": 0
+        },
+        {
+          "n": 6,
+          "prompt": "Gọi get_workspace_info",
+          "ok": false,
+          "reason": "no-change-150s",
+          "responded": true,
+          "ms": 152372,
+          "lastChangeMs": null,
+          "exceedDom": 0,
+          "exceedConsoleTotal": 0
+        }
+      ],
+      "status": "BLOCKED",
+      "error": "Error: Attempted to use detached Frame 'DC3C49821069F56AF6FC2C644D688EE3'.\n    at CdpFrame.<anonymous> (file:///C:/projects/kiro/SDLC-Agents-4-Enterprise/extension/node_modules/puppeteer-core/lib/puppeteer/util/decorators.js:99:23)\n    at convText (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/lib.mjs:176:16)\n    at runTurn (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/run2.mjs:165:26"
+    }
+  },
+  "notes": [
+    "SIT-01: fresh tab not confirmed — session may carry history (skeleton event may be absent)"
+  ],
+  "targetWindow": "w2",
+  "targetWindowIdx": 2,
+  "baselinePiCount": 0
+}

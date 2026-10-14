@@ -1,0 +1,9 @@
+
+ RUN  v4.1.9 C:/projects/kiro/SDLC-Agents-4-Enterprise/backend
+
+
+ Test Files  17 passed (17)
+      Tests  161 passed (161)
+   Start at  23:10:38
+   Duration  11.50s (transform 1.42s, setup 142ms, import 2.82s, tests 4.65s, environment 1ms)
+

@@ -1,0 +1,60 @@
+{
+  "results": {
+    "sit01": {
+      "label": "sit01",
+      "sent": "Hãy review source code",
+      "ok": false,
+      "durationMs": 180784,
+      "approvals": 0,
+      "responseLen": 0,
+      "responseTail": "",
+      "domErrors": [
+        "Backend KB unreachable after 3 attempts: fetch failed"
+      ],
+      "piMarkers": [
+        {
+          "t": "2026-10-14T22:38:14.373Z",
+          "marker": "Context budget resolved",
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T22:38:14.371Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T22:38:14.374Z",
+          "marker": "Context budget resolved",
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T22:38:14.372Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T22:38:14.376Z",
+          "marker": "PI_LEGACY_HISTORY_COMPACTED",
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"PI_LEGACY_HISTORY_COMPACTED\",\"modelId\":\"qwen-text\",\"nCtx\":65536,\"usable\":58293,\"historyMessages\":90,\"totalTokens\":57117,\"timestamp\":\"2026-10-14T22:38:14.373Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T22:39:10.720Z",
+          "marker": "Context budget resolved",
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T22:39:10.718Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T22:39:10.721Z",
+          "marker": "PI_LEGACY_HISTORY_COMPACTED",
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"PI_LEGACY_HISTORY_COMPACTED\",\"modelId\":\"qwen-text\",\"nCtx\":65536,\"usable\":58293,\"historyMessages\":90,\"totalTokens\":56542,\"timestamp\":\"2026-10-14T22:39:10.719Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T22:41:04.551Z",
+          "marker": "Context budget resolved",
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T22:41:04.548Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T22:41:04.553Z",
+          "marker": "Context budget resolved",
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T22:41:04.549Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T22:41:04.554Z",
+          "marker": "PI_LEGACY_HISTORY_COMPACTED",
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"PI_LEGACY_HISTORY_COMPACTED\",\"modelId\":\"qwen-text\",\"nCtx\":65536,\"usable\":58293,\"historyMessages\":88,\"totalTokens\":55571,\"timestamp\":\"2026-10-14T22:41:04.551Z\"} color: blue color: "
+        }
+      ],
+      "exceedEvents": [],
+      "frameTitle": "Chat Panel"
+    }
+  }
+}

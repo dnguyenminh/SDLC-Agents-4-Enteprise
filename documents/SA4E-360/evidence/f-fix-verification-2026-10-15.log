@@ -1,0 +1,37 @@
+== F-1/F-2/F-3 post-fix verification (QA ad-hoc, real execution, HEAD 0d33706) — 2026-10-15 ==
+--- [1] F-1: sanitizeCandidate on REGEX-fallback pipeline (composition-level, real SymbolOutlineExtractor) ---
+PASS F-1a FIXED outline contains [REDACTED], not the secret
+PASS F-1b FIXED outline keeps the non-secret control candidate
+PASS F-1c PRE-FIX replay LEAKS the secret (proves the vector was real and this scenario discriminates)
+
+FIXED outline  : "// Component.svelte\nconstant API_KEY const [REDACTED];\nfunction load export function load(input: string): string"
+PRE-FIX outline: "// Component.svelte\nconstant API_KEY const API_KEY = 'sk-live-abcdefgh1234567890';\nfunction load export function load(input: string): string"
+
+RESULT: 3/3 F-1 checks PASS (composition-level, real extractor)
+--- [2] F-2: deny-list expansion — 11 new families + 3 SEC-L controls (real redactSecretLike) ---
+PASS-REDACTED    jwt               -> "Authorization: Bearer [REDACTED]"
+PASS-REDACTED    connstr           -> "DATABASE_URL=[REDACTED]db.example.com:5432/app"
+PASS-REDACTED    stripe_live       -> "stripe_key = [REDACTED]"
+PASS-REDACTED    github_pat        -> "[REDACTED]"
+PASS-REDACTED    glpat             -> "gitlab: [REDACTED]"
+PASS-REDACTED    npm_token         -> "_authToken=[REDACTED]"
+PASS-REDACTED    google_aiza       -> "gmaps_key=[REDACTED]"
+PASS-REDACTED    azure_accountkey  -> "[REDACTED]"
+PASS-REDACTED    pwd               -> "[REDACTED]"
+PASS-REDACTED    passphrase        -> "[REDACTED]"
+PASS-REDACTED    aws_secret        -> "[REDACTED]"
+PASS-KEPT        CONTROL_fn        -> "export function calculateBudget(input: BudgetInput): ContextB..."
+PASS-KEPT        CONTROL_type      -> "const total = parts.length + 1;"
+PASS-KEPT        CONTROL_comment   -> "returns a mapped [REDACTED] marker document"
+
+RESULT: 14 PASS / 0 FAIL / 14 total (11 F-2 families + 3 SEC-L controls)
+--- [3] F-3: listClassMethods bind order on REAL SQLite + real QueryLayer (projectId defined) ---
+listClassMethods(p1, Parser, 10) -> ["parse","reset","tokenize","unrelated"]
+PRE-FIX param order replay        -> []
+PASS F-3a positive: 4 same-file method names returned alphabetically (pre-fix behavior: silently empty)
+PASS F-3b tenant-scoped: p1 only (p2 decoy "parse" never duplicated)
+PASS F-3c same-file membership by design: OtherClass method in SAME file included
+PASS F-3d bounded <= 10
+PASS F-3e DISCRIMINATES THE BUG: pre-fix param order replay returns [] on this seed
+
+RESULT: 5/5 F-3 checks PASS (real SQLite, real QueryLayer, projectId defined)
