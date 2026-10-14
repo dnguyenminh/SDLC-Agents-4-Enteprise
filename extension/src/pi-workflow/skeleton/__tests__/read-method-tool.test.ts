@@ -168,6 +168,48 @@ describe('UT-21 — corrupt bounds route to freshness recovery', () => {
   });
 });
 
+// TA Finding B regression (SA4E-360 review) — TDD §10-7 / FSD AF-2: the stale
+// retry must RE-INDEX changed rows BEFORE the re-locate; a bare re-locate
+// against an unchanged index is a no-op self-heal (re-queries unchanged rows).
+describe('TA Finding B: stale recovery reindexes before the retry (AF-2)', () => {
+  it('checkFile STALE → reindex exactly ONCE → ONE re-locate resolves the healthy row', async () => {
+    const freshness = stubFreshness({ checkFile: vi.fn(async () => 'STALE') });
+    let call = 0;
+    const locator = stubLocator([], undefined, {
+      locate: vi.fn(async () => ({ rows: [call++ === 0 ? row({ startLine: 20, endLine: 10 }) : row()] })),
+      reindex: vi.fn(async () => true),
+    });
+    const { envelope } = await execute(makeTool(locator, freshness) as AgentToolLike, { class: 'C', method: 'm' });
+    expect(freshness.checkFile).toHaveBeenCalledWith(root, FIXTURE_REL);
+    expect(locator.reindex).toHaveBeenCalledTimes(1); // re-index BEFORE the retry locate
+    expect(locator.locate).toHaveBeenCalledTimes(2); // original + ONE retry (AF-2)
+    expect(envelope.status).toBe('ok');
+  });
+
+  it('reindex failure is fail-safe: the single re-locate still runs → not_found steering, no throw', async () => {
+    const freshness = stubFreshness({ checkFile: vi.fn(async () => 'STALE') });
+    const locator = stubLocator([], undefined, {
+      locate: vi.fn(async () => ({ rows: [row({ endLine: 500, lineCount: 60 })] })), // stays corrupt
+      reindex: vi.fn(async () => { throw new Error('code_index_status failed'); }),
+    });
+    const { envelope } = await execute(makeTool(locator, freshness) as AgentToolLike, { class: 'C', method: 'm' });
+    expect(locator.reindex).toHaveBeenCalledTimes(1);
+    expect(locator.locate).toHaveBeenCalledTimes(2); // retry still attempted (fail-safe)
+    expect(envelope.status).toBe('not_found');
+    expect(envelope.suggestions).toContain('get_workspace_info'); // steering preserved
+  });
+
+  it('checkFile FRESH → NO reindex (only the stale branch triggers the delegate)', async () => {
+    const freshness = stubFreshness(); // checkFile → 'FRESH'
+    const locator = stubLocator([], undefined, {
+      locate: vi.fn(async () => ({ rows: [row({ endLine: 500, lineCount: 60 })] })),
+      reindex: vi.fn(async () => true),
+    });
+    await execute(makeTool(locator, freshness) as AgentToolLike, { class: 'C', method: 'm' });
+    expect(locator.reindex).not.toHaveBeenCalled();
+  });
+});
+
 // STC UT-22 — FILE_UNREADABLE: actionable error inside the result (EF-2)
 describe('UT-22 — FILE_UNREADABLE envelope', () => {
   it('unreadable file → error envelope with actionable text, no throw', async () => {

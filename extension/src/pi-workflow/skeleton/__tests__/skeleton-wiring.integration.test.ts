@@ -89,6 +89,7 @@ import { clearSessionHostCache, ensureSessionHost } from '../../pi-agent-session
 import { SkeletonProvider } from '../skeleton-provider.js';
 import { clearLayoutCache, createWorkspaceInfoTool } from '../../workspace-info-tool.js';
 import { FunctionalMapProvider } from '../functional-map-provider.js';
+import { createSkeletonRuntime } from '../skeleton-wiring.js';
 
 interface LogRecord {
   level: string;
@@ -295,6 +296,40 @@ describe('IT-10: one SummaryTreeBuilder build per 60s TTL window', () => {
     const second = await tool.execute('c2', {});
     expect((first as { content: Array<{ text: string }> }).content[0].text).toBe((second as { content: Array<{ text: string }> }).content[0].text);
     host.dispose();
+  });
+});
+
+// TA Finding A regression (SA4E-360 review) — C-360-M1: keySymbolsFor must
+// share ONE memoized corpus fetch per runtime. The pre-fix code constructed a
+// fresh cachedCorpus closure PER CALL: keySymbols were ALWAYS [] in production
+// (fresh fire-and-forget resolves after the call returns) and every map build
+// fired ~N×53 background MCP corpus fetches (loopback load + NFR risk).
+describe('TA Finding A: hoisted corpus memo (C-360-M1)', () => {
+  it('keySymbolsFor over 2 modules fires exactly ONE batched corpus pass, then serves real symbols', async () => {
+    let codeSymbolsCalls = 0;
+    const bridge = {
+      callTool: async (tool: string) => {
+        if (tool === 'code_symbols') {
+          codeSymbolsCalls++;
+          return { content: [{ type: 'text', text: 'Found 2 symbols matching "":\n\n[class] Alpha — src/alpha.ts:1\n  class Alpha\n[method] run — src/alpha.ts:2\n  run(): void' }] };
+        }
+        return { content: [{ type: 'text', text: 'Found 0 files' }] };
+      },
+    };
+    const runtime = createSkeletonRuntime(bridge);
+    const keySymbolsFor = (runtime.mapProvider as unknown as { deps: { keySymbolsFor: (m: string) => string[] } }).deps.keySymbolsFor;
+    expect(keySymbolsFor).toBeDefined();
+    // Same-tick calls for 2 modules — the real buildEntries call pattern.
+    const first = keySymbolsFor('src'); // fires the ONE corpus pass (fire-and-forget)
+    const second = keySymbolsFor('lib'); // same tick — must NOT fire another pass
+    expect(first).toEqual([]);
+    expect(second).toEqual([]);
+    // After settle: the memo serves REAL corpus symbols (pre-fix: always []).
+    await vi.waitFor(() => expect(keySymbolsFor('src')).toEqual(['Alpha', 'run']));
+    expect(codeSymbolsCalls).toBe(53); // exactly ONE 53-bucket pass (pre-fix: 106)
+    expect(keySymbolsFor('lib')).toEqual([]); // module-path filter unchanged
+    expect(keySymbolsFor('src')).toEqual(['Alpha', 'run']); // stable memoized read
+    expect(codeSymbolsCalls).toBe(53); // still ONE pass after the memoized reads
   });
 });
 

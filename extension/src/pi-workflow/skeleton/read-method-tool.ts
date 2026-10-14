@@ -128,7 +128,18 @@ async function staleRetry(
   method: string,
   staleRow: LocateRow
 ): Promise<ReadMethodEnvelope> {
-  await freshness.checkFile(workspaceRoot, staleRow.filePath);
+  const status = await freshness.checkFile(workspaceRoot, staleRow.filePath);
+  if (status === 'STALE') {
+    // TA Finding B (SA4E-360 review; TDD §10-7 / FSD AF-2): re-index the
+    // changed rows BEFORE the retry locate — re-locating an unchanged index
+    // is a no-op self-heal. Failure is fail-safe: the single re-locate still
+    // runs and degrades to the not_found steering envelope.
+    try {
+      await locator.reindex();
+    } catch (err) {
+      logger.warn('PI_READ_METHOD_REINDEX_FAILED', { error: (err as Error).message });
+    }
+  }
   let response: Awaited<ReturnType<typeof locator.locate>>;
   try {
     response = await locator.locate(cls, method); // retry ONCE — no nested retry (TDD §7.4)

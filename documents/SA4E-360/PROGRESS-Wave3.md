@@ -60,16 +60,19 @@
 - backend/src/engine/query/query-layer.ts (bind-param fix in listClassMethods)
 
 ### Gaps (deferred — documented)
-- **E2E-API-08** (loopback wrapper 3s-delay timeout/retry): extension-side
-  withRetry semantics — covered indirectly by symbol-locator retry design;
-  full real-delay-stub harness deferred (needs a cross-package runner).
-- **E2E-API-10** (/mcp rate limit, SEC-360-03 #1): requires modifying
-  `backend/src/server/HttpServer.ts` — LOCKED (SA4E-356 WIP). Deferred until
-  that ticket's changes land.
+- **E2E-API-08** (loopback wrapper 3s-delay timeout/retry): DEFERRED — the
+  retry design is unit-proven (UT-23: McpSymbolLocator retries ONCE — 2
+  attempts total with backoff); a full real-delay-stub E2E harness needs a
+  cross-package runner and stays deferred.
+- **E2E-API-10** (/mcp rate limit, SEC-360-03 #1): SCOPE DECISION — not a
+  blocker for this ticket. The earlier justification ("HttpServer.ts locked
+  by SA4E-356 WIP") is STALE: SA4E-356 is DONE (commit `a9b7751`), so no file
+  lock exists. Rate-limiting /mcp is tracked as a security backlog item
+  (SEC-360-03 #1) and will be implemented in its own change.
 - **E2E-UI-01/02** (Playwright): extension webview requires a live VS Code
   host; no Playwright harness exists for the extension webview in this repo
-  (backend Playwright configs cover admin pages only). Manual verification via
-  SIT checklist.
+  (backend Playwright configs cover admin pages only). MANUAL HANDOFF:
+  verification via the SIT checklist (SIT-01..08).
 - **SIT-01..08**: manual (llama-server qwen 32k) — QA handoff per STP.
 
 ## Next session entry point

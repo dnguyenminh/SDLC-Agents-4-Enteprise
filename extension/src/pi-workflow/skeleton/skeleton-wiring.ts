@@ -43,8 +43,13 @@ export function createSkeletonRuntime(mcpBridge?: unknown): SkeletonRuntime {
   const locator = new McpSymbolLocator(caller);
   const checker = new IndexFreshnessChecker({ reindex: () => locator.reindex() });
   const provider = new SkeletonProvider({ locator, freshness: checker });
+  // TA Finding A (SA4E-360 review): the memo closure is created ONCE per
+  // runtime and hoisted OUT of the keySymbolsFor arrow — a per-call closure
+  // re-fired the 53-bucket corpus pass for every module and always yielded []
+  // in production (C-360-M1 keySymbols empty + N×53 loopback fetch burst).
+  const corpusOf = cachedCorpus(locator);
   const mapProvider = new FunctionalMapProvider({
-    keySymbolsFor: (module) => topKeySymbols(cachedCorpus(locator)(), module),
+    keySymbolsFor: (module) => topKeySymbols(corpusOf(), module),
   });
   return { locator, checker, provider, injector: new SkeletonInjector(), mapProvider };
 }
@@ -98,13 +103,18 @@ export class DegradedSymbolLocator implements SymbolLocator {
 /** keySymbols source: ONE memoized corpus fetch per runtime (60s TTL window). */
 function cachedCorpus(locator: SymbolLocator): () => SearchCandidate[] {
   let corpus: SearchCandidate[] | undefined;
+  let inflight: Promise<void> | undefined;
   return () => {
     if (corpus) return corpus;
-    try {
-      // fire-and-forget: keySymbols enrich the map; failures omit entries (EF-1)
-      void locator.fetchSymbolCorpus().then((rows) => { corpus = rows; }).catch(() => { corpus = []; });
-    } catch {
-      corpus = [];
+    if (!inflight) {
+      // fire-and-forget: keySymbols enrich the map; failures omit entries (EF-1).
+      // The in-flight promise is memoized too — buildEntries calls keySymbolsFor
+      // for all modules in ONE synchronous tick, so only promise-memoization
+      // guarantees a single batched corpus pass per build (TA Finding A).
+      inflight = locator
+        .fetchSymbolCorpus()
+        .then((rows) => { corpus = rows; })
+        .catch(() => { corpus = []; });
     }
     return corpus ?? [];
   };
