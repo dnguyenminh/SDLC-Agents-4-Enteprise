@@ -1,7 +1,7 @@
 ﻿{
   "ticket": "SA4E-360",
   "title": "Multi-Resolution Context Supply for Pi Harness — P1: Code Skeletonization + Agentic Context Loading",
-  "currentPhase": "testing_pentest",
+  "currentPhase": "uat_gate",
   "phases": {
     "requirements": {
       "status": "done",
@@ -116,12 +116,15 @@
       "status": "not_started"
     },
     "pentest": {
-      "note": "Post F-1 fix redaction probe + containment twin + budget integrity",
+      "completedAt": "2026-10-15",
       "startedAt": "2026-10-14T22:15:00+07:00",
-      "status": "in_progress"
+      "status": "done",
+      "verdict": "SECURE_WITH_NOTES",
+      "note": "120 attempts: 80 PASS / 16 FAIL -> 6 Low (PT-360-01..06) / 24 NOTE; 0 Crit/High/Med; F-1/F-2/F-3 verified independent"
     },
     "uat": {
-      "status": "not_started"
+      "status": "not_started",
+      "note": "HUMAN GATE - cho user confirm (Phase 6: 65 PASS/0 DEFECT; pentest 0 Crit/High/Med; DEFECT-QA-01 closed)"
     }
   },
   "jira": {
