@@ -1,0 +1,12 @@
+test_case_id,tool_name,label,required_params,optional_params,requires_approval,opt_in_required,expected_in_build_default,expected_in_build_optin,description
+UT-01,jira_get_issue,Jira Get Issue,issue_key,,false,false,true,true,4 concrete bridge tools luôn được build khi wiring production (không options)
+UT-01,mem_search,Memory Search,query,limit,false,false,true,true,4 concrete bridge tools luôn được build khi wiring production (không options)
+UT-01,mem_ingest,Memory Ingest,content;type;tags,false => content,false,true,true,mem_ingest cần approval nhưng vẫn build (deny chỉ ở execute qua approvalHook)
+UT-01,code_search,Code Search,query,limit,false,false,true,true,4 concrete bridge tools luôn được build khi wiring production (không options)
+UT-01,execute_dynamic_tool,Execute Dynamic Tool,tool_name,arguments,true,true,false,true,deny-by-default: KHÔNG build khi allowDynamicChaining !== true (OI-04)
+UT-02,jira_get_issue,Jira Get Issue,issue_key,,false,false,true,true,parameters same-reference với TOOLS trong tool-definitions.ts (BR-01)
+UT-02,mem_search,Memory Search,query,limit,false,false,true,true,label khớp TOOLS (vd 'Memory Search'); description passthrough
+UT-11,execute_dynamic_tool,Execute Dynamic Tool,tool_name,arguments,true,true,false,true,assert trên returned array của buildMcpBridgeAgentTools — KHÔNG phải allowlist string (bẫy DISCOVERY_TOOLS)
+UT-12,execute_dynamic_tool,Execute Dynamic Tool,tool_name,arguments,true,true,false,true,allowDynamicChaining: true → build đủ 5 tools; false/undefined/0 → chỉ 4
+PBT-01,jira_get_issue;mem_search;mem_ingest;code_search,(4 concrete),,query/limit/content/tool_name,,,true,false,Property: mọi tổ hợp options → 4 concrete luôn có; unique names; không throw; callTool không gọi lúc build
+PBT-01,execute_dynamic_tool,Execute Dynamic Tool,tool_name,arguments,true,true,false,true,Property: chứa execute_dynamic_tool ⟺ allowDynamicChaining === true

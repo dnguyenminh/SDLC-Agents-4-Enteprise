@@ -30,6 +30,11 @@ import { createWorkspaceInfoTool, toSessionToolDefinition, WORKSPACE_INFO_TOOL_N
 import { createSkeletonRuntime, buildSkeletonSections, type SkeletonRuntime } from './skeleton/skeleton-wiring.js';
 import { createReadMethodTool } from './skeleton/read-method-tool.js';
 import { getPiExtensionEntries, getPiExtensionAgentTools } from './pi-extension-runtime.js';
+// SA4E-364: value import for the instanceof narrow (OI-03 — bridge-absent ⇒ []
+// fail-safe) + the shared bridge tool builder for both wiring surfaces.
+import { McpBridge } from '../mcp/mcp-bridge';
+import { buildMcpBridgeAgentTools } from '../pi-agent/extensions/mcp-bridge-extension';
+import type { AgentTool } from '@earendil-works/pi-agent-core';
 import { mapAgentEvent, ToolEventTracker, type EventCollector } from './pi-event-mapper.js';
 import type { NormalizedToolCall } from './types/executor.types.js';
 
@@ -326,13 +331,19 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
   } catch (err) {
     debugLog(`[PiSessionHost] extension names skipped: ${(err as Error).message}`);
   }
+  // SA4E-364 OI-03: reuse opts.mcpBridge (typed unknown → narrow before build);
+  // absent/wrong type ⇒ [] (fail-safe degraded — SA4E-360, W-1).
+  const bridgeTools: AgentTool[] =
+    opts.mcpBridge instanceof McpBridge ? buildMcpBridgeAgentTools(opts.mcpBridge) : [];
+  if (bridgeTools.length === 0) debugLog('[PiSessionHost] mcp bridge absent — bridge tools omitted (degraded)');
+  const bridgeNames = bridgeTools.map((t) => t.name);
   const loadout = buildSessionToolLoadout({
     role: opts.role,
     phase: opts.phase,
     schemaTokenCap: toolSchemaTokenCap(budget),
     coreTools: nameTools(baseTools),
     discoveryTools: [],
-    mcpTools: nameTools(extNames),
+    mcpTools: nameTools([...extNames, ...bridgeNames]), // SA4E-364: bridge names join the pool (role filter + cap apply)
   });
   // SA4E-355 Task 5 (UC-05): fail-safe gate BEFORE createAgentSession.
   // REJECT throws PI_CONTEXT_BUDGET_EXCEEDED (provider never called, BR-09);
@@ -420,6 +431,14 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
     customTools: [
       toSessionToolDefinition(createWorkspaceInfoTool(workspaceRoot, skeletonRuntime.mapProvider)),
       toSessionToolDefinition(createReadMethodTool(workspaceRoot, skeletonRuntime.locator, skeletonRuntime.checker)),
+      // SA4E-364 FR-09: the shared converter hardcodes 'Workspace orientation'
+      // prompt metadata — bridge tools override it to undefined so wrong
+      // guidance never leaks into the system prompt (SDK skips undefined).
+      ...bridgeTools.map((t) => ({
+        ...toSessionToolDefinition(t as unknown as AgentTool),
+        promptSnippet: undefined,
+        promptGuidelines: undefined,
+      })),
     ] as never,
     tools: allowlist,
   });

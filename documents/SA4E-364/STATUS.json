@@ -1,0 +1,82 @@
+{
+  "ticket": "SA4E-364",
+  "autonomyLevel": "L3",
+  "currentPhase": "implementation",
+  "branch": "SA4E-364",
+  "summary": "[SDLC Chat] MCP tools cua extension khong duoc wire vao chat agent - mcp-bridge-extension (SA4E-316) la dead code",
+  "todos": [
+    {
+      "id": "SA4E-364-TO-01",
+      "title": "Wire MCP bridge tools vao 2 duong tool pool cua SDLC CHAT",
+      "description": "Export buildMcpBridgeAgentTools() tu mcp-bridge-extension.ts (tai dung TOOLS/TOOL_ALLOWLIST/validateParams), wire vao legacy path (pi-workflow-adapter.ts) + session path (pi-agent-session-host.ts), giu execute_dynamic_tool deny-by-default, fail-safe khi MCP server stopped. Tests cover 6 AC (AC-1..AC-6).",
+      "status": "to-do",
+      "createdAt": "2026-10-15T15:16:45Z"
+    }
+  ],
+  "phases": {
+    "requirements": {
+      "status": "done",
+      "startedAt": "2026-10-15T15:30:00Z",
+      "version": 1,
+      "file": "BRD.md",
+      "completedAt": "2026-10-15T16:20:00Z"
+    },
+    "specification": {
+      "startedAt": "2026-10-15T16:20:00Z",
+      "status": "done",
+      "file": "FSD.md",
+      "version": 1.1,
+      "completedAt": "2026-10-16T09:30:00Z"
+    },
+    "design": {
+      "startedAt": "2026-10-16T09:35:00Z",
+      "status": "done",
+      "completedAt": "2026-10-15T19:17:43Z",
+      "file": "TDD.md",
+      "version": 1
+    },
+    "security_design_review": {
+      "status": "pending"
+    },
+    "test_planning": {
+      "startedAt": "2026-10-16T09:35:00Z",
+      "status": "done",
+      "completedAt": "2026-10-15T19:17:43Z",
+      "file": "STP.md,STC.md",
+      "review": "approved",
+      "version": 1
+    },
+    "cicd_setup": {
+      "startedAt": "2026-10-16T09:35:00Z",
+      "status": "done",
+      "file": "CICD-CHECK.md",
+      "verdict": "N/A",
+      "completedAt": "2026-10-15T18:17:19Z"
+    },
+    "implementation": {
+      "status": "in_progress",
+      "startedAt": "2026-10-15T19:17:43Z"
+    },
+    "user_guide": {
+      "status": "pending"
+    },
+    "security_code_review": {
+      "status": "pending"
+    },
+    "testing": {
+      "status": "pending"
+    },
+    "pentest": {
+      "status": "pending"
+    },
+    "uat": {
+      "status": "pending"
+    },
+    "deployment": {
+      "status": "pending"
+    }
+  },
+  "notes": "Bug fix ticket - root cause da duoc dieu tra va verify truoc (SA4E-364-FINDINGS.md o repo root, trung attachment Jira). BA xac nhan findings thanh BRD/FSD ngan, KHONG dieu tra lai. Scope code gioi han trong extension/src (mcp-bridge-extension.ts + pi-workflow-adapter.ts + pi-agent-session-host.ts + tests). Working tree co thay doi chua commit cua cong viec khac (SA4E-THINKING) - chi stage/commit hunks cua SA4E-364. Jira workflow SA4E: simplified (To Do/In Progress/In Review/Done, transition IDs 11/21/31/41). Human gate duy nhat: UAT sau khi test pass.",
+  "lastCommentProcessed": "2026-10-15T14:58:31Z",
+  "lastUpdated": "2026-10-15T19:17:43Z"
+}

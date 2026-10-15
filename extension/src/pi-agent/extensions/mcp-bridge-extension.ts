@@ -7,6 +7,7 @@
 import { requiresApproval } from "../../chat/engine/ToolApprovalClassifier";
 import type { IServerManager } from "../../types/server-types";
 import { McpBridge } from "../../mcp/mcp-bridge";
+import type { AgentTool } from '@earendil-works/pi-agent-core';
 import {
   DYNAMIC_TOOL_NAME,
   TOOLS,
@@ -45,6 +46,18 @@ export interface BridgeAuditEntry {
   argKeys: string[];
   decision: "auto-approved" | "approved" | "denied";
 }
+
+/**
+ * SA4E-364: options for the pure tool builder below. The wiring paths pass an
+ * already-constructed McpBridge, so no `serverManager` is required here —
+ * fail-closed construction stays with the entry point / adapter (SEC-332-09).
+ * SEC-324-03: `allowDynamicChaining` has no settings source (OI-04) — wiring
+ * never passes it, so `execute_dynamic_tool` stays out of the tool schema.
+ */
+export type BridgeToolOptions = Pick<
+  BridgeOptions,
+  'allowDynamicChaining' | 'approvalHook' | 'auditLog'
+>;
 
 /** Default audit sink: structured console line (never logs param values). */
 function defaultAuditLog(entry: BridgeAuditEntry): void {
@@ -188,6 +201,46 @@ export default function mcpBridgeExtension({ pi }: PiExtensionContext, options: 
       console.error(`[Pi Extension] Failed to register tool ${tool.name}:`, err);
     }
   }
+}
+
+/**
+ * SA4E-364: pure builder — maps the static TOOLS catalog to pi-agent-core
+ * AgentTool[] for the chat tool pool (legacy + session wiring share it).
+ * Reuses the single source of truth (TOOLS / validateParams / allowlist /
+ * DYNAMIC_TOOL_NAME / handler / audit) — no duplicated allowlist (BR-01).
+ * Sync, no network, O(TOOLS) (NFR N-6). Never throws on normal wiring.
+ */
+export function buildMcpBridgeAgentTools(
+  bridge: McpBridge,
+  options?: BridgeToolOptions
+): AgentTool[] {
+  const audit = options?.auditLog ?? defaultAuditLog;
+  const out: AgentTool[] = [];
+  const seen = new Set<string>(); // BR-1: tool names unique within a session
+  for (const tool of TOOLS) {
+    if (seen.has(tool.name)) {
+      console.warn(`[Pi Extension] Tool name already exists: ${tool.name}`);
+      continue;
+    }
+    // SEC-324-03: emit the dynamic tool only on an explicit opt-in (=== true).
+    if (tool.name === DYNAMIC_TOOL_NAME && options?.allowDynamicChaining !== true) continue;
+    out.push({
+      name: tool.name,
+      label: tool.label,
+      description: tool.description,
+      parameters: tool.parameters,
+      // Pick<> subset is structurally read by the handler (only the three
+      // BridgeToolOptions fields are accessed inside createExecuteHandler).
+      execute: createExecuteHandler(
+        bridge,
+        tool.name,
+        tool.parameters,
+        { ...options, audit } as unknown as BridgeOptions,
+      ),
+    } as unknown as AgentTool);
+    seen.add(tool.name);
+  }
+  return out;
 }
 
 /**
