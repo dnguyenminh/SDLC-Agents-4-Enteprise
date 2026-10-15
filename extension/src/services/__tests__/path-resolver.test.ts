@@ -159,11 +159,16 @@ describe("PathResolver — UT-03 T3 escape blocked (Format 2)", () => {
   ];
   it.each(escapes)("blocks corpus escape %s", (raw) => {
     const r = resolveWorkspacePath(raw, { rootProvider: providerFor(FAKE_WS) });
-    expect(r.ok).toBe(false);
-    if (!r.ok) {
-      expect(r.code).toBe("PATH_REJECTED_OUTSIDE_WORKSPACE");
-      expect(r.message.startsWith("PATH_REJECTED_OUTSIDE_WORKSPACE:")).toBe(true);
+    if (r.ok) {
+      // Platform-agnostic invariant (same style as the N-QA2 quirk corpus):
+      // backslash rows are literal filenames on posix, so a PASS is safe
+      // iff the resolution stays strictly inside the root. An escape that
+      // leaks would violate the containment contract on any platform.
+      expect(isPathWithinRoot(FAKE_WS, r.resolvedPath)).toBe(true);
+      return;
     }
+    expect(r.code).toBe("PATH_REJECTED_OUTSIDE_WORKSPACE");
+    expect(r.message.startsWith("PATH_REJECTED_OUTSIDE_WORKSPACE:")).toBe(true);
   });
 
   // STC: UT-03 — absolute with inner escape resolving outside
@@ -202,10 +207,14 @@ describe("PathResolver — UT-04 T3b prefix-collision boundary", () => {
   });
 
   it("passes genuine children and the root itself", () => {
-    expect(isPathWithinRoot("C:\\fake-ws", "C:\\fake-ws\\sub\\x.md")).toBe(true);
-    expect(isPathWithinRoot("C:\\fake-ws", "C:\\fake-ws")).toBe(true);
+    // Platform-agnostic fixtures (FAKE_WS adapts to the host): the property
+    // under test is the trailing-separator compare (UC-03 EF-2), not the
+    // drive-letter shape. Windows drive-letter roots are covered by the
+    // win32-gated UT-07 case-fold tests.
+    expect(isPathWithinRoot(FAKE_WS, path.join(FAKE_WS, "sub", "x.md"))).toBe(true);
+    expect(isPathWithinRoot(FAKE_WS, FAKE_WS)).toBe(true);
     // Root with trailing separator also works
-    expect(isPathWithinRoot("C:\\fake-ws" + path.sep, "C:\\fake-ws\\x.md")).toBe(true);
+    expect(isPathWithinRoot(FAKE_WS + path.sep, path.join(FAKE_WS, "x.md"))).toBe(true);
   });
 });
 
@@ -345,7 +354,11 @@ describe("PathResolver — UT-11 T5b BR-06b discrimination + Format 3", () => {
 
 describe("PathResolver — UT-07 T6 casing (R-1)", () => {
   // STC: UT-07 — win32 fold both sides; posix strict (safe direction, OI-3)
-  it("folds case on win32 (no false reject)", () => {
+  // PLATFORM-GATED: these verify WIN32 case-insensitive containment. Node's
+  // path.normalize/sep follow the REAL host OS (only the fold branch reads
+  // process.platform, so withPlatform cannot steer separator semantics) —
+  // they are only meaningful on a win32 host.
+  it.skipIf(!IS_WIN)("folds case on win32 (no false reject)", () => {
     withPlatform("win32", () => {
       expect(isPathWithinRoot("c:\\fake-ws", "C:\\FAKE-WS\\sub\\file.md")).toBe(true);
       const r = resolveWorkspacePath("C:\\fake-ws\\sub\\file.md", {
@@ -355,7 +368,7 @@ describe("PathResolver — UT-07 T6 casing (R-1)", () => {
     });
   });
 
-  it("folds reversed casing on win32", () => {
+  it.skipIf(!IS_WIN)("folds reversed casing on win32", () => {
     withPlatform("win32", () => {
       expect(isPathWithinRoot("C:\\FAKE-WS", "c:\\fake-ws\\sub\\file.md")).toBe(true);
     });
@@ -429,15 +442,23 @@ describe("PathResolver — UT-08 T7 per-call provider (C-3, no cache)", () => {
 describe("PathResolver — UT-09 T8 UNC / empty / non-string (C-1)", () => {
   // STC: UT-09 — UNC outside a drive-letter root is rejected
   it("rejects UNC outside a drive-letter root", () => {
-    const r = resolveWorkspacePath("\\\\server\\share\\x.md", {
-      rootProvider: () => "C:\\fake-ws",
-    });
     if (IS_WIN) {
+      const r = resolveWorkspacePath("\\\\server\\share\\x.md", {
+        rootProvider: () => "C:\\fake-ws",
+      });
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.code).toBe("PATH_REJECTED_OUTSIDE_WORKSPACE");
     } else {
-      // Posix: backslashes are literal filename chars → stays inside root.
+      // Posix: backslashes are literal filename chars → the UNC-looking input
+      // is an ordinary relative path resolving STRICTLY INSIDE a real posix
+      // root. (A `C:\`-style root is RELATIVE on posix and would resolve
+      // against cwd — use the real FAKE_WS fixture here.)
+      const r = resolveWorkspacePath("\\\\server\\share\\x.md", {
+        rootProvider: providerFor(FAKE_WS),
+      });
       expect(r.ok).toBe(true);
+      if (!r.ok) return;
+      expect(isPathWithinRoot(FAKE_WS, r.resolvedPath)).toBe(true);
     }
   });
 
@@ -491,7 +512,10 @@ describe("PathResolver — UT-12 T8-ext NUL / CRLF (SEC-05)", () => {
     });
     expect(okCase.ok).toBe(true);
     // ...but a failing sibling carrying CRLF must not echo raw CR/LF.
-    const bad = resolveWorkspacePath("..\\..\\evil\r\nX.txt", {
+    // path.join makes the escape host-correct: `..\..\` on win32, `../../`
+    // on posix (a backslash raw string is a literal in-root filename on
+    // posix and would NOT be rejected there).
+    const bad = resolveWorkspacePath(path.join("..", "..", "evil\r\nX.txt"), {
       rootProvider: providerFor(FAKE_WS),
     });
     expect(bad.ok).toBe(false);
@@ -724,7 +748,9 @@ describe("PathResolver — PBT-03 containment monotonicity (N-3, security)", () 
 
 describe("PathResolver — PBT-04 case-fold on win32 only", () => {
   // STC: PBT-04 — arbitrary case flips stay contained on win32
-  it("case mutations of a contained path stay contained on win32", () => {
+  // PLATFORM-GATED (see UT-07 note): win32 case-fold requires a win32 host —
+  // path module semantics cannot be mocked via withPlatform.
+  it.skipIf(!IS_WIN)("case mutations of a contained path stay contained on win32", () => {
     fc.assert(
       fc.property(
         fc.string({ minLength: 1, maxLength: 10 }).filter((s) => /^[A-Za-z0-9]+$/.test(s)),

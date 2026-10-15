@@ -12,7 +12,7 @@ import type { AgentTool } from '@earendil-works/pi-agent-core';
 
 export const PI_EXTENSION_PACKAGES = [
   'billion-context-pi', // 0.1.82 — compress/decompress/search_context (context opt)
-  'pi-web-access', // 0.33.0 — webfetch/search
+  'pi-web-access', // 0.41.0 — webfetch/search (SDK OAuth HIGH fix, was 0.33.0)
   '@juicesharp/rpiv-todo', // 2.11.0 — todo list
   '@juicesharp/rpiv-ask-user-question', // 2.11.0 — sole ask-user tool (raidou fork removed: needs pi-coding-agent>=0.85 + duplicate tool name)
   'pi-subagents', // 0.73.1 — subagent delegation

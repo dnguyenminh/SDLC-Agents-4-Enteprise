@@ -24,7 +24,11 @@ const SECRET_PATTERNS: readonly RegExp[] = [
   /gh[po]_[A-Za-z0-9]{16,}/g,
   /\bxox[bap]-[A-Za-z0-9-]{10,}/g,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
-  /(?i:(password|passwd|secret|token|api[_-]?key))\s*[:=]\s*(?:"[^"]{8,}"|'[^']{8,}'|[^"'\s]*\d[^"'\s]{7,})/g,
+  // SEC-F1 (Node 22 compat): `(?i:...)` inline-modifier groups require V8 12.5+
+  // (Node 23+); CI runs Node 22 where they throw SyntaxError at module load and
+  // break 18 downstream suites. The `i` flag is equivalent here — the value side
+  // has no case-sensitive classes. Mirrors the /gi style of the pwd-family row.
+  /(?:password|passwd|secret|token|api[_-]?key)\s*[:=]\s*(?:"[^"]{8,}"|'[^']{8,}'|[^"'\s]*\d[^"'\s]{7,})/gi,
   // F-2 (SA4E-360 remediation): high-frequency families missed by the baseline
   // list — bypass hunt, SECURITY-ASSESSMENT §Detailed Findings F-2. The
   // assignment pattern keeps the digit guard for unquoted values (SEC-L).

@@ -31,9 +31,9 @@ export const PI_EXTENSIONS_CONFIG: PiExtensionEntry[] = [
   },
   {
     package: 'pi-web-access',
-    version: '0.33.0',
+    version: '0.41.0',
     provides: 'web search/fetch, GitHub clone, PDF/YouTube extraction',
-    notes: 'Provider keys via env/settings; see package README for 20+ search providers.',
+    notes: 'SA4E-360 CI fix: bumped 0.33.0 → 0.41.0 — 0.33.x ships @modelcontextprotocol/sdk 1.12-1.30 (HIGH GHSA-6qxp-vccf-f47h, OAuth client); 0.41.0 resolves SDK 1.32.1. Provider keys via env/settings; see package README for 20+ search providers.',
   },
   {
     package: '@juicesharp/rpiv-todo',

@@ -110,9 +110,16 @@ describe('code_extract_signatures — fail-soft batch + caps (E2E-API-06)', () =
 });
 
 // STC E2E-API-07 — backend containment twin, 4 attack vectors (SEC-360-04)
+// NOTE (platform): `C:\...` absolute and `..\..` backslash-traversal vectors
+// only carry attack semantics on a win32 host — on posix, backslashes are
+// literal filename characters, so those inputs resolve STRICTLY INSIDE the
+// root (path.resolve posix semantics) and rejecting them would be wrong.
+// Cross-platform vectors (`/etc/passwd`, `//server/share`, `sub/../../x`)
+// stay unguarded and run on every platform.
+const IS_WIN = process.platform === 'win32';
 describe('SEC-360-04 — resolveContainedFile rejects all 4 attack layers', () => {
   it('BV-03: absolute path outside the workspace root is rejected', () => {
-    expect(resolveContainedFile(root, 'C:\\projects\\secrets.txt')).toBeNull();
+    if (IS_WIN) expect(resolveContainedFile(root, 'C:\\projects\\secrets.txt')).toBeNull();
     expect(resolveContainedFile(root, '/etc/passwd')).toBeNull();
   });
 
@@ -126,7 +133,7 @@ describe('SEC-360-04 — resolveContainedFile rejects all 4 attack layers', () =
   });
 
   it('BV-06: dotdot traversal is rejected (lexical isWithin, layer 3)', () => {
-    expect(resolveContainedFile(root, '..\\..\\secrets.txt')).toBeNull();
+    if (IS_WIN) expect(resolveContainedFile(root, '..\\..\\secrets.txt')).toBeNull();
     expect(resolveContainedFile(root, 'sub/../../secrets.txt')).toBeNull();
   });
 

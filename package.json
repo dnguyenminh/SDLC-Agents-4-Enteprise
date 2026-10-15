@@ -14,7 +14,8 @@
     "clean": "npm run clean --workspaces",
     "test:e2e": "npm run test:e2e --prefix e2e",
     "test:e2e:report": "npm run test:e2e:report --prefix e2e",
-    "test:e2e:clean": "npm run test:e2e:clean --prefix e2e"
+    "test:e2e:clean": "npm run test:e2e:clean --prefix e2e",
+    "postinstall": "node scripts/patch-vendored-deps.mjs"
   },
   "engines": {
     "node": "22.x"

@@ -248,7 +248,12 @@ describe('UT-23 — INDEX_UNAVAILABLE envelope', () => {
 // STC UT-24 — extension-side containment (SEC-325-D1): reject BEFORE any read
 describe('UT-24 — path containment on index-derived paths', () => {
   it('absolute path outside root → FILE_UNREADABLE, zero bytes read', async () => {
-    const locator = stubLocator([row({ filePath: 'C:\\projects\\secrets\\impl.ts' })]);
+    // Computed OUTSIDE-ABSOLUTE fixture (platform-agnostic): a hard-coded
+    // `C:\...` string is a legal RELATIVE filename on posix and would pass
+    // containment there. path.resolve(root, '..') is absolute-outside on
+    // every platform — the exact property under test.
+    const outsideAbs = path.resolve(root, '..', 'secrets', 'impl.ts');
+    const locator = stubLocator([row({ filePath: outsideAbs })]);
     const { envelope } = await execute(makeTool(locator) as AgentToolLike, { class: 'C', method: 'm' });
     expect(envelope.status).toBe('error');
     expect(envelope.code).toBe('FILE_UNREADABLE');
