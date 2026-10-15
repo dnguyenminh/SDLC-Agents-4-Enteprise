@@ -3,57 +3,68 @@
     <mxCell id="0"/>
     <mxCell id="1" parent="0"/>
 
-    <mxCell id="title" value="SA4E-335 — Component Design: Dockerfile multi-stage · docker-compose · GitHub Actions job graph" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;" vertex="1" parent="1">
+    <mxCell id="title" value="SA4E-335 — Component Design (as-built 2026-10-15): Dockerfile 7-stage · docker-compose · GitHub Actions job graph" style="text;html=1;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;" vertex="1" parent="1">
       <mxGeometry x="40" y="20" width="1520" height="30" as="geometry"/>
     </mxCell>
 
-    <!-- ===== Dockerfile multi-stage swimlane ===== -->
-    <mxCell id="df_lane" value="backend/Dockerfile — multi-stage build (base: node:22-slim, proposed from alpine)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
+    <!-- ===== Dockerfile multi-stage swimlane (7 stages, as-built) ===== -->
+    <mxCell id="df_lane" value="backend/Dockerfile — multi-stage build, 7 stages (base: node:22-slim, digest-pinned) — as-built" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
       <mxGeometry x="40" y="70" width="1000" height="400" as="geometry"/>
     </mxCell>
-    <mxCell id="s_base" value="base&#10;node:22-slim&#10;apt: python3 make g++ git&#10;+ draw.io CLI 24.7.8, Electron/X11/xvfb (proposed)&#10;WORKDIR /app" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
-      <mxGeometry x="30" y="50" width="220" height="120" as="geometry"/>
+    <mxCell id="s_base" value="base&#10;node:22-slim@sha256:43ac6c60… (SEC-02)&#10;apt: python3 make g++ git" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="30" y="50" width="220" height="100" as="geometry"/>
     </mxCell>
     <mxCell id="s_deps" value="deps&#10;COPY package*.json&#10;npm ci --omit=dev&#10;→ prod node_modules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
-      <mxGeometry x="300" y="50" width="200" height="110" as="geometry"/>
+      <mxGeometry x="300" y="50" width="200" height="100" as="geometry"/>
     </mxCell>
-    <mxCell id="s_build" value="build&#10;npm ci · COPY tsconfig+src&#10;npm run build → dist/&#10;pre-download model → TRANSFORMERS_CACHE (proposed)&#10;strip tree-sitter-jsp (proposed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
-      <mxGeometry x="300" y="210" width="200" height="140" as="geometry"/>
+    <mxCell id="s_mcppython" value="mcp-python ★ NEW&#10;FROM base (same pinned node base —&#10;manylinux wheel ABI match)&#10;/opt/markitdown-venv: markitdown-mcp==0.0.1a7 (PyPI)&#10;/opt/markdown-exporter-venv: 0.1.0, GitHub pin 1429b6a9 (not on npm/PyPI)&#10;import probes fail build on drift · mcp>=1.27.0,&lt;2.0.0 (FastMCP removed in 2.x)&#10;pip stripped per venv" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="df_lane">
+      <mxGeometry x="30" y="200" width="220" height="155" as="geometry"/>
     </mxCell>
-    <mxCell id="s_prod" value="production  ★ CI push target&#10;node:22-slim&#10;COPY --from=deps node_modules&#10;COPY --from=build dist/ + package.json&#10;non-root sa4e uid/gid 1001&#10;ENV NODE_ENV=production, PORT=48721&#10;ENV TRANSFORMERS_CACHE, SERVER_WORKSPACES_ROOT (proposed)&#10;HEALTHCHECK wget /health · EXPOSE 48721&#10;CMD node dist/index.js" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="df_lane">
-      <mxGeometry x="560" y="50" width="410" height="180" as="geometry"/>
+    <mxCell id="s_build" value="build&#10;npm ci · COPY tsconfig+src+scripts&#10;npm run build → dist/&#10;precache-embedding-model.mjs →&#10;/app/models-cache (ARG BAKE_EMBEDDING_MODEL=true, fail-fast)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="300" y="200" width="200" height="155" as="geometry"/>
     </mxCell>
-    <mxCell id="s_dev" value="development&#10;tsx watch (hot reload)&#10;non-root sa4e" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
-      <mxGeometry x="560" y="270" width="200" height="90" as="geometry"/>
+    <mxCell id="s_prod" value="production ★ CI push target&#10;node:22-slim (digest-pinned)&#10;COPY --from=deps node_modules&#10;COPY --from=build dist/ + package.json + models-cache&#10;COPY --from=mcp-python 2 venvs (root-owned, read-only)&#10;apt: python3 runtime only — no pip/git/pandoc (SEC-05)&#10;ENV PATH=venv bins · PYTHONUNBUFFERED=1&#10;ENV TRANSFORMERS_CACHE=/app/models-cache&#10;non-root sa4e uid/gid 1001&#10;HEALTHCHECK node http /health · EXPOSE 48721&#10;CMD node dist/index.js" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=left;spacingLeft=6;fontStyle=1;" vertex="1" parent="df_lane">
+      <mxGeometry x="560" y="50" width="410" height="215" as="geometry"/>
     </mxCell>
-    <mxCell id="s_test" value="test&#10;COPY tests + .env.test&#10;npx vitest run&#10;non-root sa4e" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
-      <mxGeometry x="780" y="270" width="190" height="90" as="geometry"/>
+    <mxCell id="s_dev" value="development&#10;tsx watch (hot reload) · non-root sa4e&#10;models-cache + venv parity (PATH, PYTHONUNBUFFERED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="560" y="295" width="200" height="85" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_test" value="test&#10;COPY tests + .env.test&#10;npx vitest run · non-root sa4e" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;spacingLeft=6;" vertex="1" parent="df_lane">
+      <mxGeometry x="780" y="295" width="190" height="85" as="geometry"/>
     </mxCell>
 
-    <mxCell id="e_base_deps" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="df_lane" source="s_base" target="s_deps">
+    <mxCell id="e_base_deps" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="df_lane" source="s_base" target="s_deps">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e_base_build" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_base" target="s_build">
+    <mxCell id="e_base_build" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_base" target="s_build">
       <mxGeometry relative="1" as="geometry">
-        <Array as="points"><mxPoint x="140" y="280"/></Array>
+        <Array as="points"><mxPoint x="275" y="125"/><mxPoint x="275" y="277"/></Array>
       </mxGeometry>
     </mxCell>
-    <mxCell id="e_deps_prod" value="COPY node_modules" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;" edge="1" parent="df_lane" source="s_deps" target="s_prod">
+    <mxCell id="e_base_mcp" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_base" target="s_mcppython">
       <mxGeometry relative="1" as="geometry"/>
     </mxCell>
-    <mxCell id="e_build_prod" value="COPY dist/ + package.json" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_build" target="s_prod">
+    <mxCell id="e_deps_prod" value="COPY node_modules" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_deps" target="s_prod">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_build_prod" value="COPY dist/ + package.json + models-cache" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.87;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_build" target="s_prod">
       <mxGeometry relative="1" as="geometry">
-        <Array as="points"><mxPoint x="660" y="255"/></Array>
+        <Array as="points"><mxPoint x="535" y="238"/></Array>
       </mxGeometry>
     </mxCell>
-    <mxCell id="e_base_dev" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_base" target="s_dev">
+    <mxCell id="e_mcp_prod" value="COPY 2 venvs (read-only)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;fontSize=9;exitX=1;exitY=0.45;exitDx=0;exitDy=0;entryX=0;entryY=0.95;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_mcppython" target="s_prod">
       <mxGeometry relative="1" as="geometry">
-        <Array as="points"><mxPoint x="140" y="385"/><mxPoint x="610" y="385"/></Array>
+        <Array as="points"><mxPoint x="280" y="270"/><mxPoint x="280" y="372"/><mxPoint x="528" y="372"/></Array>
       </mxGeometry>
     </mxCell>
-    <mxCell id="e_base_test" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_deps" target="s_test">
+    <mxCell id="e_base_dev" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;fontSize=9;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_base" target="s_dev">
       <mxGeometry relative="1" as="geometry">
-        <Array as="points"><mxPoint x="400" y="240"/><mxPoint x="875" y="240"/></Array>
+        <Array as="points"><mxPoint x="12" y="75"/><mxPoint x="12" y="388"/></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e_base_test" value="FROM base" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;dashed=1;fontSize=9;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="df_lane" source="s_base" target="s_test">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="18" y="125"/><mxPoint x="18" y="392"/></Array>
       </mxGeometry>
     </mxCell>
 
@@ -113,7 +124,7 @@
     <mxCell id="j_login" value="4. docker/login-action&#10;creds via CI secrets&#10;(--password-stdin, masked)&#10;push jobs only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="ci_lane">
       <mxGeometry x="280" y="150" width="180" height="80" as="geometry"/>
     </mxCell>
-    <mxCell id="j_build" value="5. build-push-action&#10;target=production&#10;context=backend/&#10;cache_from/to · single build&#10;push= (event!=PR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;fontStyle=1;" vertex="1" parent="ci_lane">
+    <mxCell id="j_build" value="5. build-push-action&#10;target=production&#10;context=backend/&#10;cache_from/to · single build&#10;push= (event!=PR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="ci_lane">
       <mxGeometry x="530" y="50" width="200" height="110" as="geometry"/>
     </mxCell>
     <mxCell id="j_verify" value="6. verify digest&#10;emit outputs:&#10;image-ref, image-digest, tags" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="ci_lane">
@@ -157,7 +168,7 @@
       </mxGeometry>
     </mxCell>
 
-    <mxCell id="legend2" value="Legend: blue=runtime/prod stage · green=CI/build step · yellow=dev-only/tag · grey=unchanged (postgres) · red=secret/security · purple=network/volume/data · dashed=derived/cross-artifact" style="text;html=1;fontSize=10;align=left;verticalAlign=middle;fillColor=none;" vertex="1" parent="1">
+    <mxCell id="legend2" value="Legend: blue=runtime/prod stage · orange=NEW mcp-python stage (as-built) · green=CI/build step · yellow=dev-only/tag · grey=unchanged (postgres) · red=secret/security · purple=network/volume/data · dashed=derived/cross-artifact" style="text;html=1;fontSize=10;align=left;verticalAlign=middle;fillColor=none;" vertex="1" parent="1">
       <mxGeometry x="40" y="1050" width="1520" height="20" as="geometry"/>
     </mxCell>
   </root>

@@ -33,6 +33,7 @@
 | 1.0 | 2025-07-20 | BA Agent | Initiate document (old scope — included file scanner) |
 | 2.0 | 2025-07-27 | BA Agent | Rewrite — Persistent Task Queue only |
 | 3.0 | 2026-07-17 | BA Agent | **FULL REWRITE** — Dual scope: (1) Persistent Task Queue, (2) Remove CodeIntelModule from backend, extension handles scan/index |
+| 3.1 | 2026-10-15 | BA Agent | Post-implementation delta WS-B appended — AD-6 real ONNX embedding verified against Story 1/2, risk register, §8.3 (append-only; no scope rewrite) |
 
 ---
 
@@ -612,3 +613,39 @@ PENDING → PROCESSING → COMPLETED
 |---|---------|-------|-------------------|
 | 1 | Business Flow | [business-flow.png](diagrams/business-flow.png) | [business-flow.drawio](diagrams/business-flow.drawio) |
 | 2 | Use Case | [use-case.png](diagrams/use-case.png) | [use-case.drawio](diagrams/use-case.drawio) |
+
+---
+
+## Delta 2026-10-15 — WS-B (post-implementation requirements verification)
+
+> Post-implementation verification note (BA). AD-6 — the containerization capability item "cached embedding model" (defined in the SA4E-335 TDD decision register; previously a **placeholder, DEFAULT OFF**: sin-hash pseudo-embedding with no semantics, per SEC-08/SCR-04) — is now **genuinely implemented and ON by default**. This section records the verification against the existing stories/ACs; the original content above is retained as-is (append-only history).
+
+### D.1 What shipped (WS-B)
+
+- **BEFORE (root cause fixed):** `EmbeddingService` was a sin-hash pseudo-embedding (no semantics); `onnxruntime-node` was a dead dependency (0 imports); config `onnxModelPath` / `CODE_INTEL_ONNX_MODEL` was consumed by nothing; `ONNX_RUNTIME_URL` (sidecar compose) was unread; the admin config displayed a misleading model name.
+- **NOW:** `@huggingface/transformers@4.3.1` (exact pin), model **`Xenova/paraphrase-multilingual-MiniLM-L12-v2`** (384 dims, **multilingual**). `onnxruntime-node` as a direct dependency is **removed** (transformers pulls ort-node 1.30.0). New components: `EmbeddingBackend` interface (with `EMBEDDING_DIMENSIONS = 384`), `HashEmbeddingBackend` (fallback), `OnnxEmbeddingBackend` (lazy dynamic import, memoized init), `EmbeddingService` rewritten as a facade (old API preserved), and build-time precache script `backend/scripts/precache-embedding-model.mjs` (fail-fast). Dockerfile AD-6 is now **IMPLEMENTED — default ON** (`BAKE_EMBEDDING_MODEL=true`): the model is baked into `/app/models-cache` at build time and shipped in both production and development images (image-side spec recorded in the SA4E-335 delta of the same date).
+- **Admin transparency:** the admin `/config` embedding section is now honest — `{ model, dimensions, backend: 'onnx'|'hash', cacheDir, quantized, legacyOnnxModelPath }` — replacing the previously misleading displayed model name.
+
+### D.2 Requirements verification (story/AC mapping)
+
+| Existing BRD item | Status | Notes |
+|-------------------|--------|-------|
+| Story 1 AC-5 (EmbeddingService unavailable → VECTOR_EMBEDDING not created, graceful) | ✅ Preserved | Graceful-degradation contract intact; the "available" path is now a **real semantic backend**. On ONNX failure the service fails over to `HashEmbeddingBackend` and logs **ERROR exactly once** (`onnxFailed` latch; restart to retry) — **no silent pseudo-embeddings**. |
+| Story 2 step 4 (`VECTOR_EMBEDDING → EmbeddingService → update vector`) | ✅ Met (now genuinely) | Real local ONNX inference, 384-dim, multilingual. The old API (`generateEmbedding` / `cosineSimilarity`) is preserved, so TaskWorker / MemoryToolSearchService / ReindexService / LLMInitializer are unchanged — consistent with the backward-compatibility principle of Story 9 AC-5. |
+| Risk register row "ONNX runtime not loaded → Worker skips VECTOR_EMBEDDING, retry later" | ✅ Superseded by better behavior | Instead of a silent skip, failure now degrades **explicitly** (one ERROR log + hash fallback) and is observable via admin config (`backend: 'hash'`). |
+| §8.3 Task Types — `VECTOR_EMBEDDING` requires "EmbeddingService (ONNX)" | ✅ Met | Real ONNX backend is the default; hash is a labeled fallback only. |
+| §5.2 Assumptions — "LLM + Embedding services optional" | ✅ Unchanged | Hash fallback keeps the system functional even without the model cache; ONNX is default-on wherever the baked cache exists. |
+| Vector storage contract (`vector VECTOR(384)`, FSD §5.1) | ✅ Unchanged | 384-dim retained — **no DB schema impact**. |
+
+### D.3 Business outcomes confirmed
+
+1. **Real semantic embeddings ON by default** — no configuration required when the model is baked into the image.
+2. **Multilingual 384-dim** — `paraphrase-multilingual-MiniLM-L12-v2` covers non-English content, a gap the placeholder never addressed.
+3. **Admin transparency** — the operator can see the true model, dimensions, and active backend at any time.
+4. **No silent pseudo-embeddings** — a degraded state is always loudly logged and visible in admin config.
+
+### D.4 Discrepancy noted (documented, not rewritten)
+
+FSD §9.2 named the model `all-MiniLM-L6-v2`; the implemented model is **`Xenova/paraphrase-multilingual-MiniLM-L12-v2`** (multilingual, same 384 dimensions). The dimension contract is unchanged; the model name in this delta is the as-built truth.
+
+**Revision History:** bumped to v3.1 (row added to the table at the top of this document).

@@ -31,6 +31,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-09-30 | BA Agent | Initiate document — auto-generated from Jira ticket SA4E-335 and linked ticket SA4E-44 |
+| 1.1 | 2026-10-15 | BA Agent | Post-implementation delta WS-A appended — 2 stdio MCP child servers baked into the image (new `mcp-python` stage), spawn-via-DB-config, SEC-05 posture preserved (append-only; approved stories unchanged) |
 
 ---
 
@@ -295,3 +296,46 @@ The current Dockerfile is a multi-stage build on `node:22-alpine` with stages ba
 | Current backend Dockerfile | backend/Dockerfile |
 | Current backend docker-compose | backend/docker-compose.yml |
 | Containerization proposal | SA4E-44 |
+
+---
+
+## Delta 2026-10-15 — WS-A (post-implementation requirements verification)
+
+> Post-implementation verification note (BA). The work described below is **completed & verified**; this section records that the approved BRD requirements remain satisfied and documents one consciously accepted scope extension. No requirement in the original stories was altered; the original content above is retained as-is (append-only history).
+
+### D.1 What shipped (WS-A)
+
+Two stdio MCP child servers are now baked into the backend image. `backend/Dockerfile` grew from 6 to **7 stages** (`base`, `deps`, `build`, `mcp-python`, `production`, `development`, `test`). The new `mcp-python` stage (same pinned node base) builds two **independent venvs**:
+
+| Venv | Package | Source / Pin |
+|------|---------|--------------|
+| `/opt/markitdown-venv` | `markitdown-mcp==0.0.1a7` (Microsoft MarkItDown) | PyPI, version-pinned |
+| `/opt/markdown-exporter-venv` | `markdown-exporter-mcp-local 0.1.0` | GitHub `Zac-Chen-2001`, **pinned commit `1429b6a94767a709f7f5119219ca5951042d9d3c`** (not published on npm/PyPI) |
+
+- **Dependency constraint:** hard range `mcp>=1.27.0,<2.0.0` for the exporter — upstream declares `mcp>=1.27.0` unbounded, but the code imports `mcp.server.fastmcp`, an API **removed in mcp 2.x**; unconstrained pip resolves `2.3.0` → `ModuleNotFoundError`. A probe in the Dockerfile catches this at build time (fail-fast).
+- **Production runtime:** apt installs **only `python3`** — no pip / git / pandoc (**SEC-05 preserved**; pandoc ships inside the venv via the `pypandoc-binary` wheel). The two venvs are `COPY`-ed **root-owned read-only**; `ENV PATH` + `PYTHONUNBUFFERED=1`; pip is stripped from the venvs (no package manager at runtime).
+- **Development stage:** parity with production (venvs + ENV) so dev/prod behavior matches.
+- **Spawn model:** the backend does **not** run the child servers itself; it spawns them only via configuration — DB table `mcp_servers` WHERE `disabled=0` is the **primary source** (see `documents/MCP-DB-CONFIG-REQUEST.md`; `orchestration.json` remains a fallback). In-container DB config rows must use **bare commands**: `command="markitdown-mcp"`, `args=[]` and `command="markdown-exporter-mcp-local"`, `args=[]`. **Trap:** the legacy Windows config using `uv` + `--directory C:/projects/...` **fails in-container**.
+- The orchestrator now spawns both child servers via the bare command (no `uvx` needed).
+
+### D.2 Requirements verification (BR mapping)
+
+| Requirement | Status | Evidence / Notes |
+|-------------|--------|------------------|
+| BR-01 (every proposal item receives a recorded decision + rationale) | ✅ Met | The MCP child-server addition is recorded here as an explicit, rationale-backed adopted item extending Story 1's review scope (WS-A). |
+| BR-04 (hermetic build — pinned deps, no non-deterministic fetches) | ✅ Met | PyPI version pin + GitHub commit pin + `mcp` version-range constraint enforced by a build-time probe. |
+| BR-05 (non-root `sa4e` + healthcheck preserved) | ✅ Met | Runtime user and healthcheck unchanged; venvs are root-owned read-only, so the runtime user cannot mutate them. |
+| BR-06 (size / build-time trade-offs flagged) | ⚠️ Flagged | Two additional venvs increase image size and build time; trade-off accepted for in-image document-conversion + markdown-export capability. The §6 NFR / FSD §16.1 image-size watch applies. |
+| NFR Security — minimal runtime dependencies | ✅ Strengthened | Production apt surface = `python3` only; no pip/git/pandoc at runtime; venv pip stripped (SEC-05 posture preserved). |
+| NFR Reproducibility — hermetic, deterministic build | ✅ Met | All new dependencies pinned (exact version + commit SHA). |
+| Story 2 (production compose) / Story 3 (CI) | ✅ Unaffected | The new stage rides the existing multi-stage `production` target and the existing CI pipeline (BR-14..BR-19 unchanged). |
+
+### D.3 Spawn-via-DB-config requirement
+
+The spawn-via-DB-config requirement ("child MCP servers start only from DB `mcp_servers` rows with `disabled=0`, `orchestration.json` as fallback only") is **met** and is specified in detail in `documents/MCP-DB-CONFIG-REQUEST.md` (single source of truth = DB). Functional details are recorded in the FSD Delta (§17) of this ticket.
+
+### D.4 Scope note (honest deviation record)
+
+The original BRD §1.2 listed *"Application feature changes — no functional behavior of the MCP server is modified"* as out of scope. Shipping two spawnable MCP child servers **is** a functional extension of the image beyond that boundary. This delta records it as a **consciously accepted, post-implementation scope extension (WS-A)** rather than rewriting the approved stories; the approved Story 1–4 requirements and acceptance criteria above are unchanged.
+
+**Revision History:** bumped to v1.1 (row added to the table at the top of this document).

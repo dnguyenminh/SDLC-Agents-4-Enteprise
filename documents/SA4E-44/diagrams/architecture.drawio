@@ -44,8 +44,8 @@
     <mxCell id="llm" value="&lt;b&gt;LLM Provider&lt;/b&gt;&lt;br&gt;(Optional)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;dashed=1;" vertex="1" parent="1">
       <mxGeometry x="700" y="360" width="130" height="50" as="geometry"/>
     </mxCell>
-    <mxCell id="onnx" value="&lt;b&gt;ONNX Runtime&lt;/b&gt;&lt;br&gt;(Optional)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;dashed=1;" vertex="1" parent="1">
-      <mxGeometry x="700" y="450" width="120" height="50" as="geometry"/>
+    <mxCell id="onnx" value="&lt;b&gt;EmbeddingService (facade)&lt;/b&gt;&lt;br&gt;OnnxEmbeddingBackend — in-process&lt;br&gt;@huggingface/transformers · 384 dims · q8&lt;br&gt;HashEmbeddingBackend (fallback, ERROR ×1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="700" y="430" width="200" height="90" as="geometry"/>
     </mxCell>
     <mxCell id="agent" value="&lt;b&gt;Agent&lt;/b&gt;" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
       <mxGeometry x="990" y="120" width="40" height="55" as="geometry"/>
@@ -95,12 +95,11 @@
         </Array>
       </mxGeometry>
     </mxCell>
-    <mxCell id="e9" value="queries" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="query_service" target="db">
+    <mxCell id="e9" value="queries" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="query_service" target="db">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
-          <mxPoint x="800" y="200"/>
-          <mxPoint x="800" y="520"/>
-          <mxPoint x="760" y="520"/>
+          <mxPoint x="930" y="148"/>
+          <mxPoint x="930" y="572"/>
         </Array>
       </mxGeometry>
     </mxCell>
@@ -112,7 +111,7 @@
         </Array>
       </mxGeometry>
     </mxCell>
-    <mxCell id="e11" value="vectors" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" edge="1" parent="1" source="task_queue" target="onnx">
+    <mxCell id="e11" value="embeddings (onnx → hash fail-over)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;dashed=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" edge="1" parent="1" source="task_queue" target="onnx">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
           <mxPoint x="650" y="601"/>

@@ -61,8 +61,8 @@
     <mxCell id="rt_lane" value="Runtime tier — production docker-compose (deployment host)" style="swimlane;startSize=30;fillColor=none;strokeColor=#6c8ebf;html=1;fontStyle=1;fontSize=12;verticalAlign=top;" vertex="1" parent="1">
       <mxGeometry x="840" y="430" width="720" height="490" as="geometry"/>
     </mxCell>
-    <mxCell id="backend" value="backend service&#10;image target: production&#10;node:22-slim, non-root sa4e (1001)&#10;NODE_ENV=production, PORT 48721&#10;Hono + MCP SDK (Streamable HTTP)&#10;healthcheck: wget /health&#10;restart: unless-stopped&#10;limits: cpus + memory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="rt_lane">
-      <mxGeometry x="30" y="60" width="300" height="150" as="geometry"/>
+    <mxCell id="backend" value="backend service&#10;image target: production (7 stages)&#10;node:22-slim, non-root sa4e (1001)&#10;NODE_ENV=production, PORT 48721&#10;Hono + MCP SDK (Streamable HTTP)&#10;healthcheck: node http /health (SEC-12)&#10;spawns 2 stdio MCP children (markitdown-mcp,&#10;markdown-exporter-mcp-local) from mcp_servers DB rows&#10;restart: unless-stopped&#10;limits: cpus + memory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="rt_lane">
+      <mxGeometry x="30" y="60" width="300" height="185" as="geometry"/>
     </mxCell>
     <mxCell id="postgres" value="postgres service&#10;pgvector/pgvector:pg16&#10;POSTGRES_PASSWORD_FILE (secret)&#10;healthcheck: pg_isready&#10;restart: unless-stopped&#10;limits: cpus + memory" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="rt_lane">
       <mxGeometry x="400" y="60" width="290" height="150" as="geometry"/>

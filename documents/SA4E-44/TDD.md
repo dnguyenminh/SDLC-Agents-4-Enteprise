@@ -1128,3 +1128,161 @@ Migrations MUST run in order before server starts:
 ---
 
 ## End of Document
+
+
+---
+
+## Delta 2026-10-15 — WS-B (as-built design)
+
+> Appended by SA Agent on 2026-10-15. Records the **as-built** implementation of **AD-6
+> (real semantic embeddings)**, which was designed here as a conditional SA4E-335 adopt-item
+> and is now genuinely implemented and verified in the codebase. Facts verified 2026-10-15
+> against `backend/src/engine/parsers/embedding/*`, `backend/src/config/index.ts`,
+> `backend/src/server/routes/admin/config.ts`, `backend/scripts/precache-embedding-model.mjs`,
+> `backend/package.json`, and `backend/Dockerfile`. Sections above are preserved verbatim;
+> where they conflict with this delta, **this delta is the as-built truth**.
+
+### Δ-1. Root cause being fixed (as-built record of the OLD state)
+
+| # | Old-state defect | Evidence |
+|---|------------------|----------|
+| 1 | `EmbeddingService` generated only a **sin-hash pseudo-embedding** — deterministic but with zero semantic quality (similar texts ≠ similar vectors) | old service body; now isolated in `HashEmbeddingBackend` (retained as explicitly-logged fallback) |
+| 2 | `onnxruntime-node` was a **dead direct dependency** (0 imports in the codebase) | removed from `backend/package.json` (see Δ-4) |
+| 3 | `onnxModelPath` / `CODE_INTEL_ONNX_MODEL` config **consumed by nothing** | kept only as legacy/deprecated output field |
+| 4 | `ONNX_RUNTIME_URL` env **never read** by any code path (the compose `onnx-runtime` sidecar had no in-app consumer) | superseded by in-process inference (Δ-2) |
+| 5 | Admin config reported a misleading embedding section (fake model/paths) | replaced by honest section (Δ-6) |
+
+### Δ-2. New architecture — EmbeddingService as a FACADE over pluggable backends
+
+**API-compatibility decision:** `EmbeddingService` keeps its original public API
+(`generateEmbedding(text)`, `cosineSimilarity(a,b)`, singleton `getInstance()`) so **all
+callers are unchanged**: `TaskWorker`, `MemoryToolSearchService`, `ReindexService`,
+`LLMInitializer`, and the tool-ingestion path in `index.ts`.
+
+```
+EmbeddingService (facade, singleton)          — resolves backend, owns fail-over latch
+ ├── EmbeddingBackend (interface)             — EMBEDDING_DIMENSIONS = 384
+ │    ├── OnnxEmbeddingBackend  (kind 'onnx') — real semantic inference, default
+ │    └── HashEmbeddingBackend  (kind 'hash') — sin-hash fallback, modelId 'sin-hash-fallback'
+ └── resolution order: onnxFailed→hash → injected (DI) → lazy OnnxEmbeddingBackend (config-driven)
+```
+
+**OnnxEmbeddingBackend (as-built):**
+- Library: `@huggingface/transformers@4.3.1` — **exact pin** (v4 API:
+  `pipeline('feature-extraction', modelId, { dtype: 'q8', device: 'cpu' })`, mean pooling +
+  L2 normalization).
+- Model: `Xenova/paraphrase-multilingual-MiniLM-L12-v2` — 384 dims, multilingual
+  (configurable via `CODE_INTEL_EMBEDDING_MODEL`).
+- **Lazy dynamic import** (`await import('@huggingface/transformers')`) + **memoized init**
+  (`initPromise` shared across concurrent callers) — process startup and unit tests never pay
+  the native onnxruntime load cost. `env.cacheDir` from config; `env.allowLocalModels=false`
+  (the baked/downloaded cache is the single source of truth, never `./models/`).
+- Post-inference guard: vector length must equal `EMBEDDING_DIMENSIONS` (384) or the backend throws.
+
+**Fail-over contract:** on ONNX load/inference failure the service **permanently degrades to
+hash for the process lifetime** and logs `ERROR` **exactly once** (`onnxFailed` latch;
+"restart to retry"). Indexing/search pipelines never crash; degradation is never silent — the
+active backend kind is observable via admin config (`embedding.backend` = `onnx`|`hash`).
+
+**⚠ Vector-compatibility invariant (operator-facing):** vectors from the two backends are NOT
+comparable. Switching backends invalidates stored vectors — run a full reindex so old (hash)
+and new (onnx) vectors are never mixed in similarity comparisons.
+
+**Test/DI seams:** `setBackend(backend)` replaces backend resolution entirely (an injected
+`'onnx'` backend still exercises the fail-over path); `EmbeddingService.resetForTests()`
+rebuilds the singleton between tests.
+
+### Δ-3. Class/file inventory (as-built)
+
+| File | Role |
+|------|------|
+| `backend/src/engine/parsers/embedding/EmbeddingBackend.ts` | strategy interface + `EMBEDDING_DIMENSIONS=384` + `EmbeddingBackendKind` |
+| `backend/src/engine/parsers/embedding/OnnxEmbeddingBackend.ts` | real inference via transformers.js (lazy dynamic import, memoized pipeline) |
+| `backend/src/engine/parsers/embedding/HashEmbeddingBackend.ts` | sin-hash fallback (deterministic, L2-normalized, NOT semantic) |
+| `backend/src/engine/parsers/embedding/EmbeddingService.ts` | facade (old API preserved), fail-over latch, DI seams |
+| `backend/src/engine/parsers/embedding/__tests__/EmbeddingService.test.ts` | unit tests incl. fail-over + injected-backend paths |
+| `backend/scripts/precache-embedding-model.mjs` | build-time model download (fail-fast smoke inference; exits non-zero on error so a "baked" image genuinely contains the model) |
+
+### Δ-4. Dependency change
+
+| Package | Old | New |
+|---------|-----|-----|
+| `onnxruntime-node` (backend direct dep) | present, **dead** (0 imports) | **REMOVED** — `@huggingface/transformers@4.3.1` pulls its own `onnxruntime-node 1.30.0` transitively |
+| `@huggingface/transformers` (backend direct dep) | absent | **NEW** — exact pin `4.3.1` (v4 API; DO NOT floating-upgrade: pipeline API changed across majors) |
+
+### Δ-5. Configuration (backend/src/config/index.ts)
+
+| Config key | Env var | Default | Meaning |
+|------------|---------|---------|---------|
+| `embeddingModelId` | `CODE_INTEL_EMBEDDING_MODEL` | `Xenova/paraphrase-multilingual-MiniLM-L12-v2` | HF hub model id (must emit 384-dim vectors) |
+| `embeddingCacheDir` | `TRANSFORMERS_CACHE` | `.code-intel/models-cache` | HF cache dir — the Dockerfile bakes `/app/models-cache` here at build time |
+| `embeddingQuantized` | `CODE_INTEL_EMBEDDING_QUANTIZED` | `true` | q8 ONNX weights (~3x smaller, near-identical quality); `false` → fp32 |
+| `onnxModelPath` | `CODE_INTEL_ONNX_MODEL` | `models/model.onnx` | **legacy/deprecated** — nothing loads a bare .onnx file anymore; kept for backward-compatible admin output only |
+| (removed consumer) | `ONNX_RUNTIME_URL` | — | unread as-built; external sidecar has no in-app consumer |
+
+### Δ-6. Admin route (server/routes/admin/config.ts) — honest embedding section
+
+```json
+{
+  "config": {
+    "embedding": {
+      "model": "<cfg.embeddingModelId>",
+      "dimensions": 384,
+      "backend": "onnx | hash",
+      "cacheDir": "<cfg.embeddingCacheDir>",
+      "quantized": true,
+      "legacyOnnxModelPath": "<cfg.onnxModelPath>"
+    }
+  }
+}
+```
+
+`backend` reports `EmbeddingService.getBackendKind()` — what will **actually** be used
+(`hash` after a fail-over), without triggering model loading. Covered by
+`__tests__/admin.test.ts` (expects the real model id, `backend: 'onnx'`, dimensions 384).
+
+### Δ-7. Bake flow (Dockerfile × compose) — AD-6 as-built
+
+1. `build` stage: `ARG BAKE_EMBEDDING_MODEL=true` (**default ON** — semantic search is a core
+   capability) → `mkdir -p /app/models-cache` (guarantees the production `COPY` succeeds even
+   when the download is skipped) → `TRANSFORMERS_CACHE=/app/models-cache node
+   scripts/precache-embedding-model.mjs` (fail-fast).
+2. `production` + `development`: `COPY --from=build /app/models-cache ./models-cache` +
+   `ENV TRANSFORMERS_CACHE=/app/models-cache` — runtime performs **zero** network fetch on a
+   cache hit; **read_only rootfs is safe** (cache hit = no writes).
+3. Slim builds: `--build-arg BAKE_EMBEDDING_MODEL=false` → empty dir; runtime logs the ERROR
+   fallback once and degrades to hash — or mount a volume at `/app/models-cache` to allow
+   on-first-use download (compose comment: `model_cache:/app/models-cache`).
+4. With BAKE on, `embeddingCacheDir` env → `/app/models-cache`; outside Docker the default
+   `.code-intel/models-cache` applies.
+
+### Δ-8. Process trap — dual lockfiles (npm workspaces + independent backend lock)
+
+The repo root is an **npm workspaces** root (`backend`, `extension`) with its own
+`package-lock.json`, but `backend/package-lock.json` is an **independent lock** consumed by
+the Dockerfile's `npm ci` (build context = `backend/`). Dependency changes MUST sync BOTH:
+
+```bash
+# from repo root (updates root lock via workspaces)
+npm install
+# from backend/ (updates the independent backend lock WITHOUT touching the root lock)
+npm install --package-lock-only --workspaces=false
+```
+
+Out-of-sync locks = image builds resolve different versions than the workspace (or fail
+`npm ci`). Verify with `docker build --target production backend/` after any dependency change.
+
+### Δ-9. Diagrams
+
+- `diagrams/architecture.drawio` — **factually wrong** after this change (depicted ONNX as an
+  *external optional* node fed by TaskQueue "vectors", matching neither the dead sidecar nor
+  the new in-process design; its PNG was also a broken 101-byte export). **Fixed in place**:
+  the node is now the in-process `EmbeddingService (facade)` → `OnnxEmbeddingBackend`
+  (`@huggingface/transformers`, in-process) / `HashEmbeddingBackend (fallback)` with the
+  fail-over semantics, and the PNG was re-exported. Same §2.1 embed path — no index change.
+- `diagrams/component.drawio` — **skipped (not wrong)**: it draws task-queue / code-intel /
+  extension components only and makes no claim about onnxruntime-node or embedding internals;
+  nothing it depicts is invalidated by this change. Adding an EmbeddingService box there is a
+  completeness enhancement, not a correction — out of scope for an as-built delta.
+- Other diagrams (class-task-queue, sequences, state-task, business-flow, system-context,
+  test-*) unaffected by the embedding change.

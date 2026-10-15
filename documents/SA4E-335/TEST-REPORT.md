@@ -9,7 +9,7 @@
 | Field | Value |
 |-------|-------|
 | Jira Ticket | SA4E-335 |
-| Report Version | **1.1** (v1.0 = 2026-10-02 initial execution, verdict FAIL — preserved in full below) |
+| Report Version | **1.2** (v1.1 = 2026-10-02 retest, verdict PASS; v1.0 = 2026-10-02 initial execution, verdict FAIL — preserved in full below; **v1.2 = 2026-10-15 supplementary WS-A evidence record — Delta section appended at the end, no prior content altered**) |
 | Date | 2026-10-02 |
 | Tester | qa-agent (Phase 6 — Test Execution + **bug-fix loop retest, iteration 2 of max 2**) |
 | Test Plan / Spec | STP.md v1.1, STC.md **v1.2** (BA-approved at v1.1; v1.2 = TC-INT-06 command amendment, pending BA re-review at UAT gate) |
@@ -17,6 +17,14 @@
 | Git branch note | HEAD = branch `SA4E-336` at `70d39d6` — **identical tree to branch `SA4E-335`** (verified: same commit; no checkout performed, no commits made) |
 | Commits under test | `70f35f1` (artifacts), `8d4b173` (lockfile prereq), `70d39d6` (verify evidence) **+ uncommitted working-tree fixes for DEF-001..004** (dev made no commit, per RUN-LOG #26; retest ran against `70d39d6` + those working-tree changes) |
 | Retest images | `sa4e-backend:sa4e-335-r2` (production, built by QA this session from current tree), `sa4e-backend:qa-r2-test` (test target), `backend-backend:latest` (compose rebuild) |
+
+### Revision History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | 2026-10-02 | qa-agent | Initial execution — verdict **FAIL** (36 PASS / 3 FAIL / 10 BLOCKED); DEF-001..004 raised |
+| 1.1 | 2026-10-02 | qa-agent | Retest (bug-fix loop iteration 2) — DEF-001..004 all CLOSED, verdict **PASS** (39 PASS / 0 FAIL / 10 BLOCKED) |
+| 1.2 | 2026-10-15 | qa-agent | Appended **"Delta 2026-10-15 — WS-A MCP child servers (evidence record)"** (end of document): supplementary evidence for Dockerfile stages added **after** the v1.1 retest (post-test-phase follow-up on the same ticket) — build check, production build, image contents (model cache + two MCP venvs), SEC-05 verification, stdio smoke of both child servers. Evidence recorded, not re-run. No prior content altered; **verdict unchanged (PASS)**. |
 
 ---
 
@@ -371,3 +379,41 @@ hadolint → 0 errors, 2 warnings (DL3008, DL3025), 3 info (DL3066)
 **v1.0 verdict (preserved):** ❌ **FAIL** — 36 PASS / 3 FAIL / 10 BLOCKED (2026-10-02, RUN-LOG #25) — DEF-001..004 routed to DEV; DEV remediation in RUN-LOG #26; retest evidence in §4A (this document, v1.1).
 
 *Cleanup performed (v1.0 + retest):* compose stacks down (containers + network removed), `backend_*` volumes removed for fresh-state reproducibility, smoke/offline containers removed, dummy secret files byte-identical (`dummy_pw_qa_test`, 16 B), stray `backend/sa4e_test_pw_123` deleted, tool images (hadolint/trivy) left only where pre-existing, images `sa4e-backend:sa4e-335-test6` / `sa4e-335-fix1` / `sa4e-335-r2` / `qa-r2-test` kept for later phases, **no git commits / no branch checkout** (workspace edits limited to this report, STC.md v1.2, STATUS.json, RUN-LOG.md).
+
+---
+
+## Delta 2026-10-15 — WS-A MCP child servers (evidence record)
+
+> **Nature of this section:** supplementary **evidence record**, not a retest. The v1.1 retest (§4A) closed DEF-001..004 against the Dockerfile as of `70d39d6` + the then-uncommitted fixes. The Dockerfile was subsequently **extended with new stages after the v1.1 retest** (post-test-phase follow-up on the same ticket): (a) **MCP-1** — two Python stdio MCP child servers packaged as isolated venvs copied into the runtime image, (b) **embedding-model bake** — `ARG BAKE_EMBEDDING_MODEL=true` (default ON) bakes the model into `/app/models-cache` with `ENV TRANSFORMERS_CACHE` (the AD-6 embedding branch). The evidence below was **executed and verified on 2026-10-15** and is recorded verbatim — **no build, container, or test command was re-executed for this section**. No new STC IDs were assigned; this record supplements (does not alter) the v1.1 verdict, which remains **PASS**.
+
+### D-1 Build verification
+
+| Check | Command | Result |
+|-------|---------|--------|
+| Dockerfile lint | `docker build --check` | **no warnings** (exit 0) |
+| Full production build | `docker build` (production) | **SUCCESS** |
+
+### D-2 Production image contents (verified)
+
+| Item | Verified state |
+|------|----------------|
+| Model cache | `/app/models-cache` present, **130 MB** (`model_quantized.onnx` + `config.json`); `ENV TRANSFORMERS_CACHE` points there (baked at build via `ARG BAKE_EMBEDDING_MODEL=true`) |
+| MCP child-server venvs | `/opt/markitdown-venv` + `/opt/markdown-exporter-venv` both present in the runtime image |
+| Bare-command resolution | `markitdown-mcp` and `markdown-exporter-mcp-local` both resolve as **bare commands under user `sa4e`** (venv `/bin` prepended to `PATH`) — i.e. invocable exactly as the orchestration layer's `{ "command": …, "args": [] }` config expects |
+| SEC-05 minimal runtime surface | `pip`, `pip3`, `git` all **ABSENT** from the runtime; pip additionally **uninstalled from both venvs** after dependency install |
+| mcp SDK version | `mcp 1.30.0` resolved under the declared constraint `mcp>=1.27.0,<2.0.0` |
+
+### D-3 Stdio smoke test (JSON-RPC initialize over stdin)
+
+Child servers spawned via the **bare command exactly as the orchestration does**; a JSON-RPC `initialize` request was written to stdin:
+
+| Child server | Result |
+|--------------|--------|
+| `markitdown-mcp` | ✅ responded — `serverInfo: "markitdown"` |
+| `markdown-exporter-mcp-local` | ✅ responded — `serverInfo: "markdown-exporter"` (mcp 1.30.0) |
+
+### D-4 Disposition
+
+- **v1.1 verdict PASS — unchanged.** This record adds evidence for Dockerfile stages that did not exist at retest time; no previously-passed assertion is invalidated by it.
+- Functional (runtime) verification of the **baked model** — in-container ONNX inference incl. the `--read-only --tmpfs /tmp` hardening — is recorded in the companion report **SA4E-44 TEST-REPORT v1.0** (`documents/SA4E-44/TEST-REPORT-SA4E-44.md`, §4.2/§4.3), produced in the same 2026-10-15 evidence session.
+- Operational consequence of the baked model: **reindex mandatory after deploy** — vectors from the old hash pseudo-embedding are incompatible with the new ONNX 384-dim vectors; cross-generation comparison is forbidden and stale vectors must be purged and re-indexed (`ReindexService`). Details: companion report **§6**.

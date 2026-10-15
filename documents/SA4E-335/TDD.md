@@ -431,3 +431,127 @@ Fail-fast is the default: missing secrets stop startup rather than falling back 
 | Current backend Dockerfile | backend/Dockerfile |
 | Current backend docker-compose | backend/docker-compose.yml |
 | Containerization baseline | SA4E-44 |
+
+
+---
+
+## Delta 2026-10-15 — WS-A (as-built design)
+
+> Appended by SA Agent on 2026-10-15. Records the **as-built** state of `backend/Dockerfile`
+> after implementation extended the v1.0 design: the stage graph grew from six to **seven
+> stages** (new `mcp-python`), two Python stdio MCP child servers are baked into the image,
+> and the embedding-model bake (AD-6) is now **implemented** (was conditional). Sections above
+> are preserved verbatim as design history; wherever they conflict with this delta, **this
+> delta is the as-built truth**. All facts verified line-by-line against the current
+> `backend/Dockerfile` (266 lines) on 2026-10-15.
+
+### Δ-1. Dockerfile stage graph — 7 stages (supersedes AD-2 "six-stage layout")
+
+| Stage | `FROM` | Purpose | Key steps (as-built) |
+|-------|--------|---------|----------------------|
+| `base` | `node:22-slim@sha256:43ac6c60…` (SEC-02 immutable digest pin; tag kept as comment) | Shared workdir + glibc build toolchain | `apt-get install -y --no-install-recommends python3 make g++ git` + apt cleanup. Build-time only. No draw.io CLI / Electron / xvfb (AD-6 items **not adopted** in base). |
+| `deps` | `base` | Production dependencies | `COPY package.json package-lock.json`; `npm ci --omit=dev`. |
+| `build` | `base` | Compile + hermetic prep | `npm ci`; `COPY tsconfig.json src/ scripts/`; `npm run build` → `dist/`; **AD-6 model bake (now implemented, default ON)**: `ARG BAKE_EMBEDDING_MODEL=true` → `mkdir -p /app/models-cache` + `TRANSFORMERS_CACHE=/app/models-cache node scripts/precache-embedding-model.mjs` (fail-fast: non-zero exit on download/inference error fails the build). `tree-sitter-jsp` strip **not adopted** (not needed). |
+| **`mcp-python`** ★ NEW | `base` (SAME pinned node base as runtime — Debian glibc ABI so manylinux wheels built here match runtime) | Builds 2 independent Python venvs, one per stdio MCP child server | Installs `python3-venv`; creates `/opt/markitdown-venv` (`markitdown-mcp==0.0.1a7` from PyPI) and `/opt/markdown-exporter-venv` (`markdown-exporter-mcp-local 0.1.0` from GitHub `Zac-Chen-2001/markdown-exporter-mcp-local`, pinned commit `1429b6a94767a709f7f5119219ca5951042d9d3c` — **not published to npm or PyPI**, so npm packaging is impossible by design); runs console-script `test -x` + Python `import` probes per venv (fail the build on API drift); `pip uninstall pip` inside each venv (no package manager ships to runtime). |
+| `production` ★ | `node:22-slim` (digest-pinned) | **Runtime image — sole CI push target** | npm CLI bump to `npm@11.21.0` + 2 same-major patch pins inside the bundled npm (DEF-004 Trivy gate) + SEC-04 `apt upgrade` (libpcre2-8-0, perl set); `COPY --from=deps node_modules`, `--from=build dist/ + package.json + models-cache`, `--from=mcp-python` both venvs (root-owned, read-only); `apt-get install python3` runtime only; non-root `sa4e` uid/gid 1001; `EXPOSE 48721`; **HEALTHCHECK = node http probe** (see Δ-4); `CMD ["node","dist/index.js"]`. |
+| `development` | `base` | Hot-reload dev (non-root) | `npm ci`; tsx watch; **parity with production for models-cache + both venvs + PATH/PYTHONUNBUFFERED** so dev containers embed and spawn children identically. |
+| `test` | `base` | In-container vitest (non-root) | `npm ci`; `COPY tests/ .env.test`; `CMD npx vitest run`. Unchanged. |
+
+**Why `mcp-python` derives from the node base instead of a `python:X` image:** both child
+servers are Python, but markitdown pulls native manylinux wheels (onnxruntime via
+`markitdown[all]`/magika, PyMuPDF, pillow, pandas) and pypandoc-binary bundles its own pandoc
+binary. Building the venvs on the same pinned Debian/glibc base guarantees wheel ABI matches
+the runtime image, keeps ONE pinned base digest for the whole supply chain (SEC-02), and lets
+`git` (needed for the GitHub-source install) exist only in this build-time stage (SEC-05).
+
+### Δ-2. Pinned-contract decision — `mcp>=1.27.0,<2.0.0` (the upper bound is load-bearing)
+
+**Decision:** the `markdown-exporter-venv` install pins `mcp` to `">=1.27.0,<2.0.0"` even
+though upstream `markdown-exporter-mcp-local` declares only `mcp>=1.27.0` (unbounded).
+
+**Why the upper bound exists (documented failure mode, verified):** upstream code imports
+`mcp.server.fastmcp`, an API surface **removed in mcp 2.x** (FastMCP → MCPServer API drift).
+With an unconstrained resolve, pip installs current mcp (verified drift: **2.3.0**) and the
+server crashes at import with `ModuleNotFoundError` — not at pip time, but at runtime spawn.
+**Design contract:** this is a *pinned-contract* constraint, not a convenience pin:
+
+- The Dockerfile embeds a build-time **import probe**
+  (`python -c "import markdown_exporter_mcp.server, md_exporter"`) that fails the build on
+  exactly this class of drift — a bad resolve can never reach the registry.
+- The `<2.0.0` bound must be re-evaluated when upstream migrates to the mcp 2.x API; until
+  then the bound is the contract that keeps the venv runnable.
+- Same pattern applied to venv 1: `markitdown-mcp==0.0.1a7` (exact pin) + `import markitdown_mcp` probe.
+
+### Δ-3. Production runtime surface (SEC-05, as-built)
+
+- Runtime gains **only** the `python3` interpreter (`apt-get install --no-install-recommends python3`) —
+  **no pip, no venv tooling, no git, no compilers, no apt pandoc** (pypandoc-binary wheel
+  bundles pandoc; onnxruntime ships as a manylinux wheel).
+- Both venv trees are `COPY --from=mcp-python` → root-owned **read-only** for the non-root
+  `sa4e` process (world-executable console scripts; the backend can execute but never modify
+  its own child servers), and each venv's bundled `pip` is stripped at build time.
+- `ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"` +
+  `ENV PYTHONUNBUFFERED=1` (unbuffered stderr keeps stdio MCP framing intact).
+- Development stage maintains **parity** (same venv copies + ENV) so local dev reproduces the
+  production spawn path exactly.
+
+### Δ-4. Healthcheck as-built (supersedes §4.3 wget probe)
+
+`node:22-slim` does **not** ship `wget`, so the §4.3 wget probe would silently always-fail.
+As-built (SEC-12, dependency-free):
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||48721)+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+```
+
+Parameter table of §4.3 remains valid (30s/5s/10s/3, probe `GET /health`); only the probe
+binary changed (node built-in http client). compose-level healthcheck mirrors this.
+
+### Δ-5. MCP spawn model — DB config is the primary source (container-relevant rows)
+
+The backend **never runs MCP servers inline**; child servers are spawned only from config via
+`McpClientManager.initializeAll()` → `TransportFactory` (stdio = spawn `command` + `args`).
+Primary config source is the DB table `mcp_servers WHERE disabled = 0`;
+`.code-intel/orchestration.json` is fallback-only — see `documents/MCP-DB-CONFIG-REQUEST.md`
+(single source of truth decision + §9 real-data gotchas).
+
+In-container rows that work with the baked venvs (bare commands resolve on the PATH set in Δ-3):
+
+| Column | Row 1 | Row 2 |
+|--------|-------|-------|
+| `transport_type` | `stdio` | `stdio` |
+| `command` | `markitdown-mcp` | `markdown-exporter-mcp-local` |
+| `args` | `[]` | `[]` |
+
+> **TRAP (from real data):** legacy Windows-shaped rows — `command`=`uv` with
+> `args=["--directory","C:/projects/python/markdown-exporter-mcp-local","run",…]` — **fail in
+> the container**: `uv` is not installed and the Windows path does not exist. Migrating to the
+> container image requires the bare-command rows above; args must also be clean JSON arrays
+> (no duplicated quotes — MCP-DB-CONFIG-REQUEST §9). For stdio, "start" = spawn, so `command`
+> must be on the PATH inherited by the backend process — which the image guarantees via `ENV PATH`.
+
+### Δ-6. Build ARG contract additions (extends §4.1)
+
+| Build ARG | Default | Allowed | Consumed at | Secret? |
+|-----------|---------|---------|-------------|---------|
+| `BAKE_EMBEDDING_MODEL` | `true` | `true` / `false` | `build` — gates `scripts/precache-embedding-model.mjs` into `/app/models-cache` (`mkdir -p` first so the production `COPY` succeeds even when skipped; `false` = slim build, runtime logs an error and degrades to hash fallback unless a volume is mounted at `/app/models-cache`) | No |
+| `MARKITDOWN_MCP_VERSION` | `0.0.1a7` | pinned PyPI version | `mcp-python` — venv 1 install + probe | No |
+| `MARKDOWN_EXPORTER_MCP_REF` | `1429b6a94767a709f7f5119219ca5951042d9d3c` | pinned git commit | `mcp-python` — venv 2 git-source install + probe (hermetic; GitHub-source analogue of SEC-02) | No |
+
+Also present as-built (recorded for completeness, already governed by earlier deltas):
+`NODE_BASE_DIGEST` (SEC-02 base pin) and `NPM_VERSION` (DEF-004 runtime npm CLI bump).
+Rule of §4.1 unchanged: build args never carry secrets (BR-17).
+
+### Δ-7. Diagrams
+
+- `diagrams/component.drawio` — was **factually wrong** (showed the 6-stage layout, "proposed"
+  AD-6 markers, and the wget healthcheck). **Fixed in place** to the as-built 7-stage graph
+  (adds `mcp-python`, venv `COPY` edges into production, models-cache flow, node-http
+  healthcheck) and re-exported to `diagrams/component.png`. Same embed path as §3.1 — no new
+  index row needed.
+- `diagrams/architecture.drawio` — one stale line (backend "healthcheck: wget /health")
+  corrected to the node-http probe and the backend box now notes the two stdio MCP children
+  spawned from `mcp_servers` DB rows. Re-exported to `diagrams/architecture.png`.
+- No other diagrams affected: CI job graph, sequence, state, and system-context diagrams
+  depict CI/compose/registry flows that did not change.

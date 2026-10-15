@@ -24,6 +24,7 @@
 |---------|------|--------|---------|
 | 1.0 | 2026-10-01 | BA Agent | Initial FSD draft — business/functional specification derived from the approved BRD (4 user stories). Technical API contracts and pseudocode deferred to TA enrichment. |
 | 1.1 | 2026-10-01 | TA Agent | Technical enrichment: added §12 (Technical Appendix A — API/config contracts: Dockerfile build args/ENV, compose service/env/secret definitions, GitHub Actions inputs/secrets/outputs), §13 (Appendix B — Integration requirements: registry auth, CI triggers, tag scheme), §14 (Appendix C — CI build+push pseudocode), §15 (Appendix D — Codebase-vs-spec discrepancy log against the actual backend/Dockerfile + backend/docker-compose.yml), §16 (Appendix E — quantified NFR targets). Business sections and diagrams unchanged. |
+| 1.2 | 2026-10-15 | BA Agent | Post-implementation delta WS-A appended — new §17: 7-stage Dockerfile contract (new `mcp-python` stage supersedes the §12.1 stage count), 2 spawnable bare commands via `mcp_servers` DB rows, `mcp>=1.27.0,<2.0.0` constraint rationale, SEC-05 runtime posture, dev/prod parity. Append-only. |
 
 ---
 
@@ -936,3 +937,50 @@ FUNCTION ci_build_and_push(event):
 | `postgres` | 1.0 vCPU | 1 GB | pgvector workload; tune per data volume |
 
 > These are starting targets to be tuned against measured load; they satisfy BR-11 (limits defined) and are parameterizable per environment (UC-02 AF-2).
+
+---
+
+## 17. Delta 2026-10-15 — WS-A (post-implementation requirements verification)
+
+> Functional delta appended after implementation & verification (BA). Sections 1–16 are retained unchanged (append-only history); where this delta conflicts with earlier text, **this delta reflects the as-built state**.
+
+### 17.1 Dockerfile stage contract update (supersedes the §12.1 stage count)
+
+`backend/Dockerfile` is now a **7-stage** build: `base`, `deps`, `build`, **`mcp-python`** (new), `production`, `development`, `test`. The new `mcp-python` stage (same pinned node base) builds two **independent venvs**:
+
+| Stage | Purpose | Outputs consumed by |
+|-------|---------|---------------------|
+| `mcp-python` | Build `/opt/markitdown-venv` (`markitdown-mcp==0.0.1a7`, PyPI — Microsoft MarkItDown) and `/opt/markdown-exporter-venv` (`markdown-exporter-mcp-local 0.1.0`, GitHub `Zac-Chen-2001`, **pinned commit `1429b6a94767a709f7f5119219ca5951042d9d3c`** — not published on npm/PyPI) | `production`, `development` (COPY) |
+
+### 17.2 New spawnable commands (config contract)
+
+Two new commands are spawnable via `mcp_servers` DB rows (bare command names, **no `uvx`/`uv` wrapper**):
+
+| command | args | Spawn condition |
+|---------|------|-----------------|
+| `markitdown-mcp` | `[]` | Row present in `mcp_servers` with `disabled=0` |
+| `markdown-exporter-mcp-local` | `[]` | Row present in `mcp_servers` with `disabled=0` |
+
+**Config source of truth:** the DB table `mcp_servers` (`WHERE disabled=0`) is the **primary** spawn-configuration source — see `documents/MCP-DB-CONFIG-REQUEST.md`; `orchestration.json` is a fallback only. **Configuration trap:** legacy Windows rows using `uv` + `--directory C:/projects/...` **fail in-container**; in-container rows MUST use the bare command names above. The backend does not run the child servers itself — spawning happens only via config. The orchestrator spawns both via the bare command.
+
+### 17.3 Dependency constraint (fail-fast rationale)
+
+The exporter venv pins **`mcp>=1.27.0,<2.0.0`**: upstream declares `mcp>=1.27.0` **unbounded**, but the code imports `mcp.server.fastmcp` — an API **removed in mcp 2.x**. Unconstrained pip resolves `2.3.0` → `ModuleNotFoundError` at runtime. A probe in the Dockerfile catches this at **build time** — the build fails fast, consistent with the fail-visible philosophy (BR-19 / UC-03 EF-1).
+
+### 17.4 Runtime security posture (SEC-05 preserved)
+
+- Production stage apt-installs **only `python3`** — no pip / git / pandoc at runtime (SEC-05). Pandoc ships inside the venv via the `pypandoc-binary` wheel.
+- Venvs are `COPY`-ed **root-owned read-only**; pip is stripped from the venvs (no package manager at runtime).
+- `ENV PATH` (venv bins) + `PYTHONUNBUFFERED=1`.
+- **Development stage parity:** venvs + ENV mirrored, so dev and prod spawn behavior is identical (parity in the spirit of BR-13).
+
+### 17.5 Traceability
+
+| Item | Maps to |
+|------|---------|
+| New `mcp-python` stage + pinned deps (version + commit SHA) | BR-04, BR-06 (size/build-time trade-off flagged), NFR Reproducibility |
+| python3-only runtime, no pip/git/pandoc, venv pip stripped | SEC-05, NFR Security "minimal runtime dependencies" |
+| Non-root `sa4e` + healthcheck unchanged; venvs root-owned read-only | BR-05 |
+| Spawn via `mcp_servers` DB rows (bare commands) | New functional scope recorded in BRD Delta 2026-10-15 (WS-A); config spec in `documents/MCP-DB-CONFIG-REQUEST.md` |
+
+**Revision History:** bumped to v1.2 (row added at the top of this document).

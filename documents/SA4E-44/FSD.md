@@ -26,6 +26,7 @@
 | 2.0 | 2026-07-17 | BA Agent | **FULL REWRITE** — Dual scope: Part 1 (Task Queue) + Part 2 (Code Intel Migration) |
 | 2.1 | 2026-07-17 | BA Agent | Add `timestamp` field per BRD v3.0 — UC-01, UC-06, UC-07, UC-09 + BR-09 + Data Model + API Contracts |
 | 2.2 | 2026-07-17 | TA Agent | **Technical Enrichment** — UC edge cases, detailed API contracts (status codes, rate limiting, error format), pseudocode (TaskWorker, atomic ingest, timestamp resolution, hash dedup), integration specs (MCP StreamableHTTP, Task Worker ↔ LLM/ONNX), data model validation (indexes, constraints, FKs), open issues & technical decisions |
+| 2.3 | 2026-10-15 | BA Agent | Post-implementation delta WS-B appended — new §13: embedding backend selection onnx→hash fail-over, config env keys, admin `/config` embedding contract, Docker AD-6 default-ON, **REINDEX MANDATORY** operational constraint. Append-only. |
 
 ---
 
@@ -1338,3 +1339,65 @@ DatabaseAdapter abstracts these differences at application level.
 ---
 
 ## End of Document
+
+---
+
+## 13. Delta 2026-10-15 — WS-B (post-implementation requirements verification)
+
+> Appended after implementation & verification (BA). Sections 1–12 (including the "End of Document" marker) are retained unchanged; where this delta conflicts with earlier text, **this delta reflects the as-built state**.
+
+### 13.1 Embedding backend selection & fail-over (updates §9.2 VECTOR_EMBEDDING)
+
+`EmbeddingService` is now a **facade** over a pluggable `EmbeddingBackend`:
+
+| Backend | Behavior |
+|---------|----------|
+| `OnnxEmbeddingBackend` (default) | `@huggingface/transformers@4.3.1` (exact pin), model `Xenova/paraphrase-multilingual-MiniLM-L12-v2` (384 dims, multilingual); lazy dynamic import, memoized init |
+| `HashEmbeddingBackend` (fallback) | Legacy deterministic hash embedding — used **only after ONNX failure**, never silently |
+
+**Fail-over rule:** on ONNX init/execution failure the service switches to the hash backend and logs **ERROR exactly once** (`onnxFailed` latch). Retrying ONNX requires a **process restart**. The backend actually in use is visible via admin config (`backend: 'onnx' | 'hash'`).
+
+**API compatibility:** the old public API (`generateEmbedding`, `cosineSimilarity`) is preserved, so TaskWorker, MemoryToolSearchService, ReindexService, LLMInitializer, and `index.ts` required no changes (UC-02 step 4 / UC-01 AF-01.2 / BR-08 backward-compat unaffected). DI for tests: `setBackend()` / `resetForTests()`.
+
+**New files:** `backend/src/engine/parsers/embedding/{EmbeddingBackend.ts, HashEmbeddingBackend.ts, OnnxEmbeddingBackend.ts, __tests__/EmbeddingService.test.ts}`; `backend/scripts/precache-embedding-model.mjs` (build-time model download, fail-fast). `onnxruntime-node` removed as a direct dependency (transformers pulls ort-node 1.30.0).
+
+### 13.2 Configuration contract
+
+| Config key | Env var | Default | Notes |
+|------------|---------|---------|-------|
+| `embeddingModelId` | `CODE_INTEL_EMBEDDING_MODEL` | `Xenova/paraphrase-multilingual-MiniLM-L12-v2` | HF model id |
+| `embeddingCacheDir` | `TRANSFORMERS_CACHE` | `.code-intel/models-cache` | Model cache location |
+| `embeddingQuantized` | `CODE_INTEL_EMBEDDING_QUANTIZED` | `true` | Quantized ONNX weights |
+| `onnxModelPath` | `CODE_INTEL_ONNX_MODEL` | — | **Legacy / deprecated** (was previously consumed by nothing) |
+
+### 13.3 Admin `/config` embedding section (transparency contract)
+
+```json
+{
+  "model": "<HF model id>",
+  "dimensions": 384,
+  "backend": "onnx | hash",
+  "cacheDir": "<path>",
+  "quantized": true,
+  "legacyOnnxModelPath": "<legacy value or null>"
+}
+```
+
+Replaces the previously misleading displayed model name.
+
+### 13.4 Deployment / Docker contract (AD-6 now IMPLEMENTED, default ON)
+
+- Build stage: `ARG BAKE_EMBEDDING_MODEL=true` (default **ON**) + `node scripts/precache-embedding-model.mjs` into `/app/models-cache` (fail-fast on download error).
+- `production` + `development`: `COPY --from=build` the models-cache + `ENV TRANSFORMERS_CACHE=/app/models-cache`. `read_only` rootfs is OK (cache hit needs no write).
+- Slim build without a baked model: mount volume `model_cache:/app/models-cache` (docker-compose.yml comment added).
+- ⚠️ **Lockfile trap (process):** the repo root is npm workspaces (backend, extension) but `backend/package-lock.json` is an **independent** lock consumed by the Dockerfile `npm ci` — both must be kept in sync (root via normal `npm install`; backend via `npm install --package-lock-only --workspaces=false` inside `backend/`).
+
+### 13.5 ⛔ OPERATIONAL CONSTRAINT — REINDEX MANDATORY AFTER DEPLOY
+
+Vectors produced by the old hash (pseudo-embedding) backend are **incompatible** with vectors produced by the new ONNX backend. **Cross-comparison between hash-space and ONNX-space vectors is forbidden.** Therefore: **a full REINDEX (re-embedding of all stored entries via ReindexService) is MANDATORY after deploying this change.** Until the reindex completes, semantic-search results that mix old and new vectors are invalid.
+
+### 13.6 Model-name discrepancy vs §9.2
+
+§9.2 named the model `all-MiniLM-L6-v2`; the as-built model is `Xenova/paraphrase-multilingual-MiniLM-L12-v2` (multilingual, same **384** dimensions — the `vector VECTOR(384)` storage contract in §5.1 is unchanged).
+
+**Revision History:** bumped to v2.3 (row added at the top of this document).

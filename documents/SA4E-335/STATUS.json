@@ -5,19 +5,31 @@
   "architecturePattern": "monolith",
   "currentPhase": "uat",
   "phases": {
-    "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-09-30T18:40:00Z" },
-    "specification": { "status": "done", "file": "FSD.md", "version": 2, "completedAt": "2026-10-01T11:30:00Z", "baDraft": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-10-01T10:00:00Z" }, "taEnrichment": { "status": "done", "version": 2, "completedAt": "2026-10-01T11:30:00Z" } },
-    "design": { "status": "done", "file": "TDD.md", "version": 1, "startedAt": "2026-10-01T11:30:00Z", "completedAt": "2026-10-01T12:20:00Z" },
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1.1, "completedAt": "2026-09-30T18:40:00Z", "note": "v1.1 = Delta 2026-10-15 WS-A requirements verification (append-only)" },
+    "specification": { "status": "done", "file": "FSD.md", "version": 2.2, "completedAt": "2026-10-01T11:30:00Z", "baDraft": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-10-01T10:00:00Z" }, "taEnrichment": { "status": "done", "version": 2, "completedAt": "2026-10-01T11:30:00Z" }, "note": "v2.2 = Delta 2026-10-15 WS-A section 17: 7-stage contract supersedes 12.1, bare-command mcp_servers rows, mcp>=1.27.0<2.0.0 pin" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1.1, "startedAt": "2026-10-01T11:30:00Z", "completedAt": "2026-10-01T12:20:00Z", "note": "v1.1 = Delta 2026-10-15 WS-A as-built: 7-stage table supersedes AD-2, mcp<2 pinned-contract decision, ARG additions; component.drawio + architecture.drawio redrawn to as-built" },
     "feedback_loop": { "status": "not_started", "iterations": 0, "maxIterations": 5 },
     "security_design_review": { "status": "done", "file": "SECURITY-REVIEW.md", "startedAt": "2026-10-01T12:20:00Z", "completedAt": "2026-10-01T12:50:00Z", "findings": { "critical": 2, "high": 3, "medium": 5, "low": 3 } },
     "test_planning": { "status": "done", "stpFile": "STP.md", "stcFile": "STC.md", "version": 1, "baReview": "approved", "startedAt": "2026-10-01T12:50:00Z", "completedAt": "2026-10-01T13:30:00Z" },
     "devops_pipeline_setup": { "status": "done", "file": "DEVOPS-PIPELINE-PLAN.md", "version": 1, "startedAt": "2026-10-01T13:30:00Z", "completedAt": "2026-10-01T14:30:00Z" },
     "implementation": { "status": "done", "startedAt": "2026-10-01T14:30:00Z", "completedAt": "2026-10-01T15:45:00Z", "artifactCommit": "70f35f1", "prereqCommit": "8d4b173", "verifyCommit": "70d39d6", "imageBuild": "pass", "runtimeVerify": { "nonRoot": "sa4e uid 1001", "health": "200", "evidence": "IMPL-VERIFICATION.md" }, "taReview": "approved", "taReviewDoc": "TA-IMPL-REVIEW.md" },
     "security_code_review": { "status": "done", "file": "SECURITY-ASSESSMENT.md", "verdict": "APPROVED", "findings": { "critical": 0, "high": 0, "medium": 2, "low": 2 }, "resolvedDesignFindings": { "critical": ["SEC-01", "SEC-02"], "high": ["SEC-03", "SEC-04", "SEC-05"] }, "completedAt": "2026-10-01T16:20:00Z" },
-    "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 2, "startedAt": "2026-10-02T04:30:00Z", "completedAt": "2026-10-02T16:00:00Z", "summary": { "total": 49, "pass": 39, "fail": 0, "blocked": 10, "blockedNote": "TC-CI-01..09 + TC-SEC-01 require GitHub runner/GHCR — pending CI dry-run", "stcAmendment": "TC-INT-06 v1.2", "defectsClosed": ["DEF-001", "DEF-002", "DEF-003", "DEF-004"] } },
+    "testing": { "status": "done", "file": "TEST-REPORT.md", "version": 2.2, "startedAt": "2026-10-02T04:30:00Z", "completedAt": "2026-10-02T16:00:00Z", "summary": { "total": 49, "pass": 39, "fail": 0, "blocked": 10, "blockedNote": "TC-CI-01..09 + TC-SEC-01 require GitHub runner/GHCR - pending CI dry-run (CI later verified green 2026-10-03, RUN-LOG #35-36)", "stcAmendment": "TC-INT-06 v1.2", "defectsClosed": ["DEF-001", "DEF-002", "DEF-003", "DEF-004"] }, "note": "v1.2 = Delta 2026-10-15 WS-A evidence record (append-only): docker build --check clean, image contents, SEC-05, stdio smoke markitdown + markdown-exporter" },
     "pentest": { "status": "done", "file": "PENTEST-REPORT.md", "verdict": "PASS", "findings": { "critical": 0, "high": 0, "medium": 2, "low": 2, "info": 4 }, "completedAt": "2026-10-02T17:00:00Z" },
     "uat": { "status": "in_progress", "file": "UAT-READINESS.md", "startedAt": "2026-10-02T18:00:00Z" },
-    "deployment": { "status": "not_started" }
+    "deployment": { "status": "not_started" },
+    "ws_a_mcp_child_servers": {
+      "status": "done",
+      "completedAt": "2026-10-15T08:30:00Z",
+      "description": "Post-test-phase follow-up (implemented & verified 2026-10-15; documentation-only sync, no code changes): 2 stdio MCP child servers baked into backend/Dockerfile (7 stages, new mcp-python stage; markitdown-mcp==0.0.1a7 + markdown-exporter-mcp-local 0.1.0 pin 1429b6a9, constraint mcp>=1.27.0,<2.0.0; production apt python3-only per SEC-05, venv pip stripped). Spawn via DB mcp_servers bare commands (see documents/MCP-DB-CONFIG-REQUEST.md; TRAP: legacy uv/Windows configs fail in container)",
+      "docs": ["BUILD-AND-REGISTRY.md section 8", "DPG.md section 9", "RLN.md section 1.3", "TDD.md Delta WS-A", "FSD.md section 17", "BRD.md Delta WS-A", "TEST-REPORT.md Delta 2026-10-15"]
+    },
+    "doc_sync_2026_10_15": {
+      "status": "done",
+      "completedAt": "2026-10-15T08:30:00Z",
+      "description": "Documentation-only sync: ba-agent BRD/FSD delta; sa-agent TDD delta + 2 diagrams redrawn; devops-agent BUILD-AND-REGISTRY section 8 + DPG v1.0 (created) + RLN v1.0 (created) + DOCX export; qa-agent TEST-REPORT v1.2 delta; SM: RUN-LOG reconcile (#38-41), STATUS.json, Jira comment/attachments",
+      "knownGap": "docker-compose.yml comment suggests mounting model_cache:/app/models-cache for slim build but named volume not declared top-level (documented in B&R 8.7 / DPG 9.4 / RLN known-issue)"
+    }
   },
-  "lastUpdated": "2026-10-02T18:00:00Z"
+  "lastUpdated": "2026-10-15T08:30:00Z"
 }

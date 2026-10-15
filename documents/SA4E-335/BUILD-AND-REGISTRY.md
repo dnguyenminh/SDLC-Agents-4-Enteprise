@@ -183,3 +183,136 @@ Because the base image is digest-pinned and dependencies are lockfile-pinned
 (`npm ci`), a rebuild of the same source revision is reproducible; the published
 `sha-<short>` tag and `sha256` digest map the running container back to one
 source commit (BR-16).
+
+---
+
+## 8. Delta — 2026-10-15: stdio MCP child servers baked into the image (7 stages)
+
+> Documentation-only delta appended by devops-agent. Where this section conflicts
+> with §1–§7, **this section supersedes** (those sections describe the pre-MCP image).
+
+### 8.1 What changed
+
+`backend/Dockerfile` grew from 6 to **7 stages** and the production runtime now
+ships two Python stdio MCP child servers plus the ONNX embedding model:
+
+- New stage **`mcp-python`** builds two independent venvs from the same pinned
+  `node:22-slim` base (venv interpreters and native manylinux wheels match the
+  runtime ABI):
+  - `/opt/markitdown-venv` — `markitdown-mcp==0.0.1a7` (PyPI, Microsoft MarkItDown)
+  - `/opt/markdown-exporter-venv` — `markdown-exporter-mcp-local 0.1.0` from
+    GitHub `Zac-Chen-2001/markdown-exporter-mcp-local`, pinned to commit
+    `1429b6a94767a709f7f5119219ca5951042d9d3c` — **NOT published to npm/PyPI**
+- `production`: apt installs **`python3` only** (no pip/pip3/git/pandoc — SEC-05;
+  pandoc ships inside the `pypandoc-binary` wheel), copies both venvs
+  **root-owned read-only**, sets `PATH` (bare commands) + `PYTHONUNBUFFERED=1`.
+  Venv `pip` is uninstalled during build → **zero package managers at runtime**.
+- `development`: parity (same venv copies + ENV).
+- Embedding model bake is now **default ON** (§2 said "default OFF" — superseded).
+
+### 8.2 Stage map (7 stages)
+
+| # | Stage | Role |
+|---|-------|------|
+| 1 | `base` | Shared workdir + build toolchain (python3/make/g++/git) on digest-pinned node:22-slim (build-time only) |
+| 2 | `deps` | `npm ci --omit=dev` → pruned production `node_modules` |
+| 3 | `build` | Full `npm ci` + `tsc` → `dist/`; bakes the ONNX model into `/app/models-cache` when `BAKE_EMBEDDING_MODEL=true` |
+| 4 | `mcp-python` | Builds the two stdio MCP venvs under `/opt/*` (`git` used here only, SEC-05) |
+| 5 | `production` ★ | Sole CI push target — runtime: node_modules + dist + models-cache + python3 + 2 read-only venvs; npm CLI bump (DEF-004) + Debian CVE upgrades (SEC-04) |
+| 6 | `development` | Hot-reload image (tsx watch), MCP venv parity |
+| 7 | `test` | In-container vitest |
+
+### 8.3 New build ARGs
+
+| ARG | Default | Purpose |
+|-----|---------|---------|
+| `MARKITDOWN_MCP_VERSION` | `0.0.1a7` | PyPI version pin for markitdown-mcp |
+| `MARKDOWN_EXPORTER_MCP_REF` | `1429b6a94767a709f7f5119219ca5951042d9d3c` | Upstream commit pin (hermetic git-source analogue of SEC-02) |
+| `BAKE_EMBEDDING_MODEL` | `true` | Bakes `Xenova/paraphrase-multilingual-MiniLM-L12-v2` (quantized, ~130 MB) into `/app/models-cache` (`ENV TRANSFORMERS_CACHE=/app/models-cache`). `false` → slim build; mount a volume (§8.7) |
+
+Pre-existing ARGs unchanged: `NODE_VERSION`, `NODE_BASE_DIGEST` (SEC-02),
+`NPM_VERSION` (DEF-004 npm CLI bump, 11.21.0).
+
+### 8.4 Production image contents inventory
+
+| Path / aspect | Content | Notes |
+|---------------|---------|-------|
+| `/app/models-cache` | `model_quantized.onnx` + `config.json` (~130 MB) | Baked by default; read-only rootfs OK (cache hits need no writes) |
+| `/opt/markitdown-venv` | markitdown-mcp venv | root-owned, read-only, pip stripped |
+| `/opt/markdown-exporter-venv` | markdown-exporter-mcp-local venv | same hardening |
+| apt layer | `python3` only | pip/pip3/git/pandoc **ABSENT** at runtime (SEC-05) |
+| ENV | `PATH=/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:…`, `PYTHONUNBUFFERED=1`, `TRANSFORMERS_CACHE=/app/models-cache` | bare commands resolve under user `sa4e` (BR-05) and its stdio children |
+
+### 8.5 `mcp>=1.27.0,<2.0.0` constraint rationale
+
+`markdown-exporter-mcp-local` upstream declares `mcp>=1.27.0` **unbounded**, but
+its code imports `mcp.server.fastmcp` — an API **removed in mcp 2.x** (FastMCP →
+MCPServer). Unconstrained pip resolves `mcp 2.3.0` → `ModuleNotFoundError` at
+runtime. The Dockerfile therefore pins `mcp>=1.27.0,<2.0.0` and adds an import
+probe (`markdown_exporter_mcp.server`, `md_exporter`) that fails the build on
+exactly this class of drift.
+
+### 8.6 Lockfile sync workflow — TWO-LOCKFILE TRAP
+
+Repo root = npm workspaces (`backend`, `extension`), but
+`backend/package-lock.json` is an **INDEPENDENT lockfile** consumed verbatim by
+the Dockerfile `npm ci`. When changing backend dependencies, sync BOTH:
+
+```bash
+# 1. root workspace lockfile (root CI/test runs)
+npm install
+
+# 2. backend standalone lockfile (what Docker npm ci reads)
+cd backend
+npm install --package-lock-only --workspaces=false
+```
+
+Skipping step 2 makes the image build install stale/different dependency
+versions than the ones local (root-workspace) tests exercised.
+
+### 8.7 Slim-build option (BAKE_EMBEDDING_MODEL=false)
+
+```bash
+docker build --target production --build-arg BAKE_EMBEDDING_MODEL=false -t sa4e-backend:slim .
+```
+
+The runtime then logs an error and degrades to the sin-hash fallback unless a
+writable volume is mounted at `/app/models-cache`:
+
+```yaml
+# compose override — NOTE: the named volume MUST be declared. Compose
+# validation fails on an undeclared named volume; the base compose file
+# mentions the mount in a comment but does NOT pre-declare model_cache.
+services:
+  backend:
+    volumes:
+      - model_cache:/app/models-cache
+volumes:
+  model_cache: {}
+```
+
+### 8.8 Spawn model (who starts the MCP servers)
+
+The backend does **not** run the servers itself — it spawns them from config.
+Primary source: DB table `mcp_servers` WHERE `disabled=0`
+(`documents/MCP-DB-CONFIG-REQUEST.md`; `.code-intel/orchestration.json` is a
+file-fallback when the DB is empty). In-container rows use **bare commands**:
+
+| name | transport_type | command | args |
+|------|----------------|---------|------|
+| markitdown | stdio | `markitdown-mcp` | `[]` |
+| markdown-exporter | stdio | `markdown-exporter-mcp-local` | `[]` |
+
+⚠️ TRAP: legacy Windows configs spawning via `uv` + `--directory C:/projects/…`
+**FAIL in the container** (no uv, no host paths). Bare commands only.
+
+### 8.9 Verification evidence (2026-10-15)
+
+- `docker build --check` — no warnings.
+- Full `docker build --target production` — SUCCESS.
+- stdio smoke test (JSON-RPC `initialize` over stdin, spawned as bare commands
+  exactly like orchestration does):
+  - `markitdown-mcp` → `serverInfo.name = "markitdown"`
+  - `markdown-exporter-mcp-local` → `serverInfo.name = "markdown-exporter"`
+
+  (exporter venv resolved `mcp 1.30.0` under the `<2.0.0` constraint)
