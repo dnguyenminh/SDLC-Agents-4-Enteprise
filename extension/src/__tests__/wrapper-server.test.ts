@@ -10,7 +10,7 @@ import { WrapperServer } from '../services/WrapperServer';
 import { evaluateOriginGate } from '../services/OriginGate';
 import { Base64ProxyService } from '../services/Base64ProxyService';
 import {
-  createTestServer, postMcp, postRaw, requestWithHeaders,
+  createTestServer, postMcp, requestWithHeaders,
   assertNoAccessControlHeaders, sendRawRequest, createCapturingOutputChannel,
   openSse, TMP_DIR, ensureTmpDir, cleanTmpDir, MockDeps,
 } from './wrapper-server.helpers';
@@ -194,10 +194,30 @@ describe('WrapperServer IT + E2E-API (TC-22 to TC-31)', () => {
     );
   });
 
-  it('TC-28: Body size limit rejects oversized requests', async () => {
-    const oversized = Buffer.alloc(1024 * 1024 + 1, 'x');
-    const result = await postRaw(port, oversized);
-    expect(result.status === null || result.error !== undefined || result.status !== 200).toBe(true);
+  it('TC-28: Body size limit returns clean 413 + JSON-RPC envelope (SA4E-363)', async () => {
+    // Own server with the ORIGINAL 1 MB cap (post-fix default is 64 MB — a
+    // 1 MB + 1 body is under-cap there by design, see IT-BODY-03). Injected
+    // via WrapperServerDeps.maxBodyBytes — the same dep production wiring uses.
+    const { server: capped } = createTestServer({ maxBodyBytes: 1024 * 1024 });
+    await capped.start(0);
+    try {
+      // 1 MB + 1 byte — pre-fix: readBody() called req.destroy() → ECONNRESET
+      // (the bug). requestWithHeaders REJECTS on a transport error, so a socket
+      // reset fails this test outright: "the client actually reads the 413" is
+      // structural here, not just asserted (AC-2).
+      const res = await requestWithHeaders(capped.listeningPort!, {
+        method: 'POST', path: '/mcp',
+        headers: { 'Content-Type': 'application/json' },
+        body: 'x'.repeat(1024 * 1024 + 1),
+      });
+      expect(res.status).toBe(413); // not 400 (sendError status param) / not 500 (sentinel escaped)
+      expect(res.headers.connection?.toLowerCase()).toBe('close'); // no keep-alive reuse
+      expect(JSON.parse(res.body)).toEqual({
+        jsonrpc: '2.0',
+        id: null, // protocol-legal — the body was never parsed
+        error: { code: -32600, message: expect.stringContaining('body too large') },
+      });
+    } finally { await capped.stop(); }
   });
 
   it('TC-29: Rejected path returns a TOOL error result, not JSON-RPC -32603 (SA4E-356 §5.6)', async () => {

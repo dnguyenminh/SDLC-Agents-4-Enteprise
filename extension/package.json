@@ -300,6 +300,13 @@
           "default": 9181,
           "description": "Local MCP wrapper server port — the in-process HTTP server that the IDE connects to"
         },
+        "sdlcAgents.mcpMaxBodyBytes": {
+          "type": "number",
+          "default": 67108864,
+          "minimum": 1048576,
+          "maximum": 104857600,
+          "description": "Maximum HTTP body size (bytes) the local MCP wrapper server accepts per request — large enough for base64-embedded documents (SA4E-363). Always clamped in code to [1 MiB, 100 MiB] regardless of this value. Takes effect on the next wrapper start (window reload)."
+        },
         "sdlcAgents.enableMcpServer": {
           "type": "boolean",
           "default": true,

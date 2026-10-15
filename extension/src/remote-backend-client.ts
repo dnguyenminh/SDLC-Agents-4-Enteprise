@@ -9,7 +9,7 @@ import { ServerStatus } from "./types";
 import { AuthManager } from "./auth/AuthManager";
 import { getVisibleLocalToolDefinitions } from "./backend-local-tools";
 import { Base64ProxyService } from "./services/Base64ProxyService";
-import { WrapperServer } from "./services/WrapperServer";
+import { WrapperServer, resolveMcpMaxBodyBytes } from "./services/WrapperServer";
 import { writeRuntimeSettings, clearRuntimeSettings } from "./utils/runtime-settings";
 import { httpGetJson, httpPostJson } from "./utils/http-client-utils";
 import { buildBackendAuthHeaders } from "./utils/backend-auth-headers";
@@ -155,6 +155,9 @@ export class RemoteBackendClient implements vscode.Disposable {
       base64Proxy: this.base64Proxy,
       restGetTools: () => this.restGetTools(),
       restCallTool: (name, args) => this.restCallTool(name, args),
+      // SA4E-363 §4: optional cap override — validated + clamped in code
+      // (resolveMcpMaxBodyBytes); restart-to-apply (read at construction).
+      maxBodyBytes: resolveMcpMaxBodyBytes(vscode.workspace.getConfiguration("sdlcAgents")),
     });
     await this.wrapperServer.start(port);
     writeRuntimeSettings(this.workspaceFolder, { port: this.wrapperServer.listeningPort ?? port });

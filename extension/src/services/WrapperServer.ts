@@ -15,8 +15,52 @@ import { Base64ProxyService } from "./Base64ProxyService";
 import { evaluateOriginGate } from "./OriginGate";
 import { PathResolverError, sanitizeLogText } from "./PathResolver";
 
-/** Maximum body size (1MB) */
-const MAX_BODY_SIZE = 1024 * 1024;
+/**
+ * Maximum accepted HTTP body size (64 MB) — large enough for base64-embedded
+ * documents (worst real doc so far: ~1.57 MB, SA4E-363), kept below the
+ * backend's 100 MB ingress cap so anything the wrapper accepts, the backend
+ * also accepts. Overridable per instance via WrapperServerDeps.maxBodyBytes.
+ */
+export const DEFAULT_MAX_BODY_SIZE = 64 * 1024 * 1024;
+
+/** Clamp bounds for the optional sdlcAgents.mcpMaxBodyBytes setting: never
+ *  below 1 MiB (a cap that small rejects every real request) and never above
+ *  the backend's 100 MB ingress cap (never buffer a body the backend rejects). */
+export const MIN_MCP_MAX_BODY_BYTES = 1 * 1024 * 1024;
+export const MAX_MCP_MAX_BODY_BYTES = 100 * 1024 * 1024;
+
+/** Minimal structural view of a settings getter (keeps resolveMcpMaxBodyBytes
+ *  testable without vscode). vscode.WorkspaceConfiguration satisfies it. */
+export interface SettingsGetter {
+  get<T>(section: string, defaultValue: T): T;
+}
+
+/**
+ * Resolve the optional sdlcAgents.mcpMaxBodyBytes setting (SA4E-363 §4).
+ * VS Code does NOT enforce manifest minimum/maximum — a cloned repo could ship
+ * a huge workspace setting and enlarge the DoS surface — so validation happens
+ * here in code: in-range integers pass through (then clamped into
+ * [1 MiB, 100 MiB]); strings, 0, negatives and NaN fall back to the default.
+ * Read once at wrapper construction → restart-to-apply.
+ */
+export function resolveMcpMaxBodyBytes(settings: SettingsGetter): number {
+  const raw = settings.get<number>("mcpMaxBodyBytes", DEFAULT_MAX_BODY_SIZE);
+  if (typeof raw !== "number" || !Number.isInteger(raw) || raw <= 0) return DEFAULT_MAX_BODY_SIZE;
+  return Math.min(Math.max(raw, MIN_MCP_MAX_BODY_BYTES), MAX_MCP_MAX_BODY_BYTES);
+}
+
+/**
+ * Sentinel for an over-cap request body — caught at the readBody call site in
+ * handleMcp and mapped to a clean HTTP 413 + JSON-RPC error envelope (never a
+ * socket reset, the original SA4E-363 bug). Matched via instanceof, never by
+ * message string.
+ */
+export class BodyTooLargeError extends Error {
+  constructor() {
+    super("Request body too large");
+    this.name = "BodyTooLargeError";
+  }
+}
 
 /**
  * Registry of live WrapperServer instances keyed by port, stored on globalThis.
@@ -39,16 +83,26 @@ export interface WrapperServerDeps {
   base64Proxy: Base64ProxyService;
   restGetTools: () => Promise<any[]>;
   restCallTool: (name: string, args: Record<string, unknown>) => Promise<any>;
+  /** Optional body-cap override in bytes (SA4E-363 §4) — tests inject a small
+   *  cap to exercise byte-exact boundaries without allocating 64 MB. */
+  maxBodyBytes?: number;
 }
 
 export class WrapperServer {
   private server: http.Server | null = null;
   private requestId = 0;
   private port: number | null = null;
+  /** Effective body cap in bytes (DEFAULT_MAX_BODY_SIZE unless deps override). */
+  private readonly maxBodySize: number;
   /** Track active sockets to force-close on stop (prevents port hang on reload). */
   private readonly activeSockets = new Set<import("net").Socket>();
 
-  constructor(private readonly deps: WrapperServerDeps) {}
+  /** Max time spent draining an over-cap request remainder before giving up. */
+  private static readonly DRAIN_TIMEOUT_MS = 5000;
+
+  constructor(private readonly deps: WrapperServerDeps) {
+    this.maxBodySize = deps.maxBodyBytes ?? DEFAULT_MAX_BODY_SIZE;
+  }
 
   get listeningPort(): number | null { return this.port; }
 
@@ -192,7 +246,24 @@ export class WrapperServer {
       this.sendError(res, null, -32700, "Expected application/json");
       return;
     }
-    const body = await this.readBody(req);
+    // Content-Length pre-check (SA4E-363, mirrors the MCP SDK's readRequestBody):
+    // reject an over-cap DECLARED body before reading a single byte.
+    // Number(undefined) → NaN → chunked bodies fall through to readBody's
+    // cumulative streaming check.
+    const declared = Number(req.headers["content-length"]);
+    if (Number.isFinite(declared) && declared > this.maxBodySize) {
+      this.sendBodyTooLarge(res);
+      return;
+    }
+    // Own try/catch AT the readBody call site — deliberately NOT inside the
+    // rpc-parsing try below: its catch reads rpc.id, which is still undefined
+    // here (TypeError trap, SA4E-363).
+    let body: string;
+    try { body = await this.readBody(req); }
+    catch (err) {
+      if (err instanceof BodyTooLargeError) { this.sendBodyTooLarge(res); return; }
+      throw err; // transport errors keep the existing handleRequest 500 path
+    }
     let rpc: any;
     try { rpc = JSON.parse(body); } catch { this.sendError(res, null, -32700, "Parse error"); return; }
     if (rpc.id === undefined) rpc.id = ++this.requestId;
@@ -342,18 +413,75 @@ export class WrapperServer {
     return result;
   }
 
+  /**
+   * Buffer the request body up to maxBodySize bytes (strict `>` check on
+   * cumulative bytes — a body of exactly the cap is accepted). On exceed:
+   * latch a flag, FREE the accumulated chunks, and DRAIN the remainder
+   * (bounded — see drainRemainder) before rejecting with BodyTooLargeError.
+   * Draining first guarantees the client can actually read the 413 response
+   * instead of hitting a mid-upload connection reset (the original SA4E-363
+   * bug). The socket is never destroyed before the response is flushed.
+   */
   private readBody(req: http.IncomingMessage): Promise<string> {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
       let size = 0;
+      let tooLarge = false;
       req.on("data", (chunk: Buffer) => {
+        if (tooLarge) return; // remainder is being drained — never re-buffer
         size += chunk.length;
-        if (size > MAX_BODY_SIZE) { req.destroy(); reject(new Error("Body too large")); return; }
-        chunks.push(chunk);
+        if (size <= this.maxBodySize) { chunks.push(chunk); return; }
+        tooLarge = true;
+        chunks.length = 0; // release buffered memory immediately (F-3)
+        this.drainRemainder(req, reject);
       });
-      req.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
+      req.on("end", () => {
+        if (tooLarge) reject(new BodyTooLargeError());
+        else resolve(Buffer.concat(chunks).toString("utf-8"));
+      });
+      // 'close' (without 'end') covers aborted requests and the pathological
+      // drain give-up below — the promise keeps the typed sentinel either way.
+      req.on("close", () => { if (tooLarge) reject(new BodyTooLargeError()); });
       req.on("error", reject);
     });
+  }
+
+  /**
+   * Consume and discard the remainder of an over-cap request body so the 413
+   * can be written and delivered without resetting the socket mid-upload.
+   * The drain is BOUNDED (safety cap, dev-analysis §3.2): the remainder may
+   * run up to maxBodySize extra bytes (i.e. any body up to ~2× cap always
+   * gets a clean 413 — covers AC-5's far-above probe) or DRAIN_TIMEOUT_MS,
+   * whichever comes first. Past the bound the stream is deemed pathological
+   * (e.g. an infinite chunked flood): reject with the sentinel FIRST, then
+   * destroy the socket — the response path sees res.destroyed and stays
+   * silent, so the client sees a bare reset (same early-reject class as the
+   * Hono bodyLimit / MCP SDK). Normal bodies drain in microseconds on
+   * loopback and the socket is never destroyed before the 413 is flushed.
+   */
+  private drainRemainder(req: http.IncomingMessage, reject: (err: Error) => void): void {
+    let drained = 0;
+    let done = false;
+    const onDiscard = (chunk: Buffer): void => {
+      drained += chunk.length;
+      if (drained > this.maxBodySize) giveUp();
+    };
+    const giveUp = (): void => {
+      if (done) return;
+      cleanup();
+      reject(new BodyTooLargeError()); // latch BEFORE destroying so the sentinel wins
+      req.destroy();
+    };
+    const cleanup = (): void => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      req.removeListener("data", onDiscard);
+    };
+    const timer = setTimeout(giveUp, WrapperServer.DRAIN_TIMEOUT_MS);
+    req.on("data", onDiscard);
+    req.once("end", cleanup);
+    req.once("close", cleanup);
   }
 
   private sendResult(res: http.ServerResponse, id: any, result: any): void {
@@ -361,8 +489,24 @@ export class WrapperServer {
     res.end(JSON.stringify({ jsonrpc: "2.0", id, result }));
   }
 
-  private sendError(res: http.ServerResponse, id: any, code: number, message: string): void {
-    res.writeHead(id === null ? 400 : 200, { "Content-Type": "application/json" });
+  /**
+   * Clean 413 for an over-cap body (SA4E-363): JSON-RPC envelope with
+   * `id: null` (protocol-legal — the body was never parsed, so no id exists)
+   * and a STATIC message including the effective cap (helps MCP agents
+   * self-correct, leaks nothing — never echo attempted size/Origin/Host).
+   */
+  private sendBodyTooLarge(res: http.ServerResponse): void {
+    this.sendError(res, null, -32600, `Request body too large (max ${this.maxBodySize} bytes)`, 413);
+  }
+
+  private sendError(res: http.ServerResponse, id: any, code: number, message: string, status?: number): void {
+    if (res.destroyed) return; // socket torn down mid-flight — nothing can be written
+    res.writeHead(status ?? (id === null ? 400 : 200), {
+      "Content-Type": "application/json",
+      // A 413 leaves the request body unconsumed — the socket must not be
+      // reused for a keep-alive follow-up (request-smuggling hygiene, F-3).
+      ...(status === 413 ? { Connection: "close" } : {}),
+    });
     res.end(JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }));
   }
 }
