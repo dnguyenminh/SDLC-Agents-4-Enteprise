@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.53.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.53.1.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,15 @@ MIT
 ---
 
 ## Changelog
+
+### v1.53.1 (2026-10-15)
+
+**SA4E-360 — Patch release (CI security gates)**
+
+- 🔒 Trivy image scan: 16 HIGH → **0** (pillow 12.3.0, setuptools 84.0.0 incl. vendored jaraco.context/wheel trong backend image)
+- 🔒 npm audit runtime deps: 3 HIGH → **0** (pi-web-access 0.41.0 — MCP SDK fix; brace-expansion 5.0.12 qua postinstall patch)
+- 🧪 Platform-agnostic tests: path-resolver, read-method-tool UT-24, code-extract BV vectors — xanh trên ubuntu + windows runners
+- 📦 4/4 CI workflows green; tag v1.53.1, Publish (Extension + Backend) success
 
 ### v1.53.0 (2026-10-15)
 
