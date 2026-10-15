@@ -88,3 +88,20 @@ Automated scope is complete and green — code is ready for UAT. SIT-01 (TTL=60s
 ## Appendix A — Re-test History
 
 No re-tests needed — first independent execution round, zero defects.
+
+---
+
+## UAT Execution (API-level) — 2026-10-16 · v1.1
+
+Thực thi bởi SM Agent theo ủy quyền của user. Môi trường: backend live (`CODE_INTEL_REQUIRE_AUTH=true`, TTL=60s tạm — đã revert), PostgreSQL sa4e_db local.
+
+| Scope | Kết quả |
+|-------|---------|
+| Part A — Automated re-run (16 TCs) | ✅ 2977/2977 tests PASS (309 files) |
+| Part B — SIT-01 refresh mid-job (API-level) | ✅ expired → 401 `Invalid or expired token` → refresh rotation → retry 201 success |
+| Part B — SIT-02 revoke refresh (API-level) | ✅ logout → refresh 401; garbage → 401 no crash (auth-dead path) |
+| Part C — E2E-API-01..04 | ✅ 13/13 API checks PASS (xem UAT-CHECKLIST §0) |
+| Part D — UX spot-checks | ✅ verified qua automated tests + API-level; IDE-visual DEFERRED (không có Pega server/IDE trong env) |
+
+**Defects mới: 0.** RTM: 22/22 TCs PASS (16 automated + 6 API-level UAT). Residual: trình diễn end-to-end với Pega server thật — script sẵn sàng trong UAT-CHECKLIST Part B.
+Evidence: `evidence/uat-api-results.json` (13 checks), `uat-api-transcript.txt`, `run-uat-api.ps1`, `uat-partA-full-suite.log`, `uat-backend.log`.

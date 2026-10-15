@@ -1,0 +1,300 @@
+{"level":30,"time":1792103701040,"pid":42196,"hostname":"WIN-LK2TQOOAELR","version":"1.0.0","config":{"port":9191,"host":"0.0.0.0"},"msg":"Starting Backend MCP Server"}
+[schema] sessions.user_agent_hash already exists : column "user_agent_hash" of relation "sessions" already exists
+[schema] sessions.absolute_expires_at already exists : column "absolute_expires_at" of relation "sessions" already exists
+[schema] column already exists : column "project_id" of relation "graph_nodes" already exists
+[schema] column already exists : column "created_by" of relation "project_registry" already exists
+[schema] login_ui_html already exists: column "login_ui_html" of relation "sso_providers" already exists
+{"level":30,"time":1792103702199,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pg-memory-schema","statements":45,"failed":0,"msg":"[pg-memory-schema] memory base tables ensured"}
+{"level":50,"time":1792103702329,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pg-schema-ensure","err":{"type":"DatabaseError","message":"duplicate key value violates unique constraint \"pg_class_relname_nsp_index\"","stack":"error: duplicate key value violates unique constraint \"pg_class_relname_nsp_index\"\n    at C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async PostgresAdapter.runAsync (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\database\\adapters\\PostgresAdapter.ts:107:15)\n    at async safeExec (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\database\\migration\\pg-schema-ensure.ts:193:5)\n    at async ensurePostgresIndexSchema (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\database\\migration\\pg-schema-ensure.ts:157:5)\n    at async ensurePostgresSchema (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\database\\schema-registry\\ensure-postgres-schema.ts:49:3)\n    at async initAdapters (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\admin\\db\\core.ts:172:5)\n    at async main (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\index.ts:42:3)","length":267,"name":"error","severity":"ERROR","code":"23505","detail":"Key (relname, relnamespace)=(code_dependencies_id_seq, 2200) already exists.","schema":"pg_catalog","table":"pg_class","constraint":"pg_class_relname_nsp_index","file":"nbtinsert.c","line":"666","routine":"_bt_check_unique"},"sql":"CREATE TABLE IF NOT EXISTS code_dependencies (\n      id SERIAL PRIMARY KEY, source_file_id INTEGER NOT NULL, target_file","msg":"[pg-schema-ensure] DDL failed — schema may be incomplete"}
+{"level":30,"time":1792103702373,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pg-schema-ensure","msg":"[pg-schema-ensure] Index schema verified/fixed"}
+{"level":30,"time":1792103702373,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"admin-db","engine":"postgresql","msg":"[admin] DB adapter connected and ready"}
+{"level":30,"time":1792103702376,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-215-schema","table":"mcp_servers","msg":"[sa4e-215] table ensured"}
+{"level":30,"time":1792103702378,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-215-schema","table":"decisions","msg":"[sa4e-215] table ensured"}
+{"level":30,"time":1792103702381,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-237-schema","msg":"[sa4e-237] pega_reference_resolution table ensured"}
+{"level":30,"time":1792103702388,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"resolve-engine-adapter","msg":"[engine-adapter] Active engine: postgresql — creating adapter"}
+{"level":30,"time":1792103702389,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"resolve-engine-adapter","msg":"[engine-adapter] Active engine: postgresql — creating adapter"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"codeIntel","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"analytics","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"utility","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"knowledge","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"security","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","msg":"Module registered"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","msg":"Initializing module"}
+{"level":30,"time":1792103702386,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","msg":"Initializing memory module"}
+{"level":30,"time":1792103702388,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"codeIntel","msg":"Initializing module"}
+{"level":30,"time":1792103702388,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"codeIntel","msg":"Initializing code intelligence module"}
+{"level":30,"time":1792103702389,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","msg":"Initializing module"}
+{"level":30,"time":1792103702389,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","msg":"Initializing orchestration module"}
+{"level":30,"time":1792103702397,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"McpServerConfigLoader","count":2,"source":"file","msg":"Discovered child MCP servers from orchestration.json"}
+{"level":30,"time":1792103702397,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"analytics","msg":"Initializing module"}
+{"level":30,"time":1792103702397,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"analytics","msg":"Initializing analytics module"}
+{"level":30,"time":1792103702397,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"analytics","msg":"Analytics module ready"}
+{"level":30,"time":1792103702397,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","msg":"Initializing module"}
+{"level":30,"time":1792103702397,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","msg":"Initializing KB graph module"}
+{"level":30,"time":1792103702397,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"utility","msg":"Initializing module"}
+{"level":30,"time":1792103702397,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"utility","msg":"Initializing utility module"}
+{"level":30,"time":1792103702398,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"knowledge","msg":"Initializing module"}
+{"level":30,"time":1792103702398,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"knowledge","msg":"Initializing knowledge module"}
+{"level":30,"time":1792103702398,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"security","msg":"Initializing module"}
+{"level":30,"time":1792103702398,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"security","msg":"Initializing security module (GateGuard + AgentShield)"}
+{"level":30,"time":1792103702398,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","msg":"Initializing module"}
+{"level":30,"time":1792103702398,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","msg":"Initializing sandbox module"}
+{"level":40,"time":1792103702400,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","msg":"SecurityModule hardening helper unavailable — using built-in dockerode BR-12 hardening (graceful degradation)."}
+{"level":30,"time":1792103702401,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"analytics","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1792103702401,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"utility","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1792103702414,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"McpServerConfigLoader","count":2,"source":"db","msg":"Discovered child MCP servers from DB"}
+{"level":30,"time":1792103702509,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","dockerAvailable":true,"msg":"Sandbox module ready"}
+{"level":30,"time":1792103702509,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"sandbox","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1792103702520,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"resolve-engine-adapter","msg":"[engine-adapter] postgresql connected successfully"}
+{"level":50,"time":1792103702537,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"indexing-engine","msg":"[indexer] Tree-sitter initialized (21 langs)"}
+{"level":30,"time":1792103702539,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"resolve-engine-adapter","msg":"[engine-adapter] postgresql connected successfully"}
+{"level":30,"time":1792103702537,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"codeIntel","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1792103702538,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"knowledge","msg":"Knowledge module ready"}
+{"level":30,"time":1792103702538,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"knowledge","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1792103702540,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","service":"graph-service","existingNodes":"23390","msg":"Graph service ready"}
+{"level":30,"time":1792103702541,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"kbGraph","status":"ready","msg":"Module initialized"}
+[migration-001] scope column already exists, skipping
+[migration-002] needs_verification column already exists, skipping
+{"level":30,"time":1792103702549,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"security","msg":"Security module ready"}
+{"level":30,"time":1792103702549,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"security","status":"ready","msg":"Module initialized"}
+[migration-002] epoch_id column already exists, skipping
+[migration-002] superseded_by column already exists, skipping
+[migration-002] entry_outcomes table already exists, skipping
+[migration-002] decay_config table already exists, skipping
+[migration-003] pending_tasks table already exists, skipping
+{"level":30,"time":1792103702662,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"memory_sessions","seq":"public.memory_sessions_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702669,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"memory_audit","seq":"public.memory_audit_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702675,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"conversation_turns","seq":"public.conversation_turns_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702680,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"knowledge_entries","seq":"public.knowledge_entries_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702686,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"knowledge_vectors","seq":"public.knowledge_vectors_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702690,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"knowledge_graph_edges","seq":"public.knowledge_graph_edges_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702695,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"consolidation_log","seq":"public.consolidation_log_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702703,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"citations","seq":"public.citations_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702710,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"search_log","seq":"public.search_log_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702742,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"entry_outcomes","seq":"public.entry_outcomes_id_seq","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103702746,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"migration-004","table":"pending_tasks","seq":"public.pending_tasks_id_seq1","msg":"migration-004: sequence reset"}
+{"level":30,"time":1792103706300,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"fts-recreation","msg":"[fts] PostgreSQL tsvector infrastructure created"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792103706319,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","component":"TaskWorker","msg":"TaskWorker started"}
+{"level":30,"time":1792103706320,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","service":"evolution-scheduler","decayIntervalH":24,"stagnationIntervalH":6,"msg":"Scheduler started"}
+{"level":30,"time":1792103706321,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","msg":"Memory module ready"}
+{"level":30,"time":1792103706321,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1792103706329,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","component":"TaskWorker","concurrency":64,"baseInterval":2000,"msg":"[TaskWorker] Config updated live"}
+{"level":30,"time":1792103706329,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","patch":{"concurrency":100},"msg":"[TaskWorker] Loaded persisted config from DB"}
+{"level":30,"time":1792103706369,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792103706689,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+{"level":30,"time":1792103706689,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","msg":"[LLMInitializer] Scheduling periodic LLM health check (every 60s)"}
+{"level":50,"time":1792103712488,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"McpClientManager","err":{"type":"Error","message":"Connection timeout","stack":"Error: Connection timeout\n    at Timeout._onTimeout (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src\\modules\\orchestration\\McpClientManager.ts:93:52)\n    at listOnTimeout (node:internal/timers:608:17)\n    at process.processTimers (node:internal/timers:543:7)"},"server":"markitdown","msg":"Failed to connect child server (will retry via health monitor)"}
+Installed 75 packages in 7.24s
+Processing request of type ListToolsRequest
+{"level":30,"time":1792103719033,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"ConnectionStateTracker","server":"markdown-exporter-local","from":"disconnected","to":"connected","msg":"State transition"}
+{"level":30,"time":1792103719067,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"McpClientManager","name":"markdown-exporter-local","tools":6,"msg":"Server connected"}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\ASUS\scoop\apps\python311\current\Scripts\markitdown-mcp.exe\__main__.py", line 2, in <module>
+  File "C:\Users\ASUS\scoop\apps\python311\current\Lib\site-packages\markitdown_mcp\__main__.py", line 6, in <module>
+    from mcp.server.mcpserver import MCPServer
+ModuleNotFoundError: No module named 'mcp.server.mcpserver'
+{"level":50,"time":1792103723410,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"McpClientManager","err":{"type":"McpError","message":"MCP error -32000: Connection closed","stack":"McpError: MCP error -32000: Connection closed\n    at McpError.fromError (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\node_modules\\@modelcontextprotocol\\sdk\\src\\types.ts:2330:16)\n    at Client._onclose (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\node_modules\\@modelcontextprotocol\\sdk\\src\\shared\\protocol.ts:667:32)\n    at StdioClientTransport._transport.onclose (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\node_modules\\@modelcontextprotocol\\sdk\\src\\shared\\protocol.ts:623:18)\n    at ChildProcess.<anonymous> (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\node_modules\\@modelcontextprotocol\\sdk\\src\\client\\stdio.ts:152:31)\n    at ChildProcess.emit (node:events:508:28)\n    at cp.emit (C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\node_modules\\cross-spawn\\lib\\enoent.js:34:29)\n    at maybeClose (node:internal/child_process:1101:16)\n    at ChildProcess._handle.onexit (node:internal/child_process:305:5)","code":-32000,"name":"McpError"},"server":"markitdown-mcp","msg":"Failed to connect child server (will retry via health monitor)"}
+Processing request of type ListToolsRequest
+{"level":30,"time":1792103725798,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"ConnectionStateTracker","server":"markdown-exporter-mcp-local","from":"disconnected","to":"connected","msg":"State transition"}
+{"level":30,"time":1792103725814,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"McpClientManager","name":"markdown-exporter-mcp-local","tools":6,"msg":"Server connected"}
+{"level":30,"time":1792103725815,"pid":42196,"hostname":"WIN-LK2TQOOAELR","component":"HealthMonitor","interval":60000,"msg":"Health monitor started"}
+{"level":30,"time":1792103725815,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","component":"ReindexSubscriber","msg":"re-index subscriber started"}
+{"level":30,"time":1792103725815,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"orchestration","status":"ready","msg":"Module initialized"}
+{"level":30,"time":1792103729257,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"embedding-service","modelId":"Xenova/paraphrase-multilingual-MiniLM-L12-v2","cacheDir":"C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.code-intel\\models-cache","dtype":"q8","msg":"Loading ONNX embedding model"}
+{"level":30,"time":1792103734370,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pg-schema-ensure","msg":"[pg-schema-ensure] Index schema verified/fixed"}
+{"level":30,"time":1792103734474,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pg-schema-ensure","msg":"[pg-schema-ensure] Index schema verified/fixed"}
+{"level":30,"time":1792103734478,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-101-schema","msg":"[sa4e-101] index_operations + file_checksums tables ensured"}
+{"level":30,"time":1792103734490,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792103734490,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","intervalMs":60000,"staleSeconds":600,"msg":"[startup-interrupt] periodic scheduler started"}
+{"level":30,"time":1792103734497,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-302-migration","msg":"[sa4e-302] Unique index on graph_edges ensured"}
+{"level":30,"time":1792103734588,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-303-cleanup","msg":"[sa4e-303] Dropped code_dependencies table"}
+{"level":30,"time":1792103734598,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"sa4e-303-cleanup","msg":"[sa4e-303] Dropped code_call_graph table"}
+{"level":30,"time":1792103734598,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"cleanup-scheduler","msg":"[cleanup-scheduler] started"}
+{"level":30,"time":1792103734200,"pid":42196,"hostname":"WIN-LK2TQOOAELR","ingestedTools":0,"totalTools":107,"msg":"Ingested dynamic tools with vector embeddings"}
+{"level":30,"time":1792103734251,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"Ensured pega_category_counters table exists"}
+{"level":30,"time":1792103734251,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"ToolSearchService injected into OrchestrationModule"}
+{"level":30,"time":1792103734251,"pid":42196,"hostname":"WIN-LK2TQOOAELR","readyModules":9,"totalModules":9,"msg":"Modules initialized"}
+{"level":30,"time":1792103734376,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"Fixed graph_nodes types from KNOWLEDGE_ENTRY to actual entry types"}
+{"level":30,"time":1792103734381,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"Admin portal routes registered: /admin + /api/admin/* + /api/sa4e-215/* (with auth, SSE, project-registry guard)"}
+{"level":30,"time":1792103734382,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"MCP Config REST API registered at /api/mcp-servers"}
+{"level":30,"time":1792103734385,"pid":42196,"hostname":"WIN-LK2TQOOAELR","port":9191,"host":"0.0.0.0","msg":"Backend server started"}
+{"level":30,"time":1792103734598,"pid":42196,"hostname":"WIN-LK2TQOOAELR","pid":42196,"port":9191,"version":"1.0.0","msg":"Backend MCP Server ready"}
+{"level":30,"time":1792103736325,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"auto-pin-service","evaluated":27,"threshold":80,"maxScore":79,"msg":"Auto-pin: no entries qualify"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792103766695,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792103766953,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792103794489,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792103813124,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/login","status":401,"duration_ms":17,"msg":"request"}
+{"level":30,"time":1792103813208,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/login","status":401,"duration_ms":8,"msg":"request"}
+{"level":30,"time":1792103813423,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":401,"duration_ms":1,"msg":"request"}
+{"level":30,"time":1792103813438,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/rulecatalog/bulk-check","status":401,"duration_ms":1,"msg":"request"}
+{"level":30,"time":1792103813445,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-stream","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103815465,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103817485,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103819501,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103821517,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103823525,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103825572,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":1,"msg":"request"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792103826694,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792103826876,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+{"level":30,"time":1792103827587,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103829607,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103831617,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103833631,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103835645,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103837662,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103839677,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103841687,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103843706,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":401,"duration_ms":0,"msg":"request"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792103854489,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792103878214,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":401,"duration_ms":1,"msg":"request"}
+{"level":30,"time":1792103878220,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":400,"duration_ms":2,"msg":"request"}
+{"level":30,"time":1792103878229,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103878233,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/rulecatalog/bulk-check","status":401,"duration_ms":0,"msg":"request"}
+{"level":30,"time":1792103878240,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/logout","status":200,"duration_ms":1,"msg":"request"}
+{"level":30,"time":1792103878245,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":400,"duration_ms":1,"msg":"request"}
+{"level":30,"time":1792103878251,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":401,"duration_ms":2,"msg":"request"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792103886706,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792103886957,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792103914486,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792103946687,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792103946947,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792103974484,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104006689,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104006946,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104034482,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792104055841,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/login","status":401,"duration_ms":5,"msg":"request"}
+{"level":30,"time":1792104055929,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/login","status":200,"duration_ms":22,"msg":"request"}
+{"level":30,"time":1792104055969,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":404,"duration_ms":6,"msg":"request"}
+{"level":30,"time":1792104055984,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/rulecatalog/bulk-check","status":404,"duration_ms":3,"msg":"request"}
+{"level":30,"time":1792104055996,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-stream","status":404,"duration_ms":3,"msg":"request"}
+{"level":30,"time":1792104058012,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104060038,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104062050,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":3,"msg":"request"}
+{"level":30,"time":1792104064066,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":3,"msg":"request"}
+{"level":30,"time":1792104066079,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":4,"msg":"request"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104066723,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104067068,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+{"level":30,"time":1792104068100,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":5,"msg":"request"}
+{"level":30,"time":1792104070124,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104072147,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104074169,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":3,"msg":"request"}
+{"level":30,"time":1792104076184,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":3,"msg":"request"}
+{"level":30,"time":1792104078201,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104080210,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104082229,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":6,"msg":"request"}
+{"level":30,"time":1792104084243,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":5,"msg":"request"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104086253,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104094493,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792104120936,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":401,"duration_ms":1,"msg":"request"}
+{"level":30,"time":1792104120950,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":200,"duration_ms":9,"msg":"request"}
+{"level":30,"time":1792104120962,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104120970,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/rulecatalog/bulk-check","status":404,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104120985,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/logout","status":200,"duration_ms":9,"msg":"request"}
+{"level":30,"time":1792104120991,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":401,"duration_ms":3,"msg":"request"}
+{"level":30,"time":1792104121000,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":401,"duration_ms":4,"msg":"request"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104126693,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104126931,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104154490,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104186697,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104187031,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104214496,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104246692,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104246975,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104271919,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Rule-Obj-Activity","pyRuleName":"UatRule_aaaa","projectId":"uat-project-01","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1792104271919,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Rule-Obj-Activity:UatRule_aaaa:-:-","virtualPath":"pega://Rule-Obj-Activity/rule_obj_activity/UatRule_aaaa/-/-","kind":"pega_rule_obj_activity","pyClassName":"Rule-Obj-Activity","pyRuleName":"UatRule_aaaa","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1792104271692,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/login","status":401,"duration_ms":8,"msg":"request"}
+{"level":30,"time":1792104271822,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/login","status":200,"duration_ms":24,"msg":"request"}
+{"level":30,"time":1792104271874,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/projects/register","status":200,"duration_ms":17,"msg":"request"}
+{"level":30,"time":1792104272008,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":201,"duration_ms":109,"msg":"request"}
+{"level":30,"time":1792104272022,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/rulecatalog/bulk-check","status":200,"duration_ms":8,"msg":"request"}
+{"level":30,"time":1792104272039,"pid":42196,"hostname":"WIN-LK2TQOOAELR","jobId":"344b83b7-7cbd-4eb8-a516-2460ad56bf8e","lineCount":2,"msg":"[pega-stream] Job created, processing in background"}
+{"level":30,"time":1792104272039,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-stream","status":202,"duration_ms":5,"msg":"request"}
+{"level":40,"time":1792104272040,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"[pega-stream] Rule received before metadata line — skipping"}
+{"level":40,"time":1792104272040,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"[pega-stream] Rule received before metadata line — skipping"}
+{"level":30,"time":1792104272045,"pid":42196,"hostname":"WIN-LK2TQOOAELR","jobId":"344b83b7-7cbd-4eb8-a516-2460ad56bf8e","stored":0,"total":0,"msg":"[pega-stream] Job complete"}
+{"level":30,"time":1792104274493,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792104274063,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/344b83b7-7cbd-4eb8-a516-2460ad56bf8e","status":200,"duration_ms":6,"msg":"request"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104306693,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104307044,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104334492,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792104336846,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","pxObjClass":"Rule-Obj-Activity","pyClassName":"Rule-Obj-Activity","pyRuleName":"UatRule_bbbb","projectId":"uat-project-01","msg":"syncRuleToSymbols start"}
+{"level":30,"time":1792104336846,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"pega-symbol-sync","fqn":"Rule-Obj-Activity:Rule-Obj-Activity:UatRule_bbbb:-:-","virtualPath":"pega://Rule-Obj-Activity/rule_obj_activity/UatRule_bbbb/-/-","kind":"pega_rule_obj_activity","pyClassName":"Rule-Obj-Activity","pyRuleName":"UatRule_bbbb","msg":"syncRuleToSymbols built identity"}
+{"level":30,"time":1792104336806,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":401,"duration_ms":1,"msg":"request"}
+{"level":30,"time":1792104336827,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":200,"duration_ms":12,"msg":"request"}
+{"level":30,"time":1792104336880,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":201,"duration_ms":43,"msg":"request"}
+{"level":30,"time":1792104336896,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/rulecatalog/bulk-check","status":200,"duration_ms":10,"msg":"request"}
+{"level":30,"time":1792104336913,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/logout","status":200,"duration_ms":8,"msg":"request"}
+{"level":30,"time":1792104336922,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":401,"duration_ms":4,"msg":"request"}
+{"level":30,"time":1792104336930,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":401,"duration_ms":3,"msg":"request"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104366690,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104367094,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104394502,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792104404961,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/login","status":401,"duration_ms":5,"msg":"request"}
+{"level":30,"time":1792104405043,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/login","status":200,"duration_ms":17,"msg":"request"}
+{"level":30,"time":1792104405084,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/projects/register","status":200,"duration_ms":6,"msg":"request"}
+{"level":30,"time":1792104405117,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":201,"duration_ms":11,"msg":"request"}
+{"level":30,"time":1792104405132,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/rulecatalog/bulk-check","status":200,"duration_ms":7,"msg":"request"}
+{"level":30,"time":1792104405152,"pid":42196,"hostname":"WIN-LK2TQOOAELR","jobId":"d4737249-4d0b-4d3c-95df-8881b46370c3","lineCount":2,"msg":"[pega-stream] Job created, processing in background"}
+{"level":30,"time":1792104405153,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-stream","status":202,"duration_ms":8,"msg":"request"}
+{"level":40,"time":1792104405154,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"[pega-stream] Rule received before metadata line — skipping"}
+{"level":40,"time":1792104405154,"pid":42196,"hostname":"WIN-LK2TQOOAELR","msg":"[pega-stream] Rule received before metadata line — skipping"}
+{"level":30,"time":1792104405160,"pid":42196,"hostname":"WIN-LK2TQOOAELR","jobId":"d4737249-4d0b-4d3c-95df-8881b46370c3","stored":0,"total":0,"msg":"[pega-stream] Job complete"}
+{"level":30,"time":1792104407184,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"GET","path":"/api/v1/pega/jobs/d4737249-4d0b-4d3c-95df-8881b46370c3","status":200,"duration_ms":6,"msg":"request"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104426706,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104426973,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104454500,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}
+{"level":30,"time":1792104470041,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":401,"duration_ms":2,"msg":"request"}
+{"level":30,"time":1792104470056,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":200,"duration_ms":9,"msg":"request"}
+{"level":30,"time":1792104470074,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/ingest-rule","status":201,"duration_ms":8,"msg":"request"}
+{"level":30,"time":1792104470085,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/v1/pega/rulecatalog/bulk-check","status":200,"duration_ms":5,"msg":"request"}
+{"level":30,"time":1792104470099,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/admin/auth/logout","status":200,"duration_ms":7,"msg":"request"}
+{"level":30,"time":1792104470107,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":401,"duration_ms":3,"msg":"request"}
+{"level":30,"time":1792104470114,"pid":42196,"hostname":"WIN-LK2TQOOAELR","method":"POST","path":"/api/auth/refresh","status":401,"duration_ms":2,"msg":"request"}
+[LLMInitializer] Insecure HTTP allowed for localhost:1234 (localhost carve-out or LLM_ALLOW_INSECURE_HTTP=1)
+{"level":30,"time":1792104486686,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","model":"unsloth/Qwen3.8-27B-NVFP4","msg":"[LLMInitializer] Resolved LLM config"}
+{"level":30,"time":1792104486934,"pid":42196,"hostname":"WIN-LK2TQOOAELR","module":"memory","provider":"openai","msg":"TagAnalyzer LLM not reachable — will retry in 60s"}
+Processing request of type PingRequest
+Processing request of type PingRequest
+{"level":30,"time":1792104514498,"pid":42196,"hostname":"WIN-LK2TQOOAELR","name":"startup-interrupt-detector","msg":"[startup-interrupt] no stale running operations"}

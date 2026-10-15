@@ -1,0 +1,73 @@
+{
+  "executedAt": "2026-10-16T05:47:50.1368947+07:00",
+  "total": 13,
+  "passed": 13,
+  "failed": 0,
+  "results": {
+    "PREP-01": {
+      "name": "Backend ready + auth enforced",
+      "pass": true,
+      "detail": "login probe responded (bad creds => 4xx)"
+    },
+    "PREP-02": {
+      "name": "Login OK, dual-token issued",
+      "pass": true,
+      "detail": "accessToken len=188, refreshToken len=64"
+    },
+    "PREP-03": {
+      "name": "Register project uat-project-01",
+      "pass": true,
+      "detail": "HTTP 200: {\"success\":true,\"project\":{\"project_id\":\"uat-project-01\",\"display_name\":\"UAT SA4E-362\",\"workspace_pa"
+    },
+    "E2E-API-01": {
+      "name": "POST /pega/ingest-rule => 200 (auth ok)",
+      "pass": true,
+      "detail": "HTTP 201: {\"data\":{\"status\":\"success\",\"ruleId\":-1,\"unresolvedDependencies\":[],\"reason\":\"checksum_match\"},\"error\":null}"
+    },
+    "E2E-API-04": {
+      "name": "POST /pega/rulecatalog/bulk-check contract",
+      "pass": true,
+      "detail": "HTTP 200, existing contains ckA=True"
+    },
+    "E2E-API-02": {
+      "name": "POST /pega/ingest-stream => 202 + jobId",
+      "pass": true,
+      "detail": "HTTP 202, jobId=d4737249-4d0b-4d3c-95df-8881b46370c3"
+    },
+    "E2E-API-03": {
+      "name": "GET /pega/jobs/:id poll => terminal state",
+      "pass": true,
+      "detail": "last={\"data\":{\"status\":\"done\",\"progress\":{\"processed\":2,\"total\":2},\"result\":{\"stored\":0,\"totalRulesInDb\":0,\"totalKbEntriesInDb\":0,\"totalGraphNodesInDb\":33,\"nextBatch"
+    },
+    "SIT-01a": {
+      "name": "Expired access token => 401 Invalid or expired token (bug symptom reproduced)",
+      "pass": true,
+      "detail": "HTTP 401: {\"data\":null,\"error\":{\"code\":\"TOKEN_INVALID\",\"message\":\"Invalid or expired token\"}}"
+    },
+    "SIT-01b": {
+      "name": "POST /api/auth/refresh => rotated dual token",
+      "pass": true,
+      "detail": "HTTP 200, new token differs=True"
+    },
+    "SIT-01c": {
+      "name": "Retry after refresh => 200 (single retry contract)",
+      "pass": true,
+      "detail": "HTTP 201: {\"data\":{\"status\":\"success\",\"ruleId\":-1,\"unresolvedDependencies\":[],\"reason\":\"checksum_match\"},\"error\":null}"
+    },
+    "E2E-API-04b": {
+      "name": "401-before-handler: rejected request stored NOTHING",
+      "pass": true,
+      "detail": "ckB in existing=False (expect False), ckA2 in existing=True (expect True)"
+    },
+    "SIT-02": {
+      "name": "Revoked refresh token => refresh 401 (auth-dead path)",
+      "pass": true,
+      "detail": "logout HTTP 200, refresh-after-logout HTTP 401"
+    },
+    "SIT-02b": {
+      "name": "Invalid refresh token => 401, no crash",
+      "pass": true,
+      "detail": "HTTP 401: {\"error\":\"Invalid or expired session\"}"
+    }
+  }
+}

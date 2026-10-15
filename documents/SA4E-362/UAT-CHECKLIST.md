@@ -24,6 +24,32 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-16 | QA Agent | Initiate UAT-CHECKLIST — cover 22/22 TCs của STC v1.1: 16 automated (Part A) + 2 SIT manual (Part B) + 4 E2E-API covered-by-SIT (Part C) + UX spot-checks theo BRD US-1..US-4 (Part D). UAT execution deferred bởi user — checklist ready cho later execution. |
+| 1.1 | 2026-10-16 | SM Agent (được user ủy quyền thực thi) | **EXECUTED — kết quả ở §0.** Part A re-run: 2977/2977 PASS. Part B/C thực thi ở tầng API thật (backend live TTL=60s): 13/13 PASS. Part D: verified qua automated tests + API-level; các item cần IDE + Pega server thật → DEFERRED (xem §0.3). |
+
+---
+
+## 0. KẾT QUẢ THỰC THI (2026-10-16 — SM Agent theo ủy quyền của user)
+
+### 0.1 Tổng hợp
+
+| Phần | Kết quả | Evidence |
+|------|---------|----------|
+| Part A — Automated re-run (16 TCs) | ✅ **2977/2977 tests PASS (309 files)** — full suite | `evidence/uat-partA-full-suite.log` |
+| Part B — SIT-01 (refresh mid-job) | ✅ **API-level PASS** — kịch bản auth đầy đủ: expired token → 401 `Invalid or expired token` → refresh rotation → retry success | `evidence/uat-api-results.json`, `uat-api-transcript.txt`, `run-uat-api.ps1` |
+| Part B — SIT-02 (revoke refresh → graceful stop) | ✅ **API-level PASS** — logout → refresh 401; invalid refresh → 401 không crash (auth-dead path) | như trên |
+| Part C — E2E-API-01..04 | ✅ **PASS** — ingest-rule 201, bulk-check contract + 401-before-handler no-side-effect, ingest-stream 202+jobId, jobs/:id poll terminal | như trên |
+| Part D — UX spot-checks | ✅ verified qua automated tests (UT-08/09 notification-once, BR conformance) + API-level; **IDE-visual items → DEFERRED** | `CODE-REVIEW.md` BR-1..6 bảng |
+
+### 0.2 Chi tiết 13 API checks (backend live, `CODE_INTEL_REQUIRE_AUTH=true`, TTL=60s)
+
+PREP-01/02/03 ✅ · E2E-API-01 ✅ (201 success, ruleId stored) · E2E-API-04 ✅ · E2E-API-02 ✅ (202+jobId) · E2E-API-03 ✅ (poll → terminal) · **SIT-01a ✅** (expired → 401 `TOKEN_INVALID "Invalid or expired token"` — triệu chứng bug tái hiện đúng) · **SIT-01b ✅** (refresh → rotated dual token) · **SIT-01c ✅** (retry với token mới → 201 — đúng contract `fetchWithAuthRetry`) · **E2E-API-04b ✅** (401-before-handler: request bị reject KHÔNG lưu gì — ckB ∉ existing, ckA2 ∈ existing) · **SIT-02 ✅** (logout → refresh 401) · **SIT-02b ✅** (garbage refresh → 401, no crash). **Tổng: 13/13 PASS.**
+
+### 0.3 Phạm vi & hạn chế (minh bạch)
+
+- Môi trường KHÔNG có Pega server thật + IDE interactive → phần **download rule từ Pega** và **quan sát notification UI trong VS Code** không chạy được tại đây. Tương đương: hành vi extension-side đã được verify bằng 51 automated tests (UT-01..14 mock đúng HTTP semantics đã được chứng minh khớp backend thật ở trên) + REG-13 audit.
+- TTL tạm 60s tại `backend/src/admin/db/jwt.ts:14` **ĐÃ REVERT** về `15 * 60` (verify: `git status` sạch).
+- Admin password local DB được reset cho UAT (chỉ local dev, không ảnh hưởng repo/production).
+- Kết luận: **không còn defect mới**; residual risk duy nhất = trình diễn end-to-end với Pega server thật — thực hiện được bất kỳ lúc nào theo Part B script khi có môi trường.
 
 ---
 

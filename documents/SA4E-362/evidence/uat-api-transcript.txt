@@ -1,0 +1,13 @@
+[PREP-01] PASS — Backend ready + auth enforced :: login probe responded (bad creds => 4xx)
+[PREP-02] PASS — Login OK, dual-token issued :: accessToken len=188, refreshToken len=64
+[PREP-03] PASS — Register project uat-project-01 :: HTTP 200: {"success":true,"project":{"project_id":"uat-project-01","display_name":"UAT SA4E-362","workspace_pa
+[E2E-API-01] PASS — POST /pega/ingest-rule => 200 (auth ok) :: HTTP 201: {"data":{"status":"success","ruleId":-1,"unresolvedDependencies":[],"reason":"checksum_match"},"error":null}
+[E2E-API-04] PASS — POST /pega/rulecatalog/bulk-check contract :: HTTP 200, existing contains ckA=True
+[E2E-API-02] PASS — POST /pega/ingest-stream => 202 + jobId :: HTTP 202, jobId=d4737249-4d0b-4d3c-95df-8881b46370c3
+[E2E-API-03] PASS — GET /pega/jobs/:id poll => terminal state :: last={"data":{"status":"done","progress":{"processed":2,"total":2},"result":{"stored":0,"totalRulesInDb":0,"totalKbEntriesInDb":0,"totalGraphNodesInDb":33,"nextBatch
+[SIT-01a] PASS — Expired access token => 401 Invalid or expired token (bug symptom reproduced) :: HTTP 401: {"data":null,"error":{"code":"TOKEN_INVALID","message":"Invalid or expired token"}}
+[SIT-01b] PASS — POST /api/auth/refresh => rotated dual token :: HTTP 200, new token differs=True
+[SIT-01c] PASS — Retry after refresh => 200 (single retry contract) :: HTTP 201: {"data":{"status":"success","ruleId":-1,"unresolvedDependencies":[],"reason":"checksum_match"},"error":null}
+[E2E-API-04b] PASS — 401-before-handler: rejected request stored NOTHING :: ckB in existing=False (expect False), ckA2 in existing=True (expect True)
+[SIT-02] PASS — Revoked refresh token => refresh 401 (auth-dead path) :: logout HTTP 200, refresh-after-logout HTTP 401
+[SIT-02b] PASS — Invalid refresh token => 401, no crash :: HTTP 401: {"error":"Invalid or expired session"}
