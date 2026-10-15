@@ -1,0 +1,84 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1250" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="contract" value="&lt;&lt;interface&gt;&gt;&#10;IngestAuthProvider (FR-1)&#10;utils/backend-auth-headers.ts&#10;+ getTokenSync(): string&#10;+ refreshToken(): Promise&lt;string \| undefined&gt;&#10;undefined = phiên chết (chuẩn hoá)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="470" y="40" width="330" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="legacy" value="&lt;&lt;interface&gt;&gt;&#10;ITokenProvider (legacy, giữ nguyên)&#10;+ getTokenSync(): string" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="50" width="260" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="helper" value="&lt;&lt;function&gt;&gt;&#10;withAuthRetry(send, auth?, log?, endpoint?)&#10;chỉ 401 → refresh 1× → retry 1× (BR-1/BR-2)&#10;refresh undefined → trả 401 gốc&#10;Open Point #2: một chỗ định nghĩa, FR-2/6/7 tái sử dụng" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="880" y="40" width="330" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="mgr" value="AuthManager (KHÔNG đổi)&#10;refreshToken(): Promise&lt;void&gt; :471&#10;refreshInFlight dedupe :472-475&#10;doRefresh() never throws :477-506&#10;→ KHÔNG structural-match contract" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="280" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="adapter" value="IndexingService.ingestAuthProvider() (FR-5)&#10;— adapter tại call site (pattern CommandRegistrar :51)&#10;getTokenSync: () => this.currentToken() :50-53&#10;refreshToken: await refreshTokenFn() :27&#10;  catch → undefined; if (fresh) this.token = fresh  ← GAP 4" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="420" y="210" width="430" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="ingester" value="PegaStreamIngester (FR-2/FR-3)&#10;- auth?: IngestAuthProvider&#10;- fetchWithAuthRetry(send, endpoint?, log?)&#10;- authHeaders(projectId, extra?) — rebuild per-call&#10;- makeBody() — stream factory (submitJob)&#10;+ IngestAuthError throw tại 3 call site" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="120" y="420" width="360" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="err" value="&lt;&lt;error&gt;&gt;&#10;IngestAuthError extends Error&#10;+ readonly status: number&#10;name = 'IngestAuthError'&#10;export từ PegaStreamIngester.ts" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="450" width="270" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="catcher" value="PegaBfsIndexer (FR-3)&#10;catch err instanceof IngestAuthError (CẤM regex)&#10;authDead = true → shouldStop 'auth'&#10;authNotified guard — 1 log + 1 notification" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="920" y="440" width="290" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="poster2" value="BackendHttpPoster (FR-6)&#10;tokenProvider?: (() => string) | IngestAuthProvider&#10;refreshFn() discriminate runtime&#10;401 → refresh 1× → retry 1× — message giữ nguyên" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=top;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="120" y="640" width="360" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="fr7b" value="FR-7 (SHOULD)&#10;PegaBackendClient.postBackend(core, path, body, auth?)&#10;PegaCodeIntelDiscovery — ctor auth?&#10;PegaSchemaIndexer — ctor auth? + buildBackendAuthHeaders()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;verticalAlign=top;fontStyle=1;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="650" width="380" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="x1" value="«uses»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="adapter" target="contract">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x2" value="refreshTokenFn (adapter)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="adapter" target="mgr">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x3" value="«uses» helper" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="contract" target="helper">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x4" value="«delegate» fetchWithAuthRetry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="ingester" target="helper">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1040" y="385"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x5" value="throw khi 401 persists" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="ingester" target="err">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x6" value="«catch» instanceof" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;strokeWidth=2;dashed=1;fontSize=10;" edge="1" parent="1" source="err" target="catcher">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x7" value="«provides» token" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="adapter" target="ingester">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="300" y="385"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x8" value="«provides» token" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="adapter" target="poster2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="300" y="600"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x9" value="«provides» token (optional)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="adapter" target="fr7b">
+      <mxGeometry x="0.85" relative="1" as="geometry">
+        <mxPoint as="offset" x="15" y="0"/>
+        <Array as="points">
+          <mxPoint x="880" y="390"/>
+          <mxPoint x="880" y="590"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x10" value="«accepts union» legacy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#999999;strokeWidth=1;dashed=1;fontSize=10;" edge="1" parent="1" source="legacy" target="poster2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

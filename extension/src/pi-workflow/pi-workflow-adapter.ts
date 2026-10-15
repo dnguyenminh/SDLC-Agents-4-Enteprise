@@ -20,6 +20,8 @@ import { buildCredentialResolver } from './pi-provider-config-bridge.js';
 import { detectContextWindowEarlyHelper, getDetectedContextWindowHelper, type ContextProbeState } from './pi-adapter-context-probe.js';
 import { isBudgetExceededError } from '../pi-agent/budget-gate.js';
 import { governLegacyTurn } from './legacy-turn-governance.js';
+// SA4E-364: bridge tools join the legacy tool pool (merge skip-if-exists — BR-06).
+import { buildMcpBridgeAgentTools } from '../pi-agent/extensions/mcp-bridge-extension';
 import { PROVIDER_BASE_URL_KEYS } from '../models/LlmProviderConfig';
 import type { RemoteCheckpointerStore } from './checkpointer-adapter.js';
 import { debugLog, debugError } from '../debug-logger';
@@ -305,6 +307,11 @@ export class PiWorkflowAdapter {
         (e) => {
           if (!live) return;
           this.postToolLiveEvent(e);
+        },
+        // SA4E-THINKING: reasoning deltas stream into the webview ThinkingBlock.
+        (token) => {
+          if (!live) return;
+          this.streamHandler.emitThinking('pi', token, streamId);
         }
       );
       let res;
@@ -486,6 +493,18 @@ export class PiWorkflowAdapter {
         const name = (t as { name?: unknown }).name;
         if (typeof name === 'string' && name) byName.set(name, t); // extension wins (AFT hoist)
       }
+      // SA4E-364: bridge tools join the pool AFTER builtin + ext; skip-if-exists (BR-06).
+      const bridgeTools = buildMcpBridgeAgentTools(this.mcpBridge);
+      for (const t of bridgeTools) {
+        const name = (t as { name?: unknown }).name;
+        if (typeof name !== 'string' || !name) continue;
+        if (byName.has(name)) {
+          // KHÔNG đè — khác last-wins vòng builtin/ext phía trên (OI-06).
+          debugLog(`[PiWorkflowAdapter] bridge tool skipped (exists): ${name}`);
+          continue;
+        }
+        byName.set(name, t);
+      }
       const tools = [...byName.values()] as unknown as import('./types/executor.types.js').ExecuteTurnInput['tools'];
       const workspaceRoot = this.workspaceRoot;
       const onEvent = (msg: ChatExtToWebviewMessage) => this.onEvent(msg);
@@ -514,6 +533,8 @@ export class PiWorkflowAdapter {
       const turnStart = Date.now();
       for (const chunk of result.streamChunks || []) {
         if (chunk.type === 'text' && chunk.content) { this.streamHandler.emitToken('pi', chunk.content, turnStreamId); }
+        // SA4E-THINKING: reasoning chunks → ThinkingBlock in the webview.
+        else if (chunk.type === 'thinking' && chunk.content) { this.streamHandler.emitThinking('pi', chunk.content, turnStreamId); }
         else if (chunk.type === 'error' && chunk.error) this.streamHandler.emitError('pi', chunk.error, turnStreamId);
       }
       // ⛔ ROOT-CAUSE FIX (SA4E-289) + streaming-identity fix: ALWAYS close the

@@ -112,4 +112,25 @@ describe('ChatEngineAdapter — engine fan-out mapping (streaming-identity fix)'
     expect(ends).toHaveLength(1);
     expect(ends[0].messageId).toBe(starts[0].messageId);
   });
+
+  // SA4E-365, TC-16 [FR1-R1, F6 filter, AC1/BR-1] — eventType 'thinking' không bị toStreamEvent drop
+  it('forwards thinking chunks through the engine filter into THINKING_* (F6)', () => {
+    adapter.handleEngineEvent({
+      type: 'chat:streamChunk', streamId: 'turn-1', nodeId: 'pi', eventType: 'thinking', content: 'd1', timestamp: '',
+    } as unknown as ChatExtToWebviewMessage);
+    expect(posted.map((m) => m.type)).toEqual(['STREAM_START', 'THINKING_START', 'THINKING_TOKEN']); // INV-3
+
+    adapter.handleEngineEvent({
+      type: 'chat:streamChunk', streamId: 'turn-1', nodeId: 'pi', eventType: 'thinking', content: 'd2', timestamp: '',
+    } as unknown as ChatExtToWebviewMessage);
+    adapter.handleEngineEvent({
+      type: 'chat:streamChunk', streamId: 'turn-1', nodeId: 'pi', eventType: 'token', content: 'answer', timestamp: '',
+    } as unknown as ChatExtToWebviewMessage);
+
+    const tokens = posted.filter((m) => m.type === 'THINKING_TOKEN') as Array<{ token: string }>;
+    expect(tokens).toHaveLength(2);
+    expect(tokens[1].token).toBe('d2');
+    expect(posted.map((m) => m.type).join(',')).toContain('THINKING_END,STREAM_TOKEN'); // INV-4 end-to-end
+    expect(new Set(posted.map((m) => (m as { messageId?: string }).messageId)).size).toBe(1); // FR5-R1
+  });
 });

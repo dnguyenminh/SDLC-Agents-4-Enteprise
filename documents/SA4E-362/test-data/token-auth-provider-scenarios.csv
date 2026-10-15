@@ -1,0 +1,10 @@
+test_case_id,scenario,getTokenSync,refreshTokenResult,expectedAuthorization,expected_http_code_or_behavior,description
+UT-02,stale_token_refresh_dead,stale-token,undefined,Bearer stale-token (call #1 only),typed_IngestAuthError_wrapping_original_401,Refresh returns undefined -> no retry -> typed IngestAuthError (instanceof) wrapping original 401 -> no regex on message -> no loop
+UT-06,no_auth_provider_provided,,n/a,absent,401_returned_as_is_no_crash,Constructor without auth (back-compat) -> optional chaining -> 401 passed through -> 1 fetch
+UT-06,legacy_getTokenSync_only_call_site,legacy-token,n/a,Bearer legacy-token,unchanged_behavior,Old call sites keep working (adapter pattern keeps AuthManager public signature)
+UT-07,empty_token_before_login,"",n/a,absent,no_authorization_header,Empty token -> no Authorization key at all (never 'Bearer ') -> X-Project-Id always present
+UT-07,project_id_header_contract,"",n/a,absent,X-Project-Id always set,X-Project-Id header present on every call regardless of token state
+UT-11,wiring_full_provider,current-token,fresh-2,Bearer current-token then Bearer fresh-2,refreshTokenFn_called_once_token_synced,IndexingService provider has both methods -> after refresh this.token updated (SA4E-300 GAP 4)
+UT-11,wiring_no_refreshTokenFn,current-token,undefined,absent_after_failed_refresh,resolves_undefined_graceful,refreshTokenFn not set -> refreshToken() resolves undefined -> no crash
+UT-12,concurrent_refresh_dedup,expired-tok,fresh-tok,Bearer fresh-tok,1_fetch_to_/api/auth/refresh,2 parallel getAccessToken calls after expiry -> exactly 1 refresh network call (refreshInFlight dedupe)
+PBT-01,any_status_sequence,any-token,any,max_2_authorization_values,le_2_http_calls_le_1_refresh,Property: any status sequence -> at most 2 HTTP requests and at most 1 refreshToken call

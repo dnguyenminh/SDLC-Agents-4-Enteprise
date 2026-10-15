@@ -1,0 +1,95 @@
+{
+  "ticket": "SA4E-362",
+  "autonomyLevel": "L3",
+  "currentPhase": "uat",
+  "branch": "SA4E-362",
+  "summary": "[Pega Ingest] Invalid or expired token - ingest path thieu refresh-on-401 khi access JWT het han giua job dai",
+  "todos": [
+    {
+      "id": "SA4E-362-TO-01",
+      "title": "Fix ingest auth: refresh-on-401 + graceful auth-dead stop",
+      "description": "IngestAuthProvider + fetchWithAuthRetry + PegaBfsPipeline stop-hook + typed IngestAuthError; bulk-check refresh; 13 test cases",
+      "status": "to-do",
+      "createdAt": "2026-10-15T14:00:00Z"
+    }
+  ],
+  "phases": {
+    "requirements": {
+      "output": "BRD.md v1.0 + 2 diagrams + DOCX attached to Jira",
+      "status": "done",
+      "completedAt": "2026-10-15T14:30:00Z"
+    },
+    "specification": {
+      "status": "done",
+      "completedAt": "2026-10-16T09:00:00Z",
+      "output": "FSD v1.0 (TA enriched: withAuthRetry pseudocode, error matrix 5x-endpoint, observability, security notes); DOCX 11711 attached"
+    },
+    "design": {
+      "output": "TDD v1.0 — 10-file change spec, 3 diagrams, STC UT-08 note: stopReason='auth' supersedes aborted assert; DOCX 11728 attached",
+      "status": "done",
+      "completedAt": "2026-10-16T09:40:00Z"
+    },
+    "security_design_review": {
+      "output": "SECURITY-REVIEW.md — APPROVED-WITH-CONDITIONS (0 C/H/M, 2 Low applied by dev)",
+      "completedAt": "2026-10-16T10:00:00Z",
+      "status": "done"
+    },
+    "test_planning": {
+      "output": "STP v1.0 + STC v1.1 — 22 TCs, RTM 3-way 100% (17/17 AC + 8/8 FR); STC DOCX 11710 attached",
+      "completedAt": "2026-10-16T08:00:00Z",
+      "status": "done"
+    },
+    "cicd_setup": {
+      "output": "CI-CD-REVIEW.md — verdict READY (no active CI; local compile+test:unit is the gate)",
+      "status": "done",
+      "completedAt": "2026-10-15T14:30:00Z"
+    },
+    "implementation": {
+      "output": "13 prod files + 6 test files; SEC-01/02 + SECA-01 + CR-01 resolved; compile 0 err; full suite 2986/2986 ALL GREEN; 51/51 SA4E-362",
+      "completedAt": "2026-10-16T11:05:00Z",
+      "status": "done"
+    },
+    "user_guide": {
+      "output": "UG.md v1.0 + SA4E-241/UG.md §7.1 update; DOCX attached",
+      "completedAt": "2026-10-16T10:50:00Z",
+      "status": "done"
+    },
+    "security_code_review": {
+      "output": "SECURITY-ASSESSMENT.md APPROVED-WITH-CONDITIONS — SECA-01 resolved",
+      "completedAt": "2026-10-16T10:50:00Z",
+      "status": "done"
+    },
+    "testing": {
+      "output": "TEST-REPORT.md v1.0; 16/16 automated TCs PASS; CODE-REVIEW.md APPROVED-WITH-MINOR-FIXES (CR-01 resolved)",
+      "completedAt": "2026-10-16T10:55:00Z",
+      "results": {
+        "regression": {
+          "files": 306,
+          "tests": 2986,
+          "status": "passed"
+        },
+        "external": "pi-session-routing fail = SA4E-364/365 WIP (attributed, evidence saved)",
+        "unit": {
+          "files": 7,
+          "tests": 51,
+          "status": "passed"
+        }
+      },
+      "status": "done"
+    },
+    "pentest": {
+      "output": "PENTEST-REPORT.md — risk LOW (PT-01..05 PASS)",
+      "completedAt": "2026-10-16T10:50:00Z",
+      "status": "done"
+    },
+    "uat": {
+      "status": "pending",
+      "note": "HUMAN GATE — cho user: SIT-01 (TTL=60s refresh mid-job) + SIT-02 (revoke refresh token → graceful stop)"
+    },
+    "deployment": {
+      "status": "pending"
+    }
+  },
+  "notes": "Bug fix ticket. Fix plan goc: SessionTimeout-FIX-PLAN.md (repo root) + 2 dieu chinh bat buoc tu phan tich dev/qa agent: (1) stop-hook PegaBfsPipeline, (2) typed IngestAuthError thay regex.",
+  "lastUpdated": "2026-10-16T11:10:00Z"
+}

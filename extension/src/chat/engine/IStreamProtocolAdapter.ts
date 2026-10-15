@@ -33,7 +33,7 @@ export interface StreamChunkEvent {
   type: 'chat:streamChunk';
   streamId: string;
   nodeId: string;
-  eventType: 'token' | 'status' | 'error';
+  eventType: 'token' | 'thinking' | 'status' | 'error';
   content: string;
   timestamp: string;
 }

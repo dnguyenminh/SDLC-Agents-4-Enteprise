@@ -1,0 +1,63 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-01: ingestSingleRule refreshes once on 401 and retries with the fresh token 2ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-02: refresh undefined → no retry, throws IngestAuthError with the original message 1ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-03: HTTP 400 → refreshToken 0 calls, error propagates as-is 0ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-03: HTTP 403 → refreshToken 0 calls, error propagates as-is 0ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-03: HTTP 500 → refreshToken 0 calls, error propagates as-is 0ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-03: HTTP 503 → refreshToken 0 calls, error propagates as-is 0ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-04: submitJob rebuilds the stream per attempt with duplex:'half' on both sends 2ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-05: pollUntilComplete rebuilds headers per request and survives a 401 mid-poll 2ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-06: constructor without auth → single fetch, typed error, no crash 0ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-07: empty token → no Authorization header, X-Project-Id still present 0ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > UT-14: retry still 401 after successful refresh → IngestAuthError, no second refresh 0ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > SEC-02: IngestAuthError message caps the embedded 401 body at 200 characters 0ms
+ ✓ src/services/__tests__/PegaStreamIngester.auth-retry.test.ts > PegaStreamIngester refresh-on-401 — SA4E-362 > PBT-01: property — any status sequence yields ≤2 fetches and ≤1 refresh 21ms
+ ✓ src/services/__tests__/PegaBfsPipeline.auth-dead.test.ts > SA4E-362 — BFS auth-dead graceful stop > UT-08: auth-dead stops the pipeline early; remaining items are NOT counted as skipped 11ms
+ ✓ src/services/__tests__/PegaBfsPipeline.auth-dead.test.ts > SA4E-362 — BFS auth-dead graceful stop > UT-09: non-auth 500 errors keep the pipeline resilient (no authDead, no pause) 31ms
+ ✓ src/code-intel/delta/__tests__/BackendHttpPoster.test.ts > BackendHttpPoster > sends Authorization when a token provider is supplied 13ms
+ ✓ src/code-intel/delta/__tests__/BackendHttpPoster.test.ts > BackendHttpPoster > sends no Authorization when no token is available 0ms
+ ✓ src/code-intel/delta/__tests__/BackendHttpPoster.test.ts > BackendHttpPoster > throws on a non-OK response so StateComparer degrades fail-safe 1ms
+ ✓ src/code-intel/delta/__tests__/BackendHttpPoster.test.ts > BackendHttpPoster > UT-10a: refreshes once on 401 and retries with the fresh token 1ms
+ ✓ src/code-intel/delta/__tests__/BackendHttpPoster.test.ts > BackendHttpPoster > UT-10b: refresh undefined → single fetch, rejects with the unchanged message 0ms
+ ✓ src/code-intel/delta/__tests__/BackendHttpPoster.test.ts > BackendHttpPoster > UT-10c: non-401 (500) → no refresh, error as before 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > starts unauthenticated 3ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > initialize stays unauthenticated even with stored token (explicit login required) 1ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > initialize stays unauthenticated without a stored token 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > login transitions through AUTHENTICATING to AUTHENTICATED 2ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > login rejects with AuthError and returns to UNAUTHENTICATED on bad credentials 2ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > login rejects with AuthError when backend is unreachable 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > getAccessToken returns null when not authenticated 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > getLastUsername migrates a legacy kiroSdlc.lastUsername on read 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > getAccessToken returns token when authenticated via login 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > getAccessToken flags state UNAUTHENTICATED when stored token disappears 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > getAccessToken refreshes and returns the new token when expired 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > refreshToken keeps session on network failure and warns 2ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > refreshToken transitions to UNAUTHENTICATED on 401 response 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > refreshToken stores the new token on success 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > refreshToken without a cached token transitions to UNAUTHENTICATED 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > logout clears credentials and notifies the backend when a token exists 1ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > logout skips the backend call when no token is cached 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > logout still clears local state when the backend call fails 1ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > emits AUTHENTICATING then AUTHENTICATED on every login 1ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > listSsoProviders > returns enabled providers from /auth/sso/providers 1ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > listSsoProviders > filters out malformed entries missing provider_type 1ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > listSsoProviders > returns [] on non-ok response (non-fatal) 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > listSsoProviders > returns [] on network error (non-fatal) 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > loginSso > rejects an invalid provider key without changing state 1ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > loginSso > loginEntra delegates to loginSso('entra') 0ms
+ ✓ src/auth/__tests__/auth-manager.test.ts > AuthManager > SA4E-362 UT-12 — concurrent refresh dedupe > dedupes 2 parallel getAccessToken() calls into exactly 1 POST /api/auth/refresh 1ms
+ ✓ src/services/__tests__/IndexingService.ingest-auth.test.ts > IndexingService ingestAuthProvider — SA4E-362 UT-11 > provider exposes getTokenSync + refreshToken; refresh updates this.token (GAP 4) 1ms
+ ✓ src/services/__tests__/IndexingService.ingest-auth.test.ts > IndexingService ingestAuthProvider — SA4E-362 UT-11 > refreshToken resolves undefined when refreshTokenFn is not wired 1ms
+ ✓ src/services/__tests__/IndexingService.ingest-auth.test.ts > IndexingService ingestAuthProvider — SA4E-362 UT-11 > refreshToken resolves undefined when refreshTokenFn throws 0ms
+ ✓ src/services/__tests__/PegaSchemaIndexer.auth.test.ts > PegaSchemaIndexer Authorization + refresh-on-401 — SA4E-362 UT-13 > sends Authorization on call #1 (root-cause fix) and refreshes once on 401 2ms
+
+ Test Files  6 passed (6)
+      Tests  51 passed (51)
+   Start at  04:19:44
+   Duration  2.18s (transform 279ms, setup 0ms, import 885ms, tests 117ms, environment 0ms)
+

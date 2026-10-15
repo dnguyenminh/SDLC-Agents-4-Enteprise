@@ -1,8 +1,8 @@
 /**
  * SA4E-85 — StreamProtocolAdapter implementation.
- * Translates LangGraph engine events (chat:streamChunk/Complete/toolCall)
- * into the new SA4E-85 webview protocol (STREAM_START/TOKEN/END/ERROR).
- * Tracks active streamId → messageId mappings for correlation.
+ * Translates LangGraph engine events (chat:streamChunk/Complete/toolCall) into
+ * the SA4E-85 webview protocol (STREAM_START/TOKEN/END/ERROR + THINKING_*),
+ * tracking active streamId → messageId mappings for correlation.
  */
 
 import * as crypto from 'crypto';
@@ -29,6 +29,8 @@ const DANGEROUS_TOOLS = new Set([
 export class StreamProtocolAdapter implements IStreamProtocolAdapter {
   private readonly streamToMessage = new Map<string, string>();
   private readonly startedStreams = new Set<string>();
+  /** SA4E-THINKING: streams with an open thinking block (THINKING_START emitted, THINKING_END pending). */
+  private readonly thinkingActive = new Set<string>();
 
   /**
    * Handle a single engine event, returning zero or more ExtensionMessages.
@@ -59,9 +61,14 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
   reset(): void {
     this.streamToMessage.clear();
     this.startedStreams.clear();
+    this.thinkingActive.clear();
   }
 
-  /** Translate chat:streamChunk → STREAM_START + STREAM_TOKEN or STREAM_ERROR */
+  /**
+   * Translate chat:streamChunk → STREAM_START + STREAM_TOKEN / THINKING_* or STREAM_ERROR.
+   * SA4E-THINKING: 'thinking' opens a thinking block on the first non-empty delta;
+   * the block closes (THINKING_END) on the first answer token, an error, or completion.
+   */
   private handleChunk(event: StreamChunkEvent): ExtensionMessage[] {
     const messages: ExtensionMessage[] = [];
     const isOrphan = !this.streamToMessage.has(event.streamId) && !this.startedStreams.has(event.streamId);
@@ -70,14 +77,17 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
     // Emit STREAM_START on first chunk for this stream
     if (!this.startedStreams.has(event.streamId)) {
       this.startedStreams.add(event.streamId);
-      messages.push({
-        type: 'STREAM_START',
-        messageId,
-        agentId: event.nodeId,
-      });
+      messages.push({ type: 'STREAM_START', messageId, agentId: event.nodeId });
     }
 
     if (event.eventType === 'error') {
+      // G-1 (FR4-R3/SR-01): close an open thinking block BEFORE STREAM_ERROR —
+      // error is terminal, never rely on a later complete (INV-4) or the webview
+      // block stays stuck on "Thinking..." (e.g. the PI_TURN_FAILED path).
+      if (this.thinkingActive.has(event.streamId)) {
+        this.thinkingActive.delete(event.streamId);
+        messages.push({ type: 'THINKING_END', messageId });
+      }
       messages.push({
         type: 'STREAM_ERROR',
         messageId,
@@ -87,7 +97,22 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
       // synthetic ids never accumulate across turns. Mid-stream errors keep
       // their mapping — the turn's own complete will clean up.
       if (isOrphan) this.cleanup(event.streamId);
+    } else if (event.eventType === 'thinking') {
+      // G-3 (FR3-R3, INV-3/5): empty/undefined delta → absolute no-op
+      // (no empty THINKING_TOKEN, no block opened without a non-empty token).
+      if (!event.content) return messages;
+      if (!this.thinkingActive.has(event.streamId)) {
+        this.thinkingActive.add(event.streamId);
+        messages.push({ type: 'THINKING_START', messageId });
+      }
+      messages.push({ type: 'THINKING_TOKEN', messageId, token: event.content });
     } else if (event.eventType === 'token') {
+      // Answer text after reasoning: close the thinking block first so the
+      // webview collapses ThinkingBlock and streams the visible answer.
+      if (this.thinkingActive.has(event.streamId)) {
+        this.thinkingActive.delete(event.streamId);
+        messages.push({ type: 'THINKING_END', messageId });
+      }
       messages.push({ type: 'STREAM_TOKEN', messageId, token: event.content });
     }
     // 'status' events are informational — no protocol mapping needed
@@ -95,11 +120,17 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
     return messages;
   }
 
-  /** Translate chat:streamComplete → STREAM_END */
+  /** Translate chat:streamComplete → THINKING_END (if open) + STREAM_END */
   private handleComplete(event: StreamCompleteEvent): ExtensionMessage[] {
     const messageId = this.ensureMessageId(event.streamId);
+    const messages: ExtensionMessage[] = [];
+    if (this.thinkingActive.has(event.streamId)) {
+      this.thinkingActive.delete(event.streamId);
+      messages.push({ type: 'THINKING_END', messageId });
+    }
     this.cleanup(event.streamId);
-    return [{ type: 'STREAM_END', messageId }];
+    messages.push({ type: 'STREAM_END', messageId });
+    return messages;
   }
 
   /** Translate chat:toolCall → TOOL_CALL_REQUEST */
@@ -107,22 +138,12 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
     const { id, name, args } = event.toolCall;
     const requiresApproval = DANGEROUS_TOOLS.has(name);
     const toolType = this.classifyTool(name);
-
-    return [{
-      type: 'TOOL_CALL_REQUEST',
-      toolId: id,
-      name,
-      args,
-      requiresApproval,
-      toolType,
-    }];
+    return [{ type: 'TOOL_CALL_REQUEST', toolId: id, name, args, requiresApproval, toolType }];
   }
 
   /**
-   * FIX F: translate chat:toolCallUpdate → MCP_TOOL_RESULT.
-   * The webview's messageListener runs completeToolCall(toolId, content) /
-   * failToolCall(toolId, error) on MCP_TOOL_RESULT — without this mapping the
-   * RESPONSE block never leaves "(waiting...)". 'running' emits nothing.
+   * FIX F: translate chat:toolCallUpdate → MCP_TOOL_RESULT (else the RESPONSE
+   * block never leaves "(waiting...)"). 'running' emits nothing.
    */
   private handleToolUpdate(event: ToolCallUpdateEvent): ExtensionMessage[] {
     const { id, status, result, duration } = event;
@@ -158,6 +179,10 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
   private cleanup(streamId: string): void {
     this.streamToMessage.delete(streamId);
     this.startedStreams.delete(streamId);
+    // SA4E-THINKING SR-03 (CWE-459): cleanup must also drop any open thinking
+    // block — idempotent defense-in-depth so every terminal path leaves
+    // thinkingActive empty (INV-1), even if a future path forgets to close it.
+    this.thinkingActive.delete(streamId);
   }
 
   /** Classify tool name into ToolType category for UI */

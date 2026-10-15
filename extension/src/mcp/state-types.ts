@@ -9,7 +9,7 @@ export type PipelineIntent = "sdlc" | "hotfix" | "code_review" | "docs" | "secur
 export type PipelineStatus = "idle" | "running" | "paused" | "completed" | "failed" | "cancelled";
 export type ApprovalDecision = "approve" | "reject" | "revise" | "skip" | "cancel";
 export type AutonomyLevel = "L1" | "L2" | "L3";
-export type StreamEventType = "token" | "status" | "progress" | "complete" | "error" | "retry" | "verify" | "strategy_switch" | "human_intervention_required" | "autonomy_switch";
+export type StreamEventType = "token" | "thinking" | "status" | "progress" | "complete" | "error" | "retry" | "verify" | "strategy_switch" | "human_intervention_required" | "autonomy_switch";
 
 export interface IntentAnalysis {
   intent: "APPROVE" | "REJECT" | "NEED_CLARIFICATION";

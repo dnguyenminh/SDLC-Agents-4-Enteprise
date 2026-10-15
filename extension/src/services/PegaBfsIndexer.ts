@@ -13,10 +13,11 @@ import type { PegaHttpClient } from "./PegaHttpClient";
 import type { ISchemaOrchestrator } from "./PegaSchemaOrchestrator";
 import { saveRuleFile, calibrateFetchConcurrency } from "./PegaCrawlHelper";
 import { PegaLocalRuleIndex } from "./PegaLocalRuleIndex";
-import { PegaStreamIngester } from "./PegaStreamIngester";
+import { PegaStreamIngester, IngestAuthError } from "./PegaStreamIngester";
+import type { IngestAuthProvider } from "../utils/backend-auth-headers";
 import type { UnresolvedDependency } from "./DependencyMapper";
 import type { MembershipSet } from "./DiskBackedSet";
-import { PegaBfsPipeline, type FetchedRule } from "./PegaBfsPipeline";
+import { PegaBfsPipeline, type FetchedRule, type BfsRunResult } from "./PegaBfsPipeline";
 
 type ProgressReporter = vscode.Progress<{ message?: string }>;
 type LogFn = (msg: string) => void;
@@ -99,6 +100,8 @@ export interface BfsIndexResult {
   discoveredCount: number;
   skippedCount: number;
   errorCount: number;
+  /** SA4E-362 FR-4 + SEC-01 (3.7): lý do dừng sớm — chỉ 'auth' (literal union); null/undefined = chạy hết bình thường. */
+  stopReason?: "auth" | null;
 }
 
 /**
@@ -118,6 +121,10 @@ export class PegaBfsIndexer {
    * under its real app name (not a random rule's class).
    */
   private appName?: string;
+  /** SA4E-362 FR-3: refresh đã chết (IngestAuthError) — kích hoạt shouldStop của pipeline. */
+  private authDead = false;
+  /** SA4E-362 BR-6: guard notification/log ⛔ đúng 1 lần per run — reset mỗi run(). */
+  private authNotified = false;
 
   /**
    * @param resilient - When true, a per-rule 5xx does NOT abort the whole run.
@@ -131,9 +138,9 @@ export class PegaBfsIndexer {
     private readonly log: LogFn,
     private readonly schemaOrchestrator?: ISchemaOrchestrator,
     private readonly resilient = false,
-    private readonly authManager?: { getTokenSync(): string },
+    private readonly auth?: IngestAuthProvider,
   ) {
-    this.ingester = new PegaStreamIngester(backendUrl, authManager);
+    this.ingester = new PegaStreamIngester(backendUrl, auth);
   }
 
   /**
@@ -156,6 +163,9 @@ export class PegaBfsIndexer {
     const initialCount = fetchQueue.length;
     // SA4E-338 B1: resolve the app name from pega-project.json once per run.
     this.appName = readPegaAppName(root);
+    // SA4E-362 FR-3/BR-6: reset auth state đầu mỗi run.
+    this.authDead = false;
+    this.authNotified = false;
     // Local skip source: records every rule that lands in the backend so the
     // next catalog run can skip it without touching the network.
     this.localIndex = new PegaLocalRuleIndex(root);
@@ -186,6 +196,7 @@ export class PegaBfsIndexer {
         maxQueueSize: MAX_QUEUE_SIZE,
         maxIterations,
         resilient: this.resilient,
+        shouldStop: () => (this.authDead ? ("auth" as const) : null), // SA4E-362 FR-4 + SEC-01: literal 'auth'
       },
       (fetched: FetchedRule) => this.ingestOne(projectId, fetched, root),
       (processed, queued) => report.report({
@@ -193,14 +204,18 @@ export class PegaBfsIndexer {
       }),
     );
 
+    let runResult: BfsRunResult;
     try {
-      await pipeline.run(fetchQueue, dedupSet, counters);
+      runResult = await pipeline.run(fetchQueue, dedupSet, counters);
     } finally {
       this.localIndex?.flush();
     }
 
+    if (runResult.stopReason) {
+      this.log(`[BfsIndexer] ⏸️ BFS paused (${runResult.stopReason}) — ingested=${counters.totalIngested} trước khi dừng, state preserved`);
+    }
     this.log(`[BfsIndexer] ✅ BFS complete: ingested=${counters.totalIngested}, discovered=${counters.discoveredCount}, errors=${counters.errorCount}`);
-    return { ...counters, initialCount };
+    return { ...counters, initialCount, stopReason: runResult.stopReason };
   }
 
   // ─── Private Helpers ────────────────────────────────────────────────────
@@ -265,6 +280,20 @@ export class PegaBfsIndexer {
       }
       return { ingested, relatives: result.unresolvedDependencies || [] };
     } catch (err: any) {
+      // SA4E-362 FR-3: typed auth error — nhận diện bằng instanceof (CẤM regex message).
+      if (err instanceof IngestAuthError) {
+        this.authDead = true; // idempotent — N consumer set lại không đổi hành vi (AF-1)
+        if (!this.authNotified) {
+          this.authNotified = true; // BR-6: đúng 1 log + 1 notification per run
+          this.log(`[Pega Ingester] ⛔ Auth hết hạn và refresh thất bại — dừng ingest. Hãy login lại rồi chạy lại (state đã preserve)`);
+          void vscode.window.showWarningMessage(
+            `⛔ Auth hết hạn và refresh thất bại — dừng ingest. Hãy login lại rồi chạy lại (state đã preserve).`,
+          );
+        }
+        // Rule hiện tại vẫn return { ingested: false } — GIỮ ELIGIBLE cho run sau
+        // (rerun incremental; đúng comment hiện có). KHÔNG auto-login (BR-3).
+        return { ingested: false, relatives: [] };
+      }
       // undici reports generic "fetch failed"; the real cause (ECONNREFUSED,
       // 401, body-too-large…) lives in err.cause — surface it or the failure
       // is un-diagnosable from the log alone. Include the rule identity so the

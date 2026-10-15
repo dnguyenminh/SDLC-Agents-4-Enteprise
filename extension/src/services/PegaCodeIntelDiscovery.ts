@@ -13,6 +13,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { PegaHttpClient } from "./PegaHttpClient";
+import { withAuthRetry, type IngestAuthProvider } from "../utils/backend-auth-headers";
 
 export interface DiscoveryProgress {
   report(v: { message: string }): void;
@@ -32,6 +33,7 @@ export class PegaCodeIntelDiscovery {
     private readonly httpClient: PegaHttpClient,
     private readonly outputChannel?: vscode.OutputChannel,
     private readonly log?: (msg: string) => void,
+    private readonly auth?: IngestAuthProvider,
   ) {}
 
   private trace(msg: string): void {
@@ -83,14 +85,24 @@ export class PegaCodeIntelDiscovery {
   private async callBackendDiscovery(payload: Record<string, unknown>, projectId: string): Promise<PegaCodeIntelDiscoveryResult> {
     const backendUrl = this.httpClient.getBackendUrlPublic().replace(/\/$/, "");
     const url = `${backendUrl}/api/v1/pega/discover`;
-    const res = await fetch(url, {
-      method: "POST",
-      // /api/v1/* sits behind jwtAuthStrict — without a Bearer token this 401s
-      // with AUTH_REQUIRED, which the caller surfaces as a discovery failure.
-      headers: { "Content-Type": "application/json", ...this.authHeaders(projectId) },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(120000),
-    });
+    // SA4E-362 FR-7 (T-2): wrap the fetch in the shared refresh-on-401 helper —
+    // 401 → refresh exactly once → retry exactly once. The 120s AbortSignal is
+    // PER-ATTEMPT (inside the send closure), worst-case total 240s — accepted (FSD T-2).
+    const res = await withAuthRetry(async (token) => {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        // /api/v1/* sits behind jwtAuthStrict — without a Bearer token this 401s
+        // with AUTH_REQUIRED, which the caller surfaces as a discovery failure.
+        ...this.authHeaders(projectId),
+      };
+      if (token) { headers["Authorization"] = `Bearer ${token}`; } // fresh token on retry
+      return fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(120000),
+      });
+    }, this.auth, (msg) => this.trace(msg), "discover");
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(`backend ${res.status}: ${text.substring(0, 200)}`);

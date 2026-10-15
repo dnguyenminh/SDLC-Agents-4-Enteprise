@@ -59,6 +59,15 @@ export interface PipelineOptions {
   maxQueueSize: number;
   maxIterations: number;
   resilient: boolean;
+  /** SA4E-362 FR-4 + SEC-01 (3.7): stop-hook nghiệp vụ. Trả lý do dừng (literal — chỉ 'auth' hôm nay)
+   *  hoặc null = chạy tiếp. Được check tại supply() loop-top + consume() đầu vòng. KHÔNG liên quan `aborted`. */
+  shouldStop?: () => "auth" | null;
+}
+
+/** SA4E-362 FR-4 + SEC-01 (3.7): kết quả run(). Counters được fill bình thường qua parameter (non-breaking
+ *  với caller cũ bỏ qua return); result chỉ bổ sung stopReason (literal union — không chuỗi tự do). */
+export interface BfsRunResult {
+  stopReason: "auth" | null;
 }
 
 /**
@@ -73,6 +82,12 @@ export class PegaBfsPipeline {
   private fetchErrors = 0;
   /** Lock tail: chaining promises serializes the drain section across consumers. */
   private drainLock: Promise<void> = Promise.resolve();
+  /** SA4E-362 FR-4 + SEC-01: set MỘT LẦN từ shouldStop() đầu tiên trả non-null (idempotent). */
+  private stopReason: "auth" | null = null;
+  /** SA4E-362 FR-4: snapshot observability tại thời điểm stop. */
+  private inFlightAtStop = 0;
+  /** SA4E-362 FR-4 (deadlock guard): số item bị drain-and-discard sau khi stop. */
+  private discardedAtStop = 0;
 
   constructor(
     private readonly pegaClient: PegaHttpClient,
@@ -84,13 +99,14 @@ export class PegaBfsPipeline {
 
   /**
    * Run the pipeline until the fetch queue drains and nothing is in-flight.
-   * @throws Error if a non-resilient run hits a server error (abort).
+   * @returns BfsRunResult với stopReason (SA4E-362 FR-4) — 'auth' khi stop-hook kích hoạt.
+   * @throws Error if a non-resilient run hits a server error (abort) — aborted vẫn thắng (EF-1).
    */
   async run(
     fetchQueue: CrawlPlanItem[],
     dedupSet: MembershipSet,
     counters: BfsCounters,
-  ): Promise<void> {
+  ): Promise<BfsRunResult> {
     const channel = new BoundedChannel<FetchedRule>(this.opts.channelCapacity);
 
     // Consumers start first so they can drain as soon as the supplier pushes.
@@ -105,14 +121,49 @@ export class PegaBfsPipeline {
     // have finished (no concurrent writer remains).
     counters.errorCount += this.fetchErrors;
 
-    if (this.aborted) { throw new Error(this.aborted); }
+    if (this.aborted) { throw new Error(this.aborted); } // GIỮ NGUYÊN — aborted vẫn thắng (EF-1)
+
+    if (this.stopReason) {
+      // SA4E-362 FR-4 + FSD 4.1 (SEC-01: reason chỉ còn literal 'auth' → label cố định).
+      this.log(`[BfsPipeline] ⏸️ Stopped: paused due to auth (in-flight completed: ${this.inFlightAtStop - this.discardedAtStop}, buffered discarded: ${this.discardedAtStop})`);
+    }
+    return { stopReason: this.stopReason };
+  }
+
+  /** SA4E-362 FR-4 + SEC-01: đọc shouldStop() đúng MỘT lần đầu trả non-null — cache để reason không đổi giữa chừng. */
+  private checkStop(): void {
+    if (this.stopReason) { return; }
+    const reason = this.opts.shouldStop?.() ?? null;
+    if (reason) {
+      this.stopReason = reason;
+      this.inFlightAtStop = this.inFlight;
+    }
+  }
+
+  /**
+   * SA4E-362 FR-4 (deadlock guard — TDD gap fix): when stopped, drain buffered items
+   * WITHOUT ingesting or counting them as skipped. A supplier parked on push()
+   * backpressure is only woken by take(); without this drain, an exiting consumer
+   * set could hang run() forever (violates BR-4 "graceful stop"). Discarded items
+   * release their in-flight slot so liveness accounting stays balanced.
+   */
+  private async drainDiscard(channel: BoundedChannel<FetchedRule>): Promise<void> {
+    let next = await channel.take();
+    while (!next.done) {
+      this.discardedAtStop++;
+      this.inFlight--;
+      next = await channel.take();
+    }
   }
 
   /** Supplier loop: fetch batches and push fetched rules into the channel. */
   private async supply(channel: BoundedChannel<FetchedRule>, fetchQueue: CrawlPlanItem[]): Promise<void> {
     // Continue while there is queued work OR rules still in-flight (their relatives
-    // may refill the queue). Stop early on abort or the CWE-400 iteration cap.
-    while (!this.aborted && (fetchQueue.length > 0 || this.inFlight > 0)) {
+    // may refill the queue). Stop early on abort, the business stop-hook, or the
+    // CWE-400 iteration cap.
+    while (!this.aborted && !this.stopReason && (fetchQueue.length > 0 || this.inFlight > 0)) {
+      this.checkStop();
+      if (this.stopReason) { break; } // ngừng fetch/phát item mới — channel.close() ở cuối vẫn chạy
       if (this.processed >= this.opts.maxIterations) {
         this.log(`[BfsPipeline] ⚠️ Hit max iterations (${this.opts.maxIterations}). Stopping supply.`);
         break;
@@ -159,6 +210,11 @@ export class PegaBfsPipeline {
     counters: BfsCounters,
   ): Promise<void> {
     while (true) {
+      this.checkStop();
+      if (this.stopReason) {
+        await this.drainDiscard(channel); // deadlock guard (FR-4) — see drainDiscard
+        return; // exit KHÔNG đếm item còn lại là skipped (chưa từng được ingest)
+      }
       const next = await channel.take();
       if (next.done) { return; }
       const fetched = next.value;

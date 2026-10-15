@@ -1,0 +1,27 @@
+test_case_id,status,refreshSucceeds,expectedRetry,expectedOutcome,description
+UT-03,200,false,false,success_no_refresh,Valid response -> no refresh call and no retry
+UT-03,200,true,false,success_no_refresh,Valid response with refresher available -> still no refresh (US-1 AC1)
+UT-03,202,false,false,success_no_refresh,Valid 202 accepted -> no refresh call and no retry
+UT-03,202,true,false,success_no_refresh,Valid 202 with refresher available -> still no refresh
+UT-03,400,true,false,error_400_no_refresh,Non-401 client error -> no refresh call -> error propagated as-is
+UT-03,400,false,false,error_400_no_refresh,Non-401 client error -> no refresh call -> error propagated as-is
+UT-03,403,true,false,error_403_no_refresh,403 Forbidden is NOT an expiry signal -> no refresh
+UT-03,403,false,false,error_403_no_refresh,403 Forbidden is NOT an expiry signal -> no refresh
+UT-01,401,true,true,200_after_retry,401 + refresh OK -> refresh once -> rebuild headers/body -> retry once with fresh-token -> success (US-1 AC2)
+UT-02,401,false,false,original_401_returned,401 + refresh undefined -> NO retry -> single fetch -> original 401 returned to caller (US-1 validation rule)
+UT-03,500,true,false,error_500_no_refresh,Non-401 server error -> no refresh call -> error propagated as-is
+UT-03,500,false,false,error_500_no_refresh,Non-401 server error -> no refresh call -> error propagated as-is
+UT-03,503,true,false,error_503_no_refresh,Non-401 server error -> no refresh call -> error propagated as-is
+UT-03,503,false,false,error_503_no_refresh,Non-401 server error -> no refresh call -> error propagated as-is
+UT-04,401,true,true,200_after_retry_stream_replayed,submitJob 401 + refresh OK -> makeBody rebuilt (2 distinct ReadableStream) -> duplex:'half' both -> retry once with fresh token (US-1 AC4)
+UT-05,401,true,true,poll_continues_to_done,pollUntilComplete GET 401 mid-loop + refresh OK -> headers rebuilt per-request -> retry once -> polling continues to succeeded (US-1 AC5)
+UT-13,401,true,true,200_after_retry_schema,PegaSchemaIndexer 401 + refresh OK -> Authorization header present on call#1 (previously absent) -> retry once with fresh token (US-4 AC2)
+UT-14,401,true,true,ingestAuthError_after_still_401,401 -> refresh OK (fresh-token) -> retry -> STILL 401 -> typed IngestAuthError raised (auth-dead trigger #2) -> fetch 2x refresh 1x no loop (US-2 AC1 Business Flow Step 8)
+UT-10,401,true,true,200_after_retry,Bulk-check POST 401 -> refresh once -> retry once with fresh token -> success (US-3 AC1)
+UT-10,401,false,false,throw_bulk_check_HTTP_401,Refresh dead -> single fetch -> throw 'bulk-check HTTP 401' -> no fallback re-fetch (US-2 AC5 / US-3 AC2)
+UT-10,500,true,false,throw_bulk_check_HTTP_500,Non-401 bulk-check -> no refresh -> throw as before (fail-safe E-04)
+UT-10,500,false,false,throw_bulk_check_HTTP_500,Non-401 bulk-check -> no refresh -> throw as before (fail-safe E-04)
+E2E-API-01,401,false,false,TOKEN_INVALID_401_before_handler,POST /api/v1/pega/ingest-rule expired token -> 401 TOKEN_INVALID 'Invalid or expired token' before handler -> no side-effect
+E2E-API-02,401,false,false,TOKEN_INVALID_401_before_handler,POST /api/v1/pega/ingest-stream expired token -> 401 TOKEN_INVALID before handler -> job not consumed
+E2E-API-03,401,false,false,TOKEN_INVALID_401_before_handler,GET /api/v1/pega/jobs/:id expired token -> 401 TOKEN_INVALID; fresh token -> 200 with job status
+E2E-API-04,401,false,false,TOKEN_INVALID_401_bulk_check_no_side_effect,POST /api/v1/pega/bulk-check expired token -> 401 TOKEN_INVALID before handler -> 0 catalog records changed -> retry with fresh token -> 200 no full re-fetch (US-3 AC3)

@@ -1,0 +1,61 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="640" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="start" value="" style="ellipse;fillColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="510" y="30" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="authed" value="Authed&#10;(token cached còn hạn)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="100" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="expired" value="TokenExpired&#10;KB trả 401 (trước handler)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="220" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="refreshing" value="Refreshing&#10;refreshToken() ×1 (dedupe refreshInFlight)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="350" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="dead" value="AuthDead&#10;IngestAuthError (status=401)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="760" y="350" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="stopped" value="GracefulStop (shouldStop)&#10;supplier break · consumers exit ·&#10;run() trả counters — state preserved" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="760" y="490" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="rerun" value="Rerun&#10;user login lại (không auto-login — BR-3)&#10;→ incremental" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="440" y="490" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="s1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="start" target="authed">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2" value="access JWT hết hạn giữa job (401)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;" edge="1" parent="1" source="authed" target="expired">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3" value="401 → refreshToken() (BR-1)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="expired" target="refreshing">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4" value="thành công → retry đúng 1 lần (BR-2)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="refreshing" target="authed">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="710" y="385"/>
+          <mxPoint x="710" y="130"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="s5" value="undefined / retry vẫn 401" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="refreshing" target="dead">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s6" value="authDead=true → wire shouldStop" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="dead" target="stopped">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s7" value="user login lại (BR-3)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="stopped" target="rerun">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="s8" value="state preserved → rerun incremental" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="rerun" target="authed">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="350" y="530"/>
+          <mxPoint x="350" y="130"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
