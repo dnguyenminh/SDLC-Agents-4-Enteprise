@@ -270,6 +270,11 @@ export class IndexerHttpClient {
         const unconvertible: UnconvertibleEntry[] = [];
         // SA4E-300 GAP 3: reuse singleton channel (was a fresh "Kiro Doc Indexer" per call)
         const channel = IndexerHttpClient.getIndexerOutput();
+        // SA4E-300: file-level retry for doc writes (same policy as source uploads).
+        const configuredRounds = Number(vscode.workspace.getConfiguration("sdlcAgents").get<number>("backend.indexRetryRounds", 5));
+        const retryRounds = Number.isFinite(configuredRounds) && configuredRounds > 0 ? Math.floor(configuredRounds) : 0;
+        const retryQueue: FileEntry[] = [];
+        let permanentFailures = 0;
         const batchSize = 20;
 
         for (let i = 0; i < docs.length; i += batchSize) {
@@ -296,21 +301,36 @@ export class IndexerHttpClient {
                 { files: entries }, token, 3,
             );
             if (writeResult.ok) {
-                // SA4E-300: per-file disk-write failures arrive INSIDE the 200 body.
+                // SA4E-300: per-file disk-write failures arrive INSIDE the 200 body —
+                // count real writes; retryable rejections are re-queued with backoff.
                 const outcome = IndexerHttpClient.batchWriteOutcome(writeResult.body, entries.length);
                 ingested += outcome.written;
-                if (outcome.failed > 0) {
-                    errors += outcome.failed;
-                    channel.appendLine(`⚠️ Doc batch ${Math.floor(i / batchSize) + 1}: ${outcome.failed}/${entries.length} files FAILED to save on server (HTTP 200)`);
-                    for (const r of outcome.rejectedReasons) {
-                        channel.appendLine(`   ✗ ${r.file} — ${r.code}: ${r.message}`);
-                    }
+                const classified = IndexerHttpClient.classifyRejections(writeResult.body, entries, retryQueue);
+                permanentFailures += classified.permanent.length;
+                if (classified.queued > 0) {
+                    channel.appendLine(`⚠️ Doc batch ${Math.floor(i / batchSize) + 1}: ${classified.queued}/${entries.length} file(s) failed to save (transient) — queued for retry`);
+                }
+                for (const r of classified.permanent) {
+                    channel.appendLine(`   ✗ Permanent: ${r.file} — ${r.code}: ${r.message}`);
                 }
             } else {
-                errors += entries.length;
-                channel.appendLine(`⚠️ Doc batch ${Math.floor(i / batchSize) + 1}: ${writeResult.error}`);
+                // SA4E-300: server never accepted these files — queue, don't drop.
+                retryQueue.push(...entries);
+                channel.appendLine(`⚠️ Doc batch ${Math.floor(i / batchSize) + 1}: ${writeResult.error} — ${entries.length} file(s) queued for retry`);
             }
         }
+
+        // SA4E-300: retry unsaved doc files BEFORE the single KB ingest call.
+        if (retryQueue.length > 0 && retryRounds > 0) {
+            const drain = await this.drainRetryQueue(retryQueue, `${this.backendUrl}/api/index/documents`, token, retryRounds);
+            ingested += drain.uploaded;
+            errors += drain.errors;
+        }
+        if (retryQueue.length > 0) {
+            errors += retryQueue.length;
+            channel.appendLine(`❌ ${retryQueue.length} doc file(s) still not saved after ${retryRounds} retry round(s).`);
+        }
+        errors += permanentFailures;
 
         if (errors > 0) { channel.show(true); }
 
@@ -418,6 +438,13 @@ export class IndexerHttpClient {
         // Create output channel for detailed error reporting
         const channel = IndexerHttpClient.getIndexerOutput();
 
+        // SA4E-300: file-level retry — files the server fails to persist are
+        // re-sent (with exponential backoff) until accepted or rounds exhausted.
+        const configuredRounds = Number(vscode.workspace.getConfiguration("sdlcAgents").get<number>("backend.indexRetryRounds", 5));
+        const retryRounds = Number.isFinite(configuredRounds) && configuredRounds > 0 ? Math.floor(configuredRounds) : 0;
+        const retryQueue: FileEntry[] = [];
+        let permanentFailures = 0;
+
         // Upload project code first (high priority)
         for (let i = 0; i < totalFiles; i += batchSize) {
             const batchNum = Math.floor(i / batchSize) + 1;
@@ -450,17 +477,18 @@ export class IndexerHttpClient {
             const result = await this.sendBatchWithRetry(url, { files: entries }, token, 3);
             if (result.ok) {
                 // SA4E-300: per-file disk-write failures arrive INSIDE the 200 body —
-                // count real writes and surface each rejected file with its OS error code.
+                // count real writes; retryable rejections are re-queued with backoff.
                 const outcome = IndexerHttpClient.batchWriteOutcome(result.body, batch.length);
                 uploaded += outcome.written;
-                if (outcome.failed > 0) {
-                    errors += outcome.failed;
-                    channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches}: ${outcome.failed}/${batch.length} files FAILED to save on server (HTTP 200)`);
-                    for (const r of outcome.rejectedReasons) {
-                        channel.appendLine(`   ✗ ${r.file} — ${r.code}: ${r.message}`);
-                    }
-                    channel.show(true);
+                const classified = IndexerHttpClient.classifyRejections(result.body, entries, retryQueue);
+                permanentFailures += classified.permanent.length;
+                if (classified.queued > 0) {
+                    channel.appendLine(`⚠️ Batch ${batchNum}/${totalBatches}: ${classified.queued}/${batch.length} file(s) failed to save (transient) — queued for retry`);
                 }
+                for (const r of classified.permanent) {
+                    channel.appendLine(`   ✗ Permanent: ${r.file} — ${r.code}: ${r.message}`);
+                }
+                if (classified.queued > 0 || classified.permanent.length > 0) { channel.show(true); }
             } else if (result.status === 401 && this.tokenRefresher) {
                 const freshToken = await this.tokenRefresher();
                 if (freshToken) {
@@ -471,18 +499,29 @@ export class IndexerHttpClient {
                     if (retry.ok) {
                         const retryOutcome = IndexerHttpClient.batchWriteOutcome(retry.body, batch.length);
                         uploaded += retryOutcome.written;
-                        if (retryOutcome.failed > 0) {
-                            errors += retryOutcome.failed;
-                            channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} (after token refresh): ${retryOutcome.failed}/${batch.length} files FAILED to save on server`);
-                            for (const r of retryOutcome.rejectedReasons) {
-                                channel.appendLine(`   ✗ ${r.file} — ${r.code}: ${r.message}`);
-                            }
-                            channel.show(true);
+                        const retryClassified = IndexerHttpClient.classifyRejections(retry.body, entries, retryQueue);
+                        permanentFailures += retryClassified.permanent.length;
+                        if (retryClassified.queued > 0) {
+                            channel.appendLine(`⚠️ Batch ${batchNum}/${totalBatches} (after token refresh): ${retryClassified.queued}/${batch.length} file(s) failed to save (transient) — queued for retry`);
                         }
+                        for (const r of retryClassified.permanent) {
+                            channel.appendLine(`   ✗ Permanent: ${r.file} — ${r.code}: ${r.message}`);
+                        }
+                        if (retryClassified.queued > 0 || retryClassified.permanent.length > 0) { channel.show(true); }
+                    }
+                    else if (retry.status === 401) {
+                        // Auth is broken beyond this token — retrying cannot succeed.
+                        errors += batch.length;
+                        channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} FAILED after token refresh (auth)`);
+                        channel.appendLine(`   Error: ${retry.error} | Status: ${retry.status}`);
+                        if (retry.details) channel.appendLine(`   Details: ${retry.details}`);
+                        if (retry.action) channel.appendLine(`   Action: ${retry.action}`);
+                        channel.show(true);
                     }
                     else {
-                        errors += batch.length;
-                        channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} FAILED after token refresh`);
+                        // SA4E-300: server never accepted these files — queue, don't drop.
+                        retryQueue.push(...entries);
+                        channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} FAILED after token refresh — ${entries.length} file(s) queued for retry`);
                         channel.appendLine(`   Error: ${retry.error} | Status: ${retry.status}`);
                         if (retry.details) channel.appendLine(`   Details: ${retry.details}`);
                         if (retry.action) channel.appendLine(`   Action: ${retry.action}`);
@@ -494,14 +533,31 @@ export class IndexerHttpClient {
                     channel.show(true);
                 }
             } else {
-                errors += batch.length;
-                channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} FAILED (${batch.length} files)`);
+                // SA4E-300: HTTP attempts exhausted — the server never accepted these
+                // files. Queue them for file-level retry instead of dropping them.
+                retryQueue.push(...entries);
+                channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} FAILED (${entries.length} files) — queued for retry`);
                 channel.appendLine(`   Error: ${result.error} | Status: ${result.status}`);
                 if (result.details) channel.appendLine(`   Details: ${result.details}`);
                 if (result.action) channel.appendLine(`   Action: ${result.action}`);
                 channel.show(true);
             }
         }
+        // SA4E-300: drain the file-retry queue BEFORE the full index — every file
+        // that can still be saved must be on disk before parsing starts.
+        if (retryQueue.length > 0 && retryRounds > 0) {
+            report.report({ message: `Retrying ${retryQueue.length} unsaved file(s)...`, increment: 0 });
+            const drain = await this.drainRetryQueue(retryQueue, url, token, retryRounds, log);
+            uploaded += drain.uploaded;
+            errors += drain.errors;
+        }
+        if (retryQueue.length > 0) {
+            errors += retryQueue.length;
+            channel.appendLine(`\n❌ ${retryQueue.length} file(s) still not saved after ${retryRounds} retry round(s) — re-run indexing to try again.`);
+            channel.show(true);
+        }
+        errors += permanentFailures;
+
         report.report({ message: `Indexing source code: 100% complete`, increment: 0 });
 
         // SA4E-99: Trigger full re-index ONCE after all files written (not per-batch).
@@ -591,6 +647,51 @@ export class IndexerHttpClient {
         return { written, failed: batchLength - written, rejectedReasons };
     }
 
+    /** SA4E-300: file-level retry tuning. Static (not readonly) so tests can shorten delays. */
+    static FILE_RETRY_BASE_DELAY_MS = 1000;
+    static FILE_RETRY_MAX_DELAY_MS = 30000;
+
+    /**
+     * SA4E-300: classify a per-file rejection as retryable (transient) or permanent.
+     * "Unsafe path" EACCES is a CLIENT bug — the path can never become safe, so
+     * retrying would burn every round. ENOENT/EINVAL/ENAMETOOLONG/ENOTDIR/EISDIR
+     * are permanent FS conditions. Everything else (ENOSPC disk-full, EIO, EBUSY,
+     * EMFILE, EAGAIN, UNKNOWN…) is worth re-sending: space may free up, mounts
+     * may recover, permissions may be fixed mid-run.
+     */
+    private static isRetryableRejection(r: { code?: string; message?: string }): boolean {
+        const code = String(r?.code || 'UNKNOWN').toUpperCase();
+        const message = String(r?.message || '');
+        if (code === 'EACCES' && /unsafe path/i.test(message)) { return false; }
+        if (['ENOENT', 'EINVAL', 'ENAMETOOLONG', 'ENOTDIR', 'EISDIR'].includes(code)) { return false; }
+        return true;
+    }
+
+    /**
+     * SA4E-300: route each per-file rejection of a batch — retryable ones are
+     * pushed back to the queue (with their content, ready to re-send), permanent
+     * ones are returned for immediate reporting. Unknown paths (server echoed a
+     * path we did not send) are treated as permanent to avoid queue corruption.
+     */
+    private static classifyRejections(
+        body: any, batch: FileEntry[], queue: FileEntry[],
+    ): { queued: number; permanent: Array<{ file: string; code: string; message: string }> } {
+        const reasons: Array<{ file: string; code: string; message: string }> =
+            Array.isArray(body?.rejectedReasons) ? body.rejectedReasons : [];
+        let queued = 0;
+        const permanent: Array<{ file: string; code: string; message: string }> = [];
+        for (const r of reasons) {
+            const entry = batch.find((b) => b.path === r.file);
+            if (entry && IndexerHttpClient.isRetryableRejection(r)) {
+                queue.push(entry);
+                queued++;
+            } else {
+                permanent.push({ file: r.file, code: String(r?.code || 'UNKNOWN'), message: String(r?.message || '') });
+            }
+        }
+        return { queued, permanent };
+    }
+
     private async sendBatchWithRetry(
         url: string, payload: unknown, token: string | undefined, maxRetries: number,
     ): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number; body?: any }> {
@@ -612,6 +713,53 @@ export class IndexerHttpClient {
             if (!shouldRetry) return lastResult;
         }
         return lastResult;
+    }
+
+    /**
+     * SA4E-300: drain the file-retry queue — re-send files the server failed to
+     * persist UNTIL they are accepted or the configured retry rounds run out
+     * (sdlcAgents.backend.indexRetryRounds, default 5). Exponential backoff
+     * between rounds; permanent rejections are never retried. Files that still
+     * fail after all rounds stay in the queue for the caller to count/report.
+     */
+    private async drainRetryQueue(
+        queue: FileEntry[],
+        url: string,
+        token: string | undefined,
+        rounds: number,
+        log?: (msg: string) => void,
+    ): Promise<{ uploaded: number; errors: number }> {
+        const channel = IndexerHttpClient.getIndexerOutput();
+        let uploaded = 0;
+        let errors = 0;
+        const retryBatchSize = 20;
+        for (let round = 1; round <= rounds && queue.length > 0; round++) {
+            const delay = Math.min(
+                IndexerHttpClient.FILE_RETRY_BASE_DELAY_MS * Math.pow(2, round - 1),
+                IndexerHttpClient.FILE_RETRY_MAX_DELAY_MS,
+            );
+            await new Promise((r) => setTimeout(r, delay));
+            const pending = queue.splice(0);
+            const msg = `🔄 Retrying ${pending.length} file(s) not yet saved (round ${round}/${rounds})...`;
+            channel.appendLine(msg);
+            if (log) { log(msg); }
+            for (let i = 0; i < pending.length; i += retryBatchSize) {
+                const batch = pending.slice(i, i + retryBatchSize);
+                const result = await this.sendBatchWithRetry(url, { files: batch }, token, 2);
+                if (!result.ok) {
+                    queue.push(...batch); // still not accepted by the server — next round
+                    continue;
+                }
+                const outcome = IndexerHttpClient.batchWriteOutcome(result.body, batch.length);
+                uploaded += outcome.written;
+                const classified = IndexerHttpClient.classifyRejections(result.body, batch, queue);
+                for (const r of classified.permanent) {
+                    errors++;
+                    channel.appendLine(`   ✗ Permanent: ${r.file} — ${r.code}: ${r.message}`);
+                }
+            }
+        }
+        return { uploaded, errors };
     }
 
     /**

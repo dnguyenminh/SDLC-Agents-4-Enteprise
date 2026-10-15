@@ -262,6 +262,12 @@
           "minimum": 1,
           "description": "Requests-per-minute this client asks the backend to allow. The server clamps this to its own hard cap (configured in the web admin); you can lower it but never exceed the server maximum."
         },
+        "sdlcAgents.backend.indexRetryRounds": {
+          "type": "number",
+          "default": 5,
+          "minimum": 0,
+          "description": "Retry rounds for index files the server failed to persist (e.g. disk-full ENOSPC, transient 5xx): rejected files are re-sent with exponential backoff until accepted or the rounds run out. 0 disables file-level retry (failed files are reported and dropped)."
+        },
         "sdlcAgents.pega.dedupMaxInMemory": {
           "type": "number",
           "default": 100000,

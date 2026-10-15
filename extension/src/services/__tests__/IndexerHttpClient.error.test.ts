@@ -113,6 +113,78 @@ describe('IndexerHttpClient error propagation', () => {
     expect(overclaim.failed).toBe(0);
   });
 
+  // SA4E-300: file-level retry — transient rejections (ENOSPC…) are retried
+  // until accepted; permanent ones (unsafe-path EACCES) are never retried.
+  it('isRetryableRejection classifies transient vs permanent failures', () => {
+    const fn = (IndexerHttpClient as any).isRetryableRejection;
+    expect(fn({ code: 'ENOSPC', message: 'No space left on device' })).toBe(true);
+    expect(fn({ code: 'EIO', message: 'i/o error' })).toBe(true);
+    expect(fn({ code: 'EBUSY', message: 'resource busy' })).toBe(true);
+    expect(fn({ code: 'UNKNOWN', message: 'something' })).toBe(true);
+    expect(fn({ code: 'EACCES', message: 'Unsafe path: must be a relative path staying within the temp directory' })).toBe(false);
+    expect(fn({ code: 'ENOENT', message: 'no such file' })).toBe(false);
+    expect(fn({ code: 'ENAMETOOLONG', message: 'name too long' })).toBe(false);
+  });
+
+  it('drainRetryQueue retries transient failures until the file is accepted', async () => {
+    IndexerHttpClient.FILE_RETRY_BASE_DELAY_MS = 1; // keep the test fast
+    try {
+      mockHttpPostJson
+        .mockResolvedValueOnce({
+          written: 0, rejected: ['a.ts'],
+          rejectedReasons: [{ file: 'a.ts', code: 'ENOSPC', message: 'No space left on device' }],
+        } as any)
+        .mockResolvedValueOnce({ written: 1, rejected: [], rejectedReasons: [] } as any);
+      const client = new IndexerHttpClient('http://localhost');
+      const queue: any[] = [{ path: 'a.ts', content: 'x' }];
+      const res = await (client as any).drainRetryQueue(queue, 'http://localhost/api/index/source', undefined, 3);
+      expect(res.uploaded).toBe(1);
+      expect(res.errors).toBe(0);
+      expect(queue).toHaveLength(0);
+      expect(mockHttpPostJson).toHaveBeenCalledTimes(2); // 1 failed round + 1 success round
+    } finally {
+      IndexerHttpClient.FILE_RETRY_BASE_DELAY_MS = 1000;
+    }
+  });
+
+  it('drainRetryQueue never re-sends permanent unsafe-path rejections', async () => {
+    IndexerHttpClient.FILE_RETRY_BASE_DELAY_MS = 1;
+    try {
+      mockHttpPostJson.mockResolvedValueOnce({
+        written: 0, rejected: ['../evil.ts'],
+        rejectedReasons: [{ file: '../evil.ts', code: 'EACCES', message: 'Unsafe path: must be a relative path staying within the temp directory' }],
+      } as any);
+      const client = new IndexerHttpClient('http://localhost');
+      const queue: any[] = [{ path: '../evil.ts', content: 'x' }];
+      const res = await (client as any).drainRetryQueue(queue, 'http://localhost/api/index/source', undefined, 3);
+      expect(res.errors).toBe(1);
+      expect(res.uploaded).toBe(0);
+      expect(queue).toHaveLength(0);
+      expect(mockHttpPostJson).toHaveBeenCalledTimes(1); // no retry rounds for permanent
+    } finally {
+      IndexerHttpClient.FILE_RETRY_BASE_DELAY_MS = 1000;
+    }
+  });
+
+  it('drainRetryQueue stops after the configured rounds and keeps leftovers queued', async () => {
+    IndexerHttpClient.FILE_RETRY_BASE_DELAY_MS = 1;
+    try {
+      mockHttpPostJson.mockResolvedValue({
+        written: 0, rejected: ['a.ts'],
+        rejectedReasons: [{ file: 'a.ts', code: 'ENOSPC', message: 'No space left on device' }],
+      } as any);
+      const client = new IndexerHttpClient('http://localhost');
+      const queue: any[] = [{ path: 'a.ts', content: 'x' }];
+      const res = await (client as any).drainRetryQueue(queue, 'http://localhost/api/index/source', undefined, 2);
+      expect(res.uploaded).toBe(0);
+      expect(res.errors).toBe(0); // nothing permanent — file stays queued
+      expect(queue).toHaveLength(1);
+      expect(mockHttpPostJson).toHaveBeenCalledTimes(2); // exactly `rounds` attempts
+    } finally {
+      IndexerHttpClient.FILE_RETRY_BASE_DELAY_MS = 1000;
+    }
+  });
+
   it('httpPostWithDetail maps 401 to Unauthorized but keeps details/action', async () => {
     mockHttpPostJson.mockRejectedValueOnce({
       statusCode: 401,
