@@ -85,3 +85,9 @@ secrets/*
 documents/**/.mcp-req.json
 
 /.roo/
+
+# Local scratch (2026-10-15): runtime test fixtures + session logs - never commit
+debug.log
+/chat-history-*.md
+extension/src/__tests__/.tmp-local-tools/
+extension/src/__tests__/sa4e-356-sq1-outside/

@@ -1,7 +1,7 @@
 {
   "ticket": "SA4E-360",
   "title": "Multi-Resolution Context Supply for Pi Harness — P1: Code Skeletonization + Agentic Context Loading",
-  "currentPhase": "deployment",
+  "currentPhase": "done",
   "phases": {
     "requirements": {
       "status": "done",
@@ -113,7 +113,15 @@
       "note": "65 PASS/0 FAIL/13 PENDING (2 rounds); F-fixes verified live; DEFECT-QA-01 dedicated tests bo sung truoc CLOSE"
     },
     "deployment": {
-      "status": "not_started"
+      "status": "done",
+      "completedAt": "2026-10-15T09:30:00Z",
+      "releasedVersion": "v1.53.0",
+      "tag": "v1.53.0 -> commit 609d44e (pushed)",
+      "readme": "changelog entry v1.53.0 added",
+      "sanity": "npm test 298 files / 2899 tests GREEN",
+      "jira": "Done (transition 2026-10-15)",
+      "attachments": "DPG docx (11683) + RLN docx (11684) + 2 drawio (11685-11686)",
+      "anomaly": "parallel session commit 45024cc carried Phase-7 doc files into history - content correct, attribution differs"
     },
     "pentest": {
       "completedAt": "2026-10-15",
@@ -165,7 +173,7 @@
     "oiDecisions": "OI-1 backend-side extraction; OI-2 freshness-keyed cache no TTL; OI-3 single-active-root P1; OI-4 fallback symbols transient; OI-5 keep shipped PI_GATE_DECISION values; OI-6 no-TTL accepted, monitor Phase 6",
     "implChecklist": "T1-T9 test-first, 13 files, ~70 tests estimated"
   },
-  "lastUpdated": "2026-10-15T08:05:00Z",
+  "lastUpdated": "2026-10-15T09:30:00Z",
   "securityRequirementsForDev": [
     "SEC-360-01 (Medium): add redactSecretLike() pass + secret-file name exclusion in skeleton builder + RAW_HEAD path",
     "SEC-360-02 (Medium): remaining-global-budget bound + incremental token accounting in skeleton sizing loop (fix O(parts^2) re-join)",

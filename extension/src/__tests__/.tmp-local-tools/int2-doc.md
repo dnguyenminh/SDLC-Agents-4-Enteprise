@@ -1,1 +1,0 @@
-See: ![Alt](int2-img.png)

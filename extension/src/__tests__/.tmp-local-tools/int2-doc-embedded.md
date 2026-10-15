@@ -1,1 +1,0 @@
-See: ![Alt](data:image/png;base64,aW50Mi1pbWFnZS1kYXRh)
