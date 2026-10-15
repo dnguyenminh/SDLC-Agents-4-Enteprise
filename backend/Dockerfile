@@ -116,12 +116,25 @@ RUN python3 -m venv /opt/markitdown-venv \
 # imports `mcp.server.fastmcp` — an API REMOVED in mcp 2.x (FastMCP → MCPServer).
 # The import probe below fails the build on exactly this class of drift
 # (verified: unconstrained pip resolved mcp 2.3.0 → ModuleNotFoundError).
+# `pillow==12.3.0` override (SA4E-360): upstream pins `pillow~=12.1.1`, which
+# resolves to 12.1.1 — carrying 16 HIGH CVEs that fail the production Trivy
+# gate. PEP 440 `~=12.1.1` means >=12.1.1,<12.2, so it does NOT admit the
+# fixed 12.3.0 (which markitdown-venv already runs on the same Python 3.11
+# base). The force-upgrade AFTER the main install therefore triggers a pip
+# metadata conflict warning ("markdown-exporter-mcp-local 0.1.0 requires
+# pillow~=12.1.1 ... incompatible") — EXPECTED and non-fatal: pip installs
+# the requested version and exits 0. Trivy reads the installed 12.3.0
+# metadata, clearing all 16 CVEs. The PIL version probe fails the build if
+# resolution ever regresses to 12.1.1. Remove this override once upstream
+# releases an officially fixed pin (e.g. pillow~=12.3).
 RUN python3 -m venv /opt/markdown-exporter-venv \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir \
       "markdown-exporter-mcp-local @ git+https://github.com/Zac-Chen-2001/markdown-exporter-mcp-local@${MARKDOWN_EXPORTER_MCP_REF}" \
       "mcp>=1.27.0,<2.0.0" \
  && test -x /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local \
  && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
+ && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==12.3.0" \
+ && /opt/markdown-exporter-venv/bin/python -c "import PIL; assert PIL.__version__ == '12.3.0'" \
  && /opt/markdown-exporter-venv/bin/python -m pip uninstall -y pip
 # Both venvs are copied root-owned READ-ONLY; stripping their bundled pip keeps
 # the runtime image free of ANY package manager (SEC-05) and out of Trivy scans.
