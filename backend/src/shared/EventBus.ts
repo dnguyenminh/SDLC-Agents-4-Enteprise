@@ -74,6 +74,12 @@ export const Events = {
   TASK_WORKER_CONFIG_CHANGED: 'taskworker:config:changed',
   /** Emitted when admin saves a rate-limit config change — payload: { section, key, value } */
   RATE_LIMIT_CONFIG_CHANGED: 'ratelimit:config:changed',
+  /** Emitted when admin saves an index-limit config change — payload: { section, key, value } */
+  INDEX_LIMIT_CONFIG_CHANGED: 'indexlimit:config:changed',
   /** Emitted when admin saves an auth config change — payload: { section, key, value } */
   AUTH_CONFIG_CHANGED: 'auth:config:changed',
+  /** Emitted when a user's group membership changes — payload: { userId, groupId, action } */
+  GROUP_MEMBERSHIP_CHANGED: 'rbac:group:membership',
+  /** Emitted when a permission role definition changes — payload: { permissionId, changes } */
+  PERMISSION_CHANGED: 'rbac:permission:changed',
 } as const;

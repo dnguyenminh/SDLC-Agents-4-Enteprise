@@ -94,9 +94,9 @@ export class MemoryModule implements IModule {
       builder.build();
 
       // Subscribe to LLM config changes — re-init services immediately without restart
-      bus.on(Events.LLM_CONFIG_CHANGED, () => {
+      bus.on(Events.LLM_CONFIG_CHANGED, async () => {
         this.logger.info('[MemoryModule] LLM config changed — re-initializing LLM services');
-        this.reinitLLM();
+        await this.reinitLLM();
       });
 
       // Subscribe to TaskWorker config changes — apply concurrency/intervals without restart
@@ -117,14 +117,21 @@ export class MemoryModule implements IModule {
   /**
    * Re-initialize LLM services (TagAnalyzer + ClassifyService) using latest config from DB.
    * Called automatically when admin saves LLM config via UI — no restart needed.
-   * Safe to call while running — fire-and-forget, replaces existing service references.
+   * Safe to call while running — async, handles errors without restarting process.
    */
-  reinitLLM(): void {
+  async reinitLLM(): Promise<void> {
     if (!this.dispatcher || !this.taskWorker) {
       this.logger.warn('[MemoryModule] Cannot reinit LLM — dispatcher or taskWorker not ready');
       return;
     }
-    initLLMInBackground(this.dispatcher, this.taskWorker, this.logger);
+    try {
+      await initLLMInBackground(this.dispatcher, this.taskWorker, this.logger);
+      this.logger.info('[MemoryModule] LLM re-initialization started');
+    } catch (err) {
+      this.logger.error({ err }, '[MemoryModule] LLM re-initialization failed — manual recovery needed');
+      // Notify admin via existing event (no LLM_INIT_FAILED — use MODULE_ERROR)
+      bus.emit(Events.MODULE_ERROR, { module: this.name, error: String(err) });
+    }
   }
 
   async shutdown(): Promise<void> {

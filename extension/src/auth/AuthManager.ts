@@ -273,9 +273,14 @@ export class AuthManager implements vscode.Disposable {
         }
         if (server) {
           try {
-            server.close();
-          } catch {}
-          server = null;
+            server.close((err: Error | null) => {
+              if (err) console.error('[SSO Callback] Server close error:', err.message);
+              server = null;
+            });
+          } catch (e) {
+            console.error('[SSO Callback] Server close error:', (e as Error).message);
+            server = null;
+          }
         }
       };
 

@@ -1,7 +1,9 @@
 // KSA-286: RBAC Middleware — Permission enforcement on every /api/admin/* request
+// SA4E-266: Cache invalidated via EventBus on group/permission changes
 
 import { Request, Response, NextFunction } from 'express';
 import { PermissionId, GroupPermission } from '../types/admin.types.js';
+import { bus, Events } from '../../shared/EventBus.js';
 
 // Route → Permission mapping
 const ROUTE_PERMISSIONS: Record<string, PermissionId> = {
@@ -58,6 +60,15 @@ export function invalidateRBACCache(userId?: string): void {
   if (userId) permissionCache.delete(userId);
   else permissionCache.clear();
 }
+
+// SA4E-266 §3.2 — Invalidate cache on group/permission changes (emit on routes)
+// Subscribe at module load — routes will emit these events when they mutate state
+bus.on(Events.GROUP_MEMBERSHIP_CHANGED, () => {
+  permissionCache.clear();
+});
+bus.on(Events.PERMISSION_CHANGED, () => {
+  permissionCache.clear();
+});
 
 function matchRoute(method: string, path: string): PermissionId | undefined {
   const key = `${method}:${path}`;

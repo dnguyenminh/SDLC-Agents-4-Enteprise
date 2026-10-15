@@ -543,8 +543,8 @@ export class IndexerHttpClient {
      */
     private async sendBatchWithRetry(
         url: string, payload: unknown, token: string | undefined, maxRetries: number,
-    ): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number }> {
-        let lastResult: { ok: boolean; error: string; details?: string; action?: string; status: number } = { ok: false, error: 'no attempt', status: 0 };
+    ): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number; body?: any }> {
+        let lastResult: { ok: boolean; error: string; details?: string; action?: string; status: number; body?: any } = { ok: false, error: 'no attempt', status: 0 };
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             if (attempt > 0) {
                 // Exponential backoff: 2s, 4s, 8s (longer to allow server recovery)
@@ -677,12 +677,16 @@ export class IndexerHttpClient {
             .catch(() => false);
     }
 
-	/** POST with detailed error info for user-facing error reporting. */
-	private async httpPostWithDetail(url: string, payload: unknown, token: string | undefined): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number }> {
+	/** POST with detailed error info for user-facing error reporting.
+	 * SA4E-300: on 2xx the parsed body is returned as `body` — the index
+	 * endpoints report per-file disk-write failures INSIDE a 200 response
+	 * ({written|indexed, rejected, rejectedReasons}), so callers must be able
+	 * to read them (previously the body was discarded on success). */
+	private async httpPostWithDetail(url: string, payload: unknown, token: string | undefined): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number; body?: any }> {
 		const headers = await this.buildHeaders(token);
 		try {
 			const result = await utilHttpPostJson<any>(url, payload, { headers, timeoutMs: 60000 });
-			return { ok: true, error: "", status: 200 };
+			return { ok: true, error: "", status: 200, body: result };
 		} catch (err: any) {
 			const status = err?.statusCode || err?.status || 0;
 			const body = err?.body || {};
@@ -696,8 +700,8 @@ export class IndexerHttpClient {
 				if (registered) {
 					// Retry original request
 					try {
-						await utilHttpPostJson<any>(url, payload, { headers, timeoutMs: 60000 });
-						return { ok: true, error: "", status: 200 };
+						const retryBody = await utilHttpPostJson<any>(url, payload, { headers, timeoutMs: 60000 });
+						return { ok: true, error: "", status: 200, body: retryBody };
 					} catch (retryErr: any) {
 						const rStatus = retryErr?.statusCode || retryErr?.status || 0;
 						const rBody = retryErr?.body || {};

@@ -22,6 +22,7 @@ import {
   collectIngestFiles, ingestFilesFromTemp, type IngestTenant,
 } from './api-index-ingest.js';
 import { PegaService } from '../../modules/pega/PegaService.js';
+import { bus, Events } from '../../shared/EventBus.js';
 
 interface SourceFile {
   path: string;
@@ -31,9 +32,55 @@ interface SourceFile {
 }
 interface IndexScope { projectId: string; workspace: string }
 
-// SA4E-99: Server-side backpressure — limit concurrent index requests
-const INDEX_CONCURRENCY_LIMIT = 3;
+// SA4E-99: Server-side backpressure — limit concurrent index requests.
+// indexLimit.maxConcurrent is a first-class admin config (hot-reloaded via
+// INDEX_LIMIT_CONFIG_CHANGED, persisted in config_changes) with the
+// INDEX_CONCURRENCY_LIMIT env as the startup default. The old hardcoded 3
+// starved sequential batch uploaders on cloud (high DB/disk latency holds
+// slots longer → 429 cascades). Default 3 preserves SA4E-99 behavior.
+function resolveIndexConcurrencyDefault(): number {
+  const parsed = parseInt(process.env.INDEX_CONCURRENCY_LIMIT || '3', 10);
+  return Number.isFinite(parsed) && parsed >= 1 ? parsed : 3;
+}
+let indexConcurrencyLimit = resolveIndexConcurrencyDefault();
 let activeIndexRequests = 0;
+
+/** Current max concurrent /api/index/source requests (admin-configurable). */
+export function getIndexConcurrencyLimit(): number {
+  return indexConcurrencyLimit;
+}
+
+/** Update the concurrency cap at runtime. Ignores non-integer values < 1. */
+export function setIndexConcurrencyLimit(limit: number): void {
+  if (!Number.isInteger(limit) || limit < 1) return;
+  indexConcurrencyLimit = limit;
+}
+
+/**
+ * Load the persisted indexLimit.maxConcurrent from the admin config store at
+ * startup so an admin-saved value survives a restart. Non-blocking; falls back
+ * to the env default when the DB/table is unavailable (rate-limiter.ts pattern).
+ */
+export async function loadPersistedIndexLimit(): Promise<void> {
+  try {
+    const { getDbAdapter } = await import('../../admin/db/core.js');
+    const adapter = getDbAdapter();
+    const row = await adapter.getAsync<{ new_value: string }>(
+      "SELECT new_value FROM config_changes WHERE section = 'indexLimit' AND key = 'maxConcurrent' ORDER BY changed_at DESC LIMIT 1",
+    );
+    if (row?.new_value) setIndexConcurrencyLimit(parseInt(row.new_value, 10));
+  } catch { /* config_changes table may not exist yet — keep env default */ }
+}
+
+// Hot-reload the cap when the admin saves an indexLimit config change (no restart).
+bus.on<{ section: string; key: string; value: unknown }>(
+  Events.INDEX_LIMIT_CONFIG_CHANGED,
+  ({ key, value }) => {
+    if (key !== 'maxConcurrent') return;
+    const n = typeof value === 'string' ? Number(value) : value;
+    if (typeof n === 'number') setIndexConcurrencyLimit(n);
+  },
+);
 
 /**
  * Resolve request scope from the trusted request identity only.
@@ -120,13 +167,13 @@ export function resolveSafeTargetPath(tempBase: string, rawPath: string): string
 }
 
 /** Phase: write files to disk under the workspace, rejecting unsafe paths. */
-function writeFilesPhase(userId: string, projectId: string, files: SourceFile[]): { written: number; rejected: string[]; rejectedReasons: { file: string; code: string; message: string }[] } {
+async function writeFilesPhase(userId: string, projectId: string, files: SourceFile[]): Promise<{ written: number; rejected: string[]; rejectedReasons: { file: string; code: string; message: string }[] }> {
   const rejected: string[] = [];
   const rejectedReasons: { file: string; code: string; message: string }[] = [];
   let written = 0;
   // SA4E-300 GAP 1: cross-platform temp base Temp/{userId}/{projectId}/batch-docs/
   const tempBase = resolveIndexTempBase(userId, projectId, 'batch-docs');
-  fs.mkdirSync(tempBase, { recursive: true });
+  await fs.promises.mkdir(tempBase, { recursive: true });
   for (const file of files) {
     const targetPath = resolveSafeTargetPath(tempBase, file.path);
     if (!targetPath) {
@@ -135,8 +182,8 @@ function writeFilesPhase(userId: string, projectId: string, files: SourceFile[])
       continue;
     }
     try {
-      fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-      fs.writeFileSync(targetPath, file.content, 'utf-8');
+      await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+      await fs.promises.writeFile(targetPath, file.content, 'utf-8');
       written++;
     } catch (err: any) {
       rejected.push(file.path);
@@ -161,6 +208,39 @@ async function requireAuth(c: Context): Promise<{ userId: string } | null> {
 }
 
 /**
+ * SA4E-300 SEC High #1 perf: short-TTL per-user permission cache. Sequential
+ * batch uploaders re-check the SAME user on every batch (915 batches ≈ 915
+ * identical queries through the shared PG pool — a proven 429 amplifier on
+ * cloud where pool waits stretch handler duration). Only SUCCESSFUL lookups
+ * are cached — DB errors are never cached (fail-closed preserved). Tradeoff:
+ * a permission revocation lands on index routes within ≤10s (same order as
+ * the session cache in admin/db/sessions.ts).
+ */
+const PERMISSION_CACHE_TTL_MS = 10_000;
+interface CachedPermissions { perms: Array<{ permissionId: string }>; expiresAt: number }
+const permissionCache = new Map<string, CachedPermissions>();
+
+async function getCachedUserPermissions(userId: string): Promise<Array<{ permissionId: string }>> {
+  const now = Date.now();
+  const cached = permissionCache.get(userId);
+  if (cached && cached.expiresAt > now) return cached.perms;
+  const perms = (await getUserPermissions(userId)) as Array<{ permissionId: string }>;
+  permissionCache.set(userId, { perms, expiresAt: now + PERMISSION_CACHE_TTL_MS });
+  // Bound memory: sweep expired entries past a high-water mark (no timer leak).
+  if (permissionCache.size > 1000) {
+    for (const [key, entry] of permissionCache) {
+      if (entry.expiresAt <= now) permissionCache.delete(key);
+    }
+  }
+  return perms;
+}
+
+/** Test/maintenance hook: drop all cached permission entries. */
+export function clearIndexPermissionCache(): void {
+  permissionCache.clear();
+}
+
+/**
  * SA4E-300 SEC High #1 (BOLA) + High #2 (missing RBAC on sync-pega-rules).
  * Authorization gates reusing EXISTING infra only (no new framework):
  * - Global RBAC via getUserPermissions — same source as AdminContext.requirePermission
@@ -182,7 +262,7 @@ async function requireIndexPermission(
 ): Promise<Response | null> {
   let has = false;
   try {
-    const perms = await getUserPermissions(userId);
+    const perms = await getCachedUserPermissions(userId);
     has = perms.some((p: any) => p.permissionId === permissionId);
   } catch (err) {
     // Fail closed: DB error must not grant access.
@@ -225,8 +305,9 @@ export function registerIndexRoutes(app: Hono, registry: ModuleRegistry, logger:
     const session = await requireAuth(c);
     if (!session) return c.json({ error: 'Unauthorized', details: 'Missing or invalid Authorization header', action: 'Provide valid Bearer token' }, 401);
     // SA4E-99: Backpressure — reject with 429 if too many concurrent requests
-    if (activeIndexRequests >= INDEX_CONCURRENCY_LIMIT) {
-      return c.json({ error: 'Server busy', details: `Active index requests >= ${INDEX_CONCURRENCY_LIMIT}`, action: 'Retry after 2 seconds', retryAfter: 2 }, 429);
+    const concurrencyLimit = getIndexConcurrencyLimit();
+    if (activeIndexRequests >= concurrencyLimit) {
+      return c.json({ error: 'Server busy', details: `Active index requests >= ${concurrencyLimit}`, action: 'Retry after 2 seconds', retryAfter: 2 }, 429);
     }
     activeIndexRequests++;
     try {
@@ -297,7 +378,7 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
     // Structure: {indexTempDir}/{userId}/{projectId}/source/files...
     const tempBase = resolveIndexTempBase(userId, scope.projectId, 'source');
     const wsBasename = path.basename(scope.workspace);
-    fs.mkdirSync(tempBase, { recursive: true });
+    await fs.promises.mkdir(tempBase, { recursive: true });
 
     const written: string[] = [];
     const rejected: string[] = [];
@@ -316,8 +397,8 @@ async function handleIndexSource(c: Context, registry: ModuleRegistry, logger: L
         continue;
       }
       try {
-        fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-        fs.writeFileSync(targetPath, file.content, 'utf-8');
+        await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+        await fs.promises.writeFile(targetPath, file.content, 'utf-8');
         written.push(filePath);
       } catch (err: any) {
         rejected.push(filePath);
@@ -361,8 +442,8 @@ async function handleIndexDocument(c: Context, logger: Logger, userId = '') {
     if (!targetPath) {
       return c.json({ error: 'Unsafe path', details: 'Path must be a relative path staying within the temp directory (no absolute paths or .. traversal)', action: 'Provide safe relative path' }, 400);
     }
-    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-    fs.writeFileSync(targetPath, content, 'utf-8');
+    await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+    await fs.promises.writeFile(targetPath, content, 'utf-8');
     return c.json({ success: true });
   } catch (err: any) {
     return indexError(c, err, logger, 'Error writing document');
@@ -380,7 +461,7 @@ async function handleIndexDocuments(c: Context, logger: Logger, userId = '') {
     if (docsForbidden) return docsForbidden;
     const docsBindingDenied = await verifyIndexProjectBinding(c, scope.projectId, logger);
     if (docsBindingDenied) return docsBindingDenied;
-    const { written, rejected, rejectedReasons } = writeFilesPhase(userId, scope.projectId, files);
+    const { written, rejected, rejectedReasons } = await writeFilesPhase(userId, scope.projectId, files);
     if (rejectedReasons.length > 0) {
       logger.warn({ rejectedReasons, projectId: scope.projectId }, '[index] rejected unsafe paths');
     }

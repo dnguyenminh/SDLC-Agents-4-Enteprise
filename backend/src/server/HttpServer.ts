@@ -25,6 +25,7 @@ import { McpConfigService } from '../modules/orchestration/McpConfigService.js';
 import { createRequestLogger } from './middleware/request-logger.js';
 import { createErrorHandler } from './middleware/error-handler.js';
 import { rateLimiter, loadPersistedRateLimitCap } from './middleware/rate-limiter.js';
+import { loadPersistedIndexLimit } from './routes/api-index.js';
 import { securityHeaders } from './middleware/security-headers.js';
 import { apiKeyAuth } from './middleware/api-key-auth.js';
 import { jwtAuth, jwtAuthStrict } from './middleware/jwt-auth.js';
@@ -180,7 +181,9 @@ export class HttpServer {
     const projectTypeRoutes = createProjectTypeRoutes(this.options.registry, this.logger);
     app.route('/api/v1', projectTypeRoutes);
 
-    // SA4E-157: Enrichment status polling endpoint (JWT auth, no admin check)
+    // SA4E-157: Enrichment status polling endpoint. The /status route is JWT-only;
+    // the sensitive /failures, /retry and /reconcile routes self-gate with an admin
+    // permission check (requireEnrichmentAdmin, SA4E-338 S1) inside the router.
     const enrichmentStatusRoutes = createEnrichmentStatusRoutes(this.options.registry, this.logger);
     app.route('/api/v1', enrichmentStatusRoutes);
 
@@ -211,6 +214,10 @@ export class HttpServer {
         loadPersistedRateLimitCap().catch((err) => {
           this.logger.debug({ err }, '[RateLimit] Failed to load persisted cap — using env default');
         });
+        // Apply any admin-persisted index concurrency cap (non-blocking; survives restart).
+        loadPersistedIndexLimit().catch((err) => {
+          this.logger.debug({ err }, '[IndexLimit] Failed to load persisted cap — using env default');
+        });
         // SA4E-101: bootstrap persistent index-status tables, then mark stale
         // running ops as interrupted, then start the cleanup scheduler.
         // Ensure schema is ready before marking server as fully started to avoid E2E race.
@@ -224,12 +231,11 @@ export class HttpServer {
             await runMigrations(adapter, process.env.CODE_INTEL_PROJECT_ID || 'default');
             await runGraphMigrations(adapter);
             // SA4E-171: Recreate pending_tasks without FK to knowledge_entries (SQLite cannot DROP CONSTRAINT)
-            // Force recreate on every start to guarantee no FK remains
+            // SA4E-266 §3.1: Use INSERT OR REPLACE for atomic migration — no data loss on crash
             try {
               const rows = await adapter.allAsync<any>('SELECT id, task_type, entry_id, status, payload, error, retry_count, max_retries, project_id, priority, created_at, started_at, completed_at FROM pending_tasks');
-              await adapter.execAsync(`DROP TABLE IF EXISTS pending_tasks`);
               await adapter.execAsync(`
-                CREATE TABLE pending_tasks (
+                CREATE TABLE IF NOT EXISTS pending_tasks_new (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
                   task_type TEXT NOT NULL,
                   entry_id INTEGER NOT NULL,
@@ -242,19 +248,19 @@ export class HttpServer {
                   priority INTEGER DEFAULT 0,
                   created_at TEXT,
                   started_at TEXT,
-                  completed_at TEXT
+                  completed_at TEXT,
+                  UNIQUE (id)
                 )
               `);
-              for (const r of rows) {
-                await adapter.runAsync(
-                  `INSERT INTO pending_tasks (id, task_type, entry_id, status, payload, error, retry_count, max_retries, project_id, priority, created_at, started_at, completed_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                  [r.id, r.task_type, r.entry_id, r.status, r.payload, r.error, r.retry_count, r.max_retries, r.project_id, r.priority, r.created_at, r.started_at, r.completed_at]
-                );
-              }
-              this.logger.info('[startup] pending_tasks recreated without FK');
+              await adapter.runAsync(
+                'INSERT OR REPLACE INTO pending_tasks_new (id, task_type, entry_id, status, payload, error, retry_count, max_retries, project_id, priority, created_at, started_at, completed_at) SELECT id, task_type, entry_id, status, payload, error, retry_count, max_retries, project_id, priority, created_at, started_at, completed_at FROM pending_tasks',
+                []
+              );
+              await adapter.execAsync(`DROP TABLE IF EXISTS pending_tasks`);
+              await adapter.execAsync(`ALTER TABLE pending_tasks_new RENAME TO pending_tasks`);
+              this.logger.info('[startup] pending_tasks migrated with INSERT OR REPLACE');
             } catch (e) {
-              this.logger.warn({ e }, '[startup] pending_tasks recreation failed');
+              this.logger.warn({ e }, '[startup] pending_tasks migration failed');
             }
           } else if (engine === 'postgresql') {
             await ensurePostgresIndexSchema(adapter);

@@ -9,6 +9,8 @@ import {
   sanitizePathSegment,
   resolveSafeTargetPath,
   resolveIndexTempBase,
+  setIndexConcurrencyLimit,
+  clearIndexPermissionCache,
 } from '../api-index';
 import { summarizeIngestResult, inferTypeFromPath, extractTagsFromPath, isIngestableFile } from '../api-index-ingest';
 
@@ -120,6 +122,7 @@ describe('api-index routes — SA4E-300 GAP 5 (400/401/429/rejectedReasons)', ()
   beforeEach(() => {
     vi.resetAllMocks();
     mockValidateSession.mockReset();
+    clearIndexPermissionCache(); // permission cache must not leak across tests
     mockGrantedCaller();
   });
 
@@ -274,6 +277,32 @@ describe('api-index routes — SA4E-300 GAP 5 (400/401/429/rejectedReasons)', ()
     expect(body.details).toContain('3');
     expect(body.action).toBeDefined();
   }, 15000);
+
+  it('hot-reloads indexLimit.maxConcurrent via setIndexConcurrencyLimit (admin config path)', async () => {
+    mockValidateSession.mockResolvedValue({ userId: 'u429b', username: 'u', accessGroupId: 'g' } as any);
+    const previous = 3;
+    try {
+      setIndexConcurrencyLimit(1);
+      const { app } = makeApp();
+      const payload = (n: number) => ({
+        method: 'POST' as const,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer good', 'X-Project-Id': 'p429b' },
+        body: JSON.stringify({ files: [{ path: `f${n}.ts`, content: 'x' }] }),
+      });
+      const results = await Promise.all([
+        app.request('/api/index/source', payload(1)),
+        app.request('/api/index/source', payload(2)),
+      ]);
+      const statuses = results.map((r) => r.status);
+      expect(statuses).toContain(429);
+      const idx = statuses.indexOf(429);
+      const body = await results[idx].json() as any;
+      expect(body.error).toBe('Server busy');
+      expect(body.details).toContain('1');
+    } finally {
+      setIndexConcurrencyLimit(previous); // restore default for other tests
+    }
+  }, 15000);
 });
 
 describe('SA4E-300 GAP 1 helpers', () => {
@@ -310,6 +339,7 @@ describe('SA4E-300 SEC High #1 (BOLA) + High #2 (sync RBAC)', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mockValidateSession.mockReset();
+    clearIndexPermissionCache(); // 'u1' is reused with different perms across tests
     mockGrantedCaller();
     mockValidateSession.mockResolvedValue({ userId: 'u1', username: 'u', accessGroupId: 'g' } as any);
   });
@@ -462,6 +492,7 @@ describe('SA4E-337-QA-001: /api/index/ingest-docs uses mem_ingest_file tool hand
   beforeEach(() => {
     vi.resetAllMocks();
     mockValidateSession.mockReset();
+    clearIndexPermissionCache(); // permission cache must not leak across tests
     mockGrantedCaller();
     mockValidateSession.mockResolvedValue({ userId, username: 'u', accessGroupId: 'g' } as any);
     seedTempDocs();
