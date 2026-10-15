@@ -91,3 +91,8 @@ debug.log
 /chat-history-*.md
 extension/src/__tests__/.tmp-local-tools/
 extension/src/__tests__/sa4e-356-sq1-outside/
+
+# PI agent session transcripts (SA4E-365 F-2 — SDK @earendil-works/pi-coding-agent
+# persists full messages incl. reasoning/thinking + tool results as JSONL into
+# workspace .pi/sessions/; classification Internal — never commit to VCS. CWE-312/538)
+.pi/sessions/
