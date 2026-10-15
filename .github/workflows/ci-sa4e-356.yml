@@ -234,6 +234,14 @@ jobs:
           npm install --force --no-audit --no-fund
           npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
 
+      - name: Re-apply vendored-deps patch (2nd install skips root postinstall)
+        # The @rolldown binding install re-resolves the tree and reverts the
+        # shrinkwrapped brace-expansion@5.0.9 (pi-coding-agent) — and that
+        # second `npm install <pkg>` does NOT re-run the root postinstall.
+        # Re-run the patch so `npm audit` (reads package-lock.json) sees the
+        # real 5.0.12 fix. Idempotent + offline.
+        run: node scripts/patch-vendored-deps.mjs
+
       - name: npm audit — fail on High/Critical (runtime deps)
         run: npm audit --omit=dev --audit-level=high
         working-directory: extension
