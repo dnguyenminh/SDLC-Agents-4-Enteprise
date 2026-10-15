@@ -122,6 +122,10 @@ services:
     cap_drop:
       - ALL
     volumes:
+      # /app is read-only (SEC-09); the baked ONNX embedding model at
+      # /app/models-cache (AD-6, default ON) works read-only — cache hits need
+      # no writes. With BAKE_EMBEDDING_MODEL=false, mount a writable volume
+      # (- model_cache:/app/models-cache) to allow runtime model download.
       - code_intel_data:/app/.code-intel
     networks:
       - sa4e-network

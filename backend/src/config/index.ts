@@ -47,7 +47,13 @@ export const DEFAULT_EXTENSIONS = [
 const UnifiedConfigSchema = z.object({
   port: z.number().min(1024).max(65535).default(48721),
   host: z.string().default('0.0.0.0'),
+  // Legacy/deprecated — nothing loads a bare .onnx file anymore; kept for
+  // backward-compatible admin config output. See embeddingModelId below.
   onnxModelPath: z.string().default('models/model.onnx'),
+  // SA4E-44 / AD-6 — real ONNX embeddings via transformers.js (EmbeddingService).
+  embeddingModelId: z.string().default('Xenova/paraphrase-multilingual-MiniLM-L12-v2'),
+  embeddingCacheDir: z.string(),
+  embeddingQuantized: z.boolean().default(true),
   logLevel: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   viewerPort: z.number().default(3202),
   watchEnabled: z.boolean().default(true),
@@ -163,6 +169,14 @@ export function loadConfig(overrides?: Partial<UnifiedConfig>): UnifiedConfig {
     port: resolvePort(),
     host: process.env.CODE_INTEL_HOST || '0.0.0.0',
     onnxModelPath: process.env.CODE_INTEL_ONNX_MODEL || 'models/model.onnx',
+    // SA4E-44 / AD-6 — ONNX embedding config (EmbeddingService/OnnxEmbeddingBackend).
+    // TRANSFORMERS_CACHE is the HF-standard env var; the Dockerfile bakes the
+    // model there at build time so the runtime image works fully offline.
+    embeddingModelId: process.env.CODE_INTEL_EMBEDDING_MODEL
+      || 'Xenova/paraphrase-multilingual-MiniLM-L12-v2',
+    embeddingCacheDir: process.env.TRANSFORMERS_CACHE
+      || path.join(codeIntelDir, 'models-cache'),
+    embeddingQuantized: envBool('CODE_INTEL_EMBEDDING_QUANTIZED', true),
     logLevel: (process.env.CODE_INTEL_LOG_LEVEL || 'info') as 'debug' | 'info' | 'warn' | 'error',
     viewerPort: resolveViewerPort(),
     watchEnabled: envBool('CODE_INTEL_WATCH', fileConfig.watchEnabled ?? true),

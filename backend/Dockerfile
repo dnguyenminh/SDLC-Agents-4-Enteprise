@@ -2,9 +2,9 @@
 # =============================================================================
 # SA4E-335 Backend Dockerfile — Node.js 22 + Hono Code Intelligence MCP Server
 # -----------------------------------------------------------------------------
-# Multi-stage build (6 stages): base, deps, build, production, development, test.
-# `production` is the SOLE CI push target (TDD AD-2). Build-only tooling never
-# reaches the runtime image.
+# Multi-stage build (7 stages): base, deps, build, mcp-python, production,
+# development, test. `production` is the SOLE CI push target (TDD AD-2).
+# Build-only tooling never reaches the runtime image.
 #
 # Design decisions (TDD §3.2 / Security Review):
 #   - AD-1 : base = node:22-slim (Debian/glibc) so native modules such as
@@ -20,6 +20,12 @@
 #   - AD-6 : SA4E-44 capability items (draw.io CLI/Electron/xvfb, model pre-cache,
 #            SERVER_WORKSPACES_ROOT) are guarded behind build args and DEFAULT OFF
 #            (SEC-08) — a bare `docker build --target production .` must succeed.
+#   - MCP-1 : two stdio MCP child servers (markitdown-mcp, markdown-exporter-
+#             mcp-local) are built into isolated /opt venvs in `mcp-python` and
+#             shipped read-only on PATH, so the orchestration module spawns them
+#             by bare command name. The runtime gains ONLY the python3
+#             interpreter — no pip, no git, no pandoc (SEC-05; pypandoc-binary
+#             bundles its own pandoc, onnxruntime ships as a manylinux wheel).
 # =============================================================================
 
 # --- Build-time arguments (NO secrets — build args must never carry credentials, BR-17) ---
@@ -57,10 +63,68 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig.json ./
 COPY src/ ./src/
+COPY scripts/ ./scripts/
 RUN npm run build
-# (AD-6, conditional) Pre-download embedding model into TRANSFORMERS_CACHE here
-# and strip tree-sitter-jsp to keep the build hermetic. DEFAULT OFF (SEC-08):
-# enable only when the runtime genuinely needs local embeddings / diagram export.
+# (AD-6, SA4E-44 — now IMPLEMENTED) Pre-download the ONNX embedding model into
+# TRANSFORMERS_CACHE so the runtime serves real semantic embeddings fully
+# offline. EmbeddingService/OnnxEmbeddingBackend read the same cache dir at
+# runtime (config embeddingCacheDir <- env TRANSFORMERS_CACHE). DEFAULT ON —
+# semantic search is a core capability; set --build-arg BAKE_EMBEDDING_MODEL=false
+# for slim builds (the runtime then logs an error and degrades to the sin-hash
+# fallback unless a cache volume is mounted at /app/models-cache). `mkdir -p`
+# guarantees the production COPY succeeds even when the download is skipped.
+# Fail-fast: the precache script exits non-zero on download/inference errors.
+ARG BAKE_EMBEDDING_MODEL=true
+RUN mkdir -p /app/models-cache \
+ && if [ "$BAKE_EMBEDDING_MODEL" = "true" ]; then \
+      TRANSFORMERS_CACHE=/app/models-cache node scripts/precache-embedding-model.mjs; \
+    fi
+
+# -----------------------------------------------------------------------------
+# mcp-python — builds the two stdio MCP child servers into isolated /opt venvs.
+# The orchestration module (McpClientManager → TransportFactory) spawns stdio
+# children by bare `command` name resolved on the PATH inherited by the backend
+# process (documents/MCP-DB-CONFIG-REQUEST.md §9), so each server ships as a
+# venv console script that production/development put on PATH:
+#   /opt/markitdown-venv/bin/markitdown-mcp                (Microsoft MarkItDown)
+#   /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local
+# Both servers are Python — markdown-exporter-mcp-local is NOT published to
+# npm or PyPI (GitHub source only), so npm packaging is impossible by design.
+# This stage derives from the SAME pinned node base as the runtime, so venv
+# interpreters and native manylinux wheels (onnxruntime via markitdown[all]/
+# magika, PyMuPDF, pillow, pandas; pypandoc-binary bundles pandoc → no apt
+# pandoc needed) match the runtime ABI. `git` exists only here (SEC-05).
+# -----------------------------------------------------------------------------
+FROM base AS mcp-python
+ARG MARKITDOWN_MCP_VERSION=0.0.1a7
+# markdown-exporter-mcp-local has no PyPI release — pin the exact upstream
+# commit (main @ 2026-04-07) for a hermetic build (git-source analogue of SEC-02).
+ARG MARKDOWN_EXPORTER_MCP_REF=1429b6a94767a709f7f5119219ca5951042d9d3c
+# `python3` already exists in base (build toolchain); only the venv/ensurepip
+# support is missing. One venv per server: independent dependency trees that
+# are pinned, upgraded and Trivy-scanned separately.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3-venv \
+ && rm -rf /var/lib/apt/lists/*
+RUN python3 -m venv /opt/markitdown-venv \
+ && /opt/markitdown-venv/bin/pip install --no-cache-dir \
+      "markitdown-mcp==${MARKITDOWN_MCP_VERSION}" \
+ && test -x /opt/markitdown-venv/bin/markitdown-mcp \
+ && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
+ && /opt/markitdown-venv/bin/python -m pip uninstall -y pip
+# `mcp<2` constraint: upstream declares `mcp>=1.27.0` (unbounded) but its code
+# imports `mcp.server.fastmcp` — an API REMOVED in mcp 2.x (FastMCP → MCPServer).
+# The import probe below fails the build on exactly this class of drift
+# (verified: unconstrained pip resolved mcp 2.3.0 → ModuleNotFoundError).
+RUN python3 -m venv /opt/markdown-exporter-venv \
+ && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir \
+      "markdown-exporter-mcp-local @ git+https://github.com/Zac-Chen-2001/markdown-exporter-mcp-local@${MARKDOWN_EXPORTER_MCP_REF}" \
+      "mcp>=1.27.0,<2.0.0" \
+ && test -x /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local \
+ && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
+ && /opt/markdown-exporter-venv/bin/python -m pip uninstall -y pip
+# Both venvs are copied root-owned READ-ONLY; stripping their bundled pip keeps
+# the runtime image free of ANY package manager (SEC-05) and out of Trivy scans.
 
 # -----------------------------------------------------------------------------
 # production ★ — runtime image. SOLE CI push target. Minimal surface, non-root.
@@ -108,6 +172,31 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./
 
+# (AD-6, SA4E-44) Baked ONNX embedding model cache from the `build` stage.
+# Read-only at runtime (read_only rootfs in compose) — a cache hit needs no
+# writes; with BAKE_EMBEDDING_MODEL=false the dir is empty and the runtime
+# degrades to the logged hash fallback (mount a volume here to allow download).
+COPY --from=build /app/models-cache ./models-cache
+ENV TRANSFORMERS_CACHE=/app/models-cache
+
+# --- Stdio MCP child servers (spawned by orchestration via bare command) ----
+# Python runtime only — pip/venv tooling and git stay out of the image (SEC-05).
+# The venv trees built in `mcp-python` are copied root-owned read-only
+# (world-executable: the non-root backend can execute but not modify its own
+# child servers). In-container `mcp_servers` DB rows can use bare commands:
+#   { "command": "markitdown-mcp", "args": [] }
+#   { "command": "markdown-exporter-mcp-local", "args": [] }
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3 \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+COPY --from=mcp-python /opt/markitdown-venv /opt/markitdown-venv
+COPY --from=mcp-python /opt/markdown-exporter-venv /opt/markdown-exporter-venv
+# Console scripts resolve on the PATH inherited by the backend process and its
+# stdio children; PYTHONUNBUFFERED keeps stderr logs streaming (no MCP breakage).
+ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"
+ENV PYTHONUNBUFFERED=1
+
 # Non-root runtime user (BR-05). Debian uses groupadd/useradd (not alpine addgroup).
 # `-r` = system account, `nologin` shell = no interactive login.
 RUN groupadd -g 1001 sa4e \
@@ -118,6 +207,13 @@ USER sa4e
 
 ENV NODE_ENV=production
 ENV PORT=48721
+
+# SA4E-99 backpressure — max concurrent /api/index/source upload requests.
+# Startup default only: hot-reloadable at runtime via the admin UI
+# (Configuration → indexLimit.maxConcurrent — persisted, applied instantly via
+# EventBus), and overridable per container with `docker run -e INDEX_CONCURRENCY_LIMIT=N`.
+# 8 absorbs cloud DB/disk latency (local default stays 3) without unbounded flood.
+ENV INDEX_CONCURRENCY_LIMIT=8
 
 EXPOSE 48721
 
@@ -139,6 +235,16 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig.json ./
 COPY src/ ./src/
+# (AD-6) Same baked embedding-model cache as production — dev containers embed
+# with the real ONNX model instead of the sin-hash fallback.
+COPY --from=build /app/models-cache ./models-cache
+ENV TRANSFORMERS_CACHE=/app/models-cache
+# Stdio MCP child servers — same venvs as production (see mcp-python stage);
+# `base` already carries python3, so only the venv copies + PATH are needed.
+COPY --from=mcp-python /opt/markitdown-venv /opt/markitdown-venv
+COPY --from=mcp-python /opt/markdown-exporter-venv /opt/markdown-exporter-venv
+ENV PATH="/opt/markitdown-venv/bin:/opt/markdown-exporter-venv/bin:${PATH}"
+ENV PYTHONUNBUFFERED=1
 RUN groupadd -g 1001 sa4e \
  && useradd -u 1001 -g sa4e -r -s /usr/sbin/nologin sa4e \
  && chown -R sa4e:sa4e /app

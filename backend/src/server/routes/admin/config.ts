@@ -11,6 +11,8 @@ import { maskSecret, isSecretConfigKey } from '../../../admin/sanitize.js';
 import type { AdminContext } from './context.js';
 import { bus, Events } from '../../../shared/EventBus.js';
 import { authRuntimeOverrides } from '../../../config/EntraConfig.js';
+import { EmbeddingService } from '../../../engine/parsers/embedding/EmbeddingService.js';
+import { EMBEDDING_DIMENSIONS } from '../../../engine/parsers/embedding/EmbeddingBackend.js';
 
 async function getEffectiveConfig(ctx: AdminContext): Promise<Record<string, Record<string, any>>> {
   const cfg = loadConfig();
@@ -19,7 +21,17 @@ async function getEffectiveConfig(ctx: AdminContext): Promise<Record<string, Rec
   const defaultIndexTempDir = path.join(os.tmpdir(), 'CodeIntel');
   const base: Record<string, Record<string, any>> = {
     server: { port: cfg.port, host: cfg.host, logLevel: cfg.logLevel, indexTempDir: (cfg as any).indexTempDir || defaultIndexTempDir },
-    embedding: { model: 'paraphrase-multilingual-MiniLM-L12-v2', dimensions: 384, onnxModelPath: cfg.onnxModelPath },
+    // SA4E-44 / AD-6: model + backend are now REAL (ONNX inference via
+    // EmbeddingService). `backend` reports what will actually be used; the
+    // legacy onnxModelPath is kept only for backward-compatible output.
+    embedding: {
+      model: cfg.embeddingModelId,
+      dimensions: EMBEDDING_DIMENSIONS,
+      backend: EmbeddingService.getInstance().getBackendKind(),
+      cacheDir: cfg.embeddingCacheDir,
+      quantized: cfg.embeddingQuantized,
+      legacyOnnxModelPath: cfg.onnxModelPath,
+    },
     auth: { 
       ssoEnabled: process.env.SSO_ENABLED === 'true',
       entraTenantId: process.env.ENTRA_TENANT_ID || '',
@@ -48,6 +60,11 @@ async function getEffectiveConfig(ctx: AdminContext): Promise<Record<string, Rec
     rateLimit: {
       // Server hard cap (rpm) per IP. Clients may request up to (never above) this.
       maxRpm: parseInt(process.env.RATE_LIMIT_MAX_RPM || (process.env.NODE_ENV === 'production' ? '6000' : '10000'), 10),
+    },
+    indexLimit: {
+      // SA4E-99 backpressure: max concurrent /api/index/source upload requests.
+      // Hot-reloaded via INDEX_LIMIT_CONFIG_CHANGED — no restart needed.
+      maxConcurrent: parseInt(process.env.INDEX_CONCURRENCY_LIMIT || '3', 10),
     },
   };
 
@@ -93,6 +110,15 @@ async function getEffectiveConfig(ctx: AdminContext): Promise<Record<string, Rec
       if (!isNaN(n) && n > 0) base.rateLimit.maxRpm = n;
     }
   } catch (err) { ctx.logger.debug({ err, context: 'ratelimit-config' }, 'DB not ready for rateLimit config — using env defaults'); }
+
+  // Merge DB-persisted indexLimit config (maxConcurrent)
+  try {
+    const val = await getLatestConfigValue('indexLimit', 'maxConcurrent');
+    if (val !== undefined) {
+      const n = parseInt(val, 10);
+      if (!isNaN(n) && n > 0) base.indexLimit.maxConcurrent = n;
+    }
+  } catch (err) { ctx.logger.debug({ err, context: 'indexlimit-config' }, 'DB not ready for indexLimit config — using env defaults'); }
 
   // Merge DB-persisted auth config
   try {
@@ -337,6 +363,10 @@ export function createConfigRoutes(ctx: AdminContext): Hono {
     // If rate-limit config changed, hot-reload the middleware cap (no restart)
     if (section === 'rateLimit') {
       await bus.emit(Events.RATE_LIMIT_CONFIG_CHANGED, { section, key, value });
+    }
+    // If index-limit config changed, hot-reload the index concurrency cap (no restart)
+    if (section === 'indexLimit') {
+      await bus.emit(Events.INDEX_LIMIT_CONFIG_CHANGED, { section, key, value });
     }
     // If auth config changed, hot-reload Entra verifier config
     if (section === 'auth') {

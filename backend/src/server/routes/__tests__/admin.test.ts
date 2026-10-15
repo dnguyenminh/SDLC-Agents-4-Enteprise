@@ -339,7 +339,10 @@ describe('Admin Routes — /api/admin/config', () => {
     expect(res.status).toBe(200);
     const body = await res.json() as any;
     expect(body.config.server.port).toBe(48721);
-    expect(body.config.embedding.model).toBe('paraphrase-multilingual-MiniLM-L12-v2');
+    // SA4E-44/AD-6: embedding config is now real — HF model id + active backend.
+    expect(body.config.embedding.model).toBe('Xenova/paraphrase-multilingual-MiniLM-L12-v2');
+    expect(body.config.embedding.backend).toBe('onnx');
+    expect(body.config.embedding.dimensions).toBe(384);
     expect(body).toHaveProperty('history');
     expect(body).toHaveProperty('restartRequired');
   });
