@@ -296,7 +296,16 @@ export class IndexerHttpClient {
                 { files: entries }, token, 3,
             );
             if (writeResult.ok) {
-                ingested += entries.length;
+                // SA4E-300: per-file disk-write failures arrive INSIDE the 200 body.
+                const outcome = IndexerHttpClient.batchWriteOutcome(writeResult.body, entries.length);
+                ingested += outcome.written;
+                if (outcome.failed > 0) {
+                    errors += outcome.failed;
+                    channel.appendLine(`⚠️ Doc batch ${Math.floor(i / batchSize) + 1}: ${outcome.failed}/${entries.length} files FAILED to save on server (HTTP 200)`);
+                    for (const r of outcome.rejectedReasons) {
+                        channel.appendLine(`   ✗ ${r.file} — ${r.code}: ${r.message}`);
+                    }
+                }
             } else {
                 errors += entries.length;
                 channel.appendLine(`⚠️ Doc batch ${Math.floor(i / batchSize) + 1}: ${writeResult.error}`);
@@ -440,7 +449,18 @@ export class IndexerHttpClient {
             // SA4E-99: Retry with exponential backoff for 429/5xx/network errors
             const result = await this.sendBatchWithRetry(url, { files: entries }, token, 3);
             if (result.ok) {
-                uploaded += batch.length;
+                // SA4E-300: per-file disk-write failures arrive INSIDE the 200 body —
+                // count real writes and surface each rejected file with its OS error code.
+                const outcome = IndexerHttpClient.batchWriteOutcome(result.body, batch.length);
+                uploaded += outcome.written;
+                if (outcome.failed > 0) {
+                    errors += outcome.failed;
+                    channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches}: ${outcome.failed}/${batch.length} files FAILED to save on server (HTTP 200)`);
+                    for (const r of outcome.rejectedReasons) {
+                        channel.appendLine(`   ✗ ${r.file} — ${r.code}: ${r.message}`);
+                    }
+                    channel.show(true);
+                }
             } else if (result.status === 401 && this.tokenRefresher) {
                 const freshToken = await this.tokenRefresher();
                 if (freshToken) {
@@ -448,7 +468,18 @@ export class IndexerHttpClient {
                     // SA4E-300 GAP 3: propagate the refreshed token to subscribers
                     this.notifyTokenRefreshed(freshToken);
                     const retry = await this.sendBatchWithRetry(url, { files: entries }, token, 2);
-                    if (retry.ok) { uploaded += batch.length; }
+                    if (retry.ok) {
+                        const retryOutcome = IndexerHttpClient.batchWriteOutcome(retry.body, batch.length);
+                        uploaded += retryOutcome.written;
+                        if (retryOutcome.failed > 0) {
+                            errors += retryOutcome.failed;
+                            channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} (after token refresh): ${retryOutcome.failed}/${batch.length} files FAILED to save on server`);
+                            for (const r of retryOutcome.rejectedReasons) {
+                                channel.appendLine(`   ✗ ${r.file} — ${r.code}: ${r.message}`);
+                            }
+                            channel.show(true);
+                        }
+                    }
                     else {
                         errors += batch.length;
                         channel.appendLine(`\n⚠️ Batch ${batchNum}/${totalBatches} FAILED after token refresh`);
@@ -541,6 +572,25 @@ export class IndexerHttpClient {
      * Retries on: 429 (server busy), 5xx, network errors (ECONNRESET, ECONNREFUSED, timeout).
      * Does NOT retry on 401 (handled by caller with token refresh).
      */
+    /**
+     * SA4E-300: per-batch write outcome from a 200 index response.
+     * The server awaits EVERY disk write before responding — async I/O is not
+     * fire-and-forget — and reports per-file failures inside the body:
+     *   /api/index/source    → { written, rejected, rejectedReasons }
+     *   /api/index/documents → { indexed, rejected, rejectedReasons }
+     * Falls back to batchLength when the field is absent (older servers).
+     */
+    private static batchWriteOutcome(
+        body: any, batchLength: number,
+    ): { written: number; failed: number; rejectedReasons: Array<{ file: string; code: string; message: string }> } {
+        const writtenField = typeof body?.written === 'number' ? body.written
+            : typeof body?.indexed === 'number' ? body.indexed
+            : batchLength;
+        const rejectedReasons = Array.isArray(body?.rejectedReasons) ? body.rejectedReasons : [];
+        const written = Math.max(0, Math.min(writtenField, batchLength));
+        return { written, failed: batchLength - written, rejectedReasons };
+    }
+
     private async sendBatchWithRetry(
         url: string, payload: unknown, token: string | undefined, maxRetries: number,
     ): Promise<{ ok: boolean; error: string; details?: string; action?: string; status: number; body?: any }> {

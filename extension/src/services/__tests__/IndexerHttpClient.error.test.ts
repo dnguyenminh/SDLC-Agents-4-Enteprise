@@ -65,6 +65,54 @@ describe('IndexerHttpClient error propagation', () => {
     });
   });
 
+  // SA4E-300: per-file write failures arrive INSIDE a 200 body — the parsed
+  // body must be exposed to callers (previously discarded on success).
+  it('httpPostWithDetail returns parsed body on 2xx success', async () => {
+    mockHttpPostJson.mockResolvedValueOnce({
+      written: 18,
+      skipped: 0,
+      rejected: ['bad1.ts', 'bad2.ts'],
+      rejectedReasons: [
+        { file: 'bad1.ts', code: 'EACCES', message: 'Unsafe path' },
+        { file: 'bad2.ts', code: 'ENOSPC', message: 'No space left on device' },
+      ],
+    } as any);
+    const client = new IndexerHttpClient('http://localhost');
+    const result = await (client as any).httpPostWithDetail(
+      'http://localhost/api/index/source', { files: [] }, undefined,
+    );
+    expect(result.ok).toBe(true);
+    expect(result.status).toBe(200);
+    expect(result.body.written).toBe(18);
+    expect(result.body.rejectedReasons).toHaveLength(2);
+  });
+
+  // SA4E-300: batchWriteOutcome parses both response shapes and falls back
+  // for legacy bodies (no written/indexed field → assume whole batch wrote).
+  it('batchWriteOutcome parses written/indexed shapes and legacy fallback', () => {
+    const source = (IndexerHttpClient as any).batchWriteOutcome(
+      { written: 17, rejectedReasons: [{ file: 'f.ts', code: 'EACCES', message: 'x' }] }, 20,
+    );
+    expect(source).toEqual({
+      written: 17,
+      failed: 3,
+      rejectedReasons: [{ file: 'f.ts', code: 'EACCES', message: 'x' }],
+    });
+
+    const docs = (IndexerHttpClient as any).batchWriteOutcome({ indexed: 5 }, 6);
+    expect(docs.written).toBe(5);
+    expect(docs.failed).toBe(1);
+    expect(docs.rejectedReasons).toEqual([]);
+
+    const legacy = (IndexerHttpClient as any).batchWriteOutcome(undefined, 20);
+    expect(legacy).toEqual({ written: 20, failed: 0, rejectedReasons: [] });
+
+    // defensive: server must never report MORE writes than files sent
+    const overclaim = (IndexerHttpClient as any).batchWriteOutcome({ written: 99 }, 20);
+    expect(overclaim.written).toBe(20);
+    expect(overclaim.failed).toBe(0);
+  });
+
   it('httpPostWithDetail maps 401 to Unauthorized but keeps details/action', async () => {
     mockHttpPostJson.mockRejectedValueOnce({
       statusCode: 401,
