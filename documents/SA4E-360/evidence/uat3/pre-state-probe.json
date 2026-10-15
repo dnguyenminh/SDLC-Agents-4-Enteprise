@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-14T23:22:04.668Z",
+  "state": {
+    "title": "Chat Panel",
+    "header": "SDLC Pipeline",
+    "status": "connected",
+    "userCount": 1,
+    "userTexts": [
+      "Gọi tool get_workspace_info và cho tôi biết nó trả về gì"
+    ],
+    "asstCount": 0,
+    "lastAsstHead": "",
+    "busy": false,
+    "inputValue": "",
+    "inputVisible": true,
+    "approveVisible": false,
+    "sendVisible": true,
+    "tabAddVisible": true,
+    "tabList": [
+      "Hãy review source code×",
+      "Hãy review source code",
+      "×",
+      "Hãy review source code×",
+      "Hãy review source code",
+      "×",
+      "Gọi tool get_workspace_in…×",
+      "Gọi tool get_workspace_in…",
+      "×",
+      "Hãy review source code×",
+      "Hãy review source code",
+      "×"
+    ],
+    "bodyLen": 496
+  }
+}

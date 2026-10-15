@@ -1,0 +1,24 @@
+[2026-10-14T23:00:04.833Z] page: "Agentic Chat - Untitled (Workspace) - Kiro"
+[2026-10-14T23:00:04.839Z] panel={"x":337,"y":566,"w":1092,"h":644}
+[2026-10-14T23:00:04.839Z]   BTN title="Problems (Ctrl+Shift+M)" cls="action-label" 58x31
+[2026-10-14T23:00:04.840Z]   BTN title="Output (Ctrl+Shift+U)" cls="action-label" 45x31
+[2026-10-14T23:00:04.840Z]   BTN title="Debug Console (Ctrl+Shift+Y)" cls="action-label" 90x31
+[2026-10-14T23:00:04.840Z]   BTN title="Terminal (Ctrl+`)" cls="action-label" 55x31
+[2026-10-14T23:00:04.841Z]   BTN title="Ports" cls="action-label" 36x31
+[2026-10-14T23:00:04.841Z]   BTN title="SDLC Chat" cls="action-label" 59x31
+[2026-10-14T23:00:04.842Z]   BTN title="New Terminal (Ctrl+Shift+`)
+[Alt] Split Terminal (Ctrl+Shift+5)" cls="action-label codicon codicon-plus" 22x22
+[2026-10-14T23:00:04.842Z]   BTN title="Launch Profile..." cls="action-label codicon codicon-chevron-down" 16x22
+[2026-10-14T23:00:04.843Z]   BTN title="Clear Terminal" cls="action-label codicon codicon-clear-all" 22x22
+[2026-10-14T23:00:04.843Z]   BTN title="Views and More Actions..." cls="action-label codicon codicon-toolbar-more" 22x22
+[2026-10-14T23:00:04.843Z]   BTN title="" cls="action-label separator disabled" 1x16
+[2026-10-14T23:00:04.843Z]   BTN title="Maximize Panel" cls="action-label codicon codicon-panel-maximize" 22x22
+[2026-10-14T23:00:04.843Z]   BTN title="Hide Panel (Ctrl+J)" cls="action-label codicon codicon-panel-close" 22x22
+[2026-10-14T23:00:04.844Z]   BTN title="Clear Terminal" cls="action-label codicon codicon-clear-all" 0x0
+[2026-10-14T23:00:04.844Z]   BTN title="More Actions..." cls="action-label codicon codicon-toolbar-more" 0x0
+[2026-10-14T23:00:04.844Z]   BTN title="Split (Ctrl+Shift+5)" cls="action-label codicon codicon-split-horizontal" 0x0
+[2026-10-14T23:00:04.845Z]   BTN title="Kill (Del)" cls="action-label codicon codicon-trashcan" 0x0
+[2026-10-14T23:00:04.845Z]   BTN title="Split (Ctrl+Shift+5)" cls="action-label codicon codicon-split-horizontal" 0x0
+[2026-10-14T23:00:04.845Z]   BTN title="Kill (Del)" cls="action-label codicon codicon-trashcan" 0x0
+[2026-10-14T23:00:04.847Z] maximize click -> null
+[2026-10-14T23:00:07.356Z] AFTER: panel={"x":337,"y":566,"w":1092,"h":644} iframes=[{"id":"0e226591","x":1435,"y":35,"w":607,"h":1175},{"id":"b1e02341","x":0,"y":1232,"w":300,"h":150},{"id":"ab1a7829","x":337,"y":70,"w":1092,"h":490}]

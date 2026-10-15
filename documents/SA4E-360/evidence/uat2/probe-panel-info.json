@@ -1,0 +1,262 @@
+{
+  "panelTabs": [
+    {
+      "title": "Problems (Ctrl+Shift+M)",
+      "text": "Problems",
+      "w": 66,
+      "h": 31,
+      "active": false
+    },
+    {
+      "title": "Output",
+      "text": "Output",
+      "w": 53,
+      "h": 31,
+      "active": false
+    },
+    {
+      "title": "Debug Console (Ctrl+Shift+Y)",
+      "text": "Debug Console",
+      "w": 98,
+      "h": 31,
+      "active": false
+    },
+    {
+      "title": "Terminal",
+      "text": "Terminal",
+      "w": 63,
+      "h": 31,
+      "active": true
+    },
+    {
+      "title": "Ports",
+      "text": "Ports",
+      "w": 44,
+      "h": 31,
+      "active": false
+    },
+    {
+      "title": "SDLC Chat",
+      "text": "SDLC Chat",
+      "w": 67,
+      "h": 31,
+      "active": false
+    }
+  ],
+  "panelVisible": true,
+  "panelPart": "part panel basepanel bottom pane-composite-part",
+  "statusbarItems": [
+    {
+      "title": "SDLC-Agents-4-Enterprise (Git) - main*, Checkout Branch/Tag...",
+      "text": "main*"
+    },
+    {
+      "title": "SDLC-Agents-4-Enterprise (Git) - Push 4 commits to origin/main",
+      "text": "0↓ 4↑"
+    },
+    {
+      "title": "check  SDLC Agents, SDLC Agents: Connected & Authenticated",
+      "text": "SDLC Agents"
+    }
+  ],
+  "compositeBar": [
+    {
+      "title": "Explorer (Ctrl+Shift+E)",
+      "active": false
+    },
+    {
+      "title": "Search (Ctrl+Shift+F)",
+      "active": false
+    },
+    {
+      "title": "Source Control (Ctrl+Shift+G) - 10000 pending changes",
+      "active": false
+    },
+    {
+      "title": "Run and Debug (Ctrl+Shift+D)",
+      "active": false
+    },
+    {
+      "title": "Extensions (Ctrl+Shift+X)",
+      "active": false
+    },
+    {
+      "title": "Kiro",
+      "active": false
+    },
+    {
+      "title": "Workflows",
+      "active": false
+    },
+    {
+      "title": "Powers",
+      "active": false
+    },
+    {
+      "title": "Microsoft Edge Tools",
+      "active": false
+    },
+    {
+      "title": "SDLC Agents 4 Enterprise",
+      "active": false
+    },
+    {
+      "title": "Cline",
+      "active": false
+    },
+    {
+      "title": "Roo Code",
+      "active": false
+    },
+    {
+      "title": "Accounts - Signed in with AWS IAM Identity Center",
+      "active": false
+    },
+    {
+      "title": "Manage",
+      "active": false
+    }
+  ],
+  "sdlcEls": [
+    {
+      "tag": "A",
+      "title": "SDLC Agents 4 Enterprise",
+      "cls": "action-label activity-workbench-view-extension-sdlcAgents-4c",
+      "w": 48,
+      "h": 48
+    },
+    {
+      "tag": "DIV",
+      "title": "SDLC Agents 4 Enterprise",
+      "cls": "badge",
+      "w": 0,
+      "h": 0
+    },
+    {
+      "tag": "UL",
+      "title": "SDLC Agents 4 Enterprise: SDLC Agents actions",
+      "cls": "actions-container",
+      "w": 201,
+      "h": 35
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\node_modules",
+      "cls": "monaco-icon-label folder-icon backend-name-dir-icon node_mod",
+      "w": 237,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\scripts • Contains emphasized items",
+      "cls": "monaco-icon-label folder-icon backend-name-dir-icon scripts-",
+      "w": 237,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\secrets",
+      "cls": "monaco-icon-label folder-icon backend-name-dir-icon secrets-",
+      "w": 237,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\servers",
+      "cls": "monaco-icon-label folder-icon backend-name-dir-icon servers-",
+      "w": 237,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\src • Contains emphasized items",
+      "cls": "monaco-icon-label folder-icon backend-name-dir-icon src-name",
+      "w": 237,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\tests",
+      "cls": "monaco-icon-label folder-icon backend-name-dir-icon tests-na",
+      "w": 237,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.dockerignore",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .dockerign",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.env.dev",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .env.dev-n",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.env.example",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .env.examp",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.env.prod",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .env.prod-",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.env.production.example",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .env.produ",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.env.staging",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .env.stagi",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.env.test",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .env.test-",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.huskyrc.json",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .huskyrc.j",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.lintstagedrc.json",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .lintstage",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\.tsc-out.txt",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon .tsc-out.t",
+      "w": 259,
+      "h": 22
+    },
+    {
+      "tag": "DIV",
+      "title": "C:\\projects\\kiro\\SDLC-Agents-4-Enterprise\\backend\\analyze-perf.cjs",
+      "cls": "monaco-icon-label file-icon backend-name-dir-icon analyze-pe",
+      "w": 259,
+      "h": 22
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+PIChatPanelProvider.ts — Overview giải thích
+📋 Phần overview (top-of-file comment)
+/**
+ * ChatPanelProvider — KSA-210
+ * WebviewViewProvider for the Chat Panel sidebar.
+ * Delegates status, models, state to extracted managers.
+ */Copy
+3 dòng tóm tắt:
+DòngNghĩaChatPanelProvider — KSA-210Ticket ID KSA-210 — task cụ thểWebviewViewProvider for the Chat Panel sidebarProvider cho sidebar chat panel trong VS CodeDelegates status, models, state to extracted managersStatus/models/state được delegate ra các manager riêng (không nằm trong class này)
+🏗️ Architecture từ code
+ChatPanelProvider (controller)
+├── statusManager: ChatStatusManager
+├── modelManager: ChatModelManager
+├── stateManager: ChatStateManager
+└── contextUsageTracker: ContextUsageTracker
+└── sessionCompactor: SessionCompactorCopy
+🎯 Phân tích chi tiết
+1. Constructor — Fan-in Pattern
+constructor(extensionUri, mcpManager, workspaceRoot, secrets?, workspaceState?)CopyApplyInserttypescript
+Tất cả dependencies inject qua constructorInternal managers được tạo bên trong constructor
+2. Private Methods — Logic Complex
+sendInitialContextUsage() — Count steering + MCP tools + sync context windowupdateContextUsageAfterTurn() — Sau mỗi LLM turn, recount tokensapplyCompactionAndRecount() — Auto-compaction khi context đầyhandleApplyCode() — Apply code vào editor (replace/insert)routeMessage() — Route webview messages
+3. Single Instance — Lazy Init
+private engine: PiWorkflowAdapter | null = null;
+getEngine() { if (!this.engine) { this.engine = new PiWorkflowAdapter(...); return this.engine; } }CopyApplyInserttypescript
+Singleton singleton — chỉ tạo 1 lầnLazy init — tạo khi cần
+4. Error Handling
+onEngineMessage(listener) {
+  try { listener(msg); } catch { /* swallow */ }
+}CopyApplyInserttypescript
+One bad subscriber không break sidebar
+⚠️ Nhận xét
+Vấn đềMức độthis as any ở nhiều nơi — type safety bị bypass🔴debugLog thay vì console.log — custom logger?🟡require() dynamic import — module loading pattern cũ🟡No cleanup khi dispose — engine không dispose rõ ràng🟡messageBuffer.shift() — mất oldest messages khi đầy🟢
+Overall: Controller pattern applied well, managers extracted for SRP, nhưng type safety cần cải thiện.

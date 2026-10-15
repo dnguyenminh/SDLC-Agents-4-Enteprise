@@ -1,0 +1,22 @@
+[2026-10-14T23:07:51.378Z] Frame verified: title="Chat Panel" header="SDLC Pipeline" status=connected users=1 assts=0 inputVisible=true busy=false
+[2026-10-14T23:07:51.384Z] Session tabs: [{"text":"Hãy review source code×","w":116},{"text":"Hãy review source code","w":100},{"text":"Hãy review source code×","w":116},{"text":"Hãy review source code","w":100},{"text":"Gọi tool get_workspace_in…×","w":116},{"text":"Gọi tool get_workspace_in…","w":100},{"text":"+","w":24}]
+[2026-10-14T23:07:51.385Z] ========== SIT-01: session setup + review source code ==========
+[2026-10-14T23:08:11.401Z] [sit01-newtab] handle click #tab-add-btn failed (OP-TIMEOUT click#tab-add-btn (20000ms)) — JS fallback
+[2026-10-14T23:08:14.408Z] [sit01] tab-add (js-click): users 1->0, assts 0->0, busy=false → fresh=true
+[2026-10-14T23:08:14.498Z] [sit01] frame OK title="Chat Panel" header="SDLC Pipeline" status=connected users=0 assts=0 busy=false
+[2026-10-14T23:08:14.579Z] [sit01] send: "Hãy review source code"
+[2026-10-14T23:08:34.586Z] [sit01] typing op failed (attempt 1): OP-TIMEOUT inputClick (20000ms) — JS insertText fallback
+[2026-10-14T23:08:35.214Z] [sit01] type VERIFY OK (attempt 1, 19 chars)
+[2026-10-14T23:08:55.231Z] [sit01] handle click #send-btn failed (OP-TIMEOUT click#send-btn (20000ms)) — JS fallback
+[2026-10-14T23:16:01.525Z] [sit01] done ok=false timeout=true asstIncreased=false 421s respLen=0 err=1 exceed=0 pi=7
+[2026-10-14T23:16:01.527Z] ========== SIT-02: get_workspace_info + cache ==========
+[2026-10-14T23:16:01.532Z] [sit02-t1] frame OK title="Chat Panel" header="SDLC Pipeline" status=connected users=0 assts=0 busy=false
+[2026-10-14T23:16:01.636Z] [sit02-t1] send: "Gọi tool get_workspace_info và cho tôi biết nó trả về gì"
+[2026-10-14T23:16:21.647Z] [sit02-t1] typing op failed (attempt 1): OP-TIMEOUT inputClick (20000ms) — JS insertText fallback
+[2026-10-14T23:16:22.269Z] [sit02-t1] type VERIFY OK (attempt 1, 46 chars)
+[2026-10-14T23:16:42.275Z] [sit02-t1] handle click #send-btn failed (OP-TIMEOUT click#send-btn (20000ms)) — JS fallback
+[2026-10-14T23:32:14.573Z] [cleanup] BEFORE: {"workingText":"Finishing previous message — your message is queued next.","wbActive":false,"cancelVisible":false,"tabCount":6,"tabTitles":["Hãy review source code×","Hãy review source code×","Gọi tool get_workspace_in…×","Hãy review source code×","Chat 10×","Chat 11×"],"activeTabId":"1691c8e7-8dfd-4cc5-8bb5-7ba5ab390a5c","userCount":1,"asstCount":0,"errTexts":["Backend KB unreachable after 3 attempts: fetch failed","Backend KB unreachable after 3 attempts: fetch failed"]}
+[2026-10-14T23:32:14.671Z] [cleanup] no visible #cancel-btn
+[2026-10-14T23:32:14.769Z] [cleanup] close stale tab "Gọi tool…" -> closed:8ee736b8-33a0-4c8b-9495-cfb2e12f4c7f
+[2026-10-14T23:32:17.275Z] [cleanup] AFTER CLOSE: {"workingText":"Finishing previous message — your message is queued next.","wbActive":false,"cancelVisible":false,"tabCount":5,"tabTitles":["Hãy review source code×","Hãy review source code×","Hãy review source code×","Chat 10×","Chat 11×"],"activeTabId":"1691c8e7-8dfd-4cc5-8bb5-7ba5ab390a5c","userCount":1,"asstCount":0,"errTexts":["Backend KB unreachable after 3 attempts: fetch failed","Backend KB unreachable after 3 attempts: fetch failed"]}
+[2026-10-14T23:32:17.364Z] [cleanup] CLEANUP DONE

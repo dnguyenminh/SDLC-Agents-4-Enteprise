@@ -1,0 +1,42 @@
+[2026-10-14T23:01:41.588Z] [log] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T23:01:41.587Z"} color: blue color: 
+[2026-10-14T23:01:41.589Z] [log] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T23:01:41.587Z"} color: blue color: 
+[2026-10-14T23:01:41.590Z] [log] %c[Extension Host] %c{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":87,"totalTokens":56895,"timestamp":"2026-10-14T23:01:41.588Z"} color: blue color: 
+[2026-10-14T23:01:46.049Z] [error] %c  ERR color: #f33 [Extension Host] [MessageRouter] Handler error for "SEND_PROMPT": Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T23:01:46.050Z] [error] %c[Extension Host] %c[MessageRouter] Handler error for "SEND_PROMPT": color: blue color:  Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T23:02:30.224Z] [log] %c[Extension Host] %c{"level":"info","msg":"Context budget resolved","modelId":"qwen-text","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-14T23:02:30.222Z"} color: blue color: 
+[2026-10-14T23:02:30.225Z] [log] %c[Extension Host] %c{"level":"info","msg":"PI_LEGACY_HISTORY_COMPACTED","modelId":"qwen-text","nCtx":65536,"usable":58293,"historyMessages":89,"totalTokens":57270,"timestamp":"2026-10-14T23:02:30.223Z"} color: blue color: 
+[2026-10-14T23:03:13.054Z] [warn] %c[Extension Host] %cFailed to refresh token due to network/server issue. Keeping current session. color: blue color:  TypeError: fetch failed
+[2026-10-14T23:04:56.036Z] [error] %c  ERR color: #f33 [Extension Host] [MessageRouter] Handler error for "SEND_PROMPT": Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)
+[2026-10-14T23:04:56.036Z] [error] %c[Extension Host] %c[MessageRouter] Handler error for "SEND_PROMPT": color: blue color:  Error: Webview is disposed
+	at NU.assertNotDisposed (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:123957)
+	at get webview (file:///c:/Users/ASUS/AppData/Local/Programs/Kiro/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:673:122918)
+	at nFe.sendRaw (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9871)
+	at nFe.postToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:9505)
+	at aFe.sendToWebview (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1487)
+	at aFe.handleSendPrompt (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7354:1738)
+	at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+	at async rFe.dispatch (c:\Users\ASUS\.kiro\extensions\dnguyenminh.sdlc-agents-4-enterprise-1.53.0\out\extension.js:7339:7959)

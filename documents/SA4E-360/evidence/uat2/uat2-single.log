@@ -1,0 +1,77 @@
+[2026-10-14T23:01:37.734Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:01:39.744Z] LIVE: input=274x34 status=connected busy=false users=0 assts=0
+[2026-10-14T23:01:39.746Z] iframe rect before: {"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:01:39.839Z] pre-send busy=false users=0 assts=0
+[2026-10-14T23:01:41.527Z] typed: input="Gọi tool get_workspace_info và cho tôi biết nó trả"
+[2026-10-14T23:01:43.541Z] sent=true users 0->1
+[2026-10-14T23:01:55.672Z] t+12s len=0 busy=true iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:01:55.673Z] ⚠ LAYOUT LOST at t+12s — re-activating tab
+[2026-10-14T23:01:55.675Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:02:03.837Z] t+20s len=0 busy=true iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:02:03.838Z] ⚠ LAYOUT LOST at t+20s — re-activating tab
+[2026-10-14T23:02:03.840Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:02:14.877Z] t+31s len=0 busy=true iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:02:14.877Z] ⚠ LAYOUT LOST at t+31s — re-activating tab
+[2026-10-14T23:02:14.879Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:02:25.913Z] t+42s len=0 busy=true iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:02:25.914Z] ⚠ LAYOUT LOST at t+42s — re-activating tab
+[2026-10-14T23:02:25.916Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:02:33.946Z] t+50s len=0 busy=true iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:02:33.947Z] ⚠ LAYOUT LOST at t+50s — re-activating tab
+[2026-10-14T23:02:33.948Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:02:44.987Z] t+61s len=0 busy=true iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:02:44.987Z] ⚠ LAYOUT LOST at t+61s — re-activating tab
+[2026-10-14T23:02:44.990Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:02:56.023Z] t+72s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:02:56.024Z] ⚠ LAYOUT LOST at t+72s — re-activating tab
+[2026-10-14T23:02:56.025Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:03:04.045Z] t+80s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:03:04.046Z] ⚠ LAYOUT LOST at t+80s — re-activating tab
+[2026-10-14T23:03:04.048Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:03:15.089Z] t+91s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:03:15.090Z] ⚠ LAYOUT LOST at t+91s — re-activating tab
+[2026-10-14T23:03:15.091Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:03:35.184Z] t+112s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:03:35.184Z] ⚠ LAYOUT LOST at t+112s — re-activating tab
+[2026-10-14T23:03:35.185Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:03:43.216Z] t+120s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:03:43.217Z] ⚠ LAYOUT LOST at t+120s — re-activating tab
+[2026-10-14T23:03:43.218Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:03:54.254Z] t+131s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:03:54.255Z] ⚠ LAYOUT LOST at t+131s — re-activating tab
+[2026-10-14T23:03:54.257Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:04:05.304Z] t+142s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:04:05.305Z] ⚠ LAYOUT LOST at t+142s — re-activating tab
+[2026-10-14T23:04:05.306Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:04:13.339Z] t+150s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:04:13.339Z] ⚠ LAYOUT LOST at t+150s — re-activating tab
+[2026-10-14T23:04:13.342Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:04:24.378Z] t+161s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:04:24.379Z] ⚠ LAYOUT LOST at t+161s — re-activating tab
+[2026-10-14T23:04:24.380Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:04:35.426Z] t+172s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:04:35.426Z] ⚠ LAYOUT LOST at t+172s — re-activating tab
+[2026-10-14T23:04:35.428Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:04:43.442Z] t+180s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:04:43.442Z] ⚠ LAYOUT LOST at t+180s — re-activating tab
+[2026-10-14T23:04:43.443Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:04:54.473Z] t+191s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:04:54.474Z] ⚠ LAYOUT LOST at t+191s — re-activating tab
+[2026-10-14T23:04:54.475Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:05:05.501Z] t+202s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:05:05.502Z] ⚠ LAYOUT LOST at t+202s — re-activating tab
+[2026-10-14T23:05:05.503Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:05:13.526Z] t+210s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:05:13.527Z] ⚠ LAYOUT LOST at t+210s — re-activating tab
+[2026-10-14T23:05:13.528Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:05:24.554Z] t+221s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:05:24.555Z] ⚠ LAYOUT LOST at t+221s — re-activating tab
+[2026-10-14T23:05:24.556Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:05:35.613Z] t+232s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:05:35.614Z] ⚠ LAYOUT LOST at t+232s — re-activating tab
+[2026-10-14T23:05:35.615Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:05:43.635Z] t+240s len=0 busy=false iframe={"x":0,"y":1232,"w":300,"h":150}
+[2026-10-14T23:05:43.635Z] ⚠ LAYOUT LOST at t+240s — re-activating tab
+[2026-10-14T23:05:43.637Z] activatePanelTab -> NO-TAB
+[2026-10-14T23:05:45.734Z] RESULT: ok=false respLen=0 users=1 assts=0 layoutLost=true approved=0
+[2026-10-14T23:05:45.736Z] RESP TAIL: 

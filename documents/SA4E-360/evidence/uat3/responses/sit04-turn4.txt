@@ -1,0 +1,14 @@
+PIModuleRegistry.ts — register method giải thích
+Code
+register(module: IModule): void {
+  this.modules.set(module.name, module);
+  this.logger.info({ module: module.name }, &#039;Module registered&#039;);
+  this.eventBus.emit(Events.MODULE_REGISTERED, { name: module.name });
+}CopyApplyInserttypescript
+Giải thích
+DòngChức năngthis.modules.set(module.name, module)Lưu module vào Map (key = module.name, value = module instance)this.logger.info(...)Log event cho debugging/observabilitythis.eventBus.emit(Events.MODULE_REGISTERED, ...)Emit event để Observer pattern — module khác có thể subscribe
+📋 Đặc điểm
+Observer Pattern: Emit event thay vì gọi callback trực tiếpNo Return: void — chỉ side-effect (save + log + emit)Single Responsibility: Chỉ responsible cho "register", không có logic initThread-safe-ish: Map set là async-safe trong JS single-thread
+⚠️ Nhận xét
+Vấn đềMức độKhông validate module name — trùng name sẽ overwrite🟡 Silent data lossKhông emit event khi overwrite🟡 Lost lifecycle eventKhông có isRegistered() / remove()🟢 Có thể cần
+Overall: Minimal, clean, Observer pattern applied correctly.

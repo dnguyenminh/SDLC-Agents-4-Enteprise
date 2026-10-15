@@ -1,0 +1,7 @@
+[2026-10-14T22:50:50.705Z] Workbench page: "Untitled (Workspace) - Kiro"
+[2026-10-14T22:50:50.784Z] shot probe-before OK
+[2026-10-14T22:50:50.797Z] click panel tab -> SDLC Chat
+[2026-10-14T22:50:53.879Z] shot probe-after-click OK
+[2026-10-14T22:50:53.882Z] frame check: {"t":"Chat Panel","h":"SDLC Pipeline","st":"connected","inputW":1066,"inputH":34,"msgs":3}
+[2026-10-14T22:50:53.886Z] LIVE WEBVIEW: YES input=1066x34 status=connected msgs=3
+[2026-10-14T22:50:53.970Z] shot probe-final OK

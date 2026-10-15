@@ -1,0 +1,216 @@
+{
+  "startedAt": "2026-10-14T23:07:51.384Z",
+  "frameVerification": {
+    "pageTitle": "Agentic Chat - Untitled (Workspace) - Kiro",
+    "frameTitle": "Chat Panel",
+    "headerTitle": "SDLC Pipeline",
+    "status": "connected",
+    "inputVisible": true,
+    "sendVisible": true,
+    "preState": {
+      "userCount": 1,
+      "asstCount": 0,
+      "bodyLen": 438,
+      "busy": false
+    },
+    "sessionTabs": [
+      {
+        "text": "Hãy review source code×",
+        "w": 116
+      },
+      {
+        "text": "Hãy review source code",
+        "w": 100
+      },
+      {
+        "text": "Hãy review source code×",
+        "w": 116
+      },
+      {
+        "text": "Hãy review source code",
+        "w": 100
+      },
+      {
+        "text": "Gọi tool get_workspace_in…×",
+        "w": 116
+      },
+      {
+        "text": "Gọi tool get_workspace_in…",
+        "w": 100
+      },
+      {
+        "text": "+",
+        "w": 24
+      }
+    ],
+    "at": "2026-10-14T23:07:51.384Z"
+  },
+  "sits": {
+    "sit01": {
+      "label": "sit01",
+      "sent": "Hãy review source code",
+      "ok": false,
+      "timeout": true,
+      "asstIncreased": false,
+      "durationMs": 421251,
+      "approvals": 0,
+      "approvedCtx": [],
+      "asstBefore": 0,
+      "asstAfter": 0,
+      "responseLen": 0,
+      "responseTail": "",
+      "domErrors": [
+        "Backend KB unreachable after 3 attempts: fetch failed"
+      ],
+      "exceedEvents": [],
+      "piMarkers": [
+        {
+          "t": "2026-10-14T23:08:55.282Z",
+          "marker": "Context budget resolved",
+          "parsed": {
+            "msg": "Context budget resolved",
+            "modelId": "qwen-text",
+            "nCtx": 65536,
+            "staticBudget": 40805,
+            "historyBudget": 17488
+          },
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T23:08:55.281Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T23:08:55.284Z",
+          "marker": "Context budget resolved",
+          "parsed": {
+            "msg": "Context budget resolved",
+            "modelId": "qwen-text",
+            "nCtx": 65536,
+            "staticBudget": 40805,
+            "historyBudget": 17488
+          },
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T23:08:55.281Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T23:08:55.285Z",
+          "marker": "PI_LEGACY_HISTORY_COMPACTED",
+          "parsed": {
+            "msg": "PI_LEGACY_HISTORY_COMPACTED",
+            "modelId": "qwen-text",
+            "nCtx": 65536,
+            "usable": 58293,
+            "totalTokens": 56196,
+            "historyMessages": 87
+          },
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"PI_LEGACY_HISTORY_COMPACTED\",\"modelId\":\"qwen-text\",\"nCtx\":65536,\"usable\":58293,\"historyMessages\":87,\"totalTokens\":56196,\"timestamp\":\"2026-10-14T23:08:55.282Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T23:09:48.582Z",
+          "marker": "Context budget resolved",
+          "parsed": {
+            "msg": "Context budget resolved",
+            "modelId": "qwen-text",
+            "nCtx": 65536,
+            "staticBudget": 40805,
+            "historyBudget": 17488
+          },
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T23:09:48.581Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T23:09:48.584Z",
+          "marker": "PI_LEGACY_HISTORY_COMPACTED",
+          "parsed": {
+            "msg": "PI_LEGACY_HISTORY_COMPACTED",
+            "modelId": "qwen-text",
+            "nCtx": 65536,
+            "usable": 58293,
+            "totalTokens": 56905,
+            "historyMessages": 87
+          },
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"PI_LEGACY_HISTORY_COMPACTED\",\"modelId\":\"qwen-text\",\"nCtx\":65536,\"usable\":58293,\"historyMessages\":87,\"totalTokens\":56905,\"timestamp\":\"2026-10-14T23:09:48.581Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T23:10:43.424Z",
+          "marker": "Context budget resolved",
+          "parsed": {
+            "msg": "Context budget resolved",
+            "modelId": "qwen-text",
+            "nCtx": 65536,
+            "staticBudget": 40805,
+            "historyBudget": 17488
+          },
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"Context budget resolved\",\"modelId\":\"qwen-text\",\"source\":\"provider\",\"nCtx\":65536,\"reserveOutput\":2000,\"safetyMargin\":5243,\"staticBudget\":40805,\"historyBudget\":17488,\"timestamp\":\"2026-10-14T23:10:43.422Z\"} color: blue color: "
+        },
+        {
+          "t": "2026-10-14T23:10:43.425Z",
+          "marker": "PI_LEGACY_HISTORY_COMPACTED",
+          "parsed": {
+            "msg": "PI_LEGACY_HISTORY_COMPACTED",
+            "modelId": "qwen-text",
+            "nCtx": 65536,
+            "usable": 58293,
+            "totalTokens": 56462,
+            "historyMessages": 87
+          },
+          "text": "%c[Extension Host] %c{\"level\":\"info\",\"msg\":\"PI_LEGACY_HISTORY_COMPACTED\",\"modelId\":\"qwen-text\",\"nCtx\":65536,\"usable\":58293,\"historyMessages\":87,\"totalTokens\":56462,\"timestamp\":\"2026-10-14T23:10:43.422Z\"} color: blue color: "
+        }
+      ],
+      "frameTitle": "Chat Panel",
+      "mode": "new-session",
+      "piSkeletonBuilt": false,
+      "contextBudgetResolved": [
+        {
+          "msg": "Context budget resolved",
+          "modelId": "qwen-text",
+          "nCtx": 65536,
+          "staticBudget": 40805,
+          "historyBudget": 17488
+        },
+        {
+          "msg": "Context budget resolved",
+          "modelId": "qwen-text",
+          "nCtx": 65536,
+          "staticBudget": 40805,
+          "historyBudget": 17488
+        },
+        {
+          "msg": "Context budget resolved",
+          "modelId": "qwen-text",
+          "nCtx": 65536,
+          "staticBudget": 40805,
+          "historyBudget": 17488
+        },
+        {
+          "msg": "Context budget resolved",
+          "modelId": "qwen-text",
+          "nCtx": 65536,
+          "staticBudget": 40805,
+          "historyBudget": 17488
+        }
+      ],
+      "legacyCompacted": [
+        {
+          "msg": "PI_LEGACY_HISTORY_COMPACTED",
+          "modelId": "qwen-text",
+          "nCtx": 65536,
+          "usable": 58293,
+          "totalTokens": 56196,
+          "historyMessages": 87
+        },
+        {
+          "msg": "PI_LEGACY_HISTORY_COMPACTED",
+          "modelId": "qwen-text",
+          "nCtx": 65536,
+          "usable": 58293,
+          "totalTokens": 56905,
+          "historyMessages": 87
+        },
+        {
+          "msg": "PI_LEGACY_HISTORY_COMPACTED",
+          "modelId": "qwen-text",
+          "nCtx": 65536,
+          "usable": 58293,
+          "totalTokens": 56462,
+          "historyMessages": 87
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+[2026-10-14T22:59:32.088Z] Frame verified: title="Chat Panel" header="SDLC Pipeline" status=connected users=0 assts=0 inputVisible=true
+[2026-10-14T22:59:32.091Z] ========== SIT-01: new session/tab + review source code ==========
+[2026-10-14T22:59:32.100Z] [sit01] frame OK title="Chat Panel" header="SDLC Pipeline" status=connected users=0 assts=0 busy=false
+[2026-10-14T23:02:34.643Z] [sit01] new tab: users 0->1, assts 0->0 → mode=existing-session
+[2026-10-14T23:02:34.815Z] [sit01] send: "Hãy review source code"
+[2026-10-14T23:02:34.817Z] FATAL ERROR: Error: chat busy before send
+    at sendMessage (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat3-run.mjs:121:26)
+    at async runTurn (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat3-run.mjs:242:3)
+    at async file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat3-run.mjs:293:15
+[2026-10-14T23:02:34.902Z] DONE. rollup={"totalTurns":0,"okTurns":0,"timeoutTurns":0,"exceedTotal":0,"domErrorTurns":0,"totalDurationS":0,"piSkeletonBuilt":0,"piSkeletonFallback":0,"legacyCompacted":2}

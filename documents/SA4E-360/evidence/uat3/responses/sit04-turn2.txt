@@ -1,0 +1,47 @@
+PIMemoryModule.ts — Overview Giải thích
+📋 Mô tả tổng quan
+/**
+ * Memory Module — handles mem_* tool operations.
+ * Builder pattern: initialize() delegates to MemoryModuleBuilder.
+ * DIP: core dependencies injectable via MemoryModuleDeps.
+ * SRP: LLM initialization delegated to LLMInitializer.
+ */Copy
+4 pattern được áp dụng:
+PatternÁp dụng ở đâuBuilderinitialize() → MemoryModuleBuilder (DB → Engine → Dispatcher → Promotion → Consolidation → BackgroundLLM)DIPMemoryModuleDeps interface — deps optional, production dùng default factory, test inject mockSRPLLM init được delegate ra LLMInitializer, không nằm trong class chính
+🔍 Phân tích chi tiết
+1. Constructor — Minimal
+constructor(logger: Logger, sessionName?: string, registry?: ModuleRegistry, deps: MemoryModuleDeps = {})CopyApplyInserttypescript
+Nhận tối thiểu: logger, sessionName, registry, depsdeps optional — production dùng default, test inject mock
+2. Setter Pattern — Lazy Init
+setDbManager(m: DatabaseManager): void
+setEngine(e: MemoryEngine): void
+setDispatcher(d: MemoryToolDispatcher): voidCopyApplyInserttypescript
+Props dbManager, engine, dispatcher dùng ! (non-null assertion) — deferred initCho phép ModuleRegistry inject sau khi tạo
+3. Builder Pattern — Step-by-step Init
+await builder.withDatabase();
+await builder.withEngine();
+await builder.withFtsRebuild();
+builder.withDispatcher(this.registry);
+builder.withTaskWorker();
+builder.withPromotion();
+builder.withConsolidation();
+builder.withBackgroundLLM();
+builder.build();CopyApplyInserttypescript
+Mỗi bước khởi tạo 1 component riêngDễ debug, dễ test từng bước
+4. Event Subscription — Hot Reload
+bus.on(Events.LLM_CONFIG_CHANGED, async () => {
+  await this.reinitLLM();
+});CopyApplyInserttypescript
+Không cần restart khi config thay đổiSafe to call async, error handling separate
+5. Shutdown — Resource Cleanup
+async shutdown(): Promise<void> {
+  stopScheduler(this.schedulerHandles);
+  clearInterval(this.promotionInterval);
+  clearInterval(this.consolidationInterval);
+  this.engine.endSession();
+  this.dbManager.close();
+}CopyApplyInserttypescript
+Cleanup đầy đủ: scheduler, intervals, engine, db
+⚠️ Nhận xét
+Vấn đềMức độthis as any khi truyền vào builder🔴 Type safety bị bypassPayload type any trong event listener🟡 Runtime type safetyProps non-null assertion ! — assume ready🟡 Silent failure nếu init chưa xongNo await cho dbManager.close() trong shutdown🟡 Fire-and-forgetMODULE_ERROR event — không có handler default🟡 Silent error
+Overall: Architecture tốt (Builder + DIP + SRP), nhưng có một số type safety issues cần fix.

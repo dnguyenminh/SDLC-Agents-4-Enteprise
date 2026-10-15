@@ -10,3 +10,44 @@
 [2026-10-14T22:44:21.892Z] [sit02-t1] new tab: users 1->1, assts 0->0
 [2026-10-14T22:44:21.975Z] [sit02-t1] WARN: new tab not empty (user=1, asst=0)
 [2026-10-14T22:44:22.061Z] [sit02-t1] send: "Gọi tool get_workspace_info và cho tôi biết nó trả về gì"
+[2026-10-14T22:53:05.083Z] Startup: live frame OK title="Chat Panel" input=274x52 status=connected
+[2026-10-14T22:53:05.085Z] ========== SIT-01: new tab + review source code ==========
+[2026-10-14T22:53:05.104Z] [sit01] frame OK title="Chat Panel" status=connected users=1 assts=0 err=2
+[2026-10-14T22:53:07.256Z] [sit01] new tab: fresh=true (attempts 1)
+[2026-10-14T22:53:08.348Z] [sit01] send: "Hãy review source code"
+[2026-10-14T22:56:14.243Z] [sit01] done ok=false 181s respLen=0 err=0 exceed=0 disposedErr=2 pi=9
+[2026-10-14T22:56:14.244Z] ========== SIT-02: get_workspace_info + cache ==========
+[2026-10-14T22:56:14.254Z] [sit02-t1] frame OK title="Chat Panel" status=connected users=1 assts=0 err=0
+[2026-10-14T22:56:16.345Z] [sit02-t1] new tab: fresh=true (attempts 1)
+[2026-10-14T22:56:17.443Z] [sit02-t1] send: "Gọi tool get_workspace_info và cho tôi biết nó trả về gì"
+[2026-10-14T22:56:17.445Z] FATAL ERROR: Error: chat busy before send
+    at sendMessage (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:165:26)
+    at async runTurn (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:263:3)
+    at async file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:306:16
+[2026-10-14T22:56:17.446Z] DONE at 2026-10-14T22:56:17.446Z. fatal=true
+[2026-10-14T23:09:03.084Z] Startup live: title="Chat Panel" inW=274 status=connected
+[2026-10-14T23:09:03.086Z] ========== SIT-01 ==========
+[2026-10-14T23:09:03.092Z] [sit01] frame OK title="Chat Panel" inW=274 status=connected users=1 assts=0 err=0
+[2026-10-14T23:09:05.194Z] [sit01] new tab: fresh=true
+[2026-10-14T23:09:06.101Z] [sit01] send: "Hãy review source code"
+[2026-10-14T23:09:06.104Z] FATAL ERROR: Error: chat busy before send
+    at sendMessage (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:167:26)
+    at async runTurn (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:263:3)
+    at async file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:300:21
+[2026-10-14T23:09:06.104Z] DONE fatal=true
+[2026-10-14T23:09:27.022Z] Startup live: title="Chat Panel" inW=274 status=connected
+[2026-10-14T23:09:27.023Z] ========== SIT-01 ==========
+[2026-10-14T23:09:27.030Z] [sit01] frame OK title="Chat Panel" inW=274 status=connected users=0 assts=0 err=0
+[2026-10-14T23:09:29.130Z] [sit01] new tab: fresh=true
+[2026-10-14T23:09:30.049Z] [sit01] send: "Hãy review source code"
+[2026-10-14T23:09:30.071Z] sendMessage: waiting busy... "Finishing previous message — your message is queued next." (0s)
+[2026-10-14T23:09:45.127Z] sendMessage: waiting busy... "Finishing previous message — your message is queued next." (15s)
+[2026-10-14T23:10:00.186Z] sendMessage: waiting busy... "Finishing previous message — your message is queued next." (30s)
+[2026-10-14T23:10:15.217Z] sendMessage: waiting busy... "Finishing previous message — your message is queued next." (45s)
+[2026-10-14T23:10:30.251Z] sendMessage: waiting busy... "Finishing previous message — your message is queued next." (60s)
+[2026-10-14T23:10:45.314Z] sendMessage: waiting busy... "Finishing previous message — your message is queued next." (75s)
+[2026-10-14T23:11:00.375Z] FATAL ERROR: Error: chat still busy after 90000ms (workingText above)
+    at sendMessage (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:176:26)
+    at async runTurn (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:272:3)
+    at async file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:309:21
+[2026-10-14T23:11:00.377Z] DONE fatal=true

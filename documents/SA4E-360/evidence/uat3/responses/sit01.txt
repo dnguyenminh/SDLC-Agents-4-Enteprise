@@ -1,0 +1,118 @@
+pe='table' AND name = ?`;
+  }
+  return `SELECT table_name FROM information_schema.tables WHERE table_name = ?`;
+}CopyApplyInserttypescript
+
+2. Missing Input Validation trong SchemaStorageService
+File: backend/src/modules/pega/schema/SchemaStorageService.ts
+async find(ruleType: string): Promise<EnrichedSchema | null> {
+  const source = `${SOURCE_PREFIX}${ruleType}`;
+  let row;
+  try {
+    row = await this.db.getAsync<{ content: string }>(
+      `SELECT content FROM knowledge_entries WHERE type = 'PEGA_SCHEMA_ENRICHED' AND source = ? LIMIT 1`,
+      [source],
+    );
+  } catch (err) {
+    this.logger.debug({ err, ruleType }, &#039;[schema-store] Find failed (treating as not found)&#039;);
+    return null;
+  }
+
+  if (!row?.content) return null;
+
+  try {
+    return JSON.parse(row.content) as EnrichedSchema;
+  } catch {
+    this.logger.warn({ ruleType }, &#039;[schema-store] Failed to parse stored schema&#039;);
+    return null;
+  }
+}CopyApplyInserttypescript
+Impact: ruleType untrusted có thể được sử dụng để read arbitrary schema data hoặc inject SQL.
+Fix: Validate ruleType against allowlist of known Pega class names.
+
+🟡 HIGH Issues
+3. No-Op Await trong IndexingEngine
+File: backend/src/engine/indexer/indexing-engine.ts
+await new Promise<void>(resolve => setImmediate(resolve));  // ← 4 occurrences, all no-opsCopyApplyInserttypescript
+These are dead code adding unnecessary await points.
+Fix: Remove all 4 occurrences.
+
+4. Redundant Index Check trong SignatureExtractor
+File: backend/src/engine/parsers/signature-extractor.ts
+for (const match of matches) {
+  if (!match.index && match.index !== 0) continue;  // ← always false
+  // ...
+}CopyApplyInserttypescript
+Impact: match.index is 0 for first match and positive for subsequent. Check is always false.
+Fix: Remove redundant check.
+
+5. Inconsistent Log Levels
+File: backend/src/engine/indexer/indexing-engine.ts
+logger.error(`[indexer] Starting full index (project=${projectId})...`);  // ← should be info
+logger.error(`[indexer] Found ${files.length} files to index`);  // ← should be info
+logger.error(`[indexer] Indexed ${counts.treeSitterCount} files via tree-sitter...`);  // ← should be infoCopyApplyInserttypescript
+Impact: Using error for informational messages pollutes error logs.
+Fix: Change to logger.info.
+
+6. Leaked Internal Ticket Numbers
+File: backend/src/modules/pega/PegaSymbolSync.ts
+super(&#039;checksum is required — the extension must send a client-computed checksum (NT-4). Upgrade the extension.&#039;);CopyApplyInserttypescript
+Impact: Leaks internal ticket numbers (NT-4) to end users.
+Fix:
+super(&#039;checksum is required for rule ingest. Please upgrade the extension to send a client-computed checksum.&#039;);CopyApplyInserttypescript
+
+🟢 MEDIUM Issues
+7. Duplicate File Read trong IndexingEngine
+File: backend/src/engine/indexer/indexing-engine.ts
+const content = fs.readFileSync(file.absolutePath);  // ← second readCopyApplyInserttypescript
+Impact: Performance degradation for large workspaces (50K+ files).
+Fix: Have scanWorkspaceAsync return checksums directly.
+
+8. Hardcoded Magic Numbers
+Multiple files use hardcoded limits:
+// QueryLayer.ts
+async searchCode(projectId, query, limit = 20): Promise<SearchResult[]>
+
+// IndexingEngine.ts
+const BATCH = 200;
+const BATCH = 25;
+const BATCH = 50;
+
+// PegaSymbolSync.ts
+const MAX_RULE_SIZE_BYTES = 5 * 1024 * 1024;CopyApplyInserttypescript
+Fix: Extract to config or named constants.
+
+9. No Pagination trong QueryLayer
+File: backend/src/engine/query/query-layer.ts
+async listClassMethods(projectId, cls, limit = 10): Promise<string[]> {
+  // No offset parameter — large projects hit DB limits
+}CopyApplyInserttypescript
+Fix: Add offset parameter.
+
+10. Global Singleton trong DependencyResolver
+File: backend/src/engine/parsers/dependency-resolver.ts
+const AST_PARSER = new PegaRuleAstParser();  // ← global singletonCopyApplyInserttypescript
+Impact: Hard to test, hard to mock, potential memory leak.
+Fix: Move to module-level or private constructor parameter.
+
+🟢 LOW Issues
+11. Large Classes (SRV)
+FileLinesRecommendationindexing-engine.ts600+Split into IndexingEngine, FileScanner, ChecksumServicequery-layer.ts500+Split into QueryLayer, CodeSearch, SymbolLookuppega-symbol-sync.ts400+Split into SymbolSync, VirtualFile, BodyEmbedding
+
+12. Mixed Sync/Async APIs
+SyncDatabaseAdapter.run() is synchronous (SQLite only), but QueryDatabaseAdapter.runAsync() is async.
+Recommendation: Document sync/async split clearly in interface definitions.
+
+13. Complex Regex Patterns
+File: backend/src/engine/parsers/languages/builtin.ts
+Regex patterns are complex and hard to debug.
+Recommendation: Add unit tests for each language pattern set.
+
+✅ Strengths
+AreaAssessmentStrategy PatternExcellent — DatabaseAdapter (ISP split), DialectHelper, CodeIntelligenceStrategyBuilder PatternClean — MemoryModuleBuilder separates DB → Engine → Dispatcher initFacade PatternGood — ModuleRegistry, OrchestrationModule, SecurityModuleDIPGood — All modules accept deps via constructor or settersFail-closed DesignGood — Non-fatal errors caught per-step with explicit loggingDoc CommentsExcellent — JSDoc comments explain SA4E ticket context, design decisions
+
+📋 Summary
+CategoryCountSeveritySecurity22 Critical, 1 HighPerformance2Both MediumCode Quality4Mix of Medium/LowMaintainability3LowTestability1Low
+Overall Assessment: Architecture is solid (Strategy, Builder, DIP patterns used well), but there are security vulnerabilities in SQL construction needing immediate attention. Codebase is complex and benefits from better separation of concerns and comprehensive test coverage.
+Priority Actions:
+🔴 Fix SQL injection in DialectHelper.tableExistsQuery / columnExistsQuery🔴 Add input validation to SchemaStorageService.find()🟡 Remove no-op await new Promise(...) from IndexingEngine🟡 Remove redundant index check in SignatureExtractor🟡 Fix inconsistent log levels in IndexingEngine🟢 Extract magic numbers to config/constants🟢 Add tests for core parsing/extraction logic

@@ -1,0 +1,19 @@
+[2026-10-14T23:28:44.486Z] frame id=268145bf title="" -> {"t":"","h":null,"users":0,"assts":0,"sig":""}
+[2026-10-14T23:28:44.490Z] frame id=268145bf title="CUSTOM WEBVIEW TITLE" -> {"t":"CUSTOM WEBVIEW TITLE","h":null,"users":0,"assts":0,"sig":"New Session Loading Workflows 0 Artifacts 0 Starting cloud session Let's build Plan, search, or build anything Start wit"}
+[2026-10-14T23:28:44.495Z] panel tabs=[{"label":"Problems","active":false},{"label":"Output","active":false},{"label":"Terminal","active":false},{"label":"Ports","active":false},{"label":"SDLC Chat","active":false}]
+[2026-10-14T23:28:44.496Z] panel text: PROBLEMS OUTPUT DEBUG CONSOLE TERMINAL PORTS SDLC CHAT pwsh
+[2026-10-14T23:28:44.611Z] shot Agentic Chat - Untitled (Workspace) - Kiro
+[2026-10-14T23:28:44.613Z] frame id=0e226591 title="" -> {"t":"","h":null,"users":0,"assts":0,"sig":""}
+[2026-10-14T23:28:44.615Z] frame id=0e226591 title="CUSTOM WEBVIEW TITLE" -> {"t":"CUSTOM WEBVIEW TITLE","h":null,"users":0,"assts":0,"sig":"Fix Pi SDK gateway API mismatch Multi-provider SSO sẵn sàng UAT Tôi đang dùng LLM gateway https://github.com/diegosouzap"}
+[2026-10-14T23:28:44.616Z] frame id=b1e02341 title="" -> {"t":"","h":null,"users":0,"assts":0,"sig":""}
+[2026-10-14T23:28:44.618Z] frame id=b1e02341 title="Chat Panel" -> {"t":"Chat Panel","h":"SDLC Pipeline","users":1,"assts":0,"sig":"SDLC PIPELINE connected ▲ Pipeline ↗ SM BA→BRD BA→FSD TA SA→TDD QA Plan DEV DEV UG QA Test DevOps Hãy review source code"}
+[2026-10-14T23:28:44.619Z] frame id=ab1a7829 title="" -> {"t":"","h":null,"users":0,"assts":0,"sig":""}
+[2026-10-14T23:28:44.621Z] frame id=ab1a7829 title="Agentic Chat" -> {"t":"Agentic Chat","h":null,"users":0,"assts":0,"sig":"Pi Chat Worklist No items Navigation Agentic Chat Select Agent 0/128K You 06:01 AM Đọc method ModuleFactory.ts hàm creat"}
+[2026-10-14T23:28:44.623Z] panel tabs=[{"label":"Problems","active":false},{"label":"Output","active":false},{"label":"Terminal","active":false},{"label":"Ports","active":false},{"label":"SDLC Chat","active":false}]
+[2026-10-14T23:28:44.623Z] panel text: PROBLEMS OUTPUT DEBUG CONSOLE TERMINAL PORTS SDLC CHAT 124 x 34 nodebackend opencode
+[2026-10-14T23:28:44.743Z] shot triage.test.ts - AIMailHelper - Kiro
+[2026-10-14T23:28:44.745Z] frame id=7acfc18a title="" -> {"t":"","h":null,"users":0,"assts":0,"sig":""}
+[2026-10-14T23:28:44.747Z] frame id=7acfc18a title="CUSTOM WEBVIEW TITLE" -> {"t":"CUSTOM WEBVIEW TITLE","h":null,"users":0,"assts":0,"sig":"New Session Loading Workflows 0 Artifacts 0 Starting cloud session Let's build Plan, search, or build anything Start wit"}
+[2026-10-14T23:28:44.749Z] panel tabs=[{"label":"Problems","active":false},{"label":"Output","active":false},{"label":"Terminal","active":false},{"label":"Ports","active":false},{"label":"SDLC Chat","active":false}]
+[2026-10-14T23:28:44.749Z] panel text: PROBLEMS OUTPUT DEBUG CONSOLE TERMINAL PORTS SDLC CHAT opencode
+[2026-10-14T23:28:44.752Z] final evidence captured

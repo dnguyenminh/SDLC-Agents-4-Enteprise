@@ -1,0 +1,5 @@
+{
+  "frameId": "Chat Panel / SDLC Pipeline (content match)",
+  "startedAt": "2026-10-14T23:09:27.023Z",
+  "fatal": "Error: chat still busy after 90000ms (workingText above)\n    at sendMessage (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:176:26)\n    at async runTurn (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:272:3)\n    at async file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat2-run.mjs:309:21"
+}

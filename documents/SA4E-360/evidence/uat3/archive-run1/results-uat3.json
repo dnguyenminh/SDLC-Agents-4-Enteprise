@@ -1,0 +1,31 @@
+{
+  "startedAt": "2026-10-14T22:59:32.090Z",
+  "frameVerification": {
+    "pageTitle": "Agentic Chat - Untitled (Workspace) - Kiro",
+    "frameTitle": "Chat Panel",
+    "headerTitle": "SDLC Pipeline",
+    "status": "connected",
+    "inputVisible": true,
+    "sendVisible": true,
+    "preState": {
+      "userCount": 0,
+      "asstCount": 0,
+      "bodyLen": 258
+    },
+    "at": "2026-10-14T22:59:32.090Z"
+  },
+  "sits": {},
+  "fatal": "Error: chat busy before send\n    at sendMessage (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat3-run.mjs:121:26)\n    at async runTurn (file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat3-run.mjs:242:3)\n    at async file:///C:/Users/ASUS/AppData/Local/Temp/uat-driver/uat3-run.mjs:293:15",
+  "finishedAt": "2026-10-14T23:02:34.900Z",
+  "rollup": {
+    "totalTurns": 0,
+    "okTurns": 0,
+    "timeoutTurns": 0,
+    "exceedTotal": 0,
+    "domErrorTurns": 0,
+    "totalDurationS": 0,
+    "piSkeletonBuilt": 0,
+    "piSkeletonFallback": 0,
+    "legacyCompacted": 2
+  }
+}

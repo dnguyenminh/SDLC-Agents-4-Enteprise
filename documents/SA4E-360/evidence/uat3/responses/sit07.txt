@@ -1,0 +1,37 @@
+PIextension/svelte/store.ts — Review
+📋 Overview
+/**
+ * Minimal mock implementation of Svelte's writable and derived stores for test environment.
+ * Provides just enough functionality for the extension's unit tests.
+ */Copy
+Mô tả: Mock implementation của Svelte stores (writable + derived) cho test environment, không phải production.
+🔍 Phân tích
+1. writable<T>() — Basic Reactive Store
+export function writable<T>(initialValue: T) {
+  let value = initialValue;
+  const subscribers: Array<(v: T) => void> = [];
+
+  return {
+    set(v: T) { value = v; subscribers.forEach((s) => s(value)); },
+    update(fn: (v: T) => T) { value = fn(value); subscribers.forEach((s) => s(value)); },
+    subscribe(run: (v: T) => void) {
+      run(value);
+      subscribers.push(run);
+      return () => {
+        const i = subscribers.indexOf(run);
+        if (i !== -1) subscribers.splice(i, 1);
+      };
+    },
+    get value() { return value; },
+  } as any;
+}CopyApplyInserttypescript
+Chức năng:
+set() — Thay đổi value, notify tất cả subscribersupdate() — Transform value, notify subscriberssubscribe() — Subscribe + auto-unsubscribevalue — Direct access (debugging)
+2. derived<T, R>() — Computed Store
+export function derived<T, R>(store: { subscribe: (run: (v: T) => void) => () => void }, fn: (value: T) => R)CopyApplyInserttypescript
+Chức năng: Wraps a store + transforms value through fn
+⚠️ Nhận xét
+Vấn đềMức độas any — bypass type safety🟡set() gọi s(value) sau khi update — subscribers nhận value mới, đúng behavior✅No concurrent subscription guard — nếu 2 subscribers subscribe cùng lúc, indexOf có thể fail🟡No store invalidation — Svelte stores có invalidate cho reactive updates; đây là mock đơn giản🟢Không export types — subscribers: Array<...> là internal, OK cho mock🟢Chỉ dùng cho test — Mock implementation, không phải production Svelte store🟢
+📊 Đánh giá
+Tiêu chíĐánh giáCorrectness✅ Đúng behavior cơ bảnCompleteness✅ Đủ cho unit testType Safety🟡 as anyPerformance✅ O(n) cho notifyConcurrency🟡 Không handle concurrent subscribe
+Overall: Mock đơn giản, đúng purpose (test environment). Không cần review sâu hơn vì đây là test utility, không phải production code.

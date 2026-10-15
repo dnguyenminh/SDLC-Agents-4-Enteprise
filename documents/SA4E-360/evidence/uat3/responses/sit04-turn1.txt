@@ -1,0 +1,3 @@
+PIFile backend/src/modules/ModuleFactory.ts không có phương thức createModule. File này chỉ có:
+Phương thứcMô tảcreateAndRegisterAll()Tạo và đăng ký tất cả modules cùng lúc (Memory, CodeIntel, Orchestration, Analytics, KBGraph, Utility, Knowledge, Security, Sandbox) — không có dependency injectioncreateToolRouter()Tạo ToolRoutercreateMcpConfigService()Tạo McpConfigServicecreateToolSearchService()Tạo MemoryToolSearchServicecreateHttpServer()Tạo HttpServer
+Nhận xét: Factory này chỉ là "wiring boilerplate" — mỗi module được tạo với constructor rỗng (chỉ nhận logger hoặc registry), không có DIP thực sự. Dependency injection (nếu có) phải nằm ở bên trong từng module (thông qua setter hoặc optional deps).
