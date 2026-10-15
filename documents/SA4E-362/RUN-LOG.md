@@ -32,3 +32,6 @@
 | 26 | 2026-10-16T11:20Z | sm-agent | release | Commit a84abb7 (83 files — 4 file pre-staged cua ticket khac da duoc loai bo qua amend); push origin/SA4E-362; PR link available | ✅ | 5m |
 | 27 | 2026-10-16T11:22Z | sm-agent | jira | Transition In Progress -> In Review (branch pushed = PR submitted) + comment tong ket L3 | ✅ | 1m |
 | 28 | 2026-10-16T11:22Z | sm-agent | HUMAN GATE | ⛔ STOP tai UAT gate — cho user chay SIT-01/SIT-02 va confirm "UAT pass" sau do moi QA TEST -> UAT -> deploy | ⏸ waiting user | - |
+| 29 | 2026-10-16T11:35Z | qa-agent | UAT prep | UAT-CHECKLIST.md v1.0 (451 lines): cover 22/22 TCs — Part A 16 automated (re-run commands + evidence slots), Part B SIT-01/02 step-by-step, Part C E2E-API x4 covered-by-SIT (curl), Part D 17 UX checks (17/17 BRD ACs); tracker CSV 6 NOT_RUN rows reference checklist; tat ca manual = PENDING | ✅ Coverage 100% | 20m |
+| 30 | 2026-10-16T11:40Z | sm-agent | jira | Attach UAT-CHECKLIST.md (id 11746) + comment coverage 100%; transition sang QA TEST FAIL — workflow project chi co [To Do, In Progress, In Review, Done] → ticket giu In Review den UAT pass roi Done truc tiep (mapping khac jira-workflow skill) | ⚠️ documented | 2m |
+| 31 | 2026-10-16T11:42Z | sm-agent | release | Commit ae3e0ee (UAT-CHECKLIST + tracker CSV) push origin/SA4E-362 | ✅ | 2m |

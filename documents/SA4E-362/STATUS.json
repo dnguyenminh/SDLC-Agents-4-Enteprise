@@ -83,13 +83,15 @@
       "status": "done"
     },
     "uat": {
-      "status": "pending",
-      "note": "HUMAN GATE — cho user: SIT-01 (TTL=60s refresh mid-job) + SIT-02 (revoke refresh token → graceful stop)"
+      "note": "UAT deferred boi user. UAT-CHECKLIST v1.0 cover 22/22 TCs (100%) tai documents/SA4E-362/UAT-CHECKLIST.md + Jira attachment 11746. Khi user chay xong va confirm 'UAT pass' -> transition Done (workflow project: In Review -> Done truc tiep). Merge can user approve rieng.",
+      "result": "pending",
+      "status": "checklist_ready",
+      "checklist": "UAT-CHECKLIST.md"
     },
     "deployment": {
       "status": "pending"
     }
   },
   "notes": "Bug fix ticket. Fix plan goc: SessionTimeout-FIX-PLAN.md (repo root) + 2 dieu chinh bat buoc tu phan tich dev/qa agent: (1) stop-hook PegaBfsPipeline, (2) typed IngestAuthError thay regex.",
-  "lastUpdated": "2026-10-16T11:10:00Z"
+  "lastUpdated": "2026-10-16T11:42:00Z"
 }
