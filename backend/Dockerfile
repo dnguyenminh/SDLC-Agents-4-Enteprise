@@ -101,15 +101,22 @@ ARG MARKITDOWN_MCP_VERSION=0.0.1a7
 # commit (main @ 2026-04-07) for a hermetic build (git-source analogue of SEC-02).
 ARG MARKDOWN_EXPORTER_MCP_REF=1429b6a94767a709f7f5119219ca5951042d9d3c
 # SA4E-360 follow-up: Debian's python3-venv/ensurepip bundles setuptools
-# 66.1.1 into EVERY venv it creates — carrying 2 HIGH CVEs (CVE-2024-6345,
-# fixed 70.0.0; CVE-2025-47273, fixed 78.1.1) in BOTH /opt venvs (4 of the
-# Trivy-gate HIGHs). Setuptools is kept, not uninstalled (runtime libs may
-# still import pkg_resources), but force-upgraded to 78.1.1 — the minimal
-# release clearing both CVEs (81+ starts removing pkg_resources) — verified
-# via importlib.metadata (robust across setuptools versions) plus a
-# pkg_resources import guard. Drop the override once the pinned base image
-# bundles a fixed setuptools.
-ARG SETUPTOOLS_VERSION=78.1.1
+# 66.1.1 into EVERY venv it creates, and setuptools itself VENDORS
+# jaraco.context/wheel under setuptools/_vendor — Trivy flags BOTH layers:
+#   - setuptools 66.1.1 (ensurepip bundle): CVE-2024-6345 (fix 70.0.0) +
+#     CVE-2025-47273 (fix 78.1.1) — 2 HIGH per venv
+#   - setuptools 78.1.1 (first bump): vendored jaraco.context 5.3.0
+#     (CVE-2026-23949, fix 6.1.0) + vendored wheel 0.45.1 (CVE-2026-24049,
+#     fix 0.46.2) — 2 more HIGH per venv, surfaced by a fresh Trivy DB
+# 84.0.0 clears all four: it is free of the two setuptools CVEs and vendors
+# jaraco.context 6.1.0 + wheel 0.46.3 (>= both fix versions). setuptools >=81
+# removed pkg_resources; a grep of both /opt venvs (SA4E-360) showed NO
+# runtime package imports pkg_resources — only setuptools internals and
+# unreachable onnxruntime benchmark scripts — so the removal is safe here.
+# The version is asserted via importlib.metadata (robust across setuptools
+# versions). Drop the override once the pinned base image bundles a fixed
+# setuptools.
+ARG SETUPTOOLS_VERSION=84.0.0
 # `python3` already exists in base (build toolchain); only the venv/ensurepip
 # support is missing. One venv per server: independent dependency trees that
 # are pinned, upgraded and Trivy-scanned separately.
@@ -122,7 +129,7 @@ RUN python3 -m venv /opt/markitdown-venv \
  && test -x /opt/markitdown-venv/bin/markitdown-mcp \
  && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
- && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'; import pkg_resources" \
+ && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
  && /opt/markitdown-venv/bin/python -m pip uninstall -y pip
 # `mcp<2` constraint: upstream declares `mcp>=1.27.0` (unbounded) but its code
 # imports `mcp.server.fastmcp` — an API REMOVED in mcp 2.x (FastMCP → MCPServer).
@@ -148,7 +155,7 @@ RUN python3 -m venv /opt/markdown-exporter-venv \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==12.3.0" \
  && /opt/markdown-exporter-venv/bin/python -c "import PIL; assert PIL.__version__ == '12.3.0'" \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
- && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'; import pkg_resources" \
+ && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
  && /opt/markdown-exporter-venv/bin/python -m pip uninstall -y pip
 # Both venvs are copied root-owned READ-ONLY; stripping their bundled pip keeps
 # the runtime image free of ANY package manager (SEC-05) and out of Trivy scans.
