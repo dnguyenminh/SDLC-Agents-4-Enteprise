@@ -1,0 +1,7 @@
+test_case_id,role,phase,mcp_tools_input,schema_token_cap,expected_bridge_names_in_loadout,expected_dropped,description
+UT-08,SM,*,"[...extNames, jira_get_issue, mem_search, mem_ingest, code_search]",cap = floor(staticBudget*0.25),"jira_get_issue; mem_search; mem_ingest; code_search",none,Role SM = '*' full pool — bridge names vào loadout; schemaTokens tăng đúng nameTools(bridge)
+UT-08,(undefined),*,"[...extNames, ...bridge4]",cap chuẩn,"4 bridge names",none,Unknown role fail-open giữ full pool (BR-07 SA4E-355)
+UT-09,BA,requirements,"[jira_get_issue, mem_search, mem_ingest, code_search]",cap chuẩn,"jira_get_issue; mem_search; mem_ingest",code_search,BA prefixes = docs_/mem_/jira_ → code_ bị lọc (AC-5 role filter)
+UT-09,QA,testing,"[jira_get_issue, mem_search, mem_ingest, code_search]",cap chuẩn,"jira_get_issue; mem_search; mem_ingest; code_search",none,QA prefixes chứa code_ → code_search giữ
+UT-10,SM,*,"[jira_get_issue, mem_search, mem_ingest, code_search]",minimal: true,none,"4 bridge names (drop hết)",Escalation minimal — loadout chỉ core+discovery; core file tools KHÔNG bao giờ drop (BR-07); bridge tự rơi
+UT-10,SM,*,"[...bridge4]",cap quá nhỏ để giữ candidates,có thể rơi bớt theo trim lowest-priority,trim theo thứ tự phase-priority (STC-019 pattern),trimToCap drop candidate cuối trước; capExceeded flag khi không đạt (EF-1 UC-04)

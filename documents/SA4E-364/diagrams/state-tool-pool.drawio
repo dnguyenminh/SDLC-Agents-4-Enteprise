@@ -1,0 +1,84 @@
+<mxGraphModel adaptiveColors="auto" dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1350" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="start" value="" style="ellipse;fillColor=#000000;html=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="sInit" value="SessionInit&#60;br&#62;khởi tạo turn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="40" y="150" width="170" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="sAttached" value="BridgeToolsAttached&#60;br&#62;buildMcpBridgeAgentTools()&#60;br&#62;[MỚI — SA4E-364]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="270" y="140" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="sLoadout" value="LoadoutGoverned&#60;br&#62;buildSessionToolLoadout:&#60;br&#62;role filter + schema-token cap" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="530" y="140" width="210" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="sGate" value="GateCheck&#60;br&#62;runSessionBudgetGate" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="790" y="130" width="190" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="sReady" value="Ready&#60;br&#62;tool schema gửi LLM&#60;br&#62;(gồm bridge tools)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="150" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="sMinimal" value="MinimalLoadout&#60;br&#62;BR-08 escalate:&#60;br&#62;bridge tools drop, core giữ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="790" y="310" width="190" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="sInvoke" value="Invoking&#60;br&#62;LLM gọi bridge tool" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="530" y="320" width="190" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="sError" value="ErrorText&#60;br&#62;error text trả LLM&#60;br&#62;(fail-safe, không crash)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="270" y="320" width="190" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="srvRun" value="MCP Server: Running" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="40" y="500" width="170" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="srvStop" value="MCP Server: Stopped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="270" y="500" width="170" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="se1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="start" target="sInit">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se2" value="build bridge tools [MỚI]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sInit" target="sAttached">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se3" value="tên vào mcpTools (session path)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sAttached" target="sLoadout">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se4" value="schemaTokens" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sLoadout" target="sGate">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se5" value="[schemaTokens ≤ cap]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sGate" target="sReady">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se6" value="[over budget → escalate]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sGate" target="sMinimal">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se7" value="allowlist rút gọn" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sMinimal" target="sReady">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se8" value="tool_call" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sReady" target="sInvoke">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se9" value="success → MCP_TOOL_RESULT" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sInvoke" target="sReady">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se10" value="[server stopped / validation / approval denied]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" parent="1" source="sInvoke" target="sError">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se11" value="turn tiếp tục (không crash)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="sError" target="sReady">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se12" value="server stop" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;" edge="1" parent="1" source="srvRun" target="srvStop">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se13" value="server start" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="srvStop" target="srvRun">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se14" value="isAvailable() = true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#82b366;" edge="1" parent="1" source="sInvoke" target="srvRun">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="se15" value="isAvailable() = false → McpServerNotRunningError" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;fontColor=#b85450;" edge="1" parent="1" source="sInvoke" target="srvStop">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,134 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-364 — Test Execution Flow: npm test → UT/IT pass → build → manual UAT (E2E-UI) → sign-off" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="start" value="START&#10;(fix implemented — 3 files + tests)" style="ellipse;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="60" y="100" width="180" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="laneA" value="Phase A — Automated vitest (Entry: fix code + npm install + tests trong src/**/__tests__/)" style="rounded=1;html=1;fillColor=none;strokeColor=#82b366;dashed=0;verticalAlign=top;fontSize=11;fontStyle=1;fontColor=#2d7600;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="300" y="80" width="560" height="260" as="geometry"/>
+    </mxCell>
+    <mxCell id="npmTest" value="npm test (vitest run)&#10;PBT-01..02 + UT-01..18 + IT-01..03" style="rounded=1;html=1;fillColor=#d5e8d4;strokeColor=#82b366;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="130" width="230" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="gateA" value="23/23 pass?&#10;(EC-1..EC-7 ≥1 case; AC-3 assert registry)" style="rhombus;html=1;fillColor=#fff2cc;strokeColor=#d6b656;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="620" y="110" width="200" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="fixA" value="Log defect (Major)&#10;→ DEV fix → re-run" style="rounded=1;html=1;fillColor=#f8cecc;strokeColor=#b85450;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="620" y="250" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="laneB" value="Phase B — Regression + Build (SIT-01..03)" style="rounded=1;html=1;fillColor=none;strokeColor=#6c8ebf;verticalAlign=top;fontSize=11;fontStyle=1;fontColor=#1e4e79;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="300" y="390" width="560" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit" value="SIT-01: npm test TOÀN SUITE pass&#10;(0 regression — mcp-bridge-extension, tool-loadout-*, pi-agent-session-host)" style="rounded=1;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="330" y="440" width="270" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="build" value="SIT-02/03: npm run build (tsc)&#10;0 TS error + N-1/N-7/N-8 invariants" style="rounded=1;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="620" y="440" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="gateB" value="Suite + build pass?" style="rhombus;html=1;fillColor=#fff2cc;strokeColor=#d6b656;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="430" width="180" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="fixB" value="Log defect (Critical)&#10;→ chặn merge → fix → re-run" style="rounded=1;html=1;fillColor=#f8cecc;strokeColor=#b85450;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="560" width="180" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="laneC" value="Phase C — Manual UAT trên Extension Development Host (E2E-UI-01..04)" style="rounded=1;html=1;fillColor=none;strokeColor=#d6b656;verticalAlign=top;fontSize=11;fontStyle=1;fontColor=#7a5c00;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="300" y="680" width="800" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="uat1" value="E2E-UI-01&#10;chat 'search KB: personalized rules'&#10;→ mem_search + MCP_TOOL_RESULT" style="rounded=1;html=1;fillColor=#fff2cc;strokeColor=#d6b656;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="330" y="730" width="230" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="uat2" value="E2E-UI-02 + 04&#10;stop server → error text,&#10;chat không crash; restart → recovery" style="rounded=1;html=1;fillColor=#fff2cc;strokeColor=#d6b656;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="590" y="730" width="230" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="uat3" value="E2E-UI-03&#10;debug log [PiWorkflowAdapter] /&#10;[PiSessionHost] — wiring 2 path" style="rounded=1;html=1;fillColor=#fff2cc;strokeColor=#d6b656;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="850" y="730" width="220" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="gateC" value="4/4 UAT pass?&#10;(screenshot evidence)" style="rhombus;html=1;fillColor=#fff2cc;strokeColor=#d6b656;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1180" y="740" width="170" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="exitGate" value="OVERALL EXIT: 6/6 AC covered (RTM 100%) + suite pass + build pass + UAT 4/4 + 0 Critical/Major mở" style="rounded=1;html=1;fillColor=#d5e8d4;strokeColor=#82b366;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1420" y="440" width="260" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="signoff" value="SIGN-OFF&#10;BA review gate + SM gate → TEST-REPORT + attach Jira" style="ellipse;html=1;fillColor=#d5e8d4;strokeColor=#82b366;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1450" y="600" width="200" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="start" target="npmTest">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="run" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="npmTest" target="gateA">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#b85450;fontSize=10;" edge="1" parent="1" source="gateA" target="fixA">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="re-test" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#b85450;fontSize=10;dashed=1;" edge="1" parent="1" source="fixA" target="npmTest">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#2d7600;fontSize=10;" edge="1" parent="1" source="gateA" target="sit">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="720" y="370"/>
+          <mxPoint x="300" y="370"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="sit" target="build">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="verify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;fontSize=10;" edge="1" parent="1" source="build" target="gateB">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="FAIL" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#b85450;fontSize=10;" edge="1" parent="1" source="gateB" target="fixB">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="re-test" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#b85450;fontSize=10;dashed=1;" edge="1" parent="1" source="fixB" target="sit">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="880" y="590"/>
+          <mxPoint x="880" y="475"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e10" value="PASS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#2d7600;fontSize=10;" edge="1" parent="1" source="gateB" target="uat1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1010" y="655"/>
+          <mxPoint x="240" y="655"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="uat1" target="uat2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="uat2" target="uat3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="uat3" target="gateC">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" value="FAIL → log + retry UAT" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontColor=#b85450;fontSize=10;dashed=1;" edge="1" parent="1" source="gateC" target="uat1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1265" y="850"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e15" value="PASS (AC-2 + AC-4 xác nhận thực tế)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontColor=#2d7600;fontSize=10;" edge="1" parent="1" source="gateC" target="exitGate">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1265" y="485"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;" edge="1" parent="1" source="exitGate" target="signoff">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="note1" value="E2E-API: N/A — extension không expose HTTP API mới (STP §1.2). Automation ratio: 26/30 = 86.7% — chỉ Phase C là manual." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="920" width="800" height="30" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,87 @@
+<mxGraphModel adaptiveColors="auto" dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="950" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="bridgeExt" value="mcp-bridge-extension.ts [SỬA — 196 → ~224 dòng]&#60;br&#62;+ import type AgentTool (A1: sau dòng 9)&#60;br&#62;+ export type BridgeToolOptions (A2: sau :47)&#60;br&#62;+ export buildMcpBridgeAgentTools (A3: sau :191)&#60;br&#62;giữ nguyên: BridgeOptions, bridgeRequiresApproval,&#60;br&#62;createExecuteHandler, entry point :156-191" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=left;spacing=8;" vertex="1" parent="1">
+      <mxGeometry x="480" y="60" width="420" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="adapter" value="pi-workflow-adapter.ts [SỬA — +11 dòng]&#60;br&#62;+ import buildMcpBridgeAgentTools (A1: sau :22)&#60;br&#62;+ vòng merge bridge skip-if-exists&#60;br&#62;(A2: sau :493, trước :494)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=left;spacing=8;" vertex="1" parent="1">
+      <mxGeometry x="60" y="280" width="380" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="host" value="pi-agent-session-host.ts [SỬA — +14 dòng]&#60;br&#62;+ import McpBridge (value) + builder + AgentTool (A1: sau :32)&#60;br&#62;+ bridgeTools/bridgeNames instanceof narrow (A2: sau :329)&#60;br&#62;± mcpTools = nameTools([...extNames, ...bridgeNames]) (A3: :336)&#60;br&#62;+ customTools bridge map + FR-09 override (A4: :421-424)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;align=left;spacing=8;" vertex="1" parent="1">
+      <mxGeometry x="960" y="260" width="480" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="toolDefs" value="tool-definitions.ts&#60;br&#62;(KHÔNG sửa — nguồn duy nhất)&#60;br&#62;TOOLS[5] / TOOL_ALLOWLIST /&#60;br&#62;validateParams / DYNAMIC_TOOL_NAME" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="480" y="260" width="290" height="95" as="geometry"/>
+    </mxCell>
+    <mxCell id="mcpbridge" value="mcp-bridge.ts&#60;br&#62;(KHÔNG sửa)&#60;br&#62;McpBridge.callTool / isAvailable /&#60;br&#62;McpToolTimeoutError" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="830" y="260" width="230" height="95" as="geometry"/>
+    </mxCell>
+    <mxCell id="loadout" value="tool-loadout.ts (KHÔNG sửa)&#60;br&#62;buildSessionToolLoadout / nameTools /&#60;br&#62;ROLE_TOOL_PREFIXES / TOOL_SCHEMA_BUDGET_RATIO=0.25&#60;br&#62;DISCOVERY_TOOLS chứa tên execute_dynamic_tool&#60;br&#62;(⚠️ bẫy assert AC-3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="1180" y="450" width="300" height="105" as="geometry"/>
+    </mxCell>
+    <mxCell id="converter" value="workspace-info-tool.ts (KHÔNG sửa — FR-09)&#60;br&#62;toSessionToolDefinition :172-192&#60;br&#62;(hardcode promptSnippet — override tại call site)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="960" y="450" width="200" height="105" as="geometry"/>
+    </mxCell>
+    <mxCell id="skeleton" value="skeleton-wiring.ts (KHÔNG sửa — SA4E-360)&#60;br&#62;createSkeletonRuntime(mcpBridge?: unknown) :35&#60;br&#62;(precedent narrow pattern :42)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="960" y="600" width="220" height="95" as="geometry"/>
+    </mxCell>
+    <mxCell id="pilibs" value="pi-extension-runtime.ts / pi-coding-tools.ts&#60;br&#62;(KHÔNG sửa — nguồn extTools/extNames)&#60;br&#62;pi-agent-core (type AgentTool — dep hiện có)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="450" width="300" height="95" as="geometry"/>
+    </mxCell>
+    <mxCell id="testBuilder" value="mcp-bridge-extension.test.ts [SỬA test — +~70 dòng]&#60;br&#62;describe 'buildMcpBridgeAgentTools (SA4E-364)'&#60;br&#62;6 case — mockBridge { callTool: vi.fn() }" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="480" y="450" width="300" height="95" as="geometry"/>
+    </mxCell>
+    <mxCell id="testLegacy" value="bridge-wiring-legacy.test.ts [TẠO MỚI ~95 dòng]&#60;br&#62;engineSpy pattern — assert tools của executeTurn&#60;br&#62;chứa 4 bridge tools; collision → builtin thắng;&#60;br&#62;KHÔNG execute_dynamic_tool (AC-3 trên registry)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="60" y="620" width="320" height="105" as="geometry"/>
+    </mxCell>
+    <mxCell id="testSession" value="bridge-wiring-session.test.ts [TẠO MỚI ~120 dòng]&#60;br&#62;mock pi-coding-agent — capture sessionOpts;&#60;br&#62;assert customTools + allowlist + FR-09 undefined;&#60;br&#62;AC-5 role BA lọc code_search; minimal drop;&#60;br&#62;bridge absent → []" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="440" y="620" width="320" height="115" as="geometry"/>
+    </mxCell>
+    <mxCell id="d1" value="reads TOOLS / validateParams" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontColor=#666666;" edge="1" parent="1" source="bridgeExt" target="toolDefs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d2" value="McpBridge type + execute transport" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontColor=#666666;" edge="1" parent="1" source="bridgeExt" target="mcpbridge">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d3" value="MỚI — legacy wiring" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontColor=#82b366;fontStyle=1;" edge="1" parent="1" source="adapter" target="bridgeExt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d4" value="MỚI — session wiring" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontColor=#82b366;fontStyle=1;" edge="1" parent="1" source="host" target="bridgeExt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d5" value="MỚI — value import (instanceof)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontColor=#82b366;" edge="1" parent="1" source="host" target="mcpbridge">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d6" value="bridgeNames vào mcpTools" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontColor=#666666;" edge="1" parent="1" source="host" target="loadout">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d7" value="convert + FR-09 override" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontColor=#666666;" edge="1" parent="1" source="host" target="converter">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;" edge="1" parent="1" source="host" target="skeleton">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d9" value="builtinTools / extTools / extNames" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontColor=#666666;" edge="1" parent="1" source="adapter" target="pilibs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d10" value="tests target" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;dashed=1;fontColor=#6c8ebf;" edge="1" parent="1" source="testBuilder" target="bridgeExt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="testLegacy" target="adapter">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="testSession" target="host">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d13" value="AC-5 assert (loadout)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;dashed=1;fontColor=#6c8ebf;" edge="1" parent="1" source="testSession" target="loadout">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="testLegacy" target="bridgeExt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="d15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1" source="testSession" target="bridgeExt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,162 @@
+<mxGraphModel adaptiveColors="auto" dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1450" pageHeight="850" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="hUser" value="User&#60;br&#62;(webview)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="20" y="30" width="130" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="hHost" value="PiAgentSessionHost&#60;br&#62;/ PiWorkflowAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="190" y="30" width="150" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="hLlm" value="LLM&#60;br&#62;(Pi runtime)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="375" y="30" width="130" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="hTool" value="Bridge tool&#60;br&#62;(mem_search)&#60;br&#62;[MỚI]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="565" y="30" width="130" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="hBridge" value="McpBridge" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="760" y="30" width="130" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="hMgr" value="McpServerManager&#60;br&#62;(IServerManager)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="940" y="30" width="150" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="hSrv" value="MCP server&#60;br&#62;(KB)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="1140" y="30" width="130" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="l1" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="85" y="75" as="sourcePoint"/>
+        <mxPoint x="85" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="265" y="75" as="sourcePoint"/>
+        <mxPoint x="265" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="75" as="sourcePoint"/>
+        <mxPoint x="440" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="75" as="sourcePoint"/>
+        <mxPoint x="630" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="825" y="75" as="sourcePoint"/>
+        <mxPoint x="825" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l6" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1015" y="75" as="sourcePoint"/>
+        <mxPoint x="1015" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l7" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1205" y="75" as="sourcePoint"/>
+        <mxPoint x="1205" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1: chat message — &#171;search KB: personalized rules&#187;" style="html=1;rounded=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="85" y="120" as="sourcePoint"/>
+        <mxPoint x="265" y="120" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2: prompt + tool schema (gồm bridge tools)" style="html=1;rounded=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="265" y="160" as="sourcePoint"/>
+        <mxPoint x="440" y="160" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3: tool_call mem_search(query)" style="html=1;rounded=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="200" as="sourcePoint"/>
+        <mxPoint x="630" y="200" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5: callTool('mem_search', params)   [4: validateParams → approval/audit đã chạy]" style="html=1;rounded=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="245" as="sourcePoint"/>
+        <mxPoint x="825" y="245" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6: invokeTool('mem_search', args)" style="html=1;rounded=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="825" y="285" as="sourcePoint"/>
+        <mxPoint x="1015" y="285" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7: JSON-RPC tools/call" style="html=1;rounded=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1015" y="325" as="sourcePoint"/>
+        <mxPoint x="1205" y="325" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8: result text" style="html=1;rounded=0;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1205" y="365" as="sourcePoint"/>
+        <mxPoint x="1015" y="365" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9: return string" style="html=1;rounded=0;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1015" y="405" as="sourcePoint"/>
+        <mxPoint x="825" y="405" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10: { content:[{type:'text',text}], details:{success:true} }" style="html=1;rounded=0;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="825" y="445" as="sourcePoint"/>
+        <mxPoint x="630" y="445" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11: tool result" style="html=1;rounded=0;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="485" as="sourcePoint"/>
+        <mxPoint x="440" y="485" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="12: reply" style="html=1;rounded=0;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="525" as="sourcePoint"/>
+        <mxPoint x="265" y="525" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="13: MCP_TOOL_RESULT + reply hiển thị webview" style="html=1;rounded=0;dashed=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="265" y="565" as="sourcePoint"/>
+        <mxPoint x="85" y="565" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="altFrame" value="alt [MCP server stopped]" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=4;fillColor=none;strokeColor=#cc0000;dashed=1;fontColor=#cc0000;" vertex="1" parent="1">
+      <mxGeometry x="40" y="610" width="1250" height="170" as="geometry"/>
+    </mxCell>
+    <mxCell id="x1" value="E-1: throw McpServerNotRunningError — 'MCP Server is not running.'" style="html=1;rounded=0;strokeColor=#cc0000;fontColor=#cc0000;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="825" y="660" as="sourcePoint"/>
+        <mxPoint x="630" y="660" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x2" value="E-1: error text 'Error invoking mem_search: MCP Server is not running.'" style="html=1;rounded=0;dashed=1;strokeColor=#cc0000;fontColor=#cc0000;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="630" y="700" as="sourcePoint"/>
+        <mxPoint x="440" y="700" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x3" value="reply graceful — turn tiếp tục, không crash" style="html=1;rounded=0;dashed=1;strokeColor=#cc0000;fontColor=#cc0000;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="440" y="750" as="sourcePoint"/>
+        <mxPoint x="85" y="750" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>
