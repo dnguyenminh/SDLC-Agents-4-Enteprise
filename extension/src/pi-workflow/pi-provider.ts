@@ -376,7 +376,7 @@ export class PiProvider {
     budget?: import('./turn-budget-guard.js').TurnBudget,
     onToolEvent?: import('./pi-provider-types.js').PiRunInput['onToolEvent']
   ): Promise<PiRunResult> {
-    const collector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+    const collector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
     // Shared steer/abort effectors (never throw — event dispatch must survive).
     const abortRun = (): void => {
       try {
