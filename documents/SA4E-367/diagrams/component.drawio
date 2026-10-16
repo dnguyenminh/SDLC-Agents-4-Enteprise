@@ -1,0 +1,51 @@
+<mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="f1" value="MODIFY ★&lt;br&gt;tool-definitions.ts&lt;br&gt;+ FIND_TOOL_NAME + find_tools TOOLS entry&lt;br&gt;+ isDiscoveryTool() helper&lt;br&gt;(~+25 lines)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="250" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="f2" value="MODIFY ★ (port SA4E-364 + pair gate)&lt;br&gt;mcp-bridge-extension.ts&lt;br&gt;+ BridgeToolOptions + buildMcpBridgeAgentTools&lt;br&gt;reuse createExecuteHandler/audit/allowlist&lt;br&gt;196 → ~250 lines" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="460" y="40" width="280" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="f3" value="VERIFY-ONLY&lt;br&gt;pi-workflow-adapter.ts&lt;br&gt;import :24 + merge :496-507 in tree&lt;br&gt;no edit — compiles once export exists" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="40" y="200" width="250" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="f4" value="MODIFY ★ (+4 lines)&lt;br&gt;pi-agent-session-host.ts&lt;br&gt;bridgeDynamicNames → discoveryTools&lt;br&gt;(never dropped, survives role filter)&lt;br&gt;default [] = today's behavior" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="460" y="200" width="280" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="f5" value="tool-loadout.ts (UNCHANGED)&lt;br&gt;buildSessionToolLoadout + ROLE_TOOL_PREFIXES&lt;br&gt;+ 25% schema-token cap&lt;br&gt;discoveryTools never dropped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="830" y="200" width="280" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="t1" value="EXTEND&lt;br&gt;mcp-bridge-extension.test.ts&lt;br&gt;+ describe: pair gating (find_tools ± opt-in),&lt;br&gt;find_tools execute proxy, audit («+50)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="40" y="360" width="250" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="t2" value="CREATE (port SA4E-364 + pair case)&lt;br&gt;bridge-wiring-legacy.test.ts (~100)&lt;br&gt;engineSpy: 4 concrete in tools,&lt;br&gt;no pair by default, collision skip" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="460" y="360" width="280" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="t3" value="CREATE (port SA4E-364 + pair case)&lt;br&gt;bridge-wiring-session.test.ts (~130)&lt;br&gt;customTools + allowlist; pair → discoveryTools;&lt;br&gt;FR-09 override; role BA; absent → []" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="830" y="360" width="280" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="imports" style="endArrow=classic;html=1;" edge="1" parent="1" source="f2" target="f1">
+      <mxGeometry relative="1" as="geometry"><mxPoint as="sourcePoint" /><mxPoint as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="imports" style="endArrow=classic;html=1;" edge="1" parent="1" source="f3" target="f2">
+      <mxGeometry relative="1" as="geometry"><mxPoint as="sourcePoint" /><mxPoint as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="imports" style="endArrow=classic;html=1;" edge="1" parent="1" source="f4" target="f2">
+      <mxGeometry relative="1" as="geometry"><mxPoint as="sourcePoint" /><mxPoint as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="uses" style="endArrow=classic;html=1;dashed=1;" edge="1" parent="1" source="f4" target="f5">
+      <mxGeometry relative="1" as="geometry"><mxPoint as="sourcePoint" /><mxPoint as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="covers" style="endArrow=classic;html=1;dashed=1;" edge="1" parent="1" source="t1" target="f2">
+      <mxGeometry relative="1" as="geometry"><mxPoint as="sourcePoint" /><mxPoint as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="covers" style="endArrow=classic;html=1;dashed=1;" edge="1" parent="1" source="t2" target="f3">
+      <mxGeometry relative="1" as="geometry"><mxPoint as="sourcePoint" /><mxPoint as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="covers" style="endArrow=classic;html=1;dashed=1;" edge="1" parent="1" source="t3" target="f4">
+      <mxGeometry relative="1" as="geometry"><mxPoint as="sourcePoint" /><mxPoint as="targetPoint" /></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

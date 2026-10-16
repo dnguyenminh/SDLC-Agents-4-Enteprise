@@ -1,0 +1,16 @@
+SA4E-367 build verification (2026-10-16 23:48 +07:00)
+Branch: SA4E-367 | HEAD: a937785 (matches hotfix commit)
+Note: extension/out/extension.js is gitignored (git check-ignore -> ignored) -> rebuilt fresh via `node esbuild.js --production`.
+
+Fresh bundle (out/extension.js, 20296607 bytes, minified cjs):
+  TOTAL_find_tools=9 | TOTAL_execute_dynamic_tool=8 | isDiscoveryTool/FIND_TOOL_NAME minified to single-char ids (expected)
+  NEW entry present verbatim:
+    {name:"find_tools",label:"Find Tools",description:"Discover available MCP tools by semantic query (dynamic chaining: pair with execute_dynamic_tool)",parameters:{...}}
+  Minified pair constants: Qot="execute_dynamic_tool", tDd="find_tools"
+
+Source anchors:
+  export function buildMcpBridgeAgentTools — extension/src/pi-agent/extensions/mcp-bridge-extension.ts:220
+  FIND_TOOL_NAME + isDiscoveryTool() — extension/src/pi-agent/extensions/tool-definitions.ts:133-139
+  find_tools TOOLS entry — tool-definitions.ts:66-80
+  Session discoveryTools routing — extension/src/pi-workflow/pi-agent-session-host.ts:342-351 (import isDiscoveryTool :37)
+  Legacy verify-only wiring — extension/src/pi-workflow/pi-workflow-adapter.ts:24 (import), :497 (call)

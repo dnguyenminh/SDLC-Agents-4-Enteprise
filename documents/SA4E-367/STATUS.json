@@ -1,0 +1,120 @@
+{
+  "ticket": "SA4E-367",
+  "currentPhase": "deployment",
+  "autonomyLevel": "L3",
+  "sla": "<1h",
+  "phases": {
+    "requirements": {
+      "status": "done",
+      "file": "Jira description",
+      "version": 1
+    },
+    "specification": {
+      "status": "done",
+      "file": "Jira description (hotfix, scope fixed in AC)",
+      "version": 1
+    },
+    "design": {
+      "status": "done",
+      "file": "TDD.md",
+      "version": 1
+    },
+    "feedback_loop": {
+      "status": "done",
+      "iterations": 0,
+      "note": "DISCREPANCY 3 Low/Info non-blocking, no loop needed"
+    },
+    "security_design_review": {
+      "status": "done",
+      "file": "SECURITY-REVIEW.md",
+      "verdict": "APPROVED-WITH-CONDITIONS"
+    },
+    "implementation": {
+      "status": "done",
+      "file": "branch SA4E-367 commit a937785",
+      "ta_review": "APPROVED"
+    },
+    "security_code_review": {
+      "status": "done",
+      "file": "SECURITY-ASSESSMENT.md",
+      "verdict": "CONDITIONAL PASS",
+      "risk": "Medium (Low default)"
+    },
+    "testing": {
+      "status": "done",
+      "file": "TEST-REPORT.md",
+      "verdict": "PASS 4/4 executable, 2 ENV-BLOCKED with substitutes, 0 defects"
+    },
+    "devops_review": {
+      "status": "done",
+      "file": "DPG-NOTE.md",
+      "verdict": "CONDITIONAL YES merge->staging, NO prod"
+    },
+    "deployment": {
+      "status": "in_progress",
+      "staging": "done",
+      "stagingTag": "v1.53.3-staging",
+      "stagingCommit": "6e6df4b",
+      "vsix": "extension/sdlc-agents-4-enterprise-1.53.3.vsix (8.91MB)",
+      "prod": "blocked_pending_uat",
+      "note": "Staging tagged, main untouched (cdccd97). Jira kept In Review (no Staging/Done-safe transition; Done reserved for prod)."
+    }
+  },
+  "sm_manual_test": {
+    "status": "PASS",
+    "checks": [
+      "buildMcpBridgeAgentTools exported :220",
+      "FIND_TOOL_NAME+isDiscoveryTool present",
+      "handler gate isDiscoveryTool",
+      "session discoveryTools wiring",
+      "adapter import resolves"
+    ]
+  },
+  "manual_test_staging": {
+    "status": "CONDITIONAL PASS",
+    "date": "2026-10-17",
+    "scope": "vsix 1.53.3 / tag v1.53.3-staging, headless (no GUI, HTTP JSON-RPC + bundle grep)",
+    "cases": {
+      "T1_bundle_pair": "PASS",
+      "T2_tools_list_20": "CONDITIONAL (12 incl pair, literal 20 not observed)",
+      "T3_find_tools_jira": "PASS",
+      "T4_gated_exec": "PASS",
+      "T5_failsafe": "PASS (substitute)"
+    },
+    "defects": 0
+  },
+  "manual_test_post_reload": {
+    "status": "PASS",
+    "date": "2026-10-17",
+    "scope": "ext 1.53.3 active after user Reload Window, headless HTTP JSON-RPC (no GUI chatbox)",
+    "environment": {
+      "installed": "dnguyenminh.sdlc-agents-4-enterprise-1.53.3 (2026-10-17 12:31:50 AM)",
+      "vsix": "extension/sdlc-agents-4-enterprise-1.53.3.vsix 9341470 bytes, manifest 1.53.3",
+      "wrapperPid": 22292,
+      "wrapperStartedAt": "2026-10-16T17:32:57.717Z",
+      "oldPid": 50040
+    },
+    "cases": {
+      "R1_wrapper_active": "PASS",
+      "R2_tools_list_core_pair": "PASS (12 tools incl find_tools+execute_dynamic_tool)",
+      "R3_find_tools_jira": "PASS (~100 tools incl jira_*)",
+      "R4_gated_mem_search": "PASS (2 results)",
+      "R5_bundle_installed": "PASS (find_tools x9)"
+    },
+    "defects": 0
+  },
+  "live_test_ide": {
+    "status": "PASS",
+    "date": "2026-10-17",
+    "scope": "Live trên IDE này (Kiro running, wrapper pid 22292)",
+    "correction": "Dinh chinh 2 dong BLOCKED cu §3.1: Jira la in-process local tools (khong can child server); IDE host san co",
+    "cases": {
+      "D1_orchestration_status": "PASS (ready; markdown-exporter connected/6, markitdown disconnected)",
+      "D2_find_tools_jira": "PASS (jira_* returned)",
+      "D3_jira_get_issue_live": "PASS (id 14182, key SA4E-367)"
+    },
+    "defects": 0,
+    "blocked": 0
+  },
+  "lastUpdated": "2026-10-17T00:45:00+07:00"
+}
