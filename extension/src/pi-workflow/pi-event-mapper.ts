@@ -114,6 +114,14 @@ export function mapAgentEvent(event: AgentEvent, collector: EventCollector): voi
     if (ame && ame.type === 'text_delta' && ame.delta) {
       collector.text += ame.delta;
       collector.chunks.push({ type: 'text', content: ame.delta });
+      return;
+    }
+    // Thinking (reasoning) deltas — pi-ai AssistantMessageEvent "thinking_delta".
+    // Surfaced as 'thinking' stream chunks so the chat UI can render a
+    // collapsible reasoning block; never part of the answer text.
+    if (ame && ame.type === 'thinking_delta' && ame.delta) {
+      collector.thinking += ame.delta;
+      collector.chunks.push({ type: 'thinking', content: ame.delta });
     }
     // SA4E-THINKING: forward reasoning deltas (pi-ai emits thinking_delta for
     // reasoning_content/reasoning/thinking fields) so the webview can render

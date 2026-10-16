@@ -484,7 +484,7 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
       onThinking?: (t: string) => void
     ): Promise<SessionTurnResult> {
       const runOnce = async (promptText: string): Promise<string> => {
-        const localCollector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+        const localCollector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
         const localTracker = new ToolEventTracker();
         const unsub = (session as { subscribe: (l: (e: unknown) => void) => () => void }).subscribe(
           (event) => {
@@ -531,7 +531,7 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
         };
       }
 
-      const collector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+      const collector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
       const tracker = new ToolEventTracker();
       const unsub = (session as { subscribe: (l: (e: unknown) => void) => () => void }).subscribe(
         (event) => {

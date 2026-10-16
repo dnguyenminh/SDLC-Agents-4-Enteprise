@@ -113,7 +113,7 @@ describe('FIX F — tool_execution_end result extraction', () => {
 
 describe('BUG H — mapAgentEvent does not surface per-tool failures as message-level errors', () => {
   it('a failed tool_execution_end pushes NO error chunk and sets NO errorMessage', () => {
-    const collector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+    const collector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
     mapAgentEvent(
       {
         type: 'tool_execution_end',
@@ -129,7 +129,7 @@ describe('BUG H — mapAgentEvent does not surface per-tool failures as message-
   });
 
   it('a failed tool still counts nothing against the turn (no chunks at all)', () => {
-    const collector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+    const collector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
     for (let i = 0; i < 5; i++) {
       mapAgentEvent(
         {
@@ -147,7 +147,7 @@ describe('BUG H — mapAgentEvent does not surface per-tool failures as message-
   });
 
   it('tool_execution_start still pushes the tool_call chunk (unchanged)', () => {
-    const collector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+    const collector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
     mapAgentEvent(
       { type: 'tool_execution_start', toolCallId: 't1', toolName: 'read', args: { path: 'a.ts' } } as unknown as AgentEvent,
       collector

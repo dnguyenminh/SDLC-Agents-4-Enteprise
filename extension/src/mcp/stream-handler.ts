@@ -97,6 +97,30 @@ export class StreamHandler {
     });
   }
 
+  /**
+   * Thinking (reasoning) delta from the model — buffered like tokens.
+   * eventType "thinking"; the webview owns block open/close lifecycle
+   * (first delta opens the block, first answer token / complete collapses it).
+   */
+  emitThinking(nodeId: string, content: string, streamId: string): void {
+    this.buffer.push({
+      type: "chat:streamChunk",
+      streamId,
+      nodeId,
+      eventType: "thinking",
+      content,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Prevent unbounded buffer growth
+    if (this.buffer.length > MAX_BUFFER_SIZE) {
+      this.flush();
+      return;
+    }
+
+    this.scheduleFlush();
+  }
+
   // === Self-Correction Events (KSA-233) ===
 
   /** Emit retry event — immediate flush (not buffered) */
