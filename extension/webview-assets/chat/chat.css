@@ -1545,3 +1545,37 @@ body {
   white-space: nowrap;
   margin-left: 4px;
 }
+
+/* === Thinking (reasoning) block — collapsible model reasoning display === */
+.thinking-block {
+  margin: 6px 0 2px 0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-left: 3px solid #a78bfa;
+  border-radius: 8px;
+  background: rgba(139, 92, 246, 0.06);
+  overflow: hidden;
+  font-size: 12px;
+}
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  user-select: none;
+  color: #a78bfa;
+  font-weight: 600;
+}
+.thinking-chevron { display: inline-block; transition: transform 0.15s ease; }
+.thinking-block.collapsed .thinking-chevron { transform: rotate(90deg); }
+.thinking-block.collapsed .thinking-body { display: none; }
+.thinking-body {
+  padding: 6px 10px 8px 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #94a3b8;
+  font-style: italic;
+  line-height: 1.5;
+}

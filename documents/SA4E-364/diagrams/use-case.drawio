@@ -1,0 +1,51 @@
+<mxGraphModel adaptiveColors="auto" dx="1200" dy="860" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="820" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="actorLLM" value="LLM (SDLC Chat Agent)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+      <mxGeometry x="70" y="300" width="40" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="boundary" value="SDLC CHAT — MCP Bridge Tools (SA4E-364)" style="swimlane;html=1;startSize=30;horizontal=1;fillColor=#FFFFFF;strokeColor=#333333;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="240" y="40" width="560" height="720" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1" value="Tra cứu KB (mem_search)" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="boundary">
+      <mxGeometry x="170" y="60" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2" value="Ghi KB (mem_ingest) — cần approval" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="boundary">
+      <mxGeometry x="170" y="150" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3" value="Tìm kiếm code (code_search)" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="boundary">
+      <mxGeometry x="170" y="240" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc4" value="Đọc Jira issue (jira_get_issue)" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="boundary">
+      <mxGeometry x="170" y="330" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc5" value="Dynamic chaining (execute_dynamic_tool) — opt-in" style="ellipse;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="boundary">
+      <mxGeometry x="170" y="430" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc6" value="Fail-safe khi MCP stopped — trả error text, không crash turn" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="boundary">
+      <mxGeometry x="170" y="540" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc7" value="validateParams + TOOL_ALLOWLIST + approval hook + audit log (SEC-324-03)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;dashed=1;" vertex="1" parent="boundary">
+      <mxGeometry x="140" y="640" width="280" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="ue1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actorLLM" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ue2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actorLLM" target="uc2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ue3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actorLLM" target="uc3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ue4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actorLLM" target="uc4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ue5" value="opt-in: allowDynamicChaining=true" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="actorLLM" target="uc5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="ue6" value="MCP server stopped" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#B85450;fontColor=#B85450;" edge="1" parent="1" source="actorLLM" target="uc6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

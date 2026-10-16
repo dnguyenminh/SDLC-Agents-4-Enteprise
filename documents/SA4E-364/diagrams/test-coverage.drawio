@@ -1,0 +1,159 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-364 — Test Coverage Map: 6 AC × 6 Test Levels → STC IDs (STP v1.0 / STC v1.0)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="1330" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h0" value="AC" style="shape=mxgraph.flowchart.annotation_2;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="280" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h1" value="PBT" style="html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="320" y="70" width="140" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="UT" style="html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="460" y="70" width="230" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="IT" style="html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="690" y="70" width="170" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="E2E-API" style="html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="860" y="70" width="140" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="E2E-UI (Manual UAT)" style="html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="70" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="h6" value="SIT" style="html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="70" width="170" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac1l" value="AC-1: Cả 2 path expose ≥4 bridge tools trong tool schema" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="110" width="280" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac1a" value="PBT-01" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="110" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac1b" value="UT-01, UT-02, UT-04, UT-05, UT-06, UT-07" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="110" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac1c" value="IT-02, IT-03" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="690" y="110" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac1d" value="N/A (STP §1.2)" style="html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="110" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac1e" value="E2E-UI-01, E2E-UI-03" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="110" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac1f" value="SIT-01" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="110" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac2l" value="AC-2: mem_search gọi được từ chat; kết quả qua MCP_TOOL_RESULT" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="180" width="280" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac2a" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="320" y="180" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac2b" value="UT-03" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="180" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac2c" value="IT-02" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="690" y="180" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac2d" value="N/A (STP §1.2)" style="html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="180" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac2e" value="E2E-UI-01" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="180" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac2f" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="180" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac3l" value="AC-3: execute_dynamic_tool KHÔNG có trong schema trừ khi opt-in" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="250" width="280" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac3a" value="PBT-01" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="250" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac3b" value="UT-11, UT-12, UT-17, UT-18 (assert registry — FSD §8.1)" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="250" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac3c" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="690" y="250" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac3d" value="N/A (STP §1.2)" style="html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="250" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac3e" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="250" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac3f" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="250" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac4l" value="AC-4: MCP stopped → chat hoạt động; error text rõ ràng" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="320" width="280" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac4a" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="320" y="320" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac4b" value="UT-13" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="320" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac4c" value="IT-01 (&lt; 50ms — N-4)" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="690" y="320" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac4d" value="N/A (STP §1.2)" style="html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="320" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac4e" value="E2E-UI-02, E2E-UI-04" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="320" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac4f" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="320" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac5l" value="AC-5: Role filter + schema-token cap ở session path" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="390" width="280" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac5a" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="320" y="390" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac5b" value="UT-08, UT-09, UT-10" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="390" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac5c" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="690" y="390" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac5d" value="N/A (STP §1.2)" style="html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="390" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac5e" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="390" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac5f" value="SIT-01, SIT-03 (N-1 invariant)" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="390" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac6l" value="AC-6: Unit test wiring 2 path; suite không regression" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="460" width="280" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac6a" value="PBT-02" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="320" y="460" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac6b" value="UT-04, UT-06" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="460" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac6c" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="690" y="460" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac6d" value="N/A (STP §1.2)" style="html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="860" y="460" width="140" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac6e" value="—" style="html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="460" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ac6f" value="SIT-01, SIT-02, SIT-03" style="html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1200" y="460" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="legend" value="Legend: GREEN = covered (TCs) · YELLOW = level không có TC cho AC này (—) · GRAY = cả level N/A (extension không expose HTTP API — STP §1.2) | Coverage: 6/6 AC = 100% · 30 TCs (26 automated / 4 manual)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="40" y="545" width="1330" height="30" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

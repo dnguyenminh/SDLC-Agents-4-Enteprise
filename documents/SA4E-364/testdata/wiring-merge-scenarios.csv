@@ -1,0 +1,10 @@
+test_case_id,path,scenario,input_fixture,expected_result,description
+UT-04,legacy,collision tên trùng,builtin[] + extTools=[ext mem_search sentinel, aft_hoist_tool] + bridgeTools=4,tools chứa 3 bridge names (trừ mem_search); mem_search giữ sentinel ext reference; warn 'bridge tool skipped (exists): mem_search',BR-06 skip-if-exists — bridge KHÔNG đè; khác last-wins vòng builtin/ext (OI-06)
+UT-04,legacy,không collision,builtin[] + extTools=[aft_hoist_tool] + bridgeTools=4,tools chứa đủ 4 bridge names + aft_hoist_tool nguyên reference; tool count tăng +4,AFT hoist giữ nguyên — merge không phá pool hiện có
+UT-05,legacy,extension runtime fail,getPiExtensionAgentTools throw → extTools=[],tools chứa đủ 4 bridge names + builtin tools; turn không crash,Wiring bridge độc lập npm extensions (AF-2 UC-01)
+UT-06,session,customTools composition,opts.mcpBridge=valid bridge; role SM,customTools = [get_workspace_info, read_method, ...4 bridge ToolDefinition]; tools allowlist chứa 4 bridge names,FR-03 — bridge vào customTools qua toSessionToolDefinition; SDK isAllowedTool lọc theo allowlist
+UT-07,session,prompt metadata override,opts.mcpBridge=valid bridge,mỗi bridge entry: promptSnippet=undefined; promptGuidelines=undefined; workspace_info/read_method giữ metadata của chúng,FR-09 — override tại call site; không inject guidance sai 'Workspace orientation'
+IT-03,session,type-guard real instance,opts.mcpBridge=new McpBridge(mockManager),customTools chứa 4 bridge entries,instanceof McpBridge pass (OI-03)
+IT-03,session,type-guard absent,opts.mcpBridge=undefined,customTools không có bridge; session vẫn tạo thành công (fail-safe degraded),bridge-absent ⇒ DEGRADED (SA4E-360); không throw
+IT-03,session,type-guard sai kiểu,opts.mcpBridge={} (object lạ),như absent — không bridge; không crash,Type-guard chặn object lạ (BR-03 fail-closed tinh thần)
+PBT-02,legacy,merge property — pool arbitrary,fast-check pool tên unique 0..4 collision với bridge,mọi entry có sẵn giữ nguyên reference; bridge chỉ thêm tên chưa có; pool không collision → đủ 4 bridge names,Property BR-06 bất biến với MỌI pool

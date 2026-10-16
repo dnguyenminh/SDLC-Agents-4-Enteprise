@@ -1,0 +1,108 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="hdrBefore" value="TRƯỚC FIX — Tool pool của SDLC CHAT KHÔNG có MCP tools" style="text;html=1;fontSize=15;fontStyle=1;fontColor=#B85450;align=left;" vertex="1" parent="1">
+      <mxGeometry x="60" y="40" width="620" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="start" value="User prompt trong SDLC CHAT" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="290" y="95" width="200" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="L1" value="createWorkspaceTools() → builtinTools (coding tools)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="L2" value="getPiExtensionAgentTools() → extTools (npm pi extensions — KHÔNG có MCP bridge)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="60" y="300" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="L3" value="merge byName → engine.executeTurn — Tool pool KHÔNG có MCP tools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+      <mxGeometry x="60" y="410" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="S1" value="Session path — customTools chỉ 2 tool (workspace_info, read_method)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="330" y="200" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="S2" value="additionalExtensionPaths: npm pi extensions; extNames → allowlist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="330" y="300" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="S3" value="createAgentSession() — Tool schema LLM KHÔNG có MCP tools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+      <mxGeometry x="330" y="410" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="N1" value="Picker 'Select MCP Tool' chỉ chèn text mô tả vào prompt; badge 'connected' ≠ tool pool" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="1">
+      <mxGeometry x="600" y="200" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="D1" value="mcp-bridge-extension.ts (SA4E-316) — DEAD CODE: zero production caller (chỉ test import)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+      <mxGeometry x="600" y="310" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="B1" value="McpBridge: chỉ enrich skeleton prompt (SA4E-360) + đếm token (listTools)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="600" y="420" width="230" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="Legacy path" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="start" target="L1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="Session path" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="start" target="S1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="L1" target="L2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="L2" target="L3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="S1" target="S2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="S2" target="S3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="không được wire" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#B85450;fontColor=#B85450;" edge="1" parent="1" source="D1" target="L3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="không được wire" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#B85450;fontColor=#B85450;" edge="1" parent="1" source="D1" target="S3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="hdrAfter" value="SAU FIX (SA4E-364) — Bridge tools được wire vào CẢ 2 đường tool pool" style="text;html=1;fontSize=15;fontStyle=1;fontColor=#2D7600;align=left;" vertex="1" parent="1">
+      <mxGeometry x="60" y="530" width="620" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="A1" value="buildMcpBridgeAgentTools(bridge) — hàm thuần export từ mcp-bridge-extension.ts; tái dùng TOOLS + TOOL_ALLOWLIST + approval + audit (không duplicate)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+      <mxGeometry x="290" y="580" width="260" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="L3b" value="Legacy path: merge bridgeTools vào byName (pi-workflow-adapter.ts:477+)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+      <mxGeometry x="60" y="710" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="S3b" value="Session path: customTools += bridge tools; mcpTools += bridge names → role filter + token cap (pi-agent-session-host.ts:336/420)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+      <mxGeometry x="330" y="710" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="R1" value="Tool schema LLM: jira_get_issue · mem_search · mem_ingest · code_search (+ execute_dynamic_tool khi opt-in)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="170" y="840" width="430" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="lgR" value="" style="rounded=0;html=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="1">
+      <mxGeometry x="600" y="585" width="24" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="lgRt" value="Broken / dead code" style="text;html=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="632" y="582" width="200" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="lgG" value="" style="rounded=0;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="1">
+      <mxGeometry x="600" y="615" width="24" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="lgGt" value="Wire mới (SA4E-364)" style="text;html=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="632" y="612" width="200" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="lgX" value="" style="rounded=0;html=1;fillColor=#F5F5F5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="600" y="645" width="24" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="lgXt" value="Existing (giữ nguyên)" style="text;html=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="632" y="642" width="200" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82B366;" edge="1" parent="1" source="A1" target="L3b">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82B366;" edge="1" parent="1" source="A1" target="S3b">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82B366;" edge="1" parent="1" source="L3b" target="R1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82B366;" edge="1" parent="1" source="S3b" target="R1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
