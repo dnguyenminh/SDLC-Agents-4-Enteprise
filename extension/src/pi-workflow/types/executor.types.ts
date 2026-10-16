@@ -23,7 +23,7 @@ export interface NormalizedToolCall {
 }
 
 export interface StreamChunk {
-  type: 'text' | 'tool_call' | 'error' | 'done';
+  type: 'text' | 'tool_call' | 'error' | 'done' | 'thinking';
   content?: string;
   toolCall?: NormalizedToolCall;
   error?: string;

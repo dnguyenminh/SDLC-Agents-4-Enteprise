@@ -29,6 +29,8 @@ const DANGEROUS_TOOLS = new Set([
 export class StreamProtocolAdapter implements IStreamProtocolAdapter {
   private readonly streamToMessage = new Map<string, string>();
   private readonly startedStreams = new Set<string>();
+  /** Streams with an open THINKING block — closed on first answer token or end. */
+  private readonly thinkingOpen = new Set<string>();
 
   /**
    * Handle a single engine event, returning zero or more ExtensionMessages.
@@ -59,6 +61,7 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
   reset(): void {
     this.streamToMessage.clear();
     this.startedStreams.clear();
+    this.thinkingOpen.clear();
   }
 
   /** Translate chat:streamChunk → STREAM_START + STREAM_TOKEN or STREAM_ERROR */
@@ -87,7 +90,17 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
       // synthetic ids never accumulate across turns. Mid-stream errors keep
       // their mapping — the turn's own complete will clean up.
       if (isOrphan) this.cleanup(event.streamId);
+    } else if (event.eventType === 'thinking') {
+      // THINKING_START synthesized on first delta; THINKING_END on answer
+      // token or stream end (see closeThinking below) — the block lifecycle
+      // is owned here so every THINKING_* consumer sees a balanced sequence.
+      if (!this.thinkingOpen.has(messageId)) {
+        this.thinkingOpen.add(messageId);
+        messages.push({ type: 'THINKING_START', messageId });
+      }
+      messages.push({ type: 'THINKING_TOKEN', messageId, token: event.content });
     } else if (event.eventType === 'token') {
+      messages.push(...this.closeThinking(messageId));
       messages.push({ type: 'STREAM_TOKEN', messageId, token: event.content });
     }
     // 'status' events are informational — no protocol mapping needed
@@ -95,11 +108,19 @@ export class StreamProtocolAdapter implements IStreamProtocolAdapter {
     return messages;
   }
 
+  /** Close an open THINKING block (if any) — returns [THINKING_END] or []. */
+  private closeThinking(messageId: string): ExtensionMessage[] {
+    if (!this.thinkingOpen.has(messageId)) return [];
+    this.thinkingOpen.delete(messageId);
+    return [{ type: 'THINKING_END', messageId }];
+  }
+
   /** Translate chat:streamComplete → STREAM_END */
   private handleComplete(event: StreamCompleteEvent): ExtensionMessage[] {
     const messageId = this.ensureMessageId(event.streamId);
+    const close = this.closeThinking(messageId);
     this.cleanup(event.streamId);
-    return [{ type: 'STREAM_END', messageId }];
+    return [...close, { type: 'STREAM_END', messageId }];
   }
 
   /** Translate chat:toolCall → TOOL_CALL_REQUEST */

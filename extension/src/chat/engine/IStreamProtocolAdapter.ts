@@ -28,12 +28,12 @@ export type EngineStreamEvent =
   | ToolCallEvent
   | ToolCallUpdateEvent;
 
-/** Token/status/error chunk from chat:streamChunk */
+/** Token/status/error/thinking chunk from chat:streamChunk */
 export interface StreamChunkEvent {
   type: 'chat:streamChunk';
   streamId: string;
   nodeId: string;
-  eventType: 'token' | 'status' | 'error';
+  eventType: 'token' | 'status' | 'error' | 'thinking';
   content: string;
   timestamp: string;
 }

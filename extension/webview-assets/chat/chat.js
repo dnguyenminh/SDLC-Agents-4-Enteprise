@@ -1075,6 +1075,12 @@
     var node = streamingNodes[msg.nodeId];
 
     if (msg.eventType === "token") {
+      // Answer tokens started — auto-collapse the reasoning block (UX: the
+      // user read the thinking while it streamed; the answer takes over).
+      if (node.thinkingEl && !node.thinkingCollapsed) {
+        node.thinkingCollapsed = true;
+        node.thinkingEl.classList.add("collapsed");
+      }
       // Append verbatim — whitespace-only tokens carry markdown structure
       // (blank lines between paragraphs, code indentation). Dropping them
       // corrupts the final message (UAT: collapsed text, broken tables).
@@ -1082,6 +1088,14 @@
       var contentSpan = node.el.querySelector(".stream-content");
       contentSpan.innerHTML = MarkdownRenderer.render(node.content);
       addCodeActions(contentSpan);
+    if (msg.eventType === "thinking") {
+      // Reasoning delta — render into a collapsible block that precedes the
+      // answer bubble. Block opens on first delta, auto-collapses when the
+      // first answer token arrives (or at stream completion).
+      ensureThinkingBlock(node);
+      node.thinkingText += msg.content || "";
+      node.thinkingBody.textContent = node.thinkingText;
+      node.thinkingBody.scrollTop = node.thinkingBody.scrollHeight;
     } else if (msg.eventType === "status") {
       // Status is a node lifecycle signal (e.g. "active"), NOT answer content.
       // Show it on the working bar only — never concatenate into the reply
@@ -1098,9 +1112,45 @@
     scrollToBottom();
   }
 
+  /**
+   * Thinking (reasoning) block — created lazily on first thinking delta.
+   * Lives BEFORE the answer bubble; header click toggles collapse.
+   */
+  function ensureThinkingBlock(node) {
+    if (node.thinkingEl) return;
+    var wrap = document.createElement("div");
+    wrap.className = "thinking-block";
+    var header = document.createElement("div");
+    header.className = "thinking-header";
+    header.innerHTML = '<span class="thinking-chevron">&#9656;</span><span class="thinking-label">Thinking</span>';
+    header.addEventListener("click", function () {
+      node.thinkingCollapsed = !node.thinkingCollapsed;
+      wrap.classList.toggle("collapsed", node.thinkingCollapsed);
+    });
+    var body = document.createElement("div");
+    body.className = "thinking-body";
+    wrap.appendChild(header);
+    wrap.appendChild(body);
+    if (node.el && node.el.parentNode === messagesEl) {
+      messagesEl.insertBefore(wrap, node.el);
+    } else {
+      messagesEl.appendChild(wrap);
+    }
+    node.thinkingEl = wrap;
+    node.thinkingBody = body;
+    node.thinkingText = "";
+    node.thinkingCollapsed = false;
+  }
+
   function handleStreamComplete(msg) {
     var node = streamingNodes[msg.nodeId];
     if (node) {
+      // Turn ended — fold any open reasoning block (keeps its content visible
+      // via the header toggle, never deleted with the streaming bubble state).
+      if (node.thinkingEl && !node.thinkingCollapsed) {
+        node.thinkingCollapsed = true;
+        node.thinkingEl.classList.add("collapsed");
+      }
       node.el.classList.remove("streaming");
       if (!node.content && msg.finalContent && !msg.finalContent.startsWith("Node ")) {
         var contentSpan = node.el.querySelector(".stream-content");

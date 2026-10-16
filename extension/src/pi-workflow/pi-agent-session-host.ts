@@ -92,7 +92,8 @@ interface SessionHost {
   promptTurn(
     text: string,
     onToken?: (t: string) => void,
-    onToolEvent?: (e: import('./pi-event-mapper.js').ToolLiveEvent) => void
+    onToolEvent?: (e: import('./pi-event-mapper.js').ToolLiveEvent) => void,
+    onThinking?: (delta: string) => void
   ): Promise<SessionTurnResult>;
   getSessionFile(): string | undefined;
   dispose(): void;
@@ -474,10 +475,11 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
     async promptTurn(
       text: string,
       onToken?: (t: string) => void,
-      onToolEvent?: (e: import('./pi-event-mapper.js').ToolLiveEvent) => void
+      onToolEvent?: (e: import('./pi-event-mapper.js').ToolLiveEvent) => void,
+      onThinking?: (delta: string) => void
     ): Promise<SessionTurnResult> {
       const runOnce = async (promptText: string): Promise<string> => {
-        const localCollector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+        const localCollector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
         const localTracker = new ToolEventTracker();
         const unsub = (session as { subscribe: (l: (e: unknown) => void) => () => void }).subscribe(
           (event) => {
@@ -490,6 +492,7 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
             } catch {}
             const last = localCollector.chunks[localCollector.chunks.length - 1];
             if (last?.type === 'text' && last.content) onToken?.(last.content);
+            else if (last?.type === 'thinking' && last.content) onThinking?.(last.content);
           }
         );
         try {
@@ -522,7 +525,7 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
         };
       }
 
-      const collector: EventCollector = { chunks: [], toolCalls: [], text: '' };
+      const collector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
       const tracker = new ToolEventTracker();
       const unsub = (session as { subscribe: (l: (e: unknown) => void) => () => void }).subscribe(
         (event) => {
@@ -535,6 +538,7 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
           } catch {}
           const last = collector.chunks[collector.chunks.length - 1];
           if (last?.type === 'text' && last.content) onToken?.(last.content);
+          else if (last?.type === 'thinking' && last.content) onThinking?.(last.content);
         }
       );
       try {

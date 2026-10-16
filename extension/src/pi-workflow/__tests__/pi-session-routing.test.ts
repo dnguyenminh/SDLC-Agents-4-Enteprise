@@ -113,7 +113,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     expect(mocks.ensureSessionHost).toHaveBeenCalledWith(
       expect.objectContaining({ workspaceRoot: 'C:/ws/test', providerId: 'anthropic', apiKey: 'sk-x' })
     );
-    expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function));
+    expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Function), expect.any(Function), expect.any(Function));
     expect(chatErrors(onEvent)).toEqual([]);
     // Live tool progress reaches the webview as a tool block.
     const toolMsgs = onEvent.mock.calls

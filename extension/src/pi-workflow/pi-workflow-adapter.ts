@@ -307,6 +307,10 @@ export class PiWorkflowAdapter {
         (e) => {
           if (!live) return;
           this.postToolLiveEvent(e);
+        },
+        (delta) => {
+          if (!live) return;
+          this.streamHandler.emitThinking('pi', delta, streamId);
         }
       );
       let res;
@@ -528,6 +532,7 @@ export class PiWorkflowAdapter {
       const turnStart = Date.now();
       for (const chunk of result.streamChunks || []) {
         if (chunk.type === 'text' && chunk.content) { this.streamHandler.emitToken('pi', chunk.content, turnStreamId); }
+        else if (chunk.type === 'thinking' && chunk.content) { this.streamHandler.emitThinking('pi', chunk.content, turnStreamId); }
         else if (chunk.type === 'error' && chunk.error) this.streamHandler.emitError('pi', chunk.error, turnStreamId);
       }
       // ⛔ ROOT-CAUSE FIX (SA4E-289) + streaming-identity fix: ALWAYS close the
