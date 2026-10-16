@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.53.1.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.53.2.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,16 @@ MIT
 ---
 
 ## Changelog
+
+### v1.53.2 (2026-10-16)
+
+**SA4E-364 — Patch release (SDLC CHAT: MCP tools wired + thinking display)**
+
+- 🔌 **Wire MCP bridge tools into SDLC CHAT** (SA4E-364): `mem_search` / `mem_ingest` / `code_search` / `jira_get_issue` (SA4E-316 bridge — dead code since creation) giờ nằm trong tool pool của **cả hai** đường chat (legacy + session), kèm allowlist/approval/audit SEC-324-03; `execute_dynamic_tool` deny-by-default; fail-safe khi MCP server stopped. UAT API-level 4/4 PASS (tool call 84ms, graceful -32603/31ms khi down, recovery in-place 166ms)
+- 🧠 **Thinking (reasoning) block trong SDLC CHAT**: pi-ai `thinking_delta` → engine `'thinking'` chunk → `THINKING_START/TOKEN/END` protocol → collapsible block UI (tự thu gọn khi answer bắt đầu, click header để xem lại). Hoạt động với llama-server `--reasoning-format deepseek` + mọi gateway trả thinking content
+- 🛡 **WrapperServer body cap 1MB → 64MB + HTTP 413 sạch** (SA4E-363): body lớn không còn bị connection reset, trả JSON-RPC 413 đúng protocol
+- 📋 Backend `CODE_INTEL_DATA_DIR` env hỗ trợ tách data dir khi chạy backend từ worktree khác
+- 🧪 2,936 extension tests (thêm 8 thinking-display tests + 2 bridge-wiring suites 23 TCs); docs đầy đủ trong `documents/SA4E-364/` (BRD/FSD/TDD/STP/STC + 7 diagrams)
 
 ### v1.53.1 (2026-10-15)
 
