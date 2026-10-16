@@ -18,6 +18,7 @@ import { createPegaDedupSet } from "./DiskBackedSet";
 import { PegaLocalRuleIndex } from "./PegaLocalRuleIndex";
 import { setProjectId } from "../extension";
 import type { CrawlPlanItem } from "../models";
+import type { IngestAuthProvider } from "../utils/backend-auth-headers";
 import { StateComparer } from "../code-intel/delta/StateComparer";
 import { BulkCheckClient } from "../code-intel/delta/BulkCheckClient";
 import { BackendHttpPoster } from "../code-intel/delta/BackendHttpPoster";
@@ -42,7 +43,7 @@ export class PegaCatalogIndexer {
     private readonly httpClient: IndexerHttpClient,
     private readonly outputChannel: vscode.OutputChannel | undefined,
     private readonly log: LogFn,
-    private readonly authManager?: { getTokenSync(): string },
+    private readonly auth?: IngestAuthProvider,
   ) {}
 
   /**
@@ -117,10 +118,14 @@ export class PegaCatalogIndexer {
 
     // 6: reuse BFS indexer to fetch content + ingest (+ discover relatives)
     // resilient=true: a lone 5xx on one rule must not discard the full catalog list.
-    const bfs = new PegaBfsIndexer(pegaClient, backendUrl, this.outputChannel, this.log, undefined, true, this.authManager);
+    const bfs = new PegaBfsIndexer(pegaClient, backendUrl, this.outputChannel, this.log, undefined, true, this.auth);
     const dedupSet = createPegaDedupSet(root, "catalog-indexer");
     try {
       const bfsResult = await bfs.run(projectId, toFetch, dedupSet, report, root);
+      if (bfsResult.stopReason === "auth") {
+        // FSD 4.1: catalog summary — user thấy run bị pause do auth, rerun incremental
+        this.log(`[Catalog] ⏸️ Paused due to auth — rerun sẽ tiếp tục incremental (ingested=${bfsResult.totalIngested} trước khi dừng)`);
+      }
       return { appName, catalogRules: parsed.items.length, totalIngested: bfsResult.totalIngested };
     } finally {
       dedupSet.dispose();
@@ -139,10 +144,12 @@ export class PegaCatalogIndexer {
 
     // The bulk-check route requires a Bearer token under CODE_INTEL_REQUIRE_AUTH
     // (jwtAuth → 401 AUTH_REQUIRED otherwise, which forces a full re-download).
-    const tokenProvider = () =>
-      this.authManager?.getTokenSync() ||
-      (globalThis as any).__authTokenProvider?.() || "";
-    const comparer = new StateComparer(new BulkCheckClient(new BackendHttpPoster(backendUrl, tokenProvider)));
+    // SA4E-362 FR-6: truyền provider đầy đủ cho BackendHttpPoster (401 → refresh → retry 1 lần),
+    // giữ globalThis fallback khi KHÔNG có provider (back-compat).
+    const tokenProvider: (() => string) | IngestAuthProvider | undefined =
+      this.auth ?? (() => (globalThis as any).__authTokenProvider?.() || "");
+    const poster = new BackendHttpPoster(backendUrl, tokenProvider, this.log.bind(this));
+    const comparer = new StateComparer(new BulkCheckClient(poster));
     const candidates: IndexCandidate[] = withChecksum.map((it) => ({ checksum: it.checksum as string, ref: it }));
     const { result, warning } = await comparer.compare(projectId, candidates);
     if (warning) { this.log(`[Catalog] ⚠️ ${warning}`); }

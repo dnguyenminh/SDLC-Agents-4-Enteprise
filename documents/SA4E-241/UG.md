@@ -312,6 +312,7 @@ Khi cần re-index sạch một project (ví dụ sau khi đổi công thức), 
 | 5 | Lỗi `MISSING_AUTH` khi fetch rule | Không có credential Pega (thiếu `authHeader`/`username`+`password`) | Nhập lại credential Pega (extension lưu vào SecretStorage). Không dùng credential mặc định (fail-closed). |
 | 6 | Lỗi `MISSING_PROJECT_IDENTITY` (401) | Bật `CODE_INTEL_REQUIRE_AUTH=true` nhưng request thiếu `X-Project-Id`/JWT `pid` | Gửi header `X-Project-Id` hoặc JWT hợp lệ. |
 | 7 | Catalog trả 0 rule, fallback sang crawl | Rule Catalog Export không có dữ liệu hoặc lỗi | Extension tự fallback BFS crawl. Kiểm tra quyền/cấu hình Rule Catalog Export phía Pega nếu muốn dùng đường nhanh. |
+| 8 | Notification `⛔ Auth hết hạn và refresh thất bại — dừng ingest. Hãy login lại rồi chạy lại (state đã preserve).` | Phiên backend hết hạn giữa job và refresh token cũng không còn hiệu lực → ingest dừng sớm có kiểm soát, không skip rule (SA4E-362) | Đăng nhập lại rồi chạy lại "Index Source Code" — state đã preserve nên lần chạy sau là incremental. Chi tiết: `documents/SA4E-362/UG.md`. |
 
 ### 7.2 Error Codes
 

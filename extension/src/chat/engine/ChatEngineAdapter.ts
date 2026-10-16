@@ -238,7 +238,7 @@ export class ChatEngineAdapter implements IChatEngineAdapter {
     if (event.type === 'chat:streamChunk') {
       const e = event as any;
       if (e.streamId) this.lastStreamId = e.streamId;
-      if (e.eventType === 'token' || e.eventType === 'status' || e.eventType === 'error') {
+      if (e.eventType === 'token' || e.eventType === 'thinking' || e.eventType === 'status' || e.eventType === 'error') {
         return { type: 'chat:streamChunk', streamId: e.streamId, nodeId: e.nodeId, eventType: e.eventType, content: e.content, timestamp: e.timestamp };
       }
     }

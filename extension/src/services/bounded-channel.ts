@@ -69,10 +69,9 @@ export class BoundedChannel<T> {
     return new Promise<IteratorResult<T>>((resolve) => this.takeWaiters.push(resolve));
   }
 
-  /**
-   * Close the channel. Wakes all parked consumers with `{ done: true }` once the
-   * buffer drains. Idempotent.
-   */
+  /** Close the channel. Wakes all parked consumers with `{ done: true }` once the
+    * buffer drains. Idempotent.
+    */
   close(): void {
     if (this.closed) { return; }
     this.closed = true;
@@ -86,4 +85,7 @@ export class BoundedChannel<T> {
       }
     }
   }
+
+  /** SA4E-362 FR-4: số item còn trong buffer (phục vụ log "buffered discarded" khi stop). */
+  get size(): number { return this.buffer.length; }
 }

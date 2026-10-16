@@ -1,0 +1,13 @@
+SA4E-367 targeted suites (2026-10-16 23:49 +07:00, extension/):
+  npx vitest run src/pi-agent/extensions/__tests__/mcp-bridge-extension.test.ts src/pi-workflow/__tests__/bridge-wiring-legacy.test.ts src/pi-workflow/__tests__/bridge-wiring-session.test.ts
+ Test Files  3 passed (3)
+      Tests  39 passed (39)
+   Duration 3.81s
+
+FULL SUITE (2026-10-16 23:49-23:52 +07:00, `npm test` in extension/):
+ Test Files  305 passed (305)
+      Tests  2959 passed (2959)
+   Duration 154.29s (transform 9.55s, setup 0ms, import 61.04s, tests 33.82s)
+
+tsc: npx tsc -p extension/tsconfig.json --noEmit -> exit 0 (no output).
+esbuild-production: node esbuild.js --production -> "[esbuild] build complete" (23:48 +07:00).

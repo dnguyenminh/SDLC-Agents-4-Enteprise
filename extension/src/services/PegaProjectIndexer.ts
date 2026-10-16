@@ -15,6 +15,7 @@ import { discoverAppClasses, fetchCategoryRules } from "./PegaAppClassDiscovery"
 import { summaryToCrawlItem } from "../models";
 import { setProjectId } from "../extension";
 import { createPegaDedupSet } from "./DiskBackedSet";
+import type { IngestAuthProvider } from "../utils/backend-auth-headers";
 
 type ProgressReporter = vscode.Progress<{ message?: string }>;
 
@@ -27,7 +28,7 @@ export class PegaProjectIndexer {
         private readonly httpClient: IndexerHttpClient,
         private readonly outputChannel: vscode.OutputChannel | undefined,
         private readonly log: (msg: string) => void,
-        private readonly authManager?: { getTokenSync(): string },
+        private readonly auth?: IngestAuthProvider,
     ) {}
 
     async run(root: string, report: ProgressReporter, secrets?: vscode.SecretStorage): Promise<string | null> {
@@ -64,7 +65,9 @@ export class PegaProjectIndexer {
 
         if (enumeratedMap.size === 0 && seeds.length > 0) {
             this.log(`[Pega Indexer] ⚠️ Enumeration 0 rules. Fallback to seeds.`);
-            const plan = await pegaClient.crawlPlan({ projectId, ruleKeys: seeds, visitedKeys: [] });
+            // SA4E-362 CR-01: thread the ingest auth provider (FR-7) — crawl-plan is a
+            // /api/v1/pega/* POST behind jwtAuth; refresh-on-401 applies like every site.
+            const plan = await pegaClient.crawlPlan({ projectId, ruleKeys: seeds, visitedKeys: [] }, this.auth);
             for (const item of plan.missing) {
                 enumeratedMap.set(item.insKey, {
                     pzInsKey: item.insKey, pxObjClass: item.pxObjClass,
@@ -114,7 +117,7 @@ export class PegaProjectIndexer {
         try {
             const { DataTableResolver } = await import("./DataTableResolver");
             const { PegaStreamIngester } = await import("./PegaStreamIngester");
-            const ingester = new PegaStreamIngester(pegaClient.getBackendUrlPublic(), this.authManager);
+            const ingester = new PegaStreamIngester(pegaClient.getBackendUrlPublic(), this.auth);
             const resolver = new DataTableResolver(pegaClient, ingester, this.log);
             return await resolver.resolve(projectId, root, report);
         } catch (err: any) {
@@ -345,7 +348,7 @@ export class PegaProjectIndexer {
         }
 
         const { PegaStreamIngester } = await import("./PegaStreamIngester");
-        const ingester = new PegaStreamIngester(pegaClient.getBackendUrlPublic(), this.authManager);
+        const ingester = new PegaStreamIngester(pegaClient.getBackendUrlPublic(), this.auth);
         const visited = crawlSet.map((c: any) => c.insKey);
         const res = await ingester.streamIngest(rules, projectId, checksums, versions, visited, this.log);
         return { kb: res.totalKbEntriesInDb || 0, graph: res.totalGraphNodesInDb || 0 };

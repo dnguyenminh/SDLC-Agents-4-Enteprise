@@ -23,11 +23,29 @@ export class StreamHandler {
    * ids fragment one answer into many bubbles and orphan completions.
    */
   emitToken(nodeId: string, content: string, streamId: string): void {
+    this.bufferChunk("token", nodeId, content, streamId);
+  }
+
+  /**
+   * SA4E-THINKING: buffer reasoning (thinking) delta events like tokens —
+   * debounced so the webview ThinkingBlock streams without postMessage storms.
+   */
+  emitThinking(nodeId: string, content: string, streamId: string): void {
+    this.bufferChunk("thinking", nodeId, content, streamId);
+  }
+
+  /** Shared buffered chunk path for token/thinking deltas. */
+  private bufferChunk(
+    eventType: "token" | "thinking",
+    nodeId: string,
+    content: string,
+    streamId: string
+  ): void {
     this.buffer.push({
       type: "chat:streamChunk",
       streamId,
       nodeId,
-      eventType: "token",
+      eventType,
       content,
       timestamp: new Date().toISOString(),
     });

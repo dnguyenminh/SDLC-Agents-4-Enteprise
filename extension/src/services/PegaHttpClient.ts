@@ -15,6 +15,7 @@ import * as write from "./pega/PegaRuleWriteClient";
 import * as ctx from "./pega/PegaContextClient";
 import * as dp from "./pega/PegaDataPageClient";
 import * as backend from "./pega/PegaBackendClient";
+import type { IngestAuthProvider } from "../utils/backend-auth-headers";
 
 export type { PegaOperatorContext } from "./pega/PegaHttpCore";
 
@@ -83,13 +84,13 @@ export class PegaHttpClient extends PegaHttpCore {
   }
 
   // --- Backend cache / crawl ---
-  checkBackendCache(body: Record<string, unknown>): Promise<any> { return backend.checkBackendCache(this, body); }
-  ingestBackendRule(body: Record<string, unknown>): Promise<any> { return backend.ingestBackendRule(this, body); }
-  crawlPlan(body: { projectId: string; ruleKeys: string[]; visitedKeys: string[]; ruleChecksums?: Record<string, string> }) {
-    return backend.crawlPlan(this, body);
+  checkBackendCache(body: Record<string, unknown>, auth?: IngestAuthProvider): Promise<any> { return backend.checkBackendCache(this, body, auth); }
+  ingestBackendRule(body: Record<string, unknown>, auth?: IngestAuthProvider): Promise<any> { return backend.ingestBackendRule(this, body, auth); }
+  crawlPlan(body: { projectId: string; ruleKeys: string[]; visitedKeys: string[]; ruleChecksums?: Record<string, string> }, auth?: IngestAuthProvider) {
+    return backend.crawlPlan(this, body, auth);
   }
-  crawlBatch(body: { projectId: string; rules: Record<string, unknown>[]; visitedKeys: string[]; rulesChecksums?: Record<string, string>; rulesVersions?: Record<string, string> }) {
-    return backend.crawlBatch(this, body);
+  crawlBatch(body: { projectId: string; rules: Record<string, unknown>[]; visitedKeys: string[]; rulesChecksums?: Record<string, string>; rulesVersions?: Record<string, string> }, auth?: IngestAuthProvider) {
+    return backend.crawlBatch(this, body, auth);
   }
-  detectProject(workspaceRoot: string) { return backend.detectProject(this, workspaceRoot); }
+  detectProject(workspaceRoot: string, auth?: IngestAuthProvider) { return backend.detectProject(this, workspaceRoot, auth); }
 }

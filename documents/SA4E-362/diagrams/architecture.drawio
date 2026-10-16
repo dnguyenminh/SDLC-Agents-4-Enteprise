@@ -1,0 +1,84 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1250" pageHeight="920" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="ext" value="VS Code Extension (Kiro) — extension/src/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=10;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="820" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="auth" value="AuthManager&#10;(auth/AuthManager.ts)&#10;getTokenSync() :145&#10;refreshToken() :471 — dedupe refreshInFlight&#10;doRefresh() :477 — never throws&#10;★ single source of truth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="580" y="80" width="260" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="svc" value="IndexingService&#10;(services/IndexingService.ts)&#10;+ ingestAuthProvider() : FR-5&#10;getTokenSync → currentToken() :50&#10;refreshToken → refreshTokenFn :27&#10;GAP 4: this.token = fresh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="250" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="catalog" value="PegaCatalogIndexer :45&#10;auth?: IngestAuthProvider&#10;FR-6 wiring :142-145" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="230" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="project" value="PegaProjectIndexer :30&#10;auth?: IngestAuthProvider&#10;2 ingester sites :117 :348" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="330" y="230" width="230" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="bfs" value="PegaBfsIndexer :134&#10;auth?: IngestAuthProvider&#10;authDead / authNotified (FR-3)&#10;catch instanceof IngestAuthError&#10;wire shouldStop → 'auth'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="340" width="240" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="pipe" value="PegaBfsPipeline (FR-4)&#10;PipelineOptions + shouldStop?&#10;stopReason cache — checkStop()&#10;supply break / consume exit&#10;run() → BfsRunResult{stopReason}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="340" y="340" width="240" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="ing" value="PegaStreamIngester :61-66 (FR-2/FR-3)&#10;auth?: IngestAuthProvider&#10;fetchWithAuthRetry → withAuthRetry&#10;authHeaders() rebuild per-request&#10;makeBody() stream factory&#10;3 call sites: submit / poll / rule&#10;throw IngestAuthError khi 401 persists" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="480" width="290" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="poster" value="BackendHttpPoster (FR-6)&#10;tokenProvider?: (() => string) | IngestAuthProvider&#10;refresh-on-401 single retry (bulk-check)&#10;back-compat: legacy () => string" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="390" y="490" width="270" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="fr7" value="FR-7 (SHOULD): PegaBackendClient / PegaCodeIntelDiscovery / PegaSchemaIndexer — withAuthRetry + Authorization header (SchemaIndexer: header mới)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="560" y="560" width="280" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="be" value="KB Backend — backend/src/server/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=10;" vertex="1" parent="1">
+      <mxGeometry x="920" y="40" width="290" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="jwt" value="jwtAuth middleware :111&#10;401 TOKEN_INVALID TRƯỚC handler&#10;(không side-effect → retry an toàn)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="945" y="90" width="240" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="eps" value="/api/v1/pega/ingest-stream (POST)&#10;/api/v1/pega/jobs/:id (GET)&#10;/api/v1/pega/ingest-rule (POST)&#10;/api/v1/pega/rulecatalog/bulk-check&#10;/api/v1/pega/check-rule, crawl-plan,&#10;crawl-batch, detect-project, discover,&#10;schema/generate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;align=left;spacingLeft=12;" vertex="1" parent="1">
+      <mxGeometry x="945" y="200" width="240" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="refresh" value="/api/auth/refresh (POST)&#10;refreshInFlight dedupe&#10;revoke → clearSession" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="945" y="400" width="240" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="provider (FR-5)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="svc" target="catalog">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="provider (FR-5)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="svc" target="project">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="auth :120" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="catalog" target="bfs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="auth :136" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="bfs" target="ing">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="ingestFn + shouldStop" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="bfs" target="pipe">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="IngestAuthError (FR-3)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;strokeWidth=1;dashed=1;fontSize=10;" edge="1" parent="1" source="ing" target="bfs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="tokenProvider :142-145" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="catalog" target="poster">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="HTTP + Bearer (retry 1×)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="ing" target="jwt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="bulk-check" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="poster" target="jwt">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" value="getTokenSync / refreshToken (qua adapter)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="svc" target="auth">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" value="refresh" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="auth" target="refresh">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" value="401 (mid-job)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;strokeWidth=2;dashed=1;fontSize=10;" edge="1" parent="1" source="jwt" target="ing">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

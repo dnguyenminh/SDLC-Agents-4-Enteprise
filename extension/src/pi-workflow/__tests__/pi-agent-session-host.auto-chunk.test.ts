@@ -1,8 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ensureSessionHost, clearSessionHostCache } from '../pi-agent-session-host.js';
 
-// Mock pi-coding-agent
-const { promptCalls } = vi.hoisted(() => ({ promptCalls: [] as string[] }));
+// Mock pi-coding-agent.
+// SA4E-365 (TC-03): `subscribe` now CAPTURES the listener and `prompt` emits
+// the scripted events through it — enabling synthetic thinking_delta streams.
+// `sessionEmit` only reaches listeners still subscribed (host unsubscribes in
+// its `finally`), which is exactly the real SDK post-turn behavior.
+const { promptCalls, scripted, listeners, sessionEmit } = vi.hoisted(() => {
+  const listeners: Array<(e: unknown) => void> = [];
+  const sessionEmit = (evt: unknown) => {
+    for (const l of [...listeners]) l(evt);
+  };
+  return {
+    promptCalls: [] as string[],
+    scripted: { events: [] as unknown[] },
+    listeners,
+    sessionEmit,
+  };
+});
 
 vi.mock('@earendil-works/pi-coding-agent', () => ({
   getAgentDir: () => '/tmp/pi',
@@ -19,9 +34,17 @@ vi.mock('@earendil-works/pi-coding-agent', () => ({
   DefaultResourceLoader: class { constructor() {} },
   createAgentSession: vi.fn(async () => ({
     session: {
-      subscribe: () => () => {},
+      subscribe: (listener: (e: unknown) => void) => {
+        listeners.push(listener);
+        return () => {
+          const i = listeners.indexOf(listener);
+          if (i >= 0) listeners.splice(i, 1);
+        };
+      },
       prompt: async (text: string) => {
         promptCalls.push(text);
+        // Consume the script once per prompt so chunked runs emit only on the first chunk.
+        for (const evt of scripted.events.splice(0)) sessionEmit(evt);
       },
     },
   })),
@@ -90,6 +113,73 @@ describe('PiAgentSessionHost auto-chunk (SA4E-355)', () => {
     });
     await host.promptTurn('just a normal question');
     expect(promptCalls).toHaveLength(1); // single provider call — no chunking
+    host.dispose();
+  });
+});
+
+// SA4E-365 — promptTurn onThinking forwarding (STC Group E, TC-03 [FR1-R1/R2,
+// FR5-R3, AC1/BR-1]). The fake session emits synthetic message_update events
+// through the captured subscribe listener; the script is consumed once so
+// chunked runs emit only during their first chunk prompt.
+describe('promptTurn onThinking forwarding (SA4E-365, TC-03)', () => {
+  beforeEach(() => {
+    clearSessionHostCache();
+    scripted.events.length = 0;
+    promptCalls.length = 0;
+  });
+
+  const thinking = (delta?: string): unknown => ({
+    type: 'message_update',
+    assistantMessageEvent: { type: 'thinking_delta', delta },
+  });
+  const text = (delta: string): unknown => ({
+    type: 'message_update',
+    assistantMessageEvent: { type: 'text_delta', delta },
+  });
+
+  // SA4E-365, TC-03a [FR1-R1] — normal loop (non-chunked path) forwards deltas in order
+  it('TC-03a: normal loop forwards thinking deltas then the text token', async () => {
+    const host = await ensureSessionHost({ workspaceRoot: '/ws', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
+    scripted.events.push(thinking('t1'), thinking('t2'), text('hi'));
+    const onThinking = vi.fn();
+    const onToken = vi.fn();
+    await host.promptTurn('short prompt', onToken, undefined, onThinking);
+    expect(promptCalls).toHaveLength(1); // precondition: normal loop, no chunking
+    expect(onThinking.mock.calls.map((c) => c[0])).toEqual(['t1', 't2']);
+    expect(onToken.mock.calls.map((c) => c[0])).toEqual(['hi']);
+    host.dispose();
+  });
+
+  // SA4E-365, TC-03b [FR1-R2, F2] — auto-chunk loop (runOnce) forwards deltas too
+  it('TC-03b: auto-chunk loop forwards thinking deltas via onThinking', async () => {
+    const host = await ensureSessionHost({ workspaceRoot: '/ws', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 8192 });
+    const largePrompt = Array.from({ length: 200 }, (_, i) => `Paragraph ${i} with some content. `).join('\n\n');
+    scripted.events.push(thinking('c1'), thinking('c2'));
+    const onThinking = vi.fn();
+    await host.promptTurn(largePrompt, undefined, undefined, onThinking);
+    expect(promptCalls.length).toBeGreaterThan(1); // precondition: chunked → runOnce loop
+    expect(onThinking.mock.calls.map((c) => c[0])).toEqual(['c1', 'c2']);
+    host.dispose();
+  });
+
+  // SA4E-365, TC-03c [FR1-R1 guard] — host guard drops empty deltas (truthy content only)
+  it('TC-03c: empty thinking delta never reaches onThinking', async () => {
+    const host = await ensureSessionHost({ workspaceRoot: '/ws', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
+    scripted.events.push(thinking(''), thinking(undefined), thinking('real'));
+    const onThinking = vi.fn();
+    await host.promptTurn('short prompt', undefined, undefined, onThinking);
+    expect(onThinking.mock.calls.map((c) => c[0])).toEqual(['real']);
+    host.dispose();
+  });
+
+  // SA4E-365, TC-03d [FR5-R3] — after the turn ends no event reaches onThinking (unsubscribed)
+  it('TC-03d: late event after promptTurn ends is not forwarded (guard live)', async () => {
+    const host = await ensureSessionHost({ workspaceRoot: '/ws', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
+    const onThinking = vi.fn();
+    await host.promptTurn('short prompt', undefined, undefined, onThinking);
+    expect(onThinking).not.toHaveBeenCalled(); // no script — sanity
+    sessionEmit(thinking('late')); // listeners array is empty post-unsubscribe
+    expect(onThinking).not.toHaveBeenCalled();
     host.dispose();
   });
 });

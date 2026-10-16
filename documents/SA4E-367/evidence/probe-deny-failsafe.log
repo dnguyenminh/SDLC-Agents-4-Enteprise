@@ -1,0 +1,16 @@
+SA4E-367 probe — deny-by-default + fail-safe (temp vitest file zz-probe-sa4367.test.ts, 5 tests, deleted after run)
+Date: 2026-10-16 23:49 +07:00 | Runner: vitest v4.1.8 | CWD: extension/
+
+stdout (verbose reporter):
+DEFAULT_NAMES=["code_search","jira_get_issue","mem_ingest","mem_search"]
+OPTIN_NAMES=["code_search","execute_dynamic_tool","find_tools","jira_get_issue","mem_ingest","mem_search"]
+DENY_TEXT="Dynamic tool chaining is disabled: execute_dynamic_tool requires explicit opt-in"
+DENY_DETAILS={"error":"chaining_denied","toolName":"execute_dynamic_tool"}
+FIND_DENY_TEXT="Dynamic tool chaining is disabled: find_tools requires explicit opt-in"
+FAILSAFE_TEXT="Error invoking mem_search: MCP Server is not running."
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  23:49:31 | Duration 531ms
+
+Assertions additionally verified (not only text): no-throw on denied invoke, bridge.callTool 0 calls on deny paths.

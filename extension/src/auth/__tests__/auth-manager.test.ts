@@ -245,4 +245,25 @@ describe("AuthManager", () => {
       expect(spy).toHaveBeenCalledWith("entra");
     });
   });
+
+  // ─── SA4E-362 UT-12: concurrent refresh dedupe (refreshInFlight — FR-1) ───
+  describe("SA4E-362 UT-12 — concurrent refresh dedupe", () => {
+    it("dedupes 2 parallel getAccessToken() calls into exactly 1 POST /api/auth/refresh", async () => {
+      // Arrange: login với token ĐÃ hết hạn → getAccessToken sẽ vào nhánh refresh.
+      fetchMock.mockResolvedValue(okJson({ token: "expired-tok", expiresAt: new Date(Date.now() - 3600_000).toISOString() }));
+      await auth.login("user1", "pass1");
+      fetchMock.mockClear();
+      // Refresh call → fresh token.
+      fetchMock.mockResolvedValue(okJson({ token: "fresh-tok", expiresAt: new Date(Date.now() + 3600_000).toISOString() }));
+
+      // Act: 2 getAccessToken song song (2 caller gặp 401 cùng lúc).
+      const [t1, t2] = await Promise.all([auth.getAccessToken(), auth.getAccessToken()]);
+
+      // Assert: đúng 1 fetch /api/auth/refresh (dedupe refreshInFlight — không thundering herd).
+      const refreshCalls = fetchMock.mock.calls.filter((c: unknown[]) => String(c[0]).includes("/api/auth/refresh"));
+      expect(refreshCalls.length).toBe(1);
+      expect(t1).toBe("fresh-tok");
+      expect(t2).toBe("fresh-tok"); // cả 2 resolve 'fresh-tok'
+    });
+  });
 });

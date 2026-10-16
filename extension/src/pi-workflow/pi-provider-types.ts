@@ -41,7 +41,7 @@ export interface PiRunResult {
 }
 
 export interface PiStreamChunk {
-  type: 'text' | 'tool_call' | 'error' | 'done';
+  type: 'text' | 'thinking' | 'tool_call' | 'error' | 'done';
   content?: string;
   toolCall?: ToolCall;
   error?: string;

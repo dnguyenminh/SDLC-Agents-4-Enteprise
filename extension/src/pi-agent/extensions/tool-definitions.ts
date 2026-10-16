@@ -64,6 +64,21 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'find_tools',
+    label: 'Find Tools',
+    description: 'Discover available MCP tools by semantic query (dynamic chaining: pair with execute_dynamic_tool)',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Semantic search query for tools' },
+        threshold: { type: 'number', description: 'Match threshold 0..1' },
+        top_k: { type: 'number', description: 'Max results' },
+        limit: { type: 'number', description: 'Max results (alias)' },
+      },
+      required: ['query'],
+    },
+  },
+  {
     name: 'execute_dynamic_tool',
     label: 'Execute Dynamic Tool',
     description: 'Execute dynamic tool via MCP wrapper',
@@ -111,6 +126,17 @@ export function validateParams(schema: any, params: Record<string, unknown>): { 
  * `execute_dynamic_tool` is deliberately absent (deny by default).
  */
 export const DYNAMIC_TOOL_NAME = "execute_dynamic_tool";
+
+/** SEC-324-03 — discovery pair gate. `find_tools` travels together with
+ * `execute_dynamic_tool`: both are denied by default, emitted only on the
+ * explicit `allowDynamicChaining === true` opt-in. */
+export const FIND_TOOL_NAME = "find_tools";
+
+/** True when the tool is part of the gated discovery pair
+ * (`find_tools` + `execute_dynamic_tool`). */
+export function isDiscoveryTool(toolName: string): boolean {
+  return toolName === FIND_TOOL_NAME || toolName === DYNAMIC_TOOL_NAME;
+}
 
 /** Concrete tools allowed on the Pi→MCP bridge path. */
 export const TOOL_ALLOWLIST: ReadonlySet<string> = new Set([

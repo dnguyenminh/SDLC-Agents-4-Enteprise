@@ -1,0 +1,48 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+ ❯ src/pi-workflow/__tests__/pi-session-routing.test.ts (3 tests | 1 failed) 33ms
+     × cloud provider with key routes to the session path 19ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-session-routing.test.ts > PiWorkflowAdapter session routing (local vs cloud) > cloud provider with key routes to the session path
+ FAIL  src/pi-workflow/__tests__/pi-session-routing.test.ts > PiWorkflowAdapter session routing (local vs cloud) > cloud provider with key routes to the session path
+ FAIL  src/pi-workflow/__tests__/pi-session-routing.test.ts > PiWorkflowAdapter session routing (local vs cloud) > cloud provider with key routes to the session path
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'hi', Any<Function>, Any<Function> ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    "hi",
+-   Any<Function>,
+-   Any<Function>,
++   [Function anonymous],
++   [Function anonymous],
++   [Function anonymous],
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/pi-workflow/__tests__/pi-session-routing.test.ts:116:30
+    114|       expect.objectContaining({ workspaceRoot: 'C:/ws/test', providerI…
+    115|     );
+    116|     expect(mocks.promptTurn).toHaveBeenCalledWith('hi', expect.any(Fun…
+       |                              ^
+    117|     expect(chatErrors(onEvent)).toEqual([]);
+    118|     // Live tool progress reaches the webview as a tool block.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed | 304 passed (305)
+      Tests  1 failed | 2963 passed (2964)
+   Start at  04:14:01
+   Duration  164.72s (transform 10.20s, setup 0ms, import 66.19s, tests 36.88s, environment 5.92s)
+

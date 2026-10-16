@@ -6,6 +6,8 @@ export interface EventCollector {
   chunks: PiStreamChunk[];
   toolCalls: ToolCall[];
   text: string;
+  /** SA4E-THINKING: accumulated reasoning text (rendered in ThinkingBlock, not part of the answer). */
+  thinking?: string;
   errorMessage?: string;
 }
 
@@ -112,6 +114,13 @@ export function mapAgentEvent(event: AgentEvent, collector: EventCollector): voi
     if (ame && ame.type === 'text_delta' && ame.delta) {
       collector.text += ame.delta;
       collector.chunks.push({ type: 'text', content: ame.delta });
+    }
+    // SA4E-THINKING: forward reasoning deltas (pi-ai emits thinking_delta for
+    // reasoning_content/reasoning/thinking fields) so the webview can render
+    // the live ThinkingBlock. Previously these were silently dropped here.
+    if (ame && ame.type === 'thinking_delta' && ame.delta) {
+      collector.thinking = (collector.thinking ?? '') + ame.delta;
+      collector.chunks.push({ type: 'thinking', content: ame.delta });
     }
     return;
   }

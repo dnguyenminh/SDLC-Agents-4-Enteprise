@@ -1,0 +1,9 @@
+ .../pi-agent-session-host.auto-chunk.test.ts       | 96 +++++++++++++++++++++-
+ extension/src/pi-workflow/pi-agent-session-host.ts | 31 ++++++-
+ extension/src/pi-workflow/pi-event-mapper.ts       |  9 ++
+ extension/src/pi-workflow/pi-provider-types.ts     |  2 +-
+ extension/src/pi-workflow/pi-workflow-adapter.ts   | 21 +++++
+ extension/src/pi-workflow/types/executor.types.ts  |  2 +-
+ 6 files changed, 153 insertions(+), 8 deletions(-)
+Failed test: src/pi-workflow/__tests__/pi-session-routing.test.ts > cloud provider with key routes to the session path
+Attribution: SA4E-364 WIP (external to SA4E-362 change-set)

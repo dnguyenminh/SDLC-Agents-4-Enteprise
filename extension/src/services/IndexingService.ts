@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { IndexerHttpClient } from "./IndexerHttpClient";
+import type { IngestAuthProvider } from "../utils/backend-auth-headers";
 import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET } from "./WorkspaceScopeResolver";
 
 export interface IndexOptions {
@@ -50,6 +51,28 @@ export class IndexingService {
     private currentToken(): string {
         const live = (globalThis as { __authTokenProvider?: () => string }).__authTokenProvider?.();
         return live || this.token || "";
+    }
+
+    /**
+     * SA4E-362 FR-5 — Provider auth đầy đủ cho ingest path: token cache (live qua
+     * currentToken()) + refresh theo nhu cầu khi 401. Dựng closure MỚI mỗi lần gọi
+     * (không state) — an toàn vì isProcessing chặn 2 run song song.
+     * GAP 4 (SA4E-300): refresh thành công phải cập nhật this.token để getTokenSync()
+     * ở các request sau trả token mới (nếu không, mọi request đầu lại dùng token cũ → 401 mỗi lần).
+     * Precedence của currentToken(): globalThis.__authTokenProvider?.() → this.token → "".
+     */
+    private ingestAuthProvider(): IngestAuthProvider {
+        return {
+            getTokenSync: () => this.currentToken(),
+            refreshToken: async () => {
+                if (!this.refreshTokenFn) { return undefined; } // AF-1 — chưa wired
+                try {
+                    const fresh = await this.refreshTokenFn();   // adapter AuthManager (CommandRegistrar)
+                    if (fresh) { this.token = fresh; }           // ← GAP 4: đồng bộ token nội bộ
+                    return fresh;
+                } catch { return undefined; }                    // EF-1 — refresh throw = refresh thất bại
+            },
+        };
     }
 
     private log(msg: string): void {
@@ -254,7 +277,8 @@ export class IndexingService {
             const { PegaHttpClient } = await import("./PegaHttpClient");
             const { PegaSchemaIndexer } = await import("./PegaSchemaIndexer");
             const pegaClient = new PegaHttpClient(secrets, this.outputChannel);
-            const indexer = new PegaSchemaIndexer(this.httpClient, this.log.bind(this));
+            // SA4E-362 FR-7 (SHOULD): SchemaIndexer nhận provider (Authorization + refresh-on-401)
+            const indexer = new PegaSchemaIndexer(this.httpClient, this.log.bind(this), this.ingestAuthProvider());
             return await indexer.run(root, report, pegaClient);
         } catch (err: any) {
             this.log(`[SchemaGen] ❌ Fatal error: ${err.message}`);
@@ -275,7 +299,7 @@ export class IndexingService {
         if (useCatalog && secrets) {
             try {
                 const { PegaCatalogIndexer } = await import("./PegaCatalogIndexer");
-                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.currentToken() });
+                const catalogIndexer = new PegaCatalogIndexer(this.httpClient, this.outputChannel, this.log.bind(this), this.ingestAuthProvider());
                 const result = await catalogIndexer.run(root, report, secrets);
                 if (result) {
                     return `🏛️ Pega (catalog): "${result.appName}" — ${result.catalogRules} rules in catalog, ingested ${result.totalIngested}`;
@@ -289,7 +313,7 @@ export class IndexingService {
         // Fallback path: BFS crawl (enumeration + relative discovery).
         try {
             const { PegaProjectIndexer } = await import("./PegaProjectIndexer");
-            const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this), { getTokenSync: () => this.currentToken() });
+            const indexer = new PegaProjectIndexer(this.httpClient, this.outputChannel, this.log.bind(this), this.ingestAuthProvider());
             return await indexer.run(root, report, secrets);
         } catch (err: any) {
             this.log(`[Pega Indexer] ❌ Fatal error: ${err.message}`);
@@ -306,7 +330,8 @@ export class IndexingService {
             const { PegaHttpClient } = await import("./PegaHttpClient");
             const pegaClient = new PegaHttpClient(secrets, this.outputChannel);
             const { PegaCodeIntelDiscovery } = await import("./PegaCodeIntelDiscovery");
-            const disc = new PegaCodeIntelDiscovery(pegaClient, this.outputChannel, this.log.bind(this));
+            // SA4E-362 FR-7 (SHOULD): Discovery nhận provider (refresh-on-401)
+            const disc = new PegaCodeIntelDiscovery(pegaClient, this.outputChannel, this.log.bind(this), this.ingestAuthProvider());
             const { getProjectId } = await import("../extension");
             const projectId = getProjectId();
             if (!projectId) {

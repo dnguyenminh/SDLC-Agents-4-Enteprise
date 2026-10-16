@@ -58,4 +58,45 @@ describe("BackendHttpPoster", () => {
     const poster = new BackendHttpPoster("http://127.0.0.1:48721", () => TOKEN);
     await expect(poster.postJson("/bulk-check", {}, {})).rejects.toThrow(/401/);
   });
+
+  // ─── SA4E-362 UT-10: refresh-on-401 for full IngestAuthProvider (union signature) ───
+
+  it("UT-10a: refreshes once on 401 and retries with the fresh token", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: false, status: 401, statusText: "Unauthorized", json: async () => ({}), headers: new Headers() })
+      .mockResolvedValueOnce({ ok: true, status: 200, statusText: "OK", json: async () => ({ data: { existing: [1] }, error: null }), headers: new Headers() });
+    vi.stubGlobal("fetch", fetchMock);
+    const refreshToken = vi.fn(async () => "fresh");
+    const poster = new BackendHttpPoster("http://127.0.0.1:48721", { getTokenSync: () => "stale", refreshToken });
+
+    const result = await poster.postJson("/api/v1/pega/rulecatalog/bulk-check", { projectId: "p", checksums: [] }, { "X-Project-Id": "p" });
+
+    expect(result).toEqual({ data: { existing: [1] }, error: null }); // parsed JSON
+    expect(refreshToken).toHaveBeenCalledTimes(1); // đúng 1 lần
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [, init2] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect((init2.headers as Record<string, string>)["Authorization"]).toBe("Bearer fresh"); // call #2 fresh
+  });
+
+  it("UT-10b: refresh undefined → single fetch, rejects with the unchanged message", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 401, statusText: "Unauthorized", json: async () => ({}), headers: new Headers() });
+    vi.stubGlobal("fetch", fetchMock);
+    const refreshToken = vi.fn(async () => undefined);
+    const poster = new BackendHttpPoster("http://127.0.0.1:48721", { getTokenSync: () => "stale", refreshToken });
+
+    await expect(poster.postJson("/bulk-check", {}, {})).rejects.toThrow(/bulk-check HTTP 401/);
+    expect(fetchMock).toHaveBeenCalledTimes(1); // KHÔNG fallback re-fetch (US-2 AC5)
+    expect(refreshToken).toHaveBeenCalledTimes(1);
+  });
+
+  it("UT-10c: non-401 (500) → no refresh, error as before", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 500, statusText: "Internal Server Error", json: async () => ({}), headers: new Headers() });
+    vi.stubGlobal("fetch", fetchMock);
+    const refreshToken = vi.fn(async () => "fresh");
+    const poster = new BackendHttpPoster("http://127.0.0.1:48721", { getTokenSync: () => "stale", refreshToken });
+
+    await expect(poster.postJson("/bulk-check", {}, {})).rejects.toThrow(/500/);
+    expect(refreshToken).toHaveBeenCalledTimes(0); // BR-1: chỉ 401 trigger refresh
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });

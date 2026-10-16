@@ -1,0 +1,55 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="950" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="clsIng" value="PegaStreamIngester&#10;─────────────────────────&#10;- backendUrl: string&#10;- auth?: IngestAuthProvider      [ĐỔI :61-63]&#10;─────────────────────────&#10;+ streamIngest(rules, projectId, ...)&#10;- submitJob(...)   [ĐỔI: makeBody() + fetchWithAuthRetry]&#10;- pollUntilComplete(jobId, projectId, log)  [ĐỔI: headers per-request]&#10;- ingestSingleRule(projectId, ruleJson, ...)  [ĐỔI]&#10;- fetchWithAuthRetry(send, endpoint?, log?)   [MỚI]&#10;- authHeaders(projectId, extra?)              [MỚI]&#10;─────────────────────────&#10;+ class IngestAuthError extends Error         [MỚI — export]&#10;  + readonly status: number&#10;  throw tại 3 site khi 401 persists" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="40" width="420" height="230" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsPipe" value="PegaBfsPipeline&#10;─────────────────────────&#10;- aborted: string | null          [GIỮ NGUYÊN :71 — throw]&#10;- stopReason: string | null       [MỚI — cache 1 lần]&#10;- inFlightAtStop: number          [MỚI — observability]&#10;─────────────────────────&#10;+ run(...): Promise&lt;BfsRunResult&gt; [ĐỔI: void → result]&#10;- supply(channel, fetchQueue)     [ĐỔI: while + checkStop]&#10;- consume(channel, ...)           [ĐỔI: checkStop đầu vòng]&#10;- checkStop(): void               [MỚI — idempotent]&#10;─────────────────────────&#10;+ interface BfsRunResult { stopReason: string | null }  [MỚI]&#10;+ PipelineOptions.shouldStop?: () => string | null      [MỚI]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="520" y="40" width="420" height="230" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsBfs" value="PegaBfsIndexer&#10;─────────────────────────&#10;- auth?: IngestAuthProvider       [ĐỔI :134 — rename authManager]&#10;- authDead: boolean               [MỚI — FR-3]&#10;- authNotified: boolean           [MỚI — BR-6 guard]&#10;─────────────────────────&#10;+ run(...): Promise&lt;BfsIndexResult&gt;  [ĐỔI: reset flags + shouldStop]&#10;+ BfsIndexResult.stopReason?: string | null  [MỚI — additive]&#10;- ingestAndDiscover(...)          [ĐỔI: catch instanceof IngestAuthError&#10;   → authDead=true + 1 log ⛔ + showWarningMessage]&#10;- triggerSchemaHook(...)          [GIỮ NGUYÊN]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="520" y="320" width="420" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsSvc" value="IndexingService&#10;─────────────────────────&#10;- token?: string                  [GIỮ NGUYÊN :26]&#10;- refreshTokenFn?                 [GIỮ NGUYÊN :27]&#10;─────────────────────────&#10;+ ingestAuthProvider(): IngestAuthProvider  [MỚI — FR-5]&#10;   getTokenSync → currentToken() (precedence :50-53)&#10;   refreshToken → refreshTokenFn(); if (fresh) this.token = fresh  ← GAP 4&#10;   catch → undefined&#10;─────────────────────────&#10;construction :278 / :292 → truyền provider mới&#10;(cũ: { getTokenSync: () => this.currentToken() })" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="320" width="420" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsCatalog" value="PegaCatalogIndexer&#10;─────────────────────────&#10;- auth?: IngestAuthProvider   [ĐỔI :45 — rename]&#10;─────────────────────────&#10;+ run(root, report, secrets)&#10;   :120 new PegaBfsIndexer(..., this.auth)&#10;   bfsResult.stopReason === 'auth' → log ⏸️ paused  [MỚI]&#10;- applyIncrementalSkip(...)&#10;   :142-145 new BackendHttpPoster(backendUrl, tokenProvider, log)&#10;   tokenProvider = this.auth ?? (() => globalThis fallback)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="580" width="420" height="160" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsProject" value="PegaProjectIndexer&#10;─────────────────────────&#10;- auth?: IngestAuthProvider   [ĐỔI :30 — rename]&#10;─────────────────────────&#10;+ run(root, report, secrets)&#10;   :117 VÀ :348 new PegaStreamIngester(url, this.auth)&#10;   (FR-7: crawlPlan :67 / checkBackendCache thread auth optional)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="520" y="580" width="420" height="120" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsPoster" value="BackendHttpPoster&#10;─────────────────────────&#10;- backendUrl: string&#10;- tokenProvider?: (() => string) | IngestAuthProvider  [ĐỔI :19 — union]&#10;- log?: (msg) => void         [MỚI — optional param 3]&#10;─────────────────────────&#10;+ postJson(path, body, headers)  [ĐỔI: refresh-on-401 1×]&#10;- refreshFn()                 [MỚI — discriminate runtime]&#10;- syncToken()                 [MỚI]&#10; throw 'bulk-check HTTP ...' GIỮ NGUYÊN :34" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="580" width="290" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="clsChannel" value="BoundedChannel&lt;T&gt;&#10;─────────────────────────&#10;+ get size(): number   [MỚI — additive :34]&#10;   (log 'buffered discarded' khi stop)&#10;push/take/close GIỮ NGUYÊN" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="320" width="270" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" value="tạo + truyền auth" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="clsSvc" target="clsBfs">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2" value="tạo + shouldStop / BfsRunResult" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;" edge="1" parent="1" source="clsBfs" target="clsPipe">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3" value="tạo (auth) :136" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=2;fontSize=10;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.6;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="clsBfs" target="clsIng">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="250" y="295"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r4" value="tạo (2 site :117 :348)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="clsSvc" target="clsProject">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5" value="tạo (auth) :120" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="clsSvc" target="clsCatalog">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6" value="tạo (tokenProvider) :145" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;strokeWidth=1;fontSize=10;" edge="1" parent="1" source="clsCatalog" target="clsPoster">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7" value="size accessor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;strokeWidth=1;dashed=1;fontSize=10;" edge="1" parent="1" source="clsPipe" target="clsChannel">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

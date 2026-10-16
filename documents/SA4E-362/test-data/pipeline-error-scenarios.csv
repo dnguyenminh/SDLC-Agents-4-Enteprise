@@ -1,0 +1,8 @@
+test_case_id,scenario,errorType,expectedAuthDead,expectedPipelineBehavior,description
+UT-08,ingest_auth_error_mid_bfs,IngestAuthError (typed),true,stop_early_after_in_flight_item,Producer stops dispatching new items via shouldStop -> current rule returns ingested:false (eligible) -> no mass skip -> 1 message 'login lại' -> log 'paused due to auth'
+UT-08,auth_error_mapped_not_regex,401 message variants (Invalid or expired token / HTTP 401 empty body / TOKEN_INVALID / unauthorized),true,typed_error_detected,Typed IngestAuthError detected for ALL message variants (replaces brittle regex which missed 'HTTP 401' with empty body)
+UT-09,non_auth_server_error,Error('Ingest failed: HTTP 500'),false,continue_all_items,Non-auth error -> authDead stays false -> pipeline processes remaining items resiliently as before -> no 'paused due to auth' log
+UT-09,network_error,Error('ECONNREFUSED'),false,continue_all_items,Network error treated as non-auth -> pipeline continues
+SIT-01,ttl60_refresh_mid_job,401 mid-job after 60s,n/a,1_refresh_then_continue,Log shows exactly 1 refresh point then ingest continues -> 0 repeated 'Invalid or expired token' spam -> 0 silent skip -> 0 'bulk-check HTTP 401'
+SIT-02,refresh_token_revoked,401 persists after refresh,true,graceful_stop_login_again_message,Job stops right after in-flight item -> exactly 1 'please login again (state preserved)' message -> no auto-login -> rerun after re-login is incremental
+REG-13,regression_suite_and_audit,n/a,n/a,compile_exit0_suite_green,compile exit 0 -> test:unit full suite green (legacy 3 BackendHttpPoster tests stay green) -> grep audit 0 static-token path on /api/v1/pega/* (SM-6 SM-7)

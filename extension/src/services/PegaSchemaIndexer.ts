@@ -5,6 +5,7 @@
 import type { IndexerHttpClient } from "./IndexerHttpClient";
 import type { JsonSchema } from "../models";
 import { getEffectiveScope } from "../utils/scope-detector";
+import { buildBackendAuthHeaders, withAuthRetry, type IngestAuthProvider } from "../utils/backend-auth-headers";
 
 type PegaHttpClientType = InstanceType<typeof import("./PegaHttpClient").PegaHttpClient>;
 type ProgressReporter = import("vscode").Progress<{ message?: string }>;
@@ -13,6 +14,7 @@ export class PegaSchemaIndexer {
     constructor(
         private readonly httpClient: IndexerHttpClient,
         private readonly log: (msg: string) => void,
+        private readonly auth?: IngestAuthProvider,
     ) {}
 
     /** Generate schemas for all RuleForm harness rule types. */
@@ -89,11 +91,19 @@ export class PegaSchemaIndexer {
         const sectionJsons = await this.fetchSections(pegaClient, harnessJson, ruleType);
 
         const backendUrl = this.httpClient.getBaseUrl();
-        const res = await fetch(`${backendUrl}/api/v1/pega/schema/generate`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ harnessJson, sectionJsons, ruleType }),
-        });
+        // SA4E-362 FR-7 (T-3): root-cause fix — previously NO Authorization header was
+        // sent at all (guaranteed 401 under CODE_INTEL_REQUIRE_AUTH). buildBackendAuthHeaders
+        // attaches Bearer + X-Project-Id when a token exists (BR-5: empty token → omit).
+        const baseHeaders: Record<string, string> = { "Content-Type": "application/json", ...buildBackendAuthHeaders() };
+        const res = await withAuthRetry(async (token) => {
+            const headers = { ...baseHeaders };
+            if (token) { headers["Authorization"] = `Bearer ${token}`; } // fresh token on retry
+            return fetch(`${backendUrl}/api/v1/pega/schema/generate`, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ harnessJson, sectionJsons, ruleType }),
+            });
+        }, this.auth, this.log, "schema-generate");
 
         if (!res.ok) {
             const errBody = await res.text().catch(() => "");
