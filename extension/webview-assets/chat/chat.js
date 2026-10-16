@@ -1088,7 +1088,7 @@
       var contentSpan = node.el.querySelector(".stream-content");
       contentSpan.innerHTML = MarkdownRenderer.render(node.content);
       addCodeActions(contentSpan);
-    if (msg.eventType === "thinking") {
+    } else if (msg.eventType === "thinking") {
       // Reasoning delta — render into a collapsible block that precedes the
       // answer bubble. Block opens on first delta, auto-collapses when the
       // first answer token arrives (or at stream completion).
