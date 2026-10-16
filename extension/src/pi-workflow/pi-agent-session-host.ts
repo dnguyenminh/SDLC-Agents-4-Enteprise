@@ -34,6 +34,7 @@ import { getPiExtensionEntries, getPiExtensionAgentTools } from './pi-extension-
 // fail-safe) + the shared bridge tool builder for both wiring surfaces.
 import { McpBridge } from '../mcp/mcp-bridge';
 import { buildMcpBridgeAgentTools } from '../pi-agent/extensions/mcp-bridge-extension';
+import { isDiscoveryTool } from '../pi-agent/extensions/tool-definitions';
 import type { AgentTool } from '@earendil-works/pi-agent-core';
 import { mapAgentEvent, ToolEventTracker, type EventCollector } from './pi-event-mapper.js';
 import type { NormalizedToolCall } from './types/executor.types.js';
@@ -338,13 +339,17 @@ async function createHost(opts: SessionHostOptions): Promise<SessionHost> {
     opts.mcpBridge instanceof McpBridge ? buildMcpBridgeAgentTools(opts.mcpBridge) : [];
   if (bridgeTools.length === 0) debugLog('[PiSessionHost] mcp bridge absent — bridge tools omitted (degraded)');
   const bridgeNames = bridgeTools.map((t) => t.name);
+  // SA4E-367: opted-in dynamic pair bypasses the role filter via discoveryTools
+  // (never dropped — no role prefix matches find_/execute_). Default [] = today's behavior.
+  const bridgeDynamicNames = bridgeTools.map((t) => t.name).filter(isDiscoveryTool);
+  const bridgeConcreteNames = bridgeTools.map((t) => t.name).filter((n) => !isDiscoveryTool(n));
   const loadout = buildSessionToolLoadout({
     role: opts.role,
     phase: opts.phase,
     schemaTokenCap: toolSchemaTokenCap(budget),
     coreTools: nameTools(baseTools),
-    discoveryTools: [],
-    mcpTools: nameTools([...extNames, ...bridgeNames]), // SA4E-364: bridge names join the pool (role filter + cap apply)
+    discoveryTools: nameTools(bridgeDynamicNames),
+    mcpTools: nameTools([...extNames, ...bridgeConcreteNames]), // SA4E-364: bridge names join the pool (role filter + cap apply)
   });
   // SA4E-355 Task 5 (UC-05): fail-safe gate BEFORE createAgentSession.
   // REJECT throws PI_CONTEXT_BUDGET_EXCEEDED (provider never called, BR-09);
