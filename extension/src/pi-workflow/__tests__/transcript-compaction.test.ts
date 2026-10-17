@@ -112,7 +112,9 @@ describe('tool-unit atomicity (groupToolUnits via compactTranscriptToFit)', () =
     expect(callIdsOf(res.messages)).toEqual([]); // no orphaned assistant call
     expect(resultIdsOf(res.messages)).toEqual([]); // no orphaned toolResult
     // Bug 3: the newest user message is PINNED — it survives the trim point.
-    expect(rolesOf(res.messages)).toEqual(['system', 'user']);
+    // SA4E-368: a tombstone assistant note follows the pinned user, listing
+    // the dropped read activity so the model never re-reads those files.
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant']);
   });
 
   it('keeps a MULTI-toolResult unit whole — one call + its two results survive together', () => {
@@ -143,7 +145,9 @@ describe('tool-unit atomicity (groupToolUnits via compactTranscriptToFit)', () =
     expect(res.compacted).toBe(true);
     expect(callIdsOf(res.messages)).toEqual([]);
     expect(resultIdsOf(res.messages)).toEqual([]); // never just one of the two results
-    expect(rolesOf(res.messages)).toEqual(['system', 'user']); // pinned newest user query survives
+    // SA4E-368: tombstone after the pinned user; the multi-result call is
+    // listed once (its toolCall block), so the model knows it already ran.
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant']);
   });
 
   it('treats an ORPHAN toolResult (no preceding assistant toolCall) as its own unit', () => {
@@ -195,7 +199,9 @@ describe('compactTranscriptToFit — trim order and pinned system', () => {
     expect(res.compacted).toBe(true);
     expect(resultIdsOf(res.messages)).toEqual(['tc-3']);
     expect(resultIdsOf(res.messages)).not.toContain('tc-1');
-    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant', 'toolResult']); // pinned user survives
+    // SA4E-368: the tombstone sits at the trim boundary (after the pinned
+    // user, before the oldest kept unit) listing the dropped tc-1/tc-2 reads.
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant', 'assistant', 'toolResult']); // pinned user survives
   });
 
   it('system messages are PINNED — a mid-transcript system survives past the trim point', () => {
@@ -260,7 +266,9 @@ describe('compactTranscriptToFit — text compression fallback (UC-03)', () => {
     const messages: Message[] = [systemMsg('sys'), userMsg('go'), ...toolUnit('tc-1', 100)];
     const res = compactTranscriptToFit(messages, 50);
     expect(res.compacted).toBe(true);
-    expect(rolesOf(res.messages)).toEqual(['system', 'user']);
+    // SA4E-368: the tombstone (~32 tokens) fits alongside the pinned user,
+    // so the model still knows the dropped read already happened.
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant']);
     expect(resultIdsOf(res.messages)).toEqual([]);
   });
 

@@ -14,12 +14,24 @@
  *   compressed when only that fits, kept compressed even when over budget
  *   (the caller's budget gate then REJECTS — BR-09 — instead of a 500);
  * - a unit that does not fit raw is kept with its text/thinking COMPRESSED;
- *   toolCall blocks stay intact for id pairing.
+ *   toolCall blocks stay intact for id pairing;
+ * - SA4E-368 DROPPED-TOOL-ACTIVITY TOMBSTONE: when units are dropped, ONE
+ *   compact assistant text note is inserted at the trim boundary listing the
+ *   dropped tool calls (e.g. "read src/a.ts"). Without it the model loses
+ *   all memory of files it already read — the UAT "review all files" loop:
+ *   compaction drops the old read results → the model re-reads the same
+ *   files → the request grows → compaction drops more → re-read again
+ *   (162 tool calls until the loop guard killed the turn). The tombstone
+ *   costs at most TOMBSTONE_TOKEN_CAP tokens, paid by evicting OLDER kept
+ *   units — never the pinned user, never the NEWEST kept unit (the newest
+ *   content outranks the breadcrumb). No tombstone when nothing was dropped
+ *   or the dropped units carry no toolCall blocks.
  *
  * Never mutates the input; returns a new array.
  */
 import type { Message } from '@earendil-works/pi-ai';
 import { compressPrompt, estimateTokenCount } from '../pi-agent/prompt-compressor.js';
+import { readTargetOfArgs } from './turn-budget-guard.js';
 import { logger } from '../logger';
 
 /** Wire-visible text of one message content (string | content blocks). */
@@ -135,6 +147,13 @@ interface WalkState {
   total: number; changed: boolean; overflowed: boolean;
 }
 
+/** Walk outcome: kept units (original order) + the units the trim dropped. */
+interface WalkOutcome {
+  kept: Message[][];
+  dropped: Message[][];
+  changed: boolean;
+}
+
 /** Keeps the pinned newest user unit — raw when it fits, compressed otherwise; never dropped. */
 function keepPinnedUser(unit: Message[], budgetTokens: number, state: WalkState, kept: Message[][]): void {
   const fit = fitPinnedUser(unit, budgetTokens - state.total);
@@ -144,7 +163,7 @@ function keepPinnedUser(unit: Message[], budgetTokens: number, state: WalkState,
 }
 
 /** Keeps one trimmable unit, or sets the trim point when it cannot fit. */
-function keepTrimmable(unit: Message[], budgetLeft: number, state: WalkState, kept: Message[][]): void {
+function keepTrimmable(unit: Message[], budgetLeft: number, state: WalkState, kept: Message[][], dropped: Message[][]): void {
   const fit = fitUnit(unit, budgetLeft);
   if (fit) {
     kept.unshift(fit.messages);
@@ -153,12 +172,14 @@ function keepTrimmable(unit: Message[], budgetLeft: number, state: WalkState, ke
     return;
   }
   state.overflowed = true; // this unit (and everything older but unpinned) cannot fit
+  dropped.push(unit);
   state.changed = true;
 }
 
 /** Walks units newest→oldest: pinned systems and the pinned newest user survive past the trim point; other units fit the reserve-aware budget or trim everything older. */
-function walkUnitsNewestFirst(units: Message[][], userIdx: number, reserve: number, budgetTokens: number): { kept: Message[][]; changed: boolean } {
+function walkUnitsNewestFirst(units: Message[][], userIdx: number, reserve: number, budgetTokens: number): WalkOutcome {
   const kept: Message[][] = [];
+  const dropped: Message[][] = [];
   const state: WalkState = { total: 0, changed: false, overflowed: false };
   for (let i = units.length - 1; i >= 0; i--) {
     const unit = units[i];
@@ -167,12 +188,13 @@ function walkUnitsNewestFirst(units: Message[][], userIdx: number, reserve: numb
     } else if (i === userIdx) {
       keepPinnedUser(unit, budgetTokens, state, kept); // pinned newest user query
     } else if (state.overflowed) {
-      state.changed = true; // older non-pinned units are dropped (trim-oldest-first)
+      dropped.push(unit); // older non-pinned units are dropped (trim-oldest-first)
+      state.changed = true;
     } else {
-      keepTrimmable(unit, budgetTokens - reserve - state.total, state, kept);
+      keepTrimmable(unit, budgetTokens - reserve - state.total, state, kept, dropped);
     }
   }
-  return { kept, changed: state.changed };
+  return { kept, dropped, changed: state.changed };
 }
 
 /** Defensive post-check (bug 3): compaction must keep a user query or the provider's chat template 500s — warn (never crash) on exotic userless transcripts. */
@@ -182,19 +204,140 @@ function warnIfNoUserQuery(result: { messages: Message[]; compacted: boolean }):
   if (!hasUser) logger.warn('PI_TRANSCRIPT_COMPACTED_NO_USER_QUERY', { outputMessages: result.messages.length });
 }
 
+/* ── SA4E-368: dropped-tool-activity tombstone ─────────────────────────── */
+
+/** Marker every tombstone note starts with (tests + future consumers pin on it). */
+export const TOMBSTONE_MARKER = '[context compacted';
+/** Hard char cap for the tombstone note (≈ 60 tokens under chars/4). */
+const TOMBSTONE_MAX_CHARS = 240;
+/** At most this many dropped tool calls are listed; the rest collapse to "+N more". */
+const TOMBSTONE_MAX_ENTRIES = 8;
+
+/** One dropped tool call worth remembering: `name target` (target optional). */
+function harvestToolEntries(droppedUnits: ReadonlyArray<ReadonlyArray<Message>>): string[] {
+  const entries: string[] = [];
+  const seen = new Set<string>();
+  for (const unit of droppedUnits) {
+    for (const msg of unit) {
+      const content = (msg as { content?: unknown }).content;
+      if (!Array.isArray(content)) continue;
+      for (const block of content) {
+        const b = block as { type?: string; name?: unknown; arguments?: unknown };
+        if (b?.type !== 'toolCall' || typeof b.name !== 'string') continue;
+        const entry = `${b.name} ${readTargetOfArgs(b.arguments)}`.trim();
+        if (!entry || seen.has(entry)) continue;
+        seen.add(entry);
+        entries.push(entry);
+      }
+    }
+  }
+  return entries;
+}
+
+/** Compact breadcrumb text listing the dropped tool activity. */
+function buildTombstoneText(entries: ReadonlyArray<string>): string {
+  const shown = entries.slice(0, TOMBSTONE_MAX_ENTRIES);
+  const more = entries.length - shown.length;
+  let text =
+    `${TOMBSTONE_MARKER} — earlier tool results were removed to fit the context window; ` +
+    `do NOT repeat these calls: ${shown.join('; ')}` +
+    (more > 0 ? `; +${more} more` : '') + ']';
+  if (text.length > TOMBSTONE_MAX_CHARS) text = text.slice(0, TOMBSTONE_MAX_CHARS - 1) + ']';
+  return text;
+}
+
+/** The tombstone message: plain assistant TEXT (wire-safe — no tool blocks). */
+function buildTombstoneMessage(text: string): Message {
+  return { role: 'assistant', content: [{ type: 'text', text }], timestamp: 0 } as Message;
+}
+
+/** Index of the LAST 'user' unit in kept (original order) — the pinned newest user. */
+function pinnedUserUnitIndex(kept: ReadonlyArray<ReadonlyArray<Message>>): number {
+  let at = -1;
+  for (let i = 0; i < kept.length; i++) {
+    if ((kept[i][0] as { role?: string }).role === 'user') at = i;
+  }
+  return at;
+}
+
+/** Index of the LAST trimmable kept unit (non-system, not the pinned user) — the NEWEST kept unit. */
+function newestTrimmableUnitIndex(kept: ReadonlyArray<ReadonlyArray<Message>>, pinnedUserAt: number): number {
+  let at = -1;
+  for (let i = 0; i < kept.length; i++) {
+    if (i === pinnedUserAt) continue;
+    if (isPinnedSystem(kept[i][0])) continue;
+    at = i;
+  }
+  return at;
+}
+
+/** Insert position for the tombstone: the trim boundary — before the OLDEST kept trimmable unit, falling back to right after the pinned user. */
+function tombstoneUnitIndex(kept: ReadonlyArray<ReadonlyArray<Message>>, pinnedUserAt: number): number {
+  for (let i = 0; i < kept.length; i++) {
+    if (i === pinnedUserAt) continue;
+    if (isPinnedSystem(kept[i][0])) continue;
+    return i;
+  }
+  return pinnedUserAt >= 0 ? pinnedUserAt + 1 : kept.length;
+}
+
+/**
+ * Builds the tombstone for the dropped units, making room by evicting OLDER
+ * kept trimmable units — never the pinned user, never the NEWEST kept unit.
+ * Returns the (possibly evicted) kept units + the tombstone message, or null
+ * when no tombstone applies (no dropped tool activity / cannot fit).
+ */
+function tryBuildTombstone(
+  droppedUnits: ReadonlyArray<ReadonlyArray<Message>>,
+  keptUnits: Message[][],
+  budgetTokens: number
+): { kept: Message[][]; message: Message } | null {
+  const entries = harvestToolEntries(droppedUnits);
+  if (entries.length === 0) return null;
+  const text = buildTombstoneText(entries);
+  const tombTokens = estimateTokenCount(text);
+  const kept = [...keptUnits];
+  const keptTokens = () => kept.reduce((sum, u) => sum + unitTokens(u), 0);
+  while (keptTokens() + tombTokens > budgetTokens) {
+    const pinnedUserAt = pinnedUserUnitIndex(kept);
+    const newestTrimmableAt = newestTrimmableUnitIndex(kept, pinnedUserAt);
+    // Evict the OLDEST evictable unit: trimmable, not pinned user, not the newest.
+    let evictAt = -1;
+    for (let i = 0; i < kept.length; i++) {
+      if (i === pinnedUserAt || i === newestTrimmableAt) continue;
+      if (isPinnedSystem(kept[i][0])) continue;
+      evictAt = i;
+      break;
+    }
+    if (evictAt === -1) return null; // cannot fit without sacrificing pinned/newest — skip
+    kept.splice(evictAt, 1);
+  }
+  return { kept, message: buildTombstoneMessage(text) };
+}
+
 /**
  * Compacts the transcript to fit `budgetTokens` (non-system part): walks
  * newest→oldest keeping whole tool units — raw when they fit, text-compressed
  * when only that fits, and dropping the unit (and everything older) otherwise.
  * The pinned system part and the pinned newest user message always survive.
- * See module doc for the wire-safety rules. Never mutates the input.
+ * SA4E-368: when units are dropped, a tombstone note is inserted at the trim
+ * boundary listing the dropped tool activity (see module doc). Never mutates
+ * the input.
  */
 export function compactTranscriptToFit(messages: ReadonlyArray<Message>, budgetTokens: number): { messages: Message[]; compacted: boolean } {
   const units = groupToolUnits(messages);
   const userIdx = newestUserUnitIndex(units);
   const reserve = userReserveTokens(units[userIdx], budgetTokens);
-  const { kept, changed } = walkUnitsNewestFirst(units, userIdx, reserve, budgetTokens);
-  const result = { messages: kept.flat(), compacted: changed };
+  const walk = walkUnitsNewestFirst(units, userIdx, reserve, budgetTokens);
+  let kept = walk.kept;
+  if (walk.dropped.length > 0) {
+    const tombstone = tryBuildTombstone(walk.dropped, kept, budgetTokens);
+    if (tombstone) {
+      kept = tombstone.kept;
+      kept.splice(tombstoneUnitIndex(kept, pinnedUserUnitIndex(kept)), 0, [tombstone.message]);
+    }
+  }
+  const result = { messages: kept.flat(), compacted: walk.changed };
   warnIfNoUserQuery(result);
   return result;
 }

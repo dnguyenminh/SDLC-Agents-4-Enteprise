@@ -5,9 +5,17 @@
  *
  * Design note (UAT feedback): fixed TOTAL call budgets are the wrong
  * yardstick — legit long tasks need many calls. The loop signature is
- * REPETITION: the same request (tool + args) again and again. So the guard
- * trips only on identical-signature repeats (configurable N) plus a
- * wall-clock timeout backstop. First trip wins.
+ * REPETITION: the same request again and again. So the guard trips on
+ * signature repeats (configurable N):
+ * - identical tool+args (raw signature);
+ * - SA4E-368: file-identity tools (read/ls) are keyed on their TARGET
+ *   instead — the UAT "review all files" loop re-read the same files with
+ *   varying offset/limit for 162 calls without ever repeating the exact
+ *   args (sweep tools grep/find stay on the raw ladder: same pattern over
+ *   different paths is legitimate exploration);
+ * - identical failure signatures (tool + first error line, Bug I);
+ * - identical completed assistant text blocks (perseveration).
+ * plus a wall-clock timeout backstop. First trip wins.
  *
  * Two-tier response (the owner decides via the returned action):
  * - 'steer': first time a signature repeats N times — correct course
@@ -38,6 +46,38 @@ const MAX_TEXT_SCAN_CHARS = 100_000;
 
 export type StopReason = 'repeat' | 'timeout';
 export type ObserveAction = 'ok' | 'steer' | 'abort';
+/** Kind of the most recent steer/abort trip (SA4E-368). */
+export type TripKind = 'identical' | 'reread';
+
+/**
+ * File-identity tools whose arguments identify ONE concrete target (a file
+ * path / a directory listing). Re-reading the SAME target is the "review all
+ * files" loop signature (SA4E-368 UAT: the model re-read the same files with
+ * varying offset/limit for 162 calls before the guard caught it).
+ *
+ * Deliberately EXCLUDES sweep tools (grep/find): re-running the same pattern
+ * over DIFFERENT paths is legitimate repo-wide exploration, not a loop —
+ * those stay on the identical-args ladder.
+ */
+const READ_TARGET_TOOLS = new Set(['read', 'ls']);
+
+/** Stable exploration target of a read-class tool call (object args). */
+export function readTargetOfArgs(args: unknown): string {
+  if (!args || typeof args !== 'object') return '';
+  const a = args as Record<string, unknown>;
+  const t = a.file_path ?? a.path ?? a.pattern ?? a.glob;
+  return typeof t === 'string' ? t.trim().slice(0, 200) : '';
+}
+
+/** readTargetOfArgs over a JSON args string; junk tolerated (returns ''). */
+export function extractReadTarget(argsJson: string): string {
+  if (!argsJson) return '';
+  try {
+    return readTargetOfArgs(JSON.parse(argsJson));
+  } catch {
+    return '';
+  }
+}
 
 export class TurnBudgetGuard {
   private totalCalls = 0;
@@ -45,6 +85,8 @@ export class TurnBudgetGuard {
   private steered = new Set<string>();
   private timer?: ReturnType<typeof setTimeout>;
   private reason?: StopReason;
+  private tripKind: TripKind | undefined;
+  private tripTarget: string | undefined;
 
   constructor(
     private readonly budget: Required<TurnBudget>,
@@ -74,11 +116,42 @@ export class TurnBudgetGuard {
     return { totalCalls: this.totalCalls };
   }
 
+  /** Kind of the most recent steer/abort trip — 'reread' for read-target repeats. */
+  get lastTripKind(): TripKind | undefined {
+    return this.tripKind;
+  }
+
+  /** Exploration target of the most recent reread trip (undefined otherwise). */
+  get lastTripTarget(): string | undefined {
+    return this.tripTarget;
+  }
+
   /** Observe one tool_execution_start; steer first, abort on persistence. */
   observeToolCall(name: string, argsJson: string): ObserveAction {
     if (this.reason) return 'abort';
     this.totalCalls++;
-    return this.observeSignature(`tool:${name} ${(argsJson || '').slice(0, 300)}`);
+    // SA4E-368: for read-class tools, key repeats on the exploration TARGET
+    // (file path / pattern), not the raw args — re-reading the same file with
+    // a different offset/limit is still the same pointless call. This ladder
+    // SUBSUMES the identical-args one for these tools (same args ⇒ same
+    // target), so the raw signature is skipped when a target exists.
+    if (READ_TARGET_TOOLS.has(name)) {
+      const target = extractReadTarget(argsJson);
+      if (target) {
+        const action = this.observeSignature(`reread:${name}:${target}`);
+        if (action !== 'ok') {
+          this.tripKind = 'reread';
+          this.tripTarget = target;
+        }
+        return action;
+      }
+    }
+    const action = this.observeSignature(`tool:${name} ${(argsJson || '').slice(0, 300)}`);
+    if (action !== 'ok') {
+      this.tripKind = 'identical';
+      this.tripTarget = undefined;
+    }
+    return action;
   }
 
   /**
@@ -92,7 +165,14 @@ export class TurnBudgetGuard {
     if (this.reason) return 'abort';
     const firstLine =
       (errorText ?? '').split('\n')[0]?.replace(/\s+/g, ' ').trim().slice(0, 160) ?? '';
-    return this.observeSignature(firstLine ? `fail:${name} ${firstLine}` : `fail:${name}`);
+    const action = this.observeSignature(
+      firstLine ? `fail:${name} ${firstLine}` : `fail:${name}`
+    );
+    if (action !== 'ok') {
+      this.tripKind = 'identical';
+      this.tripTarget = undefined;
+    }
+    return action;
   }
 
   /**
@@ -104,7 +184,12 @@ export class TurnBudgetGuard {
     if (this.reason) return 'abort';
     const norm = block.replace(/\s+/g, ' ').trim();
     if (norm.length < MIN_REPEAT_BLOCK_CHARS) return 'ok';
-    return this.observeSignature(`text:${norm.slice(0, 500)}[${norm.length}]`);
+    const action = this.observeSignature(`text:${norm.slice(0, 500)}[${norm.length}]`);
+    if (action !== 'ok') {
+      this.tripKind = 'identical';
+      this.tripTarget = undefined;
+    }
+    return action;
   }
 
   private observeSignature(sig: string): ObserveAction {
@@ -204,12 +289,31 @@ export function splitCompletedBlocks(text: string): string[] {
 /**
  * Mid-loop course correction for text perseveration (mirrors the tool-call
  * correction: name the stuck behavior, give the concrete alternative).
+ * SA4E-368: for review/exploration loops the alternative must include the
+ * SYNTHESIS escape hatch — "read more files" alone feeds the very loop it
+ * is meant to break.
  */
 export function buildTextSteerCorrection(repeatCount: number): string {
   return (
     `You are repeating identical content (seen ${repeatCount} times) — STOP restating it. ` +
-    `Continue ONLY with new information. If exploration is stuck, call get_workspace_info ` +
-    `once, then read specific existing files.`
+    `Continue ONLY with new information: either read files you have NOT read yet, ` +
+    `or deliver your findings from what you already have. ` +
+    `If exploration is stuck, call get_workspace_info once, then read specific existing files. ` +
+    `Never re-read a file you already read.`
+  );
+}
+
+/**
+ * Mid-loop correction for a RE-READ trip (SA4E-368): the model asked for the
+ * same target again (possibly with varied args). Names the target and pushes
+ * synthesis — deliberately does NOT suggest more exploration.
+ */
+export function buildRereadSteerCorrection(toolName: string, target: string, repeatCount: number): string {
+  return (
+    `You have already obtained '${target}' ${repeatCount} times this turn via ${toolName} — ` +
+    `calling it again will not change the result. STOP re-reading '${target}'. ` +
+    `Synthesize your answer from the results you already have; if something is missing, ` +
+    `continue only with targets you have NOT read yet.`
   );
 }
 

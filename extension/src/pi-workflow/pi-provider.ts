@@ -9,7 +9,7 @@ import type { PiProviderConfig } from './pi-provider-config.js';
 import { mapAgentEvent, extractToolResultText, type EventCollector } from './pi-event-mapper.js';
 import { isRetryableLlmError } from './utils/classify-llm-error.js';
 import { governIntraTurnRequest } from './intra-turn-budget-gate.js';
-import { TurnBudgetGuard, buildStopNote, buildSteerCorrection, buildFailureSteerCorrection, buildTextSteerCorrection, splitCompletedBlocks } from './turn-budget-guard.js';
+import { TurnBudgetGuard, buildStopNote, buildSteerCorrection, buildFailureSteerCorrection, buildTextSteerCorrection, buildRereadSteerCorrection, splitCompletedBlocks } from './turn-budget-guard.js';
 import { ToolEventTracker } from './pi-event-mapper.js';
 import { debugLog, debugError } from '../debug-logger.js';
 import type { ToolApprovalGateHandler } from './approval-adapter.js';
@@ -424,8 +424,15 @@ export class PiProvider {
         const action = guard.observeToolCall(toolName, argsJson);
         // First repeat: correct course mid-loop, keep the turn alive;
         // persisted after correction: stop the turn (guard already tripped).
-        if (action === 'steer') steerWith(buildSteerCorrection(toolName, guard.stats.totalCalls));
-        else if (action === 'abort') abortRun();
+        // SA4E-368: a re-read trip gets the synthesis correction; every other
+        // repeat keeps the generic get-workspace-layout advice.
+        if (action === 'steer') {
+          steerWith(
+            guard.lastTripKind === 'reread'
+              ? buildRereadSteerCorrection(toolName, guard.lastTripTarget ?? '', repeatLimit)
+              : buildSteerCorrection(toolName, repeatLimit)
+          );
+        } else if (action === 'abort') abortRun();
       }
       // BUG I: repeated identical FAILURES trip the guard even when the
       // arguments vary (signature = tool + first error line), so a model
@@ -484,7 +491,16 @@ export class PiProvider {
 
   /** FIX E: snapshot the agent transcript + finalize chunks and error status. */
   private collectResult(agent: Agent, collector: EventCollector, guard?: TurnBudgetGuard): PiRunResult {
-    const errorMessage = collector.errorMessage || agent.state.errorMessage;
+    // K2 (SA4E-368): a guard stop is INTENTIONAL — the abort error the SDK
+    // records on the agent state ("This operation was aborted") must NOT
+    // surface as a turn error: the friendly stop note appended below is the
+    // single source of truth. Otherwise the executor maps it to
+    // PI_EXECUTION_ERROR and the chat emits a SECOND red bubble on top of
+    // the stop note (UAT: "Stopped early … loop guard" + "This operation
+    // was aborted"). A genuine failure (no guard trip) still flows through.
+    const errorMessage = guard?.stoppedReason
+      ? undefined
+      : collector.errorMessage || agent.state.errorMessage;
     let text = collector.text;
     if (guard?.stoppedReason) {
       const note = buildStopNote(guard.stoppedReason, guard.stats.totalCalls);

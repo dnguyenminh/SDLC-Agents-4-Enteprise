@@ -211,4 +211,68 @@ describe('PiProvider failure-streak guard — Bug I (real SDK + faux model)', ()
   });
 });
 
+describe('PiProvider review-loop guard — SA4E-368 (real SDK + faux model)', () => {
+  let provider: PiProvider;
+  let models: MutableModels;
+  let faux: ReturnType<typeof fauxProvider>;
+
+  beforeEach(async () => {
+    process.env.NODE_ENV = 'test';
+    provider = new PiProvider();
+    models = createModels();
+    faux = fauxProvider();
+    models.setProvider(faux.provider);
+    await provider.initialize({ transportType: 'HTTP', models });
+    await provider.setModel('faux', 'faux-1');
+  });
+
+  afterEach(() => {
+    models.deleteProvider('faux');
+    provider.dispose();
+    delete process.env.NODE_ENV;
+  });
+
+  it('stops the re-read amnesia loop with a stop note and NO turn error (K2)', async () => {
+    // The UAT "review all files" shape: the model keeps RE-READING the same
+    // file with slightly different args (offset/limit vary), so the old
+    // identical-args ladder never tripped and the turn burned 162 calls.
+    const readTool = {
+      name: 'read',
+      label: 'Read',
+      description: 'Reads a file',
+      parameters: Type.Object({ file_path: Type.String(), offset: Type.Optional(Type.Number()) }),
+      execute: async () => ({ content: [{ type: 'text', text: 'file body' }] }),
+    } as unknown as AgentTool;
+
+    // 12 identical-target re-reads (faux never steers itself out of the loop)
+    // + a final text in case the turn outlives the responses.
+    faux.setResponses([
+      ...Array.from({ length: 12 }, (_, i) =>
+        fauxAssistantMessage(
+          [fauxToolCall('read', { file_path: 'src/a.ts', offset: i * 100 }, { id: `tc-${i + 1}` })],
+          { stopReason: 'toolUse' }
+        )
+      ),
+      fauxAssistantMessage('final partial review text'),
+    ]);
+
+    const result = await provider.run({
+      prompt: 'review all files',
+      provider: 'faux',
+      model: 'faux-1',
+      tools: [readTool],
+      turnBudget: { maxSameToolRepeats: 2, timeoutMs: 30_000 },
+    });
+
+    // The read-target ladder caught the loop early (steer at the 2nd re-read,
+    // abort on persistence) — far below the UAT's 162 burned calls.
+    expect(result.toolCalls.length).toBeLessThan(10);
+    expect(result.text).toContain('Stopped early');
+    expect(result.text).toContain('loop guard');
+    // K2: a guard-stopped turn is intentional — the abort must NOT surface
+    // as a turn error (no second red "Request was aborted" bubble).
+    expect(result.errorMessage).toBeUndefined();
+  });
+});
+
 

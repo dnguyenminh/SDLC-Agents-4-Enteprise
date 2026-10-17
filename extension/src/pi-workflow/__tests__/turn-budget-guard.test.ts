@@ -5,6 +5,8 @@ import {
   buildSteerCorrection,
   buildFailureSteerCorrection,
   buildTextSteerCorrection,
+  buildRereadSteerCorrection,
+  extractReadTarget,
   splitCompletedBlocks,
   DEFAULT_MAX_SAME_TOOL_REPEATS,
   DEFAULT_TURN_TIMEOUT_MS,
@@ -277,6 +279,106 @@ describe('TurnBudgetGuard (repetition-based loop guard)', () => {
     expect(msg).toContain('change approach');
     expect(msg).not.toContain('PowerShell');
     expect(msg).not.toContain('Git Bash');
+  });
+});
+
+describe('read-target re-read guard (SA4E-368 — "review all files" re-read loop)', () => {
+  it('steers then aborts when the SAME target is re-read with VARYING args', () => {
+    const onAbort = vi.fn();
+    const guard = new TurnBudgetGuard(
+      TurnBudgetGuard.resolveDefaults({ maxSameToolRepeats: 3 }),
+      onAbort
+    );
+    // Same file, different offset/limit every time — the identical-args
+    // signature NEVER trips (args differ); only the read-target ladder can.
+    expect(guard.observeToolCall('read', '{"file_path":"src/a.ts","offset":0,"limit":100}')).toBe('ok');
+    expect(guard.observeToolCall('read', '{"file_path":"src/a.ts","offset":100,"limit":100}')).toBe('ok');
+    expect(guard.observeToolCall('read', '{"file_path":"src/a.ts","offset":200,"limit":50}')).toBe('steer');
+    expect(guard.lastTripKind).toBe('reread');
+    expect(guard.lastTripTarget).toBe('src/a.ts');
+    expect(guard.stoppedReason).toBeUndefined();
+    expect(onAbort).not.toHaveBeenCalled();
+    // Persists after correction → abort.
+    expect(guard.observeToolCall('read', '{"file_path":"src/a.ts","offset":300,"limit":100}')).toBe('ok');
+    expect(guard.observeToolCall('read', '{"file_path":"src/a.ts","offset":400,"limit":100}')).toBe('ok');
+    expect(guard.observeToolCall('read', '{"file_path":"src/a.ts","offset":500,"limit":100}')).toBe('abort');
+    expect(guard.stoppedReason).toBe('repeat');
+    expect(onAbort).toHaveBeenCalledTimes(1);
+  });
+
+  it('DISTINCT targets never trip, however many', () => {
+    const onAbort = vi.fn();
+    const guard = new TurnBudgetGuard(TurnBudgetGuard.resolveDefaults({}), onAbort);
+    for (let i = 0; i < 50; i++) {
+      expect(guard.observeToolCall('read', `{"file_path":"src/file${i}.ts"}`)).toBe('ok');
+    }
+    expect(guard.stoppedReason).toBeUndefined();
+    expect(guard.stats.totalCalls).toBe(50);
+  });
+
+  it('args without a recognizable target field fall back to the identical-args ladder', () => {
+    const onAbort = vi.fn();
+    const guard = new TurnBudgetGuard(
+      TurnBudgetGuard.resolveDefaults({ maxSameToolRepeats: 2 }),
+      onAbort
+    );
+    expect(guard.observeToolCall('read', '{"p":"a"}')).toBe('ok');
+    expect(guard.observeToolCall('read', '{"p":"a"}')).toBe('steer');
+    expect(guard.lastTripKind).toBe('identical');
+    expect(guard.lastTripTarget).toBeUndefined();
+  });
+
+  it('malformed args JSON falls back to the raw-args ladder without throwing', () => {
+    const onAbort = vi.fn();
+    const guard = new TurnBudgetGuard(
+      TurnBudgetGuard.resolveDefaults({ maxSameToolRepeats: 2 }),
+      onAbort
+    );
+    const bad = '{"file_path":"src/a.ts'; // truncated JSON — must not throw
+    expect(guard.observeToolCall('read', bad)).toBe('ok');
+    expect(guard.observeToolCall('read', bad)).toBe('steer');
+  });
+
+  it('sweep tools (grep) do NOT trip on the same pattern across DIFFERENT paths — that is legitimate exploration', () => {
+    const onAbort = vi.fn();
+    const guard = new TurnBudgetGuard(TurnBudgetGuard.resolveDefaults({ maxSameToolRepeats: 2 }), onAbort);
+    for (let i = 0; i < 6; i++) {
+      expect(guard.observeToolCall('grep', `{"pattern":"TODO","path":"src/folder${i}"}`)).toBe('ok');
+    }
+    expect(guard.stoppedReason).toBeUndefined();
+    // Identical grep args still trip via the identical-args ladder.
+    expect(guard.observeToolCall('grep', '{"pattern":"TODO","path":"src/a","limit":10}')).toBe('ok');
+    expect(guard.observeToolCall('grep', '{"pattern":"TODO","path":"src/a","limit":10}')).toBe('steer');
+    expect(guard.lastTripKind).toBe('identical');
+  });
+
+  it('extractReadTarget reads file_path ?? path ?? pattern ?? glob; junk tolerated', () => {
+    expect(extractReadTarget('{"file_path":"src/a.ts"}')).toBe('src/a.ts');
+    expect(extractReadTarget('{"path":"src"}')).toBe('src');
+    expect(extractReadTarget('{"pattern":"TODO"}')).toBe('TODO');
+    expect(extractReadTarget('{"glob":"**/*.ts"}')).toBe('**/*.ts');
+    expect(extractReadTarget('{"offset":5}')).toBe('');
+    expect(extractReadTarget('not json')).toBe('');
+    expect(extractReadTarget('')).toBe('');
+  });
+
+  it('buildRereadSteerCorrection names the target and pushes synthesis — never more exploration', () => {
+    const msg = buildRereadSteerCorrection('read', 'src/a.ts', 3);
+    expect(msg).toContain('src/a.ts');
+    expect(msg).toContain('3');
+    expect(msg).toContain('STOP');
+    expect(msg).toContain('ynthesi'); // synthesize the answer from what you have
+    // The re-read steer must NOT push the model into MORE exploration —
+    // that advice feeds the exact loop it is supposed to break.
+    expect(msg).not.toContain('get_workspace_info');
+  });
+
+  it('buildTextSteerCorrection offers the synthesis escape hatch for review loops', () => {
+    const msg = buildTextSteerCorrection(4);
+    expect(msg).toContain('4');
+    expect(msg).toContain('get_workspace_info'); // still helps the stuck-exploration case
+    expect(msg).toContain('deliver'); // …but a review loop must deliver NOW
+    expect(msg.toLowerCase()).toContain('never re-read');
   });
 });
 
