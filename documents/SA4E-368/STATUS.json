@@ -1,0 +1,40 @@
+{
+  "ticket": "SA4E-368",
+  "type": "Bug",
+  "priority": "High",
+  "currentPhase": "testing",
+  "autonomyLevel": "L3",
+  "summary": "[SDLC Chat] Review-all-files loop: model re-read same targets with varying offset/limit — 162 calls before guard abort",
+  "rootCause": {
+    "analysis": "Old TurnBudgetGuard keyed repeats on IDENTICAL tool+args. Re-reading the same file with different offset/limit evaded the identical-args signature (162 calls). Transcript compaction also dropped tool activity silently, so the model lost track of what it had already read and re-read.",
+    "fix": [
+      "turn-budget-guard.ts: read-class tools keyed on exploration TARGET (file path) — reread of same target trips regardless of arg variation (final scope: read/ls — grep/find patterns with same target can be legit scoped rescans); reread steer correction pushes synthesis, never more exploration; text-block perseveration guard",
+      "pi-provider.ts: wire reread/identical steer + text-block observation + guard-stop intentional-abort mapping (K2)",
+      "transcript-compaction.ts: dropped-tool-activity tombstone note at trim boundary so the model knows what was already read"
+    ]
+  },
+  "phases": {
+    "implementation": {
+      "status": "done",
+      "commit": "50bd75c",
+      "note": "6 files (guard + provider + compaction + 3 test files). Fix found in-progress in working tree from parallel session; verified + committed + deployed by SM-agent session."
+    },
+    "testing": {
+      "status": "done",
+      "targeted": "70/70 PASS (turn-budget-guard, pi-provider-runtime-smoke, transcript-compaction) — re-run against committed state",
+      "tsc": "clean (exit 0)",
+      "bundleVerification": "1.53.4 bundle contains STOP re-reading / You have already obtained / observeTextBlock / reread tripKind (ripgrep; NOTE Select-String gives false negatives on the 20MB minified single-line bundle)"
+    },
+    "deployment": {
+      "status": "staging_installed",
+      "vsix": "extension/sdlc-agents-4-enterprise-1.53.4.vsix (609 files, 8.91MB)",
+      "installed": "dnguyenminh.sdlc-agents-4-enterprise-1.53.4 (2026-10-17 10:41 local)",
+      "note": "Includes SA4E-363 (wrapper 64MB) which shares version 1.53.4 on main (0f7ff9e). Operator must Reload Window + retest review-all-files."
+    }
+  },
+  "pendingOperator": [
+    "Reload Window Kiro",
+    "Retest: ask chatbox to review all files — expect no 162-call loop; steer correction appears on 4th re-read of same target, abort only if persisted after steer"
+  ],
+  "lastUpdated": "2026-10-17T10:57:00+07:00"
+}
