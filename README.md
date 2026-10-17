@@ -66,6 +66,14 @@ MIT
 
 ## Changelog
 
+### v1.53.8 (2026-10-17)
+
+**UAT 17/10 (run 20:19) — "bây giờ không chạy được luôn": model "trả bài" nguyên văn ghi chú nén context, turn kết thúc tức thì với 0 tool call**
+
+- 🔬 **Reproduce 100% trên llama-server thật**: khi ghi chú nén (tombstone) là **message `assistant` đứng CUỐI transcript** (nhánh fallback khi mọi tool-unit đều rời đi), llama-server "continue" message assistant cuối → trả lại **nguyên văn tombstone** làm câu trả lời (finish=stop, 0 tool call, 0,1–0,6s — khớp chính xác 5 lần fail 20:19–20:37: byte-identical, 0 tool call). Ở giữa transcript (role assistant) model còn tuyên bố *"[context window full]"* và bỏ cuộc; còn message `system` giữa transcript làm llama-server `--jinja` trả **500 "System message must be at the beginning"**
+- 🛠 **Fix gốc — tombstone thành message `user`, luôn đứng TRƯỚC câu hỏi user**: `buildTombstoneMessage` đổi `role: 'assistant'` → `role: 'user'`; `tombstoneUnitIndex` không còn fallback "sau pinned user" (nhánh cuối bảng) mà chèn **trước** message user mới nhất — bất biến mới: **note nén không bao giờ là message cuối cùng** (wire luôn kết thúc bằng câu hỏi thật). Chọn role user vì probe trên model thật: note user → model trả lời bình thường; note system → 500; note assistant → echo/đầu hàng
+- 🧪 Tests: cập nhật 8 assertion tombstone + thêm test "note is never the LAST message" (pinned query đóng transcript) — `transcript-compaction` 37/37, pi-workflow 53 files / 486 tests PASS; full suite + tsc + eslint + smoke:bundle xanh
+
 ### v1.53.7 (2026-10-17)
 
 **UAT 17/10 (run 19:12) follow-up — 3 lỗi lộ ra sau khi fix overflow: model đoán path rồi bỏ dở, steer bị hiểu thành lệnh dừng turn, và degeneration 71KB/11 phút**
