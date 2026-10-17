@@ -1,0 +1,5 @@
+test_case_id,scenario,prompt,fake_session_events,expected_onThinking_calls,expected_result,description
+TC-03-a,loop thuong,short prompt,"message_update[thinking_delta t1, thinking_delta t2, text_delta hi]","t1, t2 (dung thu tu)",onToken nhan hi sau do,Session path forward thinking (FR1-R1 — loop 1, host line 477)
+TC-03-b,auto-chunk loop,large prompt (200 paragraph),"message_update[thinking_delta c1, thinking_delta c2] (chunked runOnce)","c1, c2",loop 2 cung forward thinking (host line 524),F2 bat buoc ca 2 loop
+TC-03-c,guard delta rong,short prompt,message_update[thinking_delta ""],(khong goi),host guard last.content truthy,FR3-R1 defense tai host
+TC-03-d,guard live,sau khi turn ket thuc,message_update[thinking_delta late],(khong goi),wiring guard if(!live) return drop,FR5-R3 — khong bleed sang turn sau

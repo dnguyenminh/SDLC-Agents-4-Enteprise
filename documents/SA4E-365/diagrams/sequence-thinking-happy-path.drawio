@@ -1,0 +1,189 @@
+<mxGraphModel dx="1500" dy="900" grid="1" gridSize="10" guides="1" arrows="1" page="1" pageScale="1" pageWidth="1600" pageHeight="920" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="title" value="SA4E-365 — Sequence (a): Happy Path thinking → answer [UC-1, UC-2 / BR-1, BR-2]" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=15;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="400" y="10" width="800" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1" value="Model Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="40" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p2" value="pi-ai SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="230" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p3" value="pi-event-mapper&#10;(mapAgentEvent — F1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="420" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p4" value="pi-workflow&#10;(session host / legacy — F2/F3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="610" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p5" value="StreamHandler&#10;(F4/F5)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="800" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p6" value="ChatEngineAdapter&#10;(F6)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="990" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p7" value="StreamProtocolAdapter&#10;(F8 — thinkingActive)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="1180" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p8" value="Webview&#10;(chatStore + ThinkingBlock)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="1370" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="l1" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="115" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="115" y="870" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="305" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="305" y="870" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="495" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="495" y="870" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="685" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="685" y="870" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="875" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="875" y="870" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l6" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1065" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="1065" y="870" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l7" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1255" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="1255" y="870" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l8" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1445" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="1445" y="870" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1: stream chunk (reasoning_content)" style="html=1;rounded=0;strokeColor=#666666;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="115" y="130" as="sourcePoint"></mxPoint>
+        <mxPoint x="305" y="130" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2: message_update {thinking_delta, delta}" style="html=1;rounded=0;strokeColor=#6c8ebf;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="305" y="160" as="sourcePoint"></mxPoint>
+        <mxPoint x="495" y="160" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n1" value="3: mapAgentEvent (guard delta khác rỗng) →&#10;collector.chunks += {type:'thinking'} (F1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="365" y="178" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="4: chunk 'thinking' (subscribe loop)" style="html=1;rounded=0;strokeColor=#6c8ebf;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="495" y="232" as="sourcePoint"></mxPoint>
+        <mxPoint x="685" y="232" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="5: emitThinking('pi', delta, streamId) — guard live (F2/F3)" style="html=1;rounded=0;strokeColor=#d79b00;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="685" y="262" as="sourcePoint"></mxPoint>
+        <mxPoint x="875" y="262" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n2" value="6: bufferChunk → scheduleFlush 50ms (F4, NFR-1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="745" y="276" width="260" height="24" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="7: chat:streamChunk eventType='thinking' {streamId, nodeId:'pi'}" style="html=1;rounded=0;strokeColor=#d79b00;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="875" y="318" as="sourcePoint"></mxPoint>
+        <mxPoint x="1065" y="318" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n3" value="8: toStreamEvent — pass 'thinking' (F6, khóa bằng TC-16)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="935" y="330" width="260" height="24" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="9: handleChunk(StreamChunkEvent)" style="html=1;rounded=0;strokeColor=#9673a6;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1065" y="372" as="sourcePoint"></mxPoint>
+        <mxPoint x="1255" y="372" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n4" value="10: STREAM_START (chunk đầu của stream) ·&#10;thinkingActive.add(streamId) · THINKING_START + THINKING_TOKEN (INV-3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="1125" y="386" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="11: THINKING_START {messageId} + THINKING_TOKEN" style="html=1;rounded=0;strokeColor=#82b366;fontSize=10;fontStyle=1;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1255" y="440" as="sourcePoint"></mxPoint>
+        <mxPoint x="1445" y="440" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n5" value="12: startThinking (reset content) + appendThinkingToken&#10;→ ThinkingBlock 'Thinking...' live (AC1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="1315" y="454" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="13: text_delta đầu tiên của answer" style="html=1;rounded=0;strokeColor=#666666;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="115" y="510" as="sourcePoint"></mxPoint>
+        <mxPoint x="305" y="510" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="14: message_update {text_delta} → chunk 'text' (F1)" style="html=1;rounded=0;strokeColor=#6c8ebf;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="305" y="545" as="sourcePoint"></mxPoint>
+        <mxPoint x="685" y="545" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="15: emitToken (guard live)" style="html=1;rounded=0;strokeColor=#d79b00;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="685" y="580" as="sourcePoint"></mxPoint>
+        <mxPoint x="875" y="580" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="16: chat:streamChunk 'token' → toStreamEvent (F6)" style="html=1;rounded=0;strokeColor=#9673a6;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="875" y="615" as="sourcePoint"></mxPoint>
+        <mxPoint x="1255" y="615" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n6" value="17: thinkingActive.has(streamId) → delete;&#10;push THINKING_END rồi STREAM_TOKEN (FR2-R2, INV-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="1125" y="628" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="18: THINKING_END {messageId}" style="html=1;rounded=0;strokeColor=#82b366;fontSize=10;fontStyle=1;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1255" y="682" as="sourcePoint"></mxPoint>
+        <mxPoint x="1445" y="682" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="19: STREAM_TOKEN {token} — answer stream bình thường" style="html=1;rounded=0;strokeColor=#82b366;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1255" y="712" as="sourcePoint"></mxPoint>
+        <mxPoint x="1445" y="712" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n7" value="20: endThinking → block collapse 'Reasoning'&#10;(nội dung xem lại được — AC2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="1315" y="724" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m14" value="21: turn hoàn tất → emitComplete → … → handleComplete → STREAM_END (FR4-R1)" style="html=1;rounded=0;dashed=1;strokeColor=#b85450;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="685" y="800" as="sourcePoint"></mxPoint>
+        <mxPoint x="1445" y="800" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="foot" value="Invariant: 1 turn = 1 streamId = 1 messageId = 1 bubble (BR-5) · Mọi THINKING_* dùng cùng messageId với STREAM_* · StreamHandler flush pending THINKING_TOKEN trước complete/error" style="text;html=1;align=left;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none" vertex="1" parent="1">
+      <mxGeometry x="40" y="850" width="1480" height="24" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

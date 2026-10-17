@@ -1,0 +1,6 @@
+test_case_id,scenario,action,timing,expected_emit_calls,expected_result,description
+TC-13-a,debounce,emitThinking(pi,d0..d9,s1) x10,trong < 50ms,0,buffer giu — chua flush,Debounce 50ms (FR5-R2 / NFR-1)
+TC-13-a,debounce,vi.advanceTimersByTime(50),sau 50ms,10,1 flush batch — 10 message thinking dung thu tu d0..d9,Batch duy nhat theo debounce
+TC-13-b,max_buffer,emitThinking x101,ngay,101,flush dong sync ngay khong cho timer,MAX_BUFFER_SIZE 100 — flush cuong buc (NFR-1)
+TC-13-c,flush_before_terminal,emitThinking(pi,pending,s2) roi emitComplete(pi,100,s2),ngay,>=2,thinking chunk xuat hien TRUOC chat:streamComplete trong emitFn calls,Dieu kien INV-4 hoat dong o adapter
+TC-13-d,mixed,emitToken + emitThinking xen ke trong 50ms,sau 50ms,tong so event,cung 1 flush batch — chung bufferChunk,Thinking khong mo duong postMessage rieng

@@ -1,0 +1,100 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="740" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="System Context — Forward thinking_delta tới ThinkingBlock (SA4E-365)" style="text;html=1;align=left;verticalAlign=middle;fontSize=16;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="20" y="0" width="900" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="gw" value="Model Gateway (OpenAI-compatible)&#10;reasoning_content / reasoning / reasoning_text" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+      <mxGeometry x="20" y="220" width="160" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="ext" value="Extension Host (TypeScript) — pi-workflow + chat engine" style="swimlane;html=1;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="220" y="40" width="750" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1" value="pi-ai SDK&#10;phát thinking_delta&#10;(message_update.assistantMessageEvent)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="ext">
+      <mxGeometry x="30" y="60" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2" value="pi-event-mapper&#10;mapAgentEvent() → chunk {type:'thinking'}&#10;(F1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="ext">
+      <mxGeometry x="30" y="190" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3a" value="SESSION PATH&#10;pi-agent-session-host.promptTurn(&#10;text, onToken, onToolEvent, onThinking) — F2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="ext">
+      <mxGeometry x="320" y="50" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3b" value="LEGACY PATH&#10;pi-workflow-adapter — loop result.streamChunks&#10;'thinking' → emitThinking — F3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="ext">
+      <mxGeometry x="320" y="190" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="c4" value="StreamHandler.emitThinking(&#10;nodeId, content, streamId)&#10;buffer + debounce 50ms — F4" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="ext">
+      <mxGeometry x="320" y="330" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="c5" value="ChatEngineAdapter.toStreamEvent()&#10;chat:streamChunk eventType='thinking'&#10;(F5 + F6)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="ext">
+      <mxGeometry x="590" y="50" width="150" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="c6" value="StreamProtocolAdapter.handleChunk&#10;thinkingActive Set →&#10;THINKING_START / TOKEN / END&#10;(F7 + F8, GAP G-1/G-2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="ext">
+      <mxGeometry x="590" y="200" width="150" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="web" value="Webview (Svelte) — SDLC CHAT" style="swimlane;html=1;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="1030" y="40" width="320" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="w1" value="messageListener.ts&#10;THINKING_START / TOKEN / END handlers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="web">
+      <mxGeometry x="35" y="60" width="250" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="w2" value="chatStore&#10;startThinking / appendThinkingToken / endThinking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="web">
+      <mxGeometry x="35" y="190" width="250" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="w3" value="ThinkingBlock.svelte&#10;trong ChatMessage.svelte&#10;({#if message.thinking})" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="web">
+      <mxGeometry x="35" y="320" width="250" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="dev" value="Developer&#10;(xem live reasoning trong bubble hiện tại)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="1080" y="600" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="x0" value="stream response" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="gw" target="c1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x1" value="thinking_delta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="ext" source="c1" target="c2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x2" value="chunk 'thinking'" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="ext" source="c2" target="c3a">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="280" y="90"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x3" value="chunk 'thinking'" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="ext" source="c2" target="c3b">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x4" value="onThinking(t) → emitThinking (guard live)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="ext" source="c3a" target="c4">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="430" y="290"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x5" value="emitThinking" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="ext" source="c3b" target="c4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x6" value="chat:streamChunk eventType='thinking'&#10;(batch debounce 50ms)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="ext" source="c4" target="c5">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="665" y="370"/>
+          <mxPoint x="665" y="170"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="x7" value="EngineStreamEvent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="ext" source="c5" target="c6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x8" value="postMessage THINKING_START / THINKING_TOKEN / THINKING_END" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="c6" target="w1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="web" source="w1" target="w2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x10" value="message.thinking" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="web" source="w2" target="w3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="x11" value="xem live reasoning" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="w3" target="dev">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

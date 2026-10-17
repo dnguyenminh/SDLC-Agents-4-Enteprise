@@ -1,0 +1,3 @@
+test_case_id,attempt,model_behavior,stream_chunks,expected_result,description
+TC-12a-1,1,fail retryable (vd 500),"thinking B1, error retryable",attempt discard — khong replay,Per-attempt collector (pi-provider.ts:379)
+TC-12a-2,2,success,"thinking B2, text ok","runOnce tra result attempt 2 — chua B2, KHONG chua B1",FR5-R4' — thinking attempt FAILED khong bao gio toi webview (G-2 Phuong an B)

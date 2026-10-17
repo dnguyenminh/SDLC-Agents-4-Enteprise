@@ -1,0 +1,205 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/Users/ASUS/AppData/Local/Temp/sa4e-365-wt/extension
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > creates host with tier small and enables auto-chunk mode
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > creates host with tier small and enables auto-chunk mode
+{"level":"info","msg":"Context budget resolved","modelId":"test-model","source":"provider","nCtx":8192,"reserveOutput":2000,"safetyMargin":656,"staticBudget":3875,"historyBudget":1661,"timestamp":"2026-10-15T23:19:34.616Z"}
+{"level":"info","msg":"PI_COMPRESSION_ENABLED","measuredStaticTokens":344,"staticBudget":3875,"tier":"small","timestamp":"2026-10-15T23:19:34.617Z"}
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.617Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-15T23:19:34.617Z"}
+
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > creates host with tier small and enables auto-chunk mode
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":51.83,"staticTokens":2246,"escalations":[],"timestamp":"2026-10-15T23:19:34.619Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":51.83,"staticTokens":2246,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-15T23:19:34.619Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > creates host with tier small and enables auto-chunk mode
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.619Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn processes large prompt via incremental chunks for small tier
+{"level":"info","msg":"Context budget resolved","modelId":"test-model","source":"provider","nCtx":8192,"reserveOutput":2000,"safetyMargin":656,"staticBudget":3875,"historyBudget":1661,"timestamp":"2026-10-15T23:19:34.620Z"}
+{"level":"info","msg":"PI_COMPRESSION_ENABLED","measuredStaticTokens":344,"staticBudget":3875,"tier":"small","timestamp":"2026-10-15T23:19:34.620Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-15T23:19:34.620Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn processes large prompt via incremental chunks for small tier
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.620Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn processes large prompt via incremental chunks for small tier
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn processes large prompt via incremental chunks for small tier
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.621Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":51.83,"staticTokens":2246,"escalations":[],"timestamp":"2026-10-15T23:19:34.621Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":51.83,"staticTokens":2246,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-15T23:19:34.621Z"}
+
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx
+{"level":"info","msg":"Context budget resolved","modelId":"test-model","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-15T23:19:34.622Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-15T23:19:34.622Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.622Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"timestamp":"2026-10-15T23:19:34.622Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-15T23:19:34.622Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.622Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn does NOT chunk a small prompt for medium tier (below threshold)
+{"level":"info","msg":"Context budget resolved","modelId":"test-model","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-15T23:19:34.623Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-15T23:19:34.623Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn does NOT chunk a small prompt for medium tier (below threshold)
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.623Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn does NOT chunk a small prompt for medium tier (below threshold)
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"timestamp":"2026-10-15T23:19:34.623Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-15T23:19:34.623Z"}
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn does NOT chunk a small prompt for medium tier (below threshold)
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.623Z"}
+
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03a: normal loop forwards thinking deltas then the text token
+{"level":"info","msg":"Context budget resolved","modelId":"test-model","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-15T23:19:34.624Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-15T23:19:34.624Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03a: normal loop forwards thinking deltas then the text token
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.624Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03a: normal loop forwards thinking deltas then the text token
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"timestamp":"2026-10-15T23:19:34.624Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-15T23:19:34.624Z"}
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03a: normal loop forwards thinking deltas then the text token
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.624Z"}
+
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03b: auto-chunk loop forwards thinking deltas via onThinking
+{"level":"info","msg":"Context budget resolved","modelId":"test-model","source":"provider","nCtx":8192,"reserveOutput":2000,"safetyMargin":656,"staticBudget":3875,"historyBudget":1661,"timestamp":"2026-10-15T23:19:34.625Z"}
+{"level":"info","msg":"PI_COMPRESSION_ENABLED","measuredStaticTokens":344,"staticBudget":3875,"tier":"small","timestamp":"2026-10-15T23:19:34.626Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-15T23:19:34.626Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03b: auto-chunk loop forwards thinking deltas via onThinking
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.626Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03b: auto-chunk loop forwards thinking deltas via onThinking
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":51.83,"staticTokens":2246,"escalations":[],"timestamp":"2026-10-15T23:19:34.626Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":51.83,"staticTokens":2246,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-15T23:19:34.626Z"}
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03b: auto-chunk loop forwards thinking deltas via onThinking
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.626Z"}
+
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03c: empty thinking delta never reaches onThinking
+{"level":"info","msg":"Context budget resolved","modelId":"test-model","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-15T23:19:34.626Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-15T23:19:34.626Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03c: empty thinking delta never reaches onThinking
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.626Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03c: empty thinking delta never reaches onThinking
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"timestamp":"2026-10-15T23:19:34.627Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-15T23:19:34.627Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03c: empty thinking delta never reaches onThinking
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.627Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03d: late event after promptTurn ends is not forwarded (guard live)
+{"level":"info","msg":"Context budget resolved","modelId":"test-model","source":"provider","nCtx":65536,"reserveOutput":2000,"safetyMargin":5243,"staticBudget":40805,"historyBudget":17488,"timestamp":"2026-10-15T23:19:34.627Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-15T23:19:34.627Z"}
+
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03d: late event after promptTurn ends is not forwarded (guard live)
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.627Z"}
+
+stdout | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03d: late event after promptTurn ends is not forwarded (guard live)
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"timestamp":"2026-10-15T23:19:34.627Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":6.48,"staticTokens":2246,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-15T23:19:34.627Z"}
+stderr | src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03d: late event after promptTurn ends is not forwarded (guard live)
+{"level":"warn","msg":"PI_CONTEXT_FILES_MEASURE_FAILED","error":"[vitest] No \"loadProjectContextFiles\" export is defined on the \"@earendil-works/pi-coding-agent\" mock. Did you forget to return it from \"vi.mock\"?\nIf you need to partially mock a module, you can use \"importOriginal\" helper inside:\n","timestamp":"2026-10-15T23:19:34.627Z"}
+
+
+ ✓ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > creates host with tier small and enables auto-chunk mode 5ms
+ ✓ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn processes large prompt via incremental chunks for small tier 1ms
+ ✓ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx 1ms
+ ✓ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn does NOT chunk a small prompt for medium tier (below threshold) 1ms
+ ✓ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03a: normal loop forwards thinking deltas then the text token 1ms
+ ✓ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03b: auto-chunk loop forwards thinking deltas via onThinking 1ms
+ ✓ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03c: empty thinking delta never reaches onThinking 1ms
+ ✓ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03d: late event after promptTurn ends is not forwarded (guard live) 1ms
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > falls back to the next model on a transient 500 "bridge sandbox" error
+{"level":"info","msg":"Context budget resolved","modelId":"primary","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.626Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > falls back to the next model on a transient 500 "bridge sandbox" error
+{"level":"info","msg":"Context budget resolved","modelId":"fallback-a","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.628Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > skips a broken fallback and continues to the next healthy one
+{"level":"info","msg":"Context budget resolved","modelId":"primary","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.629Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > skips a broken fallback and continues to the next healthy one
+{"level":"info","msg":"Context budget resolved","modelId":"fallback-a","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.630Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > skips a broken fallback and continues to the next healthy one
+{"level":"info","msg":"Context budget resolved","modelId":"fallback-b","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.630Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > does NOT fall back on a non-retryable 400 error (fails fast on primary)
+{"level":"info","msg":"Context budget resolved","modelId":"primary","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.631Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > returns the last error when the entire chain fails transiently
+{"level":"info","msg":"Context budget resolved","modelId":"primary","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.631Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > returns the last error when the entire chain fails transiently
+{"level":"info","msg":"Context budget resolved","modelId":"fallback-a","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.631Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > returns the last error when the entire chain fails transiently
+{"level":"info","msg":"Context budget resolved","modelId":"fallback-b","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.631Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > succeeds on the primary without touching fallbacks when it is healthy
+{"level":"info","msg":"Context budget resolved","modelId":"primary","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.632Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > drops unknown fallback ids that are not in the registry
+{"level":"info","msg":"Context budget resolved","modelId":"primary","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.632Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > drops unknown fallback ids that are not in the registry
+{"level":"info","msg":"Context budget resolved","modelId":"fallback-a","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:19:35.633Z"}
+
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > falls back to the next model on a transient 500 "bridge sandbox" error 6ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > skips a broken fallback and continues to the next healthy one 1ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > does NOT fall back on a non-retryable 400 error (fails fast on primary) 1ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > returns the last error when the entire chain fails transiently 1ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > succeeds on the primary without touching fallbacks when it is healthy 1ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > PiProvider model fallback (SA4E-289 PI-MODEL-FALLBACK) > drops unknown fallback ids that are not in the registry 1ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > isRetryableLlmError classifier (SA4E-289) > treats 5xx / 408 / 429 as retryable 0ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > isRetryableLlmError classifier (SA4E-289) > treats the Devin bridge sandbox 500 as retryable 0ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > isRetryableLlmError classifier (SA4E-289) > treats timeouts / network errors as retryable 0ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > isRetryableLlmError classifier (SA4E-289) > treats 4xx client errors (except 408/429) as NON-retryable 0ms
+ ✓ src/pi-workflow/__tests__/pi-model-fallback.test.ts > isRetryableLlmError classifier (SA4E-289) > extractStatus reads status from message, .status, and .response.status 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-04: THINKING_END before STREAM_TOKEN on the first answer token 2ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-05: complete while thinking open → THINKING_END + STREAM_END, no repeat 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-06 (G-1): error while thinking open → THINKING_END then STREAM_ERROR 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-07: error/complete without thinking → no THINKING_*; orphans stay safe 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-08: tool-only turn emits zero THINKING_* messages 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-09 (G-3): empty/undefined thinking deltas push nothing, block stays open 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-10: orphan complete for unknown streamId → STREAM_END only, state untouched 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-11: reset() clears streamToMessage/startedStreams/thinkingActive together 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-12b: thinking → token (END) → thinking again → complete (continuation) 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-15: a leading empty delta must not open a block 0ms
+ ✓ src/chat/engine/__tests__/stream-thinking-mapping.test.ts > THINKING_* protocol mapping (SA4E-365, STC Group B) > TC-18 (SR-03): cleanup is idempotent across all three state collections 0ms
+ ✓ src/chat/engine/__tests__/stream-error-mapping.test.ts > ChatEngineAdapter — engine fan-out mapping (streaming-identity fix) > maps chat:error onto the open stream so the bubble shows and closes 3ms
+ ✓ src/chat/engine/__tests__/stream-error-mapping.test.ts > ChatEngineAdapter — engine fan-out mapping (streaming-identity fix) > orphan errors still surface (synthetic stream) instead of vanishing 0ms
+ ✓ src/chat/engine/__tests__/stream-error-mapping.test.ts > ChatEngineAdapter — engine fan-out mapping (streaming-identity fix) > pre-token errors after a close do not reuse the closed stream 0ms
+ ✓ src/chat/engine/__tests__/stream-error-mapping.test.ts > ChatEngineAdapter — engine fan-out mapping (streaming-identity fix) > token and completion share one messageId end to end 0ms
+ ✓ src/chat/engine/__tests__/stream-error-mapping.test.ts > ChatEngineAdapter — engine fan-out mapping (streaming-identity fix) > forwards thinking chunks through the engine filter into THINKING_* (F6) 0ms
+ ✓ src/mcp/__tests__/stream-handler-events.test.ts > StreamHandler Self-Correction Events (KSA-233) > TC-14: emitRetry emits correct event format 3ms
+ ✓ src/mcp/__tests__/stream-handler-events.test.ts > StreamHandler Self-Correction Events (KSA-233) > TC-14: emitVerify emits correct event format 0ms
+ ✓ src/mcp/__tests__/stream-handler-events.test.ts > StreamHandler Self-Correction Events (KSA-233) > TC-14: emitVerify with pass emits null feedback 0ms
+ ✓ src/mcp/__tests__/stream-handler-events.test.ts > StreamHandler Self-Correction Events (KSA-233) > TC-14: emitStrategySwitch emits correct event format 0ms
+ ✓ src/mcp/__tests__/stream-handler-events.test.ts > StreamHandler Self-Correction Events (KSA-233) > TC-14: emitHumanIntervention emits correct event format 0ms
+ ✓ src/mcp/__tests__/stream-handler-events.test.ts > StreamHandler Self-Correction Events (KSA-233) > emitRetry passes the caller-supplied streamId through (no generated ids) 0ms
+ ✓ src/mcp/__tests__/stream-handler-events.test.ts > StreamHandler Self-Correction Events (KSA-233) > events flush pending buffer before emitting 0ms
+
+ Test Files  5 passed (5)
+      Tests  42 passed (42)
+   Start at  06:19:33
+   Duration  3.03s (transform 467ms, setup 0ms, import 2.28s, tests 40ms, environment 0ms)
+

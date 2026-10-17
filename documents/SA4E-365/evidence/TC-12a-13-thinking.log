@@ -1,0 +1,23 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/Users/ASUS/AppData/Local/Temp/sa4e-365-wt/extension
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback-thinking.test.ts > PiProvider thinking attempt discard (SA4E-365, TC-12a / G-2) > returns only the successful attempt chunks (no B1 leak after fallback)
+{"level":"info","msg":"Context budget resolved","modelId":"primary","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:23:42.869Z"}
+
+stdout | src/pi-workflow/__tests__/pi-model-fallback-thinking.test.ts > PiProvider thinking attempt discard (SA4E-365, TC-12a / G-2) > returns only the successful attempt chunks (no B1 leak after fallback)
+{"level":"info","msg":"Context budget resolved","modelId":"fallback-a","source":"provider","nCtx":128000,"reserveOutput":2000,"safetyMargin":10240,"staticBudget":81032,"historyBudget":34728,"timestamp":"2026-10-15T23:23:42.870Z"}
+
+ ✓ src/pi-workflow/__tests__/pi-model-fallback-thinking.test.ts > PiProvider thinking attempt discard (SA4E-365, TC-12a / G-2) > returns only the successful attempt chunks (no B1 leak after fallback) 7ms
+ ✓ src/mcp/__tests__/stream-handler-thinking.test.ts > StreamHandler emitThinking buffering (SA4E-365, TC-13) > TC-13a: buffers 10 emitThinking deltas and flushes as one ordered batch at 50ms 4ms
+ ✓ src/mcp/__tests__/stream-handler-thinking.test.ts > StreamHandler emitThinking buffering (SA4E-365, TC-13) > TC-13b: MAX_BUFFER_SIZE — 101 events flush synchronously without a timer 1ms
+ ✓ src/mcp/__tests__/stream-handler-thinking.test.ts > StreamHandler emitThinking buffering (SA4E-365, TC-13) > TC-13c: buffered thinking flushes BEFORE chat:streamComplete (INV-4 precondition) 1ms
+ ✓ src/mcp/__tests__/stream-handler-thinking.test.ts > StreamHandler emitThinking buffering (SA4E-365, TC-13) > TC-13d: emitToken + emitThinking interleaved share ONE flush batch 0ms
+
+ Test Files  2 passed (2)
+      Tests  5 passed (5)
+   Start at  06:23:41
+   Duration  1.45s (transform 154ms, setup 0ms, import 1.13s, tests 14ms, environment 0ms)
+

@@ -1,0 +1,60 @@
+<mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" arrows="1" page="1" pageScale="1" pageWidth="1100" pageHeight="620" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="title" value="SA4E-365 — Deployment Architecture" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="300" y="20" width="500" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="ide" value="VS Code / Kiro IDE (Electron)" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13" vertex="1" parent="1">
+      <mxGeometry x="60" y="80" width="960" height="480" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="host" value="Extension Host Process (Node.js — TypeScript bundle)" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12" vertex="1" parent="1">
+      <mxGeometry x="90" y="130" width="430" height="380" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="host1" value="pi-workflow: pi-event-mapper · pi-agent-session-host ·&#10;pi-workflow-adapter · pi-provider (runOnce per attempt)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="110" y="170" width="390" height="50" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="host2" value="mcp: StreamHandler (buffer + debounce 50ms, MAX 100)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="110" y="235" width="390" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="host3" value="chat/engine: ChatEngineAdapter (toStreamEvent) ·&#10;StreamProtocolAdapter (thinkingActive + THINKING_* mapping — G-1/G-3 fix)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="110" y="290" width="390" height="50" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="host4" value="IPostMessageBridge → bridge.postToWebview(msg) — batch sau flush" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="110" y="355" width="390" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="host5" value="State in-memory: streamToMessage · startedStreams · thinkingActive&#10;Không persist · Không DB · Reset per turn" style="text;html=1;align=left;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none" vertex="1" parent="1">
+      <mxGeometry x="110" y="420" width="390" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="wv" value="Webview iframe (Chromium — Svelte 4 bundle)" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12" vertex="1" parent="1">
+      <mxGeometry x="600" y="130" width="390" height="380" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="wv1" value="messageListener.ts — THINKING_* handlers (validated)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="620" y="170" width="350" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="wv2" value="stores/chatStore.ts — startThinking / appendThinkingToken /&#10;endThinking / endStream (thinking: string · isThinkingActive: bool)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="620" y="225" width="350" height="50" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="wv3" value="components/ThinkingBlock.svelte — 'Thinking...' live → 'Reasoning'&#10;render {content} trong &lt;pre&gt; (Svelte escape — XSS-safe)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="620" y="290" width="350" height="50" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="wv4" value="SDLC CHAT panel — 1 turn = 1 bubble (streaming identity)" style="text;html=1;align=left;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none" vertex="1" parent="1">
+      <mxGeometry x="620" y="420" width="350" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="pm" value="postMessage (extension → webview)&#10;THINKING_* batch mỗi 50ms · ≤ 100 msg/flush" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.5" edge="1" parent="1" source="host" target="wv">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="pmr" value="SEND_PROMPT (webview → extension)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;fontSize=10;dashed=1;exitX=0;exitY=0.75;entryX=1;entryY=0.75" edge="1" parent="1" source="wv" target="host">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="gw" value="Model Gateway&#10;(OpenAI-compatible: qwen-text…)&#10;reasoning_content stream" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="90" y="600" width="240" height="70" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="gwe" value="HTTPS stream (qua pi-ai SDK trong Extension Host)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;exitX=0.5;exitY=0;entryX=0.25;entryY=1" edge="1" parent="1" source="gw" target="ide">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="dep" value="Deploy: npm run compile → VSIX · KHÔNG migration · KHÔNG config mới · KHÔNG feature flag&#10;Rollback: revert commit + redeploy VSIX trước (state in-memory, không corrupt)" style="text;html=1;align=left;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none" vertex="1" parent="1">
+      <mxGeometry x="380" y="600" width="620" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

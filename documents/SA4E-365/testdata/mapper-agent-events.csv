@@ -1,0 +1,6 @@
+test_case_id,agent_event_type,assistant_message_event,delta,expected_chunk_type,expected_chunk_content,expected_collector_thinking,expected_http_code,expected_result,description
+TC-01-a,message_update,thinking_delta,abc,thinking,abc,abc,,chunk tao + thinking tich luy,Delta hop le — mapper tao chunk thinking (FR1-R1)
+TC-01-b,message_update,thinking_delta,def,thinking,def,abcdef,,chunk thu 2 + tich luy tiep,Tich luy collector.thinking lien tuc
+TC-02-a,message_update,thinking_delta,"",,,,,khong tao chunk,Delta rong — guard truthy (FR3-R1 / EF-2 / INV-5)
+TC-02-b,message_update,thinking_delta,undefined,,,,,khong tao chunk,Delta undefined — guard truthy
+TC-02-c,message_update,text_delta,hi,text,hi,abc,,chunk text binh thuong,Mapper khong suy giam chuc nang text sau delta rong

@@ -1,0 +1,129 @@
+<mxGraphModel dx="1500" dy="800" grid="1" gridSize="10" guides="1" arrows="1" page="1" pageScale="1" pageWidth="1600" pageHeight="760" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="title" value="SA4E-365 — Sequence (b): Error giữa thinking — FR4-R3 / G-1 FIX [UC-4 / BR-4]" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=15;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="400" y="10" width="800" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1" value="Model Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="40" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p2" value="pi-ai SDK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="230" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p3" value="pi-event-mapper&#10;(F1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="420" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p4" value="pi-workflow&#10;(session host / legacy)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="610" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p5" value="StreamHandler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="800" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p6" value="ChatEngineAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="990" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p7" value="StreamProtocolAdapter&#10;(G-1 FIX)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="1180" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p8" value="Webview&#10;(ThinkingBlock)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="1370" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="l1" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="115" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="115" y="720" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="305" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="305" y="720" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="495" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="495" y="720" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="685" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="685" y="720" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="875" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="875" y="720" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l6" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1065" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="1065" y="720" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l7" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1255" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="1255" y="720" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l8" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1445" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="1445" y="720" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="pre" value="Bước 1–9 như happy path → thinking đang mở: thinkingActive = {streamId}, webview 'Thinking...' live" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;align=center" vertex="1" parent="1">
+      <mxGeometry x="330" y="115" width="940" height="28" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n1" value="1: turn THROW giữa turn (vd session prompt error) →&#10;catch PI_TURN_FAILED (pi-workflow-adapter.ts:545-548) → onEvent chat:error&#10;⛔ KHÔNG emitComplete theo sau (bằng chứng G-1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="555" y="160" width="260" height="54" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="2: chat:error {code:'PI_TURN_FAILED', retryable:true}" style="html=1;rounded=0;strokeColor=#b85450;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="685" y="238" as="sourcePoint"></mxPoint>
+        <mxPoint x="1065" y="238" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n2" value="3: toStreamEvent('chat:error') → synthetic error chunk&#10;{streamId: lastStreamId, eventType:'error'} (line 268-280)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="935" y="252" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="4: handleChunk — eventType 'error'" style="html=1;rounded=0;strokeColor=#9673a6;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1065" y="308" as="sourcePoint"></mxPoint>
+        <mxPoint x="1255" y="308" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n3" value="5: ⚠ G-1 FIX (FR4-R3):&#10;thinkingActive.has(streamId) → delete;&#10;push THINKING_END TRƯỚC STREAM_ERROR (cùng batch — INV-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;fontStyle=1;align=center" vertex="1" parent="1">
+      <mxGeometry x="1125" y="322" width="260" height="54" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="6: THINKING_END {messageId} — block ĐÓNG" style="html=1;rounded=0;strokeColor=#82b366;fontSize=10;fontStyle=1;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1255" y="400" as="sourcePoint"></mxPoint>
+        <mxPoint x="1445" y="400" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="7: STREAM_ERROR {code:'ENGINE_ERROR', retryable:true}" style="html=1;rounded=0;strokeColor=#b85450;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1255" y="432" as="sourcePoint"></mxPoint>
+        <mxPoint x="1445" y="432" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n4" value="8: endThinking → block collapse 'Reasoning' (KHÔNG kẹt 'Thinking...')&#10;bubble hiện lỗi như hiện có (ES-1) — AC4 ✓" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="1315" y="446" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n5" value="9: Không có complete theo sau — invariant vẫn giữ: thinkingActive rỗng (INV-1)&#10;Hiện trạng TRƯỚC fix: thiếu 3 dòng guard → THINKING_END không được phát → block kẹt 'Thinking...' (bug BR-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="330" y="520" width="940" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n6" value="Đối chiếu đường PI_SESSION_TIMEOUT (line 331-339): emitComplete TRƯỚC chat:error + live=false&#10;→ block đóng qua complete path (ES-2) → chỉ rule 'error-path tự đóng block' (FR4-R3) cover CẢ 2 flow" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="330" y="580" width="940" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="foot" value="Test khóa: TC-06 (error khi thinking mở → THINKING_END + STREAM_ERROR, thinkingActive rỗng) · TC-07 (error không thinking → chỉ STREAM_ERROR)" style="text;html=1;align=left;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none" vertex="1" parent="1">
+      <mxGeometry x="40" y="690" width="1480" height="24" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,78 @@
+<mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="640" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="title" value="SA4E-365 — Thinking Data Flow: pi-ai SDK → ThinkingBlock (2 đường streaming hội tụ StreamHandler)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="300" y="20" width="1200" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="ext" value="Extension Host (TypeScript)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;strokeColor=#666666;fillColor=none;verticalAlign=top;fontStyle=1;fontSize=12" vertex="1" parent="1">
+      <mxGeometry x="180" y="60" width="1400" height="540" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="gw" value="Model Gateway&#10;(qwen-text…)&#10;reasoning_content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="20" y="290" width="140" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="sdk" value="pi-ai SDK&#10;(pi-agent-core)&#10;F0: thinking_delta" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="210" y="290" width="150" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="mapper" value="pi-event-mapper&#10;mapAgentEvent (pure)&#10;F1: delta → chunk 'thinking'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="400" y="290" width="180" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="session" value="SESSION PATH&#10;pi-agent-session-host&#10;F2: promptTurn(…, onThinking)&#10;2 subscribe loop — guard live" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="640" y="130" width="220" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="legacy" value="LEGACY PATH&#10;pi-workflow-adapter&#10;F3: loop result.streamChunks&#10;turnStreamId chung (1 turn)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="640" y="440" width="220" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="handler" value="StreamHandler (mcp)&#10;F4: emitThinking → bufferChunk&#10;debounce 50ms · MAX_BUFFER 100" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="930" y="290" width="200" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="engine" value="ChatEngineAdapter&#10;F6: toStreamEvent — pass 'thinking'&#10;chat:error → synthetic error chunk" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="1170" y="290" width="210" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="adapter" value="StreamProtocolAdapter&#10;F8: handleChunk / handleComplete&#10;state: thinkingActive Set" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="1170" y="450" width="210" height="90" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="fix" value="⚠ FIX G-1 (FR4-R3): case 'error' → THINKING_END TRƯỚC STREAM_ERROR&#10;⚠ FIX G-3 (FR3-R3): guard content rỗng → no-op" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="930" y="560" width="450" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="webview" value="WEBVIEW (Svelte — KHÔNG ĐỔI)&#10;messageListener → chatStore&#10;THINKING_START → startThinking (reset content)&#10;THINKING_TOKEN → appendThinkingToken&#10;THINKING_END → endThinking (collapse)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="1440" y="290" width="230" height="120" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="tb" value="ThinkingBlock.svelte&#10;'Thinking...' live → 'Reasoning'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="1470" y="110" width="170" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e1" value="HTTPS stream" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10" edge="1" parent="1" source="gw" target="sdk">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="message_update {thinking_delta}" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;fontSize=10" edge="1" parent="1" source="sdk" target="mapper">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="chunk 'thinking'" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;fontSize=10;exitX=0.75;exitY=0;entryX=0;entryY=0.5" edge="1" parent="1" source="mapper" target="session">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e4" value="chunk 'thinking'" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;fontSize=10;exitX=0.75;exitY=1;entryX=0;entryY=0.5" edge="1" parent="1" source="mapper" target="legacy">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="onThinking(t) → emitThinking('pi', t, streamId)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;exitX=1;exitY=0.5;entryX=0.25;entryY=0" edge="1" parent="1" source="session" target="handler">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="emitThinking('pi', c, turnStreamId)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;exitX=1;exitY=0.5;entryX=0.25;entryY=1" edge="1" parent="1" source="legacy" target="handler">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="chat:streamChunk eventType='thinking' (batch 50ms)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10" edge="1" parent="1" source="handler" target="engine">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="StreamChunkEvent (F7 eventType 'thinking')" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9673a6;fontSize=10;exitX=0.5;exitY=1;entryX=0.5;entryY=0" edge="1" parent="1" source="engine" target="adapter">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e9" value="THINKING_START / THINKING_TOKEN / THINKING_END {messageId}" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontSize=10;exitX=1;exitY=0.25;entryX=0;entryY=0.5" edge="1" parent="1" source="adapter" target="webview">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="e10" value="render live / collapse" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;dashed=1;fontSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=1" edge="1" parent="1" source="webview" target="tb">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="legend" value="Màu: xanh dương = pi-workflow · cam = StreamHandler · tím = engine adapter · đỏ = StreamProtocolAdapter (điểm fix) · xanh lá = webview · xám = external" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontStyle=2" vertex="1" parent="1">
+      <mxGeometry x="20" y="570" width="880" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

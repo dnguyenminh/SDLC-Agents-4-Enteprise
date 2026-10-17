@@ -1,0 +1,5 @@
+test_case_id,step,engine_message_type,stream_id,event_type,content,expected_webview_messages,description
+TC-16-1,1,chat:streamChunk,turn-1,thinking,d1,"[THINKING_START, THINKING_TOKEN(d1)]",F6 — toStreamEvent khong drop eventType thinking (FR1-R1)
+TC-16-2,2,chat:streamChunk,turn-1,thinking,d2,[THINKING_TOKEN(d2)],Delta tiep qua filter
+TC-16-3,3,chat:streamChunk,turn-1,token,answer,"[THINKING_END, STREAM_TOKEN(answer)]",Thu tu END truoc TOKEN giu nguyen qua engine layer (INV-4)
+TC-16-4,4,(check),turn-1,,,"messageId THINKING_* == messageId STREAM_*",FR5-R1 — 1 bubble

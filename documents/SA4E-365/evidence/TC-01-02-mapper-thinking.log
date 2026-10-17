@@ -1,0 +1,21 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/Users/ASUS/AppData/Local/Temp/sa4e-365-wt/extension
+
+ ✓ src/webview/__tests__/chat-store.test.ts > UT-HYD-01 — chatStore hydration from SYNC_CHAT_HISTORY > populates exactly the hydrated messages 2ms
+ ✓ src/webview/__tests__/chat-store.test.ts > UT-HYD-01 — chatStore hydration from SYNC_CHAT_HISTORY > preserves all message fields (id, role, content, agentId, timestamp) 1ms
+ ✓ src/webview/__tests__/chat-store.test.ts > UT-HYD-01 — chatStore hydration from SYNC_CHAT_HISTORY > hydrates the contextStore from payload.context (STC UT-HYD-01 step 6) 0ms
+ ✓ src/webview/__tests__/chat-store.test.ts > UT-HYD-01 — chatStore hydration from SYNC_CHAT_HISTORY > sets isHydrated with empty history as messages=[] (STC API-HYD-02 step 7) 0ms
+ ✓ src/webview/__tests__/chat-store.test.ts > UT-HYD-01 — chatStore hydration from SYNC_CHAT_HISTORY > ignores invalid payloads without throwing 0ms
+ ✓ src/pi-workflow/__tests__/pi-event-mapper-thinking.test.ts > pi-event-mapper thinking_delta forwarding (SA4E-365, Group A) > TC-01: maps thinking_delta to a thinking chunk and accumulates collector.thinking 1ms
+ ✓ src/pi-workflow/__tests__/pi-event-mapper-thinking.test.ts > pi-event-mapper thinking_delta forwarding (SA4E-365, Group A) > TC-01: thinking deltas never produce text chunks or collector.text 0ms
+ ✓ src/pi-workflow/__tests__/pi-event-mapper-thinking.test.ts > pi-event-mapper thinking_delta forwarding (SA4E-365, Group A) > TC-02: skips empty and undefined deltas (no chunk, no accumulation) 0ms
+ ✓ src/pi-workflow/__tests__/pi-event-mapper-thinking.test.ts > pi-event-mapper thinking_delta forwarding (SA4E-365, Group A) > TC-02: text_delta still maps normally after skipped empty thinking deltas 0ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  06:22:54
+   Duration  1.67s (transform 166ms, setup 0ms, import 569ms, tests 6ms, environment 787ms)
+

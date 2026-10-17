@@ -1,0 +1,105 @@
+<mxGraphModel dx="1500" dy="800" grid="1" gridSize="10" guides="1" arrows="1" page="1" pageScale="1" pageWidth="1600" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="title" value="SA4E-365 — Sequence (c): Complete khi thinking active [UC-4 / BR-4, FR4-R1]" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=15;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="400" y="10" width="800" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1" value="pi-workflow&#10;(turn end)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="80" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p5" value="StreamHandler&#10;(emitComplete)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="330" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p6" value="ChatEngineAdapter&#10;(toStreamEvent)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="580" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p7" value="StreamProtocolAdapter&#10;(handleComplete)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="830" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p8" value="Webview&#10;(ThinkingBlock)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="1080" y="50" width="150" height="44" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="l1" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="155" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="155" y="620" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="405" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="405" y="620" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l6" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="655" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="655" y="620" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l7" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="905" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="905" y="620" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l8" style="html=1;endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1155" y="94" as="sourcePoint"></mxPoint>
+        <mxPoint x="1155" y="620" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="pre" value="Bước 1–9 như happy path → thinking đang mở (chưa có answer text): thinkingActive = {streamId}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontStyle=1;align=center" vertex="1" parent="1">
+      <mxGeometry x="100" y="115" width="1050" height="28" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="n1" value="1: turn hoàn tất (chỉ thinking + tool, không answer) → emitComplete —&#10;StreamHandler.flush() TRƯỚC (mọi THINKING_TOKEN pending đi trước — stream-handler.ts:76-85)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="25" y="160" width="260" height="54" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="2: emitComplete('pi', duration, streamId)" style="html=1;rounded=0;strokeColor=#d79b00;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="155" y="238" as="sourcePoint"></mxPoint>
+        <mxPoint x="405" y="238" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="3: chat:streamComplete {streamId, finalContent}" style="html=1;rounded=0;strokeColor=#d79b00;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="405" y="272" as="sourcePoint"></mxPoint>
+        <mxPoint x="655" y="272" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n2" value="4: toStreamEvent → StreamCompleteEvent; lastStreamId = undefined (stream đã đóng)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="525" y="286" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="5: handleComplete(StreamCompleteEvent)" style="html=1;rounded=0;strokeColor=#9673a6;fontSize=10;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="655" y="340" as="sourcePoint"></mxPoint>
+        <mxPoint x="905" y="340" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n3" value="6: thinkingActive.has(streamId) → delete + push THINKING_END;&#10;cleanup(streamId) (xóa streamToMessage + startedStreams); push STREAM_END&#10;→ INV-1: thinkingActive rỗng" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="775" y="354" width="260" height="54" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="7: THINKING_END {messageId}" style="html=1;rounded=0;strokeColor=#82b366;fontSize=10;fontStyle=1;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="905" y="432" as="sourcePoint"></mxPoint>
+        <mxPoint x="1155" y="432" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="8: STREAM_END {messageId} — bubble đóng" style="html=1;rounded=0;strokeColor=#82b366;fontSize=10;fontStyle=1;verticalAlign=bottom;align=center" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="905" y="462" as="sourcePoint"></mxPoint>
+        <mxPoint x="1155" y="462" as="targetPoint"></mxPoint>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="n4" value="9: endThinking (collapse 'Reasoning') + endStream&#10;— block luôn đóng, không kẹt (AC4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="1025" y="476" width="260" height="36" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="af" value="AF — Orphan complete (G-4): complete cho streamId lạ → lookup miss → SKIP THINKING_END; vẫn STREAM_END + cleanup;&#10;không crash, không block rỗng (webview endStream(unknownId) chỉ reset isStreaming — chatStore.ts:79-85). Test: TC-10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;align=center" vertex="1" parent="1">
+      <mxGeometry x="100" y="540" width="1050" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="foot" value="Test khóa: TC-05 (complete khi thinking mở → THINKING_END + STREAM_END, thinkingActive rỗng) · TC-10 (orphan complete)" style="text;html=1;align=left;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none" vertex="1" parent="1">
+      <mxGeometry x="40" y="640" width="1200" height="24" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

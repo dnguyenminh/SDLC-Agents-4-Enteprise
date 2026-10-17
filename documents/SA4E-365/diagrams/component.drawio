@@ -1,0 +1,78 @@
+<mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" arrows="1" page="1" pageScale="1" pageWidth="1500" pageHeight="760" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="title" value="SA4E-365 — Component Design: 4 vùng module (phụ thuộc một chiều)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="350" y="20" width="800" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="pkg1" value="pi-workflow  [ĐÃ WIRE F1-F3]" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;align=left;spacingLeft=8" vertex="1" parent="1">
+      <mxGeometry x="40" y="80" width="320" height="600" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1f1" value="pi-event-mapper.ts&#10;mapAgentEvent (pure): thinking_delta → chunk 'thinking'&#10;EventCollector.thinking · MAX_TOOL_RESULT_CHARS (tool result)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="55" y="115" width="290" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1f2" value="pi-agent-session-host.ts&#10;promptTurn(text, onToken, onToolEvent, onThinking)&#10;2 subscribe loop forward 'thinking' (guard content)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="55" y="190" width="290" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1f3" value="pi-workflow-adapter.ts&#10;trySessionTurn wiring (guard live) · legacy loop&#10;turnStreamId = UUID per turn · emitComplete luôn" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="55" y="265" width="290" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1f4" value="pi-provider.ts (G-2 evidence)&#10;runOnce: collector MỚI per attempt →&#10;chunk attempt failed bị discard trước replay" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="55" y="340" width="290" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1f5" value="pi-provider-types.ts · types/executor.types.ts&#10;PiStreamChunk / StreamChunk: 'text' | 'thinking' |&#10;'tool_call' | 'error' | 'done'" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="55" y="415" width="290" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p1note" value="Pattern: Pure Function · Strategy&#10;Không đổi thêm dòng nào" style="text;html=1;align=left;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none" vertex="1" parent="1">
+      <mxGeometry x="55" y="600" width="290" height="40" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="pkg2" value="mcp  [ĐÃ WIRE F4-F5]" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=12;align=left;spacingLeft=8" vertex="1" parent="1">
+      <mxGeometry x="420" y="80" width="300" height="280" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p2f1" value="stream-handler.ts&#10;emitThinking → bufferChunk (chung emitToken)&#10;DEBOUNCE_MS 50 · MAX_BUFFER_SIZE 100&#10;emitComplete/Error flush() trước" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="435" y="115" width="270" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p2f2" value="state-types.ts&#10;StreamEventType: &quot;token&quot; | &quot;thinking&quot; | …" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="435" y="210" width="270" height="50" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="pkg3" value="chat/engine  [SỬA — điểm fix duy nhất]" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=12;align=left;spacingLeft=8" vertex="1" parent="1">
+      <mxGeometry x="420" y="400" width="300" height="280" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p3f1" value="StreamProtocolAdapter.ts  ⚠ FIX&#10;G-1: error → THINKING_END trước STREAM_ERROR&#10;G-3: guard content rỗng (no-op tuyệt đối)&#10;state: streamToMessage · startedStreams · thinkingActive" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=6;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="435" y="435" width="270" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p3f2" value="ChatEngineAdapter.ts  [giữ nguyên]&#10;toStreamEvent pass 'thinking' (F6)&#10;chat:error → synthetic error chunk (lastStreamId)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="435" y="530" width="270" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p3f3" value="IStreamProtocolAdapter.ts  [giữ nguyên]&#10;StreamChunkEvent.eventType: 'token' | 'thinking' |&#10;'status' | 'error' (F7)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="435" y="600" width="270" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="pkg4" value="webview  [KHÔNG ĐỔI — SA4E-85]" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;align=left;spacingLeft=8" vertex="1" parent="1">
+      <mxGeometry x="780" y="80" width="320" height="600" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p4f1" value="messageListener.ts&#10;THINKING_START/TOKEN/END handlers" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="795" y="115" width="290" height="50" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p4f2" value="stores/chatStore.ts&#10;startThinking (reset content + mở)&#10;appendThinkingToken · endThinking (idempotent)&#10;endStream(unknownId) → no-op an toàn (G-4)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="795" y="180" width="290" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p4f3" value="components/ThinkingBlock.svelte&#10;'Thinking...' live → 'Reasoning' (collapse 1s)&#10;render {content} trong &lt;pre&gt; — Svelte escape" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="795" y="275" width="290" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p4f4" value="components/ChatMessage.svelte&#10;{#if message.thinking} → render ThinkingBlock" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="795" y="350" width="290" height="50" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="p4f5" value="chat/types/messages.ts + messageValidator.ts&#10;THINKING_START {messageId} · THINKING_TOKEN {messageId, token}&#10;THINKING_END {messageId} — validated (SA4E-85)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=10;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="795" y="415" width="290" height="60" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c1" value="chunk 'thinking' + emitThinking" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;exitX=1;exitY=0.25;entryX=0;entryY=0.5" edge="1" parent="1" source="pkg1" target="pkg2">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c2" value="chat:streamChunk (eventType 'thinking')" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9673a6;fontSize=10;exitX=1;exitY=0.75;entryX=0;entryY=0.5" edge="1" parent="1" source="pkg2" target="pkg3">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="c3" value="THINKING_* postMessage" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.75" edge="1" parent="1" source="pkg3" target="pkg4">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,60 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="actorDev" value="Developer&#10;(dùng extension)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="220" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="actorGw" value="Model Gateway&#10;(qwen-text — external)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="780" y="220" width="40" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="sysBoundary" value="SDLC CHAT (VS Code / Kiro Extension)" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=14;fontStyle=1;fillColor=none;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="180" y="40" width="520" height="440" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc1" value="Gửi prompt và nhận answer stream" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="210" y="90" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc2" value="Xem live Thinking stream (ThinkingBlock: Thinking...)" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="460" y="90" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc3" value="Đọc Reasoning sau khi block collapse" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="210" y="200" width="200" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc4" value="Debug hành vi agent qua reasoning" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="460" y="200" width="220" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc5" value="Dùng chat bình thường khi model không reasoning (không block rỗng)" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="210" y="310" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="uc6" value="UI ổn định khi stream end / error (block luôn đóng)" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="460" y="310" width="220" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actorDev" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actorDev" target="uc2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actorDev" target="uc3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="actorDev" target="uc5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="uc2" target="uc4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="actorGw" target="uc2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6lbl" value="cung cấp reasoning_content" style="text;html=1;fontSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="690" y="130" width="130" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" edge="1" parent="1" source="actorGw" target="uc1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" edge="1" parent="1" source="uc3" target="uc6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

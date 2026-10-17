@@ -1,0 +1,84 @@
+<mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" arrows="1" page="1" pageScale="1" pageWidth="1400" pageHeight="760" math="0" shadow="0">
+  <root>
+    <mxCell id="0"></mxCell>
+    <mxCell id="1" parent="0"></mxCell>
+    <mxCell id="title" value="SA4E-365 — State Machine: ThinkingBlock per streamId (điều khiển bởi thinkingActive — FSD §6.4 + INV-1..INV-5)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=15;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="250" y="15" width="900" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="70" y="240" width="30" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="hidden" value="Hidden&#10;(không thinking)&#10;thinkingActive: ∅" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=12;fontStyle=1;arcSize=40" vertex="1" parent="1">
+      <mxGeometry x="150" y="215" width="180" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="open" value="Open — 'Thinking...' (live)&#10;thinkingActive: {streamId}&#10;webview isThinkingActive = true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontStyle=1;arcSize=40" vertex="1" parent="1">
+      <mxGeometry x="460" y="215" width="230" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="collapsed" value="Collapsed — 'Reasoning'&#10;thinkingActive: ∅ (đã END)&#10;webview isThinkingActive = false" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;arcSize=40" vertex="1" parent="1">
+      <mxGeometry x="820" y="215" width="230" height="80" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="terminal" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;strokeWidth=3" vertex="1" parent="1">
+      <mxGeometry x="1160" y="240" width="30" height="30" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t1" value="chunk 'thinking' content ≠ rỗng&#10;(lần đầu của chu kỳ) →&#10;THINKING_START + THINKING_TOKEN cùng batch&#10;[FR3-R4, INV-3]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#82b366;fontSize=10;exitX=1;exitY=0.5;entryX=0;entryY=0.5;verticalAlign=bottom" edge="1" parent="1" source="hidden" target="open">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t2" value="complete / error KHÔNG thinking →&#10;chỉ STREAM_END / STREAM_ERROR&#10;[FR-3, AC3]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=1;verticalAlign=middle" edge="1" parent="1" source="hidden" target="hidden">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="240" y="360"></mxPoint>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t3" value="'thinking' tiếp theo ≠ rỗng → THINKING_TOKEN" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d79b00;fontSize=10;exitX=0.25;exitY=0;entryX=0.75;entryY=0;verticalAlign=middle" edge="1" parent="1" source="open" target="open">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="517" y="170"></mxPoint>
+          <mxPoint x="632" y="170"></mxPoint>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t4" value="'thinking' content rỗng → NO-OP tuyệt đối [G-3, INV-5]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#999999;fontSize=10;dashed=1;exitX=0.75;exitY=1;entryX=0.25;entryY=1;verticalAlign=middle" edge="1" parent="1" source="open" target="open">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="632" y="340"></mxPoint>
+          <mxPoint x="517" y="340"></mxPoint>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t5" value="'token' text đầu tiên → THINKING_END rồi STREAM_TOKEN&#10;[FR2-R1/R2, INV-4]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;fontSize=10;exitX=1;exitY=0.25;entryX=0;entryY=0.25;verticalAlign=bottom" edge="1" parent="1" source="open" target="collapsed">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t6" value="chunk 'error' → THINKING_END rồi STREAM_ERROR&#10;[G-1 FIX — FR4-R3, INV-4]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#b85450;fontSize=10;fontStyle=1;exitX=1;exitY=0.75;entryX=0;entryY=0.75;verticalAlign=top" edge="1" parent="1" source="open" target="collapsed">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t7" value="chat:streamComplete → THINKING_END + STREAM_END&#10;[FR4-R1, INV-1]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6c8ebf;fontSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=0;verticalAlign=bottom" edge="1" parent="1" source="open" target="collapsed">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="575" y="130"></mxPoint>
+          <mxPoint x="935" y="130"></mxPoint>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t8" value="'thinking' mới ≠ rỗng (trong cùng turn) →&#10;THINKING_START + THINKING_TOKEN (block mới, content reset)&#10;[FR2-R3 TA note, TC-12b — KHÔNG gắn ranh giới attempt]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9673a6;fontSize=10;exitX=0;exitY=0.5;entryX=1;entryY=0.5;verticalAlign=middle" edge="1" parent="1" source="collapsed" target="open">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="t9" value="reset() → clear cả 3 state&#10;[INV-1 — turn mới]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;exitX=0.5;exitY=0;entryX=0.5;entryY=0;verticalAlign=bottom" edge="1" parent="1" source="open" target="terminal">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="575" y="100"></mxPoint>
+          <mxPoint x="1175" y="100"></mxPoint>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t10" value="terminal kế tiếp → không END lặp (lookup miss) [INV-2, FR4-R2]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#666666;fontSize=10;dashed=1;exitX=1;exitY=0.5;entryX=0.5;entryY=1;verticalAlign=middle" edge="1" parent="1" source="collapsed" target="terminal">
+      <mxGeometry relative="1" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="invs" value="INVARIANTS (FSD §6.4.1 — acceptance cho DEV + QA)&#10;INV-1: Sau handleChunk(error) / handleComplete / reset(): thinkingActive KHÔNG còn streamId (TC-05, 06, 10, 11)&#10;INV-2: THINKING_END tối đa 1 lần per chu kỳ; chỉ emit khi lookup hit (TC-04, 06, 10)&#10;INV-3: Mọi THINKING_START đi kèm ≥ 1 THINKING_TOKEN khác rỗng trong cùng batch (TC-08, 09, 15)&#10;INV-4: Thứ tự batch: THINKING_END trước STREAM_TOKEN và trước STREAM_ERROR (TC-04, 06)&#10;INV-5: Content rỗng không tạo state mới, không append — no-op tuyệt đối (TC-09, 15)&#10;&#10;G-2 (Phương án B — Continuation): không có reset tại ranh giới attempt; mọi attempt trong turn nối tiếp cùng block; chống rò rỉ bằng provider discard (TC-12a/12b)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=10;align=left;spacingLeft=10;verticalAlign=top" vertex="1" parent="1">
+      <mxGeometry x="150" y="450" width="900" height="180" as="geometry"></mxGeometry>
+    </mxCell>
+    <mxCell id="legend" value="Màu: cam = Open (live) · xanh dương = Collapsed · xanh lá = mở block hợp lệ · đỏ = error path (G-1 fix) · tím = mở lại sau END (continuation) · xám nét đứt = no-op / terminal phụ" style="text;html=1;align=left;fontSize=10;fontStyle=2;strokeColor=none;fillColor=none" vertex="1" parent="1">
+      <mxGeometry x="150" y="645" width="900" height="24" as="geometry"></mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

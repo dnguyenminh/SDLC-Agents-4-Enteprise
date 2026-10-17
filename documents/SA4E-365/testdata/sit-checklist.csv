@@ -1,0 +1,15 @@
+test_case_id,step,action,expected_result,evidence_path,description
+SIT-01,1,npm run compile (extension/),Build success 0 error TS,evidence/SIT-01-compile.png,Build extension (TDD 12.3 step 1)
+SIT-01,2,Developer: Reload Window,Extension activate khong loi — SDLC CHAT panel mo binh thuong,evidence/SIT-01-reload.png,Reload IDE host
+SIT-02,1,Chon model qwen-text + gui prompt yeu cau reasoning,Gateway tra reasoning_content — SDK phat thinking_delta,,Mo kich ban reasoning
+SIT-02,2,Quan sat bubble turn hien tai,ThinkingBlock Thinking... stream live — trong bubble hien tai khong tao bubble moi (BR-1/BR-5/AC1),evidence/SIT-02-thinking-live.png,Thinking live
+SIT-02,3,Cho reasoning dai,Stream muot khong lag webview (NFR-1),,Debounce 50ms hieu qua
+SIT-03,1,Cho token text dau tien cua answer,Block tu collapse thanh nhan Reasoning — noi dung con xem lai (BR-2/AC2),evidence/SIT-03-collapse-reasoning.png,Collapse khi answer bat dau
+SIT-03,2,Quan sat answer stream,Answer chay binh thuong cung bubble,,Streaming identity giu nguyen
+SIT-04,1,Chon model khong reasoning / prompt tool-only + gui prompt,Turn hoan thanh binh thuong,,Kich ban khong reasoning
+SIT-04,2,Quan sat bubble,Khong ThinkingBlock — khong block rong (BR-3/AC3/NFR-2),evidence/SIT-04-no-thinking-block.png,UI khong thay doi
+SIT-05,1,Trong luc thinking live — gay error (stop turn / ngat gateway),Bubble hien STREAM_ERROR nhu hien co,,Kich ban error giua thinking
+SIT-05,2,Quan sat ThinkingBlock,Block o trang thai dong — KHONG ket Thinking... (BR-4/AC4 — G-1 end-to-end),evidence/SIT-05-error-block-closed.png,Block dong sau error
+SIT-05,3,Gui turn moi sau error,Turn moi binh thuong — khong state cu leak (FR5-R3),,Khong cross-turn leak
+SIT-06,1,Lay duong dan session file tu debugLog (pi-workflow-adapter.ts:353),Duong dan .jsonl,,SR-06 manual check
+SIT-06,2,Grep noi dung reasoning (1 cau dac trung tu SIT-02) trong file,Ket qua A: 0 match — SR-06 dong voi evidence; Ket qua B: co reasoning — ghi nhan classification Internal + notify SM,evidence/SIT-06-session-jsonl-check.md,Data-at-rest classification (khong blocking)

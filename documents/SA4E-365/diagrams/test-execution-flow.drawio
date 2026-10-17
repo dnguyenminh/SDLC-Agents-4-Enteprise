@@ -1,0 +1,76 @@
+<mxGraphModel adaptiveColors="auto" dx="1400" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="960" pageHeight="760" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="c0" value="Phase 4 → 6 — Test Execution Flow (SA4E-365)" style="text;html=1;fontSize=16;fontStyle=1;align=left;" vertex="1" parent="1"><mxGeometry x="40" y="8" width="700" height="24" as="geometry"/></mxCell>
+    <mxCell id="L-UT" value="UT — vitest (13 TCs)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#DAE8FC;strokeColor=#666666;fontSize=12;fontStyle=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="40" y="50" width="880" height="150" as="geometry"/></mxCell>
+    <mxCell id="L-IT" value="IT — fake deps (3 TCs)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#E1F0DA;strokeColor=#666666;fontSize=12;fontStyle=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="40" y="210" width="880" height="150" as="geometry"/></mxCell>
+    <mxCell id="L-REG" value="Regression (1 TC)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#FFF2CC;strokeColor=#666666;fontSize=12;fontStyle=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="40" y="370" width="880" height="120" as="geometry"/></mxCell>
+    <mxCell id="L-SIT" value="SIT — Manual IDE (6 steps)" style="swimlane;html=1;startSize=28;horizontal=0;fillColor=#F8CECC;strokeColor=#666666;fontSize=12;fontStyle=1;whiteSpace=wrap;" vertex="1" parent="1"><mxGeometry x="40" y="500" width="880" height="150" as="geometry"/></mxCell>
+    <mxCell id="ut-entry" value="Entry: Phase 5 xong —
+G-1/G-3 fix + SR-03
++ 6 file test target" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;" vertex="1" parent="L-UT"><mxGeometry x="30" y="30" width="130" height="60" as="geometry"/></mxCell>
+    <mxCell id="ut-a" value="TC-01/02
+Mapper thinking_delta
+(FR1-R1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;" vertex="1" parent="L-UT"><mxGeometry x="190" y="30" width="130" height="60" as="geometry"/></mxCell>
+    <mxCell id="ut-b" value="TC-04..TC-11, TC-15
+Adapter mapping
+(INV-1..5, G-1/G-3/G-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;" vertex="1" parent="L-UT"><mxGeometry x="350" y="30" width="140" height="60" as="geometry"/></mxCell>
+    <mxCell id="ut-c" value="TC-18
+cleanup() 3 state
+(SR-03)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;" vertex="1" parent="L-UT"><mxGeometry x="520" y="30" width="110" height="60" as="geometry"/></mxCell>
+    <mxCell id="ut-d" value="TC-13
+Debounce 50ms
+MAX_BUFFER 100 (NFR-1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;" vertex="1" parent="L-UT"><mxGeometry x="660" y="30" width="120" height="60" as="geometry"/></mxCell>
+    <mxCell id="ut-fail" value="FAIL → defect (P1/P2) → DEV fix → retest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;" vertex="1" parent="L-UT"><mxGeometry x="350" y="100" width="280" height="36" as="geometry"/></mxCell>
+    <mxCell id="it-a" value="TC-03
+Session host onThinking
+(2 loop — F2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;" vertex="1" parent="L-IT"><mxGeometry x="30" y="30" width="150" height="60" as="geometry"/></mxCell>
+    <mxCell id="it-b" value="TC-12a
+Provider discard attempt
+failed (G-2 / FR5-R4')" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;" vertex="1" parent="L-IT"><mxGeometry x="210" y="30" width="160" height="60" as="geometry"/></mxCell>
+    <mxCell id="it-c" value="TC-16
+Engine filter F6
+(toStreamEvent 'thinking')" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;" vertex="1" parent="L-IT"><mxGeometry x="400" y="30" width="150" height="60" as="geometry"/></mxCell>
+    <mxCell id="it-gate" value="Exit UT/IT: 100% pass
+0 Critical/Major mở" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;" vertex="1" parent="L-IT"><mxGeometry x="640" y="30" width="140" height="60" as="geometry"/></mxCell>
+    <mxCell id="reg-a" value="TC-14: npx vitest run — toàn bộ suite pass (AC5)
+chat engine + webview + pi-workflow + mcp" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;" vertex="1" parent="L-REG"><mxGeometry x="30" y="30" width="420" height="56" as="geometry"/></mxCell>
+    <mxCell id="reg-fail" value="FAIL → regress defect (P2) →
+DEV fix → chạy lại full suite" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;" vertex="1" parent="L-REG"><mxGeometry x="520" y="30" width="220" height="56" as="geometry"/></mxCell>
+    <mxCell id="sit-a" value="SIT-01
+Build + reload host" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;" vertex="1" parent="L-SIT"><mxGeometry x="30" y="30" width="120" height="60" as="geometry"/></mxCell>
+    <mxCell id="sit-b" value="SIT-02/03
+ThinkingBlock live →
+collapse (AC1/AC2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;" vertex="1" parent="L-SIT"><mxGeometry x="180" y="30" width="150" height="60" as="geometry"/></mxCell>
+    <mxCell id="sit-c" value="SIT-04/05
+Không block (AC3) /
+Error đóng block (AC4-G-1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;" vertex="1" parent="L-SIT"><mxGeometry x="360" y="30" width="160" height="60" as="geometry"/></mxCell>
+    <mxCell id="sit-d" value="SIT-06
+SR-06 session JSONL
+check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;" vertex="1" parent="L-SIT"><mxGeometry x="550" y="30" width="120" height="60" as="geometry"/></mxCell>
+    <mxCell id="sit-e" value="Exit: 6/6 SIT pass
++ evidence screenshots" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;" vertex="1" parent="L-SIT"><mxGeometry x="700" y="30" width="130" height="60" as="geometry"/></mxCell>
+    <mxCell id="term" value="TEST-REPORT +
+Phase 6 sign-off" style="ellipse;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;fontStyle=1;" vertex="1" parent="1"><mxGeometry x="770" y="676" width="150" height="60" as="geometry"/></mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="ut-entry" target="ut-a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="ut-a" target="ut-b"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="ut-b" target="ut-c"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="ut-c" target="ut-d"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e5" value="fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#B85450;" edge="1" parent="1" source="ut-b" target="ut-fail"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e6" value="retest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#B85450;" edge="1" parent="1" source="ut-fail" target="ut-b"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e7" value="UT pass → IT" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#548235;" edge="1" parent="1" source="ut-d" target="it-a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="it-a" target="it-b"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="it-b" target="it-c"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e10" value="IT pass" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#548235;" edge="1" parent="1" source="it-c" target="it-gate"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e11" value="Entry REG" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#BF8F00;" edge="1" parent="1" source="it-gate" target="reg-a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e12" value="fail" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#B85450;" edge="1" parent="1" source="reg-a" target="reg-fail"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e13" value="re-run" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#B85450;" edge="1" parent="1" source="reg-fail" target="reg-a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e14" value="REG pass → SIT (entry: build + gateway qwen-text)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#C00000;" edge="1" parent="1" source="reg-a" target="sit-a"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="sit-a" target="sit-b"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="sit-b" target="sit-c"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="sit-c" target="sit-d"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#5B9BD5;" edge="1" parent="1" source="sit-d" target="sit-e"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontColor=#333333;strokeColor=#548235;" edge="1" parent="1" source="sit-e" target="term"><mxGeometry relative="1" as="geometry"/></mxCell>
+  </root>
+</mxGraphModel>
