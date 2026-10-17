@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.53.3.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.53.4.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,14 @@ MIT
 ---
 
 ## Changelog
+
+### v1.53.4 (2026-10-17)
+
+**SA4E-363 — Patch release (WrapperServer body cap thực sự vào main)**
+
+- 🛡 **WrapperServer body cap 1MB → 64MB + HTTP 413 sạch** — fix gốc nằm trên branch SA4E-363 nhưng **chưa từng vào ancestry main**: các release v1.53.2/v1.53.3 đều build từ source thiếu nó (chỉ bản build từ working-tree bẩn có). Cherry-pick `5194d8d` → main (`8fca2df`): `DEFAULT_MAX_BODY_SIZE` 64MB, setting mới `sdlcAgents.mcpMaxBodyBytes` (min 1MB), `BodyTooLargeError` + `Connection: close` + Content-Length pre-check trả JSON-RPC 413 đúng protocol. 53 wrapper tests PASS
+- 📚 Docs về main: `documents/SA4E-365/` (59 files — pipeline thinking-forward) + SA4E-362 UAT closeout STATUS + `documents/SA4E-363/IMPLEMENTATION-NOTES.md` + `documents/SA4E-364/UAT-REPORT` vào đúng thư mục ticket
+- 🔧 `.gitignore` `.pi/sessions/` (SDK persists reasoning transcripts — F-2, cherry-pick từ SA4E-365)
 
 ### v1.53.3 (2026-10-17)
 
