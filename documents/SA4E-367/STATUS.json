@@ -51,13 +51,14 @@
       "verdict": "CONDITIONAL YES merge->staging, NO prod"
     },
     "deployment": {
-      "status": "in_progress",
+      "status": "done",
       "staging": "done",
       "stagingTag": "v1.53.3-staging",
       "stagingCommit": "6e6df4b",
       "vsix": "extension/sdlc-agents-4-enterprise-1.53.3.vsix (8.91MB)",
-      "prod": "blocked_pending_uat",
-      "note": "Staging tagged, main untouched (cdccd97). Jira kept In Review (no Staging/Done-safe transition; Done reserved for prod)."
+      "prod": "done (operator deployed; UAT done)",
+      "mergeToMain": "77291ef (local main)",
+      "note": "UAT done + deployed per operator. Ticket closed (Done)."
     }
   },
   "sm_manual_test": {
@@ -116,5 +117,7 @@
     "defects": 0,
     "blocked": 0
   },
-  "lastUpdated": "2026-10-17T00:45:00+07:00"
+  "lastUpdated": "2026-10-17T00:45:00+07:00",
+  "closedAt": "2026-10-17T00:55:00+07:00",
+  "jiraStatus": "Done"
 }
