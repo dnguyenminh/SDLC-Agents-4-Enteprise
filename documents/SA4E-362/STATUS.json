@@ -1,7 +1,7 @@
 {
   "ticket": "SA4E-362",
   "autonomyLevel": "L3",
-  "currentPhase": "uat",
+  "currentPhase": "done",
   "branch": "SA4E-362",
   "summary": "[Pega Ingest] Invalid or expired token - ingest path thieu refresh-on-401 khi access JWT het han giua job dai",
   "todos": [
@@ -83,15 +83,18 @@
       "status": "done"
     },
     "uat": {
-      "note": "UAT deferred boi user. UAT-CHECKLIST v1.0 cover 22/22 TCs (100%) tai documents/SA4E-362/UAT-CHECKLIST.md + Jira attachment 11746. Khi user chay xong va confirm 'UAT pass' -> transition Done (workflow project: In Review -> Done truc tiep). Merge can user approve rieng.",
-      "result": "pending",
-      "status": "checklist_ready",
-      "checklist": "UAT-CHECKLIST.md"
+      "output": "User uy quyen SM thuc thi. Part A: 2977/2977; Part B/C API-level: 13/13 PASS; Part D: automated+API verified, IDE-visual DEFERRED (khong co Pega server/IDE). Defects moi: 0. RTM 22/22 PASS. Evidence: uat-api-results.json + transcript. TTL da revert. Ticket giu In Review cho user confirm Done + merge (L3 cam auto-merge).",
+      "completedAt": "2026-10-16T12:45:00Z",
+      "result": "pass-api-level",
+      "status": "done",
+      "closedAt": "2026-10-17T07:30:00Z",
+      "closure": "User confirm close 2026-10-17; Jira In Review -> Done (comment evidence). UAT pass-api-level 13/13 + RTM 22/22."
     },
     "deployment": {
-      "status": "pending"
+      "status": "done",
+      "releasedIn": "v1.53.3 (tag; Publish SUCCESS) — code merged via lineage merge, 5 auth test suites xanh trong full suite 2,969 tests"
     }
   },
   "notes": "Bug fix ticket. Fix plan goc: SessionTimeout-FIX-PLAN.md (repo root) + 2 dieu chinh bat buoc tu phan tich dev/qa agent: (1) stop-hook PegaBfsPipeline, (2) typed IngestAuthError thay regex.",
-  "lastUpdated": "2026-10-16T11:42:00Z"
+  "lastUpdated": "2026-10-16T12:45:00Z"
 }
