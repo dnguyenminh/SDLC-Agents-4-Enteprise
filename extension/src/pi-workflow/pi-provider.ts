@@ -10,6 +10,7 @@ import { mapAgentEvent, extractToolResultText, type EventCollector } from './pi-
 import { isRetryableLlmError } from './utils/classify-llm-error.js';
 import { governIntraTurnRequest } from './intra-turn-budget-gate.js';
 import { TurnBudgetGuard, buildStopNote, buildSteerCorrection, buildFailureSteerCorrection, buildTextSteerCorrection, buildRereadSteerCorrection, splitCompletedBlocks } from './turn-budget-guard.js';
+import { AssistantRepetitionMonitor } from './assistant-repetition-monitor.js';
 import { ToolEventTracker } from './pi-event-mapper.js';
 import { debugLog, debugError } from '../debug-logger.js';
 import type { ToolApprovalGateHandler } from './approval-adapter.js';
@@ -401,8 +402,22 @@ export class PiProvider {
     // Text perseveration watch: feed newly COMPLETED assistant blocks
     // (paragraphs/fences) to the same repeat guard (spec: response repeats).
     let seenBlocks = 0;
+    // v1.53.7 stream breaker: a paragraph looping the same fragment hundreds of
+    // times is ONE block (no blank line) and invisible to the block scan —
+    // feed raw deltas to a repetition monitor (UAT 17/10: 71 KB / ~11 minutes).
+    const repetitionMonitor = new AssistantRepetitionMonitor();
+    let seenTextChars = 0;
     const repeatLimit = TurnBudgetGuard.resolveDefaults(budget).maxSameToolRepeats;
     const watchTextRepeats = () => {
+      if (guard.stoppedReason) return;
+      if (collector.text.length > seenTextChars) {
+        const delta = collector.text.slice(seenTextChars);
+        seenTextChars = collector.text.length;
+        if (repetitionMonitor.push(delta)) {
+          guard.tripNow('repeat'); // guard aborts the run; stop note + K2 suppression apply
+          return;
+        }
+      }
       const blocks = splitCompletedBlocks(collector.text);
       for (let i = seenBlocks; i < blocks.length; i++) {
         const action = guard.observeTextBlock(blocks[i]);

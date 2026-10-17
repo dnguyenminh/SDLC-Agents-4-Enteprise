@@ -7,9 +7,9 @@ import {
   clearLayoutCache,
   createWorkspaceInfoTool,
   toSessionToolDefinition,
-  withNotFoundHint,
   WORKSPACE_INFO_TOOL_NAME,
 } from '../workspace-info-tool.js';
+import { withNotFoundHint } from '../not-found-hint.js';
 import type { AgentTool } from '@earendil-works/pi-agent-core';
 
 function fakeTool(behavior: () => Promise<never> | unknown): AgentTool {

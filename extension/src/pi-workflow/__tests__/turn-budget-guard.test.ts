@@ -380,6 +380,41 @@ describe('read-target re-read guard (SA4E-368 — "review all files" re-read loo
     expect(msg).toContain('deliver'); // …but a review loop must deliver NOW
     expect(msg.toLowerCase()).toContain('never re-read');
   });
+
+  // v1.53.7 (UAT 17/10): the model read a steer as "end the turn" and wrapped
+  // up a review after 20/2342 files. Every steer must say: correction ≠ stop.
+  it('every steer correction states it is NOT a signal to end the turn', () => {
+    const corrections = [
+      buildSteerCorrection('ls', 4),
+      buildFailureSteerCorrection('ls', 4),
+      buildTextSteerCorrection(4),
+      buildRereadSteerCorrection('read', 'src/a.ts', 3),
+    ];
+    for (const msg of corrections) {
+      expect(msg.toUpperCase()).toContain('NOT A SIGNAL TO END THE TURN');
+    }
+  });
+
+  it('buildFailureSteerCorrection gives the one-level-off __tests__ fix for ls', () => {
+    const msg = buildFailureSteerCorrection('ls', 5);
+    expect(msg).toContain("'ls'");
+    expect(msg).toContain('5');
+    expect(msg).toContain('__tests__');
+    expect(msg).toContain('read');
+    expect(msg).toContain('PARENT folder');
+  });
+
+  it('tripNow trips the guard like an internal detection (reason + abort + once)', () => {
+    const onAbort = vi.fn();
+    const guard = new TurnBudgetGuard(TurnBudgetGuard.resolveDefaults({}), onAbort);
+    expect(guard.stoppedReason).toBeUndefined();
+    guard.tripNow('repeat');
+    expect(guard.stoppedReason).toBe('repeat');
+    expect(onAbort).toHaveBeenCalledTimes(1);
+    guard.tripNow('timeout'); // second trip is a no-op (first trip wins)
+    expect(guard.stoppedReason).toBe('repeat');
+    expect(onAbort).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('splitCompletedBlocks', () => {

@@ -12,7 +12,8 @@
  */
 import { debugLog } from '../debug-logger';
 import type { AgentTool } from '@earendil-works/pi-agent-core';
-import { createWorkspaceInfoTool, withNotFoundHint } from './workspace-info-tool.js';
+import { createWorkspaceInfoTool } from './workspace-info-tool.js';
+import { withNotFoundHint } from './not-found-hint.js';
 import { createPowerShellToolSafe, isWindows } from './shell-tool-factory.js';
 
 /**
@@ -40,7 +41,8 @@ function sharedPromptLines(normalizedRoot: string): string[] {
     `Never ask scoping questions when the request already states the scope (e.g. "review the whole repo" means the whole workspace).`,
     `Prefer read/grep/find/ls tools over the shell for exploring files.`,
     `ALWAYS build absolute paths from the exact Workspace root above — never guess the drive letter.`,
-    `If a path does not exist, stop and re-list from the workspace root — never guess deeper nested paths.`,
+    `If a path does not exist, list the PARENT folder and copy exact names — never guess deeper nested paths by hand; for files use read, for folders use ls.`,
+    `If a tool result includes "Did you mean", use that exact path on the next call instead of retrying the old one.`,
     `For repo-wide reviews: work top-level folder by folder and print one progress line per folder as you go.`,
     `For exploration/review tasks, call get_workspace_info first to see the real layout.`,
     `NEVER paste shell commands for the user to run — always EXECUTE them yourself with your tools.`,

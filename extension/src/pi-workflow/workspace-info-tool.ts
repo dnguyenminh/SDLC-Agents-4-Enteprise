@@ -1,14 +1,13 @@
 /**
- * Workspace info tool + not-found hint wrapper.
- * Replaces regex intent-guessing (UAT: adding more WORDS is whack-a-mole)
- * with deterministic mechanisms:
- * 1. `get_workspace_info` — zero-arg tool any model can call to learn the
- *    real root + layout instead of hallucinating nested paths.
+ * Workspace info tool (zero-arg orientation).
+ * Deterministic replacement for regex intent-guessing (UAT: adding more WORDS
+ * is whack-a-mole):
+ * 1. `get_workspace_info` — any model can call it to learn the real root +
+ *    layout instead of hallucinating nested paths.
  * 2. Path tools (read/ls/find/grep/edit) re-throw not-found errors enriched
- *    with the real layout, so the NEXT call self-corrects without new UI.
+ *    with the layout + closest existing paths — see ./not-found-hint.ts.
  */
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { Type } from 'typebox';
 import type { AgentTool, AgentToolResult } from '@earendil-works/pi-agent-core';
 import { debugLog } from '../debug-logger';
@@ -104,41 +103,10 @@ export function clearLayoutCache(): void {
   layoutCache.clear();
 }
 
-const NOT_FOUND_PATTERNS = /ENOENT|no such file|not found|does not exist|ENOTDIR|EISDIR/i;
-
 /**
- * Wrap a path-taking tool so not-found failures come back with the real
- * layout attached. The model self-corrects on its next call — no regex,
- * no extra turn, no UI needed.
+ * Not-found hinting moved to ./not-found-hint.ts (v1.53.7, BR-18 extraction:
+ * this file was at the 200-line limit). Import withNotFoundHint from there.
  */
-export function withNotFoundHint<T extends AgentTool>(tool: T, workspaceRoot: string): T {
-  const execute = tool.execute;
-  const wrapped = async (
-    toolCallId: string,
-    params: never,
-    signal?: AbortSignal,
-    onUpdate?: never
-  ): Promise<AgentToolResult<unknown>> => {
-    try {
-      return (await (execute as (...a: unknown[]) => Promise<AgentToolResult<unknown>>)(
-        toolCallId,
-        params,
-        signal,
-        onUpdate
-      )) as AgentToolResult<unknown>;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (NOT_FOUND_PATTERNS.test(message)) {
-        const hint =
-          `${message}\n\n[HINT] That path does not exist. ${getWorkspaceLayoutText(workspaceRoot)}\n` +
-          `Re-list from the workspace root instead of guessing deeper paths.`;
-        throw err instanceof Error ? new Error(hint, { cause: err }) : new Error(hint);
-      }
-      throw err;
-    }
-  };
-  return { ...tool, execute: wrapped as T['execute'] };
-}
 
 /** Zero-arg workspace orientation tool (legacy AgentTool shape).
  *  SA4E-360 (C-360-M1): optional map provider extends the result with the

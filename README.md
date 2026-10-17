@@ -66,6 +66,15 @@ MIT
 
 ## Changelog
 
+### v1.53.7 (2026-10-17)
+
+**UAT 17/10 (run 19:12) follow-up — 3 lỗi lộ ra sau khi fix overflow: model đoán path rồi bỏ dở, steer bị hiểu thành lệnh dừng turn, và degeneration 71KB/11 phút**
+
+- 🎯 **Not-found hint có "Did you mean"**: model đoán `handlers/backend-settings-handler.test.ts` sai 5 lần liên tiếp vì file thật nằm trong `handlers/__tests__/` (nó vừa `ls` ra tên đúng). Giờ lỗi not-found kèm gợi ý path gần đúng (exact trong parent → cùng tên sâu 1 cấp → fuzzy typo), và `ls` trên file giải thích rõ "dùng read" — module mới `path-suggestion.ts` + `not-found-hint.ts` (tách khỏi `workspace-info-tool.ts` theo chuẩn 200 dòng), prompt cũng dạy "list PARENT folder, copy exact names"
+- 🧭 **Steer ≠ dừng turn**: sau khi loop-guard steer ("STOP retrying"), model viết *"I need to stop… provide a comprehensive summary without further retries"* và kết thúc review khi mới đọc 20/2.342 file. Mọi steer text (steer/failure/text/reread) giờ có câu **"This steer corrects ONE stuck call only — it is NOT a signal to end the turn"**; steer cho `ls` nêu đúng nguyên nhân "off by ONE level (__tests__/) / use read for files"
+- 🛑 **Stream repetition breaker**: model lặp `PlanCanvasPanel.test.ts, plan-canvas-renderer.test.ts,` ~500 lần trong 1 đoạn văn (~71KB, 11 phút) — block-scan cũ không thấy vì đoạn văn không có dòng trống. Module mới `assistant-repetition-monitor.ts` soi delta stream trong cửa sổ 20KB: probe 64 ký tự lặp ≥ 20 lần (non-overlapping) → trip guard, abort turn + báo stop note, thay vì đợi hết 11 phút
+- 🧪 Tests: +3 test files mới (18 tests) + test steer/tripNow; full suite 312 files / 3.046 tests PASS, tsc + eslint + smoke:bundle xanh
+
 ### v1.53.6 (2026-10-17)
 
 **SA4E-369 follow-up — Fix gốc lỗi "vượt context" (raw 400) khi chat review toàn bộ workspace + export hết bị cắt**
