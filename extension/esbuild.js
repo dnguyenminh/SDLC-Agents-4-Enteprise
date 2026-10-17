@@ -1,5 +1,7 @@
 const esbuild = require('esbuild');
+const path = require('path');
 const { piImportMetaBanner, piImportMetaDefine } = require('./scripts/esbuild-plugins/pi-import-meta.js');
+const { copyJitiBabel } = require('./scripts/esbuild-plugins/jiti-babel.js');
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
@@ -27,6 +29,10 @@ const buildOptions = {
 };
 
 async function main() {
+  // jiti's lazy Babel transform must exist at <bundleDir>/../dist/babel.cjs
+  // once jiti is inlined into the bundle — see scripts/esbuild-plugins/jiti-babel.js.
+  const babelDest = copyJitiBabel(path.resolve('out'));
+  console.log(`[esbuild] jiti babel.cjs -> ${babelDest}`);
   if (watch) {
     const ctx = await esbuild.context(buildOptions);
     await ctx.watch();

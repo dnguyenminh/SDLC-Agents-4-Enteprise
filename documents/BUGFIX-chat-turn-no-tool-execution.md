@@ -23,6 +23,7 @@
 - **Independent latent bug found:** the **session turn path** registered only 1 tool (`workspace_info`) instead of the full 7 — any cloud-provider (key-requiring) turn would hit the same "can't act" failure. Fix regardless.
 - **Status of Fix B (2026-09-30, build 1.46.3): IMPLEMENTED via allowlist, not via `customTools`.** Verified in pi 0.80.10 sources (`agent-session.js` `_refreshToolRegistry` + `createAllToolDefinitions(cwd)` = all 7 cwd-bound builtins; allowlist only toggles names): `createHost` passes `tools: [read,write,edit,bash,grep,find,ls, ...extNames, get_workspace_info]` (deduped, unconditional — degraded mode keeps the 7 core tools and only drops enhancement tools). Passing the 7 as `customTools` instead would have DUPLICATED same-named builtins. Test: `pi-agent-session-host.test.ts` ("allowlist covers 7 builtins…").
 - **What to build:** (A) detect a zero-tool-call turn early and show the user a clear notice (their model can't use tools) instead of hanging 120s; (B) register the full tool set on the session path; (C) capability guard; (D) system-prompt hardening. **Never auto-execute commands parsed from model text (security).**
+- **➡️ 2026-10-17 NEW INCIDENT + FIX (SA4E-368) — see §5f:** "review tất cả các file" → compaction amnesia → re-read loop (162 calls) → loop-guard abort + duplicate "This operation was aborted" bubble. Fixed via dropped-tool-activity tombstone in compaction, read-target repeat ladder, synthesis steer text, and the K2 errorMessage suppression (collectResult). 50 files / 463 tests green.
 
 ---
 
@@ -209,10 +210,30 @@ Evidence: `Stopped early: Stopped after the turn timeout with 44 tool calls.` Th
 - Keep 120s but make the stop-note actionable (it already suggests "narrow the scope / ask for a summary"). This is arguably WORKING AS INTENDED — a whole-repo review is genuinely large; the guard prevents an unbounded turn. Consider a repo-review pattern that works folder-by-folder instead of one mega-turn.
 - Do NOT remove the timeout backstop entirely (it prevents true runaway hangs).
 
-### Bug K2 — "Request was aborted" red bubble duplicates the friendly stop-note
-Evidence: after the "Stopped early…" note (correct, from `buildStopNote`), a separate red **"Request was aborted"** bubble also appears.
-**Root cause:** on guard timeout, `trip('timeout')` → `onAbort()` → `agent.abort()`. `promptOnCurrentModel`'s catch returns partial+note WHEN `guard.stoppedReason` is set — but the abort rejection also surfaces elsewhere as a `chat:error` ("Request was aborted", an undici/SDK abort message), producing a SECOND, error-styled bubble on top of the intended stop-note.
-**Fix K2:** when the turn ended due to a guard trip (`guard.stoppedReason` set) OR the error is an abort triggered by our own `agent.abort()`, **suppress the `chat:error`** — the friendly `buildStopNote` already communicates it. Detect via `guard.stoppedReason` in `runTurnOnce`/`collectResult`, or classify the abort message (name === 'AbortError' / "Request was aborted" / "aborted") and skip emitting `chat:error` when the abort was self-initiated. Acceptance: a guard-stopped turn shows ONLY the "Stopped early…" note, no red "Request was aborted" bubble.
+### Bug K2 — "Request was aborted" red bubble duplicates the friendly stop-note — ✅ FIXED (SA4E-368, 2026-10-17)
+Evidence: after the "Stopped early…" note (correct, from `buildStopNote`), a separate red **"Request was aborted"** bubble also appears (the user's 2026-10-17 report ends with exactly that line).
+**Root cause (confirmed):** on a guard trip, `agent.abort()` makes the SDK record the AbortError on `agent.state.errorMessage` ("This operation was aborted"). `PiProvider.collectResult` still copied `state.errorMessage` into `result.errorMessage` even when `guard.stoppedReason` was set → `PiAgentExecutor` mapped it to `PI_EXECUTION_ERROR` → the adapter emitted a SECOND `chat:error` bubble on top of the stop note (and the partial text was dropped from history).
+**Fix (K2):** `collectResult` now returns `errorMessage: undefined` whenever `guard.stoppedReason` is set — the guard stop is INTENTIONAL; the stop note is the single source of truth. A genuine failure (no guard trip) still flows through unchanged. Tests: `pi-provider.test.ts` K2 describe (2).
+
+## 5f. NEW INCIDENT (2026-10-17) — "review tất cả các file" → re-read loop, 162 calls, loop-guard abort — ✅ FIXED (SA4E-368)
+
+**Symptom (user report):** asking the chatbox to review ALL files makes the model read in batches of 4, repeat "Tôi đã đọc thêm 4 files quan trọng…" many times, burn **162 tool calls**, and end with `Stopped early: Stopped after repeating one identical tool call despite correction (loop guard, 162 calls total)` **plus** the K2 "This operation was aborted" bubble.
+
+**Root-cause chain (4 links):**
+1. **Compaction amnesia (the engine of the loop):** a small-context local model + a whole-repo review → every intra-turn LLM request grows → `governIntraTurnRequest` → `compactTranscriptToFit` **dropped the oldest tool units with NO trace**. The model lost the memory of which files it had already read → re-read them → the request grew → compaction dropped more → re-read again.
+2. **The guard only caught EXACT repeats:** `TurnBudgetGuard` keyed tool calls on `tool + args`; re-reads with varying `offset`/`limit` (or shuffled batches) never matched one signature 4×, so nothing tripped until call 162.
+3. **The steer corrections fed the loop:** `buildSteerCorrection`/`buildTextSteerCorrection` advised "call get_workspace_info, then read specific existing files" — for the re-read failure mode that is precisely the behavior being corrected.
+4. **K2** (see above): the abort surfaced as a second red bubble after the friendly stop note.
+
+**Fixes (SA4E-368, all TDD — 18 new/updated tests):**
+1. **Dropped-tool-activity tombstone** (`transcript-compaction.ts`): when compaction drops units carrying toolCalls, ONE compact assistant note is inserted at the trim boundary — `[context compacted — earlier tool results were removed…; do NOT repeat these calls: read src/a.ts; …]` (≤240 chars, ≤8 entries, "+N more"). The model keeps a durable breadcrumb of what it already read even after compaction. Room is made by evicting OLDER kept units — **never the pinned user, never the NEWEST kept unit** (newest content outranks the breadcrumb); when it cannot fit, the tombstone is skipped (fail-safe, previous behavior).
+2. **Read-target ladder** (`turn-budget-guard.ts`): `read`/`ls` calls are keyed on their TARGET (`file_path`/`path`), so a re-read with different `offset`/`limit` still counts as the same repeat → steer at N (default 4), abort on persistence. Sweep tools (`grep`/`find`) deliberately stay on the identical-args ladder — the same pattern over different paths is legitimate exploration. Exposed `lastTripKind`/`lastTripTarget` so the host picks the right correction text.
+3. **Synthesis-oriented steer text**: new `buildRereadSteerCorrection` ("You already obtained 'X' N times — STOP re-reading it; synthesize your answer from the results you already have") — deliberately does NOT suggest more exploration. `buildTextSteerCorrection` gains the deliver-now escape hatch + "Never re-read a file you already read."
+4. **K2 fix** (`pi-provider.ts collectResult`): guard-stopped turns no longer surface `state.errorMessage` (see above).
+
+**Acceptance (code-level, 2026-10-17):** full `src/pi-workflow` suite **50 files / 463 tests green** (baseline 445 + 18), `tsc --noEmit` clean, eslint clean. Runtime smoke: the UAT loop shape (12 same-file re-reads with varying offsets) now steers at the 2nd re-read and aborts by the 4th — **≤5 calls instead of 162** — with the stop note and NO turn error. **PENDING UAT:** re-run "review tất cả các file" in the packaged extension — expect either a completed review or an early, friendly stop with no red abort bubble.
+
+**Note on the UAT fixture budget:** a tombstone (~31 tokens) is inserted whenever it fits alongside the pinned user; in the first test pass the 'dedupes' fixture used a budget (220) that still FIT the newest 204-token unit, so no drop → no tombstone — the fixture was corrected to budget 100 (both units dropped).
 
 ## 6. Fix plan (prioritized)
 

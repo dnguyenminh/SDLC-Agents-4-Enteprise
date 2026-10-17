@@ -17,8 +17,8 @@ import {
 import { PiContextBudgetExceededError, isBudgetExceededError } from '../../pi-agent/budget-gate.js';
 
 const msg = (content: string, role = 'user') => ({ role, content });
-/** A history message of exactly `tokens` tokens under the chars/4 heuristic. */
-const msgOfTokens = (tokens: number, role = 'user') => msg('x'.repeat(tokens * 4), role);
+/** A history message of exactly `tokens` tokens under the wire heuristic (chars/3). */
+const msgOfTokens = (tokens: number, role = 'user') => msg('x'.repeat(tokens * 3), role);
 
 /** Qwen UAT budget: detected nCtx 65536 → usable 58245 (reserve 2048, margin 5243). */
 const QWEN_INPUT: Pick<LegacyTurnGovernanceInput, 'modelId' | 'nCtxDetected'> = {
@@ -37,12 +37,12 @@ const baseInput = (over: Partial<LegacyTurnGovernanceInput>): LegacyTurnGovernan
 });
 
 describe('measureLegacyTurnTokens — full request accounting (system+history+prompt+tools)', () => {
-  it('counts every request component with the chars/4 heuristic', () => {
+  it('counts every request component with the conservative wire heuristic (chars/3)', () => {
     const m = measureLegacyTurnTokens(
       baseInput({
-        systemPrompt: 's'.repeat(400), // 100 workspace + 1875 SDK base parity = 1975
+        systemPrompt: 's'.repeat(300), // 100 workspace + 1875 SDK base parity = 1975
         history: [msgOfTokens(1000), msgOfTokens(500, 'assistant')], // 1500
-        chatInput: 'p'.repeat(4096), // 1024
+        chatInput: 'p'.repeat(3072), // 1024
         tools: [{ name: 't', inputSchema: { a: 'y'.repeat(400) } }], // ~100
       })
     );
@@ -103,7 +103,7 @@ describe('governLegacyTurn — budget gate + compaction + reject (BR-09)', () =>
   it('PASS-THROUGH: under-budget turn returns the history untouched', () => {
     const history = Array.from({ length: 10 }, () => msgOfTokens(1000)); // 10k
     const res = governLegacyTurn(
-      baseInput({ ...QWEN_INPUT, history, chatInput: 'p'.repeat(4096) }) // +1024
+      baseInput({ ...QWEN_INPUT, history, chatInput: 'p'.repeat(3072) }) // +1024
     );
     // total = 1875 (SDK base prompt parity) + 10000 + 1024 = 12899 ≤ 58245
     expect(res.compacted).toBe(false);
@@ -116,7 +116,7 @@ describe('governLegacyTurn — budget gate + compaction + reject (BR-09)', () =>
     // UAT scenario: ~58k tokens of accumulated history + 1024-token prompt.
     const history = Array.from({ length: 58 }, () => msgOfTokens(1000)); // 58000
     const res = governLegacyTurn(
-      baseInput({ ...QWEN_INPUT, history, chatInput: 'p'.repeat(4096) })
+      baseInput({ ...QWEN_INPUT, history, chatInput: 'p'.repeat(3072) })
     );
     // usable 58245; fixed part = 1875 + 1024 = 2899 → historyBudget = 55346 → 55 newest kept.
     expect(res.compacted).toBe(true);
@@ -132,10 +132,10 @@ describe('governLegacyTurn — budget gate + compaction + reject (BR-09)', () =>
     // With 65536 the budget keeps 55 messages; with the registry's 32768 it would keep fewer.
     const history = Array.from({ length: 58 }, () => msgOfTokens(1000));
     const detected = governLegacyTurn(
-      baseInput({ modelId: 'qwen', nCtxDetected: 65536, history, chatInput: 'p'.repeat(4096) })
+      baseInput({ modelId: 'qwen', nCtxDetected: 65536, history, chatInput: 'p'.repeat(3072) })
     );
     const registryOnly = governLegacyTurn(
-      baseInput({ modelId: 'qwen', nCtxDetected: undefined, history, chatInput: 'p'.repeat(4096) })
+      baseInput({ modelId: 'qwen', nCtxDetected: undefined, history, chatInput: 'p'.repeat(3072) })
     );
     expect(detected.history.length).toBe(55); // usable 58245 (BR-01 provider-first)
     expect(registryOnly.history.length).toBeLessThan(detected.history.length);
@@ -145,7 +145,7 @@ describe('governLegacyTurn — budget gate + compaction + reject (BR-09)', () =>
     // qwen registry entry → nCtx 32768; usable = 32768 − 2048 − 2622 = 28098.
     const history = Array.from({ length: 40 }, () => msgOfTokens(1000)); // 40000
     const res = governLegacyTurn(
-      baseInput({ modelId: 'qwen', nCtxDetected: undefined, history, chatInput: 'p'.repeat(4096) })
+      baseInput({ modelId: 'qwen', nCtxDetected: undefined, history, chatInput: 'p'.repeat(3072) })
     );
     expect(res.compacted).toBe(true);
     // historyBudget = 28098 − 2899 = 25199 → 25 newest kept.
@@ -158,7 +158,7 @@ describe('governLegacyTurn — budget gate + compaction + reject (BR-09)', () =>
       baseInput({
         ...QWEN_INPUT,
         history,
-        chatInput: 'p'.repeat(4096),
+        chatInput: 'p'.repeat(3072),
         tools: [{ name: 'read', inputSchema: { blob: 'z'.repeat(4000) } }],
       })
     );
@@ -173,7 +173,7 @@ describe('governLegacyTurn — budget gate + compaction + reject (BR-09)', () =>
         baseInput({
           modelId: 'phi-3-mini',
           history: [msgOfTokens(1000)],
-          chatInput: 'p'.repeat(4096),
+          chatInput: 'p'.repeat(3072),
         })
       );
     expect(attempt).toThrow(PiContextBudgetExceededError);
@@ -188,14 +188,14 @@ describe('governLegacyTurn — budget gate + compaction + reject (BR-09)', () =>
 
   it('REJECT: even with EMPTY history the turn refuses when the fixed part cannot fit', () => {
     const attempt = () =>
-      governLegacyTurn(baseInput({ modelId: 'phi-3-mini', chatInput: 'p'.repeat(4096) }));
+      governLegacyTurn(baseInput({ modelId: 'phi-3-mini', chatInput: 'p'.repeat(3072) }));
     expect(attempt).toThrow(PiContextBudgetExceededError);
   });
 
   it('REJECT: error carries the post-compaction total and the usable budget', () => {
     try {
       governLegacyTurn(
-        baseInput({ modelId: 'phi-3-mini', history: [msgOfTokens(500)], chatInput: 'p'.repeat(8192) })
+        baseInput({ modelId: 'phi-3-mini', history: [msgOfTokens(500)], chatInput: 'p'.repeat(6144) })
       );
       expect.fail('expected PiContextBudgetExceededError');
     } catch (err) {

@@ -6,7 +6,8 @@
  * extended get_workspace_info tool result (AF-3 — one build per 60s TTL window
  * feeds both). keySymbols come from the skeleton build's REAL symbol corpus
  * (no fabricated modules). Caps: map ≤ 1,500 tokens (builder default), whole
- * result ≤ 16,000 chars (MAX_TOOL_RESULT_CHARS) with module-priority trimming.
+ * result ≤ 16,000 chars (independent cap, C-360-M1 cap table — do NOT couple
+ * to pi-event-mapper's MAX_TOOL_RESULT_CHARS) with module-priority trimming.
  * EF-1: per-module failure → entry omitted (debug only). EF-2: total builder
  * failure → layout only + PI_FUNCTIONAL_MAP_UNAVAILABLE (warn, exactly once).
  */
@@ -20,7 +21,7 @@ import { estimateTokenCount } from '../../pi-agent/prompt-compressor.js';
 import { EXCLUDED_DIRS } from '../../pi-agent/context-retrieval/types.js';
 import type { FunctionalMapEntry, FunctionalMapSection } from './skeleton-types.js';
 
-/** Whole-result char cap = shipped MAX_TOOL_RESULT_CHARS (pi-event-mapper L29). */
+/** Whole-result char cap for the functional map (C-360-M1 cap table — independent of the live tool-event cap). */
 export const MAX_RESULT_CHARS = 16_000;
 /** Builder default consumed as-is (C-360-M1 cap table). */
 export const MAP_TOKEN_CAP = 1_500;

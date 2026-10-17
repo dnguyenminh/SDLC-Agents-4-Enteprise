@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { compressPrompt, CompressedVariant, estimateTokenCount, COMPRESSION_MAX_RATIO } from '../prompt-compressor';
+import { compressPrompt, CompressedVariant, estimateTokenCount, estimateWireTokens, COMPRESSION_MAX_RATIO } from '../prompt-compressor';
 
 const FULL_TEMPLATE = `# BRD Agent Prompt
 
@@ -71,5 +71,17 @@ describe('prompt-compressor', () => {
     expect(estimateTokenCount('abcd')).toBe(1);
     expect(estimateTokenCount('abcde')).toBe(2);
     expect(estimateTokenCount('')).toBe(0);
+  });
+
+  it('estimateWireTokens is CONSERVATIVE (3 chars per token) — provider-facing gates over-count, never under-count', () => {
+    // SA4E-369 UAT: the chars/4 estimate let a real 69,352-token request pass
+    // the gate as ~57.8k "fitting" into a 58,293 usable budget → provider 400.
+    expect(estimateWireTokens('abc')).toBe(1);
+    expect(estimateWireTokens('abcd')).toBe(2); // 4/3 → ceil — deliberately over the chars/4 value
+    expect(estimateWireTokens('')).toBe(0);
+    expect(estimateWireTokens('x'.repeat(30000))).toBe(10000);
+    // Conservative relation that keeps the gates on the safe side of the wire.
+    const sample = JSON.stringify({ path: 'src/pi-workflow/pi-provider.ts', tools: 3 });
+    expect(estimateWireTokens(sample)).toBeGreaterThanOrEqual(estimateTokenCount(sample));
   });
 });

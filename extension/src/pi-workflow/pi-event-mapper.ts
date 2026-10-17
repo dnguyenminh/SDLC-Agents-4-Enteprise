@@ -27,8 +27,16 @@ export interface ToolLiveEvent {
   result?: string;
 }
 
-/** FIX F: cap for tool output forwarded to the webview (postMessage + render safety). */
-export const MAX_TOOL_RESULT_CHARS = 16000;
+/**
+ * FIX F: cap for tool output forwarded to the webview (postMessage + render safety).
+ * SA4E-369 UAT follow-up: raised 16,000 → 100,000. The old cap silently cut
+ * 48,783 chars (≈14.7k tokens) of tool results out of the webview transcript —
+ * it truncated the ONLY evidence of the 69,352-token overflow (the workspace
+ * listing + big file reads) and made every chat export lossy. The 100k cap
+ * still bounds pathological single-result memory while keeping the exact
+ * transcript semantic the export feature promises.
+ */
+export const MAX_TOOL_RESULT_CHARS = 100000;
 
 function capResult(s: string): string {
   return s.length > MAX_TOOL_RESULT_CHARS

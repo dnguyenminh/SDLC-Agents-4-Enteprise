@@ -36,8 +36,8 @@ const asstToolCall = (id: string): Message =>
 const toolResult = (toolCallId: string, text: string): Message =>
   ({ role: 'toolResult', toolCallId, toolName: 'read', content: [{ type: 'text', text }], isError: false, timestamp: 0 }) as Message;
 
-/** A text payload of exactly `tokens` tokens under the chars/4 heuristic. */
-const textOfTokens = (tokens: number): string => 'x'.repeat(tokens * 4);
+/** A text payload of exactly `tokens` tokens under the wire heuristic (chars/3). */
+const textOfTokens = (tokens: number): string => 'x'.repeat(tokens * 3);
 
 /** One tool unit (assistant toolCall + its result) of ~`tokens` tokens. */
 const toolUnit = (id: string, tokens: number): Message[] =>
@@ -54,8 +54,8 @@ describe('measureIntraTurnRequest — reuse of the legacy measure (system+tools+
     const m = measureIntraTurnRequest({ messages, ...QWEN_INPUT });
     expect(m.systemTokens).toBeGreaterThan(0);
     expect(m.toolSchemaTokens).toBeGreaterThan(0); // toolsAdded replayed → OI-4 estimator
-    // user 100 + toolResult 500 + toolCall declaration `read {"path":"a"}` = 5
-    expect(m.historyTokens).toBe(605);
+    // user 100 + toolResult 500 + toolCall declaration `read {"path":"a"}` = 6
+    expect(m.historyTokens).toBe(606);
     expect(m.totalTokens).toBe(m.systemTokens + m.historyTokens + m.promptTokens + m.toolSchemaTokens);
   });
 
@@ -139,7 +139,7 @@ describe('governIntraTurnRequest — PASS-THROUGH / COMPACT / REJECT (BR-09)', (
   });
 
   it('COMPACT: a compressible NEWEST unit survives compressed when raw cannot fit (UC-03)', () => {
-    // Raw ≈ 57.5k tokens > history budget 56417; compression strips the example
+    // Raw ≈ 76.7k tokens > history budget 56417; compression strips the example
     // wall so the unit fits — the newest message must never be dropped.
     const compressible = `Example:\n${'e'.repeat(230000)}\n\n# Restored\n\nkeep me`;
     const messages: Message[] = [

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PiProvider } from '../pi-provider.js';
+import { TurnBudgetGuard } from '../turn-budget-guard.js';
 
 describe('PiProvider (SA4E-290)', () => {
   let provider: PiProvider;
@@ -140,5 +141,57 @@ describe('PiProvider Fix J — pre-execution approval gate (beforeToolCall)', ()
     expect(res?.block).toBe(true);
     expect(res?.reason).toContain('Approval check failed');
     expect(res?.reason).toContain('gate exploded');
+  });
+});
+
+describe('PiProvider K2 (SA4E-368) — a guard-stopped turn must NOT surface the abort as a turn error', () => {
+  /** Private collectResult, reached via cast (established pattern in this suite). */
+  const collectOf = (provider: PiProvider) =>
+    (
+      provider as unknown as {
+        collectResult: (
+          agent: unknown,
+          collector: unknown,
+          guard?: unknown
+        ) => { text: string; errorMessage?: string; chunks: Array<{ type: string }> };
+      }
+    ).collectResult.bind(provider);
+
+  /** A guard that has tripped (steer → persisted → abort), like the UAT review loop. */
+  const trippedGuard = () => {
+    const guard = new TurnBudgetGuard(TurnBudgetGuard.resolveDefaults({ maxSameToolRepeats: 2 }), () => {});
+    guard.observeToolCall('read', '{"file_path":"src/a.ts"}'); // ok
+    guard.observeToolCall('read', '{"file_path":"src/a.ts"}'); // steer
+    guard.observeToolCall('read', '{"file_path":"src/a.ts"}'); // ok (reset after correction)
+    guard.observeToolCall('read', '{"file_path":"src/a.ts"}'); // abort — persisted despite correction
+    expect(guard.stoppedReason).toBe('repeat');
+    return guard;
+  };
+
+  it('collectResult clears errorMessage when the loop guard stopped the turn (no duplicate red bubble)', () => {
+    const provider = new PiProvider();
+    // The SDK records the AbortError on the agent state after agent.abort().
+    const agent = { state: { errorMessage: 'This operation was aborted', messages: [] } };
+    const collector = { chunks: [] as Array<{ type: string }>, toolCalls: [], text: 'partial review text' };
+
+    const result = collectOf(provider)(agent, collector, trippedGuard());
+
+    // The friendly stop note is the single source of truth…
+    expect(result.text).toContain('partial review text');
+    expect(result.text).toContain('Stopped early');
+    expect(result.chunks.some((c) => c.type === 'done')).toBe(true);
+    // …and the abort MUST NOT surface as a turn error (K2: it used to become
+    // PI_EXECUTION_ERROR → a second red "Request was aborted" bubble).
+    expect(result.errorMessage).toBeUndefined();
+  });
+
+  it('collectResult keeps the REAL error when the turn failed WITHOUT a guard trip', () => {
+    const provider = new PiProvider();
+    const agent = { state: { errorMessage: 'HTTP 500 from gateway', messages: [] } };
+    const collector = { chunks: [] as Array<{ type: string }>, toolCalls: [], text: '' };
+
+    const result = collectOf(provider)(agent, collector);
+
+    expect(result.errorMessage).toBe('HTTP 500 from gateway');
   });
 });

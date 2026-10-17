@@ -66,6 +66,23 @@ MIT
 
 ## Changelog
 
+### v1.53.6 (2026-10-17)
+
+**SA4E-369 follow-up — Fix gốc lỗi "vượt context" (raw 400) khi chat review toàn bộ workspace + export hết bị cắt**
+
+- 🛡 **Context budget gate hết under-count (root cause của raw 400 69.352 tokens)**: gate đo request bằng heuristic `chars/4`, nhưng nội dung code/path/JSON thực tế tokenize ~3,3 chars/token (đo bằng `/tokenize` của chính llama-server) → request "tưởng fit" 57,8k trong usable 58.293 (n_ctx 65.536) nhưng thực tế **69.352 tokens** → provider trả 400 thô. Thêm `estimateWireTokens` (chars/3, conservative) vào `prompt-compressor.ts`; chuyển 3 module provider-facing sang dùng nó: `legacy-turn-governance.ts` (turn-start + history compaction), `intra-turn-budget-gate.ts` (mỗi request trong turn), `transcript-compaction.ts` (unit + tombstone) — gate giờ over-count thay vì under-count, tự compact trước khi chạm trần thật
+- 🔌 **Gateway model registry dùng context window THẬT**: `pi-gateway-provider.ts` hardcode `contextWindow: 128000` cho mọi model gateway → gate tưởng llama-server 65.536 có 128k headroom. Giờ `fetchGatewayModels` đọc `context_length` (vLLM/OpenRouter) / `meta.n_ctx` (llama-server) và truyền vào registry; 128.000 chỉ còn là fallback khi gateway không báo metadata
+- 📄 **Export chat giữ nguyên văn kết quả tool**: cap `MAX_TOOL_RESULT_CHARS` 16.000 → 100.000 — bản export UAT trước bị cắt 48.783 chars (≈14,7k tokens) của tool results, chính là bằng chứng của lỗi overflow; export giờ đúng nghĩa "transcript chính xác" để đưa AI ngoài phân tích
+- 🧪 Tests: cập nhật 5 test files sang wire heuristic + 3 test mới (estimator, gateway đọc context từ metadata, registry giữ context thật); full suite 309 files / 3.025 tests PASS, tsc + eslint + smoke:bundle xanh
+
+### v1.53.5 (2026-10-17)
+
+**SA4E-369 — SDLC CHAT: export hội thoại cho phân tích lỗi bằng AI**
+
+- 📤 **Export conversation + copy từng câu**: nút **⤓** trên toolbar chat → xuất toàn bộ hội thoại của tab ra **Markdown** hoặc **JSON** qua save dialog (`chat-{tab}-{timestamp}.md|json`) — gồm mọi message (user/assistant/error + timestamp), **đầy đủ tool call** (args/result/error/duration/status), thinking block; hover từng bubble/tool call → nút **⧉** copy nhanh dạng Markdown. Mục đích: đưa transcript chính xác cho AI ngoài phân tích lỗi chat (vd. loop SA4E-368)
+- 🧱 Tách module theo chuẩn 200 lines/file: `conversation-exporter.ts` (normalize) + `conversation-export-render.ts` (markdown/JSON) + `conversation-export-io.ts` (save/clipboard); webview `export-ui.js` + `export.css` (không nhồi thêm chat.js/chat.css legacy)
+- 🧪 Khôi phục 2 test block SA4E-368 bị rớt khỏi commit `50bd75c` (K2 errorMessage suppression + compaction tombstone) — giữ pi-workflow suite xanh
+
 ### v1.53.4 (2026-10-17)
 
 **SA4E-363 — Patch release (WrapperServer body cap thực sự vào main)**

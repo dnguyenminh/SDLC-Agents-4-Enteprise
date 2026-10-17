@@ -13,6 +13,27 @@ export function estimateTokenCount(text: string): number {
   return Math.ceil(text.length / 4);
 }
 
+/**
+ * Divisor for PROVIDER-FACING budget gates (SA4E-369 UAT follow-up: the
+ * 69,352-token raw 400 against n_ctx 65536).
+ *
+ * The chars/4 heuristic UNDER-counts real BPE tokenization of code / paths /
+ * JSON content. Measured on the UAT overflow transcript with the server's own
+ * tokenizer: 3.32 chars/token for the message stream (69,352 real tokens for a
+ * request the gate estimated at 57,786) — a 20% undercount that the gate's 8%
+ * safety margin cannot absorb, so a request the gate believes "fits" can still
+ * hard-400 the provider. Gates that compare against a provider's HARD window
+ * must over-count, not under-count, hence this conservative divisor (safe down
+ * to ~2.7 chars/token content; denser than that — minified JSON/CJK — remains
+ * the known limit of any char heuristic).
+ */
+export const WIRE_CHARS_PER_TOKEN = 3;
+
+/** Conservative token estimate for provider-facing gates (see {@link WIRE_CHARS_PER_TOKEN}). */
+export function estimateWireTokens(text: string): number {
+  return Math.ceil(text.length / WIRE_CHARS_PER_TOKEN);
+}
+
 function stripHtmlComments(text: string): string {
   return text.replace(/<!--[\s\S]*?-->/g, '');
 }

@@ -54,6 +54,8 @@ export interface ChatModelEntry {
   description?: string;
   /** Credit cost multiplier (1 = standard, 1.9 = premium, 0 = free). KSA-237 */
   rateMultiplier?: number;
+  /** Real context window (tokens) when the gateway's /v1/models reports it (context_length / meta.n_ctx). SA4E-369 */
+  contextWindow?: number;
 }
 
 // === Webview → Extension Messages ===
@@ -79,6 +81,10 @@ export type ChatWebviewToExtMessage =
   | { type: "chat:saveState"; payload: { tabs: unknown[]; activeTabId: string } }
   | { type: "chat:selectAgent"; agentId: string | null }
   | { type: "chat:toolApproval"; toolId: string; decision: string; rememberPattern?: string }
+  /** SA4E-369: export the ACTIVE conversation (tab model incl. tool calls/results) to a file. */
+  | { type: "chat:exportConversation"; format: "markdown" | "json"; tab: { id?: string; name?: string; messages: unknown[] }; model?: string; mode?: string }
+  /** SA4E-369: copy ONE message (or one tool call) as Markdown to the clipboard. */
+  | { type: "chat:copyMessage"; entry: Record<string, unknown> }
   | { type: "ready" }
   | { type: "refresh" };
 

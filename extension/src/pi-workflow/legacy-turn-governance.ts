@@ -12,7 +12,7 @@
 import { logger } from '../logger';
 import { resolveContextBudget } from '../pi-agent/context-budget-resolver.js';
 import { usableTokensOf } from '../pi-agent/models/ContextBudget.js';
-import { estimateTokenCount, compressPrompt } from '../pi-agent/prompt-compressor.js';
+import { estimateWireTokens, compressPrompt } from '../pi-agent/prompt-compressor.js';
 import { estimateToolSchemaTokens, type LoadoutTool } from '../pi-agent/tool-schema-tokens.js';
 import { BudgetCalculator, DEFAULT_SYSTEM_PROMPT_CHARS } from '../mcp/context-budget';
 import { PiContextBudgetExceededError } from '../pi-agent/budget-gate.js';
@@ -59,15 +59,17 @@ export interface LegacyGovernanceResult {
 }
 
 /**
- * Measures the FULL legacy request in tokens (chars/4): workspace system
- * prompt + SDK base prompt (parity with the session gate accounting) +
- * accumulated history (content only) + user prompt + tool schemas.
+ * Measures the FULL legacy request in tokens with the CONSERVATIVE wire
+ * estimator (chars/3 — the chars/4 heuristic let the UAT 69,352-token request
+ * pass as "fits"): workspace system prompt + SDK base prompt (parity with the
+ * session gate accounting) + accumulated history (content only) + user prompt
+ * + tool schemas.
  */
 export function measureLegacyTurnTokens(input: LegacyTurnGovernanceInput): LegacyTurnMeasurement {
   const systemTokens =
-    estimateTokenCount(input.systemPrompt) + BudgetCalculator.estimateTokens(DEFAULT_SYSTEM_PROMPT_CHARS);
-  const historyTokens = input.history.reduce<number>((sum, m) => sum + estimateTokenCount(String(m?.content ?? '')), 0);
-  const promptTokens = estimateTokenCount(input.chatInput);
+    estimateWireTokens(input.systemPrompt) + BudgetCalculator.estimateTokens(DEFAULT_SYSTEM_PROMPT_CHARS);
+  const historyTokens = input.history.reduce<number>((sum, m) => sum + estimateWireTokens(String(m?.content ?? '')), 0);
+  const promptTokens = estimateWireTokens(input.chatInput);
   const toolSchemaTokens = input.tools.reduce<number>((sum, t) => sum + estimateToolSchemaTokens(asLoadoutTool(t)), 0);
   return {
     systemTokens,
@@ -92,14 +94,14 @@ export function compactHistoryToFit(
   let total = 0;
   for (let i = history.length - 1; i >= 0; i--) {
     const raw = { role: String(history[i]?.role ?? 'user'), content: String(history[i]?.content ?? '') };
-    const rawTokens = estimateTokenCount(raw.content);
+    const rawTokens = estimateWireTokens(raw.content);
     if (total + rawTokens <= budgetTokens) {
       kept.unshift(raw);
       total += rawTokens;
       continue;
     }
     const compressed = { ...raw, content: compressPrompt(raw.content) };
-    const compressedTokens = estimateTokenCount(compressed.content);
+    const compressedTokens = estimateWireTokens(compressed.content);
     if (total + compressedTokens <= budgetTokens) {
       kept.unshift(compressed);
       total += compressedTokens;

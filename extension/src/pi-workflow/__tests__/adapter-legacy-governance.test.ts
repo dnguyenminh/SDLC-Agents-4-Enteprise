@@ -29,7 +29,7 @@ vi.mock('vscode', () => ({
   window: { createOutputChannel: () => ({ appendLine: vi.fn(), dispose: vi.fn() }) },
 }));
 
-/** UAT-shaped accumulated history: 58 messages ≈ 58k tokens (chars/4). */
+/** UAT-shaped accumulated history: 58 messages of 4000 chars each (≈77k tokens under the wire heuristic). */
 const bigHistory = Array.from({ length: 58 }, () => ({
   role: 'user',
   content: 'x'.repeat(4000),

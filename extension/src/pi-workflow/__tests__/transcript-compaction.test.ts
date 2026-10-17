@@ -42,8 +42,8 @@ const asstToolCall = (id: string): Message =>
 const toolResult = (toolCallId: string, text: string): Message =>
   ({ role: 'toolResult', toolCallId, toolName: 'read', content: [{ type: 'text', text }], isError: false, timestamp: 0 }) as Message;
 
-/** A text payload of exactly `tokens` tokens under the chars/4 heuristic. */
-const textOfTokens = (tokens: number): string => 'x'.repeat(tokens * 4);
+/** A text payload of exactly `tokens` tokens under the wire heuristic (chars/3). */
+const textOfTokens = (tokens: number): string => 'x'.repeat(tokens * 3);
 
 /** One tool unit (assistant toolCall + its result) of ~5+`tokens` tokens. */
 const toolUnit = (id: string, tokens: number): Message[] =>
@@ -99,7 +99,7 @@ describe('flattenContent — wire-visible text of one message content', () => {
 
 describe('tool-unit atomicity (groupToolUnits via compactTranscriptToFit)', () => {
   it('drops a tool unit ATOMICALLY — a result that alone would fit is never orphaned from its call', () => {
-    // unit tc-2 ≈ 205 tokens (call 5 + result 200): the RESULT alone fits
+    // unit tc-2 ≈ 206 tokens (call 6 + result 200): the RESULT alone fits
     // budget 200 exactly, but call+result do not → the WHOLE unit must go.
     const messages: Message[] = [
       systemMsg('sys'),
@@ -126,7 +126,7 @@ describe('tool-unit atomicity (groupToolUnits via compactTranscriptToFit)', () =
       toolResult('tc-a', textOfTokens(100)),
       toolResult('tc-b', textOfTokens(100)), // second result of the same unit
     ];
-    const res = compactTranscriptToFit(messages, 220); // multi-unit ≈ 205 fits; tc-1 + user do not
+    const res = compactTranscriptToFit(messages, 220); // multi-unit ≈ 206 fits; tc-1 + user do not
     expect(res.compacted).toBe(true);
     expect(callIdsOf(res.messages)).toEqual(['tc-a']);
     expect(resultIdsOf(res.messages)).toEqual(['tc-a', 'tc-b']); // both results kept with their call
@@ -141,7 +141,7 @@ describe('tool-unit atomicity (groupToolUnits via compactTranscriptToFit)', () =
       toolResult('tc-a', textOfTokens(100)),
       toolResult('tc-b', textOfTokens(100)),
     ];
-    const res = compactTranscriptToFit(messages, 100); // neither the unit (205) nor any piece fits safely
+    const res = compactTranscriptToFit(messages, 100); // neither the unit (206) nor any piece fits safely
     expect(res.compacted).toBe(true);
     expect(callIdsOf(res.messages)).toEqual([]);
     expect(resultIdsOf(res.messages)).toEqual([]); // never just one of the two results
@@ -186,7 +186,7 @@ describe('compactTranscriptToFit — trim order and pinned system', () => {
   });
 
   it('the trim point is a hard boundary — older units are dropped EVEN WHEN they would fit', () => {
-    // tc-1 (≈55) + kept tc-3 (≈55) = 110 ≤ 120, yet tc-1 must go: walking
+    // tc-1 (≈56) + kept tc-3 (≈56) = 112 ≤ 120, yet tc-1 must go: walking
     // newest→oldest, tc-2 not fitting sets the trim point for everything older.
     const messages: Message[] = [
       systemMsg('sys'),
@@ -233,7 +233,7 @@ describe('compactTranscriptToFit — text compression fallback (UC-03)', () => {
   it('keeps the newest unit COMPRESSED when raw does not fit — toolCall blocks stay intact', () => {
     const raw = compressible(800);
     const messages: Message[] = [systemMsg('sys'), userMsg('go'), asstToolCall('tc-1'), toolResult('tc-1', raw)];
-    const res = compactTranscriptToFit(messages, 60); // raw unit ≈ 226 > 60; compressed ≈ 12 ≤ 60
+    const res = compactTranscriptToFit(messages, 60); // raw unit ≈ 300 > 60; compressed ≈ 12 ≤ 60
     expect(res.compacted).toBe(true);
     // After compression frees budget (12 of 60), the 1-token user message fits too.
     expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant', 'toolResult']); // unit kept whole
@@ -266,7 +266,7 @@ describe('compactTranscriptToFit — text compression fallback (UC-03)', () => {
     const messages: Message[] = [systemMsg('sys'), userMsg('go'), ...toolUnit('tc-1', 100)];
     const res = compactTranscriptToFit(messages, 50);
     expect(res.compacted).toBe(true);
-    // SA4E-368: the tombstone (~32 tokens) fits alongside the pinned user,
+    // SA4E-368: the tombstone (~40 tokens) fits alongside the pinned user,
     // so the model still knows the dropped read already happened.
     expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant']);
     expect(resultIdsOf(res.messages)).toEqual([]);
@@ -282,11 +282,126 @@ describe('compactTranscriptToFit — text compression fallback (UC-03)', () => {
       timestamp: 0,
     } as Message;
     const messages: Message[] = [systemMsg('sys'), asstThinking];
-    const res = compactTranscriptToFit(messages, 3); // raw ≈ 5 tokens; compressed = 2 ≤ 3
+    const res = compactTranscriptToFit(messages, 3); // raw ≈ 6 tokens; compressed = 3 ≤ 3
     expect(res.compacted).toBe(true);
     const content = (res.messages[1] as { content: Array<{ type: string; thinking?: string; text?: string }> }).content;
     expect(content[0].thinking).toBe('keep');
     expect(content[1].text).toBe('ok');
+  });
+});
+
+describe('dropped-tool-activity tombstone (SA4E-368 — compaction amnesia re-read loop)', () => {
+  const tombstonesOf = (messages: Message[]): string[] =>
+    messages
+      .filter((m) => (m as { role?: string }).role === 'assistant')
+      .flatMap((m) => ((m as { content?: Array<{ type?: string; text?: string }> }).content ?? []))
+      .filter((b) => b.type === 'text' && typeof b.text === 'string' && b.text.includes('[context compacted'))
+      .map((b) => b.text as string);
+
+  const nonSystemTokens = (messages: Message[]): number =>
+    messages
+      .filter((m) => (m as { role?: string }).role !== 'system')
+      .reduce((sum, m) => sum + Math.ceil(flattenContent((m as { content?: unknown }).content).length / 3), 0);
+
+  it('inserts ONE tombstone listing the dropped read targets at the trim boundary', () => {
+    const messages: Message[] = [
+      systemMsg('sys'),
+      userMsg('go'),
+      ...toolUnit('tc-1', 200), // dropped (oldest)
+      ...toolUnit('tc-2', 200), // kept (newest)
+    ];
+    const res = compactTranscriptToFit(messages, 260);
+    expect(res.compacted).toBe(true);
+    const tombs = tombstonesOf(res.messages);
+    expect(tombs).toHaveLength(1);
+    expect(tombs[0]).toContain('do NOT repeat');
+    expect(tombs[0]).toContain('read a'); // the dropped unit's target
+    // Position: AFTER the pinned user (the dropped region began after it),
+    // BEFORE the newest kept tool unit (the trim boundary).
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant', 'assistant', 'toolResult']);
+    // Budget guarantee: kept content + tombstone never exceeds the budget.
+    expect(nonSystemTokens(res.messages)).toBeLessThanOrEqual(260);
+  });
+
+  it('dedupes identical dropped targets into one tombstone entry', () => {
+    const messages: Message[] = [
+      systemMsg('sys'),
+      userMsg('go'),
+      ...toolUnit('tc-1', 200),
+      ...toolUnit('tc-2', 200),
+    ];
+    // Budget 100: BOTH 206-token units are dropped, but the pinned user (1)
+    // + tombstone (~40) still fit → the two identical 'read a' entries
+    // collapse into ONE breadcrumb line.
+    const res = compactTranscriptToFit(messages, 100);
+    const tombs = tombstonesOf(res.messages);
+    expect(tombs).toHaveLength(1);
+    expect(tombs[0].match(/read a/g)?.length).toBe(1);
+    expect(rolesOf(res.messages)).toEqual(['system', 'user', 'assistant']);
+  });
+
+  it('NO tombstone when nothing was dropped (compression-only compaction)', () => {
+    const messages: Message[] = [systemMsg('sys'), userMsg('go'), asstToolCall('tc-1'), toolResult('tc-1', compressible(800))];
+    const res = compactTranscriptToFit(messages, 100); // unit kept compressed, nothing dropped
+    expect(res.compacted).toBe(true);
+    expect(tombstonesOf(res.messages)).toEqual([]);
+  });
+
+  it('NO tombstone when the dropped units carry no toolCall blocks (text-only history)', () => {
+    const messages: Message[] = [systemMsg('sys'), asstText(textOfTokens(400)), userMsg('go')];
+    const res = compactTranscriptToFit(messages, 100); // the 400-token assistant text is dropped
+    expect(res.compacted).toBe(true);
+    expect(tombstonesOf(res.messages)).toEqual([]);
+    expect(rolesOf(res.messages)).toEqual(['system', 'user']);
+  });
+
+  it('NO tombstone when it cannot fit without sacrificing the NEWEST kept unit', () => {
+    const messages: Message[] = [
+      systemMsg('sys'),
+      userMsg('go'),
+      ...toolUnit('tc-1', 200), // dropped
+      ...toolUnit('tc-3', 200), // kept (newest) — 206 + user 1 + tombstone > 220 → skip
+    ];
+    const res = compactTranscriptToFit(messages, 220);
+    expect(res.compacted).toBe(true);
+    // The newest unit outranks the breadcrumb: it survives, tombstone skipped.
+    expect(callIdsOf(res.messages)).toEqual(['tc-3']);
+    expect(tombstonesOf(res.messages)).toEqual([]);
+  });
+
+  it('evicts an OLDER kept unit to make room for the tombstone — never the newest', () => {
+    const messages: Message[] = [
+      systemMsg('sys'),
+      userMsg('go'),
+      ...toolUnit('tc-1', 200), // dropped by the walk (does not fit)
+      ...toolUnit('tc-2', 30), // kept by the walk, evicted for the tombstone (older)
+      ...toolUnit('tc-3', 30), // kept (newest) — always survives
+    ];
+    const res = compactTranscriptToFit(messages, 80);
+    expect(res.compacted).toBe(true);
+    const tombs = tombstonesOf(res.messages);
+    expect(tombs).toHaveLength(1);
+    expect(tombs[0]).toContain('read a'); // tc-1's activity is the breadcrumb
+    expect(callIdsOf(res.messages)).toEqual(['tc-3']); // tc-2 evicted, tc-3 kept
+    expect(nonSystemTokens(res.messages)).toBeLessThanOrEqual(80);
+  });
+
+  it('the tombstone is a plain assistant TEXT message — no toolCall/toolResult blocks (wire-safe)', () => {
+    const messages: Message[] = [
+      systemMsg('sys'),
+      userMsg('go'),
+      ...toolUnit('tc-1', 200),
+      ...toolUnit('tc-2', 200),
+    ];
+    const res = compactTranscriptToFit(messages, 260);
+    const tomb = res.messages.find((m) => tombstonesOf([m]).length > 0) as {
+      role: string;
+      content: Array<{ type: string }>;
+    };
+    expect(tomb.role).toBe('assistant');
+    expect(tomb.content.every((b) => b.type === 'text')).toBe(true);
+    // No orphaned pairing was introduced anywhere in the result.
+    expect(resultIdsOf(res.messages)).toEqual(callIdsOf(res.messages).length ? ['tc-2'] : []);
   });
 });
 
@@ -330,8 +445,9 @@ describe('compactTranscriptToFit — pinned newest user message (SA4E-355 bug 3)
     // UAT bug 3: 79 tool calls pushed the walk's trim point past the opening
     // user message → the compacted transcript had NO user query → llama-server
     // (qwen template) 500 "Jinja Exception: No user query found in messages.".
-    // Budget 410: without the pin tc-3 AND tc-4 fit raw and the user message
-    // is trimmed; with the pin its budget is reserved before the tool walk.
+    // Budget 410: without the pin tc-4 fits and tc-3 sets the trim point, so
+    // the user message would be trimmed; with the pin its budget is reserved
+    // before the tool walk.
     const messages: Message[] = [
       systemMsg('sys'),
       userMsg('go'),
@@ -387,7 +503,7 @@ describe('compactTranscriptToFit — pinned newest user message (SA4E-355 bug 3)
   });
 
   it('reservation: a user message that fits the whole budget stays RAW — newer tool units are trimmed to make room', () => {
-    // Without the reservation the 85-token tool unit would eat the budget and
+    // Without the reservation the 86-token tool unit would eat the budget and
     // force the 50-token user message into a (failing) compression — the UAT
     // task-context loss the model showed by repeating identical ls calls.
     const messages: Message[] = [systemMsg('sys'), userMsg(textOfTokens(50)), ...toolUnit('tc-1', 80)];
@@ -400,7 +516,7 @@ describe('compactTranscriptToFit — pinned newest user message (SA4E-355 bug 3)
   });
 
   it('a user message too big raw is kept COMPRESSED when its compressed form fits the budget', () => {
-    const raw = compressible(800); // ≈220 tokens raw → ≈7 tokens compressed
+    const raw = compressible(800); // ≈293 tokens raw → ≈9 tokens compressed
     const messages: Message[] = [systemMsg('sys'), userMsg(raw), ...toolUnit('tc-1', 55)];
     const res = compactTranscriptToFit(messages, 60);
     expect(res.compacted).toBe(true);

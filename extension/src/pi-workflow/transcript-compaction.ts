@@ -30,7 +30,7 @@
  * Never mutates the input; returns a new array.
  */
 import type { Message } from '@earendil-works/pi-ai';
-import { compressPrompt, estimateTokenCount } from '../pi-agent/prompt-compressor.js';
+import { compressPrompt, estimateWireTokens } from '../pi-agent/prompt-compressor.js';
 import { readTargetOfArgs } from './turn-budget-guard.js';
 import { logger } from '../logger';
 
@@ -97,9 +97,9 @@ function compressMessageText(msg: Message): Message {
   return { ...msg, content: compressed } as Message;
 }
 
-/** Estimated tokens of one unit (chars/4 over the flattened wire text). */
+/** Estimated tokens of one unit (conservative wire estimator over the flattened wire text). */
 function unitTokens(unit: ReadonlyArray<Message>): number {
-  return unit.reduce((sum, m) => sum + estimateTokenCount(flattenContent((m as { content?: unknown }).content)), 0);
+  return unit.reduce((sum, m) => sum + estimateWireTokens(flattenContent((m as { content?: unknown }).content)), 0);
 }
 
 /** Kept form of one unit: `{ messages, tokens, compressed }`. */
@@ -208,7 +208,7 @@ function warnIfNoUserQuery(result: { messages: Message[]; compacted: boolean }):
 
 /** Marker every tombstone note starts with (tests + future consumers pin on it). */
 export const TOMBSTONE_MARKER = '[context compacted';
-/** Hard char cap for the tombstone note (≈ 60 tokens under chars/4). */
+/** Hard char cap for the tombstone note (≈ 80 tokens under the wire estimator). */
 const TOMBSTONE_MAX_CHARS = 240;
 /** At most this many dropped tool calls are listed; the rest collapse to "+N more". */
 const TOMBSTONE_MAX_ENTRIES = 8;
@@ -295,7 +295,7 @@ function tryBuildTombstone(
   const entries = harvestToolEntries(droppedUnits);
   if (entries.length === 0) return null;
   const text = buildTombstoneText(entries);
-  const tombTokens = estimateTokenCount(text);
+  const tombTokens = estimateWireTokens(text);
   const kept = [...keptUnits];
   const keptTokens = () => kept.reduce((sum, u) => sum + unitTokens(u), 0);
   while (keptTokens() + tombTokens > budgetTokens) {

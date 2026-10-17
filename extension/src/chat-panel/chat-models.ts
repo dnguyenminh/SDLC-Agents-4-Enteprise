@@ -142,9 +142,21 @@ export async function fetchGatewayModels(baseUrl: string, authHeader?: string): 
       return null;
     }
 
-    // Anthropic /v1/models envelope extended with Kiro fields: { data: [{ id, display_name, description, rate_multiplier }] }
+    // OpenAI-compatible /v1/models (llama-server, vLLM, OpenRouter…) may carry
+    // the real window: `context_length` (vLLM/OpenRouter) or `meta.n_ctx`
+    // (llama-server). SA4E-369 UAT follow-up: the gateway model registry MUST
+    // use the real window — a hardcoded 128000 made the budget gates believe a
+    // 65536-token server had 128k of headroom whenever the probe didn't win.
     const json = (await response.json()) as {
-      data?: Array<{ id?: string; display_name?: string; name?: string; description?: string; rate_multiplier?: number }>;
+      data?: Array<{
+        id?: string;
+        display_name?: string;
+        name?: string;
+        description?: string;
+        rate_multiplier?: number;
+        context_length?: number;
+        meta?: { n_ctx?: number };
+      }>;
     };
     const data = Array.isArray(json?.data) ? json.data : [];
     const models: ChatModelEntry[] = data
@@ -160,6 +172,15 @@ export async function fetchGatewayModels(baseUrl: string, authHeader?: string): 
         }
         if (typeof m.rate_multiplier === "number") {
           entry.rateMultiplier = m.rate_multiplier;
+        }
+        const contextWindow =
+          typeof m.context_length === "number" && m.context_length > 0
+            ? m.context_length
+            : typeof m.meta?.n_ctx === "number" && m.meta.n_ctx > 0
+              ? m.meta.n_ctx
+              : undefined;
+        if (contextWindow) {
+          entry.contextWindow = contextWindow;
         }
         return entry;
       });

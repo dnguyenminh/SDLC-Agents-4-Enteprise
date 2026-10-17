@@ -117,6 +117,30 @@ describe("fetchGatewayModels (BUG 2)", () => {
     ]);
   });
 
+  it("carries the real context window from context_length / meta.n_ctx (SA4E-369)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            data: [
+              { id: "qwen3-32b", object: "model", context_length: 32768 },
+              { id: "qwen-text", object: "model", meta: { n_ctx: 65536 } },
+              { id: "no-window" },
+            ],
+          }),
+      })
+    );
+
+    const models = await fetchGatewayModels("http://127.0.0.1:1234/v1");
+    expect(models).toEqual([
+      { id: "qwen3-32b", name: "qwen3-32b", contextWindow: 32768 },
+      { id: "qwen-text", name: "qwen-text", contextWindow: 65536 },
+      { id: "no-window", name: "no-window" },
+    ]);
+  });
+
   it("returns null when the gateway responds non-OK", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: () => Promise.resolve({}) }));
     expect(await fetchGatewayModels("http://127.0.0.1:8990/anthropic")).toBeNull();

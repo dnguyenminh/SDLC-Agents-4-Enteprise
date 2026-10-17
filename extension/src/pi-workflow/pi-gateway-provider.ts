@@ -18,11 +18,27 @@ interface GatewayModel {
 }
 
 /**
+ * Fallback context window when the gateway's /v1/models carries no window
+ * metadata (context_length / meta.n_ctx). Local servers (llama-server) and
+ * vLLM report it; unknown cloud gateways fall back to this value.
+ * SA4E-369 UAT follow-up: this fallback was once applied UNCONDITIONALLY,
+ * making the budget gates believe a 65536-token llama-server had 128k.
+ */
+export const GATEWAY_DEFAULT_CONTEXT_WINDOW = 128000;
+
+/** A sanitized gateway-reported window, or the documented fallback. */
+function contextWindowOf(reported?: number): number {
+  return typeof reported === 'number' && Number.isFinite(reported) && reported >= 1000
+    ? Math.floor(reported)
+    : GATEWAY_DEFAULT_CONTEXT_WINDOW;
+}
+
+/**
  * Map gateway model entries → pi-ai Model shape (SA4E-289 PI-GATEWAY-MODEL-FIX).
  * Keeps `provider: providerId` so auth lookup matches the seeded credential.
  */
 function buildGatewayModels(
-  entries: Array<{ id: string; name?: string }>,
+  entries: Array<{ id: string; name?: string; contextWindow?: number }>,
   providerId: string,
   baseUrl: string,
   api: string
@@ -36,7 +52,7 @@ function buildGatewayModels(
     reasoning: false,
     input: ['text', 'image'],
     cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 128000,
+    contextWindow: contextWindowOf(m.contextWindow),
     maxTokens: 16384,
   }));
 }

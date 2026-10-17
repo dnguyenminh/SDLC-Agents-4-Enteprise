@@ -66,7 +66,8 @@ function toHistory(messages: ReadonlyArray<Message>): TurnMessage[] {
  * Measures the FULL intra-turn request by REUSING the legacy measure
  * (`measureLegacyTurnTokens`): the replayed system prompt (parity constant
  * included), tool declarations replayed from system messages (OI-4), and
- * every non-system message flattened (chars/4).
+ * every non-system message flattened (conservative wire estimate — chars/3,
+ * upgraded from chars/4 after the SA4E-369 UAT 69,352-token raw 400).
  */
 export function measureIntraTurnRequest(input: IntraTurnGateInput): LegacyTurnMeasurement {
   const messages: Message[] = [...input.messages];

@@ -9,6 +9,7 @@ mcp-server/node_modules/prebuild-install/
 mcp-server/node_modules/**/node-gyp/
 mcp-server/node_modules/.vite/
 out/
+/dist/
 *.vsix
 resources/.analysis/code-intelligence/scripts/nodejs/node_modules/
 resources/.analysis/code-intelligence/scripts/python/__pycache__/

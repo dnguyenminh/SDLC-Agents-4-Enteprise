@@ -1,0 +1,95 @@
+/**
+ * Export + per-message copy styles — SA4E-369.
+ * Split from chat.css (200-line file standard): only export/copy UI lives
+ * here; loaded as a second stylesheet by ChatHtmlBuilder + index.html.
+ */
+
+/* Export menu — mirrors .model-dropdown, anchored above the toolbar-left */
+.input-toolbar-left { position: relative; }
+
+.export-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 4px;
+  background: var(--vscode-editorWidget-background, #1e1e2e);
+  border: 1px solid var(--vscode-panel-border, #333);
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.export-menu.hidden { display: none; }
+
+.export-menu .export-menu-title {
+  padding: 4px 8px;
+  font-size: 11px;
+  opacity: 0.7;
+  user-select: none;
+}
+
+.export-menu button {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  text-align: left;
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: var(--vscode-foreground, inherit);
+  cursor: pointer;
+}
+
+.export-menu button:hover {
+  background: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.15));
+}
+
+/* Per-message copy — hover-revealed, floats at the bubble's top-right */
+.message { position: relative; }
+
+.msg-copy-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 2px 5px;
+  font-size: 11px;
+  line-height: 1;
+  border: 1px solid var(--vscode-panel-border, #333);
+  border-radius: 4px;
+  background: var(--vscode-editorWidget-background, #1e1e2e);
+  color: var(--vscode-foreground, inherit);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 5;
+}
+
+.message:hover .msg-copy-btn { opacity: 0.85; }
+.msg-copy-btn:hover { opacity: 1; background: var(--vscode-list-hoverBackground, rgba(128,128,128,0.2)); }
+
+/* Per-tool-call copy — sits at the header's right edge on hover */
+.tool-call-header { position: relative; padding-right: 34px; }
+
+.tool-copy-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 2px 5px;
+  font-size: 11px;
+  line-height: 1;
+  border: 1px solid var(--vscode-panel-border, #333);
+  border-radius: 4px;
+  background: var(--vscode-editorWidget-background, #1e1e2e);
+  color: var(--vscode-foreground, inherit);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 5;
+}
+
+.tool-call-header:hover .tool-copy-btn { opacity: 0.85; }
+.tool-copy-btn:hover { opacity: 1; background: var(--vscode-list-hoverBackground, rgba(128,128,128,0.2)); }

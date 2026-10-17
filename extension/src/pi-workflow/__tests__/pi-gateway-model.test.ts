@@ -40,6 +40,20 @@ describe('createGatewayProvider — real gateway models (SA4E-289 FIX 4)', () =>
     expect(realFetchGatewayModels).toHaveBeenCalledWith('http://localhost:20128/v1', 'Bearer sk-test');
   });
 
+  it('uses the gateway-reported context window; falls back to 128000 when absent (SA4E-369)', async () => {
+    (globalThis as any).__gatewayModels = [
+      { id: 'qwen-text', name: 'qwen-text', contextWindow: 65536 },
+      { id: 'auto', name: 'Auto' },
+    ];
+    const provider = await createGatewayProvider('openai', 'http://localhost:20128/v1', 'sk-test');
+
+    const models = (provider as unknown as { getModels: () => Array<Record<string, unknown>> }).getModels();
+    // The UAT overflow: llama-server reports n_ctx 65536 — the registry must NOT claim 128000.
+    expect(models.find((m) => m.id === 'qwen-text')?.contextWindow).toBe(65536);
+    // No metadata → documented fallback.
+    expect(models.find((m) => m.id === 'auto')?.contextWindow).toBe(128000);
+  });
+
   it('falls back to the static catalog when the gateway list is unavailable (no crash)', async () => {
     (globalThis as any).__gatewayModels = null;
     const provider = await createGatewayProvider('openai', 'http://localhost:20128/v1', 'sk-test');

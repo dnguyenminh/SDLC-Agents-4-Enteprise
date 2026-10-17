@@ -22,8 +22,8 @@ import { resolveContextBudget } from '../../pi-agent/context-budget-resolver.js'
 import { measureIntraTurnRequest } from '../intra-turn-budget-gate.js';
 import { logger } from '../../logger.js';
 
-/** Tool result payload of ~`tokens` tokens (chars/4). */
-const resultOfTokens = (tokens: number): string => 'x'.repeat(tokens * 4);
+/** Tool result payload of ~`tokens` tokens (conservative wire heuristic — chars/3). */
+const resultOfTokens = (tokens: number): string => 'x'.repeat(tokens * 3);
 
 /** Qwen UAT chain: probe-detected 65536 → usable 58293. */
 const QWEN_NCTX = 65536;

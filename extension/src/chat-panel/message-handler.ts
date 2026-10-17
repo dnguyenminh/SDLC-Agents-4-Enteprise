@@ -8,6 +8,7 @@ import { debugLog } from "../debug-logger";
 import { PiWorkflowAdapter } from "../pi-workflow";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage, AutopilotMode } from "./message-protocol";
 import { buildEnrichedText, routeUserMessage } from "./message-routing";
+import { exportConversationToFile, copyMessageEntryToClipboard } from "./conversation-export-io";
 
 export class MessageHandler {
   private currentModel: string = "auto";
@@ -102,6 +103,20 @@ export class MessageHandler {
         break;
       case "tab:close": break;
       case "tab:rename": break;
+      // SA4E-369: export the conversation / copy a single message for
+      // external AI analysis. IO failures surface as a chat:error (the
+      // provider's handleMessage catch); save-dialog cancel is silent.
+      case "chat:exportConversation":
+        await exportConversationToFile({
+          format: (msg as any).format === "json" ? "json" : "markdown",
+          tab: (msg as any).tab,
+          model: (msg as any).model || this.currentModel,
+          mode: (msg as any).mode || this.currentMode,
+        });
+        break;
+      case "chat:copyMessage":
+        await copyMessageEntryToClipboard({ entry: (msg as any).entry });
+        break;
     }
   }
 
