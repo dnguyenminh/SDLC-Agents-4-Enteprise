@@ -18,6 +18,9 @@ import {
   resolveBinary,
   waitForDevtoolsPort,
   killProcessTree,
+  validateUserDataDir,
+  validatePort,
+  validateTimeoutSeconds,
 } from "./ide-launch-helpers";
 
 // Error type extracted to ide-launch-helpers.ts (BR-18) — re-exported so
@@ -45,21 +48,44 @@ export class IdeSessionManager {
     return this.sessions.get(id);
   }
 
-  async launch(ide: string, ideBinaryPath?: string, userDataDir?: string): Promise<IdeSession> {
+  async launch(
+    ide: string,
+    ideBinaryPath?: string,
+    userDataDir?: string,
+    remoteDebuggingPort?: number,
+    timeoutSeconds?: number,
+  ): Promise<IdeSession> {
     const binary = resolveBinary(ide, ideBinaryPath);
     const profileDir =
       userDataDir ?? path.join(os.tmpdir(), `sa4e-ide-${ide}-${Date.now()}`);
+
+    // Input validation per FSD/TDD
+    validateUserDataDir(profileDir);
     fs.mkdirSync(profileDir, { recursive: true });
 
+    if (remoteDebuggingPort !== undefined) {
+      validatePort(remoteDebuggingPort);
+    }
+
+    const timeoutSec = validateTimeoutSeconds(timeoutSeconds);
+    const timeoutMs = timeoutSec * 1000;
+
+    const debuggingPortArg = remoteDebuggingPort !== undefined
+      ? remoteDebuggingPort
+      : 0;
+
     const child = spawn(binary, [
-      `--remote-debugging-port=0`,
+      `--remote-debugging-port=${debuggingPortArg}`,
       `--user-data-dir=${profileDir}`,
       "--no-first-run",
       "--disable-gpu",
     ], { detached: false, stdio: "ignore" });
 
     try {
-      const port = waitForDevtoolsPort(profileDir);
+      const port = await waitForDevtoolsPort(profileDir, {
+        timeoutMs,
+        explicitPort: remoteDebuggingPort,
+      });
       const session: IdeSession = {
         id: `ide-${++this.counter}`,
         ide,

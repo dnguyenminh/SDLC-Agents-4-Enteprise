@@ -30,8 +30,11 @@ const KNOWN_IDE_BINARIES: Record<string, string[]> = {
 };
 
 const DEVTOOLS_PORT_FILE = "DevToolsActivePort";
-const LAUNCH_WAIT_MS = 30_000;
+const DEFAULT_LAUNCH_WAIT_MS = 60_000;
 const POLL_INTERVAL_MS = 500;
+const MAX_TIMEOUT_SECONDS = 300;
+const MIN_PORT = 1024;
+const MAX_PORT = 65535;
 
 export function resolveBinary(ide: string, overridePath?: string): string {
   if (overridePath) {
@@ -60,17 +63,67 @@ function readDevtoolsPort(userDataDir: string): string | null {
   return port && /^\d+$/.test(port) ? port : null;
 }
 
-export function waitForDevtoolsPort(userDataDir: string): string {
-  const deadline = Date.now() + LAUNCH_WAIT_MS;
+/**
+ * Validate userDataDir accessibility and writability.
+ * Throws IdeLaunchError if not accessible.
+ */
+export function validateUserDataDir(userDataDir: string): void {
+  if (!userDataDir) {
+    return;
+  }
+  try {
+    if (!fs.existsSync(userDataDir)) {
+      // Directory may be created later; ensure parent is writable
+      const parent = path.dirname(userDataDir);
+      fs.accessSync(parent, fs.constants.W_OK);
+      return;
+    }
+    fs.accessSync(userDataDir, fs.constants.R_OK | fs.constants.W_OK);
+  } catch {
+    throw new IdeLaunchError(`UserDataDir not accessible: "${userDataDir}"`);
+  }
+}
+
+/**
+ * Validate remote debugging port range.
+ */
+export function validatePort(port: number): void {
+  if (!Number.isInteger(port) || port < MIN_PORT || port > MAX_PORT) {
+    throw new IdeLaunchError(`Remote debugging port must be between ${MIN_PORT} and ${MAX_PORT}`);
+  }
+}
+
+/**
+ * Validate timeout seconds (max 300s).
+ */
+export function validateTimeoutSeconds(timeoutSeconds?: number): number {
+  const seconds = timeoutSeconds ?? 60;
+  if (!Number.isInteger(seconds) || seconds <= 0 || seconds > MAX_TIMEOUT_SECONDS) {
+    throw new IdeLaunchError(`timeoutSeconds must be >0 and <= ${MAX_TIMEOUT_SECONDS}`);
+  }
+  return seconds;
+}
+
+export async function waitForDevtoolsPort(userDataDir: string, options?: { timeoutMs?: number; explicitPort?: number }): Promise<string> {
+  // If explicit port provided, return immediately for deterministic launch
+  if (options?.explicitPort !== undefined) {
+    return String(options.explicitPort);
+  }
+
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_LAUNCH_WAIT_MS;
+  const deadline = Date.now() + timeoutMs;
+
   while (Date.now() < deadline) {
     const port = readDevtoolsPort(userDataDir);
     if (port) {
       return port;
     }
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, POLL_INTERVAL_MS);
+    // Replace Atomics.wait with setTimeout-based polling
+    await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
+
   throw new IdeLaunchError(
-    `IDE did not expose DevToolsActivePort within ${LAUNCH_WAIT_MS / 1000}s`,
+    `IDE did not expose DevToolsActivePort within ${timeoutMs / 1000}s`,
   );
 }
 
