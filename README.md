@@ -66,6 +66,16 @@ MIT
 
 ## Changelog
 
+### v1.53.9 (2026-10-18)
+
+**SA4E-368/369 UAT follow-up — UAT 17/10: context window bị resolve nhầm 8192 (thật: 131.072) → tool pool bị cắt còn 12 tool + turn REJECT "mất tool"**
+
+- 🔬 **Reproduce trong code (manual test CDP trên Kiro thật)**: `openai-provider.ts` khởi tạo `contextWindowTokens = 8192` placeholder cho local server; `getDetectedContextWindowHelper` cache luôn placeholder này vào `state.detectedWindow` **trước khi** async probe (fetch `/v1/models`, timeout 5s, parser `meta.n_ctx`) kịp chạy → budget co còn 5.536 → lean tool loadout cắt toolset + turn-start REJECT (5572 > 5536)
+- 🛠 **F1 — probe không cache placeholder**: `getDetectedContextWindowHelper` chỉ được đọc/cache `provider.getContextWindow()` khi probe thật đã chạy (`probeDone === true`); trước đó trả undefined cho resolver chain xử lý
+- 🛠 **F2 — hết placeholder 8192**: local server khởi tạo `contextWindowTokens = 0` (0 = chưa detect; registry → default 8192 của resolver chain đảm nhiệm fallback); cloud giữ 128.000
+- 🛠 **F3 — probe tự hồi phục**: probe fail (vd. model đang JIT-load, `meta: null` như 23:20:50 tối qua) → **không khóa** `probeDone`, retry tối đa 3 turn; + fallback parse `--ctx-size` từ `status.args` của gateway LM Studio khi `meta.n_ctx` thiếu (model đang load vẫn đọc được ctx từ launch args)
+- 🧪 Tests mới: model-detect (meta.n_ctx / context_length precedence / args-fallback / non-fatal), probe (placeholder-not-cached / probeDone gate / retry≤3 / no-detect-fn lock); full suite + tsc + eslint + smoke xanh; vsix 1.53.9 install Kiro
+
 ### v1.53.8 (2026-10-17)
 
 **UAT 17/10 (run 20:19) — "bây giờ không chạy được luôn": model "trả bài" nguyên văn ghi chú nén context, turn kết thúc tức thì với 0 tool call**

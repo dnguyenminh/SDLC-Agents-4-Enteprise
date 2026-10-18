@@ -28,7 +28,10 @@ export class OpenAIProvider extends BaseLlmProvider {
     this.apiBase = validateProviderBaseUrl((baseUrl || DEFAULT_API_BASE).replace(/\/$/, ""));
     this.defaultModel = defaultModel || DEFAULT_MODEL;
     // Set context window based on whether this is a local server (LM Studio) or cloud
-    this.contextWindowTokens = this.isLocalServer() ? 8192 : 128000;
+    // SA4E-370: local servers start at 0 (not-yet-detected) — the async probe or
+    // the resolver chain (registry → default) supplies the real window, so the
+    // 8192 placeholder can no longer be cached as "detected".
+    this.contextWindowTokens = this.isLocalServer() ? 0 : 128000;
   }
 
   /** Resolve the effective model: prefer explicit override, then configured default,

@@ -96,7 +96,8 @@ describe("OpenAIProvider — context window", () => {
   it("uses local defaults and updates from the models endpoint for local servers", async () => {
     const fetchMock = stubFetch(async () => jsonResponse({ data: [{ id: "m", context_length: 32000 }] }));
     const provider = new OpenAIProvider(() => Promise.resolve("k"), "http://localhost:1234/v1");
-    expect(provider.getContextWindow()).toBe(8192);
+    // SA4E-370: local starts at 0 (not-yet-detected), never a fake 8192 placeholder.
+    expect(provider.getContextWindow()).toBe(0);
     await provider.detectContextWindow();
     expect(provider.getContextWindow()).toBe(32000);
     expect(fetchMock.mock.calls[0][0]).toBe("http://localhost:1234/v1/models");
