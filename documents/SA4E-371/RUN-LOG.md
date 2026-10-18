@@ -16,6 +16,12 @@
 - QA session ses_eb15ee78affe0VpuAD6X7WOQWc: STP/STC/TEST-REPORT hoàn tất, 5/5 PASS
 
 ## 2026-10-18 18:30 Audit & Fix
-- SM: Cập nhật STATUS.json completedAt, testing.status=done, lastUpdated=2026-10-18T11:33:47.528Z
+- SM: Cập nhật STATUS.json completedAt, testing.status=done
 - SM: Cập nhật RUN-LOG.md với chi tiết mốc hoàn thành
-- SM: Verify KB ingest
+
+## 2026-10-18 19:00 SDLC Diagram Compliance
+- BA ses_eb1118007ffemPf1dHCpiPho4y: Tạo BRD.md + diagrams business-flow.drawio/png, use-case.drawio/png, ingest KB
+- TA ses_eb1116ce8ffen2zn4x1rPn2SGk: Tạo FSD.md + diagrams system-context.drawio/png, sequence.drawio/png, state.drawio/png, ingest KB
+- SA ses_eb11159f0ffeE2NmGzjqLqaspd: Tạo TDD.md + diagrams architecture.drawio/png, component.drawio/png, ingest KB
+- QA ses_eb111479affe9TLKVv7AV6raM0: Bổ sung STP.md diagrams test-coverage.drawio/png, test-execution-flow.drawio/png, ingest KB
+- SM: Cập nhật STATUS.json phases requirements/specification/design/test_planning done

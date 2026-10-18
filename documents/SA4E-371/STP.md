@@ -85,6 +85,8 @@ Automated unit tests verify keywords presence in prompts. Manual review verify T
 - 100% test cases passed
 - All 5 guardrails verified for 7 roles
 
+![Test Execution Flow](diagrams/test-execution-flow.png)
+
 ---
 
 ## 3. Test Scope
@@ -103,6 +105,8 @@ Automated unit tests verify keywords presence in prompts. Manual review verify T
 | # | Feature | Reason |
 |---|---------|--------|
 | 1 | UI rendering test | Out of scope Phase 4 |
+
+![Test Coverage](diagrams/test-coverage.png)
 
 ---
 
@@ -148,4 +152,12 @@ Pass Rate target ≥ 100%
 ---
 
 ## 10. Appendix
-Glossary: KB-first, Citation, Evidence-first, No Workaround, Ingest
+
+### Glossary
+KB-first, Citation, Evidence-first, No Workaround, Ingest
+
+### Appendix Diagram Index
+| # | Diagram Name | File Path | Description |
+|---|--------------|-----------|-------------|
+| 1 | Test Coverage Overview | diagrams/test-coverage.drawio | Test coverage across requirements × test levels with color coding |
+| 2 | Test Execution Flow | diagrams/test-execution-flow.drawio | Test execution pipeline with entry/exit criteria and defect feedback loop |

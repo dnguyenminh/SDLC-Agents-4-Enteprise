@@ -216,7 +216,14 @@ GUARDRAILS:
 - [ ] Knowledge ingested after completion
 - [ ] Quality gate passed
 
-### 6. Ingestion
+### 6. Diagram Index
+| # | Diagram | File | Purpose |
+|---|---------|------|---------|
+| 1 | Prompt Template Architecture | PROMPT-TEMPLATE-ARCHITECTURE.drawio | Tổng quan kiến trúc prompt template với guardrails và luồng SDLC |
+
+![Prompt Template Architecture](PROMPT-TEMPLATE-ARCHITECTURE.png)
+
+### 7. Ingestion
 Document này sẽ được ingest vào KB với tags: sdlc, prompt-template, anti-hallucination, SA4E-371
 
 ### 7. Architecture Diagram Reference

@@ -52,5 +52,12 @@ Kết quả: Test Files 1 passed, Tests 20 passed
 - Implementation summary đã ingest vào KB với tags implementation, SA4E-371.
 - Mem Ingest ID: TBD (cập nhật sau khi ingest)
 
+## Diagram Index
+| # | Diagram | File | Purpose |
+|---|---------|------|---------|
+| 1 | Prompt Template Architecture | PROMPT-TEMPLATE-ARCHITECTURE.drawio | Tổng quan kiến trúc prompt template với guardrails và luồng SDLC |
+
+![Prompt Template Architecture](../PROMPT-TEMPLATE-ARCHITECTURE.png)
+
 ## Tóm tắt
 System prompt của chatbox đã được refactor từ hardcode sang file templates `prompts/*.md` với guardrails evidence-first, KB-first, citation, tool usage, no workaround, ingest kinh nghiệm cho 8 role. Test tự động đảm bảo prompt luôn chứa guardrails keywords và load dynamic từ file.

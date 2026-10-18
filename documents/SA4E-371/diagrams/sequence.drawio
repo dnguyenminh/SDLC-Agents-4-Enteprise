@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-10-18T17:30:00.000Z" agent="OpenCode" etag="SA4E-371-sequence" version="22.0.0" type="device">
+  <diagram name="Sequence" id="sequence">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="2" value="User" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="120" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="3" value="ChatPanel" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="80" width="120" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="4" value="AgentConfigurator" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="80" width="160" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="5" value="PromptTemplateService" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="740" y="80" width="160" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="6" value="Knowledge Base" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="300" width="120" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="7" value="1. Send message" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="8" value="2. selectPrompt(role)" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="9" value="3. getPromptForTier()" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="10" value="4. mem_search guardrails" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="11" value="5. Return enriched prompt" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="5" target="4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="12" value="6. Invoke LLM with guardrails" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="4" target="3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="13" value="7. Response with citations" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="3" target="2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

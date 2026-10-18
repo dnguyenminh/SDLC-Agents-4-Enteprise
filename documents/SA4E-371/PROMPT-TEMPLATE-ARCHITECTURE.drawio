@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-10-18T17:30:00.000Z" agent="OpenCode" etag="SA4E-371" version="22.0.0" type="device">
+  <diagram name="Prompt Template Architecture" id="SA4E-371">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="chatbox" value="Chatbox Input&#xa;User Request" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent-config" value="agent-configurator.ts&#xa;AGENT_PROMPTS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="300" y="60" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="template-service" value="PromptTemplateService&#xa;Template Discovery" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="540" y="60" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="guardrails" value="Common Guardrails&#xa;KB-FIRST / CITATION&#xa;EVIDENCE-FIRST / NO WORKAROUND&#xa;INGEST / QUALITY GATES" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="300" y="200" width="240" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="templates" value="Template Matrix&#xa;T-BA-01 / T-SA-01 / T-DEV-01/02/03&#xa;T-QA-01/02/03 / T-DO-01 / T-UI-01 / T-SEC-01" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="60" y="380" width="240" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="phases" value="SDLC Phases&#xa;Phase 1-7&#xa;BA / TA / SA / QA / DEV / DevOps / UI / Security" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="360" y="380" width="240" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="output" value="Agent Output&#xa;BRD/FSD/TDD/STP/STC/UG/DPG/RLN&#xa;+ Knowledge Ingest" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="660" y="380" width="160" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge1" edge="1" parent="1" source="chatbox" target="agent-config">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge2" edge="1" parent="1" source="agent-config" target="template-service">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge3" edge="1" parent="1" source="template-service" target="guardrails">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge4" edge="1" parent="1" source="guardrails" target="templates">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge5" edge="1" parent="1" source="templates" target="phases">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge6" edge="1" parent="1" source="phases" target="output">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
