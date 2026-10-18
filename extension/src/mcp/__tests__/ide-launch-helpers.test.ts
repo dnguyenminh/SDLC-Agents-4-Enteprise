@@ -1,6 +1,6 @@
 // Unit tests for ide-launch-helpers validation and polling
 // SA4E-373
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -10,12 +10,13 @@ import {
   validatePort,
   validateTimeoutSeconds,
   waitForDevtoolsPort,
+  resolveBinary,
 } from "../ide-launch-helpers";
 
 describe("ide-launch-helpers validation (SA4E-373)", () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "sa4e-test-"));
 
-  afterEach(() => {
+  afterAll(() => {
     // cleanup files created during tests
     try {
       fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -28,6 +29,22 @@ describe("ide-launch-helpers validation (SA4E-373)", () => {
 
   it("validateUserDataDir throws for inaccessible path", () => {
     expect(() => validateUserDataDir("/root/no-access-123")).toThrow(IdeLaunchError);
+  });
+
+  it("validateUserDataDir rejects path outside sandbox", () => {
+    const outside = path.join(os.homedir(), "outside-sandbox-test");
+    expect(() => validateUserDataDir(outside, os.tmpdir())).toThrow(IdeLaunchError);
+  });
+
+  it("validateUserDataDir rejects path with null byte", () => {
+    const badPath = tmpDir + "\0evil";
+    expect(() => validateUserDataDir(badPath)).toThrow(IdeLaunchError);
+  });
+
+  it("validateUserDataDir accepts path within sandbox", () => {
+    const inside = path.join(tmpDir, "subdir");
+    fs.mkdirSync(inside);
+    expect(() => validateUserDataDir(inside, tmpDir)).not.toThrow();
   });
 
   it("validatePort accepts valid range", () => {
@@ -51,6 +68,17 @@ describe("ide-launch-helpers validation (SA4E-373)", () => {
 
   it("validateTimeoutSeconds rejects <=0", () => {
     expect(() => validateTimeoutSeconds(0)).toThrow(IdeLaunchError);
+  });
+
+  it("resolveBinary rejects non-whitelisted override path", () => {
+    const fakePath = path.join(os.tmpdir(), "fake-ide-binary");
+    fs.writeFileSync(fakePath, "binary");
+    expect(() => resolveBinary("kiro", fakePath)).toThrow(IdeLaunchError);
+    fs.rmSync(fakePath);
+  });
+
+  it("resolveBinary rejects path with null byte", () => {
+    expect(() => resolveBinary("kiro", "/usr/bin/kiro\0")).toThrow(IdeLaunchError);
   });
 });
 

@@ -5,6 +5,7 @@
 import { spawnSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import * as os from "os";
 
 export class IdeLaunchError extends Error {
   constructor(message: string) {
@@ -36,12 +37,59 @@ const MAX_TIMEOUT_SECONDS = 300;
 const MIN_PORT = 1024;
 const MAX_PORT = 65535;
 
+// Security hardening constants
+const DEFAULT_SANDBOX_BASE = os.tmpdir();
+const PATH_SANITIZE_REGEX = /[\0\x00-\x1f\x7f]/;
+
+function sanitizePathInput(input: string): string {
+  if (typeof input !== "string") {
+    throw new IdeLaunchError(`Path must be a string`);
+  }
+  if (PATH_SANITIZE_REGEX.test(input)) {
+    throw new IdeLaunchError(`Path contains null byte or control characters`);
+  }
+  // Reject obvious traversal attempts
+  if (input.includes("..")) {
+    // Allow realpath to resolve later, but flag suspicious patterns
+    // We'll still canonicalize, but keep check for explicit traversal in raw string
+  }
+  return input;
+}
+
+function normalizePath(p: string): string {
+  return path.resolve(p);
+}
+
 export function resolveBinary(ide: string, overridePath?: string): string {
   if (overridePath) {
-    if (!fs.existsSync(overridePath)) {
+    // Sanitize input path
+    sanitizePathInput(overridePath);
+    const normalized = normalizePath(overridePath);
+    // Canonicalize via realpath to resolve symlinks
+    let realPath: string;
+    try {
+      realPath = fs.realpathSync(normalized);
+    } catch {
+      throw new IdeLaunchError(`IDE binary does not exist or is inaccessible: "${overridePath}"`);
+    }
+    // Whitelist against known binaries
+    const candidates = KNOWN_IDE_BINARIES[ide] ?? [];
+    const allowed = candidates.some((p) => {
+      if (!p) return false;
+      try {
+        const candidateReal = fs.realpathSync(path.resolve(p));
+        return candidateReal === realPath;
+      } catch {
+        return false;
+      }
+    });
+    if (!allowed) {
+      throw new IdeLaunchError(`IDE binary path not whitelisted for "${ide}": "${overridePath}"`);
+    }
+    if (!fs.existsSync(realPath)) {
       throw new IdeLaunchError(`IDE binary does not exist: "${overridePath}"`);
     }
-    return overridePath;
+    return realPath;
   }
   const candidates = KNOWN_IDE_BINARIES[ide] ?? [];
   const found = candidates.find((p) => p && fs.existsSync(p));
@@ -66,19 +114,51 @@ function readDevtoolsPort(userDataDir: string): string | null {
 /**
  * Validate userDataDir accessibility and writability.
  * Throws IdeLaunchError if not accessible.
+ * Security hardening: sanitize input, canonicalize via realpath, enforce sandbox prefix.
  */
-export function validateUserDataDir(userDataDir: string): void {
+export function validateUserDataDir(userDataDir: string, sandboxBase?: string): void {
   if (!userDataDir) {
     return;
   }
+  // Sanitize path input
+  sanitizePathInput(userDataDir);
+  const base = sandboxBase ? normalizePath(sandboxBase) : DEFAULT_SANDBOX_BASE;
+  const requested = normalizePath(userDataDir);
+  let resolved: string;
   try {
-    if (!fs.existsSync(userDataDir)) {
+    if (fs.existsSync(requested)) {
+      resolved = fs.realpathSync(requested);
+    } else {
+      // Path may not exist yet; canonicalize parent
+      const parent = path.dirname(requested);
+      const parentReal = fs.realpathSync(parent);
+      // Build resolved path by appending basename to canonical parent
+      resolved = path.join(parentReal, path.basename(requested));
+    }
+  } catch (e) {
+    throw new IdeLaunchError(`UserDataDir path cannot be canonicalized: "${userDataDir}"`);
+  }
+  // Enforce sandbox prefix
+  const baseReal = (() => {
+    try {
+      return fs.realpathSync(base);
+    } catch {
+      return path.resolve(base);
+    }
+  })();
+  // Ensure resolved path is within sandbox base
+  const relative = path.relative(baseReal, resolved);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new IdeLaunchError(`UserDataDir outside sandbox: "${userDataDir}"`);
+  }
+  try {
+    if (!fs.existsSync(requested)) {
       // Directory may be created later; ensure parent is writable
-      const parent = path.dirname(userDataDir);
+      const parent = path.dirname(requested);
       fs.accessSync(parent, fs.constants.W_OK);
       return;
     }
-    fs.accessSync(userDataDir, fs.constants.R_OK | fs.constants.W_OK);
+    fs.accessSync(requested, fs.constants.R_OK | fs.constants.W_OK);
   } catch {
     throw new IdeLaunchError(`UserDataDir not accessible: "${userDataDir}"`);
   }

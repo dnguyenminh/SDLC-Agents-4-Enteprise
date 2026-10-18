@@ -59,8 +59,8 @@ export class IdeSessionManager {
     const profileDir =
       userDataDir ?? path.join(os.tmpdir(), `sa4e-ide-${ide}-${Date.now()}`);
 
-    // Input validation per FSD/TDD
-    validateUserDataDir(profileDir);
+    // Input validation per FSD/TDD with sandbox enforcement
+    validateUserDataDir(profileDir, os.tmpdir());
     fs.mkdirSync(profileDir, { recursive: true });
 
     if (remoteDebuggingPort !== undefined) {
@@ -76,6 +76,7 @@ export class IdeSessionManager {
 
     const child = spawn(binary, [
       `--remote-debugging-port=${debuggingPortArg}`,
+      `--remote-debugging-address=127.0.0.1`,
       `--user-data-dir=${profileDir}`,
       "--no-first-run",
       "--disable-gpu",
