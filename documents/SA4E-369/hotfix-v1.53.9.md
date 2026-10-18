@@ -40,5 +40,6 @@ Chuỗi lỗi trong code:
 
 ## Notes
 
+- **Independent confirmation (second run, 18/10 16:26 ICT, isolated profile `kiro-uat3`)**: cùng prompt → Context Usage **3%** (arc dashoffset 48.762/50.27, class `safe` — chỉ khớp maxTokens≈131.072; 8.192 sẽ ~42% + class `critical`), **63 TOOL / 34 FILE / 1 CMD** giữa turn (98 calls: 86 ✓), 0 REJECT, 0 tombstone. Turn dừng chủ động sau khi đủ bằng chứng (turn thật chạy 100+ calls cần nhiều lượt Approve — profile sạch không có per-tool trust; cửa sổ thật có "Allow all" pattern nên không bị). Env note: fresh profile chưa login backend → KB/bridge tools giới hạn (env-only, như run 1).
 - SM coordination artifact ban đầu đặt nhầm vào `documents/SA4E-370/` (Epic "Custom Agents" — workstream khác, đã có trên Jira id 14185); hotfix record chuyển về đây. Epic SA4E-370 không bị đụng đến.
 - Svelte "Agentic Chat" panel 404 (`out/webview/main.js`) xác nhận là lỗi CŨ (thiếu trong VSIX cả v1.53.7) — SA4E-85 build Vite không nằm trong prepublish; theo dõi riêng, không thuộc hotfix này.
