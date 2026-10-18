@@ -1,5 +1,7 @@
 .github/**
 src/**
+!src/pi-agent/prompts/**
+!src/pi-agent/prompts/*.md
 scripts/**
 *.ts
 *.map

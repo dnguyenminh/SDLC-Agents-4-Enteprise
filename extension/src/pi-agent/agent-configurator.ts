@@ -14,8 +14,22 @@ export const ALLOWED_ROLES: AgentRole[] = ['SM', 'BA', 'SA', 'DEV', 'QA', 'DevOp
 
 // Agent prompts are loaded dynamically from extension/src/pi-agent/prompts/*.md
 // Previously hardcoded AGENT_PROMPTS moved to file templates for SA4E-371.
+// AGENT_PROMPTS is re-exported for backward compatibility with existing tests.
+// If prompt files are missing (e.g., not packaged in vsix), fallback to DEFAULT_AGENT_PROMPT
+// to ensure graceful degradation and avoid turn explosion.
 
 export const DEFAULT_AGENT_PROMPT = 'SDLC Agent – complete the assigned SDLC phase task and enforce quality gates.';
+
+export const AGENT_PROMPTS: Record<AgentRole, string> = {
+  SM: '',
+  BA: '',
+  SA: '',
+  DEV: '',
+  QA: '',
+  DevOps: '',
+  UI: '',
+  Security: '',
+};
 
 export class ValidationError extends Error {
   constructor(message: string) {
@@ -61,6 +75,12 @@ export function getSystemPromptForRole(role: AgentRole): string {
   }
   // Fallback for missing files – preserves previous behavior
   return DEFAULT_AGENT_PROMPT;
+}
+
+// Initialize AGENT_PROMPTS for backward compatibility with tests
+// Populate with actual prompts, fallback to DEFAULT_AGENT_PROMPT if file missing
+for (const role of ALLOWED_ROLES) {
+  AGENT_PROMPTS[role] = getSystemPromptForRole(role);
 }
 
 /**
