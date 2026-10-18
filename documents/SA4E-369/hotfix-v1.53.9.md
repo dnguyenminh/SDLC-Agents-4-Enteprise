@@ -36,7 +36,7 @@ Chuỗi lỗi trong code:
 | GATE-verify | Full suite **389 files / 3.066 tests PASS**; tsc 0 errors; eslint 0 errors; smoke:bundle PASSED |
 | Bundle check | `--ctx-size` fallback + `attempts` + zero-init đều có trong minified bundle |
 | GATE-ship | vsix 1.53.9 packaged (1881 files) + `kiro --install-extension --force` OK |
-| Gate-UAT | ⏳ PENDING OPERATOR — Reload Window Kiro → retest chat: tool pool đầy đủ, budget từ 131.072, không REJECT |
+| Gate-UAT | ✅ **PASSED** — MANUAL CDP UAT 18/10 trên Kiro thật (isolated profile `kiro-uat2`, seed cùng settings lmstudio/qwen-text): gửi prompt *"Review toàn bộ các file của workspace"* → **turn chạy thật**: `tabMaxTokens=131072` (DOM, trước fix là 8192 placeholder), **47 tool calls (44 ✓ / 3 ✗)**, 14 file, điểm activity "33 TOOL, 14 FILE", KHÔNG `PI_CONTEXT_BUDGET_EXCEEDED`, KHÔNG tombstone; backend "Logged in as admin" + MCP Wrapper :9181 Running. Note phụ: 1 bubble `HTTP 401` ở profile lạnh (KB/auth call trước khi auto-login xong — env-only, cửa sổ chính login sẵn không gặp; không thuộc scope v1.53.9) |
 
 ## Notes
 
