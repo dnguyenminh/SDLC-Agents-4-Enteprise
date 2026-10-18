@@ -66,7 +66,7 @@
     },
     "testing": {
       "status": "completed",
-      "gateRuns": "run5 390/3071 PASS → run6 3 fail (1 flip S1f + 2 nợ SA4E-371) → run7 sau adoption",
+      "gateRuns": "run5 390/3071 PASS → run6 3 fail (1 flip S1f + 2 nợ SA4E-371) → run7 392/3077 (3075 PASS, 2 SA4E-371 debt)",
       "uat": {
         "verdict": "PASS",
         "environment": "Kiro.exe kiro-uat3 profile, CDP 9337→9342, llama-server :1234 direct, extension v1.53.10",
@@ -78,8 +78,8 @@
       }
     },
     "deployment": {
-      "status": "not_started",
-      "note": "vsix 1.53.10 build+install Kiro; commit treo chờ user gật đầu push (12 commit backlog)"
+      "status": "commit_ready",
+      "note": "vsix 1.53.10 build+install Kiro; commit SA4E-372 ready (include BR-18 webview split + all feature files + 2 test files); EXCLUDE: eslint.config.js + resources/.code-intel/** + 7 webview-assets deletions (other workstream); await user push decision"
     }
   },
   "requirementsSource": {

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- CSP injected by ChatPanelProvider.getHtml() at runtime -->
     <link rel="stylesheet" href="chat.css">
+    <link rel="stylesheet" href="chat-blocks.css">
+    <link rel="stylesheet" href="export.css">
     <title>Chat Panel</title>
 </head>
 <body>
@@ -51,6 +53,12 @@
                         <button class="toolbar-btn" id="ctx-btn" title="Add context (#)">#</button>
                         <button class="toolbar-btn" id="attach-btn" title="Attach file">&#x1F4CE;</button>
                         <button class="toolbar-btn" id="stop-btn" title="Stop" style="display:none;">&#x23F9;</button>
+                        <button class="toolbar-btn" id="export-btn" title="Export conversation (for AI analysis)">&#8681;</button>
+                        <div class="export-menu hidden" id="export-menu">
+                            <div class="export-menu-title">Export this conversation</div>
+                            <button data-format="markdown">Markdown (.md)</button>
+                            <button data-format="json">JSON (.json)</button>
+                        </div>
                     </div>
                     <div class="input-toolbar-right">
                         <button class="model-selector" id="model-btn">
@@ -127,8 +135,36 @@
             </div>
         </div>
     </div>
+    <!-- Load order matters (no bundler): see ChatHtmlBuilder.SCRIPTS -->
+    <script src="markdown-highlight.js"></script>
+    <script src="markdown-blocks.js"></script>
     <script src="markdown-renderer.js"></script>
     <script src="graph-viz.js"></script>
-    <script src="chat.js"></script>
+    <script src="export-ui.js"></script>
+    <script src="chat-core.js"></script>
+    <script src="chat-context-usage.js"></script>
+    <script src="chat-tabs.js"></script>
+    <script src="chat-tabs-ui.js"></script>
+    <script src="chat-input.js"></script>
+    <script src="chat-attachments.js"></script>
+    <script src="chat-toolbar.js"></script>
+    <script src="chat-model.js"></script>
+    <script src="chat-inbox.js"></script>
+    <script src="chat-send.js"></script>
+    <script src="chat-messages.js"></script>
+    <script src="chat-cycle.js"></script>
+    <script src="chat-stream.js"></script>
+    <script src="chat-tools.js"></script>
+    <script src="chat-tool-helpers.js"></script>
+    <script src="chat-toolcall.js"></script>
+    <script src="chat-toolupdate.js"></script>
+    <script src="chat-chips.js"></script>
+    <script src="chat-pipeline.js"></script>
+    <script src="chat-codeactions.js"></script>
+    <script src="chat-tabsync.js"></script>
+    <script src="chat-steering.js"></script>
+    <script src="chat-slash.js"></script>
+    <script src="chat-slash-ui.js"></script>
+    <script src="chat-init.js"></script>
 </body>
 </html>
