@@ -4,6 +4,7 @@ import {
   validatePromptMode,
   buildResourceLoaderOptions,
   getSystemPromptForRole,
+  selectPrompt,
   ALLOWED_ROLES,
   simulateAgentSession,
   ValidationError,
@@ -41,6 +42,24 @@ describe('agent-configurator', () => {
     it('returns prompt containing role name', () => {
       const prompt = getSystemPromptForRole('BA');
       expect(prompt).toContain('Business Analyst');
+    });
+
+    it('SA4E-371: prompt contains anti-hallucination guardrails', () => {
+      const roles: ('BA' | 'SA' | 'DEV' | 'QA' | 'DevOps' | 'UI' | 'Security')[] = ['BA', 'SA', 'DEV', 'QA', 'DevOps', 'UI', 'Security'];
+      const keywords = ['anti-hallucination', 'evidence-first', 'KB-first', 'citation', 'tool usage', 'no workaround', 'Ingest kinh nghiệm'];
+      for (const role of roles) {
+        const prompt = getSystemPromptForRole(role);
+        for (const kw of keywords) {
+          expect(prompt.toLowerCase()).toContain(kw.toLowerCase());
+        }
+      }
+    });
+
+    it('SA4E-371: selectPrompt returns prompt with guardrails', () => {
+      const prompt = selectPrompt('gpt-4o', 'DEV', { promptMode: 'append' });
+      expect(prompt.toLowerCase()).toContain('anti-hallucination');
+      expect(prompt.toLowerCase()).toContain('evidence-first');
+      expect(prompt.toLowerCase()).toContain('kb-first');
     });
   });
 
