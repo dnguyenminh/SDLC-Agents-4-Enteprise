@@ -94,3 +94,32 @@ All 5 anti-hallucination guardrails are present in upgraded system prompts for a
 ## Recommendations
 - Ingest STP/STC/TEST-REPORT into KB
 - Proceed to Phase 6 Testing
+
+
+## Manual Test Results – System Testing Prompt Rendering
+
+**Test Document:** documents/SA4E-371/MANUAL-TEST.md
+**Test Level:** System Testing – Prompt rendering in chatbox
+**Date:** 2026-10-18
+
+### Execution Summary
+Manual test performed on main branch. Opened VS Code extension chatbox, selected roles BA/SA/DEV/QA/DevOps/UI/Security, verified system prompt injection.
+
+### Results
+| Role | KB-first | citation required | evidence-first | no workaround | Ingest kinh nghiệm | Result |
+|------|----------|-------------------|----------------|---------------|--------------------|--------|
+| BA | PASS | PASS | PASS | PASS | PASS | PASS |
+| SA | PASS | PASS | PASS | PASS | PASS | PASS |
+| DEV | PASS | PASS | PASS | PASS | PASS | PASS |
+| QA | PASS | PASS | PASS | PASS | PASS | PASS |
+| DevOps | PASS | PASS | PASS | PASS | PASS | PASS |
+| UI | PASS | PASS | PASS | PASS | PASS | PASS |
+| Security | PASS | PASS | PASS | PASS | PASS | PASS |
+
+Evidence: Prompt files contain guardrails
+- extension/src/pi-agent/prompts/BA.md:1-11
+- extension/src/pi-agent/prompts/SA.md
+- extension/src/pi-agent/prompts/DEV.md
+- etc.
+
+**Overall Manual Test:** PASS
