@@ -86,7 +86,8 @@ export type ChatWebviewToExtMessage =
   /** SA4E-369: copy ONE message (or one tool call) as Markdown to the clipboard. */
   | { type: "chat:copyMessage"; entry: Record<string, unknown> }
   | { type: "ready" }
-  | { type: "refresh" };
+  | { type: "refresh" }
+  | { type: "chat:chatHistory" };
 
 // === Extension → Webview Messages ===
 
@@ -111,8 +112,8 @@ export type ChatExtToWebviewMessage =
   | { type: "tab:updated"; payload: { tabs: Array<{ id: string; name: string; messages: unknown[]; tokenCount: number; maxTokens: number }>; activeTabId: string } }
   | { type: "tab:contextUpdate"; payload: { tabId: string; tokenCount: number; maxTokens: number; percentage: number; threshold: string } }
   | { type: "chat:steeringLoaded"; rules: Array<{ name: string; file: string }> }
-  | { type: "chat:agentsLoaded"; agents: Array<{ id: string; name: string; description: string }> }
+  | { type: "chat:agentsLoaded"; agents: Array<{ id: string; name: string; description: string; role?: string; phase?: string; model?: string; personaBody: string }> }
   | { type: "chat:hookTriggered"; hook: { name: string; type: string; status: "running" | "completed" | "skipped" } }
   | { type: "chat:contextUsage"; payload: ContextUsagePayload }
-  | { type: "chat:agentSwitched"; agentId: string | null; agentName: string }
+  | { type: "chat:agentSwitched"; agentId: string | null; agentName: string; success: boolean; tabId?: string; sessionRole?: string; sessionPhase?: string; error?: string }
   | { type: "serverStatus"; status: "connected" | "disconnected" | "failed" };

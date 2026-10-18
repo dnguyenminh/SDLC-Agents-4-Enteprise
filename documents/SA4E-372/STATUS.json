@@ -25,6 +25,46 @@
       "file": "RUN-LOG.md",
       "author": "sm-agent",
       "note": "SM file"
+    },
+    {
+      "file": "BRD.md",
+      "author": "ba-agent",
+      "note": "Business Requirements (compressed mode)"
+    },
+    {
+      "file": "FSD.md",
+      "author": "ba-agent + ta-agent",
+      "note": "Functional Spec (compressed mode)"
+    },
+    {
+      "file": "TDD.md",
+      "author": "sa-agent",
+      "note": "Technical Design (compressed mode)"
+    },
+    {
+      "file": "STP.md",
+      "author": "qa-agent",
+      "note": "System Test Plan (compressed mode)"
+    },
+    {
+      "file": "STC.md",
+      "author": "qa-agent",
+      "note": "System Test Cases (compressed mode)"
+    },
+    {
+      "file": "UG.md",
+      "author": "ui-agent",
+      "note": "User Guide"
+    },
+    {
+      "file": "DPG.md",
+      "author": "devops-agent",
+      "note": "Deployment Guide"
+    },
+    {
+      "file": "RLN.md",
+      "author": "devops-agent",
+      "note": "Release Notes"
     }
   ],
   "phases": {
@@ -66,7 +106,7 @@
     },
     "testing": {
       "status": "completed",
-      "gateRuns": "run5 390/3071 PASS → run6 3 fail (1 flip S1f + 2 nợ SA4E-371) → run7 392/3077 (3075 PASS, 2 SA4E-371 debt)",
+      "gateRuns": "run5 390/3071 PASS → run6 3 fail (1 flip S1f + 2 nợ SA4E-371) → run7 392/3077 (3075 PASS, 2 SA4E-371 debt) → run8 397/3100 (3100 PASS, 0 fail)",
       "uat": {
         "verdict": "PASS",
         "environment": "Kiro.exe kiro-uat3 profile, CDP 9337→9342, llama-server :1234 direct, extension v1.53.10",
@@ -74,12 +114,12 @@
         "R2_evidence": "sticky click tool block → data-user-managed=1 + toolData.userManaged=true → RELOAD → block replay Expanded (duy nhất 1 managed entry); còn lại auto-collapse all-terminal",
         "R3_evidence": "reload restore per-cycle order + thinkingUser + old-format compat (fused pi, 103 tool blocks replay chuẩn terminal-collapsed)",
         "anomaly_rootCaused": "turn chết 'HTTP 401' do PUT /api/v1/threads/:id/checkpoint 401 (backend auth missing trong profile UAT) × saveCheckpoint re-throw → soft-fail S1e (bằng chứng exthost instrumentation --inspect-extensions wrap global fetch)",
-        "externalDebt": "SA4E-371: ui-scenarios.manual.test.ts + compaction.summary fail (c475d27 refactor AGENT_PROMPTS → file templates); prompt files không đóng gói (out/prompts thiếu) — graceful fallback, ngoài scope"
+        "externalDebt": "SA4E-371: RESOLVED 2026-10-18 — ui-scenarios.manual.test.ts + compaction.summary fixed via AGENT_PROMPTS backward compatibility + .vscodeignore prompts packaging. Commit eda4c38. Tests green. **GAP-7 RESOLVED 2026-10-19: chat:chatHistory protocol handler implemented.**"
       }
     },
     "deployment": {
       "status": "commit_ready",
-      "note": "vsix 1.53.10 build+install Kiro; commit SA4E-372 ready (include BR-18 webview split + all feature files + 2 test files); EXCLUDE: eslint.config.js + resources/.code-intel/** + 7 webview-assets deletions (other workstream); await user push decision"
+      "note": "vsix 1.53.10 build+install Kiro; commit SA4E-372 ready (include BR-18 webview split + all feature files + 3 test files); EXCLUDE: eslint.config.js + resources/.code-intel/** + 7 webview-assets deletions (other workstream); await user push decision"
     }
   },
   "requirementsSource": {

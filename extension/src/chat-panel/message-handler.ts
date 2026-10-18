@@ -37,6 +37,9 @@ export class MessageHandler {
   async handle(msg: ChatWebviewToExtMessage): Promise<void> {
     debugLog(` MessageHandler.handle: type="${msg.type}"`);
     switch (msg.type) {
+      case "chat:chatHistory":
+        await this.handleChatHistory();
+        break;
       case "ready":
       case "refresh":
         await this.handleReady();
@@ -119,6 +122,20 @@ export class MessageHandler {
     }
   }
 
+  private async handleChatHistory(): Promise<void> {
+    const engine = this.getEngine();
+    // Access the store via the adapter's protected store property
+    const store = (engine as any).store;
+    if (!store) return;
+    
+    const history = store.getHistory ? store.getHistory() : [];
+    
+    this.sendToWebview({
+      type: "chat:chatHistory",
+      messages: history || [],
+    } as any);
+  }
+
   private async handleReady(): Promise<void> {
     this.onReady?.();
     const pipelines = await this.getEngine().listPersistedPipelines();
@@ -191,8 +208,19 @@ export class MessageHandler {
     if (node) { this.sendToWebview({ type: "chat:nodeDetails", node, recentOutputs: [] }); }
   }
 
-  /** SA4E-186: Route SELECT_AGENT to engine and confirm to webview. */
+  /** SA4E-186: Route SELECT_AGENT to engine and confirm to webview with wiring result. */
   private async handleSelectAgent(agentId: string | null): Promise<void> {
-    if (agentId) { await this.getEngine().selectAgent(agentId); }
+    if (!agentId) { return; }
+    const result = await this.getEngine().selectAgent(agentId);
+    this.sendToWebview({
+      type: 'chat:agentSwitched',
+      agentId: result.agentId,
+      agentName: result.agentName,
+      success: result.success,
+      tabId: result.tabId,
+      sessionRole: result.sessionRole,
+      sessionPhase: result.sessionPhase,
+      error: result.error,
+    } as any);
   }
 }
