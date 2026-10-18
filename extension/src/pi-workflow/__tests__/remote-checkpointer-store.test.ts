@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { KbRemoteCheckpointerStore, ensureUuidV4, deriveHmacKey } from '../remote-checkpointer-store.js';
 import type { PipelineState } from '../types/pi-workflow-state.js';
+import { debugError, debugLog } from '../../debug-logger.js';
+
+vi.mock('../../debug-logger.js', () => ({
+  debugError: vi.fn(),
+  debugLog: vi.fn(),
+}));
 
 describe('KbRemoteCheckpointerStore', () => {
   let mockKnowledgeClient: any;
@@ -48,7 +54,12 @@ describe('KbRemoteCheckpointerStore', () => {
     expect(payload.messages).toEqual([{ role: 'user', content: 'hello' }]);
   });
 
-  it('surfaces error when saveCheckpoint fails instead of silently swallowing', async () => {
+  it('does not kill the turn when saveCheckpoint fails (fail-open, logged)', async () => {
+    // SA4E-372 UAT evidence (extension-host live trace): a failing remote PUT
+    // /threads/:uuid/checkpoint (HTTP 401 in the logon-less UAT profile) used to re-throw
+    // here, killing engine.executeTurn and discarding the whole LLM turn including every
+    // already-streamed chunk. Semantic reversal vs the old "surface errors" contract:
+    // the remote checkpoint mirror is best-effort — fail-open and log only.
     const pipelineState: PipelineState = {
       ticketKey: 'SA4E-289',
       threadId: 'SA4E-289-fail',
@@ -56,7 +67,9 @@ describe('KbRemoteCheckpointerStore', () => {
     };
     mockKnowledgeClient.saveCheckpoint.mockRejectedValueOnce(new Error('Network failure'));
 
-    await expect(store.saveCheckpoint(pipelineState.threadId, pipelineState)).rejects.toThrow('Network failure');
+    await expect(store.saveCheckpoint(pipelineState.threadId, pipelineState)).resolves.toBeUndefined();
+    expect(debugError).toHaveBeenCalledTimes(1);
+    expect(debugLog).toHaveBeenCalledWith(expect.stringContaining('checkpoint save skipped (fail-open)'));
   });
 
   it('loads valid checkpoint and validates via Zod safeParse', async () => {

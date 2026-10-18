@@ -1,0 +1,115 @@
+{
+  "ticket": "SA4E-372",
+  "type": "Story",
+  "summary": "Chat blocks: separate tool/thinking per loop + sticky collapse semantics + per-workspace full transcript persistence",
+  "priority": "High",
+  "labels": [
+    "chatbox",
+    "chat-blocks",
+    "persistence",
+    "ux"
+  ],
+  "jiraUrl": "https://jiraassist.atlassian.net/browse/SA4E-372",
+  "jiraStatus": "To Do",
+  "currentPhase": "testing_done_commit_pending",
+  "relatedTickets": [
+    "SA4E-369"
+  ],
+  "documents": [
+    {
+      "file": "STATUS.json",
+      "author": "sm-agent",
+      "note": "SM file"
+    },
+    {
+      "file": "RUN-LOG.md",
+      "author": "sm-agent",
+      "note": "SM file"
+    }
+  ],
+  "phases": {
+    "requirements": {
+      "status": "completed",
+      "note": "Chế độ nén: R1/R2/R3 verbatim (Jira description SA4E-372) + rootCauseEvidence file:line đã có sẵn khi tạo ticket — không cần BRD riêng"
+    },
+    "specification": {
+      "status": "completed",
+      "note": "Chế độ nén (user duyệt 'làm tiếp đi'): renderer-only scope, thiết kế nằm trong code comments + RUN-LOG; BA/TA/SA bị vượt qua một cách có chủ ý"
+    },
+    "ui_design": {
+      "status": "completed",
+      "note": "Chế độ nén: mockup skip — anchor trực tiếp vào UX v1.53.9 hiện có, chỉ thay đổi cấu trúc block"
+    },
+    "design": {
+      "status": "completed",
+      "note": "Chế độ nén: cycle machinery (chat-cycle.js), R2 all-terminal collapse, sticky data-user-managed, checkpoint fail-open, orphan adoption — TDD skip"
+    },
+    "feedback_loop": {
+      "status": "completed",
+      "iterations": 2,
+      "maxIterations": 5,
+      "note": "Iter 1: QA review 9/10 → S1d fix toàn bộ; Iter 2: UAT trace phát hiện 2 defect (checkpoint kill-turn +legacy orphan tools) → S1e–S1h"
+    },
+    "test_planning": {
+      "status": "completed",
+      "note": "Chế độ nén: qa-agent test kế hoạch nội tuyến 10 kịch bản, ánh xạ AC1–AC10"
+    },
+    "implementation": {
+      "status": "completed",
+      "rounds": ["S1 per-cycle machinery", "S1b ChatHtmlBuilder wiring", "S1c gate-fix 200ln", "S1d QA defects", "S1e checkpoint soft-fail", "S1f contract flip", "S1g orphan adoption (R1 legacy)", "S1h think-only replay parity"],
+      "files": ["webview-assets/chat/chat-cycle.js (new, 199ln)", "webview-assets/chat/chat-blocks.css (new, 44ln)", "webview-assets/chat/chat-stream.js (87ln)", "webview-assets/chat/chat-tools.js (per-cycle rewrite)", "webview-assets/chat/chat-toolcall.js (197ln)", "webview-assets/chat/chat-tool-helpers.js (198ln)", "webview-assets/chat/chat-toolupdate.js", "webview-assets/chat/chat-messages.js (112ln)", "webview-assets/chat/chat-pipeline.js", "webview-assets/chat/chat-core.js", "webview-assets/chat/chat-tabsync.js", "src/chat-panel/ChatHtmlBuilder.ts (runtime wiring)", "src/pi-workflow/remote-checkpointer-store.ts (122ln, checkpoint soft-fail)"],
+      "note": "Tất cả file ≤200 physical lines (BR-18); webview chat split leftovers (BR-18 e9c6779) ride cùng commit — không có chúng repo không build được panel"
+    },
+    "user_guide": {
+      "status": "not_started",
+      "note": "Hoãn lại — UI tính năng mô tả nội bộ, README đã ghi changelog"
+    },
+    "testing": {
+      "status": "completed",
+      "gateRuns": "run5 390/3071 PASS → run6 3 fail (1 flip S1f + 2 nợ SA4E-371) → run7 sau adoption",
+      "uat": {
+        "verdict": "PASS",
+        "environment": "Kiro.exe kiro-uat3 profile, CDP 9337→9342, llama-server :1234 direct, extension v1.53.10",
+        "R1_evidence": "turn multi-cycle model-driven (grep+read): DOM USER→THINK(c1)→TOOLS[2 col]→THINK(c2)→ASSISTANT; persisted user,assistant:pi:c1,tool,tool,assistant:pi:c2",
+        "R2_evidence": "sticky click tool block → data-user-managed=1 + toolData.userManaged=true → RELOAD → block replay Expanded (duy nhất 1 managed entry); còn lại auto-collapse all-terminal",
+        "R3_evidence": "reload restore per-cycle order + thinkingUser + old-format compat (fused pi, 103 tool blocks replay chuẩn terminal-collapsed)",
+        "anomaly_rootCaused": "turn chết 'HTTP 401' do PUT /api/v1/threads/:id/checkpoint 401 (backend auth missing trong profile UAT) × saveCheckpoint re-throw → soft-fail S1e (bằng chứng exthost instrumentation --inspect-extensions wrap global fetch)",
+        "externalDebt": "SA4E-371: ui-scenarios.manual.test.ts + compaction.summary fail (c475d27 refactor AGENT_PROMPTS → file templates); prompt files không đóng gói (out/prompts thiếu) — graceful fallback, ngoài scope"
+      }
+    },
+    "deployment": {
+      "status": "not_started",
+      "note": "vsix 1.53.10 build+install Kiro; commit treo chờ user gật đầu push (12 commit backlog)"
+    }
+  },
+  "requirementsSource": {
+    "note": "Follow-up sau UAT extension v1.53.9 (workstream chatbox) — user phát hiện UX/persist sai với 3 yêu cầu R1/R2/R3 (giữ nguyên ý user trong Jira description SA4E-372). Root-cause đã được Explore điều tra 2026-10-18 với evidence file:line trong extension/ — downstream BA/TA/SA không cần điều tra lại, chỉ cần verify + thiết kế trên nền evidence này.",
+    "requirementR1": "Tách block tool-call và block thinking theo từng vòng loop (think -> act): mỗi loop là block thinking riêng + nhóm tool-call riêng; một turn có thể gồm nhiều loop tuần tự; KHÔNG gộp tất cả tool/thinking của turn chung 1 container",
+    "requirementR2": "Collapse semantics: (a) KHÔNG tự collapse trong khi streaming/updating; (b) expand default khi bắt đầu gọi tool; (c) auto-collapse chỉ khi các tool trong block XONG; (d) sticky user preference — user expand thì block không tự collapse again; (e) toàn bộ block/message/AI response lưu lại xem được miễn tab chưa close khỏi chatbox",
+    "requirementR3": "Persist theo workspace: toàn bộ transcript (messages + tool blocks + thinking + error) persist per-workspace và restore đầy đủ khi mở lại tab/panel — case chính là webview bị destroy/recreate. Hiện trạng chỉ giữ message cuối cùng là sai yêu cầu.",
+    "rootCauseEvidence": [
+      "extension/ chat-tools.js getOrCreateToolContainer/finalizeToolContainer — toolContainer per-TURN gộp toàn bộ tool của turn (không chia theo loop) — vi phạm R1",
+      "chat-tools.js:112-118 — auto-collapse ĐANG update khi count >= TOOL_COLLAPSE_THRESHOLD — vi phạm R2; không có sticky user-expand flag",
+      "chat-stream.js:53-55 — thinking nằm trong node bubble stream, auto-collapse khi answer bắt đầu — không tách theo loop",
+      "chat-messages.js:36-53 — replay entry.thinking dạng block — không tách theo loop",
+      "chat-tabsync.js saveStateToDisk (chat:saveState, debounce 500ms) -> ChatStateManager.saveChatState -> workspaceState('chatPanel.state') — per-workspace OK nhưng chỉ lưu/transcript một phần — vi phạm R3",
+      "Restore flow: webview 'ready' -> restoreChatState -> tab:updated {tabs(messages), activeTabId, messageHistory} -> handleTabsUpdated -> switchToTab replay",
+      "restoreEngineHistory chỉ nạp last-20 user/assistant cho LLM — không restore UI transcript",
+      "message-protocol.ts:98 — protocol chat:chatHistory đã định nghĩa nhưng CHƯA ai sử dụng (dead protocol) — cần điều tra gap thực tế khi làm FSD/TDD"
+    ]
+  },
+  "suggestedAcceptanceCriteria": [
+    "AC1 (R1): Mỗi vòng loop think->act trong một turn hiển thị thành [block thinking loop N] + [nhóm tool-call loop N] riêng biệt, đúng thứ tự diễn ra",
+    "AC2 (R1): Replay từ state lưu trữ giữ nguyên cấu trúc tách block (không trộn lại khi restore)",
+    "AC3 (R2): Trong lúc streaming, block tool/thinking không tự collapse; auto-collapse chỉ xảy ra sau khi các tool trong block kết thúc (fix chat-tools.js:112-118)",
+    "AC4 (R2): Khi bắt đầu gọi tool, block + các tool ở trạng thái expanded mặc định",
+    "AC5 (R2): User expand block -> sticky: block không tự collapse lại trong streaming lẫn sau khi xong",
+    "AC6 (R2): Toàn bộ nội dung cửa sổ chat (messages, AI responses, tool blocks, thinking, error) xem lại được sau khi mở lại panel/tab, miễn tab chưa bị close khỏi chatbox",
+    "AC7 (R3): Transcript đầy đủ persist theo workspace — mỗi message/tool-block/thinking/error đều còn nguyên, không chỉ message cuối",
+    "AC8 (R3): Case chính — webview destroy/recreate -> restore đầy đủ transcript như trước khi destroy",
+    "AC9 (Cross): Gap protocol chat:chatHistory (message-protocol.ts:98) được giải quyết — hoặc được sử dụng hiệu quả hoặc cleanup với rationale rõ trong TDD",
+    "AC10 (Cross): No regression — các chatbox test hiện có vẫn green; thêm test case persist/restore cho scenario destroy/recreate"
+  ],
+  "lastUpdated": "2026-10-18T17:20:24+07:00",
+  "lastCommentProcessed": "2026-10-18T17:20:24+07:00"
+}

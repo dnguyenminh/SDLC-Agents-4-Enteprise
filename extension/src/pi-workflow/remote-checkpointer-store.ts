@@ -112,8 +112,11 @@ export class KbRemoteCheckpointerStore implements RemoteCheckpointerStore {
       });
       debugLog(`[KbRemoteCheckpointerStore] Checkpoint saved successfully for thread ${threadId}`);
     } catch (err) {
-      debugError(`[KbRemoteCheckpointerStore] saveCheckpoint failed for thread ${threadId}`, err as Error);
-      throw err;
+      // UAT-fix SA4E-372: a remote checkpoint save failure must never kill the turn —
+      // the transcript already lives in the webview + workspaceState; the remote mirror
+      // is best-effort, symmetric with getCheckpoint's fail-safe.
+      debugError(`[KbRemoteCheckpointerStore] saveCheckpoint failed for thread ${threadId} (status=${(err as any).status ?? 'n/a'})`, err as Error);
+      debugLog('[KbRemoteCheckpointerStore] checkpoint save skipped (fail-open)');
     }
   }
 }

@@ -16,15 +16,18 @@ export class ChatHtmlBuilder {
    *  4. graph-viz.js           — pipeline graph widget (window.PipelineGraphViz)
    *  5. export-ui.js           — export menu + copy buttons (window.ChatExportUI)
    *  6. chat-core.js           — vscode API + window.ChatState namespace (MUST be first chat script)
-   *  7..27 chat-* modules      — feature slices registering onto window.ChatState
-   *  28. chat-init.js          — initial renderTabBar() + "ready" handshake (MUST be last)
+   *  7..28 chat-* modules      — feature slices registering onto window.ChatState
+   *                            (chat-cycle.js MUST precede chat-stream.js — chat-stream
+   *                             calls S.openCycle/ensureBubble at runtime; classic scripts
+   *                             execute in document order)
+   *  29. chat-init.js          — initial renderTabBar() + "ready" handshake (MUST be last)
    */
   private static readonly SCRIPTS: string[] = [
     "markdown-highlight.js", "markdown-blocks.js", "markdown-renderer.js",
     "graph-viz.js", "export-ui.js",
     "chat-core.js", "chat-context-usage.js", "chat-tabs.js", "chat-tabs-ui.js",
     "chat-input.js", "chat-attachments.js", "chat-toolbar.js", "chat-model.js",
-    "chat-inbox.js", "chat-send.js", "chat-messages.js", "chat-stream.js",
+    "chat-inbox.js", "chat-send.js", "chat-messages.js", "chat-cycle.js", "chat-stream.js",
     "chat-tools.js", "chat-tool-helpers.js", "chat-toolcall.js", "chat-toolupdate.js",
     "chat-chips.js", "chat-pipeline.js", "chat-codeactions.js", "chat-tabsync.js",
     "chat-steering.js", "chat-slash.js", "chat-slash-ui.js", "chat-init.js",
@@ -34,6 +37,7 @@ export class ChatHtmlBuilder {
     const nonce = getNonce();
     const cspSource = webview.cspSource;
     const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "chat.css"));
+    const blocksCssUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "chat-blocks.css"));
     const exportCssUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "export.css"));
     const scriptUris = ChatHtmlBuilder.SCRIPTS.map((f) =>
       webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", f))
@@ -49,6 +53,7 @@ export class ChatHtmlBuilder {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src ${cspSource} 'unsafe-inline'; img-src ${cspSource} data:; font-src ${cspSource}; connect-src 'none';">
     <link rel="stylesheet" href="${cssUri}">
+    <link rel="stylesheet" href="${blocksCssUri}">
     <link rel="stylesheet" href="${exportCssUri}">
     <title>Chat Panel</title>
 </head>

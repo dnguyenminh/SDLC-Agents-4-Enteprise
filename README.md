@@ -66,6 +66,15 @@ MIT
 
 ## Changelog
 
+### v1.53.10 (2026-10-18)
+
+**SA4E-372 — Chat blocks: tách block theo vòng loop (thinking ↔ tool-call), collapse semantics đúng, persist/restore per-workspace đầy đủ**
+
+- 🔄 **Per-cycle blocks (R1)**: mỗi model response trong turn = 1 nhóm riêng — block Thinking + bubble answer text + nhóm tool-call của cycle đó; hết fuse cả turn vào 1 bubble/1 container (turn 103 calls cũ chỉ hiện 1 thinking + 1 bubble)
+- 🎛 **Collapse semantics (R2)**: block đang update không tự collapse; tool expand default lúc gọi; tự collapse chỉ khi mọi tool terminal; user expand tay → sticky, không bao giờ auto-collapse nữa (flag data-user-managed, sống qua replay)
+- 💾 **Persist per workspace (R3)**: entries per-cycle được lưu theo thứ tự thời gian vào tab.messages → workspaceState("chatPanel.state"); replay tái tạo đúng cấu trúc N nhóm; restore nền mà vẫn tương thích data cũ (1 entry/turn)
+- 🧪 Engine không đổi (đã stream `thinking`/`token`/`toolCall` đủ chi tiết); renderer-side cycle machinery (chat-cycle.js + chat-blocks.css mới; chat.css không phình to)
+
 ### v1.53.9 (2026-10-18)
 
 **SA4E-368/369 UAT follow-up — UAT 17/10: context window bị resolve nhầm 8192 (thật: 131.072) → tool pool bị cắt còn 12 tool + turn REJECT "mất tool"**

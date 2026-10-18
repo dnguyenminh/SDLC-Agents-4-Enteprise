@@ -1,0 +1,49 @@
+/*
+ * SA4E-371 — Styles (thin layer over chat.css compose-only)
+ * Covers: thinking-block expanded/collapsed (streaming vs done states),
+ * per-cycle tool container accents, sticky user-choice indicators.
+ *
+ * Rules: ONLY additive selectors — chat.css (legacy) owns the base
+ * .thinking-block / .ksa247-tool-container / .tool-call-block styling.
+ */
+
+/* ==== Thinking block — streaming state (cycle still live) ==== */
+.thinking-block.streaming .thinking-header .thinking-label::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #c4b5fd;
+  vertical-align: middle;
+}
+
+/* ==== Thinking block — collapsed vs expanded visual states ==== */
+.thinking-block.collapsed .thinking-header .thinking-label {
+  opacity: 0.8;
+}
+.thinking-block:not(.collapsed) .thinking-probe {
+  display: none;
+}
+
+/* Streaming variant gets a violet left rail (matches chat.css base accent) */
+.thinking-block.streaming {
+  border-left-color: #c4b5fd;
+}
+
+/* ==== Sticky (R2): user took control — auto rules never fight back ==== */
+/* Tool block: subtle pin glint on the attached header */
+.tool-call-block[data-user-managed="true"] .tool-call-header {
+  box-shadow: inset 2px 0 0 #818cf8;
+}
+/* Container: manual toggle keeps a warm accent on the chevron/summary */
+.ksa247-tool-container[data-user-managed="true"] .tool-container-summary {
+  box-shadow: inset 2px 0 0 #818cf8;
+}
+
+/* Keyboard focus on the inline streaming content of the active cycle */
+.thinking-body:focus,
+.tool-call-block:focus {
+  outline: none;
+}

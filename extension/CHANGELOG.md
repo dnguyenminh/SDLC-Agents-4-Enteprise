@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.53.11] - 2026-10-18
+
+### Changed
+- **SA4E-371: upgrade system prompts anti-hallucination** — updated system prompts for agents to reduce hallucination, enforce KB-first search, and improve response accuracy.
+
 ## [1.46.2] - 2026-09-28
 
 ### Fixed

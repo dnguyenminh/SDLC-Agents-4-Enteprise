@@ -1,14 +1,10 @@
 /**
- * Markdown Renderer — KSA-210 + KSA-230
- * Safe markdown-to-HTML converter with syntax highlighting.
- * No raw innerHTML of user content; sanitizes links; escapes code blocks.
+ * Markdown Renderer — Syntax Highlighting (KSA-210 + KSA-230)
+ * Per-language token rules + the token-extraction highlighter.
+ * Exposes window.MarkdownHighlight (loaded before markdown-renderer.js).
  */
-
-// eslint-disable-next-line no-unused-vars
-var MarkdownRenderer = (function () {
+window.MarkdownHighlight = (function () {
   "use strict";
-
-  var SAFE_SCHEMES = ["http:", "https:", "vscode:"];
 
   // Simple syntax highlighting rules per language
   var HIGHLIGHT_RULES = {
@@ -66,15 +62,18 @@ var MarkdownRenderer = (function () {
     sh: "bash",
     shell: "bash",
     powershell: "bash",
+    text: [],
+    plaintext: [],
+    txt: [],
     css: [
       { pattern: /(\/\*[\s\S]*?\*\/)/g, cls: "hljs-comment" },
       { pattern: /([.#][\w-]+)/g, cls: "hljs-selector-tag" },
       { pattern: /([\w-]+)\s*:/g, cls: "hljs-property" }
     ],
     html: [
-      { pattern: /(&lt;!--[\s\S]*?--&gt;)/g, cls: "hljs-comment" },
-      { pattern: /(&lt;\/?[\w-]+)/g, cls: "hljs-selector-tag" },
-      { pattern: /([\w-]+)=(&quot;[^&]*&quot;)/g, cls: "hljs-attr" }
+      { pattern: /(\x26lt;!--[\s\S]*?--\x26gt;)/g, cls: "hljs-comment" },
+      { pattern: /(\x26lt;\/?[\w-]+)/g, cls: "hljs-selector-tag" },
+      { pattern: /([\w-]+)=(\x26quot;[^&]*\x26quot;)/g, cls: "hljs-attr" }
     ],
     xml: "html",
     sql: [
@@ -111,95 +110,12 @@ var MarkdownRenderer = (function () {
     rs: "rust"
   };
 
-  function render(text) {
-    if (!text) return "";
-
-    var html = escapeHtml(text);
-
-    // Code blocks with language
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function (_match, lang, code) {
-      var highlighted = highlightCode(code.trim(), lang);
-      var langClass = lang ? ' class="language-' + lang + '"' : "";
-      return '<pre><code' + langClass + '>' + highlighted + '</code></pre>';
-    });
-
-    // Inline code
-    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-    // Bold
-    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-    // Italic
-    html = html.replace(/(?<!\w)\*(.+?)\*(?!\w)/g, "<em>$1</em>");
-    html = html.replace(/(?<!\w)_(.+?)_(?!\w)/g, "<em>$1</em>");
-
-    // Strikethrough
-    html = html.replace(/~~(.+?)~~/g, "<del>$1</del>");
-
-    // Links
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_match, label, url) {
-      if (isSafeUrl(url)) {
-        return '<a href="' + url + '" title="' + label + '">' + label + "</a>";
-      }
-      return label;
-    });
-
-    // Headers
-    html = html.replace(/^#### (.+)$/gm, "<h5>$1</h5>");
-    html = html.replace(/^### (.+)$/gm, "<h4>$1</h4>");
-    html = html.replace(/^## (.+)$/gm, "<h3>$1</h3>");
-    html = html.replace(/^# (.+)$/gm, "<h2>$1</h2>");
-
-    // Checkbox lists
-    html = html.replace(/^- \[x\] (.+)$/gm, '<li class="checked">\u2611 $1</li>');
-    html = html.replace(/^- \[ \] (.+)$/gm, '<li class="unchecked">\u2610 $1</li>');
-
-    // Ordered lists
-    html = html.replace(/^\d+\. (.+)$/gm, "<li>$1</li>");
-
-    // Unordered lists
-    html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
-    html = html.replace(/(<li>[\s\S]*?<\/li>\n?)+/g, function (match) {
-      return "<ul>" + match + "</ul>";
-    });
-
-    // Horizontal rule
-    html = html.replace(/^---$/gm, "<hr>");
-
-    // Blockquote
-    html = html.replace(/^&gt; (.+)$/gm, "<blockquote>$1</blockquote>");
-
-    // Tables
-    html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/gm, function (_m, header, _sep, body) {
-      var ths = header.split("|").filter(function (c) { return c.trim(); });
-      var rows = body.trim().split("\n");
-      var table = "<table><thead><tr>";
-      for (var i = 0; i < ths.length; i++) table += "<th>" + ths[i].trim() + "</th>";
-      table += "</tr></thead><tbody>";
-      for (var r = 0; r < rows.length; r++) {
-        var cells = rows[r].split("|").filter(function (c) { return c.trim(); });
-        table += "<tr>";
-        for (var ci = 0; ci < cells.length; ci++) table += "<td>" + cells[ci].trim() + "</td>";
-        table += "</tr>";
-      }
-      table += "</tbody></table>";
-      return table;
-    });
-
-    // Line breaks
-    html = html.replace(/\n\n/g, "</p><p>");
-    html = "<p>" + html + "</p>";
-    html = html.replace(/<p>\s*<\/p>/g, "");
-
-    return html;
-  }
-
   function highlightCode(code, lang) {
     if (!lang) return code;
 
     var rules = HIGHLIGHT_RULES[lang.toLowerCase()];
     if (typeof rules === "string") rules = HIGHLIGHT_RULES[rules];
-    if (!rules) return code;
+    if (!rules || !rules.length) return code;
 
     var tokens = [];
     var result = code;
@@ -217,38 +133,15 @@ var MarkdownRenderer = (function () {
 
     // Restore tokens
     for (var t = 0; t < tokens.length; t++) {
-      result = result.replace("\x00T" + t + "\x00",
+      result = result.split("\x00T" + t + "\x00").join(
         '<span class="' + tokens[t].cls + '">' + tokens[t].text + '</span>');
     }
 
     return result;
   }
 
-  function escapeHtml(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  function isSafeUrl(url) {
-    try {
-      var parsed = new URL(url, "https://placeholder.local");
-      return SAFE_SCHEMES.indexOf(parsed.protocol) !== -1;
-    } catch (_e) {
-      return false;
-    }
-  }
-
-  function renderPlainText(text) {
-    return escapeHtml(text || "");
-  }
-
   return {
-    render: render,
-    renderPlainText: renderPlainText,
-    escapeHtml: escapeHtml,
+    HIGHLIGHT_RULES: HIGHLIGHT_RULES,
+    highlightCode: highlightCode
   };
 })();
