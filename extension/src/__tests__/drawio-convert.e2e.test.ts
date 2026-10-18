@@ -5,35 +5,10 @@ import * as fs from 'fs';
 import { McpServerManager } from '../mcp-server-manager';
 import { McpBridge } from '../mcp/mcp-bridge';
 import * as vscode from 'vscode';
-
-const TEST_PORT = 9183;
-const TEST_WRAPPER_PORT = 9184;
-const BACKEND_DIR = path.resolve(__dirname, '../../../backend');
-const WORKSPACE_DIR = path.resolve(__dirname, '../../../');
-const DIAGRAMS_DIR = path.join(WORKSPACE_DIR, 'documents/SA4E-124/diagrams');
-const BACKEND_DATA_DIR = path.join(__dirname, '.tmp-e2e-drawio-backend-data');
-
-/**
- * Create a fresh isolated DATA_DIR for the spawned backend. The backend reads
- * its active DB engine from <DATA_DIR>/database.json; without isolation it can
- * inherit machine-local state (e.g. a postgres engine with no reachable server)
- * and exit before printing readiness. Isolation forces the sqlite default, so
- * the E2E backend boots deterministically on any machine (SA4E-336).
- */
-function resetBackendDataDir(): string {
-  fs.rmSync(BACKEND_DATA_DIR, { recursive: true, force: true });
-  fs.mkdirSync(BACKEND_DATA_DIR, { recursive: true });
-  return BACKEND_DATA_DIR;
-}
-
-/** Best-effort removal of the isolated DATA_DIR (never fails the suite). */
-function cleanupBackendDataDir(): void {
-  try {
-    fs.rmSync(BACKEND_DATA_DIR, { recursive: true, force: true });
-  } catch {
-    // Ignore: leftover temp data must not fail the E2E suite.
-  }
-}
+import {
+  TEST_PORT, TEST_WRAPPER_PORT, BACKEND_DIR, WORKSPACE_DIR, DIAGRAMS_DIR,
+  resetBackendDataDir, cleanupBackendDataDir,
+} from './drawio-convert.e2e.fixtures';
 
 // Mock VSCode workspace for the proxy response interceptor
 const mockWorkspaceFolders = [{ uri: { fsPath: WORKSPACE_DIR } }];

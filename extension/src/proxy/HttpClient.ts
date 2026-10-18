@@ -1,29 +1,20 @@
 ﻿/**
  * HttpClient — Auth-injecting HTTP wrapper for backend communication.
  * Handles token injection, 401 retry, timeouts, streaming, and proxy routing.
+ * Subprocess transports and shared contracts live in ./HttpClient/*.
  */
 
 import type { Dispatcher } from "undici";
 import type { IAuthManager } from "../types/server-types";
 import { getProjectId } from "../extension";
 import { ProxyAgentFactory } from "./ProxyAgentFactory";
-import { CurlHttpAdapter } from "./CurlHttpAdapter";
-import { PowerShellHttpAdapter } from "./PowerShellHttpAdapter";
+import { HttpError, type ToolResult } from "./HttpClient/errors";
+import { SubprocessHttp } from "./HttpClient/subprocess";
 
-export class HttpError extends Error {
-  constructor(public readonly statusCode: number, message: string) {
-    super(message);
-    this.name = "HttpError";
-  }
-}
-
-export interface ToolResult {
-  content: Array<{ type: string; text: string }>;
-}
+export { HttpError, type ToolResult } from "./HttpClient/errors";
 
 export class HttpClient {
-  private readonly curlAdapter = new CurlHttpAdapter();
-  private readonly pwshAdapter = new PowerShellHttpAdapter();
+  private readonly subprocess = new SubprocessHttp();
 
   constructor(
     private _baseUrl: string,
@@ -58,12 +49,12 @@ export class HttpClient {
     }
     const url = this._baseUrl + path;
     // Curl mode: bypass fetch(), use curl.exe subprocess
-    if (this.isCurlMode() && !this.shouldBypassCurl(url)) {
-      return this.curlRequest<T>(url, "GET", headers, undefined, timeout);
+    if (this.subprocess.isCurlMode() && !this.subprocess.shouldBypassCurl(url)) {
+      return this.subprocess.curlRequest<T>(url, "GET", headers, undefined, timeout);
     }
     // PowerShell mode: bypass fetch(), use Invoke-WebRequest subprocess
-    if (this.isPowerShellMode() && !this.shouldBypassPwsh(url)) {
-      return this.pwshRequest<T>(url, "GET", headers, undefined, timeout);
+    if (this.subprocess.isPowerShellMode() && !this.subprocess.shouldBypassPwsh(url)) {
+      return this.subprocess.pwshRequest<T>(url, "GET", headers, undefined, timeout);
     }
     const dispatcher = await this.getProxyDispatcher(url);
     const response = await fetch(url, {
@@ -89,12 +80,12 @@ export class HttpClient {
     }
     const url = this._baseUrl + path;
     // Curl mode: bypass fetch(), use curl.exe subprocess
-    if (this.isCurlMode() && !this.shouldBypassCurl(url)) {
-      return this.curlRequest<T>(url, "POST", headers, JSON.stringify(body), timeout);
+    if (this.subprocess.isCurlMode() && !this.subprocess.shouldBypassCurl(url)) {
+      return this.subprocess.curlRequest<T>(url, "POST", headers, JSON.stringify(body), timeout);
     }
     // PowerShell mode: bypass fetch(), use Invoke-WebRequest subprocess
-    if (this.isPowerShellMode() && !this.shouldBypassPwsh(url)) {
-      return this.pwshRequest<T>(url, "POST", headers, JSON.stringify(body), timeout);
+    if (this.subprocess.isPowerShellMode() && !this.subprocess.shouldBypassPwsh(url)) {
+      return this.subprocess.pwshRequest<T>(url, "POST", headers, JSON.stringify(body), timeout);
     }
     const dispatcher = await this.getProxyDispatcher(url);
     const response = await fetch(url, {
@@ -125,8 +116,8 @@ export class HttpClient {
     }
     const url = this._baseUrl + path;
     // PowerShell mode: stream via .NET HttpClient subprocess
-    if (this.isPowerShellMode() && !this.shouldBypassPwsh(url)) {
-      return this.pwshAdapter.streamRequest(url, "POST", headers, JSON.stringify(body), timeout);
+    if (this.subprocess.isPowerShellMode() && !this.subprocess.shouldBypassPwsh(url)) {
+      return this.subprocess.pwshAdapter.streamRequest(url, "POST", headers, JSON.stringify(body), timeout);
     }
     // Note: CurlTransport does not support streaming — fall through to fetch()
     const dispatcher = await this.getProxyDispatcher(url);
@@ -157,13 +148,13 @@ export class HttpClient {
     try {
       const url = this._baseUrl + "/health";
       // Curl mode: use curl for health check too (bypassed URLs skip curl)
-      if (this.isCurlMode() && !this.shouldBypassCurl(url)) {
-        const response = await this.curlAdapter.request(url, "GET", {}, undefined, timeout || 5000);
+      if (this.subprocess.isCurlMode() && !this.subprocess.shouldBypassCurl(url)) {
+        const response = await this.subprocess.curlAdapter.request(url, "GET", {}, undefined, timeout || 5000);
         return response.ok;
       }
       // PowerShell mode: use Invoke-WebRequest for health check too
-      if (this.isPowerShellMode() && !this.shouldBypassPwsh(url)) {
-        const response = await this.pwshAdapter.request(url, "GET", {}, undefined, timeout || 5000);
+      if (this.subprocess.isPowerShellMode() && !this.subprocess.shouldBypassPwsh(url)) {
+        const response = await this.subprocess.pwshAdapter.request(url, "GET", {}, undefined, timeout || 5000);
         return response.ok;
       }
       const dispatcher = await this.getProxyDispatcher(url);
@@ -196,79 +187,5 @@ export class HttpClient {
       // ProxyAgentFactory not initialized or error — fall back to direct
       return undefined;
     }
-  }
-
-  /**
-   * Check if current proxy mode is "curl" (CurlTransport subprocess).
-   * When true, HttpClient delegates to curl.exe instead of fetch().
-   */
-  private isCurlMode(): boolean {
-    return this.curlAdapter.isCurlMode();
-  }
-
-  /**
-   * Check if a target URL should bypass curl proxy (connect directly via fetch).
-   * Uses the same bypass list as manual/system modes.
-   */
-  private shouldBypassCurl(targetUrl: string): boolean {
-    return this.curlAdapter.shouldBypass(targetUrl);
-  }
-
-  /**
-   * Execute request via CurlTransport (subprocess).
-   * Converts response to parsed JSON or throws HttpError.
-   */
-  private async curlRequest<T>(
-    url: string,
-    method: string,
-    headers: Record<string, string>,
-    body?: string,
-    timeout?: number
-  ): Promise<T> {
-    const response = await this.curlAdapter.request(url, method, headers, body, timeout);
-    if (response.status === 401) {
-      throw new HttpError(401, "Unauthorized");
-    }
-    if (!response.ok) {
-      throw new HttpError(response.status, response.body || response.statusText);
-    }
-    return JSON.parse(response.body) as T;
-  }
-
-  /**
-   * Check if current proxy mode is "powershell" (Invoke-WebRequest subprocess).
-   * When true, HttpClient delegates to PowerShell instead of fetch().
-   */
-  private isPowerShellMode(): boolean {
-    return this.pwshAdapter.isPowerShellMode();
-  }
-
-  /**
-   * Check if a target URL should bypass PowerShell proxy (connect directly via fetch).
-   * Uses the same bypass list as manual/system modes.
-   */
-  private shouldBypassPwsh(targetUrl: string): boolean {
-    return this.pwshAdapter.shouldBypass(targetUrl);
-  }
-
-  /**
-   * Execute request via PowerShellTransport (subprocess).
-   * Converts response to parsed JSON or throws HttpError.
-   */
-  private async pwshRequest<T>(
-    url: string,
-    method: string,
-    headers: Record<string, string>,
-    body?: string,
-    timeout?: number
-  ): Promise<T> {
-    const response = await this.pwshAdapter.request(url, method, headers, body, timeout);
-    if (response.status === 401) {
-      throw new HttpError(401, "Unauthorized");
-    }
-    if (!response.ok) {
-      throw new HttpError(response.status, response.body || response.statusText);
-    }
-    return JSON.parse(response.body) as T;
   }
 }

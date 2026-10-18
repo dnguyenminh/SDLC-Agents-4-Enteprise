@@ -7,15 +7,40 @@ import * as vscode from "vscode";
 import { getNonce } from "../mcp-server-manager";
 
 export class ChatHtmlBuilder {
+  /**
+   * Webview script load order — plain browser JS (no bundler), every file
+   * attaches to globals, so the order IS the dependency graph:
+   *  1. markdown-highlight.js  — token rules + highlighter (window.MarkdownHighlight)
+   *  2. markdown-blocks.js     — block/inline rules (window.MarkdownBlocks)
+   *  3. markdown-renderer.js   — MarkdownRenderer facade (global MarkdownRenderer)
+   *  4. graph-viz.js           — pipeline graph widget (window.PipelineGraphViz)
+   *  5. export-ui.js           — export menu + copy buttons (window.ChatExportUI)
+   *  6. chat-core.js           — vscode API + window.ChatState namespace (MUST be first chat script)
+   *  7..27 chat-* modules      — feature slices registering onto window.ChatState
+   *  28. chat-init.js          — initial renderTabBar() + "ready" handshake (MUST be last)
+   */
+  private static readonly SCRIPTS: string[] = [
+    "markdown-highlight.js", "markdown-blocks.js", "markdown-renderer.js",
+    "graph-viz.js", "export-ui.js",
+    "chat-core.js", "chat-context-usage.js", "chat-tabs.js", "chat-tabs-ui.js",
+    "chat-input.js", "chat-attachments.js", "chat-toolbar.js", "chat-model.js",
+    "chat-inbox.js", "chat-send.js", "chat-messages.js", "chat-stream.js",
+    "chat-tools.js", "chat-tool-helpers.js", "chat-toolcall.js", "chat-toolupdate.js",
+    "chat-chips.js", "chat-pipeline.js", "chat-codeactions.js", "chat-tabsync.js",
+    "chat-steering.js", "chat-slash.js", "chat-slash-ui.js", "chat-init.js",
+  ];
+
   static build(webview: vscode.Webview, extensionUri: vscode.Uri): string {
     const nonce = getNonce();
     const cspSource = webview.cspSource;
     const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "chat.css"));
     const exportCssUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "export.css"));
-    const chatJsUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "chat.js"));
-    const exportUiUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "export-ui.js"));
-    const mdRendererUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "markdown-renderer.js"));
-    const graphVizUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", "graph-viz.js"));
+    const scriptUris = ChatHtmlBuilder.SCRIPTS.map((f) =>
+      webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview-assets", "chat", f))
+    );
+    const scriptTags = scriptUris
+      .map((uri) => `<script nonce="${nonce}" src="${uri}"></script>`)
+      .join("\n    ");
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -37,10 +62,7 @@ export class ChatHtmlBuilder {
         <div id="chat-messages" class="hidden"></div>
         ${ChatHtmlBuilder.inputAreaHtml()}
     </div>
-    <script nonce="${nonce}" src="${mdRendererUri}"></script>
-    <script nonce="${nonce}" src="${graphVizUri}"></script>
-    <script nonce="${nonce}" src="${exportUiUri}"></script>
-    <script nonce="${nonce}" src="${chatJsUri}"></script>
+    ${scriptTags}
 </body>
 </html>`;
   }

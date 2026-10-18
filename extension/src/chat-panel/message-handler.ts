@@ -1,26 +1,25 @@
 /**
  * Message Handler --- KSA-210
  * Dispatches incoming webview messages to the appropriate engine actions.
+ * Skill/workspace context resolution lives in ./message-handler/*.
  */
 
-import * as vscode from "vscode";
 import { debugLog } from "../debug-logger";
 import { PiWorkflowAdapter } from "../pi-workflow";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage, AutopilotMode } from "./message-protocol";
 import { buildEnrichedText, routeUserMessage } from "./message-routing";
 import { exportConversationToFile, copyMessageEntryToClipboard } from "./conversation-export-io";
+import {
+  autoResolveSkillContext,
+  isPlainChat,
+  resolveSkillContext,
+  type SkillContextItem,
+} from "./message-handler/skill-context";
+import { resolveWorkspaceContext } from "./message-handler/workspace-context";
 
 export class MessageHandler {
   private currentModel: string = "auto";
   private currentMode: AutopilotMode = "autopilot";
-
-  /**
-   * Safety net (UAT): workspace-intent questions get the workspace root +
-   * top-level listing auto-attached, so the model answers correctly even
-   * when its own file-tool calling is unavailable (gateway w/o tools, etc.).
-   */
-  private static readonly WORKSPACE_INTENT =
-    /workspace|thư mục|thư mục gốc|đang đứng|cấu trúc (thư mục|project|dự án)|liệt kê|toàn bộ|toan bo|tổng thể|tong the|entire|whole|full review|review (source|code|mã nguồn|project|dùm|giùm|giúp)|đọc (file|mã|source|code)|mở file|list (files|folders|directories)|project (structure|root|path)|where am i|current (directory|folder|workspace)/i;
 
   constructor(
     private readonly getEngine: () => PiWorkflowAdapter,
@@ -132,100 +131,9 @@ export class MessageHandler {
     this.sendToWebview({ type: "chat:graphUpdate", nodes });
   }
 
-  private resolveSkillContext(text: string): Array<{ type: string; label: string; content: string }> {
-    const fs = require("fs");
-    const path = require("path");
-    const skillDir = path.join(this.workspaceRoot, ".code-intel", "skills");
-    const result: Array<{ type: string; label: string; content: string }> = [];
-    if (!fs.existsSync(skillDir)) return result;
-    let entries: any[];
-    try { entries = fs.readdirSync(skillDir, { withFileTypes: true }); } catch { return result; }
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      const id = entry.name;
-      const skillFile = path.join(skillDir, id, "SKILL.md");
-      if (!fs.existsSync(skillFile)) continue;
-      const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const re = new RegExp("/skill:" + escaped + "\\b|/" + escaped + "\\b", "g");
-      if (re.test(text)) {
-        try {
-          result.push({ type: "skill", label: id, content: fs.readFileSync(skillFile, "utf-8") });
-        } catch (e) { /* skill file unreadable — skip */ }
-      }
-    }
-    return result;
-  }
-
-  private isPlainChat(text: string): boolean {
-    const t = text.trim();
-    if (/^[A-Z]+-\d+\s+/i.test(t)) return false;
-    if (/^\/[a-z][-a-z]*\s+/i.test(t)) return false;
-    const lc = t.toLowerCase();
-    if (lc === "status" || lc === "resume" || lc === "cancel") return false;
-    return true;
-  }
-
-  private autoResolveSkillContext(text: string): Array<{ type: string; label: string; content: string }> {
-    const fs = require("fs");
-    const path = require("path");
-    const skillDir = path.join(this.workspaceRoot, ".code-intel", "skills");
-    if (!fs.existsSync(skillDir)) return [];
-    let entries: any[];
-    try { entries = fs.readdirSync(skillDir, { withFileTypes: true }); } catch { return []; }
-    const lower = text.toLowerCase();
-    const STOP = new Set(["the", "and", "for", "with", "when", "use", "this", "that", "from", "your", "agent", "will", "into", "have", "are", "you", "our", "via", "how", "what", "which", "each", "other", "based", "such", "than", "then", "them", "they", "their", "about", "these", "those", "should", "must", "can", "may", "not", "but", "all", "any", "per", "within", "across", "between", "during", "using", "used", "also", "more", "most", "some", "only", "over", "under", "after", "before"]);
-    const scored: Array<{ score: number; item: { type: string; label: string; content: string } }> = [];
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      const id = entry.name;
-      const skillFile = path.join(skillDir, id, "SKILL.md");
-      if (!fs.existsSync(skillFile)) continue;
-      let content = "";
-      try { content = fs.readFileSync(skillFile, "utf-8"); } catch { continue; }
-      const m = content.match(/description:\s*["']([^"']+)["']/);
-      const description = m ? m[1] : "";
-      const tokens = (description + " " + id).toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !STOP.has(w));
-      let score = 0;
-      for (const kw of tokens) { if (lower.includes(kw)) score++; }
-      if (score >= 2) {
-        scored.push({ score, item: { type: "skill", label: id, content } });
-      }
-    }
-    if (scored.length === 0) return [];
-    scored.sort((a, b) => b.score - a.score);
-    debugLog(` autoResolveSkillContext: best="${scored[0].item.label}" score=${scored[0].score}`);
-    return [scored[0].item];
-  }
-
-  private async resolveWorkspaceContext(
-    text: string,
-    context?: Array<{ type: string; label: string; path?: string; content?: string }>
-  ): Promise<Array<{ type: string; label: string; content: string }>> {
-    if (!MessageHandler.WORKSPACE_INTENT.test(text)) return [];
-    if ((context ?? []).some((c) => c.type === "file" || c.type === "folder" || c.type === "currentFile")) {
-      return []; // user already attached explicit file context
-    }
-    const folders = vscode.workspace.workspaceFolders;
-    if (!folders || folders.length === 0) return [];
-    const root = folders[0].uri;
-    try {
-      const entries = await vscode.workspace.fs.readDirectory(root);
-      const lines = entries.slice(0, 80).map(([name, type]) =>
-        type === vscode.FileType.Directory ? `${name}/` : name
-      );
-      return [{
-        type: "workspace",
-        label: folders[0].name || "workspace",
-        content: `Workspace root: ${root.fsPath}\nTop-level entries:\n${lines.join("\n")}`,
-      }];
-    } catch {
-      return [{ type: "workspace", label: "workspace", content: `Workspace root: ${root.fsPath}` }];
-    }
-  }
-
   private async handleUserMessage(text: string, context?: Array<{ type: string; label: string; path?: string; content?: string }>): Promise<void> {
-    const skillCtx = this.resolveSkillContext(text);
-    const autoCtx = this.isPlainChat(text) ? this.autoResolveSkillContext(text) : [];
+    const skillCtx: SkillContextItem[] = resolveSkillContext(this.workspaceRoot, text);
+    const autoCtx = isPlainChat(text) ? autoResolveSkillContext(this.workspaceRoot, text) : [];
     const mergedSkills = [...skillCtx];
     for (const a of autoCtx) {
       if (!mergedSkills.some(e => e.label === a.label)) mergedSkills.push(a);
@@ -238,7 +146,7 @@ export class MessageHandler {
     }
     strippedText = strippedText.replace(/\s{2,}/g, " ").trim();
     const finalText = strippedText.length > 0 ? strippedText : "Please follow the provided skill instructions.";
-    const wsCtx = await this.resolveWorkspaceContext(finalText, mergedContext);
+    const wsCtx = await resolveWorkspaceContext(finalText, mergedContext);
     const allContext = [...mergedContext, ...wsCtx];
     const enrichedText = buildEnrichedText(finalText, allContext);
     debugLog(` handleUserMessage: "${finalText.slice(0, 80)}" (context: ${allContext.length} items, explicitSkills: ${skillCtx.length}, autoSkills: ${autoCtx.length}, workspace: ${wsCtx.length})`);
@@ -288,4 +196,3 @@ export class MessageHandler {
     if (agentId) { await this.getEngine().selectAgent(agentId); }
   }
 }
-

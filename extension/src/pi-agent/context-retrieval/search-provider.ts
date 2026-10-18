@@ -7,6 +7,11 @@ import { isLoopbackHost } from '../../config/backend-url';
 import { RetrievalValidationError } from './types';
 import type { ISearchProvider, RetrievalConfig, SearchCandidate } from './types';
 import { MAX_QUERY_CHARS } from '../query-router';
+import { parseSearchText } from './search-parser';
+import type { SearchSource } from './search-parser';
+
+export { parseSearchText } from './search-parser';
+export type { SearchSource } from './search-parser';
 
 export interface McpCaller {
   callMcpWrapper(toolName: string, params: Record<string, unknown>): Promise<unknown>;
@@ -20,60 +25,6 @@ export const SESSION_NONCE_HEADER = 'X-Session-Nonce';
 
 interface McpToolPayload {
   content?: Array<{ type?: string; text?: string }>;
-}
-
-export type SearchSource = 'code_search' | 'mem_search';
-
-export function parseSearchText(text: string, source: SearchSource): SearchCandidate[] {
-  const out: SearchCandidate[] = [];
-  let current: SearchCandidate | undefined;
-  for (const rawLine of (text ?? '').split('\n')) {
-    const line = rawLine.trim();
-    if (!line) continue;
-    current = consumeLine(line, current, out, source);
-  }
-  if (current) out.push(current);
-  return out.filter((c) => c.name.length > 0);
-}
-
-function consumeLine(
-  line: string,
-  current: SearchCandidate | undefined,
-  out: SearchCandidate[],
-  source: SearchSource
-): SearchCandidate | undefined {
-  const head = /^\[([\w-]+)\]\s+(.+)$/.exec(line);
-  if (head) {
-    if (current) out.push(current);
-    return { kind: head[1], name: head[2], filePath: head[2], source };
-  }
-  if (!current) return undefined;
-  applyMeta(current, line);
-  return current;
-}
-
-function applyMeta(candidate: SearchCandidate, line: string): boolean {
-  const file = /^File:\s*(.+?):(\d+)$/.exec(line);
-  if (file) {
-    candidate.filePath = file[1];
-    candidate.startLine = Number(file[2]);
-    return true;
-  }
-  return applyDocMeta(candidate, line);
-}
-
-function applyDocMeta(candidate: SearchCandidate, line: string): boolean {
-  const sig = /^Sig:\s*(.*)$/.exec(line);
-  if (sig) {
-    candidate.signature = sig[1].slice(0, 200);
-    return true;
-  }
-  const doc = /^Doc:\s*(.*)$/.exec(line);
-  if (doc) {
-    candidate.docComment = doc[1].slice(0, 200);
-    return true;
-  }
-  return false;
 }
 
 export function extractText(raw: unknown): string {

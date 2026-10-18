@@ -1,7 +1,9 @@
 /**
- * SA4E-362 — PegaStreamIngester refresh-on-401 retry engine (UT-01..UT-07, UT-14, PBT-01).
+ * SA4E-362 — PegaStreamIngester refresh-on-401 retry engine (UT-01..UT-07, UT-14).
  * Conventions: vi.stubGlobal('fetch'), jsonResponse helper, (ing as any) private access,
  * fake timers for pollUntilComplete (POLL_INTERVAL_MS = 3000). STC v1.1 §3.
+ * (Split from PegaStreamIngester.auth-retry.test.ts — retry-engine concern;
+ *  SEC-02 + PBT-01 live in PegaStreamIngester.auth-error.test.ts.)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { PegaStreamIngester, IngestAuthError } from "../PegaStreamIngester";
@@ -191,84 +193,4 @@ describe("PegaStreamIngester refresh-on-401 — SA4E-362", () => {
     expect(auth.refreshToken).toHaveBeenCalledTimes(1); // không refresh lần 2
   });
 
-  // SEC-02 (3.7) + SECA-01: 401 body/message embedded trong IngestAuthError bị strip CR/LF
-  // (chống log injection) rồi cap ở 200 ký tự — message cuối luôn single-line.
-  it("SEC-02: IngestAuthError caps the embedded 401 body at 200 chars on a single line", async () => {
-    const longMessage = "x".repeat(500);
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse(longMessage, 401))
-      .mockResolvedValueOnce(jsonResponse(longMessage, 401));
-    // submitJob path: text() body 500 chars → error message phải ≤ prefix + 200.
-    const ing = new PegaStreamIngester(URL_BASE, makeProvider());
-    const err = await (ing as any).submitJob(
-      [{ pzInsKey: "R1" }], "proj-1", {}, {}, [], `${URL_BASE}/api/v1/pega/ingest-stream`, () => {},
-    ).catch((e: unknown) => e as IngestAuthError);
-
-    expect(err).toBeInstanceOf(IngestAuthError);
-    expect((err as IngestAuthError).message.length).toBeLessThanOrEqual("Ingest submit failed: HTTP 401 — ".length + 200);
-    expect((err as IngestAuthError).message).toContain("x".repeat(200));
-    expect((err as IngestAuthError).message).not.toContain("x".repeat(201));
-    // SECA-01: multi-line 401 body → single-line message (không log injection)
-    const multilineBody = "line1\r\nEVIL-LOG-LINE\r\nline3";
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse(multilineBody, 401))
-      .mockResolvedValueOnce(jsonResponse(multilineBody, 401));
-    const err2 = await (ing as any).submitJob(
-      [{ pzInsKey: "R2" }], "proj-1", {}, {}, [], `${URL_BASE}/api/v1/pega/ingest-stream`, () => {},
-    ).catch((e: unknown) => e as IngestAuthError);
-
-    expect(err2).toBeInstanceOf(IngestAuthError);
-    expect((err2 as IngestAuthError).message).not.toMatch(/[\r\n]/); // không còn newline
-    expect((err2 as IngestAuthError).message).toContain("line1 EVIL-LOG-LINE line3"); // newlines → space
-  });
-
-  // STC: PBT-01 — property: mọi chuỗi status → fetch ≤ 2, refreshToken ≤ 1, refresh chỉ khi 401 đầu
-  it("PBT-01: property — any status sequence yields ≤2 fetches and ≤1 refresh", async () => {
-    const fc = await import("fast-check");
-    await fc.assert(
-      // Async predicate → fc.asyncProperty (fc.property is sync — would not await the Promise)
-      fc.asyncProperty(
-        fc.array(fc.constantFrom(200, 202, 400, 401, 403, 500, 503), { minLength: 1, maxLength: 8 }),
-        fc.boolean(),
-        async (statuses, refreshOk) => {
-          let fetchCalls = 0;
-          let refreshCalls = 0;
-          const makeRes = (status: number): Response =>
-            ({
-              ok: status >= 200 && status < 300,
-              status,
-              text: async () => "",
-              json: async () => ({}),
-            }) as unknown as Response;
-          vi.stubGlobal("fetch", vi.fn(async () => {
-            const status = fetchCalls < statuses.length ? statuses[fetchCalls] : 200;
-            fetchCalls++;
-            return makeRes(status);
-          }));
-          const auth: IngestAuthProvider = {
-            getTokenSync: () => "stale",
-            refreshToken: async () => { refreshCalls++; return refreshOk ? "fresh" : undefined; },
-          };
-          const ing = new PegaStreamIngester(URL_BASE, auth);
-          await (ing as any).fetchWithAuthRetry(
-            async (token: string | undefined) =>
-              fetch(`${URL_BASE}/api/v1/pega/ingest-rule`, {
-                method: "POST",
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-                body: "{}",
-              }),
-            "rule",
-          );
-          // Invariants (BR-1/BR-2):
-          if (fetchCalls > 2) { throw new Error(`BR-2 violated: fetchCalls=${fetchCalls} statuses=${JSON.stringify(statuses)}`); }
-          if (refreshCalls > 1) { throw new Error(`BR-2 violated: refreshCalls=${refreshCalls} statuses=${JSON.stringify(statuses)}`); }
-          if (statuses[0] !== 401 && refreshCalls !== 0) { throw new Error(`BR-1 violated: refresh on non-401 first response (${statuses[0]})`); }
-          if (refreshCalls === 1 && refreshOk && fetchCalls !== 2) { throw new Error(`BR-2 violated: refresh OK but fetchCalls=${fetchCalls}`); }
-          if (refreshCalls === 1 && !refreshOk && fetchCalls !== 1) { throw new Error(`BR-2 violated: refresh undefined but fetchCalls=${fetchCalls}`); }
-          return true; // fc v4: async predicate phải trả boolean tường minh
-        },
-      ),
-      { numRuns: 100 },
-    );
-  });
 });

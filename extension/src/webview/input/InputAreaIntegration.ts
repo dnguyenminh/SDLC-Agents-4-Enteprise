@@ -4,6 +4,11 @@
  * KSA-254: Slash Command Menu
  * KSA-255: Spinner + Working Indicator
  * KSA-259: Interactive Options
+ *
+ * BR-18: listener/selection/badge handlers live in ./input-area/* — this file
+ * keeps the public class façade (same import path and symbols). Members marked
+ * @internal are exposed only so the extracted submodules operate on the same
+ * instance state; the public API is unchanged.
  */
 
 import { ContextMenuController } from '../context-menu/ContextMenuController';
@@ -12,11 +17,12 @@ import { SpinnerController } from '../spinner/SpinnerController';
 import { SpinnerView } from '../spinner/SpinnerView';
 import { OptionsController } from '../options/OptionsController';
 import { OptionsView } from '../options/OptionsView';
-import { BadgeRenderer } from '../badges/BadgeRenderer';
 import { MessageBridge } from '../bridge/MessageBridge';
-import type { ContextTagBadge, ChatOptionsSignal } from '../protocol';
-import type { SlashSteeringRule } from '../slash-menu/types';
 import type { VsCodeApi } from '../bridge/types';
+import type { InputAreaParts } from './input-area/parts';
+import { setupListeners, setupProcessingListener, setupOptionsListener, setupSteeringListener, setupSkillsListener } from './input-area/listeners';
+import { onAgentSelected, onSteeringSelected, onCommandSelected } from './input-area/selection-handlers';
+import { renderBadge } from './input-area/badge-handlers';
 
 export interface InputAreaIntegrationOptions {
   inputElement: HTMLElement;
@@ -26,16 +32,24 @@ export interface InputAreaIntegrationOptions {
 }
 
 export class InputAreaIntegration {
-  private controller: ContextMenuController;
-  private slashController: SlashMenuController;
-  private spinnerController: SpinnerController;
+  /** @internal BR-18 submodule wiring — do not use outside input-area/* helpers. */
+  readonly inputElement: HTMLElement;
+  /** @internal BR-18 submodule wiring — do not use outside input-area/* helpers. */
+  readonly badgeContainer: HTMLElement;
+  /** @internal BR-18 submodule wiring — do not use outside input-area/* helpers. */
+  readonly vscodeApi: VsCodeApi;
+  /** @internal BR-18 submodule wiring — do not use outside input-area/* helpers. */
+  readonly controller: ContextMenuController;
+  /** @internal BR-18 submodule wiring — do not use outside input-area/* helpers. */
+  readonly slashController: SlashMenuController;
+  /** @internal BR-18 submodule wiring — do not use outside input-area/* helpers. */
+  readonly spinnerController: SpinnerController;
+  /** @internal BR-18 submodule wiring — do not use outside input-area/* helpers. */
+  readonly optionsController: OptionsController;
+  /** @internal BR-18 submodule wiring — do not use outside input-area/* helpers. */
+  readonly hashDetectionEnabled = true;
   private spinnerView: SpinnerView;
-  private optionsController: OptionsController;
   private optionsView: OptionsView;
-  private badgeContainer: HTMLElement;
-  private inputElement: HTMLElement;
-  private hashDetectionEnabled = true;
-  private vscodeApi: VsCodeApi;
   private bridge: MessageBridge;
 
   constructor(options: InputAreaIntegrationOptions) {
@@ -50,7 +64,7 @@ export class InputAreaIntegration {
       {
         container: options.containerElement,
         inputElement: options.inputElement,
-        onBadgeInsert: (badge) => this.renderBadge(badge),
+        onBadgeInsert: (badge) => renderBadge(this, badge),
         onClose: () => this.onMenuClose(),
       },
       this.bridge
@@ -66,9 +80,9 @@ export class InputAreaIntegration {
     this.slashController = new SlashMenuController({
       container: options.containerElement,
       inputElement: options.inputElement,
-      onAgentSelect: (agentName) => this.onAgentSelected(agentName),
-      onSteeringSelect: (rule) => this.onSteeringSelected(rule),
-      onCommandSelect: (commandId) => this.onCommandSelected(commandId),
+      onAgentSelect: (agentName) => onAgentSelected(this, agentName),
+      onSteeringSelect: (rule) => onSteeringSelected(this, rule),
+      onCommandSelect: (commandId) => onCommandSelected(this, commandId),
       onClose: () => this.onMenuClose(),
     });
 
@@ -80,255 +94,11 @@ export class InputAreaIntegration {
       isSpinnerActive: () => this.spinnerController.isProcessing(),
     });
 
-    this.setupListeners();
-    this.setupProcessingListener();
-    this.setupOptionsListener();
-    this.setupSteeringListener();
-    this.setupSkillsListener();
-  }
-
-  private setupListeners(): void {
-    // Detect "#" or "/" typed in input
-    this.inputElement.addEventListener('input', (e) => {
-      const event = e as InputEvent;
-      const text = this.inputElement.textContent || '';
-
-      // KSA-254: Detect '/' trigger (BR-01, BR-02, BR-04)
-      if (event.data === '/' && !this.slashController.isOpen() && !this.controller.isOpen()) {
-        const slashPos = text.lastIndexOf('/');
-        if (slashPos >= 0 && this.slashController.isValidTrigger(text, slashPos)) {
-          this.slashController.open(slashPos);
-          return;
-        }
-      } else if (this.slashController.isOpen()) {
-        this.updateSlashFilter();
-        return;
-      }
-
-      // KSA-252: Detect '#' trigger
-      if (!this.hashDetectionEnabled) return;
-      if (event.data === '#' && !this.controller.isOpen()) {
-        this.controller.open();
-      } else if (this.controller.isOpen()) {
-        this.updateFilter();
-      }
-    });
-
-    // Key events for menu navigation + options navigation
-    this.inputElement.addEventListener('keydown', (e) => {
-      const ke = e as KeyboardEvent;
-
-      // Options keyboard handling first (KSA-259)
-      if (this.optionsController.isVisible()) {
-        const handled = this.optionsController.handleKeyDown(ke);
-        if (handled) {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-      }
-
-      // KSA-254: Slash menu keyboard handling
-      if (this.slashController.isOpen()) {
-        const handled = this.slashController.handleKeyDown(ke);
-        if (handled) {
-          e.preventDefault();
-          e.stopPropagation();
-          return;
-        }
-      }
-
-      // Context menu keyboard handling (KSA-252)
-      if (this.controller.isOpen()) {
-        const handled = this.controller.handleKeyDown(ke);
-        if (handled) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }
-    });
-
-    // Outside click detection
-    document.addEventListener('mousedown', (e) => {
-      const target = e.target as HTMLElement;
-      // KSA-254: Close slash menu on outside click
-      if (this.slashController.isOpen()) {
-        if (!target.closest('.slash-menu')) {
-          this.slashController.close();
-        }
-      }
-      // KSA-252: Close context menu on outside click
-      if (this.controller.isOpen()) {
-        if (!target.closest('.context-menu') && !target.closest('.picker-panel')) {
-          this.controller.close();
-        }
-      }
-    });
-
-    // Badge backspace removal
-    this.inputElement.addEventListener('keydown', (e) => {
-      if ((e as KeyboardEvent).key === 'Backspace' && !this.controller.isOpen() && !this.slashController.isOpen()) {
-        this.handleBadgeBackspace();
-      }
-    });
-  }
-
-  /**
-   * KSA-255: Listen for processing signals from Extension Host.
-   * Handles BOTH protocols:
-   * - chat:processing (original KSA-255 spec: { state: 'start'|'stop', reason })
-   * - chat:workingStatus (actual backend emission: { working: true|false })
-   */
-  private setupProcessingListener(): void {
-    window.addEventListener('message', (event) => {
-      const message = event.data;
-
-      // Handle chat:processing (original protocol from KSA-255 spec)
-      if (message && message.type === 'chat:processing') {
-        if (message.state === 'start') {
-          this.spinnerController.startProcessing();
-          // KSA-259: Auto-dismiss options when processing starts
-          if (this.optionsController.isVisible()) {
-            this.optionsController.dismiss('auto-dismiss');
-          }
-        } else if (message.state === 'stop') {
-          this.spinnerController.stopProcessing(message.reason ?? 'complete');
-          // KSA-259: Show pending options after spinner stops
-          this.optionsController.processPendingOptions();
-        }
-      }
-
-      // Handle chat:workingStatus (actual protocol from backend message-handler)
-      if (message && message.type === 'chat:workingStatus') {
-        if (message.working) {
-          this.spinnerController.startProcessing();
-          // KSA-259: Auto-dismiss options when processing starts
-          if (this.optionsController.isVisible()) {
-            this.optionsController.dismiss('auto-dismiss');
-          }
-        } else {
-          this.spinnerController.stopProcessing('complete');
-          // KSA-259: Show pending options after spinner stops
-          this.optionsController.processPendingOptions();
-        }
-      }
-    });
-  }
-
-  /**
-   * KSA-259: Listen for chat:options signals from Extension Host
-   */
-  private setupOptionsListener(): void {
-    window.addEventListener('message', (event) => {
-      const message = event.data as ChatOptionsSignal;
-      if (message && message.type === 'chat:options') {
-        this.optionsController.showOptions(message);
-      }
-    });
-  }
-
-  /**
-   * KSA-254: Listen for chat:steeringLoaded signal from Extension Host
-   */
-  private setupSteeringListener(): void {
-    window.addEventListener('message', (event) => {
-      const message = event.data;
-      if (message && message.type === 'chat:steeringLoaded' && Array.isArray(message.rules)) {
-        this.slashController.setSteeringRules(message.rules);
-      }
-    });
-  }
-
-  private setupSkillsListener(): void {
-    window.addEventListener('message', (event) => {
-      const message = event.data;
-      if (message && message.type === 'chat:skillsLoaded' && Array.isArray(message.skills)) {
-        this.slashController.setSkillAgents(message.skills);
-      }
-    });
-  }
-
-  /**
-   * KSA-254: Agent selected — insert /agent-name prefix into textarea (BR-24, BR-25)
-   */
-  private onAgentSelected(agentName: string): void {
-    const text = this.inputElement.textContent || '';
-    const triggerIndex = this.slashController.getTriggerIndex();
-    const before = text.substring(0, triggerIndex);
-    const cursorPos = (window.getSelection()?.anchorOffset) ?? text.length;
-    const after = text.substring(cursorPos);
-    const prefix = `/${agentName} `;
-    this.inputElement.textContent = before + prefix + after;
-    // Move cursor after prefix
-    this.setCursorPosition(before.length + prefix.length);
-  }
-
-  /**
-   * KSA-254: Steering rule selected — add context chip (BR-28, BR-29)
-   */
-  private onSteeringSelected(rule: SlashSteeringRule): void {
-    const text = this.inputElement.textContent || '';
-    const triggerIndex = this.slashController.getTriggerIndex();
-    const before = text.substring(0, triggerIndex);
-    const cursorPos = (window.getSelection()?.anchorOffset) ?? text.length;
-    const after = text.substring(cursorPos);
-    this.inputElement.textContent = before + after;
-    this.setCursorPosition(before.length);
-    // Add as context chip via badge system
-    const badge: ContextTagBadge = {
-      id: `slash-steering-${Date.now()}`,
-      type: 'steering',
-      label: rule.name,
-      icon: rule.icon,
-      metadata: { steeringFile: `.code-intel/steering/${rule.file}` },
-    };
-    this.renderBadge(badge);
-  }
-
-  /**
-   * SA4E-193: Command selected — dispatch to extension host for execution
-   */
-  private onCommandSelected(commandId: string): void {
-    const text = this.inputElement.textContent || '';
-    const triggerIndex = this.slashController.getTriggerIndex();
-    const before = text.substring(0, triggerIndex);
-    const cursorPos = (window.getSelection()?.anchorOffset) ?? text.length;
-    const after = text.substring(cursorPos);
-    // Clear the input text after slash command
-    this.inputElement.textContent = before + after;
-    this.setCursorPosition(before.length);
-    // Dispatch command to extension host via vscodeApi
-    this.vscodeApi.postMessage({ type: 'COMMAND_DISPATCH', command: commandId });
-  }
-
-  /**
-   * KSA-254: Update slash menu filter based on text after trigger position
-   */
-  private updateSlashFilter(): void {
-    const text = this.inputElement.textContent || '';
-    const triggerIndex = this.slashController.getTriggerIndex();
-    if (triggerIndex < 0) return;
-    // Extract filter text: everything between '/' trigger and cursor
-    const filterText = text.substring(triggerIndex + 1);
-    // BR-17: If user backspaced past the '/' position, close
-    if (!text.includes('/') || text.length <= triggerIndex) {
-      this.slashController.close();
-      return;
-    }
-    this.slashController.filter(filterText);
-  }
-
-  private setCursorPosition(pos: number): void {
-    const range = document.createRange();
-    const sel = window.getSelection();
-    const textNode = this.inputElement.firstChild;
-    if (textNode) {
-      const safePos = Math.min(pos, textNode.textContent?.length ?? 0);
-      range.setStart(textNode, safePos);
-      range.collapse(true);
-      sel?.removeAllRanges();
-      sel?.addRange(range);
-    }
+    setupListeners(this);
+    setupProcessingListener(this);
+    setupOptionsListener(this);
+    setupSteeringListener(this);
+    setupSkillsListener(this);
   }
 
   /**
@@ -365,42 +135,6 @@ export class InputAreaIntegration {
    */
   private showTimeoutNotification(): void {
     this.vscodeApi.postMessage({ type: 'chat:timeout-notification' });
-  }
-
-  private updateFilter(): void {
-    const text = this.inputElement.textContent || '';
-    const lastHash = text.lastIndexOf('#');
-    if (lastHash >= 0) {
-      const filterText = text.substring(lastHash + 1);
-      this.controller.filter(filterText);
-    }
-  }
-
-  private renderBadge(badge: ContextTagBadge): void {
-    const renderer = this.controller.getBadgeRenderer();
-    const el = renderer.createBadgeElement(badge);
-    this.badgeContainer.appendChild(el);
-    this.removeHashText();
-  }
-
-  private removeHashText(): void {
-    const text = this.inputElement.textContent || '';
-    const lastHash = text.lastIndexOf('#');
-    if (lastHash >= 0) {
-      this.inputElement.textContent = text.substring(0, lastHash);
-    }
-  }
-
-  private handleBadgeBackspace(): void {
-    const badges = this.controller.getBadgeManager().getAll();
-    if (badges.length > 0) {
-      const selection = window.getSelection();
-      if (selection && selection.anchorOffset === 0) {
-        const lastBadge = badges[badges.length - 1];
-        this.controller.getBadgeManager().remove(lastBadge.id);
-        BadgeRenderer.removeBadgeElement(this.badgeContainer, lastBadge.id);
-      }
-    }
   }
 
   private onMenuClose(): void {

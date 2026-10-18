@@ -4,16 +4,11 @@
  *
  * States: CLOSED ↔ OPEN ↔ FILTERING
  * Triggered by '/' at position 0 or after whitespace (BR-01, BR-05)
+ *
+ * State machine, announcer, item mapping and selection live in ./SlashMenuController/*.
  */
 
-import type {
-  SlashMenuState,
-  SlashMenuTrigger,
-  SlashStateTransition,
-  SlashMenuOptions,
-  SlashMenuItem,
-  SlashSteeringRule,
-} from './types';
+import type { SlashMenuState, SlashMenuOptions, SlashMenuItem, SlashSteeringRule } from './types';
 import { SlashMenuView } from './SlashMenuView';
 import {
   SLASH_AGENTS,
@@ -24,36 +19,29 @@ import {
   parseSteeringRules,
   filterSlashItems,
 } from './SlashMenuItems';
-
-const TRANSITIONS: SlashStateTransition[] = [
-  { from: 'CLOSED', to: 'OPEN', trigger: 'SLASH_TYPED' },
-  { from: 'OPEN', to: 'FILTERING', trigger: 'CHAR_TYPED' },
-  { from: 'OPEN', to: 'CLOSED', trigger: 'AGENT_SELECTED' },
-  { from: 'OPEN', to: 'CLOSED', trigger: 'STEERING_SELECTED' },
-  { from: 'OPEN', to: 'CLOSED', trigger: 'DISMISS' },
-  { from: 'FILTERING', to: 'OPEN', trigger: 'FILTER_CLEARED' },
-  { from: 'FILTERING', to: 'CLOSED', trigger: 'AGENT_SELECTED' },
-  { from: 'FILTERING', to: 'CLOSED', trigger: 'STEERING_SELECTED' },
-  { from: 'FILTERING', to: 'CLOSED', trigger: 'DISMISS' },
-];
+import { SlashMenuStateMachine } from './SlashMenuController/transitions';
+import { announceVia, ensureAnnouncer } from './SlashMenuController/announcer';
+import { skillAgentsToMenuItems } from './SlashMenuController/items-sync';
+import {
+  handleSlashKeyDown,
+  isValidSlashTrigger,
+  selectSlashItem,
+} from './SlashMenuController/selection';
 
 export class SlashMenuController {
-  private state: SlashMenuState = 'CLOSED';
+  private sm = new SlashMenuStateMachine();
   private view: SlashMenuView;
   private options: SlashMenuOptions;
   private filterText = '';
   private triggerIndex = -1;
 
-  // Data sources
   private agentItems: SlashMenuItem[];
   private steeringRules: SlashSteeringRule[] = [];
   private steeringItems: SlashMenuItem[] = [];
 
-  // Filtered results
   private visibleAgents: SlashMenuItem[];
   private visibleSteering: SlashMenuItem[] = [];
 
-  // Screen reader announcer
   private announcer: HTMLElement | null = null;
 
   constructor(options: SlashMenuOptions) {
@@ -62,43 +50,19 @@ export class SlashMenuController {
     const allAgents = [...SLASH_AGENTS, ...SKILL_AGENTS];
     this.agentItems = [...agentsToMenuItems(allAgents), ...SLASH_COMMANDS];
     this.visibleAgents = [...this.agentItems];
-    this.setupAnnouncer();
-  }
-
-  private setupAnnouncer(): void {
-    this.announcer = document.getElementById('sr-announcer');
-    if (!this.announcer) {
-      this.announcer = document.createElement('div');
-      this.announcer.id = 'sr-announcer';
-      this.announcer.setAttribute('aria-live', 'polite');
-      this.announcer.setAttribute('aria-atomic', 'true');
-      this.announcer.className = 'sr-only';
-      document.body.appendChild(this.announcer);
-    }
+    this.announcer = ensureAnnouncer();
   }
 
   private announce(message: string): void {
-    if (this.announcer) {
-      this.announcer.textContent = '';
-      requestAnimationFrame(() => {
-        if (this.announcer) this.announcer.textContent = message;
-      });
-    }
-  }
-
-  private transition(trigger: SlashMenuTrigger): boolean {
-    const valid = TRANSITIONS.find((t) => t.from === this.state && t.trigger === trigger);
-    if (!valid) return false;
-    this.state = valid.to;
-    return true;
+    announceVia(this.announcer, message);
   }
 
   getState(): SlashMenuState {
-    return this.state;
+    return this.sm.current;
   }
 
   isOpen(): boolean {
-    return this.state !== 'CLOSED';
+    return this.sm.isOpen();
   }
 
   getTriggerIndex(): number {
@@ -118,44 +82,24 @@ export class SlashMenuController {
    * Update skill agents from extension host
    */
   setSkillAgents(skills: Array<{id:string;label:string;description:string}>): void {
-    const skillAgents = skills.map(s => ({
-      id: s.id,
-      icon: '🧩',
-      label: s.label,
-      agentName: `skill-${s.id}`,
-      description: s.description || 'Skill',
-    }));
-    const allAgents = [...agentsToMenuItems(SLASH_AGENTS), ...skillAgents.map(a => ({
-      id: `agent-${a.id}`,
-      icon: a.icon,
-      label: a.label,
-      description: a.description,
-      itemType: 'agent' as const,
-      agentName: a.agentName,
-    }))];
+    const allAgents = skillAgentsToMenuItems(skills);
     this.agentItems = [...allAgents, ...SLASH_COMMANDS];
-    if (this.state !== 'CLOSED') {
+    if (this.sm.current !== 'CLOSED') {
       this.visibleAgents = [...this.agentItems];
       this.view.updateItems(this.visibleAgents, this.visibleSteering);
     }
   }
 
-  /**
-   * Check if '/' at the given position is a valid trigger (BR-01, BR-05)
-   * Valid: position 0 OR preceded by whitespace
-   * Invalid: mid-word (e.g., "http://")
-   */
+  /** Valid: position 0 OR preceded by whitespace; invalid mid-word (BR-01, BR-05) */
   isValidTrigger(text: string, slashPos: number): boolean {
-    if (slashPos === 0) return true;
-    const charBefore = text[slashPos - 1];
-    return charBefore === ' ' || charBefore === '\t' || charBefore === '\n';
+    return isValidSlashTrigger(text, slashPos);
   }
 
   /**
    * Open the slash popup at the given trigger position
    */
   open(triggerIndex: number): void {
-    if (!this.transition('SLASH_TYPED')) return;
+    if (!this.sm.transition('SLASH_TYPED')) return;
     this.triggerIndex = triggerIndex;
     this.filterText = '';
     this.visibleAgents = [...this.agentItems];
@@ -172,7 +116,7 @@ export class SlashMenuController {
    * Close the popup (BR-22: Escape dismisses)
    */
   close(): void {
-    this.transition('DISMISS');
+    this.sm.transition('DISMISS');
     this.view.destroy();
     this.filterText = '';
     this.triggerIndex = -1;
@@ -186,11 +130,11 @@ export class SlashMenuController {
     this.filterText = text;
 
     if (!text) {
-      this.transition('FILTER_CLEARED');
+      this.sm.transition('FILTER_CLEARED');
       this.visibleAgents = [...this.agentItems];
       this.visibleSteering = [...this.steeringItems];
     } else {
-      if (this.state === 'OPEN') this.transition('CHAR_TYPED');
+      if (this.sm.current === 'OPEN') this.sm.transition('CHAR_TYPED');
       const result = filterSlashItems(this.agentItems, this.steeringItems, text);
       this.visibleAgents = result.agents;
       this.visibleSteering = result.steering;
@@ -205,27 +149,11 @@ export class SlashMenuController {
    * Handle keyboard navigation (BR-18 through BR-22)
    */
   handleKeyDown(event: KeyboardEvent): boolean {
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        this.view.moveHighlight('down');
-        return true;
-      case 'ArrowUp':
-        event.preventDefault();
-        this.view.moveHighlight('up');
-        return true;
-      case 'Enter':
-      case 'Tab':
-        event.preventDefault();
-        this.selectHighlighted();
-        return true;
-      case 'Escape':
-        event.preventDefault();
-        this.close();
-        return true;
-      default:
-        return false;
-    }
+    return handleSlashKeyDown(event, {
+      view: this.view,
+      onSelectHighlighted: () => this.selectHighlighted(),
+      onClose: () => this.close(),
+    });
   }
 
   /**
@@ -242,27 +170,13 @@ export class SlashMenuController {
   }
 
   private selectItem(item: SlashMenuItem): void {
-    if (item.itemType === 'agent') {
-      this.transition('AGENT_SELECTED');
-      this.view.destroy();
-      this.options.onAgentSelect(item.agentName!);
-      this.announce(`Agent selected: ${item.label}`);
-    } else if (item.itemType === 'steering') {
-      this.transition('STEERING_SELECTED');
-      this.view.destroy();
-      const rule = this.steeringRules.find((r) => r.name === item.label);
-      if (rule) {
-        this.options.onSteeringSelect(rule);
-        this.announce(`Steering rule attached: ${item.label}`);
-      }
-    } else if (item.itemType === 'command') {
-      this.transition('AGENT_SELECTED');
-      this.view.destroy();
-      if (this.options.onCommandSelect) {
-        this.options.onCommandSelect(item.id.replace('command-', ''));
-      }
-      this.announce(`Command executed: ${item.label}`);
-    }
+    selectSlashItem(item, {
+      sm: this.sm,
+      view: this.view,
+      options: this.options,
+      announce: (message) => this.announce(message),
+      steeringRules: this.steeringRules,
+    });
     this.filterText = '';
     this.triggerIndex = -1;
   }

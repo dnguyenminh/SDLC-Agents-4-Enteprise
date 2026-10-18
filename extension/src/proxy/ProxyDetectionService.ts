@@ -2,10 +2,22 @@
  * ProxyDetectionService — Cross-platform system proxy auto-detection.
  * Priority: HTTPS_PROXY > HTTP_PROXY > VS Code http.proxy > OS-native detection.
  * OS-native: Windows (netsh), macOS (scutil), Linux (gsettings).
+ * Platform implementations live in ./ProxyDetectionService/*.
  */
 
 import * as vscode from "vscode";
-import { execSync } from "child_process";
+import {
+  detectWindowsProxy as detectWindowsProxyImpl,
+  detectWindowsBypass as detectWindowsBypassImpl,
+} from "./ProxyDetectionService/windows";
+import {
+  detectMacOsProxy as detectMacOsProxyImpl,
+  detectMacOsBypass as detectMacOsBypassImpl,
+} from "./ProxyDetectionService/macos";
+import {
+  detectLinuxProxy as detectLinuxProxyImpl,
+  detectLinuxBypass as detectLinuxBypassImpl,
+} from "./ProxyDetectionService/linux";
 
 /** Result of system proxy detection */
 export interface DetectedProxy {
@@ -103,165 +115,35 @@ export class ProxyDetectionService {
     }
   }
 
-  // --- Windows: PowerShell .NET WebRequest proxy resolution ---
+  // --- Platform delegators (kept as methods — tests invoke them directly) ---
 
+  /** Windows: PowerShell .NET WebRequest proxy resolution with netsh fallback. */
   private detectWindowsProxy(): string | null {
-    try {
-      // Use PowerShell to call .NET WebRequest.GetSystemWebProxy()
-      // This detects WPAD/PAC auto-configured proxies that netsh misses
-      const script = [
-        "$proxy = [System.Net.WebRequest]::GetSystemWebProxy()",
-        "$uri = [Uri]'https://www.google.com'",
-        "$proxyUri = $proxy.GetProxy($uri)",
-        "if ($proxyUri.AbsoluteUri -eq $uri.AbsoluteUri) { Write-Output 'DIRECT' }",
-        "else { Write-Output $proxyUri.AbsoluteUri }",
-      ].join("; ");
-      const output = this.execQuiet(
-        `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "${script.replace(/"/g, '\\"')}"`
-      );
-      const result = output.trim();
-      if (!result || result === "DIRECT") { return null; }
-      return result;
-    } catch {
-      // Fallback to netsh if PowerShell fails
-      return this.detectWindowsProxyNetsh();
-    }
+    return detectWindowsProxyImpl();
   }
 
-  /** Fallback: netsh winhttp (only works when proxy is explicitly set) */
-  private detectWindowsProxyNetsh(): string | null {
-    try {
-      const output = this.execQuiet("netsh winhttp show proxy");
-      const match = output.match(/Proxy Server\(s\)\s*:\s*(.+)/i);
-      if (!match) { return null; }
-      const server = match[1].trim();
-      if (server.toLowerCase().includes("direct access")) { return null; }
-      if (server.includes("=")) { return this.parsePerProtocolProxy(server); }
-      return `http://${server}`;
-    } catch {
-      return null;
-    }
-  }
-
+  /** Windows: netsh winhttp bypass list. */
   private detectWindowsBypass(): string | null {
-    try {
-      const output = this.execQuiet("netsh winhttp show proxy");
-      // Parse: "Bypass List     :  *.local;<local>"
-      const match = output.match(/Bypass List\s*:\s*(.+)/i);
-      if (!match) { return null; }
-      const bypass = match[1].trim();
-      if (bypass.toLowerCase() === "(none)") { return null; }
-      return bypass.split(";").map((s) => s.trim()).filter(Boolean).join(",");
-    } catch {
-      return null;
-    }
+    return detectWindowsBypassImpl();
   }
 
-  // --- macOS: scutil --proxy ---
-
+  /** macOS: scutil --proxy resolution. */
   private detectMacOsProxy(): string | null {
-    try {
-      const output = this.execQuiet("scutil --proxy");
-      // Check HTTPS first, then HTTP
-      const httpsEnabled = /HTTPSEnable\s*:\s*1/i.test(output);
-      if (httpsEnabled) {
-        const host = output.match(/HTTPSProxy\s*:\s*(\S+)/i)?.[1];
-        const port = output.match(/HTTPSPort\s*:\s*(\d+)/i)?.[1];
-        if (host) { return `http://${host}${port ? `:${port}` : ""}`; }
-      }
-      const httpEnabled = /HTTPEnable\s*:\s*1/i.test(output);
-      if (httpEnabled) {
-        const host = output.match(/HTTPProxy\s*:\s*(\S+)/i)?.[1];
-        const port = output.match(/HTTPPort\s*:\s*(\d+)/i)?.[1];
-        if (host) { return `http://${host}${port ? `:${port}` : ""}`; }
-      }
-      return null;
-    } catch {
-      return null;
-    }
+    return detectMacOsProxyImpl();
   }
 
+  /** macOS: scutil ExceptionsList bypass. */
   private detectMacOsBypass(): string | null {
-    try {
-      const output = this.execQuiet("scutil --proxy");
-      // ExceptionsList : <array> { 0 : *.local  1 : 169.254/16 }
-      const match = output.match(/ExceptionsList\s*:\s*<array>\s*\{([^}]+)\}/i);
-      if (!match) { return null; }
-      const entries = match[1].match(/\d+\s*:\s*(\S+)/g);
-      if (!entries) { return null; }
-      const list = entries.map((e) => e.replace(/^\d+\s*:\s*/, "").trim());
-      return list.join(",");
-    } catch {
-      return null;
-    }
+    return detectMacOsBypassImpl();
   }
 
-  // --- Linux: gsettings (GNOME) ---
-
+  /** Linux: gsettings (GNOME) resolution. */
   private detectLinuxProxy(): string | null {
-    try {
-      const mode = this.execQuiet("gsettings get org.gnome.system.proxy mode")
-        .trim().replace(/'/g, "");
-      if (mode !== "manual") { return null; }
-      // Try HTTPS first, then HTTP
-      const httpsHost = this.gsettingsGet("org.gnome.system.proxy.https", "host");
-      const httpsPort = this.gsettingsGet("org.gnome.system.proxy.https", "port");
-      if (httpsHost) { return `http://${httpsHost}${httpsPort ? `:${httpsPort}` : ""}`; }
-      const httpHost = this.gsettingsGet("org.gnome.system.proxy.http", "host");
-      const httpPort = this.gsettingsGet("org.gnome.system.proxy.http", "port");
-      if (httpHost) { return `http://${httpHost}${httpPort ? `:${httpPort}` : ""}`; }
-      return null;
-    } catch {
-      // gsettings not available (non-GNOME desktop or headless server)
-      return null;
-    }
+    return detectLinuxProxyImpl();
   }
 
+  /** Linux: gsettings ignore-hosts bypass. */
   private detectLinuxBypass(): string | null {
-    try {
-      const output = this.execQuiet("gsettings get org.gnome.system.proxy ignore-hosts");
-      // Format: ['localhost', '127.0.0.0/8', '::1']
-      const entries = output.match(/'([^']+)'/g);
-      if (!entries) { return null; }
-      return entries.map((e) => e.replace(/'/g, "")).join(",");
-    } catch {
-      return null;
-    }
-  }
-
-  // --- Shared helpers ---
-
-  /**
-   * Parse per-protocol proxy string (e.g. "http=host1:80;https=host2:443").
-   * Prefers https, falls back to http.
-   */
-  private parsePerProtocolProxy(server: string): string | null {
-    const entries = server.split(";").map((s) => s.trim());
-    const map = new Map<string, string>();
-    for (const entry of entries) {
-      const [protocol, address] = entry.split("=", 2);
-      if (protocol && address) { map.set(protocol.toLowerCase(), address); }
-    }
-    const httpsAddr = map.get("https");
-    if (httpsAddr) { return `http://${httpsAddr}`; }
-    const httpAddr = map.get("http");
-    if (httpAddr) { return `http://${httpAddr}`; }
-    return null;
-  }
-
-  /** Read a gsettings key, strip quotes, return null if empty or "0". */
-  private gsettingsGet(schema: string, key: string): string | null {
-    try {
-      const val = this.execQuiet(`gsettings get ${schema} ${key}`)
-        .trim().replace(/'/g, "");
-      return (val && val !== "0") ? val : null;
-    } catch {
-      return null;
-    }
-  }
-
-  /** Execute a command quietly — returns stdout, throws on error. */
-  private execQuiet(cmd: string): string {
-    return execSync(cmd, { encoding: "utf-8", timeout: 3000, windowsHide: true });
+    return detectLinuxBypassImpl();
   }
 }

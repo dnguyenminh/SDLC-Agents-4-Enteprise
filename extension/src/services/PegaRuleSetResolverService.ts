@@ -14,6 +14,10 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import { PegaHttpClient } from "./PegaHttpClient";
+import {
+  checkRuleSetOpenStatus as checkRuleSetOpenStatusImpl,
+  resolveRuleWriteContext as resolveRuleWriteContextImpl,
+} from "./pega-ruleset-write-context";
 
 export interface RuleSetVersionInfo {
   name: string;
@@ -89,20 +93,7 @@ export class PegaRuleSetResolverService {
    * Query qua endpoint GET /rules/{insKey} với insKey `RULE-RULESET-VERSION <NAME> <VERSION>`.
    */
   public async checkRuleSetOpenStatus(name: string, version: string): Promise<RuleSetVersionInfo> {
-    const insKey = `RULE-RULESET-VERSION ${name.toUpperCase()} ${version}`;
-    try {
-      const obj = await this.client.getRuleByInsKey(insKey);
-      const open =
-        obj.pyOpen === true ||
-        obj.pyOpen === "true" ||
-        obj.pyOpenStatus === true ||
-        String(obj.pyOpenStatus || "").toLowerCase() === "true" ||
-        String(obj.pyRuleSetVersionStatus || "").toLowerCase().includes("open") ||
-        String(obj.pyStatus || "").toLowerCase().includes("open");
-      return { name, version, open, exists: true };
-    } catch {
-      return { name, version, open: false, exists: false };
-    }
+    return checkRuleSetOpenStatusImpl(this.client, name, version);
   }
 
   /**
@@ -125,86 +116,7 @@ export class PegaRuleSetResolverService {
    * các RuleSet version trong stack app, đề xuất target theo bảng quyết định.
    */
   public async resolveRuleWriteContext(rulePayload: Record<string, unknown>): Promise<RuleWriteContext> {
-    const warnings: string[] = [];
-    const existingRule = this.extractRuleSetFromRule(rulePayload);
-    const ruleType: "existing" | "new" =
-      existingRule.pzInsKey || existingRule.pyRuleSet ? "existing" : "new";
-
-    // 1. Thu thập RuleSet candidates từ app hierarchy (operator => access group => app => rulesets)
-    let stackRulesets: Array<{ name: string; version: string }> = [];
-    try {
-      const hierarchy = await this.client.resolveDeterministicPegaHierarchy();
-      stackRulesets = hierarchy.ruleSets.map((rs) => {
-        const idx = rs.indexOf(":");
-        return idx > 0
-          ? { name: rs.slice(0, idx), version: rs.slice(idx + 1) }
-          : { name: rs, version: "01-01-01" };
-      });
-    } catch (err: any) {
-      warnings.push(`Không resolve được app hierarchy: ${err.message}`);
-    }
-
-    const candidates: RuleSetVersionInfo[] = [];
-    const seen = new Set<string>();
-
-    // 2. Candidate từ chính rule (existing)
-    if (existingRule.pyRuleSet && existingRule.pyRuleSetVersion) {
-      const key = `${existingRule.pyRuleSet}|${existingRule.pyRuleSetVersion}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        candidates.push(await this.checkRuleSetOpenStatus(existingRule.pyRuleSet, existingRule.pyRuleSetVersion));
-      }
-    }
-
-    // 3. Candidates từ ruleset stack (open check)
-    for (const rs of stackRulesets) {
-      const key = `${rs.name}|${rs.version}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      candidates.push(await this.checkRuleSetOpenStatus(rs.name, rs.version));
-    }
-
-    // 4. Chọn suggested target
-    const openCandidates = candidates.filter((c) => c.open && c.exists);
-    let suggestedTarget: RuleWriteContext["suggestedTarget"];
-
-    const ownCandidate = candidates.find(
-      (c) => c.name === existingRule.pyRuleSet && c.version === existingRule.pyRuleSetVersion
-    );
-
-    if (ruleType === "existing" && ownCandidate && ownCandidate.open) {
-      // Existing rule thuộc open version => save trực tiếp vào version đó.
-      suggestedTarget = {
-        pyRuleSet: ownCandidate.name,
-        pyRuleSetVersion: ownCandidate.version,
-        source: "direct",
-      };
-    } else if (openCandidates.length > 0) {
-      // New rule hoặc existing rule thuộc closed version => đề xuất open version trong stack.
-      const chosen = openCandidates[0];
-      suggestedTarget = {
-        pyRuleSet: chosen.name,
-        pyRuleSetVersion: chosen.version,
-        source: "direct",
-      };
-      if (ruleType === "existing" && ownCandidate && !ownCandidate.open) {
-        warnings.push(
-          `RuleSet version hiện tại của rule (${ownCandidate.name}:${ownCandidate.version}) không open; đề xuất save vào ${chosen.name}:${chosen.version}.`
-        );
-      }
-    } else {
-      // Không có version nào open => chặn với hướng dẫn.
-      warnings.push(
-        "Không tìm thấy RuleSet version open nào. Cần checkout rule hoặc tạo branch/CR trước khi save."
-      );
-      suggestedTarget = {
-        pyRuleSet: ownCandidate?.name || stackRulesets[0]?.name || "PegaApp",
-        pyRuleSetVersion: ownCandidate?.version || stackRulesets[0]?.version || "01-01-01",
-        source: "open-stack",
-      };
-    }
-
-    return { ruleType, existingRule, candidates, suggestedTarget, warnings };
+    return resolveRuleWriteContextImpl(this.client, rulePayload);
   }
 
   /**

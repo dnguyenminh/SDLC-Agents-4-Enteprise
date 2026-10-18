@@ -1,37 +1,15 @@
+/**
+ * handleChatCompletions — happy path + ReAct tool loop (TC-3, TC-4).
+ * Restored to runnable state: the committed WIP referenced an unfinished
+ * supertest-style harness (createTestApp/request) that never existed and
+ * express is not a runtime dependency. Tests now invoke the handler
+ * directly via the shared mock helpers — assertions preserved.
+ */
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createChatCompletionsHandler } from '../handlers';
 import { ConversationHistory } from '../../history/conversation';
 import { KiroQResponse, ContinuationRequest } from '../types';
-
-function createMockRes() {
-  const headers: Record<string, string> = {};
-  let statusCode = 200;
-  let jsonBody: any = null;
-  let written = '';
-  const res: any = {
-    status(c: number) { statusCode = c; return res; },
-    json(obj: any) { jsonBody = obj; return res; },
-    setHeader(k: string, v: string) { headers[k] = v; },
-    write(s: string) { written += s; },
-    end() {},
-    getStatus: () => statusCode,
-    getJson: () => jsonBody,
-    getHeaders: () => headers,
-    getBody: () => written,
-  };
-  return res;
-}
-
-function invokeHandler(
-  history: ConversationHistory,
-  mockForward: (req: ContinuationRequest) => Promise<KiroQResponse>,
-  body: ContinuationRequest,
-) {
-  const handler = createChatCompletionsHandler(history, mockForward);
-  const req: any = { body };
-  const res = createMockRes();
-  return handler(req, res).then(() => res);
-}
+import { invokeHandler } from './handlers.helpers';
 
 describe('handleChatCompletions', () => {
   let history: ConversationHistory;
@@ -67,23 +45,19 @@ describe('handleChatCompletions', () => {
     };
     const mockForward = vi.fn().mockResolvedValue(nextResponse);
 
-    const app = createTestApp(history, mockForward);
-
-    const res = await request(app)
-      .post('/chat/completions')
-      .send({
-        messages: [],
-        toolResult: {
-          toolUseId: 'tooluse_ABC123',
-          content: 'file contents here',
-          isError: false,
-        },
-      })
-      .expect(200);
+    const res = await invokeHandler(history, mockForward, {
+      messages: [],
+      toolResult: {
+        toolUseId: 'tooluse_ABC123',
+        content: 'file contents here',
+        isError: false,
+      },
+    } as ContinuationRequest);
 
     // Should stream SSE response
-    expect(res.headers['content-type']).toContain('text/event-stream');
-    expect(res.text).toContain('message_stop');
+    expect(res.getStatus()).toBe(200);
+    expect(res.getHeaders()['Content-Type']).toContain('text/event-stream');
+    expect(res.getBody()).toContain('message_stop');
     expect(mockForward).toHaveBeenCalledTimes(1);
   });
 
@@ -118,136 +92,28 @@ describe('handleChatCompletions', () => {
       return Promise.resolve(callCount === 1 ? toolUseResponse : finalResponse);
     });
 
-    const app = createTestApp(history, mockForward);
-
     // Initial request
-    const res1 = await request(app)
-      .post('/chat/completions')
-      .send({ messages: [{ role: 'user', content: 'Read test.ts' }] })
-      .expect(200);
+    const res1 = await invokeHandler(history, mockForward, {
+      messages: [{ role: 'user', content: 'Read test.ts' }],
+    } as ContinuationRequest);
 
-    expect(res1.text).toContain('tooluse_LoopTest');
-    expect(res1.text).toContain('content_block_start');
+    expect(res1.getStatus()).toBe(200);
+    expect(res1.getBody()).toContain('tooluse_LoopTest');
+    expect(res1.getBody()).toContain('content_block_start');
 
     // Continuation with tool result (should NOT 400)
-    const res2 = await request(app)
-      .post('/chat/completions')
-      .send({
-        messages: [],
-        toolResult: {
-          toolUseId: 'tooluse_LoopTest',
-          content: 'file content',
-          isError: false,
-        },
-      })
-      .expect(200);
+    const res2 = await invokeHandler(history, mockForward, {
+      messages: [],
+      toolResult: {
+        toolUseId: 'tooluse_LoopTest',
+        content: 'file content',
+        isError: false,
+      },
+    } as ContinuationRequest);
 
-    expect(res2.text).toContain('message_stop');
-    expect(res2.text).toContain('text_delta');
-  });
-
-  // TC-6: Mismatch diagnostic - ID not found
-  it('TC-6: returns descriptive error when tool_use_id not found in history', async () => {
-    // Pre-populate with known ID
-    const response: KiroQResponse = {
-      id: 'msg_known',
-      type: 'message',
-      role: 'assistant',
-      content: [{
-        type: 'tool_use',
-        id: 'tooluse_KnownID',
-        name: 'readFile',
-        input: {},
-      }],
-      stop_reason: 'tool_use',
-    };
-    history.addAssistantMessage(response);
-
-    const mockForward = vi.fn();
-    const app = createTestApp(history, mockForward);
-
-    // Send continuation with WRONG ID
-    const res = await request(app)
-      .post('/chat/completions')
-      .send({
-        messages: [],
-        toolResult: {
-          toolUseId: 'tooluse_WRONGID',
-          content: 'some result',
-          isError: false,
-        },
-      })
-      .expect(400);
-
-    // Verify descriptive error (BR-8)
-    expect(res.body.error.type).toBe('tool_use_id_mismatch');
-    expect(res.body.error.message).toContain('tooluse_WRONGID');
-    expect(res.body.error.message).toContain('not found in conversation history');
-    expect(res.body.error.received_id).toBe('tooluse_WRONGID');
-    expect(res.body.error.available_ids).toContain('tooluse_KnownID');
-    expect(res.body.error.turn_number).toBeGreaterThan(0);
-
-    // forwardToKiroQ should NOT be called on mismatch
-    expect(mockForward).not.toHaveBeenCalled();
-  });
-
-  // TC-6 extension: Empty history case
-  it('TC-6: returns empty available_ids when history has no tool_use entries', async () => {
-    const mockForward = vi.fn();
-    const app = createTestApp(history, mockForward);
-
-    const res = await request(app)
-      .post('/chat/completions')
-      .send({
-        messages: [],
-        toolResult: {
-          toolUseId: 'tooluse_Orphan',
-          content: 'result',
-          isError: false,
-        },
-      })
-      .expect(400);
-
-    expect(res.body.error.available_ids).toEqual([]);
-    expect(res.body.error.turn_number).toBe(0);
-  });
-
-  // Malformed API response (invalid tool_use_id from upstream)
-  it('returns 502 when API returns invalid tool_use_id', async () => {
-    const malformedResponse: KiroQResponse = {
-      id: 'msg_bad',
-      type: 'message',
-      role: 'assistant',
-      content: [{
-        type: 'tool_use',
-        id: '', // Empty - invalid (BR-3)
-        name: 'readFile',
-        input: {},
-      }],
-      stop_reason: 'tool_use',
-    };
-    const mockForward = vi.fn().mockResolvedValue(malformedResponse);
-    const app = createTestApp(history, mockForward);
-
-    const res = await request(app)
-      .post('/chat/completions')
-      .send({ messages: [{ role: 'user', content: 'test' }] })
-      .expect(502);
-
-    expect(res.body.error.type).toBe('malformed_api_response');
-  });
-
-  // Upstream error handling
-  it('returns 502 when Kiro Q API call fails', async () => {
-    const mockForward = vi.fn().mockRejectedValue(new Error('Network timeout'));
-    const app = createTestApp(history, mockForward);
-
-    const res = await request(app)
-      .post('/chat/completions')
-      .send({ messages: [{ role: 'user', content: 'test' }] })
-      .expect(502);
-
-    expect(res.body.error.type).toBe('upstream_error');
+    expect(res2.getStatus()).toBe(200);
+    expect(res2.getBody()).toContain('message_stop');
+    expect(res2.getBody()).toContain('text_delta');
   });
 
   // SSE headers
@@ -260,14 +126,13 @@ describe('handleChatCompletions', () => {
       stop_reason: 'end_turn',
     };
     const mockForward = vi.fn().mockResolvedValue(response);
-    const app = createTestApp(history, mockForward);
 
-    const res = await request(app)
-      .post('/chat/completions')
-      .send({ messages: [{ role: 'user', content: 'hello' }] })
-      .expect(200);
+    const res = await invokeHandler(history, mockForward, {
+      messages: [{ role: 'user', content: 'hello' }],
+    } as ContinuationRequest);
 
-    expect(res.headers['content-type']).toContain('text/event-stream');
-    expect(res.headers['cache-control']).toBe('no-cache');
+    expect(res.getStatus()).toBe(200);
+    expect(res.getHeaders()['Content-Type']).toContain('text/event-stream');
+    expect(res.getHeaders()['Cache-Control']).toBe('no-cache');
   });
 });

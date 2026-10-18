@@ -4,6 +4,7 @@
  * Pure string ops — NO I/O, NEVER throws (C-1, C-2).
  */
 import * as path from "path";
+import { sanitizeLogText } from "./path-format";
 
 // ── Types (TDD §3.2) ────────────────────────────────────────────────────
 
@@ -181,43 +182,10 @@ export function isPathWithinRoot(root: string, candidate: string): boolean {
   );
 }
 
-// ── Shared Format-1 builders (DEV minor additive — pure string ops, no I/O;
-// prevents template drift across the 6 call sites, same bug class as M-4).
-// No behavioral deviation (byte-identical to §7.2 templates); unit-covered.
-
-/** Sanitize a path/value before interpolating into messages or logs (SEC-05). */
-export function sanitizeLogText(value: string): string {
-  return value.replace(/[\r\n\0]/g, "?");
-}
-
-/** Format 1 — ENOENT after a correct resolve (built at TOOL layer, never helper). */
-export function formatFileNotFound(resolution: PathResolutionOk): string {
-  const cleanPath = sanitizeLogText(resolution.resolvedPath);
-  const cleanRoot = sanitizeLogText(resolution.rootPath);
-  if (resolution.rootSource === "workspace") {
-    return (
-      `FILE_NOT_FOUND: File not found: ${cleanPath}. ` +
-      `Resolved against workspace root ${cleanRoot}. ` +
-      "Gợi ý: dùng absolute path (nằm trong workspace root) hoặc kiểm tra lại " +
-      "đường dẫn tương đối tính từ workspace root."
-    );
-  }
-  return (
-    `FILE_NOT_FOUND: File not found: ${cleanPath}. ` +
-    `Resolved against process.cwd() fallback = ${cleanRoot}. ` +
-    "Gợi ý: mở workspace hoặc dùng absolute path trong workspace root."
-  );
-}
-
-/** Format 1 variant — non-ENOENT fs errors (UC-04 EF-1). */
-export function formatFsError(
-  operation: string,
-  resolution: PathResolutionOk,
-  err: unknown,
-): string {
-  const msg = err instanceof Error ? err.message : String(err);
-  return (
-    `FS_ERROR: Failed ${operation} ${sanitizeLogText(resolution.resolvedPath)}: ` +
-    sanitizeLogText(msg)
-  );
-}
+// ── Shared Format-1 builders — extracted to path-format.ts (BR-18);
+// re-exported here so public symbols stay at this path.
+export {
+  sanitizeLogText,
+  formatFileNotFound,
+  formatFsError,
+} from "./path-format";

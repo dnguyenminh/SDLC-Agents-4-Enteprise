@@ -7,6 +7,7 @@ import type { McpToolDefinition } from "../mcp-types";
 import { BaseLlmProvider } from "./BaseLlmProvider";
 import { formatMessages, formatMessagesForTools, buildHeaders } from "./openai-helpers";
 import { validateProviderBaseUrl } from "./provider-url-policy";
+import { fetchFirstModelId, detectLocalContextWindow } from "./openai-model-detect";
 
 const OPENAI_SECRET_KEY = "sdlcAgents.openaiApiKey";
 const DEFAULT_MODEL = "gpt-4o";
@@ -45,47 +46,16 @@ export class OpenAIProvider extends BaseLlmProvider {
 
   /** Detect the first loaded model id from the local server /v1/models endpoint. */
   private async detectFirstModel(): Promise<string | undefined> {
-    if (this.detectedModel) { return this.detectedModel; }
-    try {
-      const response = await fetch(`${this.apiBase}/models`, {
-        method: "GET",
-        signal: AbortSignal.timeout(5000),
-      });
-      if (response.ok) {
-        const data = await response.json() as { data?: Array<{ id: string }> };
-        const id = data.data?.[0]?.id;
-        if (id) { this.detectedModel = id; return id; }
-      }
-    } catch (err) {
-      console.debug(`[OpenAIProvider] model detection failed (non-fatal): ${(err as Error).message}`);
-    }
-    return undefined;
+    const detected = await fetchFirstModelId(this.apiBase, this.detectedModel);
+    if (detected) { this.detectedModel = detected; }
+    return detected;
   }
 
   /** Detect context window from /v1/models endpoint (LM Studio / local servers) */
   async detectContextWindow(): Promise<void> {
     if (!this.isLocalServer()) return; // Cloud providers have known limits
-    try {
-      const response = await fetch(`${this.apiBase}/models`, {
-        method: "GET",
-        signal: AbortSignal.timeout(5000),
-      });
-      if (response.ok) {
-        const data = await response.json() as { data?: Array<{ id: string; context_length?: number; meta?: { n_ctx?: number } }> };
-        const model = data.data?.[0];
-        // Standard OpenAI field
-        if (model?.context_length && model.context_length > 0) {
-          this.contextWindowTokens = model.context_length;
-        }
-        // llama-server uses meta.n_ctx instead
-        else if (model?.meta?.n_ctx && model.meta.n_ctx > 0) {
-          this.contextWindowTokens = model.meta.n_ctx;
-        }
-      }
-    } catch (err) {
-      console.debug(`[OpenAIProvider] context window detection failed (non-fatal): ${(err as Error).message}`);
-      /* keep default */
-    }
+    const ctx = await detectLocalContextWindow(this.apiBase);
+    if (ctx !== undefined) { this.contextWindowTokens = ctx; }
   }
 
   async chat(messages: LlmMessage[], options?: LlmOptions): Promise<string> {

@@ -1,8 +1,8 @@
 /**
- * Unit tests for global-fetch-patch — verifies fetch proxy injection behavior.
- * Strategy: We test the patching logic by verifying the patchedFetch wrapper
- * routes through curl/powershell adapters or injects undici dispatcher based
- * on ProxyAgentFactory config mode.
+ * Unit tests for global-fetch-patch — dispatcher modes: system/manual (undici
+ * dispatcher), bypass, none, and patch lifecycle.
+ * (Split from global-fetch-patch.test.ts — dispatcher concern; curl/powershell
+ * adapter routing lives in global-fetch-patch.adapters.test.ts.)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -169,93 +169,6 @@ describe("global-fetch-patch", () => {
     });
   });
 
-  describe("curl mode", () => {
-    beforeEach(() => {
-      mockCurlIsCurlMode.mockReturnValue(true);
-      mockFactory.getConfig.mockReturnValue({ mode: "curl", bypass: "localhost" });
-    });
-
-    it("routes through CurlHttpAdapter for external URLs", async () => {
-      applyGlobalFetchPatch();
-
-      const response = await globalThis.fetch("https://pega.corp.com/prweb/api");
-
-      expect(mockCurlRequest).toHaveBeenCalledWith(
-        "https://pega.corp.com/prweb/api", "GET", {}, undefined, 30000, true
-      );
-      expect(fetchSpy).not.toHaveBeenCalled();
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toBe('{"curl":true}');
-    });
-
-    it("passes method, headers, and body to curl adapter", async () => {
-      applyGlobalFetchPatch();
-
-      await globalThis.fetch("https://pega.corp.com/prweb/api", {
-        method: "POST",
-        headers: { "Authorization": "Basic abc", "Content-Type": "application/json" },
-        body: '{"data":1}',
-      });
-
-      expect(mockCurlRequest).toHaveBeenCalledWith(
-        "https://pega.corp.com/prweb/api",
-        "POST",
-        { "Authorization": "Basic abc", "Content-Type": "application/json" },
-        '{"data":1}',
-        30000,
-        true
-      );
-    });
-
-    it("does NOT call originalFetch when curl handles the request", async () => {
-      applyGlobalFetchPatch();
-
-      await globalThis.fetch("https://external.api.com/resource");
-
-      expect(fetchSpy).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("powershell mode", () => {
-    beforeEach(() => {
-      mockPwshIsPowerShellMode.mockReturnValue(true);
-      mockFactory.getConfig.mockReturnValue({ mode: "powershell", bypass: "localhost" });
-    });
-
-    it("routes through PowerShellHttpAdapter for external URLs", async () => {
-      applyGlobalFetchPatch();
-
-      const response = await globalThis.fetch("https://jira.corp.com/rest/api/2/myself");
-
-      expect(mockPwshRequest).toHaveBeenCalledWith(
-        "https://jira.corp.com/rest/api/2/myself", "GET", {}, undefined, 30000
-      );
-      expect(fetchSpy).not.toHaveBeenCalled();
-      expect(response.status).toBe(200);
-      const body = await response.text();
-      expect(body).toBe('{"pwsh":true}');
-    });
-
-    it("passes method, headers, and body to powershell adapter", async () => {
-      applyGlobalFetchPatch();
-
-      await globalThis.fetch("https://api.anthropic.com/v1/models", {
-        method: "POST",
-        headers: { "Authorization": "Bearer key123" },
-        body: '{"model":"claude"}',
-      });
-
-      expect(mockPwshRequest).toHaveBeenCalledWith(
-        "https://api.anthropic.com/v1/models",
-        "POST",
-        { "Authorization": "Bearer key123" },
-        '{"model":"claude"}',
-        30000
-      );
-    });
-  });
-
   describe("patch lifecycle", () => {
     it("only patches once even if called multiple times", () => {
       applyGlobalFetchPatch();
@@ -271,22 +184,6 @@ describe("global-fetch-patch", () => {
 
       removeGlobalFetchPatch();
       expect(globalThis.fetch).toBe(fetchSpy);
-    });
-  });
-
-  describe("error handling", () => {
-    it("falls through gracefully when ProxyAgentFactory throws", async () => {
-      mockFactory.getConfig.mockImplementation(() => { throw new Error("Not initialized"); });
-      mockFactory.getDispatcher.mockRejectedValue(new Error("Not initialized"));
-      applyGlobalFetchPatch();
-
-      await globalThis.fetch("https://api.example.com/data");
-
-      expect(fetchSpy).toHaveBeenCalledTimes(1);
-      const [, init] = fetchSpy.mock.calls[0];
-      // Factory failure → no proxy dispatcher → falls back to the shared
-      // direct (raised-timeout) dispatcher instead of crashing.
-      expect((init as any)?.dispatcher).toBe(getDirectFetchDispatcher());
     });
   });
 });

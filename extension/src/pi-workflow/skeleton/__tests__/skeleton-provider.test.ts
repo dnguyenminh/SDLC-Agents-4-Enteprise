@@ -1,85 +1,16 @@
 /**
- * SA4E-360 — SkeletonProvider tests (TDD task T6; STC UT-11..16 + UT-35).
- * Batched corpus render, per-file bound = cap, fallback ladder (BR-360-03),
- * per-file skip (EF-3), empty index (EF-5), OI-2 freshness-keyed cache.
+ * SA4E-360 — SkeletonProvider tests (TDD task T6; STC UT-11..13 + UT-35).
+ * Batched corpus render, per-file bound = cap, fallback ladder (BR-360-03).
  * UT-35 (DEFECT-QA-01) is the F-1 regression guard: the REGEX_SIGNATURES rung
  * must sanitize candidates before outline rendering (SEC-360-01 vector 3/3).
+ * UT-14/15/16 + scale bound live in skeleton-provider-degradation.test.ts.
  */
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import * as os from 'node:os';
-import { SkeletonProvider, skeletonCap, SKELETON_MAX_FILES } from '../skeleton-provider.js';
-import { SymbolOutlineExtractor, FsContentReader } from '../../../pi-agent/context-retrieval/symbol-outline-extractor.js';
-import { TokenCounter } from '../../../pi-agent/context-retrieval/token-counter.js';
+import { describe, it, expect, vi } from 'vitest';
+import { skeletonCap } from '../skeleton-provider.js';
 import { REDACTED_MARKER } from '../secret-redaction.js';
-import type { SymbolLocator } from '../symbol-locator.js';
-import type { IndexFreshnessChecker } from '../index-freshness-checker.js';
-import type { SearchCandidate } from '../../../pi-agent/context-retrieval/types.js';
+import { CORPUS_APP, events, fakeLocator, makeProvider, setupSkeletonProviderFixture, spyExtractor, sym, root } from './skeleton-provider-harness.js';
 
-let root = '';
-const events: Array<{ event: string; payload: unknown }> = [];
-
-function sym(name: string, kind: string, filePath: string, startLine: number, signature?: string): SearchCandidate {
-  return { name, kind, filePath, startLine, signature, source: 'code_search' };
-}
-
-const CORPUS_APP = [
-  sym('App', 'class', 'src/app.ts', 1, 'class App {'),
-  sym('render', 'method', 'src/app.ts', 10, 'render(target: string): void'),
-];
-
-function fakeLocator(corpus: SearchCandidate[], extract?: (files: Array<{ path: string }>) => Promise<SearchCandidate[]>): SymbolLocator {
-  return {
-    locate: vi.fn(async () => ({ rows: [] })),
-    extractSignatures: vi.fn(extract ?? (async () => [])),
-    fetchSymbolCorpus: vi.fn(async () => corpus),
-    reindex: vi.fn(async () => true),
-  };
-}
-
-function fakeFreshness(): IndexFreshnessChecker {
-  return {
-    checkFile: vi.fn(async () => 'FRESH'),
-    sweep: vi.fn(async () => ({ status: 'FRESH', action: 'none', staleFiles: [], files: new Map() })),
-  } as unknown as IndexFreshnessChecker;
-}
-
-/** Spy extractor delegating to a real SymbolOutlineExtractor (counts + captures). */
-function spyExtractor() {
-  const calls: Array<{ filePath: string; maxTokens: number }> = [];
-  const real = new SymbolOutlineExtractor(new TokenCounter(), new FsContentReader());
-  const spy = {
-    extractOutline: (filePath: string, symbols: readonly SearchCandidate[], maxTokens: number) => {
-      calls.push({ filePath, maxTokens });
-      return real.extractOutline(filePath, symbols as never, maxTokens);
-    },
-  } as unknown as SymbolOutlineExtractor;
-  return { spy, calls };
-}
-
-function makeProvider(locator: SymbolLocator, extractor?: SymbolOutlineExtractor): SkeletonProvider {
-  return new SkeletonProvider({ locator, freshness: fakeFreshness(), extractor, emit: (event, payload) => events.push({ event, payload }) });
-}
-
-beforeAll(() => {
-  root = fs.mkdtempSync(path.join(os.tmpdir(), 'sa4e-360-provider-'));
-  fs.mkdirSync(path.join(root, 'src'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'src', 'app.ts'), 'export class App {}\n');
-  fs.writeFileSync(path.join(root, 'src', 'Widget.svelte'), '<script>\n  export function load(x) { return x; }\n</script>\n');
-  // UT-35 fixture — grammar-less file holding a credential literal; the REGEX
-  // rung must redact it BEFORE the outline render (F-1, commit 0d33706).
-  fs.writeFileSync(
-    path.join(root, 'src', 'Component.svelte'),
-    '<script lang="ts">\nconst API_KEY = \'sk-live-abcdefgh1234567890\';\nexport function load(input: string): string {\n  return input;\n}\n</script>\n'
-  );
-  fs.writeFileSync(path.join(root, 'src', 'Template.hbs'), '<div>{{title}}</div>\n');
-  fs.mkdirSync(path.join(root, 'empty-ws'), { recursive: true });
-});
-
-afterAll(() => {
-  fs.rmSync(root, { recursive: true, force: true });
-});
+setupSkeletonProviderFixture();
 
 // STC UT-11 — ONE batched corpus query; render format per FSD §3.1.4
 describe('UT-11 — batched corpus render format', () => {
@@ -195,58 +126,5 @@ describe('UT-35 — F-1: fallback REGEX rung redacts secrets (SEC-360-01)', () =
     expect(regexRung.length).toBeGreaterThan(0);
     // Hygiene never blocks the session (BR-360-03).
     expect(skeleton.gateDecision).not.toBe('REJECT');
-  });
-});
-
-// STC UT-14 — single-file failure → skip + warn, others continue (EF-3)
-describe('UT-14 — single bad file never blocks the build', () => {
-  it('1 unreadable + good files → PI_SKELETON_FILE_SKIPPED, skippedFiles counted', async () => {
-    fs.writeFileSync(path.join(root, 'src', 'Broken.zzz'), 'garbage');
-    const locator = fakeLocator(CORPUS_APP); // Broken.zzz not in corpus; regex finds nothing; head garbage→trimmed but non-empty
-    const { skeleton } = await makeProvider(locator).getSections(root, 19668, []);
-    expect(skeleton.skeletonContent).toContain('// app.ts'); // good file rendered
-    expect(skeleton.gateDecision).not.toBe('REJECT');
-  });
-});
-
-// STC UT-15 — empty workspace index → DEGRADED_NO_SKELETON (EF-5)
-describe('UT-15 — empty index degrades without REJECT', () => {
-  it('empty workspace → skeletonTokens 0, DEGRADED_NO_SKELETON', async () => {
-    const emptyRoot = path.join(root, 'empty-ws');
-    const { skeleton } = await makeProvider(fakeLocator([])).getSections(emptyRoot, 19668, []);
-    expect(skeleton.skeletonTokens).toBe(0);
-    expect(skeleton.gateDecision).toBe('DEGRADED_NO_SKELETON');
-  });
-});
-
-// STC UT-16 — OI-2 freshness-keyed cache (no TTL)
-describe('UT-16 — OI-2 fingerprint cache reuse + rebuild', () => {
-  it('unchanged fingerprint serves cache (extractor not re-invoked); mtime change rebuilds', async () => {
-    const { spy, calls } = spyExtractor();
-    const locator = fakeLocator(CORPUS_APP);
-    const provider = makeProvider(locator, spy);
-    const first = await provider.getSections(root, 19668, []);
-    const afterFirst = calls.length;
-    const second = await provider.getSections(root, 19668, []);
-    expect(second).toEqual(first); // cached artifact
-    expect(calls.length).toBe(afterFirst); // extractor NOT re-invoked
-    // Mutate one file → fingerprint differs → rebuild.
-    const target = path.join(root, 'src', 'app.ts');
-    const later = Date.now() / 1000 + 60;
-    fs.utimesSync(target, new Date(later * 1000), new Date(later * 1000));
-    await provider.getSections(root, 19668, []);
-    expect(calls.length).toBeGreaterThan(afterFirst);
-    // invalidate() forces a rebuild regardless of fingerprint.
-    const afterRebuild = calls.length;
-    provider.invalidate(root);
-    await provider.getSections(root, 19668, []);
-    expect(calls.length).toBeGreaterThan(afterRebuild);
-  });
-});
-
-// Guard — §8 scale constant stays bounded (walk cap)
-describe('scale bound', () => {
-  it('SKELETON_MAX_FILES caps the corpus walk at 2000 files', () => {
-    expect(SKELETON_MAX_FILES).toBe(2000);
   });
 });

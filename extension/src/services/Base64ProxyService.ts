@@ -14,28 +14,31 @@
  * (single source of truth). The constructor accepts a plain string (legacy
  * callers/tests) or a live WorkspaceRootProvider (production wiring in
  * RemoteBackendClient — UC-01 AF-2, no stale root).
+ *
+ * Schema rewriting and dynamic-tool helpers live in ./Base64ProxyService/*.
  */
 import * as fs from "fs";
-import * as path from "path";
 import { checkSymlinkGuard } from "../backend-local-tools";
 import {
   resolveWorkspacePath,
   sanitizeLogText,
   PathResolverError,
-  FILE_PATH_SCHEMA_DESCRIPTION,
   type PathResolutionOk,
   type WorkspaceRootProvider,
 } from "./PathResolver";
+import type { ToolSchema } from "./Base64ProxyService/types";
+import {
+  hasBase64InputParam,
+  hasBase64Output,
+  rewriteSingleSchema,
+} from "./Base64ProxyService/schema-rewrite";
+import { unwrapDynamicTool, wrapDynamicTool } from "./Base64ProxyService/dynamic-tool";
+import { proxyToolOutput } from "./Base64ProxyService/output-proxy";
+
+export type { ToolSchema } from "./Base64ProxyService/types";
 
 /** Maximum proxy pre-read file size (N-9, SEC-07 — SA policy). */
 export const PROXY_PRE_READ_MAX_BYTES = 25 * 1024 * 1024;
-
-/** Describes a single tool's schema from the backend. */
-export interface ToolSchema {
-  name: string;
-  description?: string;
-  inputSchema?: Record<string, unknown>;
-}
 
 export class Base64ProxyService {
   private base64InputTools = new Set<string>();
@@ -55,10 +58,10 @@ export class Base64ProxyService {
     this.base64InputTools.clear();
     this.base64OutputTools.clear();
     for (const tool of tools) {
-      if (this.hasBase64InputParam(tool)) {
+      if (hasBase64InputParam(tool)) {
         this.base64InputTools.add(tool.name);
       }
-      if (this.hasBase64Output(tool)) {
+      if (hasBase64Output(tool)) {
         this.base64OutputTools.add(tool.name);
       }
     }
@@ -76,7 +79,11 @@ export class Base64ProxyService {
 
   /** Rewrite tool schemas for LLM visibility (hide content_base64, add output_path). */
   rewriteSchemasForLlm(tools: ToolSchema[]): ToolSchema[] {
-    return tools.map((tool) => this.rewriteSingleSchema(tool));
+    return tools.map((tool) => rewriteSingleSchema(
+      tool,
+      this.base64InputTools.has(tool.name),
+      this.base64OutputTools.has(tool.name),
+    ));
   }
 
   /** Proxy input: read file_path → inject content_base64 into args. */
@@ -123,60 +130,31 @@ export class Base64ProxyService {
 
   /** Proxy output: extract output_base64 → write to file → rewrite response. */
   proxyOutput(toolName: string, args: Record<string, unknown>, result: any): any {
-    if (!this.base64OutputTools.has(toolName)) return result;
-    if (!result || result.isError) return result;
-    const text = this.extractText(result);
-    if (!text) return result;
-    try {
-      const parsed = JSON.parse(text);
-      if (!parsed.output_base64) return result;
-      const outputPath = this.resolveOutputPath(toolName, args);
-      if (!outputPath) return result;
-      const buf = Buffer.from(parsed.output_base64, "base64");
-      this.ensureDir(path.dirname(outputPath));
-      // I-7 guard for the proxy write (re-resolve is idempotent — PBT-02).
-      const outResolution = resolveWorkspacePath(outputPath, {
-        rootProvider: () => this.resolveRoot(),
-      });
-      if (!outResolution.ok) throw new PathResolverError(outResolution.message);
-      const guardError = checkSymlinkGuard(outResolution, sanitizeLogText(outputPath));
-      if (guardError) throw new PathResolverError(guardError);
-      fs.writeFileSync(outputPath, buf);
-      const updated = { ...parsed, file_path: outputPath, size_bytes: buf.length };
-      delete updated.output_base64;
-      return this.replaceText(result, JSON.stringify(updated));
-    } catch (err) {
-      // JSON parse or file write failed — return raw result to avoid silent data loss
-      console.warn(`[Base64ProxyService] proxyOutput failed for '${toolName}': ${(err as Error).message}`);
-      return result;
-    }
+    return proxyToolOutput(
+      {
+        isOutputTool: (name) => this.base64OutputTools.has(name),
+        resolvePath: (p) => this.resolvePath(p),
+        resolveRoot: () => this.resolveRoot(),
+      },
+      toolName, args, result,
+    );
   }
 
   /**
-   * Unwrap execute_dynamic_tool call:
-   * Extract nested toolName + arguments for proxy processing.
+   * Unwrap execute_dynamic_tool call — see Base64ProxyService/dynamic-tool.
    */
   unwrapDynamicTool(args: Record<string, unknown>): { toolName: string; innerArgs: Record<string, unknown> } | null {
-    const toolName = (args.toolName ?? args.tool_name) as string | undefined;
-    if (!toolName) return null;
-    const innerArgs = (args.arguments ?? args.args ?? {}) as Record<string, unknown>;
-    return { toolName, innerArgs };
+    return unwrapDynamicTool(args);
   }
 
   /**
    * Wrap proxied inner args back into execute_dynamic_tool shape.
    */
   wrapDynamicTool(originalArgs: Record<string, unknown>, proxiedInnerArgs: Record<string, unknown>): Record<string, unknown> {
-    const newArgs = { ...originalArgs };
-    if ("arguments" in originalArgs) {
-      newArgs.arguments = proxiedInnerArgs;
-    } else if ("args" in originalArgs) {
-      newArgs.args = proxiedInnerArgs;
-    }
-    return newArgs;
+    return wrapDynamicTool(originalArgs, proxiedInnerArgs);
   }
 
-  // --- Private detection helpers ---
+  // --- Private helpers ---
 
   /**
    * Resolve a path against the workspace root via the shared helper.
@@ -198,78 +176,5 @@ export class Base64ProxyService {
     return typeof this.workspaceRoot === "function"
       ? this.workspaceRoot()
       : this.workspaceRoot;
-  }
-
-  private hasBase64InputParam(tool: ToolSchema): boolean {
-    const schema = tool.inputSchema;
-    if (!schema) return false;
-    const props = schema.properties as Record<string, any> | undefined;
-    if (!props) return false;
-    return "content_base64" in props;
-  }
-
-  private hasBase64Output(tool: ToolSchema): boolean {
-    const desc = tool.description || "";
-    return desc.includes("output_base64") || desc.includes("Returns output_base64");
-  }
-
-  private rewriteSingleSchema(tool: ToolSchema): ToolSchema {
-    const isInput = this.base64InputTools.has(tool.name);
-    const isOutput = this.base64OutputTools.has(tool.name);
-    if (!isInput && !isOutput) return tool;
-    const rewritten = { ...tool, inputSchema: { ...tool.inputSchema } };
-    const schema = rewritten.inputSchema!;
-    const props = { ...(schema.properties as Record<string, any> || {}) };
-    const required = [...(schema.required as string[] || [])];
-    if (isInput) {
-      delete props.content_base64;
-      // M-1: file_path description is ALWAYS overwritten with the shared rule
-      // (closes the mem_ingest_file no-description + drawio_export_png
-      // "reference only" holes — FSD §3.2.2).
-      props.file_path = { type: "string", description: FILE_PATH_SCHEMA_DESCRIPTION };
-      if (!required.includes("file_path")) required.push("file_path");
-      const idx = required.indexOf("content_base64");
-      if (idx >= 0) required.splice(idx, 1);
-    }
-    if (isOutput && !props.output_path) {
-      // M-2: suffix covers BOTH resolveOutputPath derived branches
-      // (.drawio→.png swap; non-.drawio gets .out appended — DISC-2).
-      props.output_path = {
-        type: "string",
-        description:
-          FILE_PATH_SCHEMA_DESCRIPTION +
-          " Defaults to <file_path> with extension swapped (.drawio→.png; non-.drawio inputs get .out appended).",
-      };
-    }
-    schema.properties = props;
-    schema.required = required;
-    return rewritten;
-  }
-
-  private resolveOutputPath(toolName: string, args: Record<string, unknown>): string | null {
-    if (args.output_path) return this.resolvePath(args.output_path as string);
-    const fp = args.file_path as string | undefined;
-    if (!fp) return null;
-    const resolved = this.resolvePath(fp);
-    if (resolved.endsWith(".drawio")) return resolved.replace(/\.drawio$/, ".png");
-    return resolved + ".out";
-  }
-
-  private extractText(result: any): string | null {
-    if (typeof result === "string") return result;
-    if (result?.content?.[0]?.text) return result.content[0].text;
-    return null;
-  }
-
-  private replaceText(result: any, newText: string): any {
-    if (typeof result === "string") return newText;
-    if (result?.content?.[0]?.text) {
-      return { ...result, content: [{ type: "text", text: newText }] };
-    }
-    return result;
-  }
-
-  private ensureDir(dir: string): void {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   }
 }

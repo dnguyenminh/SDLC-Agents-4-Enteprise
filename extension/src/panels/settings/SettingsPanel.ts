@@ -95,12 +95,29 @@ export class SettingsPanel {
     const cssUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, "webview-assets", "settings", "settings.css")
     );
-    const jsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "webview-assets", "settings", "settings.js")
+    // Load order matters (plain browser JS, no bundler — order IS the
+    // dependency graph):
+    //  1. settings-core.js       — acquireVsCodeApi + window.SettingsShared
+    //                              namespace (state, DOM refs, helpers)
+    //  2. settings-provider.js   — provider switch + sections/model catalog UI
+    //  3. settings-inputs.js     — API key/model/URL/ollama bindings
+    //  4. settings-connections.js— server/Pega/Atlassian bindings
+    //  5. settings-apply.js      — "state"/"models" payload -> form restore
+    //  6. settings-messages.js   — message handler + "ready" (MUST be last of
+    //                              the settings modules)
+    //  7. proxy-tab.js           — proxy form bindings (window.ProxyTab)
+    //  8. proxy-tab-handlers.js  — proxy message handlers + init
+    const scripts = [
+      "settings-core.js", "settings-provider.js", "settings-inputs.js",
+      "settings-connections.js", "settings-apply.js", "settings-messages.js",
+      "proxy-tab.js", "proxy-tab-handlers.js",
+    ];
+    const scriptUris = scripts.map((f) =>
+      webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, "webview-assets", "settings", f))
     );
-    const proxyJsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "webview-assets", "settings", "proxy-tab.js")
-    );
+    const scriptTags = scriptUris
+      .map((uri) => `<script nonce="${nonce}" src="${uri}"></script>`)
+      .join("\n    ");
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -141,8 +158,7 @@ export class SettingsPanel {
             <section class="card" id="proxy-test-section"><h2>&#129514; Test Connection</h2><p class="card-desc">Test proxy connectivity by connecting to an external URL.</p><div class="form-group"><label for="proxy-test-url-input">Test URL</label><input type="text" id="proxy-test-url-input" placeholder="https://httpbin.org/get" value="https://httpbin.org/get"></div><div class="btn-row"><button id="test-proxy-btn" class="btn primary">Test Proxy</button><button id="detect-proxy-btn" class="btn secondary">Detect System Proxy</button></div><div id="proxy-test-result" class="status-indicator"></div></section>
         </div>
     </div>
-    <script nonce="${nonce}" src="${jsUri}"></script>
-    <script nonce="${nonce}" src="${proxyJsUri}"></script>
+    ${scriptTags}
 </body>
 </html>`;
   }

@@ -3,39 +3,19 @@
  * Adapter pattern: bridges src/chat/ MessageRouter to LangGraphEngine.
  * Registers message handlers for all WebviewMessage types and subscribes
  * to engine stream events, translating them via StreamProtocolAdapter.
+ * Deps contract, event mapping, and hydration live in ./ChatEngineAdapter/*.
  */
 
 import * as vscode from 'vscode';
-import type { IMessageRouter } from '../router/IMessageRouter';
-import type { IPostMessageBridge } from '../bridge/IPostMessageBridge';
-import type { IContextManager } from '../context/types';
-import type { IToolHandler, DiffBlock } from '../tools/diffTypes';
 import type { WebviewMessage, ExtensionMessage } from '../types';
+import type { DiffBlock } from '../tools/diffTypes';
 import type { IChatEngineAdapter } from './IChatEngineAdapter';
-import type { IStreamProtocolAdapter, EngineStreamEvent } from './IStreamProtocolAdapter';
-import type { ISessionManager } from './ISessionManager';
-import type { PiWorkflowAdapter } from '../../pi-workflow';
 import type { ChatExtToWebviewMessage } from '../../chat-panel/message-protocol';
-import type { ToolApprovalGate } from './ToolApprovalGate';
-import type { CommandPatternMatcher } from './CommandPatternMatcher';
-import type { IDiffTracker } from '../diff/IDiffTracker';
+import { StreamEventMapper } from './ChatEngineAdapter/event-mapper';
+import { handleSendPromptWithSession, handleRequestSyncState } from './ChatEngineAdapter/hydration';
+import type { ChatEngineAdapterDeps } from './ChatEngineAdapter/deps';
 
-/**
- * Dependencies injected into ChatEngineAdapter (DIP).
- * All concrete implementations hidden behind interfaces.
- */
-export interface ChatEngineAdapterDeps {
-  router: IMessageRouter;
-  bridge: IPostMessageBridge;
-  engine: PiWorkflowAdapter;
-  streamAdapter: IStreamProtocolAdapter;
-  contextManager: IContextManager;
-  toolHandler: IToolHandler;
-  sessionManager: ISessionManager;
-  approvalGate?: ToolApprovalGate;
-  commandPatternMatcher?: CommandPatternMatcher;
-  diffTracker?: IDiffTracker;
-}
+export type { ChatEngineAdapterDeps } from './ChatEngineAdapter/deps';
 
 /**
  * Concrete adapter: connects MessageRouter handlers to LangGraphEngine.
@@ -45,8 +25,7 @@ export class ChatEngineAdapter implements IChatEngineAdapter {
   private readonly deps: ChatEngineAdapterDeps;
   private connected = false;
   private readonly disposables: vscode.Disposable[] = [];
-  /** Latest stream seen — orphan errors attach here so bubbles can close. */
-  private lastStreamId: string | undefined;
+  private readonly eventMapper = new StreamEventMapper();
 
   constructor(deps: ChatEngineAdapterDeps) {
     this.deps = deps;
@@ -102,7 +81,7 @@ export class ChatEngineAdapter implements IChatEngineAdapter {
    * @param event - Raw engine event to translate
    */
   handleEngineEvent(event: ChatExtToWebviewMessage): void {
-    const streamEvent = this.toStreamEvent(event);
+    const streamEvent = this.eventMapper.map(event);
     if (!streamEvent) return;
 
     const messages = this.deps.streamAdapter.handleEngineEvent(streamEvent);
@@ -113,51 +92,11 @@ export class ChatEngineAdapter implements IChatEngineAdapter {
 
   private async handleSendPrompt(payload: unknown): Promise<void> {
     const msg = payload as Extract<WebviewMessage, { type: 'SEND_PROMPT' }>;
-    try {
-      await this.deps.sessionManager.ensureSession();
-    } catch (err) {
-      // Backend KB is optional for local-first PI turns — warn and continue
-      // with the PI engine instead of blocking the chat (UAT without backend).
-      this.sendToWebview([{
-        type: 'STREAM_ERROR',
-        messageId: 'session',
-        error: { code: 'KB_UNREACHABLE_WARN', message: `Backend session unavailable, continuing locally: ${(err as Error).message}`, retryable: false },
-      }]);
-    }
-    await this.deps.engine.invokeChat(msg.text);
+    await handleSendPromptWithSession(this.deps, msg.text, (m) => this.sendToWebview(m));
   }
 
-  /**
-   * SA4E-85 v3.1: Webview mount hydration.
-   * Resolves the current Backend KB thread + message history and pushes
-   * SYNC_CHAT_HISTORY so the webview chatStore rehydrates (multi-IDE hydrate).
-   */
   private async handleRequestSyncState(): Promise<void> {
-    try {
-      const hydrated = await this.deps.sessionManager.getSessionMessages();
-      // STC API-HYD-02 step 7: empty history still hydrates with messages=[] (never undefined)
-      if (!hydrated) { return; }
-      // TDD §4.1 / STC API-HYD-02: SYNC_CHAT_HISTORY carries context snapshot
-      const state = this.deps.contextManager.getState();
-      const context = {
-        tokenCount: state.tokenCount,
-        maxTokens: state.maxTokens,
-        files: state.files.map((f) => ({ path: f.filePath, tokenCount: f.tokenCount, pinned: true })),
-      };
-      this.deps.bridge.postToWebview({
-        type: 'SYNC_CHAT_HISTORY',
-        threadId: hydrated.threadId,
-        messages: hydrated.messages,
-        context,
-      });
-    } catch (err) {
-      // Non-fatal: webview keeps an empty state, user can retry by sending a message
-      this.sendToWebview([{
-        type: 'STREAM_ERROR',
-        messageId: 'sync',
-        error: { code: 'SYNC_STATE_FAILED', message: `Failed to hydrate chat state: ${(err as Error).message}`, retryable: true },
-      }]);
-    }
+    await handleRequestSyncState(this.deps, (m) => this.sendToWebview(m));
   }
 
   private async handleToolCallResponse(payload: unknown): Promise<void> {
@@ -231,53 +170,5 @@ export class ChatEngineAdapter implements IChatEngineAdapter {
       agentId: result.agentId,
       agentName: result.agentName,
     }]);
-  }
-
-  /** Convert ChatExtToWebviewMessage to EngineStreamEvent (or null) */
-  private toStreamEvent(event: ChatExtToWebviewMessage): EngineStreamEvent | null {
-    if (event.type === 'chat:streamChunk') {
-      const e = event as any;
-      if (e.streamId) this.lastStreamId = e.streamId;
-      if (e.eventType === 'token' || e.eventType === 'thinking' || e.eventType === 'status' || e.eventType === 'error') {
-        return { type: 'chat:streamChunk', streamId: e.streamId, nodeId: e.nodeId, eventType: e.eventType, content: e.content, timestamp: e.timestamp };
-      }
-    }
-    if (event.type === 'chat:streamComplete') {
-      const e = event as any;
-      if (e.streamId) this.lastStreamId = e.streamId;
-      const mapped: EngineStreamEvent = { type: 'chat:streamComplete', streamId: e.streamId, nodeId: e.nodeId, finalContent: e.finalContent };
-      // The stream is closed: a later pre-token error must not attach to it.
-      this.lastStreamId = undefined;
-      return mapped;
-    }
-    if (event.type === 'chat:toolCall') {
-      return { type: 'chat:toolCall', toolCall: (event as any).toolCall };
-    }
-    if (event.type === 'chat:toolCallUpdate') {
-      // FIX F: forward tool result/status so the webview can complete/fail the block.
-      const e = event as { id?: string; status?: 'running' | 'completed' | 'failed'; result?: string; duration?: number };
-      if (!e.id) return null;
-      return {
-        type: 'chat:toolCallUpdate',
-        id: e.id,
-        status: e.status ?? 'completed',
-        result: e.result,
-        duration: e.duration,
-      };
-    }
-    if (event.type === 'chat:error') {
-      // Errors carry no streamId — attach to the currently open stream so
-      // the bubble shows the failure and can be closed (previously swallowed).
-      const e = event as any;
-      return {
-        type: 'chat:streamChunk',
-        streamId: this.lastStreamId ?? 'error-stream',
-        nodeId: 'pi',
-        eventType: 'error',
-        content: `${e.code || 'ERROR'}: ${e.message || 'Unknown error'}`,
-        timestamp: new Date().toISOString(),
-      };
-    }
-    return null;
   }
 }

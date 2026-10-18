@@ -2,20 +2,31 @@
  * ChatPanelProvider — KSA-210
  * WebviewViewProvider for the Chat Panel sidebar.
  * Delegates status, models, state to extracted managers.
+ *
+ * Context-usage accounting, engine creation, message dispatch and code
+ * actions live in ./chat-panel-provider/ modules.
  */
 
 import * as vscode from "vscode";
-import { debugLog } from "../debug-logger";
 import { IServerManager } from "../types/server-types";
-import { PiWorkflowAdapter, KbRemoteCheckpointerStore } from "../pi-workflow";
+import { PiWorkflowAdapter } from "../pi-workflow";
 import { createLlmProvider } from "../mcp/providers";
 import { MessageHandler } from "./message-handler";
 import { ChatWebviewToExtMessage, ChatExtToWebviewMessage } from "./message-protocol";
 import { ContextUsageTracker } from "./context-usage-tracker";
-import { SessionCompactor, CompactableSession, normalizeUsageToFraction, SessionMonitor } from "../pi-agent/session-compactor";
+import { SessionCompactor } from "../pi-agent/session-compactor";
 import { ChatStatusManager } from "./ChatStatusManager";
 import { ChatModelManager } from "./ChatModelManager";
 import { ChatStateManager } from "./ChatStateManager";
+import { CountedFlags } from "./chat-panel-provider/counted-flags";
+import { sendInitialContextUsage as runInitialContextUsage, updateContextUsageFromSavedState as runSavedStateContextUsage } from "./chat-panel-provider/context-usage";
+import type { ContextUsageDeps } from "./chat-panel-provider/context-usage";
+import { updateContextUsageAfterTurn as runContextUsageAfterTurn } from "./chat-panel-provider/context-compaction";
+import { createChatEngine } from "./chat-panel-provider/engine-factory";
+import { applyChatConfigChange } from "./chat-panel-provider/config-change";
+import { handleBuiltinChatMessage } from "./chat-panel-provider/message-dispatch";
+import { applyCodeToEditor, insertCodeToEditor, pickAttachmentFiles, pickChatContext } from "./chat-panel-provider/code-actions";
+import { setLlmModelConfig } from "./chat-panel-provider/model-config";
 
 export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Disposable {
   public static readonly viewType = "sdlcChatPanel";
@@ -26,91 +37,13 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   private messageBuffer: ChatExtToWebviewMessage[] = [];
   private contextUsageTracker: ContextUsageTracker = new ContextUsageTracker();
   private sessionCompactor: SessionCompactor = new SessionCompactor();
-  private steeringCounted = false;
-  private toolDefinitionsCounted = false;
-
-  /**
-   * SA4E-182: Send initial context usage on panel load.
-   * Reads steering files from disk + estimates MCP tool definitions.
-   * Syncs maxTokens from provider if engine already detected context window.
-   */
-  private async sendInitialContextUsage(): Promise<void> {
-    const tabId = "default";
-    try {
-      // SA4E-182: Eagerly detect context window from provider's /v1/models endpoint.
-      // This is the single source of truth for local servers (llama-server -c flag).
-      // Static model map is unreliable because user controls context size via CLI args.
-      const engine = this.getEngine();
-      const detectedWindow = engine.getDetectedContextWindow();
-      if (detectedWindow && detectedWindow > 0) {
-        this.contextUsageTracker.setMaxTokens(detectedWindow);
-      } else {
-        // Provider hasn't detected yet — trigger detection now (fast: single HTTP call)
-        await engine.detectContextWindowEarly();
-        const freshWindow = engine.getDetectedContextWindow();
-        if (freshWindow && freshWindow > 0) {
-          this.contextUsageTracker.setMaxTokens(freshWindow);
-        }
-        // If still 0 (provider offline), keep default 128000 — will sync on first invoke
-      }
-      // 1. Count steering tokens — match actual injectSteering() budget (MAX_STEERING_CHARS=4000)
-      // Plus base system prompt + agent instructions overhead
-      if (!this.steeringCounted) {
-        // injectSteering caps at 4000 chars of steering content + system prompt base (~3500 chars)
-        const SYSTEM_PROMPT_BASE_CHARS = 3500;
-        const MAX_STEERING_CHARS = 4000; // mirrors steering-loader.ts injectSteering budget
-        const steeringChars = SYSTEM_PROMPT_BASE_CHARS + MAX_STEERING_CHARS;
-        this.contextUsageTracker.updateSteeringTokens(tabId, ["x".repeat(steeringChars)]);
-        this.steeringCounted = true;
-      }
-
-      // 2. Count MCP + VS Code tool definitions via engine's McpBridge
-      try {
-        const engine = this.getEngine();
-        const tools = await engine.listAvailableTools();
-        if (tools.length > 0) {
-          // Build tool text matching what LLM actually receives (name + description + schema)
-          const toolText = tools.map((t: any) =>
-            `${t.name}: ${t.description || ""} ${JSON.stringify(t.inputSchema || {})}`
-          ).join("\n");
-          this.contextUsageTracker.addToolTokens(tabId, toolText);
-          debugLog(`[ChatPanel] MCP tools counted: ${tools.length} tools, ~${Math.ceil(toolText.length / 4)} tokens`);
-        }
-      } catch (err) {
-        debugLog(`[ChatPanel] MCP tool counting failed (non-fatal): ${(err as Error).message}`);
-      }
-
-      // 3. Send to webview
-      const payload = this.contextUsageTracker.getUsagePayload(tabId);
-      console.log(`[ChatPanel] sendInitialContextUsage: steeringCounted=${this.steeringCounted}, total=${payload.total.tokens}, steering=${payload.steering.tokens}`);
-      this.sendToWebview({
-        type: "tab:contextUpdate",
-        payload: {
-          tabId,
-          tokenCount: payload.total.tokens,
-          maxTokens: payload.maxTokens,
-          breakdown: {
-            conversation: payload.conversation.percentage,
-            mcpTools: payload.mcpTools.percentage,
-            steering: payload.steering.percentage,
-          },
-        },
-      } as any);
-    } catch (err) {
-      debugLog(`[ChatPanel] sendInitialContextUsage error: ${(err as Error).message}`);
-    }
-  }
+  private readonly countedFlags = new CountedFlags();
+  private readonly contextUsageDeps: ContextUsageDeps;
   private disposables: vscode.Disposable[] = [];
 
   private readonly statusManager: ChatStatusManager;
   private readonly modelManager: ChatModelManager;
   private readonly stateManager: ChatStateManager;
-  /**
-   * Fan-out subscribers for engine messages (streaming-identity fix).
-   * The sidebar consumes via sendToWebview; the Agentic Chat panel
-   * subscribes here so engine responses actually reach it (previously
-   * handleEngineEvent had zero callers — send-only dead panel).
-   */
   private readonly engineListeners = new Set<(msg: ChatExtToWebviewMessage) => void>();
   private diffTracker: import('../chat/diff/IDiffTracker').IDiffTracker | null = null;
 
@@ -124,6 +57,14 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     this.statusManager = new ChatStatusManager(mcpManager, secrets, (msg) => this.sendToWebview(msg));
     this.modelManager = new ChatModelManager((msg) => this.sendToWebview(msg));
     this.stateManager = new ChatStateManager(workspaceRoot, workspaceState, (msg) => this.sendToWebview(msg), () => this.getEngine());
+    this.contextUsageDeps = {
+      getOrCreateEngine: () => this.getEngine(),
+      peekEngine: () => this.engine,
+      getTracker: () => this.contextUsageTracker,
+      getFlags: () => this.countedFlags,
+      getCompactor: () => this.sessionCompactor,
+      sendToWebview: (msg) => this.sendToWebview(msg),
+    };
     this.disposables.push(this.stateManager);
   }
 
@@ -151,7 +92,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   saveChatState(state: { tabs: unknown[]; activeTabId: string; messageHistory?: string[] }): void {
     this.stateManager.saveChatState(state);
     // SA4E-182: Update context usage whenever chat state is saved (fires after every turn)
-    this.updateContextUsageFromSavedState(state);
+    runSavedStateContextUsage(this.contextUsageDeps, state);
   }
 
   sendContextUsage(tabId: string): void {
@@ -159,175 +100,14 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     this.sendToWebview({ type: "chat:contextUsage", payload });
   }
 
-  /**
-   * SA4E-182: Update context token usage after each LLM turn completes.
-   * Counts conversation messages, estimates steering + tool tokens.
-   * Syncs maxTokens from provider's detected context window (e.g., 32768 from llama-server).
-   * Sends tab:contextUpdate to webview (which chat.js handleContextUpdate handles).
-   */
-  private updateContextUsageAfterTurn(): void {
-    try {
-      const engine = this.engine;
-      if (!engine) return;
-      const tabId = "default";
-
-      // SA4E-182: Sync maxTokens from detected context window (provider.getContextWindow())
-      // After first ensureGraph() call, detectContextWindow() has run and provider
-      // reports the actual value (e.g., 32768 for llama-server -c 65536 -np 2).
-      const detectedWindow = engine.getDetectedContextWindow();
-      if (detectedWindow && detectedWindow > 0) {
-        this.contextUsageTracker.setMaxTokens(detectedWindow);
-      }
-
-      const messages = engine.getChatHistory() || [];
-      debugLog(`[ChatPanel] updateContextUsageAfterTurn: ${messages.length} messages, maxTokens=${detectedWindow || "default"}`);
-
-      // Count conversation tokens from messages
-      this.contextUsageTracker.updateFromMessages(
-        tabId,
-        messages.map((m: any) => ({ content: m.content || "" }))
-      );
-
-      // Estimate steering tokens on first call — match injectSteering() actual budget
-      if (!this.steeringCounted) {
-        // System prompt base (~3500) + MAX_STEERING_CHARS (4000) = 7500 chars
-        this.contextUsageTracker.updateSteeringTokens(tabId, [
-          "x".repeat(7500),
-        ]);
-        this.steeringCounted = true;
-      }
-
-      // SA4E-182: Count MCP tool definitions (schema sent to LLM on every request).
-      // These are constant for the session — count once after engine has fetched tools.
-      if (!this.toolDefinitionsCounted) {
-        void engine.listAvailableTools().then(tools => {
-          if (tools.length > 0) {
-            const toolText = tools.map((t: any) =>
-              `${t.name}: ${t.description || ""} ${JSON.stringify(t.inputSchema || {})}`
-            ).join("\n");
-            const usage = (this.contextUsageTracker as any).tabUsage?.get(tabId);
-            if (usage) { usage.mcpTools = Math.ceil(toolText.length / 4); }
-            this.toolDefinitionsCounted = true;
-            debugLog(`[ChatPanel] Tool definitions counted: ${tools.length} tools, ~${Math.ceil(toolText.length / 4)} tokens`);
-          }
-        }).catch(() => { /* non-fatal */ });
-      }
-
-      // Send tab:contextUpdate with breakdown
-      let payload = this.contextUsageTracker.getUsagePayload(tabId);
-      const usageFraction = normalizeUsageToFraction(payload.total.percentage);
-
-      // SA4E-339: Auto-trigger compaction when context usage reaches threshold
-      if (SessionMonitor.shouldCompact(usageFraction) === 'compact' && messages.length > 2) {
-        debugLog(`[ChatPanel] Triggering auto-compaction: usageFraction=${usageFraction}, messages=${messages.length}`);
-        this.applyCompactionAndRecount(tabId, payload.maxTokens, usageFraction, messages);
-        // Refetch payload after recount (TDD F-1)
-        payload = this.contextUsageTracker.getUsagePayload(tabId);
-      }
-
-      debugLog(`[ChatPanel] context payload: total=${payload.total.tokens}, conv=${payload.conversation.tokens}, mcp=${payload.mcpTools.tokens}, steer=${payload.steering.tokens}`);
-      this.sendToWebview({
-        type: "tab:contextUpdate",
-        payload: {
-          tabId,
-          tokenCount: payload.total.tokens,
-          maxTokens: payload.maxTokens,
-          breakdown: {
-            conversation: payload.conversation.percentage,
-            mcpTools: payload.mcpTools.percentage,
-            steering: payload.steering.percentage,
-          },
-        },
-      } as any);
-    } catch (err) {
-      debugLog(`[ChatPanel] updateContextUsageAfterTurn error (non-fatal): ${(err as Error).message}`);
-    }
-  }
-
-  private applyCompactionAndRecount(tabId: string, maxTokens: number, usageFraction: number, messages: any[]): void {
-    const session = this.buildCompactableSession(maxTokens, usageFraction, messages);
-    const compResult = this.sessionCompactor.compact(session);
-    if (compResult.action === "compact" && compResult.session.messages.length > 0) {
-      if (typeof (this.engine as any).setChatHistory === "function") {
-        (this.engine as any).setChatHistory(compResult.session.messages);
-      }
-      this.contextUsageTracker.updateFromMessages(
-        tabId,
-        compResult.session.messages.map((m: any) => ({ content: m.content || "" }))
-      );
-      debugLog(`[ChatPanel] Auto-compaction complete: tokensSaved=${compResult.tokensSaved}`);
-    }
-  }
-
-  private buildCompactableSession(maxTokens: number, usageFraction: number, messages: any[]): CompactableSession {
-    return {
-      modelId: "default",
-      contextWindow: maxTokens,
-      usage: usageFraction,
-      messages: messages.map((m: any) => ({
-        role: m.role || "user",
-        content: typeof m.content === "string" ? m.content : JSON.stringify(m.content),
-        toolName: m.toolName,
-      })),
-    };
-  }
-
-  /**
-   * SA4E-182: Update context from saved state (triggered by saveChatState debounce).
-   * This is the reliable path — fires every time webview saves state after messages change.
-   */
-  private updateContextUsageFromSavedState(state: { tabs: unknown[]; activeTabId: string }): void {
-    try {
-      const tabId = "default";
-      const tabs = state.tabs as Array<{ id: string; messages?: Array<{ content?: string; role?: string }> }>;
-      const activeTab = tabs.find(t => t.id === state.activeTabId) || tabs[0];
-      if (!activeTab?.messages || activeTab.messages.length === 0) return;
-
-      // Count conversation tokens
-      this.contextUsageTracker.updateFromMessages(
-        tabId,
-        activeTab.messages.map(m => ({ content: m.content || "" }))
-      );
-
-      // SA4E-182: Sync maxTokens from detected context window
-      if (this.engine) {
-        const detectedWindow = this.engine.getDetectedContextWindow();
-        if (detectedWindow && detectedWindow > 0) {
-          this.contextUsageTracker.setMaxTokens(detectedWindow);
-        }
-      }
-
-      // Tool definitions are counted once by updateContextUsageAfterTurn or sendInitialContextUsage.
-      // Don't overwrite mcpTools here — they represent constant tool schema tokens, not message content.
-
-      // Steering (count once) — match injectSteering() budget
-      if (!this.steeringCounted) {
-        this.contextUsageTracker.updateSteeringTokens(tabId, ["x".repeat(7500)]);
-        this.steeringCounted = true;
-      }
-
-      // Send update
-      const payload = this.contextUsageTracker.getUsagePayload(tabId);
-      this.sendToWebview({
-        type: "tab:contextUpdate",
-        payload: {
-          tabId,
-          tokenCount: payload.total.tokens,
-          maxTokens: payload.maxTokens,
-          breakdown: {
-            conversation: payload.conversation.percentage,
-            mcpTools: payload.mcpTools.percentage,
-            steering: payload.steering.percentage,
-          },
-        },
-      } as any);
-    } catch {
-      // Non-fatal
-    }
-  }
-
   getContextUsageTracker(): ContextUsageTracker {
     return this.contextUsageTracker;
+  }
+
+  /** Subscribe to every engine message (sidebar stays the default sink). */
+  onEngineMessage(listener: (msg: ChatExtToWebviewMessage) => void): vscode.Disposable {
+    this.engineListeners.add(listener);
+    return { dispose: () => { this.engineListeners.delete(listener); } };
   }
 
   dispose(): void {
@@ -337,20 +117,8 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   // === Private routing ===
-
   private routeMessage(msg: ChatWebviewToExtMessage): void {
-    if ((msg as any).type === "executeCommand" && (msg as any).command) {
-      vscode.commands.executeCommand((msg as any).command);
-      return;
-    }
-    if (msg.type === "chat:saveState") {
-      this.stateManager.saveChatState(msg.payload);
-      return;
-    }
-    if ((msg as any).type === "chat:debugLog") {
-      debugLog(`[webview] ${(msg as any).text}`);
-      return;
-    }
+    if (handleBuiltinChatMessage(msg, { saveChatState: (payload) => this.stateManager.saveChatState(payload) })) { return; }
     if (msg.type === "ready") {
       void this.statusManager.sendCombinedStatus();
       void this.modelManager.sendModels();
@@ -358,20 +126,18 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       this.stateManager.sendSteeringInfo();
       this.stateManager.sendAgentsInfo();
       this.stateManager.sendSkillsInfo();
-      void this.sendInitialContextUsage();
+      void runInitialContextUsage(this.contextUsageDeps);
     }
     this.handleMessage(msg);
   }
 
   private onConfigChange(e: vscode.ConfigurationChangeEvent): void {
-    if (e.affectsConfiguration("sdlcAgents.llmProvider") || e.affectsConfiguration("sdlcAgents.llmModel")) {
-      if (this.engine && this.secrets) { this.engine.setLlmProvider(createLlmProvider(this.secrets)); }
-      void this.modelManager.sendModels();
-      void this.statusManager.sendCombinedStatus();
-    }
-    if (e.affectsConfiguration("sdlcAgents.anthropicBaseUrl") || e.affectsConfiguration("sdlcAgents.openaiBaseUrl") || e.affectsConfiguration("sdlcAgents.ollamaUrl")) {
-      void this.statusManager.sendCombinedStatus();
-    }
+    applyChatConfigChange(e, {
+      peekEngine: () => this.engine,
+      getSecrets: () => this.secrets,
+      sendModels: () => this.modelManager.sendModels(),
+      sendCombinedStatus: () => this.statusManager.sendCombinedStatus(),
+    });
   }
 
   private flushBuffer(webviewView: vscode.WebviewView): void {
@@ -381,12 +147,6 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
       }
       this.messageBuffer = [];
     }
-  }
-
-  /** Subscribe to every engine message (sidebar stays the default sink). */
-  onEngineMessage(listener: (msg: ChatExtToWebviewMessage) => void): vscode.Disposable {
-    this.engineListeners.add(listener);
-    return { dispose: () => { this.engineListeners.delete(listener); } };
   }
 
   private sendToWebview(msg: ChatExtToWebviewMessage): void {
@@ -403,32 +163,14 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   private getEngine(): PiWorkflowAdapter {
     if (!this.engine) {
-      this.engine = new PiWorkflowAdapter({
-        mcpManager: this.mcpManager,
-        workspaceRoot: this.workspaceRoot,
-        onEvent: (msg) => {
-          this.sendToWebview(msg);
-          for (const listener of this.engineListeners) {
-            try {
-              listener(msg);
-            } catch {
-              // One bad subscriber must not break the sidebar.
-            }
-          }
-        },
-        llmProvider: this.secrets ? createLlmProvider(this.secrets) : undefined,
-        checkpointerStore: new KbRemoteCheckpointerStore({
-          workspaceRoot: this.workspaceRoot,
-        }),
-        secrets: this.secrets,
-      });
+      this.engine = createChatEngine(this.mcpManager, this.workspaceRoot, this.secrets, (msg) => this.sendToWebview(msg), this.engineListeners);
     }
     return this.engine;
   }
 
   private getMessageHandler(): MessageHandler {
     if (!this.messageHandler) {
-      this.messageHandler = new MessageHandler(() => this.getEngine(), (msg) => this.sendToWebview(msg), this.workspaceRoot, (ct) => this.handlePickContext(ct), () => this.handlePickAttachment(), (code, filePath) => this.handleApplyCode(code, filePath), (code) => this.handleInsertCode(code), (model) => this.handleSetModel(model), () => this.updateContextUsageAfterTurn(), () => this.stateManager.broadcastInitialState());
+      this.messageHandler = new MessageHandler(() => this.getEngine(), (msg) => this.sendToWebview(msg), this.workspaceRoot, (ct) => pickChatContext(this.workspaceRoot, (m) => this.sendToWebview(m), ct), () => pickAttachmentFiles((m) => this.sendToWebview(m)), (code, filePath) => applyCodeToEditor(code, filePath), (code) => insertCodeToEditor(code), (model) => setLlmModelConfig(model), () => this.updateContextUsageAfterTurn(), () => this.stateManager.broadcastInitialState());
     }
     return this.messageHandler;
   }
@@ -444,63 +186,11 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     }
   }
 
-  private async handleSetModel(model: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    try {
-      await config.update("llmModel", model === "auto" ? undefined : model, vscode.ConfigurationTarget.Global);
-    } catch (err) {
-      console.debug("[ChatPanelProvider] handleSetModel config update failed: " + (err as Error).message);
-    }
-  }
-
-  private async handlePickContext(contextType: string): Promise<void> {
-    const { ChatContextPicker } = require("./ChatContextPicker");
-    const picker = new ChatContextPicker(this.workspaceRoot, (msg: ChatExtToWebviewMessage) => this.sendToWebview(msg));
-    await picker.pick(contextType);
-  }
-
-  private async handlePickAttachment(): Promise<void> {
-    const uris = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, canSelectMany: true, title: "Attach Files", filters: { "All Files": ["*"] } });
-    if (!uris) { return; }
-    for (const uri of uris) { this.sendToWebview({ type: "chat:contextPicked", item: { type: "file", label: vscode.workspace.asRelativePath(uri), path: uri.fsPath } }); }
-  }
-
-  private async handleApplyCode(code: string, filePath?: string): Promise<void> {
-    let editor = vscode.window.activeTextEditor;
-
-    // If no active editor but filePath provided, open that file
-    if (!editor && filePath) {
-      const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
-      const fullPath = require("path").isAbsolute(filePath) ? filePath : require("path").join(wsRoot, filePath);
-      try {
-        const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(fullPath));
-        editor = await vscode.window.showTextDocument(doc);
-      } catch (err) {
-        console.warn("[ChatPanelProvider] handleApplyCode failed to open file: " + (err as Error).message);
-        vscode.window.showWarningMessage(`Cannot open file: ${filePath}`);
-        return;
-      }
-    }
-
-    if (!editor) {
-      vscode.window.showWarningMessage("No active editor. Open the target file first, then click Apply.");
-      return;
-    }
-
-    // Replace entire file content if selection is empty and code looks like full file
-    const hasImports = code.trimStart().startsWith("import ") || code.trimStart().startsWith("package ");
-    if (editor.selection.isEmpty && hasImports) {
-      const fullRange = new vscode.Range(0, 0, editor.document.lineCount, 0);
-      await editor.edit((eb) => { eb.replace(fullRange, code); });
-    } else {
-      await editor.edit((eb) => { editor!.selection.isEmpty ? eb.insert(editor!.selection.active, code) : eb.replace(editor!.selection, code); });
-    }
-  }
-
-  private async handleInsertCode(code: string): Promise<void> {
-    const editor = vscode.window.activeTextEditor;
-    if (editor) { await editor.edit((eb) => eb.insert(editor.selection.active, code)); }
-    else { await vscode.window.showTextDocument(await vscode.workspace.openTextDocument({ content: code })); }
+  /**
+   * SA4E-182: Update context token usage after each LLM turn (see context-compaction.ts).
+   */
+  private updateContextUsageAfterTurn(): void {
+    runContextUsageAfterTurn(this.contextUsageDeps);
   }
 
   private getHtml(webview: vscode.Webview): string {
@@ -508,4 +198,3 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     return ChatHtmlBuilder.build(webview, this.extensionUri);
   }
 }
-

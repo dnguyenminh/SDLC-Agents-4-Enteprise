@@ -16,8 +16,6 @@ import { FileScanner } from '../../pi-agent/context-retrieval/file-scanner.js';
 import { FsDirLister } from '../../pi-agent/context-retrieval/file-exclusion-filter.js';
 import { FsContentReader, SymbolOutlineExtractor } from '../../pi-agent/context-retrieval/symbol-outline-extractor.js';
 import { TokenCounter } from '../../pi-agent/context-retrieval/token-counter.js';
-import type { SearchCandidate } from '../../pi-agent/context-retrieval/types.js';
-import { LANGUAGE_EXTENSIONS } from '../../code-intel/models.js';
 import { renderCorpusWithGlobalBudget, type CorpusFile } from './skeleton-renderer.js';
 import { runFallbackLadder, moduleOf, type FallbackEntry } from './skeleton-fallback.js';
 import { SkeletonTruncator } from './skeleton-truncator.js';
@@ -25,6 +23,13 @@ import { isSecretFileName } from './secret-redaction.js';
 import type { SkeletonBuildResult, SkeletonPart, SkeletonSections, IndexedFileInfo } from './skeleton-types.js';
 import type { SymbolLocator } from './symbol-locator.js';
 import type { IndexFreshnessChecker } from './index-freshness-checker.js';
+import {
+  degraded, toRelative, extName, detectLanguage, groupCorpusByPath, sort,
+} from './skeleton-utils.js';
+
+// Language detection moved to skeleton-utils.ts (BR-18) — re-exported so the
+// public symbol stays at this path.
+export { detectLanguage } from './skeleton-utils.js';
 
 /** §8 scale bound — walked files per build (larger workspaces truncate). */
 export const SKELETON_MAX_FILES = 2_000;
@@ -183,47 +188,4 @@ export class SkeletonProvider {
       durationMs: Date.now() - started,
     });
   }
-}
-
-function degraded(): SkeletonSections {
-  return {
-    skeleton: {
-      skeletonContent: '', skeletonTokens: 0, truncationApplied: false,
-      fallbackFiles: 0, skippedFiles: 0, gateDecision: 'DEGRADED_NO_SKELETON',
-    },
-  };
-}
-
-function toRelative(root: string, absolutePath: string): string {
-  return path.relative(root, absolutePath).replaceAll('\\', '/');
-}
-
-function extName(relativePath: string): string {
-  return path.extname(relativePath).replace(/^\./, '') || 'unknown';
-}
-
-/** Existing language detection (code-intel models) — null ⇒ grammar-less. */
-export function detectLanguage(relativePath: string): string | null {
-  const ext = path.extname(relativePath).toLowerCase();
-  for (const [lang, exts] of Object.entries(LANGUAGE_EXTENSIONS)) {
-    if (exts.includes(ext)) return lang;
-  }
-  return null;
-}
-
-function groupCorpusByPath(corpus: readonly SearchCandidate[]): Map<string, SearchCandidate[]> {
-  const map = new Map<string, SearchCandidate[]>();
-  for (const c of corpus) {
-    const key = (c.filePath ?? '').replaceAll('\\', '/');
-    const list = map.get(key) ?? [];
-    list.push(c);
-    map.set(key, list);
-  }
-  return map;
-}
-
-/** Renders highest-priority modules first so they claim budget first. */
-function sort(files: CorpusFile[], priority: readonly string[]): void {
-  const rank = new Map(priority.map((m, i) => [m, i]));
-  files.sort((a, b) => (rank.get(a.module) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.module) ?? Number.MAX_SAFE_INTEGER));
 }
