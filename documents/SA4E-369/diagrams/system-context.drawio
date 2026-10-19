@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="592" dy="286" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="host" value="VS Code Extension Host (single process, in-memory only)" style="swimlane;whiteSpace=wrap;html=1;startSize=40;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="40" width="800" height="700" as="geometry"/>
+                </mxCell>
+                <mxCell id="tabs" value="Chatbox Tabs (per-tab sessions, D1)" style="swimlane;whiteSpace=wrap;html=1;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" parent="host" vertex="1">
+                    <mxGeometry x="30" y="50" width="740" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="ta" value="Tab A — Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="tabs" vertex="1">
+                    <mxGeometry x="30" y="45" width="210" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="tbx" value="Tab B — Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="tabs" vertex="1">
+                    <mxGeometry x="265" y="45" width="210" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="tn" value="Tab N — Agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="tabs" vertex="1">
+                    <mxGeometry x="500" y="45" width="210" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="tools" value="Session Tools: peer_list / peer_send / peer_status (SA4E-360 pattern)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="host" vertex="1">
+                    <mxGeometry x="30" y="220" width="340" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="pb" value="PeerBus (in-process, EventEmitter-style)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" parent="host" vertex="1">
+                    <mxGeometry x="430" y="220" width="340" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="ui" value="Chat UI WebView (TabBar badge, transcript prefix, peer list panel)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="host" vertex="1">
+                    <mxGeometry x="30" y="350" width="340" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="pr" value="PeerRegistry (tabId → peer info)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="host" vertex="1">
+                    <mxGeometry x="430" y="350" width="160" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="ptm" value="PeerTaskManager (task lifecycle, peer_status)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="host" vertex="1">
+                    <mxGeometry x="610" y="350" width="160" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="sh" value="Session Host — key: workspaceRoot + tabId" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="host" vertex="1">
+                    <mxGeometry x="430" y="480" width="340" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="cg" value="Context Governance (budget gate → auto-chunk → intra-turn guard)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="host" vertex="1">
+                    <mxGeometry x="430" y="600" width="340" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="user" value="Developer (user)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="345" width="150" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="a2a" value="pi-a2a cross-machine transport — OUT OF SCOPE (D5)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="590" width="240" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_user_ui" value="drives tabs, views badge/panel" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="user" target="ui" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_ta_tools" value="peer_send" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.3;entryY=0;entryDx=0;entryDy=0;" parent="1" source="ta" target="tools" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="425" y="228"/>
+                            <mxPoint x="390" y="228"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_tbx_tools" value="peer_send" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.7;entryY=0;entryDx=0;entryDy=0;" parent="1" source="tbx" target="tools" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+<Array as="points">
+<mxPoint x="660" y="235"/>
+</Array>
+</mxGeometry>
+                </mxCell>
+                <mxCell id="e_tn_tools" value="peer_send" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.95;entryY=0;entryDx=0;entryDy=0;" parent="1" source="tn" target="tools" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="895" y="240"/>
+                            <mxPoint x="520" y="240"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_tools_pb" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="tools" target="pb" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_pb_pr" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="pb" target="pr" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_pb_ptm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="pb" target="ptm" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_pb_sh" value="auto-run turn (D2)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="pb" target="sh" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+<Array as="points">
+<mxPoint x="1050" y="295"/>
+<mxPoint x="1050" y="555"/>
+</Array>
+</mxGeometry>
+                </mxCell>
+                <mxCell id="e_sh_cg" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="sh" target="cg" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_pb_ui" value="events" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="pb" target="ui" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="860" y="360"/>
+                            <mxPoint x="460" y="360"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_pb_a2a" value="future transport swap — shape-compatible contract only (D4)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;" parent="1" source="pb" target="a2a" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>

@@ -1,0 +1,41 @@
+<mxGraphModel dx="756" dy="329" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="lane1" value="Sender Tab" style="swimlane;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+            <mxGeometry x="40" y="40" width="760" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1" value="peer_send(tabId, message)" style="rounded=1;whiteSpace=wrap;html=1;" parent="lane1" vertex="1">
+            <mxGeometry x="100" y="60" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane2" value="PeerBus" style="swimlane;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+            <mxGeometry x="40" y="260" width="760" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2" value="Route message" style="rounded=1;whiteSpace=wrap;html=1;" parent="lane2" vertex="1">
+            <mxGeometry x="100" y="60" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane3" value="Receiver Tab" style="swimlane;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+            <mxGeometry x="40" y="480" width="760" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3" value="Auto-run agent turn" style="rounded=1;whiteSpace=wrap;html=1;" parent="lane3" vertex="1">
+            <mxGeometry x="100" y="60" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="s4" value="Reply via PeerBus" style="rounded=1;whiteSpace=wrap;html=1;" parent="lane3" vertex="1">
+            <mxGeometry x="400" y="60" width="160" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;" parent="1" source="s1" target="s2" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;" parent="1" source="s2" target="s3" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;" parent="1" source="s4" target="s1" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="370" y="570"/>
+                    <mxPoint x="370" y="130"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+    </root>
+</mxGraphModel>

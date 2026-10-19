@@ -1,0 +1,75 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="start" value="Phase 5 complete&#10;peer/ implemented + wired" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="40" y="200" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="pbt" value="PBT (6)&#10;fast-check properties&#10;zero-state, bounds, envelope" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="260" y="200" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="ut" value="UT (31)&#10;vitest unit suites&#10;registry/guards/threads/&#10;task-manager/tools/envelope" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="490" y="200" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="it" value="IT (35)&#10;mock session host only&#10;bus orchestration, guards,&#10;governance, approval logic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="720" y="200" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2e" value="E2E (8)&#10;vitest.e2e.config.ts&#10;real ConversationManager,&#10;import scan, regression" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="950" y="200" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="sit" value="SIT manual (16)&#10;REAL Kiro + real agent turns&#10;badge/prefix visuals, injection,&#10;approval UX, netstat (CDP)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="1180" y="200" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="end" value="Exit gate&#10;0 Critical / 0 Major&#10;AC1-AC8 + C1-C3 verified" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="1410" y="200" width="160" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="devfix" value="DEV fix root cause&#10;(no workaround rule)&#10;security findings cross-logged&#10;SEC-01/03/06" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;" vertex="1" parent="1">
+      <mxGeometry x="720" y="400" width="200" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="g1" value="Entry: compile clean,&#10;constants in constants.ts" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="230" y="130" width="170" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="g2" value="Entry: UT green,&#10;injectable components" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="700" y="130" width="180" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="g3" value="Entry: wiring merged,&#10;e2e config includes peer/" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="930" y="130" width="180" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="g4" value="Entry: C1 option decided,&#10;Kiro sideloaded, CDP on" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="130" width="180" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="e0" edge="1" parent="1" source="start" target="pbt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="pbt" target="ut" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="ut" target="it" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="it" target="e2e" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="e2e" target="sit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" edge="1" parent="1" source="sit" target="end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f1" edge="1" parent="1" source="ut" target="devfix" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;" value="FAIL">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f2" edge="1" parent="1" source="it" target="devfix" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;" value="FAIL">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f3" edge="1" parent="1" source="e2e" target="devfix" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;" value="FAIL">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f4" edge="1" parent="1" source="sit" target="devfix" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;" value="FAIL">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="f5" edge="1" parent="1" source="devfix" target="it" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#b85450;" value="retest (defect loop)">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

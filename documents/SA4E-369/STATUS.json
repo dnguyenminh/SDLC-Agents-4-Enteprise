@@ -1,0 +1,146 @@
+{
+  "ticket": "SA4E-369",
+  "type": "Story",
+  "summary": "Intra-instance agent-to-agent messaging between chatbox tabs (local PeerBus, zero-config)",
+  "priority": "High",
+  "labels": [
+    "peer-bus",
+    "chatbox-tabs",
+    "agent-to-agent",
+    "pi-workflow",
+    "context-governance",
+    "zero-config"
+  ],
+  "jiraUrl": "https://jiraassist.atlassian.net/browse/SA4E-369",
+  "jiraStatus": "In Progress",
+  "currentPhase": "implementation",
+  "relatedTickets": [
+    "SA4E-370",
+    "SA4E-333",
+    "SA4E-334",
+    "SA4E-360",
+    "SA4E-364",
+    "KSA-240"
+  ],
+  "documents": [
+    {
+      "file": "STATUS.json",
+      "author": "sm-agent",
+      "note": "SM file"
+    },
+    {
+      "file": "RUN-LOG.md",
+      "author": "sm-agent",
+      "note": "SM file"
+    },
+    {
+      "file": "FSD.md",
+      "author": "ba-agent",
+      "note": "FSD draft + it.1 (4 Mermaid -> draw.io + embeds) + it.2 (Diagram Index fix); TA enrichment in progress"
+    },
+    {
+      "file": "UI-SPEC.md",
+      "author": "ui-agent",
+      "note": "UI spec + 4 wireframes (AC4: badge, transcript prefix, peer list panel)"
+    },
+    {
+      "file": "TDD.md",
+      "author": "sa-agent",
+      "note": "TDD v1.0 — 976 lines, 12 sections, 8 tdd-* diagrams + DOCX. Design against ground-truth code"
+    },
+    {
+      "file": "DISCREPANCY.md",
+      "author": "sa-agent",
+      "note": "3 findings: DISC-1 tab lifecycle conversation-manager, DISC-2 D1 landed session-host, DISC-3 separator"
+    }
+  ],
+  "phases": {
+    "requirements": {
+      "status": "done",
+      "file": "BRD.md",
+      "version": 1,
+      "completedAt": "2026-10-19T14:30:00+07:00"
+    },
+    "specification": {
+      "status": "done",
+      "file": "FSD.md",
+      "version": 1.2,
+      "completedAt": "2026-10-20T00:15:00+07:00",
+      "note": "BA draft + TA enrichment + it.4 ground-truth harmonization (DISC-1/2/3): D1 LANDED in pi-workflow/session-host — peer CONSUME as-is (not modify session-factory); separator +; tab lifecycle conversation-manager.ts. 0 mermaid, 10 diagram embeds intact"
+    },
+    "ui_design": {
+      "status": "done",
+      "file": "UI-SPEC.md",
+      "version": 1,
+      "completedAt": "2026-10-19T21:50:00+07:00"
+    },
+    "design": {
+      "status": "done",
+      "file": "TDD.md",
+      "version": 1.1,
+      "completedAt": "2026-10-20T04:20:00+07:00",
+      "note": "v1.0: 976 lines, 12 sections, 8 tdd-* diagrams (XML valid, 0 mermaid) + DOCX. Ground-truth per DISCREPANCY.md (DISC-1/2/3). v1.1 security amendment per SECURITY-REVIEW: PeerPromptEnvelope + turnOrigin + ToolApprovalGate options A/B for peer-turns (C1, user decides Phase 5), PEER_MESSAGE_MAX_CHARS=16000 + PEER_010 (SEC-03/C2), dispatch via Registry (SEC-08), invariant I-6a (C3), visibility toggle note (SEC-02). C1-C3 all covered"
+    },
+    "feedback_loop": {
+      "status": "done",
+      "iterations": 4,
+      "maxIterations": 5,
+      "note": "it.1: 4 Mermaid -> draw.io + PNG + embeds (circuit-break at polish loop); it.2: Diagram Index stale metadata fixed; it.3: session-conflict reconciliation; it.4: FSD v1.2 harmonized per DISCREPANCY (D1 landed/consume-as-is, separator +, conversation-manager)"
+    },
+    "security_design_review": {
+      "status": "done",
+      "file": "SECURITY-REVIEW.md",
+      "version": 1,
+      "completedAt": "2026-10-20T03:45:00+07:00",
+      "note": "GO-WITH-CONDITIONS: 0 Critical / 1 High (SEC-01 D2 auto-run prompt injection — ToolApprovalGate NOT wired in create-host.ts:149-172, verified in source) / 2 Medium (SEC-02 consent visibility, SEC-03 oversized bypass rate limit via chunkPrompt) / 3 Low / 3 Info. AC7 confirmed no-socket; AC6/D1 isolation preserved. 3 blocking conditions C1-C3 for auto-run path — TDD amendment dispatched"
+    },
+    "test_planning": {
+      "status": "done",
+      "file": "STP.md + STC.md",
+      "version": 1,
+      "completedAt": "2026-10-20T05:15:00+07:00",
+      "note": "STP 290 dòng + STC 1792 dòng: 83 TC (Happy9/Alt10/Exc13/BR11/Boundary15/UI6/NFR-Sec11/Int4/Reg4) + 6 PBT + 16 SIT manual = 96 items, 80 automated (83.3%). RTM 100%: AC 8/8, UC 6/6, BR 15/15, PEER_001-010 10/10, SEC C1-C3 + SEC-01..09 9/9, bounds đầy đủ. Dual-track option A/B (1 track BLOCKED đến khi user quyết). 6 CSV test-data + qa-test-execution-flow.drawio/png + TEST-REPORT.csv (16 SIT NOT_RUN)"
+    },
+    "ci_cd_setup": {
+      "status": "done",
+      "file": "CICD-SETUP.md + .github/workflows/ci-sa4e-369.yml",
+      "version": 1,
+      "completedAt": "2026-10-20T04:45:00+07:00",
+      "note": "Survey-first: convention per-ticket workflow (7 file cũ) → tạo MỚI ci-sa4e-369.yml (additive, YAML verified). Stages: install→tsc→eslint→full suite vitest(incl peer/*)→peer security cases(SEC-01/03)→esbuild+smoke:bundle→vsix(no publish). RED-BY-DESIGN — gates arm ở Phase 5. Gate mapping v1.53.9 trong CICD-SETUP.md §6"
+    },
+    "implementation": {
+      "status": "in_progress",
+      "note": "Phase 5 dev-agent dispatched — D6 = Option A (full approval gate fail-closed). Scope: module peer/ + wiring conversation-manager/turn-executor/create-host + __tests__/peer/"
+    },
+    "user_guide": {
+      "status": "not_started"
+    },
+    "testing": {
+      "status": "not_started"
+    },
+    "deployment": {
+      "status": "not_started"
+    }
+  },
+  "designDecisions": {
+    "note": "Locked with user 2026-10-18 — downstream agents (BA/TA/SA/QA) do NOT reopen these",
+    "D1": "PREREQUISITE: refactor tabs -> per-tab sessions. Session-host registry key changes workspaceRoot -> workspaceRoot+tabId; per-tab token accounting + per-tab compaction (remove hardcoded tabId='default')",
+    "D2": "Auto-run delivery model: inbound peer task AUTO-TRIGGERS receiving tab's agent turn (with mandatory anti-loop/rate guards, see AC3) — no human inbox approval",
+    "D3": "In-memory PeerRegistry (tabId -> {agentName, role, capabilities, model, status}) + in-process PeerBus (EventEmitter-style): blocking request/response, async dispatch (fire + poll), per-pair conversation threads with bounded history",
+    "D4": "New session tools (subject to FSD/TDD detail): peer_list(), peer_send(tabId, message, async?), peer_status(taskId) — shape-compatible with pi-a2a a2a_call(agent, message, async_dispatch?)/a2a_status so future cross-machine transport swap does not change the contract",
+    "D5": "NON-GOALS: cross-machine/cross-window transport (pi-a2a's job), replacing pi-subagents or acp_delegate, mDNS/HTTP/gateway anything",
+    "D6": "SEC-01 mitigation (Phase 3.7 conditions): Option A — full ToolApprovalGate fail-closed cho peer-triggered turns (TDD §7.6 recommendation; user deferred 'làm tiếp cho xong' → SM apply default 2026-10-20). Option B read-only loadout = future in-memory config; STC track B (TC-109) BLOCKED tại execution"
+  },
+  "suggestedAcceptanceCriteria": [
+    "AC1: Two tabs in same window complete a blocking peer task exchange (A sends -> B auto-runs turn -> A receives reply) with zero configuration",
+    "AC2: Async dispatch returns task id; peer_status polls to terminal state",
+    "AC3: Anti-loop guard: per-pair turn cap (port pattern maxPingpongTurns=5 from pi-a2a) + per-tab rate limit; exceeded -> task fails with descriptive error, both tabs still functional",
+    "AC4: Peer-inbound activity visible in receiving tab UI (badge/indicator + transcript message prefixed like '[Peer inbound] from <tab>')",
+    "AC5: Peer messages pass through existing context governance (budget gate, auto-chunk, intra-turn guard) — no governance bypass",
+    "AC6: Per-tab sessions: each tab has isolated history + per-tab token accounting/compaction (no more hardcoded 'default')",
+    "AC7: Zero new config files/keys required for the local bus; no network sockets opened by the feature",
+    "AC8: Existing suites stay green (context-governance.*, auto-chunk, session routing tests)"
+  ],
+  "lastUpdated": "2026-10-20T05:30:00+07:00",
+  "lastCommentProcessed": "2026-10-18T00:24:01+07:00"
+}
