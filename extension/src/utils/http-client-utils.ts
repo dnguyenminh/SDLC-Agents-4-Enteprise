@@ -103,3 +103,55 @@ function formatErrorPayload(rawError: unknown): string {
   }
   return String(rawError ?? "");
 }
+
+/**
+ * Describe a fetch/undici error so a connection-level failure is diagnosable.
+ *
+ * undici throws a generic `TypeError: fetch failed` whose real reason lives in
+ * `err.cause`. When ALL connection attempts to an address fail, that cause is an
+ * `AggregateError` whose own `.message` is EMPTY and whose per-attempt errors
+ * (ECONNREFUSED/ETIMEDOUT/ENOTFOUND, with address+port) sit in `.errors[]`.
+ * Rendering only `cause.message` therefore prints "(cause: )" and the failure is
+ * un-diagnosable from the log alone (SA4E Pega ingest).
+ *
+ * This unwraps that chain and surfaces the concrete syscall details:
+ *   "AggregateError: connect ECONNREFUSED 127.0.0.1:48721 [ECONNREFUSED]"
+ *
+ * @param err - The error thrown by fetch (or any error).
+ * @returns A single-line description including code/errno/address/port when present.
+ */
+export function describeFetchError(err: unknown): string {
+  if (!err || typeof err !== "object") { return String(err ?? "unknown error"); }
+  const e = err as Record<string, any>;
+
+  // The low-level reason (if any) that undici attached.
+  const cause = e.cause as Record<string, any> | undefined;
+
+  // When the cause is an AggregateError, its own message is usually empty — the
+  // real per-attempt errors are in `.errors[]`. Describe the first concrete one.
+  const detail = describeSingleCause(cause) ?? describeSingleCause(e);
+  const top = typeof e.message === "string" && e.message.length > 0 ? e.message : e.name ?? "Error";
+
+  return detail && detail !== top ? `${top} (${detail})` : top;
+}
+
+/**
+ * Render one error object (or the first entry of an AggregateError) into a
+ * compact string with the OS-level fields that pinpoint a connection failure.
+ */
+function describeSingleCause(c: Record<string, any> | undefined): string | undefined {
+  if (!c) { return undefined; }
+
+  // AggregateError.errors[] holds the actual connect failures — take the first.
+  const inner = Array.isArray(c.errors) && c.errors.length > 0 ? c.errors[0] : c;
+  if (!inner || typeof inner !== "object") { return undefined; }
+
+  const parts: string[] = [];
+  if (typeof inner.message === "string" && inner.message.length > 0) { parts.push(inner.message); }
+  const code = inner.code ?? inner.errno;
+  if (code && !parts.join(" ").includes(String(code))) { parts.push(`[${code}]`); }
+  if (inner.address) { parts.push(`addr=${inner.address}${inner.port ? `:${inner.port}` : ""}`); }
+
+  const text = parts.join(" ").trim();
+  return text.length > 0 ? text : undefined;
+}

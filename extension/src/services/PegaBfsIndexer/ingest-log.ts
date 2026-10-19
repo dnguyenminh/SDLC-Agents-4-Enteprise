@@ -5,6 +5,7 @@
 
 import type { PegaStreamIngester } from "../PegaStreamIngester";
 import type { LogFn } from "./types";
+import { describeFetchError } from "../../utils/http-client-utils";
 
 type IngestSingleRuleResult = Awaited<ReturnType<PegaStreamIngester["ingestSingleRule"]>>;
 
@@ -35,9 +36,10 @@ export function logIngestRejection(
 export function logIngestCrash(
   log: LogFn, err: any, ruleJson: Record<string, unknown>, sourceFile?: string,
 ): void {
-  const cause = err?.cause ? ` (cause: ${err.cause.message ?? err.cause})` : "";
+  const detail = describeFetchError(err);
+  const endpoint = "/api/v1/pega/ingest-rule";
   const pzInsKey = String(ruleJson.pzInsKey ?? ruleJson.insKey ?? '');
   const pxObjClass = String(ruleJson.pxObjClass ?? '');
   const pyRuleName = String(ruleJson.pyRuleName ?? '');
-  log(`[Pega Ingester] ❌ Ingest POST failed (skipping): ${err.message}${cause} | insKey=${pzInsKey} pxObjClass=${pxObjClass} pyRuleName=${pyRuleName}${sourceFile ? ` | file=${sourceFile}` : ""}`);
+  log(`[Pega Ingester] ❌ Ingest POST failed (skipping): ${detail} | endpoint=${endpoint} | insKey=${pzInsKey} pxObjClass=${pxObjClass} pyRuleName=${pyRuleName}${sourceFile ? ` | file=${sourceFile}` : ""}`);
 }
