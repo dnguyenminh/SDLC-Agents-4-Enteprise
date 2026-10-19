@@ -61,13 +61,12 @@ export async function deriveProjectId(workspaceRoot: string): Promise<string> {
   } catch {
     projectId = "";
   }
-  // 3. User + folder hash (always succeeds)
+  // 3. User + workspace hash (always succeeds) — deterministic, no random component
   if (!projectId) {
     const userId = os.userInfo().username || "unknown";
-    const folderName = pathModule.basename(workspaceRoot) || "workspace";
-    // 3a. Add random UUID component to break user-to-project correlation
-    const uuidComponent = crypto.randomUUID().slice(0, 8);
-    projectId = crypto.createHash("sha256").update(`${userId}:${folderName}:${uuidComponent}`).digest("hex").slice(0, 12);
+    // Use full workspace root to ensure stability across folder renames (basename) and uniqueness
+    const workspaceKey = workspaceRoot || "workspace";
+    projectId = crypto.createHash("sha256").update(`${userId}:${workspaceKey}`).digest("hex").slice(0, 12);
   }
 
   // NOTE (CRIT-2): project-id derivation must NOT depend on any auth secret.

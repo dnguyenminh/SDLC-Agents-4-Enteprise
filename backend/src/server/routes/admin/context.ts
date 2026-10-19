@@ -111,15 +111,25 @@ export function createAdminContext(logger: Logger, registry?: any): AdminContext
         [projectId]
       );
       if (row) return projectId;
-      return c.json({
-        __error: true,
-        error: {
-          code: 'PROJECT_NOT_REGISTERED',
-          message: `Project ${projectId} is not registered. Call POST /api/admin/projects/register first.`,
-          action: 'register',
-          projectId,
-        }
-      }, 404);
+      // SA4E-375: Server-side auto-upsert project on first access to avoid PROJECT_NOT_REGISTERED
+      const workspaceRoot = c.req.header('X-Workspace-Root') || '';
+      const displayName = workspaceRoot ? workspaceRoot.split(/[\\/]/).pop() || projectId : projectId;
+      try {
+        await adapter.runAsync(
+          `INSERT INTO project_registry (project_id, display_name, workspace_path, created_by, last_seen)
+           VALUES (?, ?, ?, ?, current_timestamp)
+           ON CONFLICT(project_id) DO UPDATE SET
+             display_name = COALESCE(EXCLUDED.display_name, display_name),
+             workspace_path = COALESCE(EXCLUDED.workspace_path, workspace_path),
+             last_seen = current_timestamp`,
+          [projectId, displayName, workspaceRoot, '']
+        );
+        logger.info({ projectId, displayName, workspaceRoot }, '[ensureProjectRegistered] auto-upserted project');
+      } catch (upsertErr: any) {
+        // Non-fatal: log and continue; subsequent requests may succeed
+        logger.warn({ err: upsertErr, projectId }, '[ensureProjectRegistered] auto-upsert failed, proceeding');
+      }
+      return projectId;
     } catch (err: any) {
       logger.error({ err }, '[ensureProjectRegistered] check failed');
       return c.json({ __error: true, error: { code: 'INTERNAL_ERROR', message: err.message } }, 500);

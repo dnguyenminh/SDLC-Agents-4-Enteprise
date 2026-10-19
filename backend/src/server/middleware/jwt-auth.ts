@@ -14,6 +14,7 @@ import { createProjectContext } from '../../modules/memory/ProjectContext.js';
 import { SessionService } from '../services/SessionService.js';
 import { getEntraVerifier, isEntraToken, tryEntraVerification, validateEntraAuthConfig } from './verifiers/entra-auth.js';
 import { getJwtSecret } from '../../admin/db/jwt.js';
+import { getDbAdapter } from '../../admin/admin-db.js';
 
 const REQUIRE_AUTH = process.env.CODE_INTEL_REQUIRE_AUTH === 'true';
 const TOKEN_SECRET = process.env.KB_TOKEN_SECRET || '';
@@ -29,6 +30,26 @@ export function validateJwtConfig(): void {
 
 export function isJwtAuthRequired(): boolean {
   return REQUIRE_AUTH;
+}
+
+/** SA4E-375: Auto-upsert project in project_registry to avoid PROJECT_NOT_REGISTERED. */
+async function autoUpsertProject(projectId: string, workspaceRoot: string, userId: string) {
+  if (!projectId || projectId === 'default' || !projectId.trim()) return;
+  try {
+    const adapter = getDbAdapter();
+    const displayName = workspaceRoot ? workspaceRoot.split(/[\\/]/).pop() || projectId : projectId;
+    await adapter.runAsync(
+      `INSERT INTO project_registry (project_id, display_name, workspace_path, created_by, last_seen)
+       VALUES (?, ?, ?, ?, current_timestamp)
+       ON CONFLICT(project_id) DO UPDATE SET
+         display_name = COALESCE(EXCLUDED.display_name, display_name),
+         workspace_path = COALESCE(EXCLUDED.workspace_path, workspace_path),
+         last_seen = current_timestamp`,
+      [projectId, displayName, workspaceRoot, userId || '']
+    );
+  } catch {
+    // Non-fatal: ignore upsert errors, project may already exist or DB error
+  }
 }
 
 function decodeJwtPayload(token: string): Record<string, any> | null {
@@ -69,12 +90,18 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
   return async (c, next) => {
     // X-Project-Id header is the mandatory source of project identity
     const projectId = c.req.header('X-Project-Id') || '';
+    const workspaceRoot = c.req.header('X-Workspace-Root') || '';
     const authHeader = c.req.header('Authorization');
     const mustAuth = REQUIRE_AUTH || alwaysRequire;
 
-    const anonymous = () => {
-      const ctx = createProjectContext(projectId, 'anonymous');
-      c.set('projectContext', ctx);
+    const commitContext = async (ctxProjectId: string, userId: string) => {
+      c.set('projectContext', createProjectContext(ctxProjectId, userId));
+      // SA4E-375: auto-upsert project on every authenticated request to ensure project_registry exists
+      await autoUpsertProject(ctxProjectId, workspaceRoot, userId);
+    };
+
+    const anonymous = async () => {
+      await commitContext(projectId, 'anonymous');
       return next();
     };
 
@@ -117,13 +144,9 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
         if (!mustAuth) return anonymous();
         return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
       }
-      const ctx = createProjectContext(
-        projectId || payload.pid || '',
-        payload.sub || 'anonymous',
-        undefined,
-        payload.wid || undefined,
-      );
-      c.set('projectContext', ctx);
+      const ctxProjectId = projectId || payload.pid || '';
+      const userId = payload.sub || 'anonymous';
+      await commitContext(ctxProjectId, userId);
       return next();
     }
 
@@ -139,8 +162,7 @@ function createJwtAuth(alwaysRequire = false): MiddlewareHandler {
       if (!mustAuth) return anonymous();
       return unauthorized('TOKEN_INVALID', 'Invalid or expired token');
     }
-    const ctx = createProjectContext(projectId, session.userId);
-    c.set('projectContext', ctx);
+    await commitContext(projectId, session.userId);
     return next();
   };
 }
