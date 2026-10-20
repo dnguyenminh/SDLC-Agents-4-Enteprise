@@ -7,16 +7,53 @@
 import { v4 as uuidv4 } from "uuid";
 import { ConversationTab, TabMessage } from "./conversation-types";
 
+/** SA4E-369: tab lifecycle listeners (registry wiring — TDD §6.1). */
+export type TabCreatedListener = (tab: ConversationTab) => void;
+export type TabClosedListener = (tabId: string) => void;
+
 export class ConversationManager {
   private tabs: Map<string, ConversationTab> = new Map();
   private activeTabId: string = "";
   private readonly maxTabs: number;
   private tabCounter: number = 0;
+  private readonly tabCreatedListeners: TabCreatedListener[] = [];
+  private readonly tabClosedListeners: TabClosedListener[] = [];
 
   constructor(maxTabs: number = 10) {
     this.maxTabs = maxTabs;
     // Create initial tab
     this.createTab();
+  }
+
+  /** SA4E-369: subscribe to tab creation. Returns an unsubscribe function. */
+  onTabCreated(listener: TabCreatedListener): () => void {
+    this.tabCreatedListeners.push(listener);
+    return () => {
+      const idx = this.tabCreatedListeners.indexOf(listener);
+      if (idx >= 0) this.tabCreatedListeners.splice(idx, 1);
+    };
+  }
+
+  /** SA4E-369: subscribe to tab close. Returns an unsubscribe function. */
+  onTabClosed(listener: TabClosedListener): () => void {
+    this.tabClosedListeners.push(listener);
+    return () => {
+      const idx = this.tabClosedListeners.indexOf(listener);
+      if (idx >= 0) this.tabClosedListeners.splice(idx, 1);
+    };
+  }
+
+  /** Update-then-emit (I-3): listeners observe post-mutation state only. */
+  private emitCreated(tab: ConversationTab): void {
+    for (const listener of [...this.tabCreatedListeners]) {
+      try { listener(tab); } catch { /* listener errors never break tab flows */ }
+    }
+  }
+
+  private emitClosed(tabId: string): void {
+    for (const listener of [...this.tabClosedListeners]) {
+      try { listener(tabId); } catch { /* listener errors never break tab flows */ }
+    }
   }
 
   createTab(): ConversationTab {
@@ -47,6 +84,7 @@ export class ConversationManager {
 
     this.tabs.set(tab.id, tab);
     this.activeTabId = tab.id;
+    this.emitCreated(tab);
     return tab;
   }
 
@@ -94,6 +132,7 @@ export class ConversationManager {
     }
 
     this.tabs.delete(tabId);
+    this.emitClosed(tabId);
     return { closedTab, newActiveTab };
   }
 

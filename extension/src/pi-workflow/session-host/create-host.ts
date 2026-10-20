@@ -27,6 +27,7 @@ import { createModelRuntime } from './model-resolution.js';
 import { applyCompressedAgentsFiles, applyScopedSkills, failOpenOverride } from './overrides.js';
 import { buildSessionLoadout, tokensOfNames } from './loadout.js';
 import { createSessionPromptTurn } from './turn-executor.js';
+import { wirePeerSession } from './peer-approval.js';
 import type { SessionHost, SessionHostOptions } from './types.js';
 
 /**
@@ -45,9 +46,18 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
   const sessionDir = path.join(workspaceRoot, '.pi', 'sessions');
   const sessionManager =
     (opts.sessionManager as never) ?? piCoding.SessionManager.create(workspaceRoot, sessionDir);
+  // SA4E-370 S2: agent personaBody is prepended to the workspace system prompt so
+  // it flows through the budget gate (BR-01/BR-02: measured in static budget,
+  // REJECT with PI_CONTEXT_BUDGET_EXCEEDED if oversized).
+  const baseWorkspacePrompt = buildWorkspaceSystemPrompt(workspaceRoot);
+  const workspacePrompt = opts.personaBody
+    ? `${baseWorkspacePrompt}\n\n--- Agent Persona ---\n${opts.personaBody}`
+    : baseWorkspacePrompt;
+  if (opts.personaBody) {
+    debugLog(`[PiSessionHost] persona injected for agent ${opts.activeAgentId ?? '(unknown)'} (${opts.personaBody.length} chars)`);
+  }
   // SA4E-355 (TDD §6.1): resolve the session budget + conditional compression
   // decision BEFORE wiring the loader overrides (UC-01 feeds UC-02/UC-03).
-  const workspacePrompt = buildWorkspaceSystemPrompt(workspaceRoot);
   const { budget, shouldCompress, tier } = resolveSessionGovernance(
     piCoding,
     opts,
@@ -90,6 +100,9 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
   if (tierSmall && DEFAULT_AUTO_CHUNK_CONFIG.incrementalSteering) {
     steeringBudget = halveSteeringCap(steeringBudget);
   }
+  // SA4E-369 peer wiring (→ peer-approval.ts): shared origin tracker +
+  // fail-closed approval-gate extension + fail-safe registry tools.
+  const peer = wirePeerSession(opts, providerId);
   const resourceLoader =
     (opts.resourceLoader as never) ??
     new piCoding.DefaultResourceLoader({
@@ -98,6 +111,7 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
       settingsManager,
       additionalExtensionPaths: getPiExtensionEntries(workspaceRoot),
       appendSystemPrompt: [workspacePrompt],
+      extensionFactories: peer.extensionFactories,
       // SA4E-355 Task 2 (UC-02): role-scoped skills + phase-scoped, capped steering.
       skillsOverride: (base) =>
         failOpenOverride(base, (b) => applyScopedSkills(b, opts.role), 'skillsOverride'),
@@ -158,6 +172,8 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
         promptSnippet: undefined,
         promptGuidelines: undefined,
       })),
+      // SA4E-369 (D4): peer_list/peer_send/peer_status auto in every tab (AC7).
+      ...peer.peerToolDefs,
     ] as never,
     tools: allowlist,
   });
@@ -178,6 +194,6 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
         (session as { dispose?: () => void }).dispose?.();
       } catch { /* best-effort */ }
     },
-    promptTurn: createSessionPromptTurn(session, tier, budget, getFile),
+    promptTurn: createSessionPromptTurn(session, tier, budget, getFile, peer.turnOriginTracker),
   };
 }
