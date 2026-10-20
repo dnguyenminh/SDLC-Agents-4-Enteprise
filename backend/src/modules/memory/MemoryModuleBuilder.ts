@@ -1,6 +1,6 @@
 /**
- * MemoryModuleBuilder — fluent builder for MemoryModule initialization.
- * Builder pattern: decomposes the 69-line initialize() into focused steps.
+ * MemoryModuleBuilder (facade) — fluent builder for MemoryModule initialization.
+ * Builder pattern: decomposes the initialize() flow into focused steps.
  * Each with*() method handles one sub-step, improving testability and SRP.
  *
  * Usage:
@@ -13,34 +13,25 @@
  *     .withPromotion(config)
  *     .withBackgroundLLM()
  *     .build();
+ *
+ * Implementation submodules (same directory):
+ * - memory-db-bootstrap.ts    — adapter resolution + migrations + FTS
+ * - memory-services-wiring.ts — dispatcher/task worker/promotion/LLM wiring
  */
 
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from '../ModuleRegistry.js';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
-import { DatabaseManager } from '../../engine/db/database-manager.js';
 import { MemoryEngine } from './engine/index.js';
-import { MemoryToolDispatcher } from './dispatchers/index.js';
-import { ConvertToolResolver } from './ingest/ConvertToolResolver.js';
-import { RegistryOrchestrationGateway } from './ingest/OrchestrationGateway.js';
-import { QueryLayer } from '../../engine/query/query-layer.js';
-import { migrate001AddScopeColumns } from './migrations/001-add-scope-columns.js';
-import { migrate002AddEvolutionColumns } from './migrations/002-add-evolution-columns.js';
-import { migrate003PendingTasks } from './migrations/003-pending-tasks.js';
-import { migrate004ResetSequences } from './migrations/004-reset-sequences.js';
-import { migrate005UniqueSourceProject } from './migrations/005-unique-source-project.js';
-import { migrate006PendingTasksProjectId } from './migrations/006-pending-tasks-project-id.js';
-import { ScopePromotionService } from './promotion/index.js';
-import { TierConsolidationService } from './consolidation/service.js';
-import { startScheduler } from './evolution/Scheduler.js';
-import { TaskWorker } from './task-queue/TaskWorker.js';
 import type { TaskWorkerConfig } from './task-queue/TaskWorkerConfig.js';
-import { resolveEngineAdapter } from '../../database/factory/resolveEngineAdapter.js';
-import { initLLMInBackground } from './llm/LLMInitializer.js';
+import {
+  openMemoryDatabase, rebuildFtsIfNeeded,
+} from './memory-db-bootstrap.js';
+import {
+  wireDispatcher, startTaskWorker, startPromotion,
+  startConsolidation, startBackgroundLLM,
+} from './memory-services-wiring.js';
 import type { MemoryModule } from './MemoryModule.js';
-
-const PROMOTION_SCAN_INTERVAL_MS = 60 * 60 * 1000;
-const CONSOLIDATION_INTERVAL_MS = 30 * 60 * 1000;
 
 export interface BuilderConfig {
   dataDir: string;
@@ -64,69 +55,8 @@ export class MemoryModuleBuilder {
   ) {}
 
   /** Step 1: Open SQLite/PG connection and run schema migrations. */
-  /** Step 1: Open connection and run schema migrations.
-   *  SA4E-53: DatabaseManager only created for SQLite — Postgres skips SQLite file.
-   */
   async withDatabase(): Promise<this> {
-    const dbPath = this.config.dbPath ?? `${this.config.dataDir}/memory.db`;
-    const injectd = this.mod.getInjectedDeps();
-
-    // Resolve adapter — only opens SQLite when engine is sqlite
-    const injectAdapter = injectd.memAdapter;
-    if (injectAdapter) {
-      this.memAdapter = injectAdapter;
-    } else {
-      this.memAdapter = await resolveEngineAdapter(this.config.dataDir, dbPath);
-    }
-
-    // For SQLite: also initialize DatabaseManager (schema migrations, WAL, etc.)
-    if (this.memAdapter.getEngine() === 'sqlite') {
-      let dbManager: DatabaseManager;
-      if (injectd.dbManager) {
-        dbManager = injectd.dbManager;
-      } else {
-        dbManager = new DatabaseManager(dbPath);
-        await dbManager.initialize();
-      }
-      this.mod.setDbManager(dbManager);
-    }
-
-    // Ensure base memory tables exist in THIS adapter's view before versioned
-    // migrations. SqliteAdapter works on an in-memory snapshot of the host
-    // file, so tables created elsewhere (native driver) may not be visible
-    // here on fresh DBs — migrate001 then failed with "no such table:
-    // knowledge_entries", leaving the memory module in error and /health
-    // at 503 forever (E2E setup timeout). Idempotent (IF NOT EXISTS).
-    if (this.memAdapter.getEngine() === 'sqlite') {
-      const { MEMORY_SCHEMA } = await import('./schema/index.js');
-      await this.memAdapter.execAsync(MEMORY_SCHEMA);
-    }
-
-    // Run versioned migrations via DatabaseAdapter
-    await migrate001AddScopeColumns(this.memAdapter);
-    await migrate002AddEvolutionColumns(this.memAdapter);
-    await migrate003PendingTasks(this.memAdapter);
-    await migrate004ResetSequences(this.memAdapter);
-    await migrate005UniqueSourceProject(this.memAdapter);
-    await migrate006PendingTasksProjectId(this.memAdapter);
-
-    // SA4E-79: Add enrichment_status tracking columns
-    const { migrate007Up } = await import('./schema/migrations/007_enrichment_status.js');
-    await migrate007Up(this.memAdapter).catch(err => {
-      // Column already exists — safe to ignore
-      if (!String(err).includes('duplicate column') && !String(err).includes('already exists')) {
-        this.logger.warn({ err }, '[MemoryModuleBuilder] Migration 007 issue (non-fatal)');
-      }
-    });
-
-    // SA4E-45: Ensure PostgreSQL FTS infrastructure exists (tsvector_content + GIN index)
-    if (this.memAdapter.getEngine() === 'postgresql') {
-      const { recreateFtsInfrastructure } = await import('../../database/migration/fts-recreation.js');
-      await recreateFtsInfrastructure(this.memAdapter).catch(err => {
-        this.logger.warn({ err }, '[MemoryModuleBuilder] FTS recreation failed (non-fatal)');
-      });
-    }
-
+    this.memAdapter = await openMemoryDatabase(this.mod, this.logger, this.config);
     return this;
   }
 
@@ -147,132 +77,39 @@ export class MemoryModuleBuilder {
 
   /** Step 2b: Rebuild FTS index if empty (SA4E-79 FTS bug fix). */
   async withFtsRebuild(): Promise<this> {
-    if (!this.memAdapter || this.memAdapter.getEngine() !== 'sqlite') return this;
-    try {
-      const count = await this.memAdapter.getAsync<{ cnt: number }>(
-        'SELECT COUNT(*) as cnt FROM knowledge_fts',
-      );
-      if (count && count.cnt > 0) return this;
-      this.logger.info('[FTS] knowledge_fts is empty — triggering rebuild from knowledge_entries');
-      await this.memAdapter.runAsync(
-        "INSERT INTO knowledge_fts(knowledge_fts) VALUES('rebuild')",
-      );
-      const rebuilt = await this.memAdapter.getAsync<{ cnt: number }>(
-        'SELECT COUNT(*) as cnt FROM knowledge_fts',
-      );
-      this.logger.info({ rebuilt: rebuilt?.cnt ?? 0 }, '[FTS] Rebuild complete');
-    } catch (err) {
-      this.logger.warn({ err }, '[FTS] Rebuild failed (non-fatal)');
+    if (this.memAdapter) {
+      await rebuildFtsIfNeeded(this.memAdapter, this.logger);
     }
     return this;
   }
 
   /** Step 3: Wire MemoryToolDispatcher with all services. */
   withDispatcher(registry?: ModuleRegistry): this {
-    const { workspace = '' } = this.config;
-    const queryLayer = this.memAdapter
-      ? new QueryLayer(this.memAdapter!)
-      : undefined;
-    const dispatcher = new MemoryToolDispatcher(this.mod.engine, workspace, queryLayer);
-    if (registry) {
-      const gateway = new RegistryOrchestrationGateway(registry);
-      const resolver = new ConvertToolResolver(gateway);
-      dispatcher.setConvertResolver(resolver);
-    }
-    if (this.memAdapter) dispatcher.setDbAdapter(this.memAdapter);
-    this.mod.setDispatcher(dispatcher);
+    wireDispatcher(this.mod, this.config, this.memAdapter, registry);
     return this;
   }
 
   /** Step 4: Set up task worker for background enrichment. */
   withTaskWorker(): this {
-    const injectd = this.mod.getInjectedDeps();
-    const worker = injectd.taskWorker
-      ? injectd.taskWorker
-      : new TaskWorker(this.memAdapter!, this.mod.engine, this.logger, this.config.taskWorkerConfig);
-    worker.start();
-    this.mod.setTaskWorker(worker);
-
-    // SA4E-107: Load persisted TaskWorker config from DB (Admin UI values survive restart)
-    this.loadPersistedTaskWorkerConfig(worker).catch(err => {
-      this.logger.debug({ err }, '[MemoryModuleBuilder] Failed to load persisted TaskWorker config (using defaults)');
-    });
-
+    startTaskWorker(this.mod, this.logger, this.config, this.memAdapter);
     return this;
-  }
-
-  /** Load TaskWorker config overrides from config_changes DB table (non-blocking). */
-  private async loadPersistedTaskWorkerConfig(worker: TaskWorker): Promise<void> {
-    try {
-      const { getDbAdapter } = await import('../../admin/db/core.js');
-      const adapter = getDbAdapter();
-      const rows = await adapter.allAsync<{ key: string; new_value: string }>(
-        "SELECT key, new_value FROM config_changes WHERE section = 'taskWorker' ORDER BY changed_at DESC",
-      );
-      const patch: Record<string, number> = {};
-      for (const row of rows) {
-        if (!patch[row.key]) { patch[row.key] = parseInt(row.new_value, 10); }
-      }
-      if (Object.keys(patch).length > 0) {
-        worker.updateConfig(patch as any);
-        this.logger.info({ patch }, '[TaskWorker] Loaded persisted config from DB');
-      }
-    } catch { /* DB may not have config_changes table yet — use defaults */ }
   }
 
   /** Step 5: Start scope promotion service + background scheduler. */
   withPromotion(): this {
-    const injectd = this.mod.getInjectedDeps();
-    if (!injectd.promotionService && this.memAdapter) {
-      // SA4E-53: ScopePromotionService now uses DatabaseAdapter
-      const promotionService = new ScopePromotionService(this.memAdapter, this.logger);
-      // Initialize table asynchronously (non-blocking)
-      promotionService.ensurePromotionQueueTable().catch((err: unknown) => {
-        this.logger.warn({ err }, '[MemoryModuleBuilder] promotion queue table init failed');
-      });
-      this.mod.dispatcher?.setPromotionService(promotionService);
-
-      const interval = setInterval(() => {
-        promotionService.runPromotionCycle().catch((err: unknown) => {
-          this.logger.warn({ err }, 'Promotion cycle failed');
-        });
-      }, PROMOTION_SCAN_INTERVAL_MS);
-      this.mod.setPromotionInterval(interval);
-    } else if (injectd.promotionService) {
-      this.mod.dispatcher?.setPromotionService(injectd.promotionService);
-    }
-
-    // Start decay/epoch scheduler — now uses adapter directly (all engines)
-    if (this.mod.engine) {
-      const handles = startScheduler(this.mod.engine.getAdapter(), this.logger);
-      this.mod.setSchedulerHandles(handles);
-    }
+    startPromotion(this.mod, this.logger, this.memAdapter);
     return this;
   }
 
   /** Step 6: Start background tier consolidation (non-blocking). */
   withConsolidation(): this {
-    if (this.memAdapter) {
-      const service = new TierConsolidationService(this.memAdapter);
-      const interval = setInterval(() => {
-        service.runConsolidation().catch((err: unknown) => {
-          this.logger.warn({ err }, '[MemoryModuleBuilder] Consolidation cycle failed');
-        });
-      }, CONSOLIDATION_INTERVAL_MS);
-      this.mod.setConsolidationInterval(interval);
-    }
+    startConsolidation(this.mod, this.logger, this.memAdapter);
     return this;
   }
 
   /** Step 7: Kick off LLM initialization in background (non-blocking). */
   withBackgroundLLM(): this {
-    if (this.mod.taskWorker) {
-      try {
-        initLLMInBackground(this.mod.dispatcher!, this.mod.taskWorker, this.logger);
-      } catch (err: unknown) {
-        this.logger.warn({ err }, 'LLM init failed');
-      }
-    }
+    startBackgroundLLM(this.mod, this.logger);
     return this;
   }
 
@@ -282,8 +119,3 @@ export class MemoryModuleBuilder {
     this.logger.info('Memory module ready');
   }
 }
-
-
-
-
-

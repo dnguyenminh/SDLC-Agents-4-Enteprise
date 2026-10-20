@@ -100,17 +100,12 @@ describe('Project Registration — POST /api/admin/projects/register', () => {
 });
 
 describe('PROJECT_NOT_REGISTERED guard on protected routes', () => {
-   it('GET /api/admin/kb/entries returns PROJECT_NOT_REGISTERED for unregistered project', async () => {
+   it('GET /api/admin/kb/entries auto-upserts unregistered project (SA4E-375)', async () => {
      const res = await app.request('/api/admin/kb/entries', {
        headers: { ...authHeaders(), 'X-Project-Id': 'unregistered-project-xyz' },
      });
-     expect(res.status).toBe(404);
-     const body = await res.json() as any;
-     expect(body.__error).toBe(true);
-     expect(body.error.code).toBe('PROJECT_NOT_REGISTERED');
-     expect(body.error.message).toContain('unregistered-project-xyz');
-     expect(body.error.action).toBe('register');
-     expect(body.error.projectId).toBe('unregistered-project-xyz');
+     // SA4E-375: project auto-upsert — unregistered projects are registered on first access (no more 404)
+     expect(res.status).toBe(200);
    });
 
   it('GET /api/admin/projects bypasses guard (list is allowed)', async () => {

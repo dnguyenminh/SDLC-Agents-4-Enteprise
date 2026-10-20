@@ -1,16 +1,22 @@
+/**
+ * PegaAccessParser (facade) — access/admin rule parsing strategy.
+ * Supports Rule-Access-* / Rule-Admin-* / operator classes and produces
+ * symbols + dependencies + typed entity parsing for the security domain.
+ *
+ * Implementation submodules (same directory):
+ * - PegaAccessEntityParsers.ts — typed entity converters (group/role/privilege/…)
+ */
+
 import type { IPegaRuleParserStrategy, ParseResult } from '../strategies/IPegaRuleParserStrategy.js';
 import type { UnresolvedDependency } from '../models.js';
 import type {
-  AccessGroup,
-  AccessRole,
-  AccessRoleRef,
-  Privilege,
-  PrivilegeRef,
-  OperatorID,
-  OrgDivision,
-  OrgUnit,
-  SecurityVA,
+  AccessGroup, AccessRole, Privilege, OperatorID, OrgDivision, OrgUnit, SecurityVA,
 } from './PegaAccessTypes.js';
+import {
+  extractAccessName, parseAccessGroupEntity, parseAccessRoleEntity,
+  parsePrivilegeEntity, parseOperatorIDEntity, parseOrgDivisionEntity,
+  parseOrgUnitEntity, parseSecurityVAEntity,
+} from './PegaAccessEntityParsers.js';
 
 const ACCESS_AND_ADMIN_CLASSES = new Set([
   'Rule-Access-',
@@ -43,7 +49,7 @@ export class PegaAccessParser implements IPegaRuleParserStrategy {
   public parse(json: Record<string, unknown>): ParseResult {
     const pxObjClass = (json.pxObjClass as string) || '';
     const className = (json.pyClassName as string) || '@baseclass';
-    const name = this.extractName(pxObjClass, json);
+    const name = extractAccessName(pxObjClass, json);
     const fqn = `${pxObjClass}:${className}:${name}`;
     const dependencies = this.extractDependencies(json);
 
@@ -63,159 +69,32 @@ export class PegaAccessParser implements IPegaRuleParserStrategy {
     return { symbol, dependencies };
   }
 
-  private extractName(pxObjClass: string, json: Record<string, unknown>): string {
-    return (json.pyRuleName as string)
-      || (json.pyUserIdentifier as string)
-      || (json.pyPrivilegeName as string)
-      || (json.pyAccessRole as string)
-      || (json.pyAccessGroup as string)
-      || (json.pyName as string)
-      || (json.pyLabel as string)
-      || '';
-  }
-
   public parseAccessGroup(json: Record<string, unknown>): AccessGroup {
-    const roleList: string[] = [];
-    const accessRoleList: AccessRoleRef[] = [];
-
-    const rawRoles = json.pyUserRoles as unknown[];
-    if (Array.isArray(rawRoles)) {
-      for (const raw of rawRoles) {
-        if (typeof raw !== 'object' || !raw) continue;
-        const role = raw as Record<string, unknown>;
-        const roleName = (role.pyRoleName as string) || '';
-        if (roleName) roleList.push(roleName);
-      }
-    }
-
-    const rawAccessRoles = json.pyAccessRoles as unknown[];
-    if (Array.isArray(rawAccessRoles)) {
-      for (const raw of rawAccessRoles) {
-        if (typeof raw !== 'object' || !raw) continue;
-        const ar = raw as Record<string, unknown>;
-        const privs: string[] = [];
-        const rawPrivs = ar.pyPrivileges as unknown[];
-        if (Array.isArray(rawPrivs)) {
-          for (const p of rawPrivs) {
-            if (typeof p === 'string') privs.push(p);
-          }
-        }
-        accessRoleList.push({
-          pyRoleName: (ar.pyRoleName as string) || '',
-          pyPrivileges: privs.length > 0 ? privs : undefined,
-        });
-      }
-    }
-
-    return {
-      pxObjClass: (json.pxObjClass as string) || 'Data-Admin-AccessGroup',
-      pyName: (json.pyAccessGroup as string) || this.extractName('', json),
-      pyLabel: (json.pyLabel as string) || undefined,
-      pyOrganization: (json.pyOrganization as string) || undefined,
-      pyDivision: (json.pyDivision as string) || undefined,
-      pyRoleList: roleList.length > 0 ? roleList : undefined,
-      pyAccessRoleList: accessRoleList.length > 0 ? accessRoleList : undefined,
-    };
+    return parseAccessGroupEntity(json);
   }
 
   public parseAccessRole(json: Record<string, unknown>): AccessRole {
-    const privileges: PrivilegeRef[] = [];
-    const rawPrivs = json.pyPrivileges as unknown[];
-    if (Array.isArray(rawPrivs)) {
-      for (const raw of rawPrivs) {
-        if (typeof raw !== 'object' || !raw) continue;
-        const p = raw as Record<string, unknown>;
-        const actions: string[] = [];
-        const rawActions = p.pyActions as unknown[];
-        if (Array.isArray(rawActions)) {
-          for (const a of rawActions) {
-            if (typeof a === 'string') actions.push(a);
-          }
-        }
-        privileges.push({
-          pyPrivilegeName: (p.pyPrivilegeName as string) || '',
-          pyActions: actions.length > 0 ? actions : undefined,
-        });
-      }
-    }
-
-    const classes: string[] = [];
-    const rawClasses = json.pyAccessibleClasses as unknown[];
-    if (Array.isArray(rawClasses)) {
-      for (const c of rawClasses) {
-        if (typeof c === 'string') classes.push(c);
-      }
-    }
-
-    return {
-      pxObjClass: (json.pxObjClass as string) || 'Rule-Access-Role-Name',
-      pyName: (json.pyAccessRole as string) || this.extractName('', json),
-      pyLabel: (json.pyLabel as string) || undefined,
-      pyPrivileges: privileges.length > 0 ? privileges : undefined,
-      pyClasses: classes.length > 0 ? classes : undefined,
-      pyAccessGroup: (json.pyAccessGroup as string) || undefined,
-    };
+    return parseAccessRoleEntity(json);
   }
 
   public parsePrivilege(json: Record<string, unknown>): Privilege {
-    const actions: string[] = [];
-    const rawActions = json.pyActions as unknown[];
-    if (Array.isArray(rawActions)) {
-      for (const a of rawActions) {
-        if (typeof a === 'string') actions.push(a);
-      }
-    }
-
-    return {
-      pxObjClass: (json.pxObjClass as string) || 'Rule-Access-Privilege',
-      pyName: (json.pyPrivilegeName as string) || this.extractName('', json),
-      pyLabel: (json.pyLabel as string) || undefined,
-      pyActions: actions.length > 0 ? actions : undefined,
-      pyAccessGroup: (json.pyAccessGroup as string) || undefined,
-      pyClassName: (json.pyClassName as string) || undefined,
-    };
+    return parsePrivilegeEntity(json);
   }
 
   public parseOperatorID(json: Record<string, unknown>): OperatorID {
-    return {
-      pxObjClass: (json.pxObjClass as string) || 'Data-Admin-Operator-ID',
-      pyName: (json.pyUserIdentifier as string) || this.extractName('', json),
-      pyLabel: (json.pyUserName as string) || (json.pyLabel as string) || undefined,
-      pyAccessGroupName: (json.pyAccessGroup as string) || undefined,
-      pyOrgDivision: (json.pyDivision as string) || undefined,
-      pyOrgUnit: (json.pyUnit as string) || undefined,
-      pyLanguage: (json.pyLanguage as string) || undefined,
-      pyOrganization: (json.pyOrganization as string) || undefined,
-    };
+    return parseOperatorIDEntity(json);
   }
 
   public parseOrgDivision(json: Record<string, unknown>): OrgDivision {
-    return {
-      pxObjClass: (json.pxObjClass as string) || 'Data-Admin-OrgDivision',
-      pyName: (json.pyName as string) || (json.pyOrgDivision as string) || this.extractName('', json),
-      pyLabel: (json.pyLabel as string) || undefined,
-    };
+    return parseOrgDivisionEntity(json);
   }
 
   public parseOrgUnit(json: Record<string, unknown>): OrgUnit {
-    return {
-      pxObjClass: (json.pxObjClass as string) || 'Data-Admin-OrgUnit',
-      pyName: (json.pyName as string) || (json.pyOrgUnit as string) || this.extractName('', json),
-      pyLabel: (json.pyLabel as string) || undefined,
-      pyDivisionName: (json.pyDivisionName as string) || (json.pyOrgDivision as string) || undefined,
-    };
+    return parseOrgUnitEntity(json);
   }
 
   public parseSecurityVA(json: Record<string, unknown>): SecurityVA {
-    return {
-      pxObjClass: (json.pxObjClass as string) || 'Rule-Security-VA',
-      pyName: (json.pyRuleName as string) || this.extractName('', json),
-      pyLabel: (json.pyLabel as string) || undefined,
-      pyEventType: (json.pyEventType as string) || undefined,
-      pyEventCategory: (json.pyEventCategory as string) || undefined,
-      pySeverity: (json.pySeverity as string) || undefined,
-      pyTargetClass: (json.pyTargetClass as string) || (json.pyClassName as string) || undefined,
-    };
+    return parseSecurityVAEntity(json);
   }
 
   private extractDependencies(json: Record<string, unknown>): UnresolvedDependency[] {
@@ -247,7 +126,7 @@ export class PegaAccessParser implements IPegaRuleParserStrategy {
 
   private buildLogicSummary(pxObjClass: string, json: Record<string, unknown>): string {
     const lines: string[] = [];
-    lines.push(`${pxObjClass}: ${this.extractName(pxObjClass, json)}`);
+    lines.push(`${pxObjClass}: ${extractAccessName(pxObjClass, json)}`);
 
     if (pxObjClass === 'Data-Admin-AccessGroup') {
       const roles = json.pyUserRoles as unknown[];

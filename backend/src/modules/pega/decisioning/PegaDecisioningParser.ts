@@ -2,8 +2,6 @@ import type { IPegaRuleParserStrategy, ParseResult } from '../strategies/IPegaRu
 import type { UnresolvedDependency } from '../models.js';
 import type {
   Strategy,
-  StrategyComponent,
-  ComponentType,
   Condition,
   NBA,
   Offer,
@@ -11,6 +9,11 @@ import type {
   Treatment,
 } from './PegaDecisioningTypes.js';
 import type { DecisionOperator } from '../decision/PegaEvaluationResult.js';
+import {
+  buildLogicSummary,
+  extractDependencies,
+  parseComponents,
+} from './PegaDecisioningParser/strategy-extract.js';
 
 const DECISION_PREFIXES = [
   'Rule-Decision-',
@@ -37,10 +40,10 @@ export class PegaDecisioningParser implements IPegaRuleParserStrategy {
       isRule: pxObjClass.startsWith('Rule-'),
       ruleset: (json.pyRuleset as string) || undefined,
       version: (json.pyRulesetVersion as string) || undefined,
-      logicSummary: this.buildLogicSummary(strategy),
+      logicSummary: buildLogicSummary(strategy),
     };
 
-    const dependencies = this.extractDependencies(strategy, json);
+    const dependencies: UnresolvedDependency[] = extractDependencies(strategy, json);
 
     return { symbol, dependencies };
   }
@@ -50,58 +53,10 @@ export class PegaDecisioningParser implements IPegaRuleParserStrategy {
 
     return {
       pyName: name,
-      components: this.parseComponents(json),
+      components: parseComponents(json),
       pyDescription: (json.pyDescription as string) || undefined,
       pyType: (json.pxObjClass as string) || 'Strategy',
     };
-  }
-
-  private parseComponents(json: Record<string, unknown>): StrategyComponent[] {
-    const components: StrategyComponent[] = [];
-    const rawComponents = Array.isArray(json.pyComponents) ? json.pyComponents : [];
-
-    for (const raw of rawComponents) {
-      if (!raw || typeof raw !== 'object') continue;
-      const comp = raw as Record<string, unknown>;
-      components.push({
-        pyName: (comp.pyName as string) || 'UnnamedComponent',
-        pyComponentType: this.normalizeComponentType(comp.pyComponentType as string | undefined),
-        config: this.extractConfig(comp),
-      });
-    }
-
-    const rawSegments = Array.isArray(json.pySegments) ? json.pySegments : [];
-    for (const raw of rawSegments) {
-      if (!raw || typeof raw !== 'object') continue;
-      const seg = raw as Record<string, unknown>;
-      components.push({
-        pyName: (seg.pyName as string) || 'UnnamedSegment',
-        pyComponentType: 'Segment',
-        config: this.extractConfig(seg),
-      });
-    }
-
-    return components;
-  }
-
-  private normalizeComponentType(raw: string | undefined): ComponentType {
-    if (!raw) return 'Segment';
-    const upper = raw.charAt(0).toUpperCase() + raw.slice(1);
-    const validTypes: ComponentType[] = ['Segment', 'Filter', 'Rank', 'SetPriority', 'NBA', 'Offer', 'Proposition', 'Treatment'];
-    if (validTypes.includes(upper as ComponentType)) {
-      return upper as ComponentType;
-    }
-    return 'Segment';
-  }
-
-  private extractConfig(comp: Record<string, unknown>): Record<string, unknown> {
-    const config: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(comp)) {
-      if (key === 'pyName' || key === 'pyComponentType') continue;
-      if (key.startsWith('px') || key.startsWith('pz')) continue;
-      config[key] = value;
-    }
-    return config;
   }
 
   public parseCondition(raw: Record<string, unknown>): Condition {
@@ -202,43 +157,5 @@ export class PegaDecisioningParser implements IPegaRuleParserStrategy {
     if (map[trimmed]) return map[trimmed];
     if (trimmed.startsWith('custom') || trimmed.startsWith('@')) return 'CUSTOM';
     return undefined;
-  }
-
-  private buildLogicSummary(strategy: Strategy): string | undefined {
-    if (strategy.components.length === 0) return undefined;
-    const summary = strategy.components.map((c) => `${c.pyComponentType}:${c.pyName}`).join(' -> ');
-    return `Strategy[${strategy.pyName}] ${summary}`;
-  }
-
-  private extractDependencies(strategy: Strategy, json: Record<string, unknown>): UnresolvedDependency[] {
-    const deps: UnresolvedDependency[] = [];
-
-    for (const comp of strategy.components) {
-      const ref = comp.config.pyRef || comp.config.pyWhenRef || comp.config.pyTreatment;
-      if (typeof ref === 'string' && ref.trim()) {
-        deps.push({
-          ruleType: 'Rule-Decision-Strategy',
-          className: (json.pyClassName as string) || '@baseclass',
-          ruleName: ref.trim(),
-        });
-      }
-    }
-
-    const refs = Array.isArray(json.pyRuleReferences) ? json.pyRuleReferences : [];
-    for (const ref of refs) {
-      if (!ref || typeof ref !== 'object') continue;
-      const r = ref as Record<string, unknown>;
-      const refName = r.pyRuleName as string | undefined;
-      const refClass = r.pxRuleClassName as string | undefined;
-      if (refName && typeof refName === 'string' && refName.trim()) {
-        deps.push({
-          ruleType: refClass || 'Rule-Decision-',
-          className: (json.pyClassName as string) || '@baseclass',
-          ruleName: refName.trim(),
-        });
-      }
-    }
-
-    return deps;
   }
 }

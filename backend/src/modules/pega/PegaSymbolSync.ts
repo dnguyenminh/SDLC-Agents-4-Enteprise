@@ -2,18 +2,24 @@
  * SA4E-171 — PegaSymbolSync: Sync Pega rules into symbols table.
  * Creates: virtual file → symbol → body_embeddings → CODE_ENRICHMENT task.
  * Feature flag: PEGA_DUAL_WRITE (default true) controls dual-write.
+ * Facade (BR-18): DB upserts in symbol-sync-db.ts, resolvers in
+ * symbol-sync-helpers.ts.
  */
 
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
 import { GraphRepository } from '../../database/repositories/GraphRepository.js';
 import {
-  resolveSymbolKind, buildVirtualPath, buildFqn, resolveRuleNameField,
-  resolveClassNameField, resolveRuleSetName, resolveRuleSetVersion,
+  resolveSymbolKind, buildVirtualPath, buildFqn,
+  resolveRuleSetName, resolveRuleSetVersion,
 } from './pega-mapping.js';
 import { extractRuleContentWithFlags } from './PegaContentExtractor.js';
-import { SchemaStorageService, type IDatabaseAdapter } from './schema/SchemaStorageService.js';
-import { TaskType, TaskStatus } from '../memory/task-queue/models.js';
 import pino from 'pino';
+import {
+  upsertVirtualFile, upsertSymbol, storeBodyEmbedding, createEnrichmentTaskIfNeeded,
+} from './symbol-sync-db.js';
+import {
+  resolvePegaDisplayName, resolveRuleSet, resolveNestedLogicPaths, extractRequiredFields,
+} from './symbol-sync-helpers.js';
 
 const logger = pino({ name: 'pega-symbol-sync' });
 
@@ -51,17 +57,9 @@ export class MissingChecksumError extends Error {
 /**
  * Sync a Pega rule into the symbols table (new path).
  * Creates: virtual file → symbol → body_embeddings → CODE_ENRICHMENT task.
- * @param adapter - Database adapter for SQL operations
- * @param ruleJson - Raw Pega rule JSON content
- * @param projectId - Tenant project identifier (SEC-04)
- * @param promptContext - Prompt context for doc_comment
- * @param checksum - SA4E-241: client-computed checksum (computePegaChecksum, 3
- *   save-time fields). Stored AS-IS as content_hash so the write-path value equals
- *   what bulk-check compares against (INV-1). ⛔ REQUIRED — the backend NEVER
- *   computes a checksum (NT-4); the extension is the single computation authority.
- *   Missing/empty → throws MissingChecksumError (fail-closed; upgrade the extension).
+ * ⛔ REQUIRED checksum — the backend NEVER computes one (NT-4); the extension
+ * is the single computation authority. Missing/empty → MissingChecksumError.
  * @returns symbolId and fileId, or null if validation fails
- * @throws MissingChecksumError when `checksum` is absent/empty
  */
 export async function syncRuleToSymbols(
   adapter: DatabaseAdapter,
@@ -108,15 +106,27 @@ export async function syncRuleToSymbols(
 
   const fileId = await upsertVirtualFile(adapter, projectId, virtualPath, pyClassName, contentHash, ruleJsonStr.length);
   const symbolId = await upsertSymbol(adapter, projectId, fileId, pyRuleName, kind, fqn, pyClassName, docComment);
-  // Register the PROJECT (not the rule). Previously this wrote the current rule's
-  // pyClassName as display_name and `pega://<class>` as workspace_path — so a project's
-  // display name became whichever rule was processed LAST, and the path was a fake URI.
-  // Use the Pega application name (stable across all rules of the app) for display, and
-  // leave workspace_path empty (the backend has no real client path here) — matching the
-  // dedicated Pega crawler registration (pega-stream-helpers.ts / pega-api.ts).
+  await registerPegaProject(adapter, ruleJson, projectId, appName);
+  await extractAndStoreBody(adapter, ruleJson, pxObjClass, projectId, symbolId, pyRuleName, kind, virtualPath, pyClassName, fqn);
+
+  logger.debug({ fqn, symbolId, fileId, kind }, 'Rule synced to symbols');
+  return { symbolId, fileId };
+}
+
+/** Register the PROJECT (not the rule) in project_registry (SA4E-338 B1 display name). */
+async function registerPegaProject(adapter: DatabaseAdapter, ruleJson: Record<string, unknown>, projectId: string, appName?: string): Promise<void> {
   try {
     await new GraphRepository(adapter).registerProject(projectId, resolvePegaDisplayName(ruleJson, projectId, appName), '');
   } catch (err) { logger.warn({ err, projectId }, '[pega] project_registry register skipped (non-fatal)'); }
+}
+
+/** SA4E-222/SA4E-106/SA4E-338 B2: extract content, store body, queue enrichment. */
+async function extractAndStoreBody(
+  adapter: DatabaseAdapter, ruleJson: Record<string, unknown>, pxObjClass: string,
+  projectId: string, symbolId: number, pyRuleName: string, kind: string,
+  virtualPath: string, pyClassName: string,
+  fqn: string,
+): Promise<void> {
   // SA4E-222: resolve learned schema paths (if any) and pass to extraction (no LLM at index time)
   const nestedLogicPaths = await resolveNestedLogicPaths(adapter, pxObjClass);
   // SA4E-106: store extracted readable content (steps/params/Java) for LLM enrichment.
@@ -133,9 +143,6 @@ export async function syncRuleToSymbols(
   } else {
     logger.info({ fqn, symbolId, kind }, 'Binary/asset rule indexed metadata-only — enrichment skipped');
   }
-
-  logger.debug({ fqn, symbolId, fileId, kind }, 'Rule synced to symbols');
-  return { symbolId, fileId };
 }
 
 /** Re-store body + re-queue enrichment for an existing symbol (SA4E-106 backfill). */
@@ -177,186 +184,5 @@ export async function refreshRuleSymbolBody(
   await createEnrichmentTaskIfNeeded(
     adapter, symbolId, fields.pyRuleName, kind, virtualPath,
     projectId, fields.pyClassName, resolveRuleSet(ruleJson),
-  );
-}
-
-/**
- * Resolve a stable project display name for project_registry.
- * Priority (SA4E-338 B1):
- *   1. explicit `appName` — the extension reads it from the project's
- *      `pega-project.json` (`applicationName`), the authoritative source.
- *   2. rule `pyApplication` / `pyApplicationName` — best-effort when the client
- *      did not send an app name (older extension).
- *   3. projectId — last-resort label.
- * This keeps the display name consistent across ALL rules of the app, instead of
- * the previous behaviour where it became whichever rule's class was processed last.
- * @param ruleJson - Raw Pega rule JSON.
- * @param projectId - Tenant project id (fallback label).
- * @param appName - Authoritative app name from pega-project.json (preferred).
- * @returns Display name like `Pega: HRAppsV2`.
- */
-function resolvePegaDisplayName(ruleJson: Record<string, unknown>, projectId: string, appName?: string): string {
-  const explicit = (appName ?? '').trim();
-  if (explicit) return `Pega: ${explicit}`;
-  const r = ruleJson as Record<string, unknown>;
-  const fromRule = String(r.pyApplication ?? r.pyApplicationName ?? '').trim();
-  return `Pega: ${fromRule || projectId}`;
-}
-
-/** Resolve "RuleSet Version" display string from rule JSON (both export casings). */
-function resolveRuleSet(ruleJson: Record<string, unknown>): string {
-  const rs = resolveRuleSetName(ruleJson);
-  const version = resolveRuleSetVersion(ruleJson);
-  return rs ? (version ? `${rs} ${version}` : rs) : '';
-}
-
-/**
- * SA4E-222 — Resolve learned nested logic paths for a rule type from the KB.
- * Reads the canonical EnrichedSchema (if it exists from a prior enrichment) so
- * extraction can render structured logic without new TypeScript. Returns undefined
- * when no schema/paths exist, letting the generic extractor take over. Non-fatal.
- */
-async function resolveNestedLogicPaths(
-  adapter: DatabaseAdapter, ruleType: string,
-): Promise<string[] | undefined> {
-  try {
-    const storage = new SchemaStorageService(adapter as unknown as IDatabaseAdapter, logger);
-    const schema = await storage.find(ruleType);
-    const paths = schema?.extraction_hints?.nested_logic_paths;
-    return paths && paths.length > 0 ? paths : undefined;
-  } catch (err) {
-    logger.warn({ err, ruleType }, '[pega-sync] Schema path lookup failed; using generic extractor');
-    return undefined;
-  }
-}
-
-/** Extract and validate required fields from rule JSON. */
-function extractRequiredFields(ruleJson: Record<string, unknown>) {
-  const pxObjClass = String((ruleJson as any)?.pxObjClass || '');
-  // Class via shared fallback (pyClassName → pxObjClass) so instance-level Data-Admin
-  // rules with no pyClassName still index. MUST match the FQN built in PegaIndexer's
-  // checksum dedup so a rule resolves to the SAME identity at write and at dedup.
-  const pyClassName = resolveClassNameField(ruleJson);
-  // Name via canonical fallback (pyRuleName → pyActivityName → pyModelName → pyFlowName → pyLabel)
-  const pyRuleName = resolveRuleNameField(ruleJson);
-
-  if (!pxObjClass || !pyClassName || !pyRuleName) {
-    logger.warn({ pxObjClass, pyClassName, pyRuleName }, 'Missing required Pega fields');
-    return null;
-  }
-  return { pxObjClass, pyClassName, pyRuleName };
-}
-
-/** UPSERT virtual file entry (BR-02, BR-05). */
-async function upsertVirtualFile(
-  adapter: DatabaseAdapter, projectId: string, virtualPath: string,
-  module: string, contentHash: string, sizeBytes: number,
-): Promise<number> {
-  const engine = adapter.getEngine();
-  if (engine === 'postgresql') {
-    const row = await adapter.getAsync<{ id: number }>(
-      `INSERT INTO files (project_id, path, relative_path, language, module, content_hash, size_bytes, line_count)
-       VALUES ($1, $2, $3, 'pega', $4, $5, $6, 1)
-       ON CONFLICT(project_id, path) DO UPDATE SET
-         content_hash = EXCLUDED.content_hash, size_bytes = EXCLUDED.size_bytes
-       RETURNING id`,
-      [projectId, virtualPath, virtualPath, module, contentHash, sizeBytes],
-    );
-    return row!.id;
-  }
-  // SQLite path
-  await adapter.runAsync(
-    `INSERT INTO files (project_id, path, relative_path, language, module, content_hash, size_bytes, line_count)
-     VALUES (?, ?, ?, 'pega', ?, ?, ?, 1)
-     ON CONFLICT(project_id, path) DO UPDATE SET
-       content_hash = excluded.content_hash, size_bytes = excluded.size_bytes`,
-    [projectId, virtualPath, virtualPath, module, contentHash, sizeBytes],
-  );
-  const row = await adapter.getAsync<{ id: number }>(
-    'SELECT id FROM files WHERE project_id = ? AND path = ?',
-    [projectId, virtualPath],
-  );
-  return row!.id;
-}
-
-/** UPSERT symbol entry (BR-01, BR-03, BR-04). */
-async function upsertSymbol(
-  adapter: DatabaseAdapter, projectId: string, fileId: number,
-  name: string, kind: string, signature: string,
-  parentSymbol: string, docComment: string,
-): Promise<number> {
-  const engine = adapter.getEngine();
-  // Delete existing symbol for this file (1:1 virtual file → symbol)
-  await adapter.runAsync(
-    'DELETE FROM symbols WHERE file_id = ? AND project_id = ?',
-    [fileId, projectId],
-  );
-  if (engine === 'postgresql') {
-    const row = await adapter.getAsync<{ id: number }>(
-      `INSERT INTO symbols (project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment)
-       VALUES ($1, $2, $3, $4, $5, 1, 1, $6, 'public', $7)
-       RETURNING id`,
-      [projectId, fileId, name, kind, signature, parentSymbol, docComment],
-    );
-    return row!.id;
-  }
-  const result = await adapter.runAsync(
-    `INSERT INTO symbols (project_id, file_id, name, kind, signature, start_line, end_line, parent_symbol, visibility, doc_comment)
-     VALUES (?, ?, ?, ?, ?, 1, 1, ?, 'public', ?)`,
-    [projectId, fileId, name, kind, signature, parentSymbol, docComment],
-  );
-  return result.lastInsertRowid as number;
-}
-
-/** Store rule JSON body in body_embeddings for loadBodyText() (OI-04). */
-async function storeBodyEmbedding(
-  adapter: DatabaseAdapter, projectId: string, symbolId: number, body: string,
-): Promise<void> {
-  const buf = Buffer.from(body, 'utf-8');
-  const tokenCount = Math.ceil(body.length / 4); // Rough token estimate
-  const engine = adapter.getEngine();
-  if (engine === 'postgresql') {
-    await adapter.runAsync(
-      `INSERT INTO body_embeddings (project_id, symbol_id, chunk_index, embedding, token_count)
-       VALUES ($1, $2, 0, $3, $4)
-       ON CONFLICT(project_id, symbol_id, chunk_index) DO UPDATE SET
-         embedding = EXCLUDED.embedding, token_count = EXCLUDED.token_count`,
-      [projectId, symbolId, buf, tokenCount],
-    );
-  } else {
-    await adapter.runAsync(
-      `INSERT INTO body_embeddings (project_id, symbol_id, chunk_index, embedding, token_count)
-       VALUES (?, ?, 0, ?, ?)
-       ON CONFLICT(project_id, symbol_id, chunk_index) DO UPDATE SET
-         embedding = excluded.embedding, token_count = excluded.token_count`,
-      [projectId, symbolId, buf, tokenCount],
-    );
-  }
-}
-
-/** Create CODE_ENRICHMENT task if symbol not already fully enriched (BR-07 amended). */
-async function createEnrichmentTaskIfNeeded(
-  adapter: DatabaseAdapter, symbolId: number, symbolName: string,
-  kind: string, filePath: string, projectId: string,
-  pegaClass?: string, pegaRuleset?: string,
-): Promise<void> {
-  // Skip only if CODE_ENRICHMENT already produced summary (not just TAG_ENRICHMENT tags)
-  const sym = await adapter.getAsync<{ enrichment_status: string | null; summary: string | null }>(
-    'SELECT enrichment_status, summary FROM symbols WHERE id = ? AND project_id = ?',
-    [symbolId, projectId],
-  );
-  if (sym?.enrichment_status === 'COMPLETED' && sym.summary) return;
-
-  const payload = JSON.stringify({
-    symbolId, symbolName, symbolKind: kind,
-    projectId, filePath, workspaceType: 'pega',
-    pegaClass, pegaRuleset,
-  });
-
-  const now = new Date().toISOString();
-  await adapter.runAsync(
-    `INSERT INTO pending_tasks (task_type, entry_id, status, payload, max_retries, project_id, created_at)
-     VALUES (?, ?, ?, ?, 3, ?, ?)`,
-    [TaskType.CODE_ENRICHMENT, symbolId, TaskStatus.PENDING, payload, projectId, now],
   );
 }

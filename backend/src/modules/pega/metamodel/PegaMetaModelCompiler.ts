@@ -1,189 +1,20 @@
 /**
- * PegaMetaModelCompiler — Generates IPegaRuleParserStrategy instances
+ * PegaMetaModelCompiler (facade) — Generates IPegaRuleParserStrategy instances
  * from PegaClassDefinition schemas at runtime (dynamic, not code-gen).
  *
  * Each compiled strategy knows its class definition, supports inheritance-based
  * matching, and extracts properties/children/dependencies automatically.
+ *
+ * Implementation submodules (same directory):
+ * - CompiledPegaRuleParserStrategy.ts — the compiled strategy wrapper
+ * - PegaRuleFieldInference.ts         — name extraction + rule-type inference
  */
 
 import type { PegaClassDefinition } from './PegaClassDefinition.js';
 import type { PegaMetaModelRegistry } from './PegaMetaModelRegistry.js';
-import type { IPegaRuleParserStrategy, ParseResult } from '../strategies/IPegaRuleParserStrategy.js';
-import type { UnresolvedDependency } from '../models.js';
+import type { IPegaRuleParserStrategy } from '../strategies/IPegaRuleParserStrategy.js';
 import type { PegaParserRegistry } from '../strategies/PegaParserRegistry.js';
-
-/**
- * Compiled strategy that wraps a PegaClassDefinition and uses the registry
- * for inheritance resolution.
- */
-class CompiledPegaRuleParserStrategy implements IPegaRuleParserStrategy {
-  constructor(
-    private readonly classDef: PegaClassDefinition,
-    private readonly compiler: PegaMetaModelCompiler,
-    private readonly registry: PegaMetaModelRegistry,
-  ) {}
-
-  /**
-   * Check whether this strategy supports the given pxObjClass.
-   *
-   * Matching rules:
-   * 1. Exact match on pxObjClass
-   * 2. @baseclass supports everything
-   * 3. Classes ending with '-' (base categories) support any subclass by prefix
-   * 4. Full inheritance check via the registry
-   */
-  public supports(pxObjClass: string): boolean {
-    if (pxObjClass === this.classDef.pxObjClass) return true;
-    if (this.classDef.pxObjClass === '@baseclass') return true;
-
-    // Base-category classes ending with '-' support prefix match
-    if (this.classDef.pxObjClass.endsWith('-')) {
-      if (pxObjClass.startsWith(this.classDef.pxObjClass)) return true;
-    }
-
-    // Full inheritance chain check
-    return this.compiler.isDerivedFrom(pxObjClass, this.classDef.pxObjClass);
-  }
-
-  /**
-   * Parse a raw JSON object into a ParseResult.
-   * Extracts the symbol (name, class, type), detects references as dependencies,
-   * and records all properties per the class definition.
-   */
-  public parse(json: Record<string, unknown>): ParseResult {
-    const pxObjClass = (json.pxObjClass as string) || this.classDef.pxObjClass;
-    const className = (json.pyClassName as string) || (json.className as string) || '@baseclass';
-    const name = this.extractName(json);
-    const fqn = `${pxObjClass}:${className}:${name}`;
-
-    const symbol = {
-      fqn,
-      name,
-      className,
-      ruleType: pxObjClass,
-      isRule: pxObjClass.startsWith('Rule-'),
-      ruleset: (json.pyRuleset as string) || undefined,
-      version: (json.pyRulesetVersion as string) || undefined,
-      logicSummary: this.buildLogicSummary(json),
-    };
-
-    const dependencies = this.extractDependencies(json, className);
-
-    return { symbol, dependencies };
-  }
-
-  private extractName(json: Record<string, unknown>): string {
-    const candidates = ['pyRuleName', 'pyActivityName', 'pyModelName', 'pyTransformName',
-      'pyFlowName', 'pyServiceRuleName', 'pyServiceName', 'pyLabel', 'pyName'];
-    for (const key of candidates) {
-      const val = json[key];
-      if (typeof val === 'string' && val.trim()) return val.trim();
-    }
-    return 'Unnamed';
-  }
-
-  private extractDependencies(json: Record<string, unknown>, className: string): UnresolvedDependency[] {
-    const deps: UnresolvedDependency[] = [];
-    const visited = new Set<string>();
-
-    // 1. Extract from classDef properties marked as isReference
-    for (const prop of this.classDef.properties) {
-      if (!prop.isReference) continue;
-      const val = json[prop.name];
-      if (typeof val !== 'string' || !val.trim()) continue;
-      const key = `${prop.name}:${val}`;
-      if (visited.has(key)) continue;
-      visited.add(key);
-      const ruleType = this.inferRuleType(prop.name, val, json);
-      deps.push({ ruleType, className, ruleName: val.trim() });
-    }
-
-    // 2. Detect additional reference fields by naming convention
-    //    Fields ending in reference-like suffixes that aren't already captured
-    const referenceSuffixes = ['Name', 'Class', 'Profile', 'Transform', 'Condition', 'From', 'Evaluated', 'Trigger', 'Action', 'Target', 'Source', 'Expression'];
-    for (const [key, val] of Object.entries(json)) {
-      if (typeof val !== 'string' || !val.trim()) continue;
-      if (key === 'pxObjClass' || key === 'pyClassName' || key === 'pyRuleName') continue;
-      if (key === 'pyRuleset' || key === 'pyRulesetVersion' || key === 'pyRuleSet' || key === 'pyRuleSetVersion') continue;
-
-      const hasRefSuffix = referenceSuffixes.some(s => key.endsWith(s));
-      if (!hasRefSuffix) continue;
-
-      // Skip if already captured as isReference property
-      if (this.classDef.properties.some(p => p.name === key && p.isReference)) continue;
-
-      const depKey = `${key}:${val}`;
-      if (visited.has(depKey)) continue;
-      visited.add(depKey);
-
-      const ruleType = this.inferRuleType(key, val, json);
-      deps.push({ ruleType, className, ruleName: val.trim() });
-    }
-
-    return deps;
-  }
-
-  private inferRuleType(fieldName: string, fieldValue: string, _json?: Record<string, unknown>): string {
-    // Map known reference fields to rule types
-    if (fieldName === 'pyAuthProfile') return 'Rule-Connect-AuthProfile';
-    if (fieldName === 'pyRequestDataTransform' || fieldName === 'pyResponseDataTransform') return 'Rule-Obj-Model';
-    if (fieldName === 'pyWhenCondition') return 'Rule-Obj-When';
-    if (fieldName === 'pyOnChangeTrigger') return 'Rule-Obj-When';
-    if (fieldName === 'pyFlowActionName') return 'Rule-Obj-FlowAction';
-    if (fieldName === 'pySuperClass' || fieldName === 'pyDerivesFrom' || fieldName === 'pyPatternParent') return 'Rule-Obj-Class';
-    if (fieldName === 'pyTransformName') return 'Rule-Obj-Model';
-    if (fieldName === 'pyActivityName') return 'Rule-Obj-Activity';
-    if (fieldName === 'pyFlowName') return 'Rule-Obj-Flow';
-    if (fieldName === 'pyPropertyName') return 'Rule-Obj-Property';
-    if (fieldName === 'pyPropertyEvaluated') return 'Rule-Obj-Property';
-    if (fieldName === 'pyMethodParameters') return 'Rule-Obj-Activity';
-
-    // Generic detection from value pattern
-    if (fieldValue.includes('.') && fieldName.includes('Method')) return 'Rule-Obj-Activity';
-    if (fieldName.endsWith('Transform')) return 'Rule-Obj-Model';
-    if (fieldName.endsWith('Class')) return 'Rule-Obj-Class';
-    if (fieldName.endsWith('Profile')) return 'Rule-Connect-AuthProfile';
-    if (fieldName.endsWith('Condition')) return 'Rule-Obj-When';
-    if (fieldName.endsWith('From')) return 'Rule-Obj-Class';
-    if (fieldName.endsWith('Evaluated')) return 'Rule-Obj-Property';
-    if (fieldName.endsWith('Trigger')) return 'Rule-Obj-When';
-    if (fieldName.endsWith('Action')) return 'Rule-Obj-FlowAction';
-    if (fieldName.endsWith('Target')) return 'Rule-Obj-Model';
-    if (fieldName.endsWith('Source')) return 'Rule-Obj-Class';
-    if (fieldName.endsWith('Expression')) return 'Rule-Obj-Model';
-    if (fieldName.endsWith('Name')) return 'Rule-Obj-Activity';
-
-    return 'Rule-Obj-Activity';
-  }
-
-  private buildLogicSummary(json: Record<string, unknown>): string | undefined {
-    const name = this.extractName(json);
-    const cls = this.classDef;
-    const lines: string[] = [];
-    lines.push(`${cls.pxObjClass}: ${name}`);
-
-    // Add key fields based on classDef meta
-    for (const prop of cls.properties.slice(0, 6)) {
-      const val = json[prop.name];
-      if (val !== undefined && val !== null && val !== '') {
-        lines.push(`  ${prop.name}: ${String(val)}`);
-      }
-    }
-
-    // Count children
-    let childCount = 0;
-    for (const child of cls.children) {
-      const arr = json[child.name];
-      if (Array.isArray(arr)) childCount += arr.length;
-    }
-
-    if (childCount > 0) {
-      lines.push(`  Children: ${childCount} item(s) across ${cls.children.length} array(s)`);
-    }
-
-    return lines.join('\n');
-  }
-}
+import { CompiledPegaRuleParserStrategy } from './CompiledPegaRuleParserStrategy.js';
 
 export class PegaMetaModelCompiler {
   private registry: PegaMetaModelRegistry;

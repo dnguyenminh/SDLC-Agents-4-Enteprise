@@ -5,83 +5,18 @@ import { GenericCodeAnalyzer } from '../artifact-analyzer/analyzers/GenericCodeA
 import { StructureAnalyzer } from '../artifact-analyzer/analyzers/StructureAnalyzer.js';
 import { FallbackAnalyzer } from '../artifact-analyzer/analyzers/FallbackAnalyzer.js';
 import { ArtifactAnalyzerRegistry } from '../artifact-analyzer/ArtifactAnalyzerRegistry.js';
-
-// ─── Fixtures ────────────────────────────────────────────────────────────
-
-const PEGA_RULE_JSON = JSON.stringify({
-  pxObjClass: 'Rule-Obj-Activity',
-  pyClassName: 'Work-Cover-Jira',
-  pyActivityName: 'ResolveTicket',
-  pyLabel: 'Process and Resolve Jira Ticket',
-  pyRuleset: 'JiraIntegration',
-  steps: [
-    { pyStepNum: '1', pyMethod: 'Property-Set', pyMethodParameters: '.Status', pyStepPage: '', pyStepPageClass: '' },
-    { pyStepNum: '2', pyMethod: 'Call', pyMethodParameters: 'Work-Cover-Jira.SendNotification', pyStepPage: '', pyStepPageClass: '' },
-  ],
-});
-
-const PEGA_RULE_NO_PXOBJCLASS = JSON.stringify({
-  pyClassName: 'Work-Cover-Jira',
-  pyActivityName: 'NoClassRule',
-});
-
-const TYPESCRIPT_CODE = `import { Component } from '@angular/core';
-
-interface User {
-  name: string;
-  age: number;
-}
-
-export function greet(user: User): string {
-  return \`Hello, \${user.name}\`;
-}`;
-
-const PYTHON_CODE = `import os
-from typing import List
-
-def calculate_total(items: List[float]) -> float:
-    total = 0.0
-    for item in items:
-        total += item
-    return total
-
-class Calculator:
-    pass`;
-
-const JAVA_CODE = `package com.example;
-
-import java.util.List;
-
-public class HelloWorld {
-    private String name;
-
-    public String greet() {
-        return "Hello, " + this.name;
-    }
-}`;
-
-const CPP_CODE = `#include <iostream>
-#include <vector>
-
-class MyClass {
-private:
-    int value;
-public:
-    MyClass(int v) : value(v) {}
-    void print() const { std::cout << value; }
-};
-
-int main() {
-    MyClass obj(42);
-    obj.print();
-    return 0;
-}`;
-
-const JSON_OBJECT = '{"name": "test", "value": 42, "nested": {"a": 1, "b": 2}}';
-const XML_CONTENT = '<root><item id="1">value</item><item id="2">other</item></root>';
-const YAML_CONTENT = 'server:\n  port: 8080\n  host: localhost\n  debug: true';
-
-const RANDOM_TEXT = 'The quick brown fox jumps over the lazy dog.';
+import {
+  PEGA_RULE_JSON,
+  PEGA_RULE_NO_PXOBJCLASS,
+  TYPESCRIPT_CODE,
+  PYTHON_CODE,
+  JAVA_CODE,
+  CPP_CODE,
+  JSON_OBJECT,
+  XML_CONTENT,
+  YAML_CONTENT,
+  RANDOM_TEXT,
+} from './artifact-analyzer.fixtures.js';
 
 // ─── ArtifactDetector (10 tests) ─────────────────────────────────────────
 

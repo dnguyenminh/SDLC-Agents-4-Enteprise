@@ -3,28 +3,23 @@
  * Creates CODE_ENRICHMENT tasks after indexing. Skips already-enriched symbols.
  * Cross-scope dedup: skips LLM if same content_hash already enriched in another project/scope.
  * Non-blocking: failures don't affect the indexing pipeline (BR-01).
+ * BR-18 facade — insert logic lives in ./CodeEnrichmentTaskCreator/task-insert.ts,
+ * cross-scope copy in ./CodeEnrichmentTaskCreator/cross-scope.ts.
  */
 
 import type { Logger } from 'pino';
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
-import { TaskType, TaskStatus } from '../../modules/memory/task-queue/models.js';
 import { isPegaKind } from '../../modules/pega/pega-mapping.js';
-
-/**
- * Kinds eligible for enrichment — every non-trivial code symbol must be LLM-enriched.
- * Includes Salesforce-specific kinds (apex_class, trigger) so Apex entities get
- * summary + pseudo code like any other class/function. Trivial symbols (variables,
- * constants, fields, properties) are intentionally excluded.
- */
-const ENRICHABLE_KINDS = new Set([
-  // Class-like
-  'class', 'interface', 'enum', 'apex_class',
-  // Function-like
-  'function', 'method', 'arrow_function', 'generator', 'constructor', 'trigger',
-  // Salesforce declarative metadata + component properties (summary only, no pseudo code)
-  'property', 'sf_field', 'sf_object', 'lwc_component', 'aura_component',
-  'flow', 'visualforce_page',
-]);
+import {
+  copyEnrichmentFromOtherScope as copyFromScope,
+  isFileEnrichedInOtherScope as isEnrichedInOtherScope,
+} from './CodeEnrichmentTaskCreator/cross-scope.js';
+import {
+  ENRICHABLE_KINDS,
+  getSymbolKind as lookupSymbolKind,
+  insertTask as insertEnrichmentTask,
+  shouldCreateTask as checkShouldCreateTask,
+} from './CodeEnrichmentTaskCreator/task-insert.js';
 
 /**
  * Creates CODE_ENRICHMENT tasks for newly indexed symbols.
@@ -125,142 +120,28 @@ export class CodeEnrichmentTaskCreator {
   }
 
   /** Skip if symbol already fully enriched (has summary). */
-  private async shouldCreateTask(symbolId: number): Promise<boolean> {
-    const row = await this.adapter.getAsync<{ enrichment_status: string | null; summary: string | null }>(
-      'SELECT enrichment_status, summary FROM symbols WHERE id = ?',
-      [symbolId],
-    );
-    // Skip only if COMPLETED AND has summary (CODE_ENRICHMENT done, not just TAG_ENRICHMENT)
-    return !(row?.enrichment_status === 'COMPLETED' && row?.summary);
+  private shouldCreateTask(symbolId: number): Promise<boolean> {
+    return checkShouldCreateTask(this.adapter, symbolId);
   }
 
-  /**
-   * SA4E-106: Copy enrichment data from an already-enriched scope to current project.
-   * Matches by file content_hash + symbol name + kind.
-   * Uses COALESCE for pseudo_code to preserve PegaLogicNormalizer output.
-   * @param filePath - Relative file path in current project
-   * @param projectId - Current project ID
-   * @returns Number of symbols updated
-   */
-  private async copyEnrichmentFromOtherScope(filePath: string, projectId: string): Promise<number> {
-    const sourceFileId = await this.findSourceFileId(filePath, projectId);
-    if (!sourceFileId) return 0;
-
-    const targetFileId = await this.findTargetFileId(filePath, projectId);
-    if (!targetFileId) return 0;
-
-    const sourceSymbols = await this.loadEnrichedSymbols(sourceFileId);
-    return this.applyEnrichmentCopy(sourceSymbols, targetFileId);
+  /** Copy enrichment data from an already-enriched scope (SA4E-106). */
+  private copyEnrichmentFromOtherScope(filePath: string, projectId: string): Promise<number> {
+    return copyFromScope(this.adapter, filePath, projectId);
   }
 
-  /** Find a source file (another project) with enriched symbols for same content. */
-  private async findSourceFileId(filePath: string, projectId: string): Promise<number | null> {
-    const currentFile = await this.adapter.getAsync<{ content_hash: string }>(
-      'SELECT content_hash FROM files WHERE relative_path = ? AND project_id = ?',
-      [filePath, projectId],
-    );
-    if (!currentFile?.content_hash) return null;
-
-    const sourceFile = await this.adapter.getAsync<{ id: number }>(
-      `SELECT f.id FROM files f
-       JOIN symbols s ON s.file_id = f.id
-       WHERE f.content_hash = ? AND f.project_id != ?
-         AND s.enrichment_status = 'COMPLETED'
-       LIMIT 1`,
-      [currentFile.content_hash, projectId],
-    );
-    return sourceFile?.id ?? null;
+  /** Cross-scope dedup check against other projects. */
+  private isFileEnrichedInOtherScope(filePath: string, currentProjectId: string): Promise<boolean> {
+    return isEnrichedInOtherScope(this.adapter, filePath, currentProjectId);
   }
 
-  /** Get the target file ID in the current project. */
-  private async findTargetFileId(filePath: string, projectId: string): Promise<number | null> {
-    const targetFile = await this.adapter.getAsync<{ id: number }>(
-      'SELECT id FROM files WHERE relative_path = ? AND project_id = ?',
-      [filePath, projectId],
-    );
-    return targetFile?.id ?? null;
+  private getSymbolKind(symbolId: number): Promise<string | null> {
+    return lookupSymbolKind(this.adapter, symbolId);
   }
 
-  /** Load enriched symbols from source file. */
-  private async loadEnrichedSymbols(sourceFileId: number) {
-    return this.adapter.allAsync<{
-      name: string; kind: string; summary: string | null;
-      pseudo_code: string | null; llm_tags: string | null;
-    }>(
-      `SELECT name, kind, summary, pseudo_code, llm_tags FROM symbols
-       WHERE file_id = ? AND enrichment_status = 'COMPLETED'`,
-      [sourceFileId],
-    );
-  }
-
-  /** Apply enrichment copy from source symbols to target file symbols. */
-  private async applyEnrichmentCopy(
-    sourceSymbols: { name: string; kind: string; summary: string | null; pseudo_code: string | null; llm_tags: string | null }[],
-    targetFileId: number,
-  ): Promise<number> {
-    let copied = 0;
-    for (const src of sourceSymbols) {
-      if (!src.summary) continue;
-      const result = await this.adapter.runAsync(
-        `UPDATE symbols SET
-           summary = ?,
-           pseudo_code = COALESCE(?, pseudo_code),
-           llm_tags = ?,
-           enrichment_status = 'COMPLETED',
-           enriched_at = datetime('now')
-         WHERE file_id = ? AND name = ? AND kind = ?
-           AND (enrichment_status IS NULL OR enrichment_status != 'COMPLETED')`,
-        [src.summary, src.pseudo_code, src.llm_tags, targetFileId, src.name, src.kind],
-      );
-      if (result?.changes && result.changes > 0) copied++;
-    }
-    return copied;
-  }
-
-  /**
-   * Cross-scope dedup: check if the same file (by content_hash) has already been
-   * enriched in another project. If yes, skip LLM task creation entirely.
-   */
-  private async isFileEnrichedInOtherScope(filePath: string, currentProjectId: string): Promise<boolean> {
-    try {
-      const sourceId = await this.findSourceFileId(filePath, currentProjectId);
-      return sourceId !== null;
-    } catch {
-      // Non-fatal: if query fails (table missing, etc.), proceed with task creation
-      return false;
-    }
-  }
-
-  private async getSymbolKind(symbolId: number): Promise<string | null> {
-    const row = await this.adapter.getAsync<{ kind: string }>(
-      'SELECT kind FROM symbols WHERE id = ?', [symbolId],
-    );
-    return row?.kind ?? null;
-  }
-
-  private async insertTask(
+  private insertTask(
     symbolId: number, symbolName: string, kind: string,
     filePath: string, projectId: string,
   ): Promise<void> {
-    // Dedup guard: avoid duplicate PENDING/PROCESSING tasks for same symbol/project
-    const exists = await this.adapter.getAsync<{ id: number }>(
-      `SELECT id FROM pending_tasks WHERE task_type = ? AND entry_id = ? AND project_id = ? AND status IN (?, ?) LIMIT 1`,
-      [TaskType.CODE_ENRICHMENT, symbolId, projectId, TaskStatus.PENDING, TaskStatus.PROCESSING],
-    );
-    if (exists) return;
-
-    // SA4E-171: dynamically set workspaceType based on symbol kind
-    const payload = JSON.stringify({
-      symbolId, symbolName, symbolKind: kind,
-      projectId, filePath,
-      workspaceType: isPegaKind(kind) ? 'pega' : 'standard',
-    });
-
-    const now = new Date().toISOString();
-    await this.adapter.runAsync(
-      `INSERT INTO pending_tasks (task_type, entry_id, status, payload, max_retries, project_id, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [TaskType.CODE_ENRICHMENT, symbolId, TaskStatus.PENDING, payload, 3, projectId, now],
-    );
+    return insertEnrichmentTask(this.adapter, symbolId, symbolName, kind, filePath, projectId);
   }
 }

@@ -1,11 +1,15 @@
 /**
- * SA4E-214 — SchemaAnalyzeService: dual-strategy analysis coordinator.
+ * SA4E-214 — SchemaAnalyzeService (facade): dual-strategy analysis coordinator.
  * Rule-based parsing first (fast, deterministic), LLM fallback when empty (BR-10).
  * R-03: Wraps harness content in delimiters for LLM prompts.
+ *
+ * Implementation submodules (same directory):
+ * - schema-rule-extractor.ts — deterministic field/sub-section extraction
  */
 
 import type { Logger } from 'pino';
 import type { FieldDescriptor, ExtractionHints } from '../../../models/pega-schema.models.js';
+import { extractFieldsRuleBased, detectSubSections } from './schema-rule-extractor.js';
 
 /** Response structure from analyze operation */
 export interface AnalyzeResult {
@@ -46,8 +50,8 @@ export class SchemaAnalyzeService {
     depth: number,
   ): Promise<AnalyzeResult> {
     // Phase 1: Rule-based extraction (deterministic, fast)
-    const ruleBasedFields = this.extractFieldsRuleBased(harnessJson, ruleType);
-    const subSections = this.detectSubSections(harnessJson);
+    const ruleBasedFields = extractFieldsRuleBased(harnessJson, ruleType);
+    const subSections = detectSubSections(harnessJson);
     const coverage = this.calculateCoverage(ruleBasedFields, harnessJson);
 
     // If rule-based found fields, use them (no LLM needed)
@@ -62,21 +66,8 @@ export class SchemaAnalyzeService {
     }
 
     // Phase 2: LLM fallback for stream-rendered or empty harnesses
-    if (this.llmAnalyzer && this.isLlmFallbackNeeded(harnessJson)) {
-      this.logger.info({ ruleType, depth }, '[schema-analyze] Rule-based empty — LLM fallback');
-      try {
-        const llmResult = await this.llmAnalyzer.analyzeHarness(harnessJson, ruleType);
-        return {
-          fields: llmResult.fields,
-          sub_sections: [...subSections, ...llmResult.sub_sections],
-          rule_based_coverage: 0,
-          llm_fallback_used: true,
-          hints: this.deriveHints(llmResult.fields, ruleType),
-        };
-      } catch (err: any) {
-        this.logger.warn({ err: err.message, ruleType }, '[schema-analyze] LLM fallback failed');
-      }
-    }
+    const llmResult = await this.tryLlmFallback(harnessJson, ruleType, depth, subSections);
+    if (llmResult) return llmResult;
 
     // Fallback: return whatever we have (may be empty)
     return {
@@ -88,125 +79,27 @@ export class SchemaAnalyzeService {
     };
   }
 
-  // ─── Rule-Based Extraction ──────────────────────────────────────────────
-
-  /** Extract fields from harness JSON using deterministic rules. */
-  private extractFieldsRuleBased(json: Record<string, unknown>, ruleType: string): FieldDescriptor[] {
-    const fields: FieldDescriptor[] = [];
-    const seen = new Set<string>();
-
-    // Strategy 1: Look for pxRuleReferences with field bindings
-    this.extractFromRuleReferences(json, fields, seen);
-
-    // Strategy 2: Look for pyRows/pyCells with pyValue bindings
-    this.extractFromCellBindings(json, fields, seen);
-
-    // Strategy 3: Look for top-level properties that look like data fields
-    this.extractTopLevelDataFields(json, fields, seen, ruleType);
-
-    return fields;
-  }
-
-  /** Extract from pxRuleReferences array. */
-  private extractFromRuleReferences(
-    json: Record<string, unknown>, fields: FieldDescriptor[], seen: Set<string>,
-  ): void {
-    const refs = json['pxRuleReferences'];
-    if (!Array.isArray(refs)) return;
-
-    for (const ref of refs) {
-      if (!ref || typeof ref !== 'object') continue;
-      const r = ref as Record<string, unknown>;
-      const propName = String(r['pyPropertyName'] || r['pyValue'] || '');
-      if (!propName || propName.startsWith('px') || propName.startsWith('pz')) continue;
-      if (seen.has(propName)) continue;
-      seen.add(propName);
-
-      fields.push({
-        path: propName.replace(/^\./, ''),
-        category: this.inferCategory(propName),
-        type: this.inferFieldType(r),
-        description: String(r['pyLabel'] || r['pyCaption'] || ''),
-        frequency: 'common',
-      });
+  /** LLM fallback attempt; returns null when unavailable/unneeded/failed. */
+  private async tryLlmFallback(
+    harnessJson: Record<string, unknown>, ruleType: string, depth: number,
+    subSections: string[],
+  ): Promise<AnalyzeResult | null> {
+    if (!this.llmAnalyzer || !this.isLlmFallbackNeeded(harnessJson)) return null;
+    this.logger.info({ ruleType, depth }, '[schema-analyze] Rule-based empty — LLM fallback');
+    try {
+      const llmResult = await this.llmAnalyzer.analyzeHarness(harnessJson, ruleType);
+      return {
+        fields: llmResult.fields,
+        sub_sections: [...subSections, ...llmResult.sub_sections],
+        rule_based_coverage: 0,
+        llm_fallback_used: true,
+        hints: this.deriveHints(llmResult.fields, ruleType),
+      };
+    } catch (err: any) {
+      this.logger.warn({ err: err.message, ruleType }, '[schema-analyze] LLM fallback failed');
+      return null;
     }
   }
-
-  /** Extract from pyRows → pyCells hierarchy. */
-  private extractFromCellBindings(
-    json: Record<string, unknown>, fields: FieldDescriptor[], seen: Set<string>,
-  ): void {
-    const traverse = (obj: unknown): void => {
-      if (!obj || typeof obj !== 'object') return;
-      if (Array.isArray(obj)) { obj.forEach(traverse); return; }
-
-      const record = obj as Record<string, unknown>;
-      const value = record['pyValue'];
-      if (typeof value === 'string' && value.startsWith('.') && value.length > 1) {
-        const propName = value.substring(1);
-        if (!propName.startsWith('px') && !propName.startsWith('pz') && !seen.has(propName)) {
-          seen.add(propName);
-          fields.push({
-            path: propName,
-            category: this.inferCategory(propName),
-            type: record['pyType'] === 'CHECKBOX' ? 'boolean' : 'string',
-            description: String(record['pyLabel'] || record['pyCaption'] || ''),
-            frequency: 'common',
-          });
-        }
-      }
-      // Recurse into children
-      for (const val of Object.values(record)) {
-        if (typeof val === 'object' && val !== null) traverse(val);
-      }
-    };
-    traverse(json['pyRows'] || json['pySections']);
-  }
-
-  /** Extract top-level data fields (non-internal, non-rendering). */
-  private extractTopLevelDataFields(
-    json: Record<string, unknown>, fields: FieldDescriptor[], seen: Set<string>, ruleType: string,
-  ): void {
-    const SKIP_PREFIXES = ['px', 'pz', 'pyJava', 'pyVisio', 'pyFooter', 'pyHeader'];
-    for (const [key, val] of Object.entries(json)) {
-      if (seen.has(key)) continue;
-      if (SKIP_PREFIXES.some(p => key.startsWith(p))) continue;
-      if (key === 'pxObjClass' || key === 'pxCreateDateTime') continue;
-
-      // Only include fields with actual data content
-      if (val === null || val === '' || val === undefined) continue;
-      seen.add(key);
-
-      fields.push({
-        path: key,
-        category: this.inferCategory(key),
-        type: this.inferTypeFromValue(val),
-        description: '',
-        frequency: 'common',
-      });
-    }
-  }
-
-  // ─── Sub-Section Detection ──────────────────────────────────────────────
-
-  /** Detect sub-sections that need recursive analysis. */
-  private detectSubSections(json: Record<string, unknown>): string[] {
-    const sections: string[] = [];
-    const refs = json['pxRuleReferences'];
-    if (!Array.isArray(refs)) return sections;
-
-    for (const ref of refs) {
-      if (!ref || typeof ref !== 'object') continue;
-      const r = ref as Record<string, unknown>;
-      if (r['pxRuleObjClass'] === 'Rule-HTML-Section') {
-        const name = String(r['pyRuleName'] || '');
-        if (name) sections.push(name);
-      }
-    }
-    return sections;
-  }
-
-  // ─── Helpers ────────────────────────────────────────────────────────────
 
   /** Determine if LLM fallback should run (stream-rendered harness detection). */
   private isLlmFallbackNeeded(json: Record<string, unknown>): boolean {
@@ -224,31 +117,6 @@ export class SchemaAnalyzeService {
     ).length;
     if (totalKeys === 0) return 0;
     return Math.min(100, Math.round((fields.length / totalKeys) * 100));
-  }
-
-  /** Infer category from property name patterns. */
-  private inferCategory(name: string): FieldDescriptor['category'] {
-    if (/^py(ClassName|RuleName|RuleSet|Label|Purpose)/.test(name)) return 'identity';
-    if (/^py(Steps|Connector|Decision|Flow|Action|When)/.test(name)) return 'logic';
-    if (/^py(DataPage|Service|Connect|Queue|External)/.test(name)) return 'connectivity';
-    return 'metadata';
-  }
-
-  /** Infer type from pxRuleReference metadata. */
-  private inferFieldType(ref: Record<string, unknown>): string {
-    const objClass = String(ref['pxRuleObjClass'] || '');
-    if (objClass.includes('List') || objClass.includes('Page')) return 'array';
-    if (objClass.includes('Boolean')) return 'boolean';
-    return 'string';
-  }
-
-  /** Infer type from value. */
-  private inferTypeFromValue(val: unknown): string {
-    if (Array.isArray(val)) return 'array';
-    if (typeof val === 'boolean') return 'boolean';
-    if (typeof val === 'number') return 'number';
-    if (typeof val === 'object') return 'object';
-    return 'string';
   }
 
   /** Derive extraction hints from fields. */
