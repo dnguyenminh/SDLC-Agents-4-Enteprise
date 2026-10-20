@@ -16,6 +16,8 @@ import { mapAgentEvent, ToolEventTracker, type EventCollector, type ToolLiveEven
 import type { NormalizedToolCall } from '../types/executor.types.js';
 import type { SessionHost, SessionTurnResult, SessionTier } from './types.js';
 import type { ContextBudget } from '../../pi-agent/models/ContextBudget';
+import type { TurnOriginTracker } from '../peer/types.js';
+import { logger } from '../../logger.js';
 
 /** Per-turn streaming callbacks (token / live tool event / reasoning deltas). */
 interface SessionTurnHooks {
@@ -35,7 +37,8 @@ export function createSessionPromptTurn(
   session: unknown,
   tier: SessionTier,
   budget: ContextBudget,
-  getFile: () => string | undefined
+  getFile: () => string | undefined,
+  turnOrigin?: TurnOriginTracker
 ): SessionHost['promptTurn'] {
   let approxHistoryTokens = 0;
   const recordHistoryGrowth = (turnText: string, replyText: string): void => {
@@ -45,12 +48,18 @@ export function createSessionPromptTurn(
     usableTokens: usableTokensOf(budget),
     historyTokens: approxHistoryTokens,
   });
-  return async function promptTurn(
+  const runOwnTurn = async (
     text: string,
     onToken?: (t: string) => void,
     onToolEvent?: (e: ToolLiveEvent) => void,
-    onThinking?: (t: string) => void
-  ): Promise<SessionTurnResult> {
+    onThinking?: (t: string) => void,
+    opts?: import('./types.js').SessionTurnOptions
+  ): Promise<SessionTurnResult> => {
+    // SA4E-369 SEC-01/C1 L2: tag the CURRENT turn's origin so the peer approval
+    // extension can gate peer-turn tool calls. Default 'user' = prior behavior.
+    const turnOriginTag = opts?.turnOrigin ?? 'user';
+    if (turnOrigin) turnOrigin.current = turnOriginTag;
+    if (turnOriginTag === 'peer') logger.debug('peer turn started', { turnOrigin: turnOriginTag });
     const hooks: SessionTurnHooks = { onToken, onToolEvent, onThinking };
     const runOnce = async (promptText: string): Promise<string> => {
       const localCollector: EventCollector = { chunks: [], toolCalls: [], text: '', thinking: '' };
@@ -59,15 +68,47 @@ export function createSessionPromptTurn(
       return localCollector.text;
     };
 
-    const promptTokens = estimateTokenCount(text);
-    // SA4E-355 UAT fix #2: history-aware decision — medium/large tiers chunk
-    // once prompt + accumulated history pass 70% of the usable budget.
-    const shouldChunk = shouldAutoChunk(tier, promptTokens, DEFAULT_AUTO_CHUNK_CONFIG, chunkThreshold());
-    approxHistoryTokens += promptTokens; // this prompt joins the session history
-    if (shouldChunk) {
-      return runChunkedTurn(session, hooks, text, runOnce, recordHistoryGrowth, getFile);
+    try {
+      const promptTokens = estimateTokenCount(text);
+      // SA4E-355 UAT fix #2: history-aware decision — medium/large tiers chunk
+      // once prompt + accumulated history pass 70% of the usable budget.
+      const shouldChunk = shouldAutoChunk(tier, promptTokens, DEFAULT_AUTO_CHUNK_CONFIG, chunkThreshold());
+      approxHistoryTokens += promptTokens; // this prompt joins the session history
+      if (shouldChunk) {
+        return await runChunkedTurn(session, hooks, text, runOnce, recordHistoryGrowth, getFile);
+      }
+      return await runSingleTurn(session, hooks, text, recordHistoryGrowth, getFile);
+    } finally {
+      if (turnOrigin) turnOrigin.current = 'user'; // reset — never leaks across turns
     }
-    return runSingleTurn(session, hooks, text, recordHistoryGrowth, getFile);
+  };
+
+  // S-03 (SEC-01/C1 L2): single-flight lock per session host. A concurrent
+  // turn MUST WAIT until the current one settles — otherwise a user prompt
+  // arriving mid-peer-turn re-tags `turnOrigin` and its tool calls run
+  // UNGATED inside the peer turn (fail-open). FIFO chain, never poisoned.
+  let inFlight: Promise<unknown> = Promise.resolve();
+  return async function promptTurn(
+    text: string,
+    onToken?: (t: string) => void,
+    onToolEvent?: (e: ToolLiveEvent) => void,
+    onThinking?: (t: string) => void,
+    opts?: import('./types.js').SessionTurnOptions
+  ): Promise<SessionTurnResult> {
+    const mine = (async () => {
+      try {
+        await inFlight;
+      } catch {
+        /* join the chain on settlement even when the previous turn failed */
+      }
+      if (opts?.turnOrigin === 'peer') logger.debug('turn chain join', { turnOrigin: opts.turnOrigin });
+      return runOwnTurn(text, onToken, onToolEvent, onThinking, opts);
+    })();
+    inFlight = mine.then(
+      () => undefined,
+      () => undefined
+    ); // settle-mirror: the NEXT turn starts only after `mine` is done
+    return mine;
   };
 }
 

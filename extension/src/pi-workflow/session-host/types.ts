@@ -3,6 +3,7 @@
  * (SA4E-355) for the PiAgentSessionHost.
  */
 import type { NormalizedToolCall } from '../types/executor.types.js';
+import type { PeerToolApprovalHandler, PeerTurnOrigin } from '../peer/types.js';
 import { SMALL_CONTEXT_WINDOW_THRESHOLD } from '../../pi-agent/model-router.js';
 
 export interface SessionHostOptions {
@@ -31,6 +32,28 @@ export interface SessionHostOptions {
    * (fail-safe, never crash).
    */
   mcpBridge?: unknown;
+  /** SA4E-370 S2: agent persona body injected as system prompt content. */
+  personaBody?: string;
+  /** SA4E-370 S2/S4: id of the agent driving this session (for history tagging + badge). */
+  activeAgentId?: string;
+  /**
+   * SA4E-369: owning chat tab id (registry key workspaceRoot+tabId). Optional
+   * here because the session-host registry requires it at its own boundary.
+   */
+  tabId?: string;
+  /**
+   * SA4E-369 SEC-01/C1 L3 (D6 Option A): fail-closed approval handler for
+   * peer-triggered turns. Absent ⇒ peer-turn tool calls are blocked.
+   */
+  peerApprovalGate?: PeerToolApprovalHandler;
+}
+
+/**
+ * SA4E-369 SEC-01/C1 L2: per-turn options — `turnOrigin` tags the executing
+ * turn ('user' default keeps every existing caller unchanged, FR-10/AC8).
+ */
+export interface SessionTurnOptions {
+  turnOrigin?: PeerTurnOrigin;
 }
 
 export interface SessionTurnResult {
@@ -44,7 +67,8 @@ export interface SessionHost {
     text: string,
     onToken?: (t: string) => void,
     onToolEvent?: (e: import('../pi-event-mapper.js').ToolLiveEvent) => void,
-    onThinking?: (t: string) => void
+    onThinking?: (t: string) => void,
+    opts?: SessionTurnOptions
   ): Promise<SessionTurnResult>;
   getSessionFile(): string | undefined;
   dispose(): void;

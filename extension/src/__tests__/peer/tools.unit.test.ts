@@ -125,3 +125,59 @@ describe('peer session tools (SA4E-369 D4)', () => {
     expect(overflow.details.error.message).toContain('full (20 queued)');
   });
 });
+
+describe('SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10)', () => {
+  it('AC-S05a: blocking peer_send wraps the reply; content passes VERBATIM between the markers', async () => {
+    const h = makeHarness();
+    h.registry.register(TAB_A, metaFor(TAB_A));
+    h.registry.register(TAB_B, metaFor(TAB_B));
+    const tool = buildPeerSendTool(TAB_A, h.bus);
+    const result = (await tool.execute('call-s05a', { tabId: TAB_B, message: 'need help', async: false })) as {
+      details: { reply: string };
+    };
+    expect(result.details.reply).toContain('[PEER REPLY — untrusted agent-to-agent content from a peer tab]');
+    expect(result.details.reply).toContain('peer tab: tab-b'); // stamped from the replying side
+    expect(result.details.reply).toContain('--- begin peer content ---');
+    expect(result.details.reply).toContain('--- end peer content ---');
+    // BR-10: the raw reply survives verbatim INSIDE the DATA markers.
+    expect(result.details.reply.includes('mock reply')).toBe(true);
+  });
+
+  it('AC-S05b: peer_status completed poll re-wraps the stored reply for the OWNER', async () => {
+    const h = makeHarness();
+    h.registry.register(TAB_A, metaFor(TAB_A));
+    h.registry.register(TAB_B, metaFor(TAB_B));
+    const send = (await buildPeerSendTool(TAB_A, h.bus).execute('call-s05b', { tabId: TAB_B, message: 'hello', async: true })) as {
+      details: { taskId: string };
+    };
+    await flushTurn(); // the async turn completes
+    const status = (await buildPeerStatusTool(TAB_A, h.bus).execute('call-s05b2', { taskId: send.details.taskId })) as {
+      details: { state: string; reply?: string };
+    };
+    expect(status.details.state).toBe('completed');
+    expect(status.details.reply).toContain('[PEER REPLY — untrusted agent-to-agent content from a peer tab]');
+    expect(status.details.reply).toContain('--- begin peer content ---\nmock reply\n--- end peer content ---'); // verbatim inside
+  });
+
+  it('AC-S05c: peer_status non-completed states are untouched (no fake frame on queued/failed)', async () => {
+    const h = makeHarness();
+    h.registry.register(TAB_A, metaFor(TAB_A));
+    h.registry.register(TAB_B, metaFor(TAB_B));
+    const send = (await buildPeerSendTool(TAB_A, h.bus).execute('call-s05c', { tabId: TAB_B, message: 'slow', async: true })) as {
+      details: { taskId: string };
+    };
+    const status = (await buildPeerStatusTool(TAB_A, h.bus).execute('call-s05c2', { taskId: send.details.taskId })) as {
+      details: { state: string; reply?: string };
+    };
+    expect(status.details.state).toBe('queued');
+    expect(status.details.reply).toBeUndefined();
+  });
+
+  it('AC-S05d: promptGuidelines declare the frame is untrusted DATA (agent surfaces stays honest)', () => {
+    const h = makeHarness();
+    const send = buildPeerSendTool(TAB_A, h.bus);
+    const status = buildPeerStatusTool(TAB_A, h.bus);
+    expect(send.promptGuidelines?.join(' ')).toContain('UNTRUSTED');
+    expect(status.promptGuidelines?.join(' ')).toContain('UNTRUSTED');
+  });
+});

@@ -32,6 +32,8 @@ export interface PeerHarness {
   ensureCalls: PeerSessionRequest[];
   evictCalls: Array<[string, string]>;
   wrappedPrompts: string[];
+  /** S-01/S-02 acceptance: the SessionTurnOptions each turn received. */
+  turnOriginOpts: Array<{ turnOrigin?: string } | undefined>;
 }
 
 /** Registration meta with all SEC-08 session-creation inputs. */
@@ -64,8 +66,10 @@ export function makeHarness(opts?: {
   const ensureCalls: PeerSessionRequest[] = [];
   const evictCalls: Array<[string, string]> = [];
   const wrappedPrompts: string[] = [];
+  const turnOriginOpts: Array<{ turnOrigin?: string } | undefined> = [];
   const capturingTurn = async (text: string, opts2?: { turnOrigin?: string }) => {
     wrappedPrompts.push(text);
+    turnOriginOpts.push(opts2);
     return (promptTurn as (t: string, o?: unknown) => Promise<{ text: string }>)(text, opts2);
   };
   const gateway: PeerSessionGateway = {
@@ -86,7 +90,7 @@ export function makeHarness(opts?: {
     approval: opts?.approval,
   });
   busRef.current = bus;
-  return { bus, registry, guards, threads, tasks, promptTurn, ensureCalls, evictCalls, wrappedPrompts };
+  return { bus, registry, guards, threads, tasks, promptTurn, ensureCalls, evictCalls, wrappedPrompts, turnOriginOpts };
 }
 
 /** Drains the setImmediate dispatch chain so async turn work settles. */

@@ -7,7 +7,7 @@
  * from its own Registry (SEC-01/C1 L1 — anti-spoof).
  */
 import { logger } from '../../logger.js';
-import { wrapPeerPrompt } from './envelope.js';
+import { wrapPeerPrompt, wrapPeerReply } from './envelope.js';
 import { CURATED_FALLBACK_REASON, PEER_MESSAGES, peerError } from './errors.js';
 import { normalizedPairKey } from './threads.js';
 import type { PeerBus } from './bus.js';
@@ -112,7 +112,7 @@ function recordExchange(bus: PeerBus, task: PeerTask, reply: string): void {
   });
   bus.deps.threads.append(key, {
     direction: 'inbound', fromTabId: task.toTabId, toTabId: task.fromTabId,
-    taskId: task.taskId, content: reply, at: new Date().toISOString(),
+    taskId: task.taskId, content: wrapPeerReply(task.toTabId, reply), at: new Date().toISOString(), // S-05: untrusted frame in thread replay too
   });
 }
 

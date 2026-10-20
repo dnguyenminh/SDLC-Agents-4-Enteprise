@@ -6,6 +6,7 @@
  */
 import { ToolApprovalGate } from '../../chat/engine/ToolApprovalGate.js';
 import { createPeerTurnApprovalHandler } from './approval.js';
+import { PEER_APPROVAL_TIMEOUT_MS } from './constants.js';
 import { PeerBus } from './bus.js';
 import { dispatchPeerTurn } from './dispatch.js';
 import { AntiLoopGuards } from './guards.js';
@@ -13,7 +14,7 @@ import { PeerRegistry } from './registry.js';
 import { sessionHostGateway } from './session-gateway.js';
 import { PeerTaskManager } from './task-manager.js';
 import { PeerThreadStore } from './threads.js';
-import type { PeerRegistryRegistration, PeerSessionGateway } from './types.js';
+import type { PeerRegistryRegistration, PeerSessionGateway, PeerToolApprovalHandler, PeerToolApprovalRequest } from './types.js';
 
 export interface PeerRuntime {
   bus: PeerBus;
@@ -21,6 +22,8 @@ export interface PeerRuntime {
   guards: AntiLoopGuards;
   threads: PeerThreadStore;
   tasks: PeerTaskManager;
+  /** S-02: runtime-owned gate — the webview resolves peer approvals here. */
+  approvalGate: ToolApprovalGate;
   dispose(): void;
 }
 
@@ -33,7 +36,10 @@ export function initPeerRuntime(gateway: PeerSessionGateway = sessionHostGateway
   const guards = new AntiLoopGuards();
   const threads = new PeerThreadStore();
   const tasks = new PeerTaskManager();
-  const approvalGate = new ToolApprovalGate({ timeoutMs: 120_000 });
+  // S-02 (d): 30s auto-deny (was 120s silent stall) — bounded pending window,
+  // the webview sets the label from the forwarded event so the user is never
+  // left with an invisible approval. Fail-closed on timeout stays as designed.
+  const approvalGate = new ToolApprovalGate({ timeoutMs: PEER_APPROVAL_TIMEOUT_MS });
   let busRef: PeerBus | undefined;
   const approval = createPeerTurnApprovalHandler(approvalGate, (req) => {
     busRef?.emit('peer:approval-pending', {
@@ -58,12 +64,47 @@ export function initPeerRuntime(gateway: PeerSessionGateway = sessionHostGateway
     guards,
     threads,
     tasks,
+    approvalGate,
     dispose: () => {
       bus.dispose();
       approvalGate.dispose();
     },
   };
   return runtime;
+}
+
+/** Test/diagnostic + wiring accessor — the live runtime or not-initialized. */
+export function peekPeerRuntime(): PeerRuntime | undefined {
+  return runtime;
+}
+
+/** S-02 (a)/(b) — the runtime-owned ToolApprovalGate (human-resolution entry). */
+export function getPeerApprovalGate(): ToolApprovalGate {
+  return initPeerRuntime().approvalGate;
+}
+
+/**
+ * S-02 (a): the fail-closed approval handler that MUST be passed into EVERY
+ * ensureSessionHost call — user-path included — so the host cache can never
+ * keep a first-winner entry whose peer tool calls would block instantly
+ * (approval.ts `!gate ⇒ block`). Undefined only if peer init failed; the host
+ * then runs WITHOUT peer tools — the same fail-closed contract (never bypass).
+ */
+export function peerApprovalGateOrUndefined(): PeerToolApprovalHandler | undefined {
+  try {
+    return initPeerRuntime().bus.deps.approval ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** S-02 (b): UI-bridge subscription to `peer:approval-pending`; returns unsubscribe. */
+export function onPeerApprovalPending(
+  listener: (req: Pick<PeerToolApprovalRequest, 'toolUseId' | 'toolName' | 'tabId'>) => void,
+): () => void {
+  const bus = initPeerRuntime().bus;
+  bus.on('peer:approval-pending', listener);
+  return () => bus.off('peer:approval-pending', listener);
 }
 
 /** Registers a tab's identity + session-creation inputs (idempotent, I-1). */

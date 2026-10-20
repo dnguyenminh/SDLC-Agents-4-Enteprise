@@ -135,7 +135,11 @@ export class PeerTaskManager {
   private publish(task: PeerTask): void {
     const copy = structuredClone(task);
     this.events.emit('updated', copy);
-    this.events.emit(`task:${task.taskId}`, copy);
+    // S-05 diag (blocking bc settle): the `task:<id>` channel is the
+    // BLOCKING-WAITER settlement channel — TERMINAL transitions only.
+    // setRunning also published here and settled the waiter on a running
+    // snapshot (state 'running', no reply) before the terminal event arrived.
+    if (TERMINAL_STATES.has(task.state)) this.events.emit(`task:${task.taskId}`, copy);
   }
 
   /** Bounded store: terminal tasks are removed after the retention window. */

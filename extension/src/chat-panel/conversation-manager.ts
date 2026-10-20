@@ -6,6 +6,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { ConversationTab, TabMessage } from "./conversation-types";
+import type { PeerTabLifecycleBinder } from "../pi-workflow/peer/lifecycle";
 
 /** SA4E-369: tab lifecycle listeners (registry wiring — TDD §6.1). */
 export type TabCreatedListener = (tab: ConversationTab) => void;
@@ -41,6 +42,19 @@ export class ConversationManager {
       const idx = this.tabClosedListeners.indexOf(listener);
       if (idx >= 0) this.tabClosedListeners.splice(idx, 1);
     };
+  }
+
+  /**
+   * SA4E-369 S-01: wire this manager's tab lifecycle into the peer runtime —
+   * tab-opened registers the peer identity (I-1), tab-closed runs the I-8
+   * single cleanup point (registry.deregister + queued tasks cancelled +
+   * threads dropped + guards released + session host evicted). The binder is
+   * injected so the pure UI model never imports the peer runtime directly.
+   * Returns the dispose function of the produced binding (undefined earlier no-op).
+   */
+  bindPeerLifecycle(binder: PeerTabLifecycleBinder): () => void {
+    const binding = binder.wiring(this) as { dispose?: () => void } | undefined;
+    return () => binding?.dispose?.();
   }
 
   /** Update-then-emit (I-3): listeners observe post-mutation state only. */

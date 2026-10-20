@@ -25,5 +25,9 @@ export const INBOUND_QUEUE_CAP = 20;
 /** Terminal tasks are deleted after this retention (bounded store). */
 export const POST_TERMINAL_RETENTION_MS = 60_000;
 
-/** Peer message size cap (v1.1 SEC-03/C2 — PEER_010, zero-state, pre-guard). */
+/** Per message size cap (v1.1 SEC-03/C2 — PEER_010, zero-state, pre-guard). */
 export const PEER_MESSAGE_MAX_CHARS = 16_000;
+
+/** S-02 (d): peer tool-approval UI window — auto-deny (fail-closed, TC-603).
+ *  30s bounds the silent-stall surface the 120s default left open. */
+export const PEER_APPROVAL_TIMEOUT_MS = 30_000;

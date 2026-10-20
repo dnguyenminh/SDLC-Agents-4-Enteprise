@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../../logger.js';
 import { BLOCKING_TIMEOUT_MS, INBOUND_QUEUE_CAP, PEER_MESSAGE_MAX_CHARS } from './constants.js';
 import { PEER_MESSAGES, peerError } from './errors.js';
+import { messageContainsForgedMarkers } from './envelope.js';
 import type { PeerRegistry } from './registry.js';
 import type {
   PeerError,
@@ -142,6 +143,11 @@ export class PeerBus extends EventEmitter {
     if (targetTabId === fromTabId) throw peerError('PEER_002', PEER_MESSAGES.PEER_002());
     if (typeof message !== 'string' || message.length === 0 || message.length > PEER_MESSAGE_MAX_CHARS) {
       throw peerError('PEER_010', PEER_MESSAGES.PEER_010(message?.length ?? 0, PEER_MESSAGE_MAX_CHARS), { max: PEER_MESSAGE_MAX_CHARS });
+    }
+    // S-04 (SEC-01 L0): marker forgery — zero-state rejection (I-2, I-7).
+    // AFTER the size check; BEFORE guards — no pair state, no queue entry.
+    if (messageContainsForgedMarkers(message)) {
+      throw peerError('PEER_010', PEER_MESSAGES.PEER_010_FORGERY());
     }
   }
 

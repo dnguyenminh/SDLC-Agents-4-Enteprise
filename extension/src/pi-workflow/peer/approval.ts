@@ -17,11 +17,15 @@ export function createPeerTurnApprovalHandler(
 ): PeerToolApprovalHandler {
   return {
     requestApproval: async (req) => {
+      logger.debug('peer turn approval requested', { toolName: req.toolName, tabId: req.tabId });
+      // S-02 (b)-reorder: the pending entry MUST be registered BEFORE the UI is
+      // notified — a user answering almost instantly must find the id resolvable
+      // (notify-first raced resolveApproval into a no-op on a not-yet-pending id).
+      const pending = gate.requestApproval(req.toolUseId);
       try {
         onPending?.(req);
       } catch { /* notification must never break the gate */ }
-      logger.debug('peer turn approval requested', { toolName: req.toolName, tabId: req.tabId });
-      const result = (await gate.requestApproval(req.toolUseId)) as { decision?: string; reason?: string };
+      const result = (await pending) as { decision?: string; reason?: string };
       if (result?.decision === 'approve') return { approved: true };
       return { approved: false, reason: result?.reason || 'Rejected by user' };
     },

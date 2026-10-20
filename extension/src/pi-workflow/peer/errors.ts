@@ -33,6 +33,9 @@ export const PEER_MESSAGES = {
   PEER_009: (taskId: string): string => `Peer task ${taskId} cancelled: target tab closed.`,
   PEER_010: (length: number, max: number): string =>
     `Peer message is too large (${fmt(length)} > ${fmt(max)} characters). Split the message and resend.`,
+  PEER_010_FORGERY: (): string =>
+    'Peer message rejected: content contains forged provenance markers ("--- begin/end peer content ---" framing). ' +
+    'Content is treated as DATA — remove the framing and resend.',
   TEARDOWN: (): string => 'Extension host shutting down; peer task state discarded (BR-12).',
 } as const;
 
