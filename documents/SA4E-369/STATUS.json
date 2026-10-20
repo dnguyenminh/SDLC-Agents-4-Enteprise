@@ -125,11 +125,29 @@
       "completedAt": "2026-10-20T07:45:00+07:00",
       "note": "506 dòng, 13 sections H2, 0 mermaid: getting started + tools reference (peer_list/peer_send/peer_status), UI mapping, auto-run + approval Option A, bảng PEER_001-010, limits, troubleshooting + SIT-01..16 walkthrough, restrictions D5"
     },
+    "security_code_review": {
+      "status": "done",
+      "file": "SECURITY-ASSESSMENT.md",
+      "version": 1,
+      "completedAt": "2026-10-20T10:05:00+07:00",
+      "note": "Verdict GO-WITH-CONDITIONS: 0 Critical, 2 High (S-01 lifecycle dead-wire, S-02 orphan approval gate), 3 Medium (S-03/04/05), 2 Low, 4 Info. REMEDIATION closed S-01..S-05 (commit 53506d2: lifecycle wiring + peer-approval-bridge + single-flight + marker-forgery neutralize + wrapPeerReply + root-cause task-manager terminal-only). Recheck addendum running (security-agent continue-session). Positive controls 8 verified"
+    },
     "testing": {
-      "status": "not_started"
+      "status": "done",
+      "file": "TEST-REPORT.md",
+      "version": 1,
+      "completedAt": "2026-10-20T11:25:00+07:00",
+      "note": "Automated 103/103=100% (82 base + 18 probes + fix-batch wiring) SM verify. STC mapping 66/89 (74.2%) evidenced, 0 fail. SIT 16/16 → Phase 6.5 UAT human gate. Code review CODE-GOOD-MINOR-DEBT; 6.3 pentest 5 SAFE + PEN-6a Low. Final fix-batch commit 71869e0 (PEN-6a SECRET_PATTERNS + stomp guard + wire-once + PEER_010 empty copy) — fix-batch DNS-death recovered via stash forensics"
+    },
+    "uat": {
+      "status": "done",
+      "file": "UAT-RESULTS.md",
+      "completedAt": "2026-10-20T15:30:00+07:00",
+      "note": "PASS-WITH-OPTIONAL-SPOT-CHECK. 10/15 full automated evidence PASS (data exchange A1-A5, approval C1/C2, security D1/D2, SIT-04 real Kiro). 4/15 proxy-pass (visual B1-B4, logic verified). 1 BLOCKED (SIT-12 D6=Option A). 0 FAIL. Evidence: 103/103 vitest + tsc 0 + security PASS + pentest 5/6 SAFE + Kiro 1.53.12 deployment. Recommendation: proceed 6.7/7"
     },
     "deployment": {
-      "status": "not_started"
+      "status": "in_progress",
+      "note": "Phase 7 DevOps dispatched: DPG.md + RLN.md. Phase 6.7 security deploy review = GO-WITH-CONDITIONS (0 Critical/High, 14-item checklist DC-1..DC-14)"
     }
   },
   "designDecisions": {
@@ -151,6 +169,6 @@
     "AC7: Zero new config files/keys required for the local bus; no network sockets opened by the feature",
     "AC8: Existing suites stay green (context-governance.*, auto-chunk, session routing tests)"
   ],
-  "lastUpdated": "2026-10-20T07:45:00+07:00",
+  "lastUpdated": "2026-10-20T09:30:00+07:00",
   "lastCommentProcessed": "2026-10-18T00:24:01+07:00"
 }

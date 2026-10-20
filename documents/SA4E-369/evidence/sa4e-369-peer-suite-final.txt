@@ -1,0 +1,368 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+
+ Test Files  15 passed (15)
+      Tests  82 passed (82)
+   Start at  11:04:40
+   Duration  6.78s (transform 850ms, setup 0ms, import 3.33s, tests 328ms, environment 1ms)
+
+
+--- tsc --noEmit ---
+tsc exit=0
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+stdout | src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02a: peer tool-call → human approve → executes (no block), pending event fired to the UI
+{"level":"debug","msg":"peer turn approval requested","toolName":"bash","tabId":"tab-b","timestamp":"2026-10-20T04:11:41.879Z"}
+
+stdout | src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02b: deny → { block, terminate: true } and the peer task settles FAILED (PEER_003, terminal)
+{"level":"info","msg":"peer send accepted","taskId":"t-a591c6ce-7510-4f6f-bce5-1cef2eabc061","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:41.884Z"}
+
+stdout | src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02b: deny → { block, terminate: true } and the peer task settles FAILED (PEER_003, terminal)
+{"level":"debug","msg":"peer turn approval requested","toolName":"bash","tabId":"tab-b","timestamp":"2026-10-20T04:11:41.885Z"}
+
+stderr | src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02b: deny → { block, terminate: true } and the peer task settles FAILED (PEER_003, terminal)
+{"level":"warn","msg":"peer task failed","taskId":"t-a591c6ce-7510-4f6f-bce5-1cef2eabc061","code":"PEER_003","tabId":"tab-b","durationMs":1792469501885,"timestamp":"2026-10-20T04:11:41.885Z"}
+
+stdout | src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02c: no human answer → gate TIMEOUT auto-deny (fail-closed, bounded)
+{"level":"debug","msg":"peer turn approval requested","toolName":"bash","tabId":"tab-b","timestamp":"2026-10-20T04:11:41.909Z"}
+
+ ✓ src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02a: peer tool-call → human approve → executes (no block), pending event fired to the UI 5ms
+ ✓ src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02b: deny → { block, terminate: true } and the peer task settles FAILED (PEER_003, terminal) 26ms
+ ✓ src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02c: no human answer → gate TIMEOUT auto-deny (fail-closed, bounded) 76ms
+ ✓ src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02d: production gate constants — 30s window (was 120s silent stall) 0ms
+ ✓ src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02e: bridge forwards peer:approval-pending as chat:toolApprovalPending 1ms
+ ✓ src/__tests__/peer/approval-loop.integration.test.ts > SA4E-369 S-02 — peer approval loop reaches a human (acceptance 2) > AC-S02f: fast human answer during pending resolves the REAL runtime gate (no orphan pending) 0ms
+stdout | src/__tests__/peer/single-flight.unit.test.ts > SA4E-369 S-03 — single-flight lock per session host > AC-S03a: peer turn in flight → user prompt joins the chain, tracker stays "peer", prompts sequential
+{"level":"debug","msg":"turn chain join","turnOrigin":"peer","timestamp":"2026-10-20T04:11:42.293Z"}
+{"level":"debug","msg":"peer turn started","turnOrigin":"peer","timestamp":"2026-10-20T04:11:42.295Z"}
+
+stdout | src/__tests__/peer/single-flight.unit.test.ts > SA4E-369 S-03 — single-flight lock per session host > AC-S03b: a failed turn NEVER poisons the chain — the next turn still executes
+{"level":"debug","msg":"turn chain join","turnOrigin":"peer","timestamp":"2026-10-20T04:11:42.322Z"}
+{"level":"debug","msg":"peer turn started","turnOrigin":"peer","timestamp":"2026-10-20T04:11:42.322Z"}
+
+ ✓ src/__tests__/peer/single-flight.unit.test.ts > SA4E-369 S-03 — single-flight lock per session host > AC-S03a: peer turn in flight → user prompt joins the chain, tracker stays "peer", prompts sequential 29ms
+ ✓ src/__tests__/peer/single-flight.unit.test.ts > SA4E-369 S-03 — single-flight lock per session host > AC-S03b: a failed turn NEVER poisons the chain — the next turn still executes 15ms
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-602: peer_send async success returns the queued SendResult envelope
+{"level":"info","msg":"peer send accepted","taskId":"t-f3ebedd8-2666-4f28-96f9-b9edb946cf24","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.847Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-602: peer_send async success returns the queued SendResult envelope
+{"level":"debug","msg":"peer turn completed","taskId":"t-f3ebedd8-2666-4f28-96f9-b9edb946cf24","toTabId":"tab-b","timestamp":"2026-10-20T04:11:42.848Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-306: peer_status unknown taskId → PEER_008; non-owner gets the SAME code (no existence oracle)
+{"level":"info","msg":"peer send accepted","taskId":"t-7d0f249f-dfe2-435c-9a27-5a966b944244","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.860Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-306: peer_status unknown taskId → PEER_008; non-owner gets the SAME code (no existence oracle)
+{"level":"debug","msg":"peer turn completed","taskId":"t-7d0f249f-dfe2-435c-9a27-5a966b944244","toTabId":"tab-b","timestamp":"2026-10-20T04:11:42.861Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-a08f19c2-04c5-4808-9065-2b1217c344ad","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.861Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-2b8b04dd-2fe6-46d2-908d-22ade2ce3aa7","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-b9227095-737b-41fb-943e-7a91c58cd29f","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-85199d56-be7a-407b-864a-8e1dba13401c","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-dc455d39-19ef-4299-b6ca-89599a9ad542","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-6dfc22a6-03b1-40f5-8504-2d7de0f24cbe","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-d4921977-2983-4e47-a7e0-1a1a45c20e13","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-46637d1c-099d-4b8d-9b2b-2c35b8b9aa36","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-896a66ce-1834-46af-bc4f-7cd564496c9c","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-28f70def-aa4e-454e-afa2-b4c68e4d84f4","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-39cca11f-b972-4acb-8db0-a6c8dd1f1395","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-885ff24e-9586-45a4-b94a-151b4474d1ae","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-d9c65549-c7d4-4a10-bbc2-8c3d41afd7fb","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.862Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-d015a808-9ae0-43d2-85df-1fb63c26ab43","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-38362951-746b-41cd-9d62-f8024ae5bbf1","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-fca9af9b-2482-4916-8132-e779fe7387d6","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-28b1c622-17b0-4d1f-99e4-afddadd925c9","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-c7c0444c-f970-459f-99ae-868908682011","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-10ca77ed-d138-4a19-b645-e326554bbfac","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-4fc5ee36-db76-4472-bcf1-e7db4db1f407","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005
+{"level":"info","msg":"peer send accepted","taskId":"t-6bb9c921-b1b9-432a-b239-e6daa63f8656","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05a: blocking peer_send wraps the reply; content passes VERBATIM between the markers
+{"level":"info","msg":"peer send accepted","taskId":"t-23529450-ac09-4e4d-a9b6-9057e95fa171","fromTabId":"tab-a","toTabId":"tab-b","mode":"blocking","timestamp":"2026-10-20T04:11:42.863Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05a: blocking peer_send wraps the reply; content passes VERBATIM between the markers
+{"level":"debug","msg":"peer turn completed","taskId":"t-23529450-ac09-4e4d-a9b6-9057e95fa171","toTabId":"tab-b","timestamp":"2026-10-20T04:11:42.864Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05b: peer_status completed poll re-wraps the stored reply for the OWNER
+{"level":"info","msg":"peer send accepted","taskId":"t-cfd7d978-a51d-4ccb-862a-d0f476ec4521","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.864Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05b: peer_status completed poll re-wraps the stored reply for the OWNER
+{"level":"debug","msg":"peer turn completed","taskId":"t-cfd7d978-a51d-4ccb-862a-d0f476ec4521","toTabId":"tab-b","timestamp":"2026-10-20T04:11:42.865Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05c: peer_status non-completed states are untouched (no fake frame on queued/failed)
+{"level":"info","msg":"peer send accepted","taskId":"t-f0518e7c-684e-4337-bec4-b454b2da8f30","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:42.865Z"}
+
+stdout | src/__tests__/peer/tools.unit.test.ts
+{"level":"debug","msg":"peer turn completed","taskId":"t-f0518e7c-684e-4337-bec4-b454b2da8f30","toTabId":"tab-b","timestamp":"2026-10-20T04:11:42.867Z"}
+
+ ✓ src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-601: buildPeerTools binds exactly the 3 a2a tools with name/label/execute 4ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-601: peer_list returns the a2a text envelope with caller-relative rows 4ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-602: peer_send async success returns the queued SendResult envelope 3ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-602: peer_send rejections are wrapped in the pi-a2a error envelope 11ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-306: peer_status unknown taskId → PEER_008; non-owner gets the SAME code (no existence oracle) 1ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > peer session tools (SA4E-369 D4) > TC-401: queue-cap rejection surfaces through peer_send as PEER_005 2ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05a: blocking peer_send wraps the reply; content passes VERBATIM between the markers 1ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05b: peer_status completed poll re-wraps the stored reply for the OWNER 1ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05c: peer_status non-completed states are untouched (no fake frame on queued/failed) 0ms
+ ✓ src/__tests__/peer/tools.unit.test.ts > SA4E-369 S-05 — peer replies cross tabs inside an untrusted [PEER REPLY] frame (BR-10) > AC-S05d: promptGuidelines declare the frame is untrusted DATA (agent surfaces stays honest) 0ms
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-400: 16,000 chars accepted — task created and delivered
+{"level":"info","msg":"peer send accepted","taskId":"t-70f43986-e393-4387-a7d2-ba7b9bd36f60","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.212Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-400: 16,000 chars accepted — task created and delivered
+{"level":"debug","msg":"peer turn completed","taskId":"t-70f43986-e393-4387-a7d2-ba7b9bd36f60","toTabId":"tab-b","timestamp":"2026-10-20T04:11:43.214Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-7df30da8-44d9-4121-9c79-7d724f090b83","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.229Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-f150b35b-2ff5-4bda-bf40-b2d0769c3050","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.230Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-5b641357-0a0e-4c0b-bbd2-acb8cf6d52da","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.230Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-b7704920-e1d9-4606-bb3f-0ba4004a90cc","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.230Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-71255200-d344-4d4b-b7f4-c034b5d2b3d8","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.230Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-64614652-72d7-40f7-ae1f-aba3014d0426","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.230Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-c6c3e021-9f20-4a11-b589-4566ffc4c58a","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.230Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-8ec7d282-0d66-49a5-a7e9-63a398edecee","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.230Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-ed745652-0b4d-4dfe-901d-4c2c75a55493","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.230Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-d3c86d9b-6f35-4f55-a0ec-59dd345d16ef","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-d9d1f219-25f7-4eb1-a229-83af16a56d30","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-ffe4394c-7628-40fc-b19a-2845251da80a","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-c8d39c3f-4e0e-4b45-a8a1-3399f3a63928","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-50303b25-c20b-4e87-96ad-f3a07c7ab66f","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-06737b7a-8ecd-498d-84a2-f65ce8291368","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-fdb7e940-90fe-43cf-b849-664f0766f994","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-43450055-f731-44c8-a363-64b089a88d15","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-32ebf211-6cbd-4560-9a01-f57da4453b40","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-3e9edb37-770c-4bf9-9140-2b2b98071ba9","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-60de7e61-dd4d-4fe2-ac59-982989f3bc9c","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+stdout | src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap)
+{"level":"info","msg":"peer send accepted","taskId":"t-2f089ab7-eb1f-408a-8c5a-4e36604c9fc2","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.231Z"}
+
+ ✓ src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-400: 16,000 chars accepted — task created and delivered 8ms
+ ✓ src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-400/TC-209: 16,001 chars rejected PEER_010 — zero state 13ms
+ ✓ src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 steps 1-2 (validation order): oversized+unknown → PEER_001; oversized self-send → PEER_002 0ms
+ ✓ src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 3 (validation order): oversized + pair already tripped → PEER_010 wins (size before guards) 0ms
+ ✓ src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-210 step 4 / TC-401 (validation order): valid size + full queue → PEER_005 (queue cap) 3ms
+ ✓ src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-604: 10× oversized (160,000 chars) — PEER_010, no host call, chunk loop never entered 1ms
+ ✓ src/__tests__/peer/message-size.unit.test.ts > PEER_MESSAGE_MAX_CHARS (SA4E-369 SEC-03) > TC-405: empty / whitespace-only message rejected at the tool boundary — zero state 1ms
+stdout | src/__tests__/peer/marker-forgery.unit.test.ts > SA4E-369 S-04 — marker forgery is rejected zero-state > AC-S04d: lookalike text WITHOUT the exact framing is allowed (no false positive)
+{"level":"info","msg":"peer send accepted","taskId":"t-61f85768-d4ba-4c08-ab75-ebf5b73780f3","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.555Z"}
+
+stdout | src/__tests__/peer/marker-forgery.unit.test.ts > SA4E-369 S-04 — marker forgery is rejected zero-state > AC-S04f: pair guard state is untouched by a rejected forgery (zero-state guard commit)
+{"level":"info","msg":"peer send accepted","taskId":"t-a9f76b39-ee42-4c4c-8eba-faffdfd3f058","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.567Z"}
+
+stdout | src/__tests__/peer/marker-forgery.unit.test.ts
+{"level":"debug","msg":"peer turn completed","taskId":"t-a9f76b39-ee42-4c4c-8eba-faffdfd3f058","toTabId":"tab-b","timestamp":"2026-10-20T04:11:43.568Z"}
+
+ ✓ src/__tests__/peer/marker-forgery.unit.test.ts > SA4E-369 S-04 — marker forgery is rejected zero-state > AC-S04a: payload embedding the BEGIN marker → PEER_010 forgery, nothing queued 4ms
+ ✓ src/__tests__/peer/marker-forgery.unit.test.ts > SA4E-369 S-04 — marker forgery is rejected zero-state > AC-S04b: payload embedding the END marker → rejected 0ms
+ ✓ src/__tests__/peer/marker-forgery.unit.test.ts > SA4E-369 S-04 — marker forgery is rejected zero-state > AC-S04c: payload embedding the PEER INBOUND header prefix → rejected 0ms
+ ✓ src/__tests__/peer/marker-forgery.unit.test.ts > SA4E-369 S-04 — marker forgery is rejected zero-state > AC-S04d: lookalike text WITHOUT the exact framing is allowed (no false positive) 1ms
+ ✓ src/__tests__/peer/marker-forgery.unit.test.ts > SA4E-369 S-04 — marker forgery is rejected zero-state > AC-S04e: validation order — size check BEFORE forgery check (oversize+forged → size message) 11ms
+ ✓ src/__tests__/peer/marker-forgery.unit.test.ts > SA4E-369 S-04 — marker forgery is rejected zero-state > AC-S04f: pair guard state is untouched by a rejected forgery (zero-state guard commit) 1ms
+stdout | src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D1: wrapped prompt is header-first, verbatim content inside markers, taskId from receiving registry
+{"level":"info","msg":"peer send accepted","taskId":"t-9cbd333f-17b6-464d-8b98-aed3a66e8301","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.838Z"}
+
+stdout | src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D1: wrapped prompt is header-first, verbatim content inside markers, taskId from receiving registry
+{"level":"debug","msg":"peer turn completed","taskId":"t-9cbd333f-17b6-464d-8b98-aed3a66e8301","toTabId":"tab-b","timestamp":"2026-10-20T04:11:43.840Z"}
+
+stdout | src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D2: the promptTurn options carry turnOrigin "peer" (the approval gate tag)
+{"level":"info","msg":"peer send accepted","taskId":"t-896ef47e-aea2-4972-b51c-9837073fe965","fromTabId":"tab-a","toTabId":"tab-b","mode":"blocking","timestamp":"2026-10-20T04:11:43.841Z"}
+
+stdout | src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D2: the promptTurn options carry turnOrigin "peer" (the approval gate tag)
+{"level":"debug","msg":"peer turn completed","taskId":"t-896ef47e-aea2-4972-b51c-9837073fe965","toTabId":"tab-b","timestamp":"2026-10-20T04:11:43.842Z"}
+
+stdout | src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D3: session host creation receives the fail-closed approval gate (S-02a wiring)
+{"level":"info","msg":"peer send accepted","taskId":"t-6cce707e-a7d7-47a0-82b5-a7c5121572a8","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:43.842Z"}
+
+stdout | src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D3: session host creation receives the fail-closed approval gate (S-02a wiring)
+{"level":"debug","msg":"peer turn completed","taskId":"t-6cce707e-a7d7-47a0-82b5-a7c5121572a8","toTabId":"tab-b","timestamp":"2026-10-20T04:11:43.842Z"}
+
+ ✓ src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D1: wrapped prompt is header-first, verbatim content inside markers, taskId from receiving registry 5ms
+ ✓ src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D2: the promptTurn options carry turnOrigin "peer" (the approval gate tag) 1ms
+ ✓ src/__tests__/peer/dispatch.integration.test.ts > SA4E-369 — dispatch wraps peer prompts + enters promptTurn with turnOrigin "peer" > AC-D3: session host creation receives the fail-closed approval gate (S-02a wiring) 1ms
+ ✓ src/__tests__/peer/envelope.unit.test.ts > wrapPeerPrompt (SA4E-369 SEC-01 L1) > TC-007: exact frame — untrusted-data header, Registry header fields, DATA markers 1ms
+ ✓ src/__tests__/peer/envelope.unit.test.ts > wrapPeerPrompt (SA4E-369 SEC-01 L1) > TC-007 step 4 (BR-10): content passes through verbatim — no trimming or rewrite 0ms
+ ✓ src/__tests__/peer/envelope.unit.test.ts > wrapPeerPrompt (SA4E-369 SEC-01 L1) > TC-505/TC-603: identity claims inside content NEVER alter the header 0ms
+ ✓ src/__tests__/peer/envelope.unit.test.ts > wrapPeerPrompt (SA4E-369 SEC-01 L1) > PBT-04: for arbitrary spoof payloads the frame + header stay Registry-truth 12ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-302: MAX_PINGPONG_TURNS is LOCKED at 5 (regression guard) 1ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-302 (BR-7): 5 consecutive agent sends pass, 6th rejected PEER_004 with pair+cap 1ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-203 step 5: cap is pair-normalized — reverse direction B→A also rejected 0ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-302 step 4: user-originated send resets the chain and does not build it 0ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-402 (BR-8): 10th send accepted, 11th within 60s rejected PEER_005 0ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-303: rate limit is per-TAB — tabC unaffected by tabB saturation 0ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-105/TC-402 step 3: window roll-off restores capacity (prune-then-check) 1ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-410/TC-605 (I-6a): prune happens even on rejection; window never exceeds 10 8ms
+ ✓ src/__tests__/peer/guards.unit.test.ts > AntiLoopGuards (SA4E-369) > TC-104 (BR-9): resetPairsInvolving clears chains for both directions only 1ms
+stdout | src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01a: tab close → registry empty + queued task cancelled (PEER_009) + thread dropped + guards released + host evicted
+{"level":"info","msg":"peer send accepted","taskId":"t-71c0ed69-105b-422d-94fa-14884ffb5bc3","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:45.121Z"}
+
+stdout | src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01a: tab close → registry empty + queued task cancelled (PEER_009) + thread dropped + guards released + host evicted
+{"level":"debug","msg":"peer turn completed","taskId":"t-71c0ed69-105b-422d-94fa-14884ffb5bc3","toTabId":"tab-b","timestamp":"2026-10-20T04:11:45.123Z"}
+
+stdout | src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01a: tab close → registry empty + queued task cancelled (PEER_009) + thread dropped + guards released + host evicted
+{"level":"info","msg":"peer tab closed","tabId":"tab-b","timestamp":"2026-10-20T04:11:45.125Z"}
+
+stdout | src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01a: queued async task for a closed tab settles cancelled with PEER_009
+{"level":"info","msg":"peer send accepted","taskId":"t-24715708-18ea-4cc3-9b06-9d80adc0b35e","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:45.126Z"}
+
+stdout | src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01a: queued async task for a closed tab settles cancelled with PEER_009
+{"level":"info","msg":"peer tab closed","tabId":"tab-b","timestamp":"2026-10-20T04:11:45.126Z"}
+
+stdout | src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01c: tab-created event → peer identity registered via the REAL runtime singleton (I-1 upgradeable)
+{"level":"info","msg":"peer tab closed","tabId":"tab-a","timestamp":"2026-10-20T04:11:45.129Z"}
+
+ ✓ src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01a: tab close → registry empty + queued task cancelled (PEER_009) + thread dropped + guards released + host evicted 9ms
+ ✓ src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01a: queued async task for a closed tab settles cancelled with PEER_009 1ms
+ ✓ src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01b/BR-9: user activity resets the pair chain — the 5-turn pair lock is recoverable 1ms
+ ✓ src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > AC-S01c: tab-created event → peer identity registered via the REAL runtime singleton (I-1 upgradeable) 1ms
+ ✓ src/__tests__/peer/lifecycle.integration.test.ts > SA4E-369 S-01 — wiring → harness I-8 cleanup (acceptance 1) > ConversationManager: closeTab/createTab actually forward through bindPeerLifecycle 1ms
+ ✓ src/__tests__/peer/task-manager.unit.test.ts > PeerTaskManager (SA4E-369) > TC-002/TC-103: create → get returns a deep copy; poll is side-effect free 5ms
+ ✓ src/__tests__/peer/task-manager.unit.test.ts > PeerTaskManager (SA4E-369) > TC-205 (PEER_006): blocking timeout rejects the CALLER; task stays running + pollable 1ms
+ ✓ src/__tests__/peer/task-manager.unit.test.ts > PeerTaskManager (SA4E-369) > TC-413: exactly-once settlement — terminal at the same tick as timer expiry 1ms
+ ✓ src/__tests__/peer/task-manager.unit.test.ts > PeerTaskManager (SA4E-369) > TC-404: post-terminal retention — retrievable before 60s, PEER_008-class removal after 1ms
+ ✓ src/__tests__/peer/task-manager.unit.test.ts > PeerTaskManager (SA4E-369) > TC-208/TC-310 (PEER_009): cancelQueuedFor cancels only QUEUED tasks of the target 1ms
+ ✓ src/__tests__/peer/task-manager.unit.test.ts > PeerTaskManager (SA4E-369) > TC-212 (§6.5): disposeAll rejects every pending waiter with the teardown error 1ms
+ ✓ src/__tests__/peer/task-manager.unit.test.ts > PeerTaskManager (SA4E-369) > PBT-06: no transition originates from a terminal state; failed→failed ignored 0ms
+ ✓ src/__tests__/peer/task-manager.unit.test.ts > PeerTaskManager (SA4E-369) > TC-207 edge: awaitTerminal on an unknown taskId resolves with PEER_008-shaped error 0ms
+stdout | src/__tests__/peer/reply-envelope.integration.test.ts > SA4E-369 S-05 — recordExchange inbound thread entry carries the [PEER REPLY] frame > AC-S05e: completed peer turn → thread inbound content wrapped, reply verbatim inside markers
+{"level":"info","msg":"peer send accepted","taskId":"t-390dc1a2-aad7-4df5-a648-49a50fc0658e","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:45.768Z"}
+
+stdout | src/__tests__/peer/reply-envelope.integration.test.ts > SA4E-369 S-05 — recordExchange inbound thread entry carries the [PEER REPLY] frame > AC-S05e: completed peer turn → thread inbound content wrapped, reply verbatim inside markers
+{"level":"debug","msg":"peer turn completed","taskId":"t-390dc1a2-aad7-4df5-a648-49a50fc0658e","toTabId":"tab-b","timestamp":"2026-10-20T04:11:45.769Z"}
+
+stdout | src/__tests__/peer/reply-envelope.integration.test.ts > SA4E-369 S-05 — recordExchange inbound thread entry carries the [PEER REPLY] frame > AC-S05f: failure marker still records the PEER_003 frame without leaking internals
+{"level":"info","msg":"peer send accepted","taskId":"t-9629c7ac-a24f-4ac8-818b-3948330ab249","fromTabId":"tab-a","toTabId":"tab-b","mode":"async","timestamp":"2026-10-20T04:11:45.772Z"}
+
+stderr | src/__tests__/peer/reply-envelope.integration.test.ts > SA4E-369 S-05 — recordExchange inbound thread entry carries the [PEER REPLY] frame > AC-S05f: failure marker still records the PEER_003 frame without leaking internals
+{"level":"warn","msg":"peer task failed","taskId":"t-9629c7ac-a24f-4ac8-818b-3948330ab249","code":"PEER_003","tabId":"tab-b","durationMs":1792469505772,"timestamp":"2026-10-20T04:11:45.772Z"}
+
+ ✓ src/__tests__/peer/reply-envelope.integration.test.ts > SA4E-369 S-05 — recordExchange inbound thread entry carries the [PEER REPLY] frame > AC-S05e: completed peer turn → thread inbound content wrapped, reply verbatim inside markers 7ms
+ ✓ src/__tests__/peer/reply-envelope.integration.test.ts > SA4E-369 S-05 — recordExchange inbound thread entry carries the [PEER REPLY] frame > AC-S05f: failure marker still records the PEER_003 frame without leaking internals 1ms
+ ✓ src/__tests__/peer/registry.unit.test.ts > PeerRegistry (SA4E-369) > TC-300: register adds entry; deregister removes and fires after Map.delete 3ms
+ ✓ src/__tests__/peer/registry.unit.test.ts > PeerRegistry (SA4E-369) > TC-411 (I-1): re-register on same id updates in place, no duplicate event 0ms
+ ✓ src/__tests__/peer/registry.unit.test.ts > PeerRegistry (SA4E-369) > TC-003/TC-412 (I-4): snapshot deep copy + self flag; mutation does not leak 1ms
+ ✓ src/__tests__/peer/registry.unit.test.ts > PeerRegistry (SA4E-369) > TC-412 (I-4/SEC-08): getEntry returns a deep copy — dispatch input isolation 0ms
+ ✓ src/__tests__/peer/registry.unit.test.ts > PeerRegistry (SA4E-369) > TC-300: setStatus flips in place without events; touchActivity refreshes 0ms
+ ✓ src/__tests__/peer/registry.unit.test.ts > PeerRegistry (SA4E-369) > TC-300: deregister of unknown id is a silent no-op 1ms
+ ✓ src/__tests__/peer/no-socket.test.ts > AC7 — peer module has no network surface > imports no socket/network module (node:|bare net/http/https/dgram/ws/socket.io) 4ms
+ ✓ src/__tests__/peer/no-socket.test.ts > AC7 — peer module has no network surface > references no fetch()/XMLHttpRequest browser-network API 2ms
+stdout | src/__tests__/peer/approval.unit.test.ts > createPeerTurnApprovalHandler (SA4E-369 D6 Option A) > TC-603: approve decision → { approved: true }
+{"level":"debug","msg":"peer turn approval requested","toolName":"write_file","tabId":"tab-a","timestamp":"2026-10-20T04:11:46.597Z"}
+
+stdout | src/__tests__/peer/approval.unit.test.ts > createPeerTurnApprovalHandler (SA4E-369 D6 Option A) > TC-603: deny / malformed decision → { approved: false } with reason
+{"level":"debug","msg":"peer turn approval requested","toolName":"bash","tabId":"tab-a","timestamp":"2026-10-20T04:11:46.599Z"}
+
+stdout | src/__tests__/peer/approval.unit.test.ts > createPeerTurnApprovalHandler (SA4E-369 D6 Option A) > TC-603: deny / malformed decision → { approved: false } with reason
+{"level":"debug","msg":"peer turn approval requested","toolName":"bash","tabId":"tab-a","timestamp":"2026-10-20T04:11:46.599Z"}
+
+stdout | src/__tests__/peer/approval.unit.test.ts > createPeerTurnApprovalHandler (SA4E-369 D6 Option A) > TC-603: onPending throwing must never break the gate
+{"level":"debug","msg":"peer turn approval requested","toolName":"bash","tabId":"tab-a","timestamp":"2026-10-20T04:11:46.600Z"}
+
+ ✓ src/__tests__/peer/approval.unit.test.ts > createPeerTurnApprovalHandler (SA4E-369 D6 Option A) > TC-603: approve decision → { approved: true } 3ms
+ ✓ src/__tests__/peer/approval.unit.test.ts > createPeerTurnApprovalHandler (SA4E-369 D6 Option A) > TC-603: deny / malformed decision → { approved: false } with reason 0ms
+ ✓ src/__tests__/peer/approval.unit.test.ts > createPeerTurnApprovalHandler (SA4E-369 D6 Option A) > TC-603: onPending throwing must never break the gate 0ms
+ ✓ src/__tests__/peer/approval.unit.test.ts > createPeerApprovalExtension (peer turns fail-closed) > TC-802: user turns bypass the gate entirely (undefined = allow, byte-identical) 0ms
+ ✓ src/__tests__/peer/approval.unit.test.ts > createPeerApprovalExtension (peer turns fail-closed) > TC-603: peer turn with NO gate → blocked (fail-closed, no auto-approve) 0ms
+ ✓ src/__tests__/peer/approval.unit.test.ts > createPeerApprovalExtension (peer turns fail-closed) > TC-108: approved peer tool call proceeds; rejected one blocks AND terminates 0ms
+ ✓ src/__tests__/peer/threads.unit.test.ts > PeerThreadStore (SA4E-369) > TC-403: 50th kept, 51st evicts oldest FIFO; length never exceeds 50 (I-5) 2ms
+ ✓ src/__tests__/peer/threads.unit.test.ts > PeerThreadStore (SA4E-369) > TC-403 step 3: snapshot is a deep copy — later appends do not mutate it (I-4) 0ms
+ ✓ src/__tests__/peer/threads.unit.test.ts > PeerThreadStore (SA4E-369) > TC-414: normalized pair key — reverse direction lands in the SAME thread 1ms
+ ✓ src/__tests__/peer/threads.unit.test.ts > PeerThreadStore (SA4E-369) > TC-306: pair isolation — evictions in (A,B) never touch (A,C) 1ms
+ ✓ src/__tests__/peer/threads.unit.test.ts > PeerThreadStore (SA4E-369) > I-8: dropThreadsInvolving removes every thread mentioning the tab 0ms
+ ✓ src/__tests__/peer/threads.unit.test.ts > PeerThreadStore (SA4E-369) > BR-11: THREAD_MAX_ENTRIES constant is 50 (regression guard) 0ms
+
+ Test Files  15 passed (15)
+      Tests  82 passed (82)
+   Start at  11:11:39
+   Duration  7.67s (transform 938ms, setup 0ms, import 3.76s, tests 325ms, environment 1ms)
+
+
+--- TYPECHECK ---
+tsc exit=0 (0 = pass)
+--- CAPTURE METADATA ---
+captured: 2026-10-20T11:11:39+07:00 | branch SA4E-369 | HEAD 53506d2 | reporter=verbose
