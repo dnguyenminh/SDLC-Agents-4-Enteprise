@@ -66,6 +66,16 @@ MIT
 
 ## Changelog
 
+### v1.53.12 (2026-10-20)
+
+**SA4E-374 — Fix SRP violation: Pega workspace indexing không qua extension**
+
+- 🧹 **Backend indexer no longer scans Pega rules** — removed `.pega` from `DEFAULT_EXTENSIONS` (`backend/src/config/schema.ts`), `UNIFIED_EXTENSIONS` (`backend/src/config/unified-extensions.ts`) and `EXTENSION_LANGUAGE_MAP` (`backend/src/engine/indexer/file-scanner/languages.ts`); `detectLanguage` now returns `null` for `.pega`
+- 🚫 **Exclude Pega artifacts from source scan** — added `rules/` and `.pega-cache/` to `DEFAULT_EXCLUDE` and `FALLBACK_EXCLUDES` (`backend/src/engine/indexer/project-type/resolver.ts`); Pega ingestion goes extension → backend Pega API (`/api/v1/pega/*`), file scanner keeps indexing real source only (SRP)
+- ✅ **Tests** — file-scanner / resolver / salesforce-extensions 19/19 PASS; STP/STC 31/31 PASS (TEST-REPORT v1)
+- 🧾 **Docs** — BRD/FSD/TDD/STP/STC/TEST-REPORT/UG/DPG/RLN v1 attached to Jira SA4E-374
+- 🔖 **Version sync** — root `package.json`, `backend/package.json`, `extension/package.json` aligned to `1.53.12`; tag `v1.53.12`
+
 ### v1.53.10 (2026-10-18)
 
 **SA4E-372 — Chat blocks: tách block theo vòng loop (thinking ↔ tool-call), collapse semantics đúng, persist/restore per-workspace đầy đủ**

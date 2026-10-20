@@ -1,0 +1,5 @@
+id,name,path,extension,should_exclude,description
+1,file.pega,src/file.pega,.pega,TRUE,.pega file
+2,file.rules,rules/file.json,json,TRUE,rules folder
+3,file.cache,.pega-cache/file.json,json,TRUE,pega-cache folder
+4,file.ts,src/file.ts,ts,FALSE,normal file

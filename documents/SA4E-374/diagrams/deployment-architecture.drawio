@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel adaptiveColors="auto" xmlns="http://www.jgraph.com/">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="dev" value="DEV" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="40" y="40" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="sit" value="SIT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="200" y="40" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="uat" value="UAT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="360" y="40" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="prod" value="PROD" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="520" y="40" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="backend" value="Backend Indexer\nSA4E-374" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;" vertex="1" parent="1">
+<mxGeometry x="240" y="150" width="160" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="extension" value="VS Code Extension" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+<mxGeometry x="240" y="270" width="160" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="dev" target="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e2" edge="1" parent="1" source="sit" target="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e3" edge="1" parent="1" source="uat" target="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e4" edge="1" parent="1" source="prod" target="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e5" edge="1" parent="1" source="extension" target="backend" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root>
+</mxGraphModel>

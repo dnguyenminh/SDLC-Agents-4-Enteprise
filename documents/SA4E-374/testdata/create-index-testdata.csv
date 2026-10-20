@@ -1,0 +1,5 @@
+test_case_id,workspace_path,file_path,expected_excluded,description
+E2E-API-06,ws1,src/a.pega,TRUE,.pega file should be excluded
+E2E-API-06,ws1,src/b.ts,FALSE,ts file should be included
+IT-03,ws2,rules/Rule-1.json,TRUE,rules folder excluded
+IT-04,ws3,.pega-cache/data.json,TRUE,.pega-cache excluded

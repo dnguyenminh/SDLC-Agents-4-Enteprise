@@ -113,10 +113,10 @@ describe('detectLanguage', () => {
   });
 
   // ---- SA4E-223: regression — .cls/.trigger/.pega unchanged (TC-05) ----
-  it('keeps legacy apex/pega mappings', () => {
+  it('keeps legacy apex mappings, pega removed for SRP', () => {
     expect(detectLanguage('/a/C.cls')).toBe('apex');
     expect(detectLanguage('/a/T.trigger')).toBe('apex');
-    expect(detectLanguage('/a/R.pega')).toBe('pega');
+    expect(detectLanguage('/a/R.pega')).toBeNull();
   });
 
   // ---- SA4E-223: unknown still null (TC-06) ----

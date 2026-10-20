@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel adaptiveColors="auto" xmlns="http://www.jgraph.com/">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="start" value="Issue Detected" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1">
+<mxGeometry x="280" y="40" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="decide" value="Severity Critical?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+<mxGeometry x="260" y="140" width="160" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="rollback" value="Initiate Rollback" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;" vertex="1" parent="1">
+<mxGeometry x="120" y="260" width="140" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="stop" value="Stop Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="120" y="360" width="140" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="db" value="Rollback DB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="360" y="360" width="140" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="deploy" value="Deploy Previous Version" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="240" y="460" width="200" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="verify" value="Verify Rollback" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+<mxGeometry x="260" y="560" width="160" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="end" value="Rollback Complete" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+<mxGeometry x="280" y="680" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="start" target="decide" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e2" edge="1" parent="1" source="decide" target="rollback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e3" edge="1" parent="1" source="rollback" target="stop" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e4" edge="1" parent="1" source="stop" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e5" edge="1" parent="1" source="db" target="deploy" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e6" edge="1" parent="1" source="deploy" target="verify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e7" edge="1" parent="1" source="verify" target="end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root>
+</mxGraphModel>

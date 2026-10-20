@@ -18,7 +18,7 @@ describe('DEFAULT_EXTENSIONS (SA4E-223)', () => {
       // regression: legacy extensions preserved
       expect(cfg.includeExtensions).toContain('.cls');
       expect(cfg.includeExtensions).toContain('.trigger');
-      expect(cfg.includeExtensions).toContain('.pega');
+      expect(cfg.includeExtensions).not.toContain('.pega');
     } finally {
       fs.rmSync(ws, { recursive: true, force: true });
     }
