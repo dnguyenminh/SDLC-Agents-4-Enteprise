@@ -21,7 +21,7 @@ export function updateContextUsageAfterTurn(deps: ContextUsageDeps): void {
   try {
     const engine = deps.peekEngine();
     if (!engine) return;
-    const tabId = "default";
+    const tabId = deps.getTabId();
     const detectedWindow = syncTurnWindow(deps, engine);
 
     const messages = engine.getChatHistory() || [];

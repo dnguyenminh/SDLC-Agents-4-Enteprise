@@ -9,7 +9,16 @@ import {
   startStream, appendToken, endStream, setStreamError,
   startThinking, appendThinkingToken, endThinking,
 } from './stores/chatStore';
-import { syncAgents } from './stores/agentStore';
+import { 
+  syncAgents, 
+  setSwitchSuccess, 
+  setSwitchError, 
+  setActiveAgentForTab 
+} from './stores/agentStore';
+import { 
+  updateTabs, 
+  setActiveTab 
+} from './stores/tabStore';
 import { updateContext } from './stores/contextStore';
 import {
   addToolCall, appendToolOutput, completeToolCall, failToolCall,
@@ -67,6 +76,31 @@ function buildHandlers(): HandlerMap {
     },
     SYNC_AVAILABLE_AGENTS: (msg) => {
       if (msg.type === 'SYNC_AVAILABLE_AGENTS') syncAgents(msg.agents);
+    },
+    AGENT_SWITCHED: (msg) => {
+      if (msg.type === 'AGENT_SWITCHED') {
+        if (msg.success) {
+          setSwitchSuccess(msg.tabId, msg.agentId);
+          setActiveAgentForTab(msg.tabId, msg.agentId);
+        } else {
+          setSwitchError(msg.error || 'Agent switch failed');
+        }
+      }
+    },
+    tab:updated: (msg) => {
+      if (msg.type === 'tab:updated') {
+        updateTabs(msg.payload.tabs, msg.payload.activeTabId);
+      }
+    },
+    TAB_UPDATED: (msg) => {
+      if (msg.type === 'TAB_UPDATED') {
+        updateTabs(msg.payload.tabs, msg.payload.activeTabId);
+      }
+    },
+    tab:switch: (msg) => {
+      if (msg.type === 'tab:switch') {
+        setActiveTab(msg.payload.tabId);
+      }
     },
     IPC_STATUS: (msg) => {
       if (msg.type === 'IPC_STATUS') updateServiceStatus(msg.service, msg.status, msg.endpoint);

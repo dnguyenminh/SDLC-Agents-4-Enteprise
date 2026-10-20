@@ -60,6 +60,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     this.contextUsageDeps = {
       getOrCreateEngine: () => this.getEngine(),
       peekEngine: () => this.engine,
+      getTabId: () => this.getEngine().getActiveTabId(),
       getTracker: () => this.contextUsageTracker,
       getFlags: () => this.countedFlags,
       getCompactor: () => this.sessionCompactor,

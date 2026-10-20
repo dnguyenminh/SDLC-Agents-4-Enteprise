@@ -5,10 +5,12 @@
   import CenterPane from './CenterPane.svelte';
   import RightPane from './RightPane.svelte';
   import StatusBar from './StatusBar.svelte';
+  import TabBar from './TabBar.svelte';
 </script>
 
 <div class="layout" data-testid="pi-chat-layout">
   <Toolbar />
+  <TabBar />
   <div class="panes">
     <LeftPane />
     <CenterPane />
