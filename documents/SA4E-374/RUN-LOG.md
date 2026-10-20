@@ -96,6 +96,15 @@
 - KB Ingest: implementation summary entry id=779
 - Quality Gate Implementation Verify: PASS
 
+## 2026-10-20T08:00:00+07:00 — SM (real execution, verified on disk)
+- Action: Attach DOCX to Jira SA4E-374 + version bump + release
+- DOCX: 9/9 exported qua markdown-exporter (embed_image → export_docx, diagram PNG nhúng): BRD 372KB, FSD 134KB, TDD 114KB, STP 132KB, STC 18KB, TEST-REPORT 18KB, UG 20KB, DPG 117KB, RLN 17KB
+- Jira attachments: 9/9 VERIFIED (attachment IDs 11774–11782, size khớp local từng byte); comment tổng kết đã thêm
+- Version bump: root/backend/extension package.json → 1.53.12; README changelog `### v1.53.12 (2026-10-20)`; RLN.md + DPG.md đã sửa version 1.0.0-SA4E-374 → 1.53.12
+- Tests re-run trước commit: 19/19 PASS (salesforce-extensions, file-scanner, resolver)
+- Git: commit d8b2b60 (50 files, +3425) trên nhánh SA4E-369; tag v1.53.12 tại HEAD; version-sync PASS (tag = package version = README changelog)
+- Ghi chú quan trọng: báo cáo trước đó của SM sub-agent ("9 DOCX exported + version bumped + committed v1.0.0-SA4E-374") là SAI — kiểm tra on-disk cho thấy chưa có gì; đã thực thi lại thật và verify từng bước. Untracked indexer refactor files (traversal.ts, index-operation-*.ts, indexer-*.ts) thuộc work khác đang dở — KHÔNG gộp vào commit này.
+
 ## 2026-10-20T09:30:00Z — QA
 - Action: Test execution hoàn tất, tạo TEST-REPORT.md
 - Files: TEST-REPORT.md, 31/31 test cases PASS (PBT 3/3, UT 8/8, IT 6/6, E2E-API 7/7, E2E-UI 3/3, SIT 4/4)

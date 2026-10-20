@@ -1,0 +1,6 @@
+TC_ID,Title,Priority,Type,Requirement,Preconditions,Test_Data,Steps_Summary,Expected_Result,Status,Actual_Result,Evidence_Path,Defect_ID,Executed_By,Executed_Date,Notes
+PBT-01,projectId derivation stable across random workspaces,High,Property-Based,BRD AC3,,testdata/create-project-testdata.csv,Derive ID twice for same path,IDs match,NOT_RUN,,,,
+PBT-02,auto-register idempotent,High,Property-Based,BRD AC4,,testdata/create-project-testdata.csv,Call autoRegister twice,No duplicate,NOT_RUN,,,,
+UT-01,deriveProjectId from git remote stable,High,Unit,BRD AC3,Workspace with git remote,testdata/create-project-testdata.csv,Call deriveProjectId twice,Same ID returned,NOT_RUN,,,,
+E2E-API-01,Index document via HTTP when project unregistered,High,Automated,BRD AC1,Project not registered,testdata/index-testdata.csv,POST /api/index then GET project,201 and project created,NOT_RUN,,,,
+SIT-01,Visual verification of project registration flow,Medium,Manual,BRD Overall,Clean workspace,,Open UI and index,No error shown,NOT_RUN,,,,

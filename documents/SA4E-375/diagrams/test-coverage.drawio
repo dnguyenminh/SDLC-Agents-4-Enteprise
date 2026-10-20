@@ -1,0 +1,51 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="2" value="Test Coverage Overview - SA4E-375" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;strokeWidth=0;" vertex="1" parent="1">
+      <mxGeometry x="200" y="40" width="400" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="3" value="Requirements" style="swimlane;html=1;startSize=30;" vertex="1" parent="1">
+      <mxGeometry x="40" y="120" width="740" height="600" as="geometry"/>
+    </mxCell>
+    <mxCell id="4" value="BRD AC1 - Index no PROJECT_NOT_REGISTERED" style="text;html=1;strokeWidth=0;" vertex="1" parent="3">
+      <mxGeometry x="20" y="40" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="5" value="PBT UT IT E2E-API E2E-UI SIT" style="text;html=1;align=center;strokeWidth=0;" vertex="1" parent="3">
+      <mxGeometry x="120" y="90" width="600" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="6" value="✅" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="3">
+      <mxGeometry x="100" y="120" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="7" value="✅" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="3">
+      <mxGeometry x="200" y="120" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="8" value="✅" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="3">
+      <mxGeometry x="300" y="120" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="9" value="✅" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="3">
+      <mxGeometry x="400" y="120" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="10" value="✅" style="ellipse;fillColor=#d5e8d4;strokeColor=#82b366;html=1;" vertex="1" parent="3">
+      <mxGeometry x="500" y="120" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="11" value="🟡" style="ellipse;fillColor=#fff2cc;strokeColor=#d6b656;html=1;" vertex="1" parent="3">
+      <mxGeometry x="600" y="120" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="12" value="BRD AC2 - MCP auto-register" style="text;html=1;strokeWidth=0;" vertex="1" parent="3">
+      <mxGeometry x="20" y="180" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="13" value="BRD AC3 - projectId stable" style="text;html=1;strokeWidth=0;" vertex="1" parent="3">
+      <mxGeometry x="20" y="240" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="14" value="BRD AC4 - No duplicate" style="text;html=1;strokeWidth=0;" vertex="1" parent="3">
+      <mxGeometry x="20" y="300" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="15" value="Guard ensureProjectRegistered" style="text;html=1;strokeWidth=0;" vertex="1" parent="3">
+      <mxGeometry x="20" y="360" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="16" value="Coverage 100%" style="text;html=1;align=center;verticalAlign=middle;strokeWidth=0;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="350" y="750" width="150" height="30" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,3 @@
+id,name,workspace_path,status,created_at,description
+proj-001,Demo Workspace,C:\projects\demo,ACTIVE,2026-01-01T00:00:00Z,Pre-seeded project for tests
+proj-002,Test Workspace,C:\projects\test,ACTIVE,2026-01-01T00:00:00Z,Standard project for permission tests
