@@ -1,15 +1,23 @@
 /**
- * TagAnalyzerService — SA4E-47
+ * TagAnalyzerService (facade) — SA4E-47
  * LLM-based automatic tag assignment + expanded extraction for KB entries.
  * Supports context chain, chunking, and enhanced JSON parsing.
+ *
+ * Implementation submodules (same directory):
+ * - analyzer-helpers.ts — response parsing, normalization, fallback, chunking
  */
 
 import type { LLMMessage, ContextChainInput } from './types.js';
 import { safeParseStructuredMap } from './types.js';
 import { LLMService } from './LLMService.js';
 import type { Logger } from 'pino';
-import { SYSTEM_PROMPT, DEFAULT_TAXONOMY, KNOWN_KEYWORDS } from './prompts.js';
+import { SYSTEM_PROMPT, DEFAULT_TAXONOMY } from './prompts.js';
 import type { TaskWorkerConfig } from '../task-queue/TaskWorkerConfig.js';
+import {
+  parseEnhancedLlmResponse, normalizeTagSuggestions,
+  applyThresholdWithExtended, fallbackKeywordExtraction,
+  chunkContent, llmTimeout,
+} from './analyzer-helpers.js';
 
 export interface TagSuggestion {
   tag: string;
@@ -78,11 +86,11 @@ export class TagAnalyzerService {
           this.workerConfig?.llmChunkOverlap ?? 200);
       }
       const llmResult = await this.analyzeWithLLM(content, options, context ?? null);
-      const normalized = this.normalizeTags(llmResult.suggestions);
-      return this.applyThresholdWithExtended(normalized, threshold, autoApply, llmResult);
+      const normalized = normalizeTagSuggestions(llmResult.suggestions, this.allValidTags);
+      return applyThresholdWithExtended(normalized, threshold, autoApply, llmResult);
     } catch (err) {
       this.logger?.warn({ err, component: 'TagAnalyzerService' }, 'LLM analysis failed, using fallback');
-      const fallback = this.fallbackWithExtended(content, threshold);
+      const fallback = fallbackKeywordExtraction(content, threshold);
       fallback.fallbackReason = err instanceof Error ? err.message : String(err);
       return fallback;
     }
@@ -95,6 +103,7 @@ export class TagAnalyzerService {
     options?: TagAnalyzeOptions,
     context?: ContextChainInput | null,
   ): Promise<{ suggestions: TagSuggestion[]; summary: string; business_entities: string[]; actors: string[]; business_rules: string[] }> {
+    void options;
     const userPrompt = this.buildContextPrompt(context, content);
     const messages: LLMMessage[] = [
       { role: 'system', content: SYSTEM_PROMPT },
@@ -105,10 +114,10 @@ export class TagAnalyzerService {
       '[TagAnalyzer] Calling LLM...');
     const response = await Promise.race([
       this.llmService.complete(messages),
-      this.timeout(timeoutMs),
+      llmTimeout(timeoutMs),
     ]);
     this.logger?.info({ responseLen: response.content.length }, '[TagAnalyzer] LLM responded');
-    return this.parseEnhancedResponse(response.content);
+    return parseEnhancedLlmResponse(response.content, this.logger);
   }
 
   // ── Context Prompt Builder ──
@@ -122,7 +131,7 @@ export class TagAnalyzerService {
     return `/no_think\n\n${contextBlock}\n\n---\n\n${content}`;
   }
 
-  // ── Response Parsing ──
+  // ── Response Parsing / Chunking (public, delegate to helpers) ──
 
   parseEnhancedResponse(llmOutput: string): {
     suggestions: TagSuggestion[];
@@ -131,119 +140,15 @@ export class TagAnalyzerService {
     actors: string[];
     business_rules: string[];
   } {
-    const defaults = { suggestions: [] as TagSuggestion[], summary: '',
-      business_entities: [] as string[], actors: [] as string[], business_rules: [] as string[] };
-    if (!llmOutput || llmOutput.trim().length === 0) return defaults;
-
-    const jsonMatch = llmOutput.match(/\{[\s\S]*"tags"[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        const suggestions = (parsed.tags || parsed.suggestions || [])
-          .filter((t: any) => t.tag && t.confidence !== undefined)
-          .map((t: any) => ({
-            tag: String(t.tag).toLowerCase().trim().replace(/\s+/g, '-'),
-            category: String(t.category || 'feature'),
-            confidence: Number(t.confidence),
-            reason: String(t.reason || ''),
-          }))
-          .filter((t: TagSuggestion) => t.tag.length >= 3 && t.tag.length <= 50);
-        return {
-          suggestions,
-          summary: String(parsed.summary || '').slice(0, 500),
-          business_entities: (parsed.business_entities || [])
-            .filter((e: any) => typeof e === 'string' && e.length <= 100).slice(0, 5),
-          actors: (parsed.actors || [])
-            .filter((a: any) => typeof a === 'string' && a.length <= 100).slice(0, 5),
-          business_rules: (parsed.business_rules || [])
-            .filter((r: any) => typeof r === 'string' && r.length <= 300).slice(0, 10),
-        };
-      } catch (err) { this.logger?.debug({ err }, '[analyzer] LLM parse failed, falling through to regex'); }
-    }
-
-    const tagPattern = /["']([a-z][a-z0-9-]{4,40}[a-z0-9])["']/g;
-    const found: string[] = [];
-    let m;
-    while ((m = tagPattern.exec(llmOutput)) !== null) {
-      const tag = m[1];
-      if (tag.includes('-') && !['let-me', 'wait-the', 'so-maybe', 'that-s'].includes(tag)) {
-        found.push(tag);
-      }
-    }
-    return { ...defaults, suggestions: [...new Set(found)].slice(-3).map(tag => ({
-      tag, category: 'feature', confidence: 0.85, reason: 'extracted from reasoning',
-    })) };
+    return parseEnhancedLlmResponse(llmOutput, this.logger);
   }
-
-  // ── Tag Normalization (map LLM tags to taxonomy) ──
-
-  private normalizeTags(suggestions: TagSuggestion[]): TagSuggestion[] {
-    return suggestions.map(s => {
-      if (this.allValidTags.has(s.tag)) return s;
-      const keywordMatch = KNOWN_KEYWORDS[s.tag] ?? KNOWN_KEYWORDS[s.tag.replace(/-/g, ' ')];
-      if (keywordMatch) return { ...s, tag: keywordMatch };
-      // Fuzzy match: only consider valid tags ≥5 chars to avoid false positives
-      // from short taxonomy entries (e.g. 'low' matching 'auth-flow-login')
-      for (const validTag of this.allValidTags) {
-        if (validTag.length < 5) continue;
-        if (s.tag.includes(validTag) || validTag.includes(s.tag)) {
-          return { ...s, tag: validTag, confidence: Math.min(s.confidence, 0.7) };
-        }
-      }
-      // Unknown tags retain original confidence — LLM-assigned confidence is authoritative
-      return s;
-    });
-  }
-
-  // ── Threshold & Fallback ──
-
-  private applyThresholdWithExtended(
-    suggestions: TagSuggestion[],
-    threshold: number,
-    autoApply: boolean,
-    extended?: { summary: string; business_entities: string[]; actors: string[]; business_rules: string[] },
-  ): TagAnalysisResult {
-    const applied = autoApply ? suggestions.filter(t => t.confidence >= threshold) : [];
-    const suggested = suggestions.filter(t => t.confidence < threshold);
-    return {
-      appliedTags: applied.map(t => t.tag).slice(0, 6),
-      suggestedTags: suggested,
-      fallbackUsed: false,
-      summary: extended?.summary ?? '',
-      business_entities: extended?.business_entities ?? [],
-      actors: extended?.actors ?? [],
-      business_rules: extended?.business_rules ?? [],
-    };
-  }
-
-  private fallbackWithExtended(content: string, _threshold: number): TagAnalysisResult {
-    const base = this.fallbackKeywordExtraction(content, _threshold);
-    return { ...base, summary: '', business_entities: [], actors: [], business_rules: [] };
-  }
-
-  // ── Chunking ──
 
   chunkContent(
     content: string,
     chunkSize = 6000,
     overlap = 200,
   ): { chunks: string[]; totalChunks: number } {
-    if (content.length <= chunkSize) {
-      return { chunks: [content], totalChunks: 1 };
-    }
-    // Clamp overlap to prevent excessive/infinite loops when overlap >= chunkSize
-    // Minimum step of 20% chunkSize ensures reasonable chunk count
-    const maxOverlap = Math.max(Math.floor(chunkSize * 0.8), 1);
-    const safeOverlap = Math.min(overlap, maxOverlap);
-    const chunks: string[] = [];
-    let start = 0;
-    while (start < content.length) {
-      const end = Math.min(start + chunkSize, content.length);
-      chunks.push(content.slice(start, end));
-      start = end - safeOverlap;
-      if (start >= content.length - safeOverlap) break;
-    }
-    return { chunks, totalChunks: chunks.length };
+    return chunkContent(content, chunkSize, overlap);
   }
 
   async analyzeWithChunking(
@@ -252,63 +157,43 @@ export class TagAnalyzerService {
     chunkSize?: number,
     overlap?: number,
   ): Promise<TagAnalysisResult> {
-    const { chunks } = this.chunkContent(content, chunkSize, overlap);
+    const { chunks } = chunkContent(content, chunkSize, overlap);
     this.logger?.info({ totalChunks: chunks.length, chunkSize, component: 'TagAnalyzerService' },
       'Chunking activated');
     const results: TagAnalysisResult[] = [];
     for (const chunk of chunks) {
-      try {
-        const ctx = results.length === 0 ? context : null;
-        const llmResult = await this.analyzeWithLLM(chunk, undefined, ctx);
-        const normalized = this.normalizeTags(llmResult.suggestions);
-        results.push(this.applyThresholdWithExtended(normalized, 0.7, true, llmResult));
-      } catch (err) {
-        this.logger?.warn({ err, chunkIdx: results.length, component: 'TagAnalyzerService' }, 'Chunk LLM failed, using fallback');
-        results.push({ ...this.fallbackKeywordExtraction(chunk, 0.7), summary: '', business_entities: [], actors: [], business_rules: [] });
-      }
+      results.push(await this.analyzeOneChunk(chunk, context, results.length));
     }
-    return {
-      appliedTags: [...new Set(results.flatMap(r => r.appliedTags))].slice(0, 6),
-      suggestedTags: results[0]?.suggestedTags ?? [],
-      fallbackUsed: results.some(r => r.fallbackUsed),
-      summary: results[0]?.summary ?? '',
-      business_entities: [...new Set(results.flatMap(r => r.business_entities))].slice(0, 5),
-      actors: [...new Set(results.flatMap(r => r.actors))].slice(0, 5),
-      business_rules: [...new Set(results.flatMap(r => r.business_rules))].slice(0, 10),
-    };
+    return mergeChunkResults(results);
   }
 
-  // ── Helpers ──
-
-  private fallbackKeywordExtraction(content: string, _threshold: number): TagAnalysisResult {
-    const lower = content.toLowerCase();
-    const found: string[] = [];
-    for (const [keyword, tag] of Object.entries(KNOWN_KEYWORDS)) {
-      if (lower.includes(keyword) && !found.includes(tag)) found.push(tag);
+  /** Analyze a single chunk; falls back to keywords on LLM failure. */
+  private async analyzeOneChunk(
+    chunk: string, context: ContextChainInput | null | undefined, chunkIdx: number,
+  ): Promise<TagAnalysisResult> {
+    try {
+      const ctx = chunkIdx === 0 ? context : null;
+      const llmResult = await this.analyzeWithLLM(chunk, undefined, ctx);
+      const normalized = normalizeTagSuggestions(llmResult.suggestions, this.allValidTags);
+      return applyThresholdWithExtended(normalized, 0.7, true, llmResult);
+    } catch (err) {
+      this.logger?.warn({ err, chunkIdx, component: 'TagAnalyzerService' }, 'Chunk LLM failed, using fallback');
+      return { ...fallbackKeywordExtraction(chunk, 0.7), summary: '', business_entities: [], actors: [], business_rules: [] };
     }
-    if (lower.startsWith('decision:') || lower.includes('we decided')) {
-      if (!found.includes('decision')) found.push('decision');
-    }
-    if (lower.includes('error') || lower.includes('bug') || lower.includes('fix')) {
-      if (!found.includes('error-pattern')) found.push('error-pattern');
-    }
-    return { appliedTags: found.slice(0, 6), suggestedTags: [],
-      fallbackUsed: true, summary: '', business_entities: [], actors: [], business_rules: [] };
   }
+}
 
-  private filterTaxonomy(categories?: string[]): Record<string, string[]> {
-    if (!categories || categories.length === 0) return this.taxonomy;
-    const filtered: Record<string, string[]> = {};
-    for (const cat of categories) {
-      if (this.taxonomy[cat]) filtered[cat] = this.taxonomy[cat];
-    }
-    return Object.keys(filtered).length > 0 ? filtered : this.taxonomy;
-  }
-
-  private timeout(ms: number): Promise<never> {
-    return new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('LLM timeout')), ms));
-  }
+/** Merge per-chunk results: union tags/entities, first-chunk summary wins. */
+function mergeChunkResults(results: TagAnalysisResult[]): TagAnalysisResult {
+  return {
+    appliedTags: [...new Set(results.flatMap(r => r.appliedTags))].slice(0, 6),
+    suggestedTags: results[0]?.suggestedTags ?? [],
+    fallbackUsed: results.some(r => r.fallbackUsed),
+    summary: results[0]?.summary ?? '',
+    business_entities: [...new Set(results.flatMap(r => r.business_entities))].slice(0, 5),
+    actors: [...new Set(results.flatMap(r => r.actors))].slice(0, 5),
+    business_rules: [...new Set(results.flatMap(r => r.business_rules))].slice(0, 10),
+  };
 }
 
 export { safeParseStructuredMap };

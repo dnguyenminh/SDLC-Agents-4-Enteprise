@@ -2,79 +2,20 @@
  * Query Layer — FTS5 search, symbol lookup, module listing.
  * SA4E-41: every method is tenant-scoped and fail-closed via CodeIntelIsolation.
  * SA4E-53: refactored to use DatabaseAdapter (async) instead of Database.Database directly.
+ * Facade (BR-18): types/sanitizers in query-utils.ts, search backends in query-search.ts.
  */
 
 import type { DatabaseAdapter } from '../../database/adapters/DatabaseAdapter.js';
-import { buildCodeScopeFilter, type CodeScopeFilter } from './code-intel-isolation.js';
+import { buildCodeScopeFilter } from './code-intel-isolation.js';
+import type {
+  SearchResult, SymbolInfo, ModuleInfo, IndexStatus, LocateRow,
+} from './query-utils.js';
+import { MODULE_COLUMNS, SYMBOL_COLUMNS, sanitizeLikeQuery } from './query-utils.js';
+import { searchCode } from './query-search.js';
 
-export interface SearchResult {
-  name: string;
-  kind: string;
-  signature: string;
-  filePath: string;
-  startLine: number;
-  endLine: number;
-  docComment: string | null;
-  rank: number;
-}
-
-export interface SymbolInfo {
-  name: string;
-  kind: string;
-  signature: string;
-  filePath: string;
-  startLine: number;
-  endLine: number;
-  visibility: string | null;
-  docComment: string | null;
-  parentSymbol: string | null;
-}
-
-export interface ModuleInfo {
-  name: string;
-  rootPath: string;
-  language: string | null;
-  description: string | null;
-  fileCount: number;
-  symbolCount: number;
-  diStyle: string | null;
-  errorHandling: string | null;
-  namingConvention: string | null;
-  loggingFramework: string | null;
-  testingFramework: string | null;
-  purpose: string | null;
-}
-
-export interface IndexStatus {
-  totalFiles: number;
-  totalSymbols: number;
-  totalModules: number;
-  languages: Record<string, number>;
-  lastIndexed: string | null;
-}
-
-/** SA4E-360 — one located symbol row with slice bounds (TDD §4.2 output). */
-export interface LocateRow {
-  name: string;
-  kind: string;
-  signature: string | null;
-  filePath: string;
-  startLine: number;
-  endLine: number;
-  lineCount: number;
-  parentSymbol: string | null;
-}
-
-const MODULE_COLUMNS = `name, root_path as rootPath, language, description,
-  file_count as fileCount, symbol_count as symbolCount,
-  di_style as diStyle, error_handling as errorHandling,
-  naming_convention as namingConvention,
-  logging_framework as loggingFramework,
-  testing_framework as testingFramework, purpose`;
-
-const SYMBOL_COLUMNS = `s.name, s.kind, s.signature, f.relative_path as filePath,
-  s.start_line as startLine, s.end_line as endLine,
-  s.visibility, s.doc_comment as docComment, s.parent_symbol as parentSymbol`;
+export type {
+  SearchResult, SymbolInfo, ModuleInfo, IndexStatus, LocateRow,
+};
 
 export class QueryLayer {
   constructor(private readonly adapter: DatabaseAdapter) {}
@@ -86,95 +27,7 @@ export class QueryLayer {
    * FTS5 virtual table is SQLite-specific (there is no tsvector column for code symbols).
    */
   async searchCode(projectId: string | undefined, query: string, limit = 20): Promise<SearchResult[]> {
-    const scope = buildCodeScopeFilter(projectId, 's');
-    if (this.adapter.getEngine() === 'sqlite') {
-      try {
-        return await this.searchCodeSqlite(scope, sanitizeFtsQuery(query), limit);
-      } catch {
-        return [];
-      }
-    }
-    return this.searchCodePortable(scope, query, limit);
-  }
-
-  /** SQLite FTS5 search against the symbols_fts virtual table. */
-  private async searchCodeSqlite(
-    scope: CodeScopeFilter,
-    ftsQuery: string,
-    limit: number,
-  ): Promise<SearchResult[]> {
-    return this.adapter.allAsync<SearchResult>(
-      `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
-              s.start_line as startLine, s.end_line as endLine,
-              s.doc_comment as docComment, rank
-       FROM symbols_fts
-       JOIN symbols s ON symbols_fts.rowid = s.id
-       JOIN files f ON s.file_id = f.id
-       WHERE symbols_fts MATCH ? AND ${scope.clause}
-       ORDER BY rank LIMIT ?`,
-      [ftsQuery, ...scope.params, limit],
-    );
-  }
-
-  /**
-   * Full-text search for PostgreSQL using the `search_tsv` tsvector column
-   * (created by the graph migrator). Ranks by ts_rank and falls back to an
-   * ILIKE substring search when the query has no usable full-text terms.
-   */
-  private async searchCodePortable(
-    scope: CodeScopeFilter,
-    query: string,
-    limit: number,
-  ): Promise<SearchResult[]> {
-    const tsTerms = sanitizeLikeQuery(query);
-    if (this.adapter.getEngine() === 'postgresql' && tsTerms) {
-      const rows = await this.searchCodePostgresFts(scope, tsTerms, limit);
-      if (rows.length > 0) return rows;
-    }
-    return this.searchCodeLike(scope, tsTerms, limit);
-  }
-
-  /** PostgreSQL tsvector full-text search ranked by ts_rank. */
-  private async searchCodePostgresFts(
-    scope: CodeScopeFilter,
-    terms: string,
-    limit: number,
-  ): Promise<SearchResult[]> {
-    const tsQuery = terms.split(/\s+/).filter(Boolean).join(' | ');
-    return this.adapter.allAsync<SearchResult>(
-      `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
-              s.start_line as startLine, s.end_line as endLine,
-              s.doc_comment as docComment,
-              ts_rank(s.search_tsv, to_tsquery('english', ?)) as rank
-       FROM symbols s
-       JOIN files f ON s.file_id = f.id
-       WHERE s.search_tsv @@ to_tsquery('english', ?) AND ${scope.clause}
-       ORDER BY rank DESC LIMIT ?`,
-      [tsQuery, tsQuery, ...scope.params, limit],
-    );
-  }
-
-  /**
-   * Portable ILIKE substring search — used as the PostgreSQL fallback and for
-   * any other non-SQLite engine. Matches name, signature and doc comment.
-   */
-  private async searchCodeLike(
-    scope: CodeScopeFilter,
-    terms: string,
-    limit: number,
-  ): Promise<SearchResult[]> {
-    const pattern = `%${terms}%`;
-    return this.adapter.allAsync<SearchResult>(
-      `SELECT s.name, s.kind, s.signature, f.relative_path as filePath,
-              s.start_line as startLine, s.end_line as endLine,
-              s.doc_comment as docComment, 0 as rank
-       FROM symbols s
-       JOIN files f ON s.file_id = f.id
-       WHERE (s.name ILIKE ? OR s.signature ILIKE ? OR s.doc_comment ILIKE ?)
-         AND ${scope.clause}
-       ORDER BY s.name LIMIT ?`,
-      [pattern, pattern, pattern, ...scope.params, limit],
-    );
+    return searchCode(this.adapter, projectId, query, limit);
   }
 
   /** Lookup symbols by exact name or prefix, scoped to one tenant. */
@@ -332,21 +185,4 @@ export class QueryLayer {
       lastIndexed: lastRow?.t ?? null,
     };
   }
-}
-
-function sanitizeFtsQuery(query: string): string {
-  return query.replace(/[^\w\s*"]/g, ' ').trim() || '*';
-}
-
-/**
- * Sanitize a query for use inside a LIKE/ILIKE pattern.
- * Strips FTS operators and escapes LIKE wildcards (% and _) so user input is
- * matched literally rather than as a wildcard pattern.
- */
-function sanitizeLikeQuery(query: string): string {
-  return query
-    .replace(/[*"]/g, ' ')
-    .replace(/[%_\\]/g, '\\$&')
-    .replace(/\s+/g, ' ')
-    .trim();
 }

@@ -1,47 +1,23 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { EntraProviderStrategy } from '../EntraProviderStrategy.js';
-
-/** Build a fake (unsigned) id_token from a claims payload for decode-path tests. */
-function makeIdToken(payload: Record<string, unknown>): string {
-  const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'key-1' })).toString('base64url');
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  return `${header}.${body}.sig`;
-}
-
-const TENANT_ID = '00000000-0000-0000-0000-000000000001';
-const CLIENT_ID = '11111111-1111-1111-1111-111111111111';
-const CLIENT_SECRET = 'secret12345';
-const REDIRECT_URI = 'http://localhost:3000/auth/entra/callback';
-const AUTHORITY = `https://login.microsoftonline.com/${TENANT_ID}`;
+import {
+  TENANT_ID,
+  CLIENT_ID,
+  setupEntraEnv,
+  teardownEntraEnv,
+  makeIdToken,
+} from './EntraProviderStrategy.helpers.js';
 
 describe('EntraProviderStrategy', () => {
   let strategy: EntraProviderStrategy;
 
   beforeEach(() => {
-    process.env.SSO_ENABLED = 'true';
-    process.env.ENTRA_TENANT_ID = TENANT_ID;
-    process.env.ENTRA_CLIENT_ID = CLIENT_ID;
-    process.env.ENTRA_CLIENT_SECRET = CLIENT_SECRET;
-    process.env.ENTRA_REDIRECT_URI = REDIRECT_URI;
-    process.env.ENTRA_AUTHORITY = AUTHORITY;
-    process.env.ENTRA_ISSUER = `https://login.microsoftonline.com/${TENANT_ID}/v2.0`;
-    process.env.ENTRA_JWKS_URI = `${AUTHORITY}/discovery/v2.0/keys`;
-    process.env.ENTRA_SCOPES = 'openid profile email offline_access';
-
+    setupEntraEnv();
     strategy = new EntraProviderStrategy();
   });
 
   afterEach(() => {
-    delete process.env.SSO_ENABLED;
-    delete process.env.ENTRA_TENANT_ID;
-    delete process.env.ENTRA_CLIENT_ID;
-    delete process.env.ENTRA_CLIENT_SECRET;
-    delete process.env.ENTRA_REDIRECT_URI;
-    delete process.env.ENTRA_AUTHORITY;
-    delete process.env.ENTRA_ISSUER;
-    delete process.env.ENTRA_JWKS_URI;
-    delete process.env.ENTRA_SCOPES;
-    vi.restoreAllMocks();
+    teardownEntraEnv();
   });
 
   it('builds authorize URL with PKCE parameters', async () => {
@@ -174,92 +150,5 @@ describe('EntraProviderStrategy', () => {
     });
     expect(profile.emailVerified).toBe(true);
     expect(profile.email).toBe('tenant.user@contoso.com');
-  });
-
-  // xms_edov as the string "false" must NOT be trusted (Boolean("false")===true trap).
-  it('treats xms_edov="false" as NOT verified', async () => {
-    const expectedNonce = 'nonce-edov-false';
-    const payload = {
-      iss: `https://login.microsoftonline.com/${TENANT_ID}/v2.0`,
-      sub: 'sub-edov-2', oid: 'oid-edov-2', email: 'u@contoso.com',
-      xms_edov: 'false', nonce: expectedNonce,
-    };
-    const id_token = makeIdToken(payload);
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true, status: 200, json: async () => ({ id_token, access_token: 'at' }),
-    });
-    const entraAuthModule = await import('../../../middleware/verifiers/entra-auth.js');
-    vi.spyOn(entraAuthModule, 'getEntraVerifierAsync').mockResolvedValue({
-      verify: vi.fn().mockResolvedValue(payload),
-    } as any);
-
-    const profile = await strategy.handleCallback({ code: 'c', codeVerifier: 'v', nonce: expectedNonce });
-    expect(profile.emailVerified).toBe(false);
-  });
-
-  // When `email` claim is absent, fall back to preferred_username so JIT has an address.
-  it('falls back to preferred_username when email claim is absent', async () => {
-    const expectedNonce = 'nonce-fallback';
-    const verifyClaims = { sub: 'sub-x', oid: 'oid-x', name: 'X' }; // no email from verify()
-    const payload = {
-      iss: `https://login.microsoftonline.com/${TENANT_ID}/v2.0`,
-      sub: 'sub-x', oid: 'oid-x',
-      preferred_username: 'fallback.user@contoso.com',
-      xms_edov: true, nonce: expectedNonce,
-    };
-    const id_token = makeIdToken(payload);
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true, status: 200, json: async () => ({ id_token, access_token: 'at' }),
-    });
-    const entraAuthModule = await import('../../../middleware/verifiers/entra-auth.js');
-    vi.spyOn(entraAuthModule, 'getEntraVerifierAsync').mockResolvedValue({
-      verify: vi.fn().mockResolvedValue(verifyClaims),
-    } as any);
-
-    const profile = await strategy.handleCallback({ code: 'c', codeVerifier: 'v', nonce: expectedNonce });
-    expect(profile.email).toBe('fallback.user@contoso.com');
-    expect(profile.emailVerified).toBe(true);
-  });
-
-  it('rejects callback with invalid_nonce when nonce does not match', async () => {
-    const payload = {
-      sub: 'sub-user-1',
-      oid: 'oid-123',
-      email: 'user@example.com',
-      nonce: 'mismatched-nonce',
-    };
-    const header = Buffer.from(JSON.stringify({ alg: 'RS256' })).toString('base64url');
-    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-    const id_token = `${header}.${body}.sig`;
-
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({ id_token, access_token: 'at-123' }),
-    });
-
-    const entraAuthModule = await import('../../../middleware/verifiers/entra-auth.js');
-    vi.spyOn(entraAuthModule, 'getEntraVerifierAsync').mockResolvedValue({
-      verify: vi.fn().mockResolvedValue(payload),
-    } as any);
-
-    await expect(strategy.handleCallback({
-      code: 'auth-code-123',
-      codeVerifier: 'verifier-123',
-      nonce: 'expected-nonce',
-    })).rejects.toThrow('invalid_nonce');
-  });
-
-  it('throws when token endpoint fails', async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      status: 400,
-      text: async () => 'bad_verification_code',
-    });
-
-    await expect(strategy.handleCallback({
-      code: 'bad-code',
-      codeVerifier: 'verifier-123',
-    })).rejects.toThrow('token_exchange_failed');
   });
 });

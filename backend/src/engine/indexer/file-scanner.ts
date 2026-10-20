@@ -2,82 +2,25 @@
  * File Scanner — Traverses workspace, respects .gitignore, detects language.
  * Produces a list of scannable files with metadata.
  * KSA-191: Added Salesforce extensions + compound extension detection.
+ *
+ * BR-18 facade — language maps live in ./file-scanner/languages.ts,
+ * workspace traversal in ./file-scanner/traversal.ts,
+ * sidecar metadata in ./file-scanner/file-meta.ts.
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as crypto from 'crypto';
-import { AppConfig } from '../config.js';
-import { createIgnoreParser, IgnoreParser } from '../parsers/ignore/index.js';
-import { resolveContainedPath, isWithinWorkspace, resolveWorkspaceRoot } from './path-safety.js';
+import type { AppConfig } from '../config.js';
+import { createIgnoreParser } from '../parsers/ignore/index.js';
+import { resolveContainedPath, resolveWorkspaceRoot } from './path-safety.js';
+import type { ScannedFile } from './file-scanner/scanned-file.js';
+import { detectLanguage } from './file-scanner/languages.js';
+import { hashContent, traverseDirectory } from './file-scanner/traversal.js';
+import { loadFileMetadata, type FileMetaEntry } from './file-scanner/file-meta.js';
 
-export interface ScannedFile {
-  absolutePath: string;
-  relativePath: string;
-  language: string;
-  contentHash: string;
-  sizeBytes: number;
-  lineCount: number;
-  fileCreatedAt?: string;
-  fileAuthor?: string;
-  fileVersion?: string;
-}
-
-const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
-  '.ts': 'typescript', '.tsx': 'typescript',
-  '.js': 'javascript', '.jsx': 'javascript',
-  '.kt': 'kotlin', '.kts': 'kotlin',
-  '.java': 'java',
-  '.py': 'python',
-  '.go': 'go',
-  '.rs': 'rust',
-  '.c': 'c', '.h': 'c',
-  '.cpp': 'cpp', '.hpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
-  '.cs': 'csharp',
-  '.rb': 'ruby',
-  '.php': 'php',
-  '.swift': 'swift',
-  '.scala': 'scala',
-  '.sql': 'sql',
-  '.sh': 'bash',
-  '.yaml': 'yaml', '.yml': 'yaml',
-  '.json': 'json',
-  '.toml': 'toml',
-  '.cls': 'apex',
-  '.trigger': 'apex',
-  '.pega': 'pega',
-  // ---- SA4E-223: new Salesforce simple extensions ----
-  '.apex': 'apex',
-  '.soql': 'apex',
-  '.page': 'visualforce',
-  '.component': 'visualforce',
-  '.cmp': 'aura',
-  '.app': 'aura',
-  '.evt': 'aura',
-  '.intf': 'aura',
-  '.tokens': 'aura',
-  // ---- SA4E-... LWC HTML template support ----
-  '.html': 'lwc-html',
-  // ---- SA4E-261: Tier B extensions for unified whitelist ----
-  '.jsp': 'jsp',
-  '.xml': 'xml',
-  '.properties': 'properties',
-  '.css': 'css',
-  '.ps1': 'powershell',
-};
-
-/**
- * SA4E-223 — Single source of truth for Salesforce `*-meta.xml` compound suffixes.
- * Used by detectLanguage() so *.xml files are routed to the `salesforce-meta` parser.
- * (Compound-suffix files have ext === '.xml' which is NOT in includeExtensions, but
- * processFile/async-file-scanner exempt `language === 'salesforce-meta'`.)
- */
-export const SALESFORCE_META_SUFFIXES: string[] = [
-  '.flow-meta.xml', '.object-meta.xml', '.field-meta.xml', '.js-meta.xml', '.component-meta.xml',
-  '.flexipage-meta.xml', '.permissionset-meta.xml', '.profile-meta.xml', '.labels-meta.xml',
-  '.tab-meta.xml', '.layout-meta.xml', '.report-meta.xml', '.dashboard-meta.xml',
-  '.site-meta.xml', '.resource-meta.xml', '.email-meta.xml', '.testsuite-meta.xml',
-];
+export type { ScannedFile } from './file-scanner/scanned-file.js';
+export { SALESFORCE_META_SUFFIXES, detectLanguage } from './file-scanner/languages.js';
+export { loadFileMetadata, type FileMetaEntry } from './file-scanner/file-meta.js';
 
 /** Scan workspace and return list of indexable files. */
 export function scanWorkspace(config: AppConfig): ScannedFile[] {
@@ -108,128 +51,5 @@ export function scanSingleFile(filePath: string, workspace: string): ScannedFile
     };
   } catch {
     return null;
-  }
-}
-
-/** Detect language from file extension — supports compound extensions. */
-export function detectLanguage(filePath: string): string | null {
-  // Check compound extensions first (Salesforce metadata)
-  const lowerPath = filePath.toLowerCase().replace(/\\/g, '/');
-  if (SALESFORCE_META_SUFFIXES.some(s => lowerPath.endsWith(s))) {
-    return 'salesforce-meta';
-  }
-
-  const ext = getExtension(filePath);
-  return EXTENSION_LANGUAGE_MAP[ext] ?? null;
-}
-
-function getExtension(filePath: string): string {
-  if (filePath.endsWith('.gradle.kts')) return '.kts';
-  return path.extname(filePath).toLowerCase();
-}
-
-function hashContent(content: string): string {
-  return crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
-}
-
-function traverseDirectory(
-  dir: string,
-  config: AppConfig,
-  ignoreParser: IgnoreParser,
-  results: ScannedFile[],
-  root: string
-): void {
-  const entries = safeReadDir(dir);
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    const relPath = path.relative(config.workspace, fullPath).replace(/\\/g, '/');
-
-    if (shouldExclude(relPath, entry.name, config.excludePatterns, ignoreParser)) continue;
-
-    if (entry.isDirectory()) {
-      traverseDirectory(fullPath, config, ignoreParser, results, root);
-    } else if (entry.isFile()) {
-      const file = processFile(fullPath, relPath, config, root);
-      if (file) results.push(file);
-    }
-  }
-}
-
-function processFile(fullPath: string, relPath: string, config: AppConfig, root: string): ScannedFile | null {
-  const language = detectLanguage(fullPath);
-  if (!language) return null;
-
-  const ext = getExtension(fullPath);
-  // Allow through if simple extension matches OR if compound extension detected (salesforce-meta)
-  if (!config.includeExtensions.includes(ext) && ext !== '.kts' && language !== 'salesforce-meta' && ext !== '.jsp') return null;
-
-  try {
-    // F-01: reject symlinks that escape the workspace (realpath containment).
-    // .native so the form matches resolveWorkspaceRoot (short vs long on Windows).
-    const realPath = fs.realpathSync.native(fullPath);
-    if (!isWithinWorkspace(realPath, root)) return null;
-
-    const stat = fs.statSync(realPath);
-    if (stat.size > config.maxFileSize) return null;
-
-    const content = fs.readFileSync(realPath, 'utf-8');
-    if (isBinary(content)) return null;
-
-    return {
-      absolutePath: fullPath,
-      relativePath: relPath,
-      language,
-      contentHash: hashContent(content),
-      sizeBytes: stat.size,
-      lineCount: content.split('\n').length,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function shouldExclude(
-  relPath: string, name: string, excludes: string[], ignoreParser: IgnoreParser
-): boolean {
-  if (name.startsWith('.') && name !== '.') return true;
-  for (const pattern of excludes) {
-    if (relPath.includes(pattern) || name === pattern) return true;
-  }
-  return ignoreParser.shouldIgnore(relPath);
-}
-
-function isBinary(content: string): boolean {
-  const sample = content.slice(0, 1024);
-  const nullCount = (sample.match(/\0/g) || []).length;
-  return nullCount > 2;
-}
-
-function safeReadDir(dir: string): fs.Dirent[] {
-  try {
-    return fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-}
-
-export interface FileMetaEntry {
-  fileCreatedAt?: string;
-  fileAuthor?: string;
-  fileVersion?: string;
-}
-
-/**
- * Load file metadata from the .code-intel/file-meta.json sidecar.
- * Returns a map from relative file path → metadata entry.
- */
-export function loadFileMetadata(
-  workspace: string,
-): Record<string, FileMetaEntry> {
-  const metaPath = path.join(workspace, '.code-intel', 'file-meta.json');
-  try {
-    const raw = fs.readFileSync(metaPath, 'utf-8');
-    return JSON.parse(raw) as Record<string, FileMetaEntry>;
-  } catch {
-    return {};
   }
 }

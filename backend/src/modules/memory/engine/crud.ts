@@ -5,6 +5,7 @@
 
 import type { DatabaseAdapter } from '../../../database/adapters/DatabaseAdapter.js';
 import { DialectHelper } from '../../../database/dialect/DialectHelper.js';
+import { reconcileOrphanGraphNodes } from './graph-cleanup.js';
 import type { KnowledgeEntry, GraphEdge } from '../models.js';
 
 export class MemoryEngineCrud {
@@ -121,42 +122,10 @@ export class MemoryEngineCrud {
    * Remove orphan graph nodes whose source entities no longer exist.
    * Also removes ALL legacy 'kb-entry:*' nodes (replaced by 'doc-{id}' format).
    * Ensures graph_nodes stays consistent with source tables over time.
-   * Runs on startup (non-fatal).
+   * Runs on startup (non-fatal). (BR-18: body in ./graph-cleanup.ts)
    */
   async reconcileOrphanGraphNodes(): Promise<number> {
-    try {
-      // Remove ALL legacy 'kb-entry:*' nodes — this prefix is no longer used
-      const r1 = await this.adapter.runAsync(
-        `DELETE FROM graph_nodes WHERE entry_id LIKE 'kb-entry:%'`,
-      );
-      // Clean orphan 'doc-*' nodes (KB entries that were deleted)
-      const r2 = await this.adapter.runAsync(
-        `DELETE FROM graph_nodes WHERE entry_id LIKE 'doc-%'
-         AND CAST(REPLACE(entry_id, 'doc-', '') AS INTEGER) NOT IN (
-           SELECT id FROM knowledge_entries
-         )`,
-      );
-      // Clean orphan 'sym-*' nodes (symbols that were deleted)
-      const r3 = await this.adapter.runAsync(
-        `DELETE FROM graph_nodes WHERE entry_id LIKE 'sym-%'
-         AND CAST(REPLACE(entry_id, 'sym-', '') AS INTEGER) NOT IN (
-           SELECT id FROM symbols
-         )`,
-      );
-      // Clean orphan 'code:*' nodes (symbols re-created with a new id on re-index).
-      // Without this, a graph node points at a dead symbol id and the viewer
-      // shows "No content available" even though the live symbol is enriched.
-      const r4 = await this.adapter.runAsync(
-        `DELETE FROM graph_nodes WHERE entry_id LIKE 'code:%'
-         AND CAST(REPLACE(entry_id, 'code:', '') AS INTEGER) NOT IN (
-           SELECT id FROM symbols
-         )`,
-      );
-      return (r1.changes ?? 0) + (r2.changes ?? 0) + (r3.changes ?? 0) + (r4.changes ?? 0);
-    } catch {
-      // Non-fatal: graph_nodes table may not exist in test environments
-      return 0;
-    }
+    return reconcileOrphanGraphNodes(this.adapter);
   }
 
   async findById(id: number): Promise<KnowledgeEntry | undefined> {

@@ -1,101 +1,24 @@
 /**
- * SA4E-78 — Decoupled indexer endpoints (SRP: separated from legacy api-index).
+ * SA4E-78 — Decoupled indexer endpoints (facade).
+ * SRP: separated from legacy api-index.
  * POST /api/index/full — trigger async full index (202 Accepted)
  * POST /api/index/file-events — push file change events from Extension
  * POST /api/index/cancel — cancel running index via AbortController
  * GET  /api/index/progress — poll current progress
+ *
+ * Implementation submodules (same directory):
+ * - api-index-scope.ts       — singleton manager + tenant/workspace scope
+ * - api-index-file-events.ts — incremental file-event ingestion
  */
 
 import type { Context } from 'hono';
 import type { Logger } from 'pino';
-import * as fs from 'fs';
-import * as path from 'path';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
-import type { CodeIntelModule } from '../../modules/code-intel/CodeIntelModule.js';
-import { IndexOperationManager } from '../../engine/indexer/index-operation-manager.js';
-import { loadConfig } from '../../config/index.js';
-import { requireProjectId } from '../../engine/query/code-intel-isolation.js';
-import { resolveWithinWorkspace } from '../../shared/path-safety.js';
-import type { FileEvent, FileEventsResult } from '../../engine/indexer/types.js';
+import { getManager, resolveScope } from './api-index-scope.js';
+import { handleFileEvents } from './api-index-file-events.js';
 
-/** Max events per request to prevent abuse. */
-const MAX_EVENTS_PER_REQUEST = 100;
-
-/** Singleton manager map — one per CodeIntelModule lifetime. */
-const managerCache = new WeakMap<object, IndexOperationManager>();
-
-/**
- * Get or create the SINGLETON IndexOperationManager for the codeIntel module.
- * Exported so all index routes (source upload + full + progress) share ONE
- * manager instance — otherwise progress written by one route is invisible to
- * another (each manager only tracks its own operations), and each extra
- * instance leaks an `engine.on('progress')` listener.
- */
-export function getManager(registry: ModuleRegistry): IndexOperationManager | null {
-  const codeIntel = registry.getModule('codeIntel') as CodeIntelModule | undefined;
-  if (!codeIntel || codeIntel.status !== 'ready') return null;
-  const indexer = codeIntel.getIndexer();
-  if (!indexer) return null;
-
-  let manager = managerCache.get(codeIntel);
-  if (!manager) {
-    manager = new IndexOperationManager(indexer);
-    managerCache.set(codeIntel, manager);
-  }
-  return manager;
-}
-
-/**
- * Resolve project scope from request headers (multi-tenant via JWT + X-Project-Id).
- * SINGLE SOURCE OF TRUTH for the index temp directory: both the source-upload
- * route (`/api/index/source`) and the index/progress routes MUST resolve the
- * same `{indexTempDir}/{userId}/{projectId}` so files are written to exactly the
- * directory that gets scanned, and progress is keyed by the same userId:projectId.
- * Exported for reuse by api-index.ts.
- */
-export async function resolveScope(c: Context): Promise<{ userId: string; projectId: string; workspace: string; displayName?: string }> {
-  const config = loadConfig();
-  // Identity MUST come from the request (X-Project-Id / JWT projectContext). The backend
-  // is multi-tenant and must never infer identity from its own config — missing identity
-  // fails closed via requireProjectId (PROJECT_REQUIRED → 400), never silently defaulting
-  // to the boot project (which would mis-scope or leak across tenants).
-  const ctx = c.get('projectContext') as { userId?: string; projectId?: string } | undefined;
-  const projectId = requireProjectId(c.req.header('X-Project-Id') || ctx?.projectId);
-  // SINGLE SOURCE OF TRUTH for userId: the upload route (/api/index/source) derives
-  // userId from validateSession(token) (requireAuth). The full-index/progress routes
-  // MUST resolve the SAME userId, otherwise upload writes to {session.userId}/… while
-  // the scan reads {ctx.userId||'default'}/… — a different (empty) dir → "Found 0 files".
-  // Resolve from the session token first (matches upload), then ctx, then 'default'.
-  const sessionUserId = await resolveSessionUserId(c);
-  const userId = sessionUserId || ctx?.userId || 'default';
-  // indexTempDir/{userId}/{projectId} — same dir for source file writes + scan.
-  const workspace = path.join(config.indexTempDir, userId, projectId);
-  if (!fs.existsSync(workspace)) fs.mkdirSync(workspace, { recursive: true });
-  // The scan `workspace` above is a synthetic temp dir named after the projectId,
-  // so its basename is NOT a usable display name. The client sends its REAL
-  // workspace root via X-Workspace-Root — use that for project_registry.display_name.
-  const workspaceRoot = c.req.header('X-Workspace-Root') || c.req.header('x-workspace-root');
-  const displayName = workspaceRoot ? path.basename(workspaceRoot) : undefined;
-  return { userId, projectId, workspace, displayName };
-}
-
-/**
- * Resolve userId from the Bearer session token — the SAME mechanism the upload
- * route uses (validateSession). Returns '' when no valid session, so callers can
- * fall back. This keeps upload and full-index on one identity source.
- */
-async function resolveSessionUserId(c: Context): Promise<string> {
-  const auth = c.req.header('Authorization') || '';
-  const token = auth.replace('Bearer ', '').trim();
-  if (!token) return '';
-  try {
-    const { validateSession } = await import('../../admin/db/sessions.js');
-    const session = await validateSession(token);
-    return session?.userId || '';
-  } catch {
-    return '';
-  }
-}
+// Preserve the original public API at this module path (api-index.ts imports these).
+export { getManager, resolveScope, handleFileEvents };
 
 /**
  * POST /api/index/full — Trigger async full index.
@@ -126,90 +49,6 @@ export async function handleFullIndex(c: Context, registry: ModuleRegistry, logg
     }, 200);
   } catch (err: unknown) {
     return handleError(c, err, logger, 'Error starting full index');
-  }
-}
-
-/**
- * POST /api/index/file-events — Receive file change events from Extension.
- * Processes sequentially to avoid DB contention.
- */
-export async function handleFileEvents(c: Context, registry: ModuleRegistry, logger: Logger) {
-  try {
-    const scope = await resolveScope(c);
-    const body = await c.req.json() as { events: FileEvent[] };
-    const { events } = body;
-
-    if (!events || !Array.isArray(events)) {
-      return c.json({ error: 'events array required' }, 400);
-    }
-    if (events.length > MAX_EVENTS_PER_REQUEST) {
-      return c.json({ error: `Max ${MAX_EVENTS_PER_REQUEST} events per request` }, 413);
-    }
-
-    const codeIntel = registry.getModule('codeIntel') as CodeIntelModule | undefined;
-    const indexer = codeIntel?.getIndexer() as any;
-    if (!indexer) return c.json({ error: 'Code intelligence not ready' }, 503);
-
-    // ROOT-CAUSE FIX: incremental tenants never run runFullIndex, so nothing
-    // ever wrote project_registry for them (empty admin dropdown). Register the
-    // project once per batch here — non-fatal, indexing continues on failure.
-    try {
-      await indexer.registerWorkspace(scope.projectId, scope.workspace, scope.displayName);
-    } catch (err) {
-      logger.warn({ err, projectId: scope.projectId }, '[index] project_registry register skipped (non-fatal)');
-    }
-
-    const result: FileEventsResult = {
-      indexed: 0, updated: 0, removed: 0,
-      skipped: 0, rejected: [], projectId: scope.projectId,
-    };
-
-    for (const event of events) {
-      const processed = await processFileEvent(
-        event, scope, indexer, logger,
-      );
-      if (processed === 'rejected') result.rejected.push(event.path);
-      else if (processed === 'indexed') result.indexed++;
-      else if (processed === 'updated') result.updated++;
-      else if (processed === 'removed') result.removed++;
-      else result.skipped++;
-    }
-
-    return c.json(result);
-  } catch (err: unknown) {
-    return handleError(c, err, logger, 'Error processing file events');
-  }
-}
-
-/** Process a single file event — returns outcome category. */
-async function processFileEvent(
-  event: FileEvent,
-  scope: { projectId: string; workspace: string },
-  indexer: any,
-  logger: Logger,
-): Promise<'indexed' | 'updated' | 'removed' | 'skipped' | 'rejected'> {
-  const safePath = resolveWithinWorkspace(scope.workspace, event.path);
-  if (!safePath) return 'rejected';
-
-  if (event.type === 'delete') {
-    indexer.removeFile(event.path);
-    return 'removed';
-  }
-
-  // For add/change: write content if provided, then index
-  if (event.content) {
-    fs.mkdirSync(path.dirname(safePath), { recursive: true });
-    fs.writeFileSync(safePath, event.content, 'utf-8');
-  }
-
-  try {
-    // F-01: pass the already-validated/contained safePath (not the raw event.path)
-    // so a symlink submitted in event.path cannot be followed outside the workspace.
-    await indexer.indexSingleFile(safePath, scope.projectId);
-    return event.type === 'add' ? 'indexed' : 'updated';
-  } catch (err) {
-    logger.warn({ err, file: event.path }, '[index] file-event index failed');
-    return 'skipped';
   }
 }
 

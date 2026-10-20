@@ -1,39 +1,13 @@
 /**
  * KSA-148: Python Parser Unit Tests.
  * Tests symbol extraction, relationship extraction, and edge cases.
+ * setup/readFixture/parseFixture extracted to python-parser.fixtures.ts
+ * (line-count gate <=200).
  */
 
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { Parser, Language } from 'web-tree-sitter';
-import * as path from 'path';
-import * as fs from 'fs';
-import PythonParser from '../python-parser.js';
-
-const FIXTURES_DIR = path.resolve(__dirname, 'fixtures');
-const GRAMMAR_PATH = path.resolve(__dirname, '../../grammars/tree-sitter-python.wasm');
-
-let parser: PythonParser;
-let grammarAvailable = false;
-
-async function setup(): Promise<void> {
-  await Parser.init();
-  const tsParser = new Parser();
-
-  if (!fs.existsSync(GRAMMAR_PATH)) {
-    console.error(`[SKIP] Python WASM grammar not found at ${GRAMMAR_PATH}`);
-    return;
-  }
-
-  const language = await Language.load(GRAMMAR_PATH);
-  tsParser.setLanguage(language);
-  parser = new PythonParser(tsParser, 'python');
-  grammarAvailable = true;
-}
-
-function readFixture(name: string): string {
-  return fs.readFileSync(path.join(FIXTURES_DIR, name), 'utf-8');
-}
+import { setup, parser, grammarAvailable, parseFixture } from './python-parser.fixtures.js';
 
 describe('PythonParser', () => {
   before(async () => {
@@ -50,8 +24,7 @@ describe('PythonParser', () => {
   describe('parse — simple-function.py', () => {
     it('should extract module-level imports', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const imports = result.relationships.filter(r => r.kind === 'imports');
       assert.ok(imports.length >= 4, `Expected >=4 imports, got ${imports.length}`);
@@ -71,8 +44,7 @@ describe('PythonParser', () => {
 
     it('should extract module-level functions', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const simpleFunc = result.symbols.find(s => s.name === 'simple_function');
       assert.ok(simpleFunc, 'Should find simple_function');
@@ -84,8 +56,7 @@ describe('PythonParser', () => {
 
     it('should extract async functions', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const asyncFunc = result.symbols.find(s => s.name === 'fetch_data');
       assert.ok(asyncFunc, 'Should find fetch_data');
@@ -95,8 +66,7 @@ describe('PythonParser', () => {
 
     it('should extract classes with inheritance', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const cls = result.symbols.find(s => s.name === 'DataProcessor' && s.kind === 'class');
       assert.ok(cls, 'Should find DataProcessor class');
@@ -111,8 +81,7 @@ describe('PythonParser', () => {
 
     it('should extract methods with decorators', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const staticMethod = result.symbols.find(s => s.name === 'validate' && s.parentName === 'DataProcessor');
       assert.ok(staticMethod, 'Should find validate method');
@@ -129,8 +98,7 @@ describe('PythonParser', () => {
 
     it('should extract constructors', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const init = result.symbols.find(s => s.name === '__init__' && s.parentName === 'DataProcessor');
       assert.ok(init, 'Should find __init__');
@@ -139,8 +107,7 @@ describe('PythonParser', () => {
 
     it('should extract module-level constants', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const constant = result.symbols.find(s => s.name === 'MAX_RETRIES');
       assert.ok(constant, 'Should find MAX_RETRIES constant');
@@ -149,8 +116,7 @@ describe('PythonParser', () => {
 
     it('should mark private methods as not exported', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const privateMethod = result.symbols.find(s => s.name === '_internal_method');
       assert.ok(privateMethod, 'Should find _internal_method');
@@ -159,8 +125,7 @@ describe('PythonParser', () => {
 
     it('should extract function calls', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('simple-function.py');
-      const result = parser.parse(source, 'simple-function.py');
+      const result = parseFixture('simple-function.py');
 
       const calls = result.relationships.filter(r => r.kind === 'calls');
       assert.ok(calls.length > 0, 'Should find some calls');
@@ -170,8 +135,7 @@ describe('PythonParser', () => {
   describe('parse — protocol-class.py', () => {
     it('should detect Protocol as interface', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('protocol-class.py');
-      const result = parser.parse(source, 'protocol-class.py');
+      const result = parseFixture('protocol-class.py');
 
       const protocol = result.symbols.find(s => s.name === 'Serializable');
       assert.ok(protocol, 'Should find Serializable');
@@ -185,8 +149,7 @@ describe('PythonParser', () => {
 
     it('should detect ABC as abstract class', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('protocol-class.py');
-      const result = parser.parse(source, 'protocol-class.py');
+      const result = parseFixture('protocol-class.py');
 
       const abc = result.symbols.find(s => s.name === 'AbstractHandler');
       assert.ok(abc, 'Should find AbstractHandler');
@@ -196,8 +159,7 @@ describe('PythonParser', () => {
 
     it('should detect dataclass decorator', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('protocol-class.py');
-      const result = parser.parse(source, 'protocol-class.py');
+      const result = parseFixture('protocol-class.py');
 
       const config = result.symbols.find(s => s.name === 'Config');
       assert.ok(config, 'Should find Config dataclass');
@@ -207,8 +169,7 @@ describe('PythonParser', () => {
 
     it('should extract abstract methods', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('protocol-class.py');
-      const result = parser.parse(source, 'protocol-class.py');
+      const result = parseFixture('protocol-class.py');
 
       const abstractMethod = result.symbols.find(s => s.name === 'handle' && s.parentName === 'AbstractHandler');
       assert.ok(abstractMethod, 'Should find abstract handle method');
@@ -217,8 +178,7 @@ describe('PythonParser', () => {
 
     it('should extract docstrings', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('protocol-class.py');
-      const result = parser.parse(source, 'protocol-class.py');
+      const result = parseFixture('protocol-class.py');
 
       const config = result.symbols.find(s => s.name === 'Config');
       assert.ok(config?.docComment, 'Config should have docstring');

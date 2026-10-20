@@ -1,77 +1,30 @@
 /**
- * admin/routes/users.ts — User management endpoints.
+ * admin/routes/users.ts (facade) — User management endpoints.
  * SA4E-50: All admin-db calls are awaited; route handlers are async.
+ *
+ * Implementation submodules (same directory):
+ * - users-profile-routes.ts  — impersonate + self-service profile
+ * - users-password-routes.ts — admin reset/change password
+ * - users-access-guard.ts    — access-group privilege-escalation check (SEC)
  */
 
 import { Hono } from 'hono';
 import {
-  getUserById, getUserPermissions, getUsers, createUser,
-  updateUserStatus, deleteUser, resetUserPassword, changePassword,
+  getUserById, getUsers, createUser,
+  updateUserStatus, deleteUser,
   invalidateUserSessions, getUserSessions, recordAudit,
-  getGroupById, getGroupPermissionIds,
   updateUserEmail, getDbAdapter,
 } from '../../../admin/admin-db.js';
 import type { AdminContext } from './context.js';
+import { registerProfileRoutes } from './users-profile-routes.js';
+import { registerPasswordRoutes } from './users-password-routes.js';
+import { checkGroupEscalation, auditEscalationDenied } from './users-access-guard.js';
 
 export function createUsersRoutes(ctx: AdminContext): Hono {
   const app = new Hono();
 
-  app.get('/api/admin/impersonate/:userId', async (c) => {
-    const user = await ctx.requireAuth(c);
-    if (user instanceof Response) return user;
-    const permCheck = await ctx.requirePermission(c, user.userId, 'RBAC_MANAGE');
-    if (permCheck instanceof Response) return permCheck;
-    const targetId = c.req.param('userId');
-    const [target, targetPerms] = await Promise.all([
-      getUserById(targetId),
-      getUserPermissions(targetId),
-    ]);
-    if (!target) return c.json({ error: 'User not found' }, 404);
-    return c.json({
-      userId: target.userId, username: target.username,
-      accessGroupId: target.accessGroupId,
-      permissions: targetPerms.map(p => p.permissionId),
-      roleData: targetPerms.reduce((acc, p) => { acc[p.permissionId] = p.roleData; return acc; }, {} as any),
-    });
-  });
-
-  app.get('/api/admin/profile', async (c) => {
-    const user = await ctx.requireAuth(c);
-    if (user instanceof Response) return user;
-    const requestedId = c.req.query('userId');
-    let targetId = user.userId;
-    if (requestedId && requestedId !== user.userId) {
-      const { has } = await ctx.checkPermission(user.userId, 'USER_MANAGE');
-      if (!has) {
-        await recordAudit(user.userId, user.username, 'PROFILE_ACCESS_DENIED', 'users', requestedId, 'IDOR attempt');
-        return c.json({ error: 'Forbidden: cannot access another user profile' }, 403);
-      }
-      targetId = requestedId;
-    }
-    const [dbUser, permissions] = await Promise.all([
-      getUserById(targetId),
-      getUserPermissions(targetId),
-    ]);
-    if (!dbUser) return c.json({ error: 'User not found' }, 404);
-    return c.json({
-      userId: dbUser.userId, username: dbUser.username, email: dbUser.email || '',
-      group: dbUser.accessGroupId, permissions: permissions.map(p => p.permissionId),
-      lastLogin: dbUser.lastLogin || new Date().toISOString(),
-      forcePasswordChange: dbUser.forcePasswordChange || false,
-    });
-  });
-
-  app.post('/api/admin/profile', async (c) => {
-    const user = await ctx.requireAuth(c);
-    if (user instanceof Response) return user;
-    const { email } = await c.req.json();
-    if (email !== undefined) {
-      await ctx.db.user.updateEmail(user.userId, email);
-      await recordAudit(user.userId, user.username, 'UPDATE_PROFILE', 'users', user.userId, JSON.stringify({ email }));
-    }
-    const dbUser = await getUserById(user.userId);
-    return c.json({ success: true, user: { userId: dbUser?.userId, username: dbUser?.username, email: dbUser?.email } });
-  });
+  registerProfileRoutes(app, ctx);
+  registerPasswordRoutes(app, ctx);
 
   app.get('/api/admin/users', async (c) => {
     const user = await ctx.requireAuth(c);
@@ -110,18 +63,14 @@ export function createUsersRoutes(ctx: AdminContext): Hono {
       if (!username || !password || !accessGroupId) return c.json({ error: 'username, password, and accessGroupId are required' }, 400);
       if (username.length < 3) return c.json({ error: 'Username must be at least 3 characters' }, 400);
       if (password.length < 6) return c.json({ error: 'Password must be at least 6 characters' }, 400);
-      const [group, creatorPerms] = await Promise.all([
-        getGroupById(accessGroupId),
-        getUserPermissions(user.userId),
-      ]);
-      if (!group) return c.json({ error: 'Access group not found' }, 400);
-      const creatorPermSet = new Set(creatorPerms.map(p => p.permissionId));
-      const targetPerms = await getGroupPermissionIds(accessGroupId);
-      const escalated = targetPerms.filter(p => !creatorPermSet.has(p));
-      if (escalated.length > 0) {
-        await recordAudit(user.userId, user.username, 'CREATE_USER_DENIED', 'users', undefined, JSON.stringify({ username, accessGroupId, escalatedPermissions: escalated }));
-        return c.json({ error: 'Cannot assign an access group with privileges higher than your own', escalatedPermissions: escalated }, 403);
+
+      const guard = await checkGroupEscalation(user.userId, accessGroupId);
+      if (!guard.ok) {
+        if (guard.reason === 'group-not-found') return c.json({ error: 'Access group not found' }, 400);
+        await auditEscalationDenied(user, 'CREATE_USER_DENIED', undefined, { username, accessGroupId, escalatedPermissions: guard.escalatedPermissions });
+        return c.json({ error: 'Cannot assign an access group with privileges higher than your own', escalatedPermissions: guard.escalatedPermissions }, 403);
       }
+
       const newUser = await createUser(username, email || '', password, accessGroupId);
       await recordAudit(user.userId, user.username, 'CREATE_USER', 'users', newUser.userId, JSON.stringify({ username, accessGroupId }));
       return c.json({ success: true, user: newUser }, 201);
@@ -132,92 +81,9 @@ export function createUsersRoutes(ctx: AdminContext): Hono {
     }
   });
 
-  app.put('/api/admin/users/:id/status', async (c) => {
-    const user = await ctx.requireAuth(c);
-    if (user instanceof Response) return user;
-    const permCheck = await ctx.requirePermission(c, user.userId, 'USER_MANAGE');
-    if (permCheck instanceof Response) return permCheck;
-    const targetId = c.req.param('id');
-    const { status } = await c.req.json();
-    if (!status || !['ACTIVE', 'DISABLED'].includes(status)) return c.json({ error: 'Invalid status. Must be ACTIVE or DISABLED' }, 400);
-    const target = await getUserById(targetId);
-    if (!target) return c.json({ error: 'User not found' }, 404);
-    if (target.username === 'admin' && status === 'DISABLED') return c.json({ error: 'Cannot disable system admin' }, 403);
-    const sessionsTerminated = await updateUserStatus(targetId, status);
-    await recordAudit(user.userId, user.username, 'UPDATE_USER_STATUS', 'users', targetId, JSON.stringify({ status, sessionsTerminated }));
-    return c.json({ success: true, sessionsTerminated });
-  });
-
-  app.put('/api/admin/users/:id', async (c) => {
-    const user = await ctx.requireAuth(c);
-    if (user instanceof Response) return user;
-    const permCheck = await ctx.requirePermission(c, user.userId, 'USER_MANAGE');
-    if (permCheck instanceof Response) return permCheck;
-    const targetId = c.req.param('id');
-    try {
-      const { username, email, accessGroupId } = await c.req.json();
-      const target = await getUserById(targetId);
-      if (!target) return c.json({ error: 'User not found' }, 404);
-      if (target.username === 'admin' && username && username !== 'admin') return c.json({ error: 'Cannot rename system admin' }, 403);
-      
-      // Validate email if provided
-      if (email !== undefined && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return c.json({ error: 'Invalid email format' }, 400);
-      }
-      
-      // If accessGroupId provided, validate it exists and no privilege escalation
-      if (accessGroupId !== undefined) {
-        const [group, creatorPerms] = await Promise.all([
-          getGroupById(accessGroupId),
-          getUserPermissions(user.userId),
-        ]);
-        if (!group) return c.json({ error: 'Access group not found' }, 400);
-        const creatorPermSet = new Set(creatorPerms.map(p => p.permissionId));
-        const targetPerms = await getGroupPermissionIds(accessGroupId);
-        const escalated = targetPerms.filter(p => !creatorPermSet.has(p));
-        if (escalated.length > 0) {
-          await recordAudit(user.userId, user.username, 'UPDATE_USER_DENIED', 'users', targetId, JSON.stringify({ accessGroupId, escalatedPermissions: escalated }));
-          return c.json({ error: 'Cannot assign an access group with privileges higher than your own', escalatedPermissions: escalated }, 403);
-        }
-      }
-      
-      // Update user - we'll update fields that were provided
-      if (username !== undefined && username !== target.username) {
-        const adapter = getDbAdapter();
-        await adapter.runAsync('UPDATE users SET username = ? WHERE user_id = ?', [username, targetId]);
-      }
-      if (email !== undefined && email !== target.email) {
-        await updateUserEmail(targetId, email);
-      }
-      if (accessGroupId !== undefined && accessGroupId !== target.accessGroupId) {
-        const adapter = getDbAdapter();
-        await adapter.runAsync('UPDATE users SET access_group_id = ? WHERE user_id = ?', [accessGroupId, targetId]);
-      }
-      
-      const updated = await getUserById(targetId);
-      await recordAudit(user.userId, user.username, 'UPDATE_USER', 'users', targetId, JSON.stringify({ username, email, accessGroupId }));
-      return c.json({ success: true, user: updated });
-    } catch (err: any) {
-      if (err.message?.includes('UNIQUE constraint')) return c.json({ error: 'Username already exists' }, 409);
-      ctx.logger.error({ err }, 'Update user error');
-      return c.json({ error: err.message || 'Internal error' }, 500);
-    }
-  });
-
-  app.delete('/api/admin/users/:id', async (c) => {
-    const user = await ctx.requireAuth(c);
-    if (user instanceof Response) return user;
-    const permCheck = await ctx.requirePermission(c, user.userId, 'USER_MANAGE');
-    if (permCheck instanceof Response) return permCheck;
-    const targetId = c.req.param('id');
-    try {
-      const target = await getUserById(targetId);
-      if (!target) return c.json({ error: 'User not found' }, 404);
-      await deleteUser(targetId);
-      await recordAudit(user.userId, user.username, 'DELETE_USER', 'users', targetId, JSON.stringify({ username: target.username }));
-      return c.json({ success: true });
-    } catch (err: any) { return c.json({ error: err.message }, 400); }
-  });
+  app.put('/api/admin/users/:id/status', (c) => updateStatusRoute(c, ctx));
+  app.put('/api/admin/users/:id', (c) => updateUserRoute(c, ctx));
+  app.delete('/api/admin/users/:id', (c) => deleteUserRoute(c, ctx));
 
   app.post('/api/admin/users/:id/force-logout', async (c) => {
     const user = await ctx.requireAuth(c);
@@ -232,35 +98,89 @@ export function createUsersRoutes(ctx: AdminContext): Hono {
     return c.json({ success: true, terminated });
   });
 
-  app.post('/api/admin/users/:id/reset-password', async (c) => {
-    const user = await ctx.requireAuth(c);
-    if (user instanceof Response) return user;
-    const permCheck = await ctx.requirePermission(c, user.userId, 'USER_MANAGE');
-    if (permCheck instanceof Response) return permCheck;
-    const targetId = c.req.param('id');
-    const target = await getUserById(targetId);
-    if (!target) return c.json({ error: 'User not found' }, 404);
-    const temporaryPassword = await resetUserPassword(targetId);
-    await invalidateUserSessions(targetId);
-    await recordAudit(user.userId, user.username, 'RESET_PASSWORD', 'users', targetId);
-    return c.json({ success: true, temporaryPassword });
-  });
-
-  app.post('/api/admin/users/:id/change-password', async (c) => {
-    const user = await ctx.requireAuth(c);
-    if (user instanceof Response) return user;
-    const permCheck = await ctx.requirePermission(c, user.userId, 'USER_MANAGE');
-    if (permCheck instanceof Response) return permCheck;
-    const targetId = c.req.param('id');
-    const target = await getUserById(targetId);
-    if (!target) return c.json({ error: 'User not found' }, 404);
-    const { newPassword } = await c.req.json();
-    if (!newPassword || newPassword.length < 6) return c.json({ error: 'Password must be at least 6 characters' }, 400);
-    await changePassword(targetId, newPassword);
-    await invalidateUserSessions(targetId);
-    await recordAudit(user.userId, user.username, 'CHANGE_PASSWORD_ADMIN', 'users', targetId);
-    return c.json({ success: true });
-  });
-
   return app;
+}
+
+/** PUT /api/admin/users/:id/status — enable/disable; system admin protected. */
+async function updateStatusRoute(c: any, ctx: AdminContext) {
+  const user = await ctx.requireAuth(c);
+  if (user instanceof Response) return user;
+  const permCheck = await ctx.requirePermission(c, user.userId, 'USER_MANAGE');
+  if (permCheck instanceof Response) return permCheck;
+  const targetId = c.req.param('id');
+  const { status } = await c.req.json();
+  if (!status || !['ACTIVE', 'DISABLED'].includes(status)) return c.json({ error: 'Invalid status. Must be ACTIVE or DISABLED' }, 400);
+  const target = await getUserById(targetId);
+  if (!target) return c.json({ error: 'User not found' }, 404);
+  if (target.username === 'admin' && status === 'DISABLED') return c.json({ error: 'Cannot disable system admin' }, 403);
+  const sessionsTerminated = await updateUserStatus(targetId, status);
+  await recordAudit(user.userId, user.username, 'UPDATE_USER_STATUS', 'users', targetId, JSON.stringify({ status, sessionsTerminated }));
+  return c.json({ success: true, sessionsTerminated });
+}
+
+/** PUT /api/admin/users/:id — update username/email/accessGroup (escalation-guarded). */
+async function updateUserRoute(c: any, ctx: AdminContext) {
+  const user = await ctx.requireAuth(c);
+  if (user instanceof Response) return user;
+  const permCheck = await ctx.requirePermission(c, user.userId, 'USER_MANAGE');
+  if (permCheck instanceof Response) return permCheck;
+  const targetId = c.req.param('id');
+  try {
+    const { username, email, accessGroupId } = await c.req.json();
+    const target = await getUserById(targetId);
+    if (!target) return c.json({ error: 'User not found' }, 404);
+    if (target.username === 'admin' && username && username !== 'admin') return c.json({ error: 'Cannot rename system admin' }, 403);
+
+    // Validate email if provided
+    if (email !== undefined && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return c.json({ error: 'Invalid email format' }, 400);
+    }
+
+    // If accessGroupId provided, validate it exists and no privilege escalation
+    if (accessGroupId !== undefined) {
+      const guard = await checkGroupEscalation(user.userId, accessGroupId);
+      if (!guard.ok) {
+        if (guard.reason === 'group-not-found') return c.json({ error: 'Access group not found' }, 400);
+        await auditEscalationDenied(user, 'UPDATE_USER_DENIED', targetId, { accessGroupId, escalatedPermissions: guard.escalatedPermissions });
+        return c.json({ error: 'Cannot assign an access group with privileges higher than your own', escalatedPermissions: guard.escalatedPermissions }, 403);
+      }
+    }
+
+    // Update user - we'll update fields that were provided
+    if (username !== undefined && username !== target.username) {
+      const adapter = getDbAdapter();
+      await adapter.runAsync('UPDATE users SET username = ? WHERE user_id = ?', [username, targetId]);
+    }
+    if (email !== undefined && email !== target.email) {
+      await updateUserEmail(targetId, email);
+    }
+    if (accessGroupId !== undefined && accessGroupId !== target.accessGroupId) {
+      const adapter = getDbAdapter();
+      await adapter.runAsync('UPDATE users SET access_group_id = ? WHERE user_id = ?', [accessGroupId, targetId]);
+    }
+
+    const updated = await getUserById(targetId);
+    await recordAudit(user.userId, user.username, 'UPDATE_USER', 'users', targetId, JSON.stringify({ username, email, accessGroupId }));
+    return c.json({ success: true, user: updated });
+  } catch (err: any) {
+    if (err.message?.includes('UNIQUE constraint')) return c.json({ error: 'Username already exists' }, 409);
+    ctx.logger.error({ err }, 'Update user error');
+    return c.json({ error: err.message || 'Internal error' }, 500);
+  }
+}
+
+/** DELETE /api/admin/users/:id — delete user account. */
+async function deleteUserRoute(c: any, ctx: AdminContext) {
+  const user = await ctx.requireAuth(c);
+  if (user instanceof Response) return user;
+  const permCheck = await ctx.requirePermission(c, user.userId, 'USER_MANAGE');
+  if (permCheck instanceof Response) return permCheck;
+  const targetId = c.req.param('id');
+  try {
+    const target = await getUserById(targetId);
+    if (!target) return c.json({ error: 'User not found' }, 404);
+    await deleteUser(targetId);
+    await recordAudit(user.userId, user.username, 'DELETE_USER', 'users', targetId, JSON.stringify({ username: target.username }));
+    return c.json({ success: true });
+  } catch (err: any) { return c.json({ error: err.message }, 400); }
 }

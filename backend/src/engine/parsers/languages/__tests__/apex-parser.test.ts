@@ -2,39 +2,14 @@
  * KSA-191: Apex Parser Unit Tests.
  * Tests symbol extraction, relationship extraction (DML, SOQL, triggers).
  * Requires tree-sitter-apex.wasm — tests skip gracefully if unavailable.
+ * setup/readFixture/parseFixture extracted to apex-parser.fixtures.ts
+ * (line-count gate <=200).
  */
 
 import { describe, it, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { Parser, Language } from 'web-tree-sitter';
-import * as path from 'path';
-import * as fs from 'fs';
 import ApexParser from '../apex-parser.js';
-
-const FIXTURES_DIR = path.resolve(__dirname, 'fixtures/apex');
-const GRAMMAR_PATH = path.resolve(__dirname, '../../grammars/tree-sitter-apex.wasm');
-
-let parser: ApexParser;
-let grammarAvailable = false;
-
-async function setup(): Promise<void> {
-  await Parser.init();
-  const tsParser = new Parser();
-
-  if (!fs.existsSync(GRAMMAR_PATH)) {
-    console.error(`[SKIP] Apex WASM grammar not found at ${GRAMMAR_PATH}`);
-    return;
-  }
-
-  const language = await Language.load(GRAMMAR_PATH);
-  tsParser.setLanguage(language);
-  parser = new ApexParser(tsParser, 'apex');
-  grammarAvailable = true;
-}
-
-function readFixture(name: string): string {
-  return fs.readFileSync(path.join(FIXTURES_DIR, name), 'utf-8');
-}
+import { setup, parser, grammarAvailable, parseFixture } from './apex-parser.fixtures.js';
 
 describe('ApexParser', () => {
   before(async () => {
@@ -52,8 +27,7 @@ describe('ApexParser', () => {
   describe('parse — SimpleClass.cls', () => {
     it('should extract class symbol', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('SimpleClass.cls');
-      const result = parser.parse(source, 'SimpleClass.cls');
+      const result = parseFixture('SimpleClass.cls');
 
       const cls = result.symbols.find(s => s.kind === 'apex_class');
       assert.ok(cls, 'Should find class symbol');
@@ -64,8 +38,7 @@ describe('ApexParser', () => {
 
     it('should have no relationships for empty class', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('SimpleClass.cls');
-      const result = parser.parse(source, 'SimpleClass.cls');
+      const result = parseFixture('SimpleClass.cls');
       assert.equal(result.relationships.length, 0);
     });
   });
@@ -73,8 +46,7 @@ describe('ApexParser', () => {
   describe('parse — ClassWithMethods.cls', () => {
     it('should extract class and methods', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('ClassWithMethods.cls');
-      const result = parser.parse(source, 'ClassWithMethods.cls');
+      const result = parseFixture('ClassWithMethods.cls');
 
       const cls = result.symbols.find(s => s.kind === 'apex_class');
       assert.ok(cls, 'Should find class');
@@ -90,8 +62,7 @@ describe('ApexParser', () => {
 
     it('should extract fields and constants', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('ClassWithMethods.cls');
-      const result = parser.parse(source, 'ClassWithMethods.cls');
+      const result = parseFixture('ClassWithMethods.cls');
 
       const props = result.symbols.filter(s => s.kind === 'property' || s.kind === 'constant');
       assert.ok(props.length >= 1, 'Should find at least 1 field/constant');
@@ -99,8 +70,7 @@ describe('ApexParser', () => {
 
     it('should extract constructor', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('ClassWithMethods.cls');
-      const result = parser.parse(source, 'ClassWithMethods.cls');
+      const result = parseFixture('ClassWithMethods.cls');
 
       const ctor = result.symbols.find(s => s.kind === 'constructor');
       assert.ok(ctor, 'Should find constructor');
@@ -109,8 +79,7 @@ describe('ApexParser', () => {
 
     it('should extract annotations as decorators', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('ClassWithMethods.cls');
-      const result = parser.parse(source, 'ClassWithMethods.cls');
+      const result = parseFixture('ClassWithMethods.cls');
 
       const updateMethod = result.symbols.find(s => s.name === 'updateAccount');
       if (updateMethod) {
@@ -121,8 +90,7 @@ describe('ApexParser', () => {
 
     it('should extract SOQL relationships', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('ClassWithMethods.cls');
-      const result = parser.parse(source, 'ClassWithMethods.cls');
+      const result = parseFixture('ClassWithMethods.cls');
 
       const soqlRels = result.relationships.filter(r => r.kind === 'soql');
       // May or may not find SOQL depending on AST node types
@@ -132,8 +100,7 @@ describe('ApexParser', () => {
 
     it('should extract DML relationships', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('ClassWithMethods.cls');
-      const result = parser.parse(source, 'ClassWithMethods.cls');
+      const result = parseFixture('ClassWithMethods.cls');
 
       const dmlRels = result.relationships.filter(r => r.kind === 'dml');
       assert.ok(Array.isArray(dmlRels));
@@ -143,8 +110,7 @@ describe('ApexParser', () => {
   describe('parse — ClassWithDML.cls', () => {
     it('should extract DML operations', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('ClassWithDML.cls');
-      const result = parser.parse(source, 'ClassWithDML.cls');
+      const result = parseFixture('ClassWithDML.cls');
 
       const dmlRels = result.relationships.filter(r => r.kind === 'dml');
       // DML extraction depends on tree-sitter-apex AST having dml_expression nodes
@@ -155,8 +121,7 @@ describe('ApexParser', () => {
   describe('parse — ClassWithSOQL.cls', () => {
     it('should extract SOQL queries', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('ClassWithSOQL.cls');
-      const result = parser.parse(source, 'ClassWithSOQL.cls');
+      const result = parseFixture('ClassWithSOQL.cls');
 
       const soqlRels = result.relationships.filter(r => r.kind === 'soql');
       assert.ok(Array.isArray(soqlRels));
@@ -166,8 +131,7 @@ describe('ApexParser', () => {
   describe('parse — TriggerExample.trigger', () => {
     it('should extract trigger symbol', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('TriggerExample.trigger');
-      const result = parser.parse(source, 'TriggerExample.trigger');
+      const result = parseFixture('TriggerExample.trigger');
 
       const trigger = result.symbols.find(s => s.modifiers?.includes('trigger'));
       assert.ok(trigger, 'Should find trigger symbol');
@@ -177,8 +141,7 @@ describe('ApexParser', () => {
 
     it('should extract trigger-on relationship', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('TriggerExample.trigger');
-      const result = parser.parse(source, 'TriggerExample.trigger');
+      const result = parseFixture('TriggerExample.trigger');
 
       const triggerOnRels = result.relationships.filter(r => r.kind === 'trigger-on');
       assert.ok(triggerOnRels.length >= 1, 'Should find trigger-on relationship');
@@ -187,8 +150,7 @@ describe('ApexParser', () => {
 
     it('should extract calls from trigger body', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('TriggerExample.trigger');
-      const result = parser.parse(source, 'TriggerExample.trigger');
+      const result = parseFixture('TriggerExample.trigger');
 
       const callsRels = result.relationships.filter(r => r.kind === 'calls');
       assert.ok(callsRels.length >= 1, 'Should find calls in trigger body');
@@ -198,8 +160,7 @@ describe('ApexParser', () => {
   describe('parse — InterfaceExample.cls', () => {
     it('should extract interface symbol', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('InterfaceExample.cls');
-      const result = parser.parse(source, 'InterfaceExample.cls');
+      const result = parseFixture('InterfaceExample.cls');
 
       const iface = result.symbols.find(s => s.kind === 'interface');
       assert.ok(iface, 'Should find interface symbol');
@@ -208,8 +169,7 @@ describe('ApexParser', () => {
 
     it('should extract interface methods', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('InterfaceExample.cls');
-      const result = parser.parse(source, 'InterfaceExample.cls');
+      const result = parseFixture('InterfaceExample.cls');
 
       const methods = result.symbols.filter(s => s.kind === 'method');
       assert.ok(methods.length >= 3, 'Should find at least 3 interface methods');
@@ -219,8 +179,7 @@ describe('ApexParser', () => {
   describe('parse — InheritanceExample.cls', () => {
     it('should extract inherits relationship', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('InheritanceExample.cls');
-      const result = parser.parse(source, 'InheritanceExample.cls');
+      const result = parseFixture('InheritanceExample.cls');
 
       const inheritsRels = result.relationships.filter(r => r.kind === 'inherits');
       assert.ok(inheritsRels.length >= 1, 'Should find inherits relationship');
@@ -230,8 +189,7 @@ describe('ApexParser', () => {
 
     it('should extract implements relationships', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('InheritanceExample.cls');
-      const result = parser.parse(source, 'InheritanceExample.cls');
+      const result = parseFixture('InheritanceExample.cls');
 
       const implRels = result.relationships.filter(r => r.kind === 'implements');
       assert.ok(implRels.length >= 1, 'Should find implements relationships');
@@ -241,8 +199,7 @@ describe('ApexParser', () => {
   describe('parse — MalformedClass.cls', () => {
     it('should return partial result with errors', () => {
       if (!grammarAvailable) return;
-      const source = readFixture('MalformedClass.cls');
-      const result = parser.parse(source, 'MalformedClass.cls');
+      const result = parseFixture('MalformedClass.cls');
 
       assert.ok(result, 'Should return a result');
       assert.ok(result.errors.length > 0, 'Should have parse errors');
