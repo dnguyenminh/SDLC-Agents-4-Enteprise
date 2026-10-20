@@ -7,7 +7,7 @@ export const UNIFIED_EXTENSIONS = [
   'kt', 'java', 'py', 'go', 'rs',
   'c', 'cpp', 'h', 'hpp',
   'cs', 'php', 'rb', 'scala', 'swift',
-  'cls', 'trigger', 'apex', 'soql', 'page', 'component', 'cmp', 'app', 'evt', 'intf', 'tokens', 'pega',
+  'cls', 'trigger', 'apex', 'soql', 'page', 'component', 'cmp', 'app', 'evt', 'intf', 'tokens',
   'html', 'jsp', 'xml', 'sql', 'properties', 'yml', 'yaml', 'css',
   'ps1'
 ] as const;

@@ -1,0 +1,12 @@
+test_case_id,task_id,caller_tab,expected_code,expected_result,description
+ST-01,{taskId from PS-02},{tabA},,queued/running snapshot,Immediate poll fields fromTabId/toTabId/createdAt (TC-002)
+ST-02,{taskId from PS-02},{tabA},,terminal completed+reply+completedAt,Poll to terminal (TC-002)
+ST-03,{taskId from PS-02},{tabA},,same snapshot,Post-terminal poll side-effect free (TC-002/TC-103)
+ST-04,{taskId in-flight},{tabA},,stable snapshot x50,Tight-loop polling no mutation (TC-103)
+ST-05,{taskId blocking},caller,PEER_006,caller rejected task still running->completed,Timeout then survival (TC-106/TC-205/TC-308)
+ST-06,{taskId blocking},caller,PEER_006,reject at 300s; completes at 300.5s visible,Boundary timing (TC-308)
+ST-07,{taskId terminal},{tabA},,snapshot until +60s then PEER_008,Post-terminal retention sweep (TC-404)
+ST-10,t-does-not-exist,{tabA},PEER_008,unknown peer task,Unknown id (TC-207/TC-309)
+ST-11,{taskId owned by tabA},{tabC},PEER_008,masked same as unknown,Non-owner no oracle (TC-607/TC-309)
+ST-12,{taskId cancelled},{tabA},,state=cancelled + message,PEER_009 poll result (TC-208)
+ST-13,{taskId queued-on-B},owner,,state=cancelled after B closes,Queued cancel visible (TC-310)

@@ -1,0 +1,6 @@
+test_case_id,projectId,workspaceRoot,rules_count,expected_http_code,expected_error
+E2E-API-01,proj-001,/workspace/pegaproject,10,202,
+E2E-API-02,,/workspace,5,400,PEGA-001
+E2E-API-03,proj-001,/workspace,5,401,PEGA-002
+E2E-API-04,proj-001,/workspace,50000,413,PEGA-003
+E2E-API-05,proj-001,/workspace,1,400,PEGA-005

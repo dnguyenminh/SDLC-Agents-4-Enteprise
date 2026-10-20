@@ -1,0 +1,10 @@
+test_case_id,scenario,action,expected_code,expected_result,description
+LC-01,two tabs distinct conversations,hold separate chats + 1 peer exchange each,,distinct session files workspaceRoot+tabId,"Per-tab isolation (TC-006/SIT-03)"
+LC-02,compaction in tabA only,drive tabA past threshold,,tabA compacts; tabB untouched,"Independent per-tab compaction (TC-006)"
+LC-03,close B while 2 queued,closeTab(tabB),PEER_009,queued tasks cancelled; threads+guards released,"Single cleanup point I-8 (TC-208/TC-310)"
+LC-04,session creation failure,force ensureSessionHost reject,PEER_003,task failed; B still takes user input,"UC-5 EF-1 (TC-211/SIT-16)"
+LC-05,host teardown,peerBus.dispose(),,waiters rejected; queued cancelled; maps cleared,"BR-12 teardown (TC-212)"
+LC-06,close B mid-turn,closeTab during running turn,,descriptive failure to caller; evictSessionHost; A functional,"Tab closed mid-task (TC-407/SIT-13)"
+LC-07,rename B mid-exchange,renameTab(B -> Reviewer-2),,tabId stable; task continues; agentName updated,"Rename continuity (TC-408/SIT-14)"
+LC-08,evict + reopen,close B then open new tab,,old key evicted; fresh host for new tabId,"evictSessionHost (TC-409)"
+LC-09,visibility toggle,setPeerVisibility(tabB,false),PEER_001,same as unregistered; nothing persisted,"SEC-02 optional (TC-610)"

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="0" dy="0" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="2" value="Test Coverage Overview - SA4E-374" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1" vertex="1" parent="1">
+<mxGeometry x="300" y="20" width="300" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="3" value="Requirements" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc" vertex="1" parent="1">
+<mxGeometry x="50" y="80" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="4" value="PBT\nUT\nIT\nE2E-API\nE2E-UI\nSIT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc" vertex="1" parent="1">
+<mxGeometry x="220" y="80" width="150" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="5" value="Exclude .pega files" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc" vertex="1" parent="1">
+<mxGeometry x="50" y="170" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="6" value="Exclude rules/" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc" vertex="1" parent="1">
+<mxGeometry x="50" y="230" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="7" value="Exclude .pega-cache" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc" vertex="1" parent="1">
+<mxGeometry x="50" y="290" width="120" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="8" value="Coverage Matrix" style="shape=table;html=1;" vertex="1" parent="1">
+<mxGeometry x="220" y="170" width="300" height="200" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

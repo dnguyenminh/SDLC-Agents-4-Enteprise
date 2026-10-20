@@ -46,14 +46,18 @@ export class IndexerHttpClientCore {
 	/** SA4E-215: Auto-register project if backend reports PROJECT_NOT_REGISTERED. */
 	protected async maybeAutoRegister(token?: string): Promise<boolean> {
 		if (this._autoRegisterAttempted) return false;
-		this._autoRegisterAttempted = true;
 		const workspaceFolders = vscode.workspace.workspaceFolders;
 		const workspaceFolder = workspaceFolders?.[0]?.uri.fsPath || '';
 		const folderName = workspaceFolder ? path.basename(workspaceFolder) : 'unknown';
 		const { getProjectId } = await import("../../extension");
 		const projectId = getProjectId();
 		if (!projectId) return false;
-		return this.registerProject(token, projectId, folderName, workspaceFolder);
+		const success = await this.registerProject(token, projectId, folderName, workspaceFolder);
+		if (success) {
+			this._autoRegisterAttempted = true;
+		}
+		// On failure, keep flag false to allow safe retry on next PROJECT_NOT_REGISTERED
+		return success;
 	}
 
 	/** SA4E-215: POST the project registration (15s timeout); true only on 2xx. */

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="681" dy="329" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="650" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="peer_registry_entry" value="&lt;b&gt;PEER_REGISTRY_ENTRY&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;PK tabId : string&lt;br/&gt;workspaceRoot : string&lt;br/&gt;agentName : string&lt;br/&gt;role : string&lt;br/&gt;capabilities : string[]&lt;br/&gt;model : string&lt;br/&gt;status : string&lt;br/&gt;registeredAt : datetime&lt;br/&gt;lastActivityAt : datetime" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=6;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="40" width="300" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="peer_task" value="&lt;b&gt;PEER_TASK&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;PK taskId : string&lt;br/&gt;FK fromTabId : string&lt;br/&gt;FK toTabId : string&lt;br/&gt;message : string&lt;br/&gt;mode : string&lt;br/&gt;state : string&lt;br/&gt;reply : string&lt;br/&gt;error : string&lt;br/&gt;createdAt : datetime&lt;br/&gt;startedAt : datetime&lt;br/&gt;completedAt : datetime" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=6;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="40" width="280" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="peer_thread" value="&lt;b&gt;PEER_THREAD&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;PK threadKey : string&lt;br/&gt;maxEntries : int&lt;br/&gt;createdAt : datetime&lt;br/&gt;lastActivityAt : datetime" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=6;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="40" width="240" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="rate_state" value="&lt;b&gt;RATE_STATE&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;PK tabId : string&lt;br/&gt;inboundTimestamps : string[]" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=6;spacingTop=4;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="380" width="260" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="peer_message" value="&lt;b&gt;PEER_MESSAGE&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;PK messageId : string&lt;br/&gt;FK threadKey : string&lt;br/&gt;fromTabId : string&lt;br/&gt;toTabId : string&lt;br/&gt;direction : string&lt;br/&gt;content : string&lt;br/&gt;FK taskId : string&lt;br/&gt;createdAt : datetime" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=6;spacingTop=4;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="400" width="280" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="guard_state" value="&lt;b&gt;GUARD_STATE&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;PK pairKey : string&lt;br/&gt;pingpongTurns : int&lt;br/&gt;windowStart : datetime" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;align=left;spacingLeft=6;spacingTop=4;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="400" width="240" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1" value="sends / receives [1 : 0..N]" style="rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.003;entryY=0.414;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="peer_registry_entry" target="peer_task" edge="1">
+                    <mxGeometry x="0.0011" y="-31" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r2" value="rate-limits inbound [1 : 1]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.58;entryY=0;entryDx=0;entryDy=0;" parent="1" source="peer_registry_entry" target="rate_state" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3" value="contains (bounded FIFO) [1 : 1..N]" style="rounded=1;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;" parent="1" source="peer_thread" target="peer_message" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="920" y="330"/>
+                            <mxPoint x="600" y="330"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r4" value="carries reply as message [1 : 1]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="peer_task" target="peer_message" edge="1">
+                    <mxGeometry x="-0.1765" y="-10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="r5" value="scoped to same pair key [1 : 1]" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" parent="1" source="guard_state" target="peer_thread" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>

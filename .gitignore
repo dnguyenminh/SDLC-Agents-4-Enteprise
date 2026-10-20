@@ -96,3 +96,7 @@ extension/src/__tests__/sa4e-356-sq1-outside/
 # persists full messages incl. reasoning/thinking + tool results as JSONL into
 # workspace .pi/sessions/; classification Internal — never commit to VCS. CWE-312/538)
 .pi/sessions/
+
+# SA4E derived artifacts (DOCX exports + embedded-md intermediates)
+documents/**/*.docx
+documents/*/*-embedded.md

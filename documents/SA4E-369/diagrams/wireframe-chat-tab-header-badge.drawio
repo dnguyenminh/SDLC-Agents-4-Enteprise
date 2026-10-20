@@ -1,0 +1,30 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="n1" value="Chat Window" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="100" y="80" width="800" height="500" as="geometry"/>
+    </mxCell>
+    <mxCell id="n2" value="Tab Bar" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="120" y="110" width="760" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="n3" value="Tab A &lt;tabId=1&gt;" style="rounded=8;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="140" y="125" width="120" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="n4" value="Tab B &lt;tabId=2&gt;" style="rounded=8;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="280" y="125" width="120" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="n5" value="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="380" y="120" width="28" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="n6" value="Peer inbound badge" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;" vertex="1" parent="1">
+      <mxGeometry x="360" y="160" width="80" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="n7" value="Transcript Area" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="120" y="200" width="760" height="340" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;" edge="1" parent="1" source="n4" target="n5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

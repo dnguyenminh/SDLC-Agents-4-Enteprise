@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="413" dy="199" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="500" math="0" shadow="0">
+    <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+            <mxGeometry x="50" y="215" width="30" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="queued" value="queued" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+            <mxGeometry x="140" y="200" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="running" value="running" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+            <mxGeometry x="390" y="200" width="170" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="completed" value="completed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+            <mxGeometry x="660" y="80" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="failed" value="failed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+            <mxGeometry x="660" y="200" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="cancelled" value="cancelled" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" parent="1" vertex="1">
+            <mxGeometry x="660" y="320" width="180" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="end" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+            <mxGeometry x="950" y="215" width="30" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" value="peer_send accepted (guards passed)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="start" target="queued" edge="1">
+            <mxGeometry relative="1" as="geometry">
+<mxPoint x="0" y="-52" as="offset"/>
+</mxGeometry>
+        </mxCell>
+        <mxCell id="e2" value="guard tripped at send (PEER_004 / PEER_005)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="start" target="failed" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="65" y="420"/>
+                    <mxPoint x="610" y="420"/>
+                    <mxPoint x="610" y="290"/>
+                    <mxPoint x="705" y="290"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="target picks up (auto-run starts)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="queued" target="running" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="target tab closed before pickup (PEER_009)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="queued" target="cancelled" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="225" y="350"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="reply captured" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="running" target="completed" edge="1">
+            <mxGeometry relative="1" as="geometry">
+                <Array as="points">
+                    <mxPoint x="475" y="110"/>
+                </Array>
+            </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="governance rejection (PEER_007) / turn error (PEER_003)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="running" target="failed" edge="1">
+            <mxGeometry relative="1" as="geometry">
+<mxPoint x="0" y="58" as="offset"/>
+</mxGeometry>
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="completed" target="end" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" parent="1" source="failed" target="end" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="cancelled" target="end" edge="1">
+            <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+    </root>
+</mxGraphModel>

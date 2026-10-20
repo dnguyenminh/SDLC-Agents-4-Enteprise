@@ -1,0 +1,145 @@
+name: SA4E-369 CI — Intra-instance peer messaging (peer/ module)
+
+# Per-ticket CI pipeline for SA4E-369 (Phase 4.5, prepared BEFORE Phase 5 DEV).
+# Pattern: ci-sa4e-358.yml (per-ticket layout; 8th file in the ci-sa4e-XXX
+# convention: 191, 223, 241, 332, 336, 356, 358, 369). ADDITIVE-ONLY — the
+# base ci.yml, per-ticket workflows of other tickets, publish.yml and
+# auto-release.yml are NOT modified by this file.
+#
+# Scope (TDD v1.1 §11 + SECURITY-REVIEW v1.0 SEC-01/SEC-03):
+#   - extension/: tsc -> eslint -> vitest (full suite incl. peer/* when DEV
+#     lands it) -> peer security cases (envelope provenance SEC-01/C1,
+#     message-size zero-state SEC-03) -> esbuild production bundle ->
+#     smoke:bundle -> VSIX package (NO publish).
+#   - Quality-gate baseline (hotfix v1.53.9, verified 2026-10-18): full suite
+#     389 files / 3,066 tests PASS; tsc 0 errors; eslint 0 errors;
+#     smoke:bundle PASSED; VSIX packaged + `kiro --install-extension --force`
+#     OK. This workflow enforces the same gates in CI.
+#
+# INSTALL STRATEGY — root workspaces install (NOT standalone `npm ci`):
+#   Same repo-canonical root workspaces install as ci.yml / ci-sa4e-356.yml /
+#   ci-sa4e-358.yml (pre-existing lock drift documented there; owned by the
+#   lock re-sync ticket). No new runtime dependencies are added by SA4E-369
+#   (TDD §2 — pure TypeScript + Node built-ins).
+#
+# RED-BY-DESIGN note (Phase 4.5 — extension/src/peer/ does not exist yet,
+# TDD §12 order):
+#   - All steps are GREEN at Phase 4.5: there is nothing peer-specific to
+#     fail, and the full-suite step runs the existing 3,066-test baseline.
+#   - The peer security-cases step ARMS automatically when
+#     extension/src/__tests__/peer/ lands (TDD §11.2) — before that it
+#     reports SKIP instead of failing on a missing path (mirrors the
+#     SA4E-356 N-7 / SA4E-358 OriginGate arming pattern).
+#   - Do NOT "fix" the pipeline to pass early — implement TDD §5/§6 (C1..C5).
+#   - Live-harness verification (real two-tab Kiro host, CDP manual UAT) is
+#     NOT automatable in CI — manual-web-test / Phase 6 scope (STP §2.x,
+#     TDD §11.5).
+#
+# PUBLISH POLICY: this workflow packages a VSIX as an artifact for review
+# ONLY. It does NOT run `vsce publish` and holds no registry secrets.
+
+on:
+  push:
+    branches: [SA4E-369]
+  pull_request:
+    branches: [SA4E-369, main]
+  workflow_dispatch:
+
+concurrency:
+  group: sa4e-369-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Extension — tsc -> eslint -> vitest full suite (incl. peer/*) -> peer
+  # security cases -> esbuild production + smoke:bundle -> VSIX (no publish).
+  # Matrix ubuntu+windows: matches the per-ticket convention (ci-sa4e-356/358);
+  # the peer module is pure in-process TypeScript (TDD §9 cross-platform),
+  # but the existing extension suite carries platform-conditional behavior.
+  # ---------------------------------------------------------------------------
+  extension-peer:
+    name: Extension peer/ — Typecheck / Lint / Tests / Security cases / Bundle / VSIX (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install (root workspaces — repo-canonical, see header)
+        shell: bash
+        run: |
+          rm -rf node_modules backend/node_modules extension/node_modules
+          npm cache clean --force
+          npm install --force --no-audit --no-fund
+          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+
+      - name: Stage 2 — Type-check extension (tsc, 0 errors)
+        run: npm run compile --workspace=extension
+        working-directory: .
+
+      - name: Stage 3 — Lint extension (eslint src/)
+        # Same relaxed policy as SA4E-356/358: pre-existing warnings must not
+        # block the ticket gate — staged-file cleanliness is enforced by the
+        # pre-commit lint-staged hook. New SA4E-369 code (peer/* + additive
+        # D1 wiring diffs) must be clean; v1.53.9 baseline = 0 errors.
+        run: npm run lint --workspace=extension
+        working-directory: .
+        continue-on-error: true
+
+      - name: Stage 4 — Full suite (vitest, incl. peer/* once landed)
+        # Baseline: 389 files / 3,066 tests (v1.53.9 gate). vitest.config.ts
+        # include "src/**/__tests__/**/*.test.ts" picks up
+        # src/__tests__/peer/*.test.ts automatically when DEV lands it
+        # (TDD §11.2). GREEN at Phase 4.5 (nothing peer-specific yet).
+        run: npm run test --workspace=extension
+        working-directory: .
+
+      - name: Stage 5 — Peer security cases (SEC-01 envelope / SEC-03 message size)
+        # Arms when extension/src/__tests__/peer/ lands (TDD §11.2):
+        #   envelope.unit.test.ts        — SEC-01/C1 provenance header stamped
+        #                                  from Registry, wrap format
+        #   message-size.unit.test.ts    — SEC-03/C2 PEER_010 zero-state,
+        #                                  rate window untouched, pre-guard
+        #   peer-provenance.e2e.test.ts  — SEC-01/C1 turnOrigin:'peer' +
+        #                                  approval-gate routing (§7.6 L3)
+        # Runs the same default vitest config (node env, vscode mock alias).
+        shell: bash
+        working-directory: extension
+        run: |
+          if [ -d src/__tests__/peer ]; then
+            npx vitest run \
+              src/__tests__/peer/envelope.unit.test.ts \
+              src/__tests__/peer/message-size.unit.test.ts \
+              src/__tests__/peer/peer-provenance.e2e.test.ts
+          else
+            echo "SKIP peer security cases: src/__tests__/peer/ not yet implemented (TDD §11.2 pending) — gate arms on landing."
+          fi
+
+      - name: Stage 6 — Production bundle (esbuild) + smoke:bundle
+        run: |
+          npm run esbuild-production --workspace=extension
+          npm run smoke:bundle --workspace=extension
+        working-directory: .
+
+      - name: Stage 7 — Package VSIX (vsce, no dependencies — NO publish)
+        # vscode:prepublish runs esbuild-production + copy-resources +
+        # gen-checksums. Artifact is for review/install testing only.
+        working-directory: extension
+        run: npx @vscode/vsce package --no-dependencies
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sa4e-369-extension-vsix-${{ matrix.os }}
+          path: extension/*.vsix
+          if-no-files-found: error

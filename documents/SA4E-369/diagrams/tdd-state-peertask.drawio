@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="798" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="t6" value="SA4E-369 TDD — PeerTask State Machine (terminal: completed | failed | cancelled — AC2)" style="text;html=1;fontSize=15;fontStyle=1;align=center;" vertex="1" parent="1"><mxGeometry x="250" y="15" width="680" height="30" as="geometry"/></mxCell>
+<mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="80" y="250" width="30" height="30" as="geometry"/></mxCell>
+<mxCell id="queued" value="queued&#10;───&#10;guards passed → task created&#10;enqueued FIFO · peer:inbound" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1"><mxGeometry x="160" y="225" width="190" height="90" as="geometry"/></mxCell>
+<mxCell id="running" value="running&#10;───&#10;turn started in target per-tab session&#10;status=busy · startedAt stamped" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1"><mxGeometry x="430" y="225" width="200" height="90" as="geometry"/></mxCell>
+<mxCell id="done" value="completed&#10;───&#10;reply captured · thread appended&#10;waiter resolved / polls observe" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1"><mxGeometry x="700" y="90" width="210" height="90" as="geometry"/></mxCell>
+<mxCell id="failed" value="failed&#10;───&#10;PEER_003 turn/session error&#10;PEER_007 governance (authoritative)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1"><mxGeometry x="700" y="250" width="210" height="90" as="geometry"/></mxCell>
+<mxCell id="cancelled" value="cancelled&#10;───&#10;PEER_009 target closed while queued&#10;or host teardown" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1"><mxGeometry x="430" y="420" width="200" height="90" as="geometry"/></mxCell>
+<mxCell id="end1" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1"><mxGeometry x="965" y="125" width="26" height="26" as="geometry"/></mxCell>
+<mxCell id="end2" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1"><mxGeometry x="965" y="282" width="26" height="26" as="geometry"/></mxCell>
+<mxCell id="end3" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1"><mxGeometry x="680" y="445" width="26" height="26" as="geometry"/></mxCell>
+<mxCell id="no6" value="PEER_006 (blocking timeout 300s) is CALLER-SIDE ONLY — NOT a task state; task continues and stays pollable (BR-13)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1"><mxGeometry x="60" y="420" width="320" height="70" as="geometry"/></mxCell>
+<mxCell id="nost" value="PEER_001/002/004/005: rejected BEFORE creation — no task object exists (zero-state, I-7)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1"><mxGeometry x="60" y="510" width="320" height="55" as="geometry"/></mxCell>
+<mxCell id="ret" value="post-terminal retention 60s → task deleted from store (bounded memory §8.2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="700" y="560" width="210" height="50" as="geometry"/></mxCell>
+<mxCell id="s1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=9;" edge="1" parent="1" source="start" target="queued"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="s2" value="target idle (dequeue)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=9;" edge="1" parent="1" source="queued" target="running"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="s3" value="turn output captured" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=9;" edge="1" parent="1" source="running" target="done"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="s4" value="turn error / governance" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=9;" edge="1" parent="1" source="running" target="failed"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="s5" value="deregister / dispose" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=9;" edge="1" parent="1" source="queued" target="cancelled"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="s6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=9;" edge="1" parent="1" source="done" target="end1"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="s7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=9;" edge="1" parent="1" source="failed" target="end2"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="s8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=9;" edge="1" parent="1" source="cancelled" target="end3"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root>
+</mxGraphModel>

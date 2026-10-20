@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="798" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="t3" value="SA4E-369 TDD — Deployment: single-process, no network, no persistence" style="text;html=1;fontSize=16;fontStyle=1;align=center;" vertex="1" parent="1"><mxGeometry x="280" y="15" width="620" height="30" as="geometry"/></mxCell>
+<mxCell id="ws" value="Developer Workstation" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=12;fontStyle=1;align=left;spacingLeft=8;fillColor=#fafafa;strokeColor=#666666;" vertex="1" parent="1"><mxGeometry x="320" y="70" width="520" height="470" as="geometry"/></mxCell>
+<mxCell id="vsc" value="VS Code Instance" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=12;fontStyle=1;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#999999;" vertex="1" parent="1"><mxGeometry x="350" y="110" width="460" height="400" as="geometry"/></mxCell>
+<mxCell id="eh" value="Extension Host process&#10;(feature ships in the existing extension bundle)" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=12;fontStyle=1;align=left;spacingLeft=8;fillColor=#F7FBFF;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1"><mxGeometry x="370" y="150" width="420" height="300" as="geometry"/></mxCell>
+<mxCell id="peer" value="peer/ module + singletons&#10;PeerBus · PeerRegistry · PeerTaskManager ·&#10;AntiLoopGuards · PeerThreadStore" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1"><mxGeometry x="390" y="195" width="180" height="90" as="geometry"/></mxCell>
+<mxCell id="heap" value="Extension host heap — ALL peer state&#10;(tasks, threads, guards, registry)&#10;dies with the host (BR-12)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1"><mxGeometry x="590" y="195" width="180" height="90" as="geometry"/></mxCell>
+<mxCell id="piagent" value="pi-agent/ session stack — per-tab sessions (D1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1"><mxGeometry x="390" y="305" width="180" height="60" as="geometry"/></mxCell>
+<mxCell id="webview" value="Chat webview(s) — badge / transcript prefix / peer panel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1"><mxGeometry x="590" y="305" width="180" height="60" as="geometry"/></mxCell>
+<mxCell id="loader" value="Extension loader (SA4E-333) — activation / deactivation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;" vertex="1" parent="1"><mxGeometry x="390" y="385" width="380" height="40" as="geometry"/></mxCell>
+<mxCell id="nonet" value="Network: NO sockets, ports, tokens (AC7)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1"><mxGeometry x="330" y="590" width="250" height="40" as="geometry"/></mxCell>
+<mxCell id="noext" value="No external system contacted (NG-2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1"><mxGeometry x="610" y="590" width="230" height="40" as="geometry"/></mxCell>
+<mxCell id="d1" value="lives in" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="peer" target="heap"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="d2" value="invokes turns" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="peer" target="piagent"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="d3" value="bus events" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="peer" target="webview"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="d4" value="loads at activation" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;" edge="1" parent="1" source="loader" target="peer"><mxGeometry relative="1" as="geometry"/></mxCell>
+</root>
+</mxGraphModel>

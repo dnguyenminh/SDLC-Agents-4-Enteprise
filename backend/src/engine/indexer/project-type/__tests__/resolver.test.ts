@@ -40,8 +40,9 @@ describe('IndexingStrategyResolver', () => {
 
   it('SA4E-223: getFallback includes new Salesforce extensions', () => {
     const exts = resolver.getFallback().includeExtensions;
-    for (const e of ['.apex', '.soql', '.page', '.component', '.cmp', '.app', '.evt', '.intf', '.tokens', '.cls', '.trigger', '.pega']) {
+    for (const e of ['.apex', '.soql', '.page', '.component', '.cmp', '.app', '.evt', '.intf', '.tokens', '.cls', '.trigger']) {
       expect(exts).toContain(e);
     }
+    expect(exts).not.toContain('.pega');
   });
 });

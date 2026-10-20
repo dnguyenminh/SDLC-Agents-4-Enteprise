@@ -1,0 +1,7 @@
+test_case_id,tabId_placeholder,agent_name,role,capabilities,model,status,self,workspace_root,description
+PRE-01,{tabA},Coder,coder,"implement;test",glm-5.3,idle,false,/workspace,alpha tab — sender for most cases
+PRE-02,{tabB},Reviewer,reviewer,"code-review",glm-5.3,idle,false,/workspace,beta tab — primary receiver
+PRE-03,{tabC},Orchestrator,orchestrator,"plan;delegate",glm-5.3,busy,false,/workspace,gamma tab — busy-target queue cases
+PRE-04,{tabA},Coder,coder,"implement;test",glm-5.3,idle,true,/workspace,caller self entry (TC-003/TC-102)
+PRE-05,{tabSolo},Solo,solo,"general",glm-5.3,idle,true,/workspace,single-tab variant (TC-102/TC-803)
+PRE-06,{tabB},Reviewer-2,reviewer,"code-review",glm-5.3,idle,false,/workspace,post-rename variant (TC-408/SIT-14)

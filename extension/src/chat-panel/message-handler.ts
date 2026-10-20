@@ -16,6 +16,8 @@ import {
   type SkillContextItem,
 } from "./message-handler/skill-context";
 import { resolveWorkspaceContext } from "./message-handler/workspace-context";
+import { handlePeerTabClosed, registerPeerTabIdentity } from "../pi-workflow/peer/lifecycle";
+import { wirePeerApprovalBridge, tryResolvePeerApproval } from "./peer-approval-bridge";
 
 export class MessageHandler {
   private currentModel: string = "auto";
@@ -32,7 +34,10 @@ export class MessageHandler {
     private readonly onSetModel?: (model: string) => void,
     private readonly onTurnComplete?: () => void,
     private readonly onReady?: () => void
-  ) {}
+  ) {
+    // S-02(b): one bridge per handler — peer pending events reach the SAME chat:toolApprovalPending loop.
+    wirePeerApprovalBridge(this.sendToWebview);
+  }
 
   async handle(msg: ChatWebviewToExtMessage): Promise<void> {
     debugLog(` MessageHandler.handle: type="${msg.type}"`);
@@ -101,9 +106,14 @@ export class MessageHandler {
         break;
       case "tab:switch":
         this.getEngine().switchActiveTab((msg as any).payload.tabId);
+        // S-01(1): register the peer identity — I-1; upgraded when the session host is created.
+        registerPeerTabIdentity((msg as any).payload.tabId, this.workspaceRoot);
         if (this.onTurnComplete) { this.onTurnComplete(); }
         break;
-      case "tab:close": break;
+      // S-01(2): I-8 single cleanup point (deregister + PEER_009 + threads + guards + evict).
+      case "tab:close":
+        handlePeerTabClosed((msg as any).payload?.tabId);
+        break;
       case "tab:rename": break;
       // SA4E-369: export the conversation / copy a single message for
       // external AI analysis. IO failures surface as a chat:error (the
@@ -186,10 +196,19 @@ export class MessageHandler {
 
   /** Handle tool-level approval from webview (ToolApprovalGate) */
   private handleToolApproval(toolId: string, decision: string, rememberPattern?: string): void {
+    const normalizedDecision = decision === "approve" ? "approve" : "reject";
+    // S-02(b): the PEER gate may own this toolId — resolve there FIRST; peer decisions never feed the auto-approve matcher (D6).\n    
+    if (tryResolvePeerApproval(toolId, normalizedDecision)) {
+      this.sendToWebview({
+        type: "chat:workingStatus",
+        working: true,
+        label: normalizedDecision === "approve" ? "Approved — peer turn running..." : "Rejected — peer turn aborted...",
+      });
+      return;
+    }
     const gate = this.getEngine().approvalGate;
     if (!gate) return;
-    const normalizedDecision = decision === "approve" ? "approve" : "reject";
-    // Store pattern for future auto-approve
+    // Store pattern for future auto-approve (legacy engine gate path only)
     if (normalizedDecision === "approve" && rememberPattern) {
       this.getEngine().commandPatternMatcher.addPattern(rememberPattern);
     }

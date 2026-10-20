@@ -12,6 +12,8 @@ const BASE_EXCLUDES = ['.git', '.svn', '.hg'];
 const FALLBACK_EXCLUDES = [
   'node_modules', '.git', 'dist', 'build', '.gradle',
   '.idea', '.vscode', '__pycache__', '.venv', 'target',
+  'rules',
+  '.pega-cache',
 ];
 
 /** Fallback extensions aligned with unified whitelist (SA4E-261) */

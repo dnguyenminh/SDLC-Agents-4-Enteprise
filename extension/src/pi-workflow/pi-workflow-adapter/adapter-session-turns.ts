@@ -13,6 +13,8 @@ import { debugLog } from '../../debug-logger';
 import * as vscode from 'vscode';
 import { AdapterCore } from './adapter-core.js';
 import { forwardToolLiveEvent } from './tool-live-events.js';
+import { notifyPeerUserActivity } from '../peer/lifecycle.js';
+import { peerApprovalGateOrUndefined } from '../peer/runtime.js';
 
 export abstract class AdapterSessionTurns extends AdapterCore {
   /** Implemented by the legacy-path level (./adapter-legacy-turns.ts). */
@@ -33,6 +35,9 @@ export abstract class AdapterSessionTurns extends AdapterCore {
   }
 
   private async runTurn(state: PipelineState, chatInput: string, ticketKey: string): Promise<void> {
+    // S-01(3)/BR-9: any user msg resets the anti-loop chains of the tab (both invoke + invokeChat
+    // flows, keyed by the SAME tab key the peer registry uses). Wraps in try/catch — never throws.
+    notifyPeerUserActivity(this.store.activeTab || 'CHAT');
     // CONCURRENCY-FIX: serialize turns. A second invokeChat while one is still running is queued
     // (runs after the current one) and surfaced as a non-fatal notice — never dropped, never overlapped.
     if (this.turnInFlight) {
@@ -94,8 +99,10 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       // assembles static context — the resolver chain needs it first (UC-01).
       await this.detectContextWindowEarly();
       const { ensureSessionHost } = await import('../pi-agent-session-host.js');
+      const tabId = this.store.activeTab || 'CHAT';
       const host = await ensureSessionHost({
         workspaceRoot: this.workspaceRoot,
+        tabId, // SA4E-370 S3: per-tab session key workspaceRoot+tabId
         providerId,
         apiKey,
         baseUrl,
@@ -104,6 +111,10 @@ export abstract class AdapterSessionTurns extends AdapterCore {
         phase: state.currentPhase, // UC-02: steering map (unmapped → shared-* only)
         nCtxDetected: this.getDetectedContextWindow(), // UC-01 (absent → fail-open chain)
         mcpBridge: this.mcpBridge, // SA4E-360 §6.4: skeleton supply + read_method (absent ⇒ degraded)
+        // S-02(a): EVERY host creation carries the fail-closed peer approval gate —
+        // the host cache is first-winner; without it a user-path creation would
+        // strand the host and instantly block peer tool calls (never bypass).
+        peerApprovalGate: peerApprovalGateOrUndefined(),
       });
       // One stable stream identity per turn (streaming-identity fix):
       // every token/complete/error of this turn shares turnStreamId so the
