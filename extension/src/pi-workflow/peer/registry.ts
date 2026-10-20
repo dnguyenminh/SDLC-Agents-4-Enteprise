@@ -24,10 +24,18 @@ export class PeerRegistry {
   register(tabId: string, info: PeerRegistryRegistration): PeerRegistryEntry {
     const existing = this.entries.get(tabId);
     if (existing) {
-      Object.assign(existing, structuredClone(info), {
+      const next = structuredClone(info);
+      // Review-batch fix (registry I-1 stomp): re-register (lifecycle tab:switch
+      // bootstrap, header upgrade, host re-issue) may RAISE busy but must NEVER
+      // downgrade a mid-turn busy → idle. Callers carrying status:'idle' by
+      // default are protected here; the dispatch loop's setStatus('idle') in
+      // its finally block remains the ONLY legitimate busy exit (§2.2.1).
+      const status: PeerStatus = existing.status === 'busy' ? 'busy' : next.status;
+      Object.assign(existing, next, {
         tabId,
         registeredAt: existing.registeredAt,
         lastActivityAt: existing.lastActivityAt,
+        status,
       });
       return structuredClone(existing);
     }

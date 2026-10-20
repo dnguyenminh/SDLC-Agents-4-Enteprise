@@ -10,17 +10,37 @@ import { getPeerApprovalGate, onPeerApprovalPending } from "../pi-workflow/peer/
 
 type SendToWebview = (msg: ChatExtToWebviewMessage) => void;
 
-/** Forwards every peer approval-pending event to the webview approval bar. */
+/** Handlers already wired — guards repeat registrations across handler builds. */
+const wired = new WeakSet<SendToWebview>();
+/** Single-slot subscription: at most ONE runtime listener at any time. */
+let active: { unsub: () => void } | undefined;
+
+/**
+ * Forwards every peer approval-pending event to the webview approval bar.
+ * Fix (review batch SA4E-369, message-handler L39 duplicate listeners): each
+ * panel used to stack its own runtime listener — N panels (or N handler
+ * rebuilds) registered N callbacks and listeners accumulated for closed
+ * panels. Now a once-per-handler WeakSet guard plus single-slot replacement:
+ * a new wire unsubscribes the previous one, so registration never repeats and
+ * nothing accumulates. Fail-closed semantics are unchanged — no resolution
+ * on the runtime gate ⇒ auto-deny, regardless of which panel is wired.
+ */
 export function wirePeerApprovalBridge(sendToWebview: SendToWebview): void {
+  if (wired.has(sendToWebview)) return;
+  wired.add(sendToWebview);
   try {
-    onPeerApprovalPending((event) => {
-      sendToWebview({
-        type: "chat:toolApprovalPending",
-        toolId: event.toolUseId,
-        toolName: event.toolName,
-        peer: true,
-      } as ChatExtToWebviewMessage);
+    active?.unsub(); // latest panel wins — never more than one subscription
+    const unsub = onPeerApprovalPending((event) => {
+      try {
+        sendToWebview({
+          type: "chat:toolApprovalPending",
+          toolId: event.toolUseId,
+          toolName: event.toolName,
+          peer: true,
+        } as ChatExtToWebviewMessage);
+      } catch { /* a dead panel view must never break the runtime */ }
     });
+    active = { unsub };
   } catch { /* approval UI must never break the handler construction */ }
 }
 

@@ -86,7 +86,9 @@ function failTask(bus: PeerBus, taskId: string, tabId: string, err: unknown): vo
   const error = isGovernanceRejection(raw)
     ? peerError('PEER_007', PEER_MESSAGES.PEER_007(tabId, reason), { tabId })
     : peerError('PEER_003', PEER_MESSAGES.PEER_003(tabId, reason), { tabId });
-  logger.warn('peer task failed', { taskId, code: error.code, tabId, durationMs: Date.now() });
+  // Fix 2 (SA4E-369 review): a one-shot failure event log has no duration —
+  // Date.now() as `durationMs` was meaningless; it is a terminal timestamp.
+  logger.warn('peer task failed', { taskId, code: error.code, tabId, endedAt: new Date().toISOString() });
   bus.deps.tasks.setFailed(taskId, error);
   recordFailureMarker(bus, taskId, tabId, error.code);
 }
@@ -94,9 +96,28 @@ function failTask(bus: PeerBus, taskId: string, tabId: string, err: unknown): vo
 /** SEC-04: raw internals (paths, stacks) never cross tabs — curated surface. */
 function curateReason(raw: string): string {
   const compact = raw.split('\n')[0] ?? '';
-  const internal = compact.includes('/') || compact.includes('\\') || compact.length > 160;
+  const internal = compact.includes('/') || compact.includes('\\') || compact.length > 160
+    || SECRET_PATTERNS.some((pattern) => pattern.test(compact)); // PEN-6a fix
   return internal ? CURATED_FALLBACK_REASON : compact;
 }
+
+/**
+ * PEN-6a fix (SEC-04, review batch SA4E-369): credential-shaped text in a raw
+ * error first line is exactly the same user, but it must never traverse tabs.
+ * Any match ⇒ the whole reason degrades to CURATED_FALLBACK_REASON.
+ * `token`-family words use word boundaries so benign governance copy
+ * ("PI_BUDGET_EXCEEDED tokens 200000 > 150000") keeps its verbatim reason.
+ */
+const SECRET_PATTERNS: RegExp[] = [
+  /sk-[A-Za-z0-9]{8,}/, // provider-style API keys ("sk-…")
+  /api[\s_-]?key/i, // "api key", "api_key", "API-KEY", "apikey"
+  /\btoken\b/i,
+  /\bpassword\b/i,
+  /\bbearer\b/i,
+  /\bauthorization\b/i,
+  /\bsecret\b/i,
+  /[0-9a-fA-F]{32,}/, // hex material ≥32 chars (digests / hashed credentials)
+];
 
 /** Governance-shaped rejections carry allowlisted PI_* / governance prefixes. */
 function isGovernanceRejection(raw: string): boolean {

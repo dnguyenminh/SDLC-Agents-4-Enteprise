@@ -33,6 +33,10 @@ export const PEER_MESSAGES = {
   PEER_009: (taskId: string): string => `Peer task ${taskId} cancelled: target tab closed.`,
   PEER_010: (length: number, max: number): string =>
     `Peer message is too large (${fmt(length)} > ${fmt(max)} characters). Split the message and resend.`,
+  // SA4E-369 fix batch (review): empty payloads share PEER_010's code, but the
+  // "too large" copy was misleading for length 0 — distinguishable message
+  // (same code, which tools/tests keep asserting).
+  PEER_010_EMPTY: (): string => 'Peer message is empty. Provide the message content and resend.',
   PEER_010_FORGERY: (): string =>
     'Peer message rejected: content contains forged provenance markers ("--- begin/end peer content ---" framing). ' +
     'Content is treated as DATA — remove the framing and resend.',
