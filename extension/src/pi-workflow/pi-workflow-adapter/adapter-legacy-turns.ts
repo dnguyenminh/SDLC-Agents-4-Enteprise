@@ -78,9 +78,11 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       // Falls back to the legacy engine path below on any failure.
       // turnStreamId (below) is the single identity for every stream event.
       const turnStreamId = crypto.randomUUID();
-      // SA4E-355 (UC-02/UC-04): the executeTurn role also drives session
-      // scoping — one value shared by the session path and the legacy path.
-      const sessionRole = 'sm-agent';
+      // SA4E-370 S2: role from active agent for this tab, not hardcoded 'sm-agent'.
+      // Falls back to 'sm-agent' when no agent is selected (backward compat).
+      const tabId = this.store.activeTab || 'CHAT';
+      const active = this.activeAgents.get(tabId);
+      const sessionRole = active?.role || 'sm-agent';
       if (await this.trySessionTurn(state, chatInput, ticketKey, sessionRole, chatTimeoutMs, turnStreamId)) return;
       // FIX A + B: initialize + seed credentials + register gateway + resolve model (correct order).
       const { modelUnresolved, credentialsPresent } = await configureEngineProvider(this.engine, this.secrets);

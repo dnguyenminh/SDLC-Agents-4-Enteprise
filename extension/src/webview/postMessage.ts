@@ -96,3 +96,23 @@ export function requestDiffSummary(): void {
 export function openDiffFile(filePath: string, operation: 'added' | 'modified' | 'deleted'): void {
   postToExtension({ type: 'DIFF_OPEN_FILE', filePath, operation });
 }
+
+/** SA4E-370 S3: Switch active tab */
+export function switchTab(tabId: string): void {
+  postToExtension({ type: 'tab:switch', payload: { tabId } });
+}
+
+/** SA4E-370 S3: Create new tab */
+export function createTab(tab: { id: string; name: string; messages: unknown[]; tokenCount: number; maxTokens: number }): void {
+  postToExtension({ type: 'tab:create', payload: { tab } });
+}
+
+/** SA4E-370 S3: Close tab */
+export function closeTab(tabId: string): void {
+  postToExtension({ type: 'tab:close', payload: { tabId } });
+}
+
+/** SA4E-370 S3: Rename tab */
+export function renameTab(tabId: string, newName: string): void {
+  postToExtension({ type: 'tab:rename', payload: { tabId, newName } });
+}

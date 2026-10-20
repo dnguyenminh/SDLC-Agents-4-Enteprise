@@ -141,8 +141,13 @@ export class PeerBus extends EventEmitter {
       throw peerError('PEER_001', PEER_MESSAGES.PEER_001(targetTabId), { tabId: targetTabId });
     }
     if (targetTabId === fromTabId) throw peerError('PEER_002', PEER_MESSAGES.PEER_002());
-    if (typeof message !== 'string' || message.length === 0 || message.length > PEER_MESSAGE_MAX_CHARS) {
-      throw peerError('PEER_010', PEER_MESSAGES.PEER_010(message?.length ?? 0, PEER_MESSAGE_MAX_CHARS), { max: PEER_MESSAGE_MAX_CHARS });
+    if (typeof message !== 'string' || message.length === 0) {
+      // SA4E-369 fix batch (review): empty ≠ oversized — same PEER_010 code,
+      // separate message so the copy no longer claims "too large" for 0 chars.
+      throw peerError('PEER_010', PEER_MESSAGES.PEER_010_EMPTY());
+    }
+    if (message.length > PEER_MESSAGE_MAX_CHARS) {
+      throw peerError('PEER_010', PEER_MESSAGES.PEER_010(message.length, PEER_MESSAGE_MAX_CHARS), { max: PEER_MESSAGE_MAX_CHARS });
     }
     // S-04 (SEC-01 L0): marker forgery — zero-state rejection (I-2, I-7).
     // AFTER the size check; BEFORE guards — no pair state, no queue entry.

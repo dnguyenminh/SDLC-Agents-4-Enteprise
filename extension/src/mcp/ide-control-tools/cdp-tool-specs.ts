@@ -8,15 +8,17 @@ export const CDP_TOOL_SPECS: IdeToolSpec[] = [
   {
     name: "ide_launch",
     description:
-      "Launch a VSCode-like IDE (code | kiro | antigravity | kilo) with remote debugging enabled. Returns sessionId + cdpEndpoint. Pass ideBinaryPath to override the resolved binary.",
+      "Launch a VSCode-like IDE (code | kiro | antigravity | kilo) with remote debugging enabled. Returns sessionId + cdpEndpoint. Pass ideBinaryPath to override the resolved binary. Supports remoteDebuggingPort and timeoutSeconds for deterministic launch.",
     handler: (m, a) =>
-      m.launch(String(a.ide ?? "code"), a.ideBinaryPath as string | undefined, a.userDataDir as string | undefined),
+      m.launch(String(a.ide ?? "code"), a.ideBinaryPath as string | undefined, a.userDataDir as string | undefined, a.remoteDebuggingPort as number | undefined, a.timeoutSeconds as number | undefined),
     inputSchema: {
       type: "object",
       properties: {
         ide: { type: "string", enum: ["code", "kiro", "antigravity", "kilo"], description: "IDE to launch (default: code)" },
         ideBinaryPath: { type: "string", description: "Optional: explicit path to the IDE executable (BR-01 fail-fast if missing)" },
         userDataDir: { type: "string", description: "Optional: user-data-dir for an isolated profile" },
+        remoteDebuggingPort: { type: "integer", minimum: 1024, maximum: 65535, description: "Optional: explicit remote debugging port to use for deterministic launch" },
+        timeoutSeconds: { type: "integer", minimum: 1, maximum: 300, description: "Optional: timeout in seconds for DevTools port detection (default 60, max 300)" },
       },
       required: [],
     },

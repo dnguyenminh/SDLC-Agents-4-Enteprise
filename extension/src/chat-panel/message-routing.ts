@@ -57,13 +57,14 @@ export async function routeUserMessage(
     return;
   }
 
-  // Agent command prefix
+  // Agent command prefix — SA4E-370 S2: cosmetic [Agent: X] prefix retired.
+  // The active agent's persona (injected via selectAgent wiring) drives the turn.
   const agentMatch = text.trim().match(/^\/([a-z][-a-z]*)\s+(.+)$/i);
   if (agentMatch) {
-    const [, agentName, agentTask] = agentMatch;
-    debugLog(` handleUserMessage: routed to AGENT "${agentName}"`);
-    sendToWebview({ type: "chat:workingStatus", working: true, label: `${agentName} --- working...` });
-    await getEngine().invokeChat(`[Agent: ${agentName}] ${agentTask}`);
+    const [, , agentTask] = agentMatch;
+    debugLog(` handleUserMessage: routed to AGENT (prefix retired, persona drives turn)`);
+    sendToWebview({ type: "chat:workingStatus", working: true, label: "Agent turn --- working..." });
+    await getEngine().invokeChat(agentTask);
     if (onTurnComplete) { onTurnComplete(); }
     sendToWebview({ type: "chat:workingStatus", working: false });
     return;

@@ -13,7 +13,7 @@ export type { ChatMessageItem } from './chatStore';
 
 export {
   agentState, agents, selectedAgentId, selectedAgent, isAgentLoading,
-  syncAgents, selectAgent, resetAgents,
+  syncAgents, selectAgent, resetAgents, syncSelectedAgentWithTab,
 } from './agentStore';
 
 export {
@@ -41,3 +41,9 @@ export {
   updateDiffCount, setDiffSummary, toggleDiffPanel, resetDiffTracker,
 } from './diffTrackerStore';
 export type { DiffSummaryPayload, ChangeEntryPayload } from './diffTrackerStore';
+
+export {
+  tabState, tabs, activeTabId, activeTab, isTabLoading,
+  updateTabs, setActiveTab, addTab, closeTab, renameTab, resetTabs,
+} from './tabStore';
+export type { ChatTab } from './tabStore';

@@ -116,7 +116,7 @@ export class IdeSessionManager {
     // (same convention as devtools-bridge.ts importing the vendored barrel)
     const { puppeteer } = await import("./devtools/third_party/index.js");
     const browser = await (puppeteer as any).connect({
-      browserUrl: endpoint,
+      browserURL: endpoint,
       defaultViewport: null,
     });
     const target = (session ?? {

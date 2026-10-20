@@ -27,6 +27,8 @@ export class ChatStateManager implements vscode.Disposable {
   private steeringWatcher: WorkspaceDirWatcher;
   private hooksWatcher: WorkspaceDirWatcher;
   private skillsWatcher: WorkspaceDirWatcher;
+  /** SA4E-370 S4: per-tab active agent for badge display (tabId -> agentId). */
+  private readonly activeAgentByTab = new Map<string, string>();
 
   constructor(
     private readonly workspaceRoot: string,
@@ -45,6 +47,20 @@ export class ChatStateManager implements vscode.Disposable {
     this.skillsWatcher = createSkillsWatcher(workspaceRoot, () => this.sendSkillsInfo());
     this.skillsWatcher.start();
     this.broadcastInitialState();
+  }
+
+  /** SA4E-370 S4: set the active agent for a tab (badge + switch indicator). */
+  setActiveAgentForTab(tabId: string, agentId: string | null): void {
+    if (agentId) {
+      this.activeAgentByTab.set(tabId, agentId);
+    } else {
+      this.activeAgentByTab.delete(tabId);
+    }
+  }
+
+  /** SA4E-370 S4: get the active agent id for a tab (badge lookup). */
+  getActiveAgentForTab(tabId: string): string | null {
+    return this.activeAgentByTab.get(tabId) ?? null;
   }
 
   public broadcastInitialState(): void {

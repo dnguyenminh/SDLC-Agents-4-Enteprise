@@ -17,6 +17,8 @@ export interface ContextUsageDeps {
   getOrCreateEngine: () => PiWorkflowAdapter;
   /** Returns the engine without creating it (matches plain `this.engine` reads). */
   peekEngine: () => PiWorkflowAdapter | null;
+  /** SA4E-370 S3: active tab id for per-tab context accounting. */
+  getTabId: () => string;
   getTracker: () => ContextUsageTracker;
   getFlags: () => CountedFlags;
   /** SA4E-339: compactor used by the per-turn auto-compaction path. */
@@ -47,7 +49,7 @@ export function sendContextUpdateMessage(sendToWebview: (msg: ChatExtToWebviewMe
  * Syncs maxTokens from provider if engine already detected context window.
  */
 export async function sendInitialContextUsage(deps: ContextUsageDeps): Promise<void> {
-  const tabId = "default";
+  const tabId = deps.getTabId();
   try {
     await detectInitialContextWindow(deps);
     countInitialSteeringTokens(deps, tabId);
@@ -124,7 +126,7 @@ async function countMcpToolTokens(deps: ContextUsageDeps, tabId: string): Promis
  */
 export function updateContextUsageFromSavedState(deps: ContextUsageDeps, state: { tabs: unknown[]; activeTabId: string }): void {
   try {
-    const tabId = "default";
+    const tabId = deps.getTabId();
     const tabs = state.tabs as Array<{ id: string; messages?: Array<{ content?: string; role?: string }> }>;
     const activeTab = tabs.find(t => t.id === state.activeTabId) || tabs[0];
     if (!activeTab?.messages || activeTab.messages.length === 0) return;
