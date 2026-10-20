@@ -24,6 +24,11 @@
   ],
   "documents": [
     {
+      "file": "UG.md",
+      "author": "dev-agent",
+      "note": "UG v1.0 — user guide: tools reference, UI, approval Option A, PEER errors, troubleshooting+FAQ, restrictions"
+    },
+    {
       "file": "STATUS.json",
       "author": "sm-agent",
       "note": "SM file"
@@ -109,11 +114,16 @@
       "note": "Survey-first: convention per-ticket workflow (7 file cũ) → tạo MỚI ci-sa4e-369.yml (additive, YAML verified). Stages: install→tsc→eslint→full suite vitest(incl peer/*)→peer security cases(SEC-01/03)→esbuild+smoke:bundle→vsix(no publish). RED-BY-DESIGN — gates arm ở Phase 5. Gate mapping v1.53.9 trong CICD-SETUP.md §6"
     },
     "implementation": {
-      "status": "in_progress",
-      "note": "Phase 5 dev-agent dispatched — D6 = Option A (full approval gate fail-closed). Scope: module peer/ + wiring conversation-manager/turn-executor/create-host + __tests__/peer/"
+      "status": "done",
+      "completedAt": "2026-10-20T09:25:00+07:00",
+      "note": "peer/ 15 file (types/constants/errors/registry/threads/guards/task-manager/envelope/tools/bus/dispatch/runtime/approval/session-gateway/peer-approval — tất cả ≤200 dòng) + wiring conversation-manager(+39)/create-host(176→192)/peer-approval.ts mới. Tests: __tests__/peer/ 10 file, 54/54 PASS; no-socket AC7 scan ✓. tsc --noEmit 0. D6 Option A fail-closed approval wired. Full-suite 77 fail đã chứng minh pre-existing (baseline worktree 15/15 + revert-wiring no-change) — 0 fail liên quan peer. SA4E-370 S3 bug 2-line (mock path) chuyển người SA4E-370"
     },
     "user_guide": {
-      "status": "not_started"
+      "status": "done",
+      "file": "UG.md",
+      "version": 1,
+      "completedAt": "2026-10-20T07:45:00+07:00",
+      "note": "506 dòng, 13 sections H2, 0 mermaid: getting started + tools reference (peer_list/peer_send/peer_status), UI mapping, auto-run + approval Option A, bảng PEER_001-010, limits, troubleshooting + SIT-01..16 walkthrough, restrictions D5"
     },
     "testing": {
       "status": "not_started"
@@ -141,6 +151,6 @@
     "AC7: Zero new config files/keys required for the local bus; no network sockets opened by the feature",
     "AC8: Existing suites stay green (context-governance.*, auto-chunk, session routing tests)"
   ],
-  "lastUpdated": "2026-10-20T05:30:00+07:00",
+  "lastUpdated": "2026-10-20T07:45:00+07:00",
   "lastCommentProcessed": "2026-10-18T00:24:01+07:00"
 }
