@@ -1,0 +1,39 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="2" value="Extension Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="80" y="80" width="140" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="3" value="MCP Tools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;" vertex="1" parent="1">
+<mxGeometry x="80" y="180" width="140" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="4" value="Backend API Gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;" vertex="1" parent="1">
+<mxGeometry x="400" y="100" width="160" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="5" value="ensureProjectRegistered Guard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;" vertex="1" parent="1">
+<mxGeometry x="420" y="240" width="120" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="6" value="Project Registry DB" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+<mxGeometry x="420" y="340" width="120" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="7" value="Knowledge Base" style="shape=cylinder;whiteSpace=wrap;html=1;fillColor=#d5e8d4;" vertex="1" parent="1">
+<mxGeometry x="650" y="240" width="140" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="8" edge="1" parent="1" source="2" target="4" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="9" edge="1" parent="1" source="3" target="4" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="10" edge="1" parent="1" source="4" target="5" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="11" edge="1" parent="1" source="5" target="6" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="12" edge="1" parent="1" source="4" target="7" style="edgeStyle=orthogonalEdgeStyle;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

@@ -1,0 +1,5 @@
+test_case_id,workspace_path,git_remote_present,expected_project_id,expected_http_code,description
+E2E-API-01,C:\projects\kiro\SDLC-Agents-4-Enterprise,true,{existing_user_id},201,Valid auto-register with git remote
+E2E-API-03,C:\projects\no-git-workspace,false,{stable_id},201,Auto-register without git remote uses project.json
+UT-03,proj-dup-test,true,{existing_id},200,Duplicate auto-register returns existing
+IT-01,C:\projects\new-workspace,true,{new_id},201,First index creates project

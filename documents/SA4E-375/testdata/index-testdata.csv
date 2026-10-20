@@ -1,0 +1,5 @@
+test_case_id,project_id,document_title,document_content,expected_http_code,expected_error,description
+E2E-API-01,unregistered-proj,Test Doc,Sample content,201,,Index succeeds with auto-register
+E2E-API-05,proj-001,Test Doc,Sample content,200,,Index succeeds for registered project
+IT-01,unregistered-proj,Test Doc,Sample content,201,,Integration index auto-register
+UT-04,nonexistent-proj,Test Doc,Sample content,404,PROJECT_NOT_REGISTERED,Guard blocks unknown project
