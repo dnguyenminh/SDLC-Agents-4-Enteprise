@@ -6,21 +6,50 @@
 
 import { debugLog } from "../../debug-logger";
 
-export interface AgentInfo { id: string; name: string; description: string }
+export interface AgentInfo {
+  id: string;
+  name: string;
+  description: string;
+  role?: string;
+  phase?: string;
+  model?: string;
+  personaBody: string;
+}
 export interface SkillInfo { id: string; label: string; description: string }
 
-/** Extract name + description from agent frontmatter. */
+/** Simple YAML frontmatter field extractor — line-by-line, no full YAML parse (F06: safe, no ReDoS). */
+function extractYamlField(yaml: string, key: string): string | undefined {
+  const pattern = new RegExp(`^${key}\\s*:\\s*(.+)$`, 'm');
+  const m = yaml.match(pattern);
+  if (!m) return undefined;
+  return stripQuotes(m[1].trim());
+}
+
+function stripQuotes(value: string): string {
+  return value.replace(/^["']|["']$/g, '');
+}
+
+/** Truncate a string to a safe max length. */
+function truncate(value: string, maxLen: number): string {
+  return value.length > maxLen ? value.slice(0, maxLen) : value;
+}
+
+/** Extract name + description + extended fields from agent frontmatter (v2, backward compatible). */
 export function parseAgentFrontmatter(content: string, fallbackId: string): AgentInfo {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) { return { id: fallbackId, name: fallbackId, description: "" }; }
-  const yaml = match[1];
-  const nameMatch = yaml.match(/^(?:label|name):\s*(.+)$/m);
-  const descMatch = yaml.match(/^description:\s*(.+)$/m);
-  return {
-    id: fallbackId,
-    name: nameMatch ? nameMatch[1].trim().replace(/^["']|["']$/g, "") : fallbackId,
-    description: descMatch ? descMatch[1].trim().replace(/^["'>]|["']$/g, "").slice(0, 80) : "",
-  };
+  let yaml = '';
+  let body = content;
+  if (match) {
+    yaml = match[1];
+    body = content.slice(match[0].length);
+  }
+  const name = extractYamlField(yaml, 'name') ?? extractYamlField(yaml, 'label') ?? fallbackId;
+  const description = truncate(extractYamlField(yaml, 'description') ?? '', 80);
+  const role = extractYamlField(yaml, 'role');
+  const phase = extractYamlField(yaml, 'phase');
+  const model = extractYamlField(yaml, 'model');
+  const personaBody = body.trimStart();
+  return { id: fallbackId, name, description, role, phase, model, personaBody };
 }
 
 /** Read a steering file and decide whether its frontmatter inclusion is auto-injected. */
@@ -101,7 +130,10 @@ export function collectSteeringRules(workspaceRoot: string): Array<{ name: strin
   return rules;
 }
 
-/** Read agent .md files from .code-intel/agents and parse their frontmatter. */
+/** Read agent .md files from .code-intel/agents and parse their frontmatter (v2).
+ * Fail-safe: invalid/unreadable files are skipped with a diagnostic log; discovery
+ * continues with remaining files (BR-04, F06).
+ */
 export function readAgentInfos(workspaceRoot: string): AgentInfo[] {
   const fs = require("fs");
   const path = require("path");
@@ -114,9 +146,19 @@ export function readAgentInfos(workspaceRoot: string): AgentInfo[] {
   for (const file of files) {
     const id = path.basename(file, ".md");
     const filePath = path.join(agentsDir, file);
-    const content = fs.readFileSync(filePath, "utf-8");
-    const meta = parseAgentFrontmatter(content, id);
-    agents.push({ ...meta, id });
+    let content: string;
+    try {
+      content = fs.readFileSync(filePath, "utf-8");
+    } catch (err) {
+      console.debug(`[ChatStateManager] readAgentInfos: cannot read ${filePath}: ${(err as Error).message}`);
+      continue;
+    }
+    try {
+      const meta = parseAgentFrontmatter(content, id);
+      agents.push({ ...meta, id });
+    } catch (err) {
+      console.debug(`[ChatStateManager] readAgentInfos: parse failed for ${filePath}, skipping: ${(err as Error).message}`);
+    }
   }
   return agents;
 }
