@@ -162,13 +162,18 @@ export class ChatEngineAdapter implements IChatEngineAdapter {
    * SA4E-186: Handle SELECT_AGENT — dual-path routing.
    * Delegates to engine.selectAgent() and sends AGENT_SWITCHED confirmation to webview.
    */
-  private handleSelectAgent(payload: unknown): void {
+  private async handleSelectAgent(payload: unknown): Promise<void> {
     const msg = payload as Extract<WebviewMessage, { type: 'SELECT_AGENT' }>;
-    const result = this.deps.engine.selectAgent(msg.agentId);
+    const result = await this.deps.engine.selectAgent(msg.agentId);
     this.sendToWebview([{
       type: 'AGENT_SWITCHED',
       agentId: result.agentId,
       agentName: result.agentName,
+      tabId: result.tabId,
+      success: result.success,
+      sessionRole: result.sessionRole,
+      sessionPhase: result.sessionPhase,
+      error: result.error,
     }]);
   }
 }
