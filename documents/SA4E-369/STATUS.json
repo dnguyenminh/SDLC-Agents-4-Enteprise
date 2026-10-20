@@ -146,8 +146,10 @@
       "note": "PASS-WITH-OPTIONAL-SPOT-CHECK. 10/15 full automated evidence PASS (data exchange A1-A5, approval C1/C2, security D1/D2, SIT-04 real Kiro). 4/15 proxy-pass (visual B1-B4, logic verified). 1 BLOCKED (SIT-12 D6=Option A). 0 FAIL. Evidence: 103/103 vitest + tsc 0 + security PASS + pentest 5/6 SAFE + Kiro 1.53.12 deployment. Recommendation: proceed 6.7/7"
     },
     "deployment": {
-      "status": "in_progress",
-      "note": "Phase 7 DevOps dispatched: DPG.md + RLN.md. Phase 6.7 security deploy review = GO-WITH-CONDITIONS (0 Critical/High, 14-item checklist DC-1..DC-14)"
+      "status": "done",
+      "file": "DPG.md + RLN.md",
+      "completedAt": "2026-10-20T19:30:00+07:00",
+      "note": "DPG.md 298 lines (14/14 DC checklist + C-D1..C-D3 conditions, 3 install methods, rollback). RLN.md 159 lines (v1.53.12, PeerBus features, S-01..S-05, breaking changes: None). Both ingested KB. Phase 7 complete — SA4E-369 ready for Done transition + push"
     }
   },
   "designDecisions": {
