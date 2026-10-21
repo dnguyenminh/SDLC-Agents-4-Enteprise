@@ -40,14 +40,20 @@ export class PowerShellTransport {
    * Returns proxy URL, or null if direct connection or DIRECT.
    */
   static async detectSystemProxy(): Promise<string | null> {
+    // FIX: try/catch inside PS to handle Constrained Language Mode + output validation
     const script = `
-      $proxy = [System.Net.WebRequest]::GetSystemWebProxy()
-      $testUrl = [System.Uri]'https://api.anthropic.com'
-      $proxyUri = $proxy.GetProxy($testUrl)
-      if ($proxyUri -and $proxyUri.AbsoluteUri -ne $testUrl.AbsoluteUri) {
-        Write-Output $proxyUri.AbsoluteUri
-      } else {
-        Write-Output 'DIRECT'
+      $ErrorActionPreference = 'Stop'
+      try {
+        $proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+        $testUrl = [System.Uri]'https://api.anthropic.com'
+        $proxyUri = $proxy.GetProxy($testUrl)
+        if ($proxyUri -and $proxyUri.AbsoluteUri -ne $testUrl.AbsoluteUri) {
+          Write-Output $proxyUri.AbsoluteUri
+        } else {
+          Write-Output 'DIRECT'
+        }
+      } catch {
+        Write-Output 'CLM_FALLBACK'
       }
     `;
     try {
@@ -57,7 +63,9 @@ export class PowerShellTransport {
         { timeout: 10000 }
       );
       const result = stdout.trim();
-      if (!result || result === "DIRECT") { return null; }
+      if (!result || result === "DIRECT" || result === "CLM_FALLBACK") { return null; }
+      // Validate: output must look like a URL — reject PowerShell error text
+      if (!/^https?:\/\/\S+/.test(result)) { return null; }
       return result;
     } catch {
       return null;
