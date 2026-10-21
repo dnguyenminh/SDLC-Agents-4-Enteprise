@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.53.4-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.54.0-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.53.4.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.54.0.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.53.4.vsix
+code --install-extension sdlc-agents-4-enterprise-1.54.0.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,13 @@ MIT
 ---
 
 ## Changelog
+
+### v1.54.0 (2026-10-21)
+
+- **SA4E-369: PeerBus — Intra-instance agent-to-agent messaging** — peer_send/peer_list/peer_status tools, Option A fail-closed ToolApprovalGate (30s auto-deny), rate limiting (10/60s, queue 20, ping-pong 5, 16k chars), anti-injection (PEER_010_FORGERY, marker forgery detection, 2nd-order reply wrapping), lifecycle cleanup (I-8, BR-9), PEN-6a SECRET_PATTERNS. 103 tests + 18 pentest probes, security PASS, UAT PASS
+- **SA4E-370: 77 test failures fixed** — D1 per-tab session keys, mock paths, real-fs rewrites, TabBar.svelte CSS fix. 3,224/3,224 PASS
+- **SA4E-373: ide_launch fix** — DevToolsActivePort timeout, realpath canonicalization, sandbox prefix
+- **CI fully GREEN** — 3,330 backend + 3,224 extension tests, 0 TS errors, contract tests pass
 
 ### v1.48.0 (2026-10-10)
 
