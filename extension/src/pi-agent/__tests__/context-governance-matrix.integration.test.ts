@@ -86,7 +86,7 @@ describe('Governance matrix + full flow (SA4E-355 Task 7)', () => {
     expect(budget.staticBudget + budget.historyBudget).toBe(58245);
     expect(resolveSessionTier(budget.nCtx)).toBe('medium');
     const host = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-111-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-111-${++id}`, providerId: 'p',
       configuredModelId: 'qwen', nCtxDetected: 65536,
     });
     expect(gateDecision()).toMatchObject({ decision: 'ALLOW' });
@@ -101,7 +101,7 @@ describe('Governance matrix + full flow (SA4E-355 Task 7)', () => {
   ])('STC-016: nCtx=$nCtx — total prompt <= usable $usable, never REJECT', async ({ nCtx, usable }) => {
     const modelId = nCtx === 128000 ? 'gpt-4o-mini' : 'qwen';
     const host = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-016-${nCtx}-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-016-${nCtx}-${++id}`, providerId: 'p',
       configuredModelId: modelId, role: 'DEV', phase: 'implementation', nCtxDetected: nCtx,
     });
     const decision = gateDecision();
@@ -123,7 +123,7 @@ describe('Governance matrix + full flow (SA4E-355 Task 7)', () => {
     const loadout = buildSessionToolLoadout({ role: 'SM', mcpTools: nameTools(['jira_get_issue']) });
     expect(loadout.loadout).toEqual(expect.arrayContaining(['read', 'find_tools', 'jira_get_issue']));
     const host = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-017-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-017-${++id}`, providerId: 'p',
       configuredModelId: 'qwen', role: 'SM', nCtxDetected: 32768,
     });
     const tools = (mocks.createSession.mock.calls[0][0] as { tools: string[] }).tools;
@@ -133,14 +133,14 @@ describe('Governance matrix + full flow (SA4E-355 Task 7)', () => {
 
   it('tier spot-check: small forces compression, medium surplus passes through', async () => {
     const small = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-small-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-small-${++id}`, providerId: 'p',
       configuredModelId: 'qwen', nCtxDetected: 8192,
     });
     expect(logger.info).toHaveBeenCalledWith('PI_COMPRESSION_ENABLED', expect.objectContaining({ tier: 'small' }));
     small.dispose();
     vi.clearAllMocks();
     const medium = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-medium-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-medium-${++id}`, providerId: 'p',
       configuredModelId: 'qwen', nCtxDetected: 32768,
     });
     expect(logger.info).not.toHaveBeenCalledWith('PI_COMPRESSION_ENABLED', expect.anything());

@@ -62,6 +62,7 @@ async function turn1Host(
   mocks.contextFiles.length = 0;
   mocks.contextFiles.push(...files);
   return ensureSessionHost({
+    tabId: 'tab-1',
     workspaceRoot: `C:/ws/gov-turn1-${++id}`,
     providerId: 'p',
     configuredModelId: 'qwen',

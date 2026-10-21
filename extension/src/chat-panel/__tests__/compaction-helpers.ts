@@ -11,7 +11,9 @@ export function createCompactionHarness() {
     getDetectedContextWindow: vi.fn().mockReturnValue(128000),
     getChatHistory: vi.fn().mockReturnValue([]),
     setChatHistory: vi.fn(),
-    listAvailableTools: vi.fn().mockResolvedValue([])
+    listAvailableTools: vi.fn().mockResolvedValue([]),
+    // SA4E-370 D1: per-tab usage accounting reads the engine's active tab id.
+    getActiveTabId: vi.fn().mockReturnValue("tab-1"),
   };
 
   const mockUri = { fsPath: "/mock/path" } as any;

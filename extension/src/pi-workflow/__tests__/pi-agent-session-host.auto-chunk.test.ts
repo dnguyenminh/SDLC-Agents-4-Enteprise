@@ -63,6 +63,7 @@ describe('PiAgentSessionHost auto-chunk (SA4E-355)', () => {
   it('creates host with tier small and enables auto-chunk mode', async () => {
     const host = await ensureSessionHost({
       workspaceRoot: '/ws',
+      tabId: 'tab-1',
       providerId: 'anthropic',
       apiKey: 'k',
       nCtxDetected: 8192, // small tier
@@ -76,6 +77,7 @@ describe('PiAgentSessionHost auto-chunk (SA4E-355)', () => {
     // This test will be expanded after implementation
     const host = await ensureSessionHost({
       workspaceRoot: '/ws',
+      tabId: 'tab-1',
       providerId: 'anthropic',
       apiKey: 'k',
       nCtxDetected: 8192,
@@ -92,6 +94,7 @@ describe('PiAgentSessionHost auto-chunk (SA4E-355)', () => {
     promptCalls.length = 0;
     const host = await ensureSessionHost({
       workspaceRoot: '/ws',
+      tabId: 'tab-1',
       providerId: 'anthropic',
       apiKey: 'k',
       nCtxDetected: 65536, // → tier medium (16k < 65536 < 128k)
@@ -107,6 +110,7 @@ describe('PiAgentSessionHost auto-chunk (SA4E-355)', () => {
     promptCalls.length = 0;
     const host = await ensureSessionHost({
       workspaceRoot: '/ws',
+      tabId: 'tab-1',
       providerId: 'anthropic',
       apiKey: 'k',
       nCtxDetected: 65536,
@@ -139,7 +143,7 @@ describe('promptTurn onThinking forwarding (SA4E-365, TC-03)', () => {
 
   // SA4E-365, TC-03a [FR1-R1] — normal loop (non-chunked path) forwards deltas in order
   it('TC-03a: normal loop forwards thinking deltas then the text token', async () => {
-    const host = await ensureSessionHost({ workspaceRoot: '/ws', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
+    const host = await ensureSessionHost({ workspaceRoot: '/ws', tabId: 'tab-1', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
     scripted.events.push(thinking('t1'), thinking('t2'), text('hi'));
     const onThinking = vi.fn();
     const onToken = vi.fn();
@@ -152,7 +156,7 @@ describe('promptTurn onThinking forwarding (SA4E-365, TC-03)', () => {
 
   // SA4E-365, TC-03b [FR1-R2, F2] — auto-chunk loop (runOnce) forwards deltas too
   it('TC-03b: auto-chunk loop forwards thinking deltas via onThinking', async () => {
-    const host = await ensureSessionHost({ workspaceRoot: '/ws', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 8192 });
+    const host = await ensureSessionHost({ workspaceRoot: '/ws', tabId: 'tab-1', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 8192 });
     const largePrompt = Array.from({ length: 200 }, (_, i) => `Paragraph ${i} with some content. `).join('\n\n');
     scripted.events.push(thinking('c1'), thinking('c2'));
     const onThinking = vi.fn();
@@ -164,7 +168,7 @@ describe('promptTurn onThinking forwarding (SA4E-365, TC-03)', () => {
 
   // SA4E-365, TC-03c [FR1-R1 guard] — host guard drops empty deltas (truthy content only)
   it('TC-03c: empty thinking delta never reaches onThinking', async () => {
-    const host = await ensureSessionHost({ workspaceRoot: '/ws', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
+    const host = await ensureSessionHost({ workspaceRoot: '/ws', tabId: 'tab-1', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
     scripted.events.push(thinking(''), thinking(undefined), thinking('real'));
     const onThinking = vi.fn();
     await host.promptTurn('short prompt', undefined, undefined, onThinking);
@@ -174,7 +178,7 @@ describe('promptTurn onThinking forwarding (SA4E-365, TC-03)', () => {
 
   // SA4E-365, TC-03d [FR5-R3] — after the turn ends no event reaches onThinking (unsubscribed)
   it('TC-03d: late event after promptTurn ends is not forwarded (guard live)', async () => {
-    const host = await ensureSessionHost({ workspaceRoot: '/ws', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
+    const host = await ensureSessionHost({ workspaceRoot: '/ws', tabId: 'tab-1', providerId: 'anthropic', apiKey: 'k', nCtxDetected: 65536 });
     const onThinking = vi.fn();
     await host.promptTurn('short prompt', undefined, undefined, onThinking);
     expect(onThinking).not.toHaveBeenCalled(); // no script — sanity

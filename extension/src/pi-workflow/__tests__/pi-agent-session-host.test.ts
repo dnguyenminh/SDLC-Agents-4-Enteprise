@@ -8,6 +8,10 @@ const { mocks } = vi.hoisted(() => {
     promptCalls,
     setRuntimeApiKey,
     sessionOpts: undefined as unknown,
+    // SA4E-370: promptTurn subscribes per-turn (async FIFO chain), so live
+    // events must be scripted through the mock's prompt() — drained through
+    // the captured listener while the turn is live.
+    scriptedEvents: [] as unknown[],
     get subscribed() {
       return subscribed;
     },
@@ -19,6 +23,9 @@ const { mocks } = vi.hoisted(() => {
       },
       prompt: async (text: string) => {
         promptCalls.push(text);
+        for (const evt of mocks.scriptedEvents.splice(0)) {
+          mocks.listener?.(evt);
+        }
         mocks.listener?.({
           type: 'message_update',
           assistantMessageEvent: { type: 'text_delta', delta: 'session says hi' },
@@ -73,12 +80,14 @@ describe('PiAgentSessionHost (SA4E-334 Option A)', () => {
   beforeEach(() => {
     clearSessionHostCache();
     mocks.promptCalls.length = 0;
+    mocks.scriptedEvents.length = 0;
     mocks.setRuntimeApiKey.mockClear();
     mocks.session.dispose.mockClear();
   });
 
   it('promptTurn streams tokens and reports the session transcript file', async () => {
     const host = await ensureSessionHost({
+      tabId: 'tab-1',
       workspaceRoot: 'C:/ws/test',
       providerId: 'anthropic',
       apiKey: 'k',
@@ -95,27 +104,27 @@ describe('PiAgentSessionHost (SA4E-334 Option A)', () => {
   });
 
   it('caches the host per workspaceRoot', async () => {
-    const a = await ensureSessionHost({ workspaceRoot: 'C:/ws/a', providerId: 'p', apiKey: 'k' });
-    const b = await ensureSessionHost({ workspaceRoot: 'C:/ws/a', providerId: 'p', apiKey: 'k' });
+    const a = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/a', providerId: 'p', apiKey: 'k' });
+    const b = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/a', providerId: 'p', apiKey: 'k' });
     expect(a).toBe(b);
     a.dispose();
   });
 
   it('seeds a real key into the runtime store', async () => {
-    const host = await ensureSessionHost({ workspaceRoot: 'C:/ws/keyed', providerId: 'anthropic', apiKey: 'sk-x' });
+    const host = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/keyed', providerId: 'anthropic', apiKey: 'sk-x' });
     expect(mocks.setRuntimeApiKey).toHaveBeenCalledWith('anthropic', 'sk-x');
     host.dispose();
   });
 
   it('registers get_workspace_info as a session custom tool', async () => {
-    const host = await ensureSessionHost({ workspaceRoot: 'C:/ws/custom', providerId: 'p', apiKey: 'k' });
+    const host = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/custom', providerId: 'p', apiKey: 'k' });
     const opts = mocks.sessionOpts as { customTools?: Array<{ name?: string }> };
     expect(opts.customTools?.map((t) => t.name)).toContain('get_workspace_info');
     host.dispose();
   });
 
   it('allowlist covers 7 builtins + discovered extensions + orientation (deduped)', async () => {
-    const host = await ensureSessionHost({ workspaceRoot: 'C:/ws/allow', providerId: 'p', apiKey: 'k' });
+    const host = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/allow', providerId: 'p', apiKey: 'k' });
     const opts = mocks.sessionOpts as { tools?: string[] };
     // SA4E-336: shell tool is OS-aware (powershell on win32, bash elsewhere).
     const shell = process.platform === 'win32' ? 'powershell' : 'bash';
@@ -128,7 +137,7 @@ describe('PiAgentSessionHost (SA4E-334 Option A)', () => {
 
   it('omits allowlist when extensions fail to resolve (defaults preserved)', async () => {
     vi.mocked(getPiExtensionAgentTools).mockResolvedValueOnce({ tools: [], loaded: [], skipped: [] });
-    const host = await ensureSessionHost({ workspaceRoot: 'C:/ws/noallow', providerId: 'p', apiKey: 'k' });
+    const host = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/noallow', providerId: 'p', apiKey: 'k' });
     const opts = mocks.sessionOpts as { tools?: string[] };
     const shell = process.platform === 'win32' ? 'powershell' : 'bash';
     expect(opts.tools).toEqual(
@@ -138,12 +147,16 @@ describe('PiAgentSessionHost (SA4E-334 Option A)', () => {
   });
 
   it('forwards live tool events from the session subscription', async () => {
-    const host = await ensureSessionHost({ workspaceRoot: 'C:/ws/tools', providerId: 'p', apiKey: 'k' });
+    const host = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/tools', providerId: 'p', apiKey: 'k' });
     const onToolEvent = vi.fn();
-    const done = host.promptTurn('hi', undefined, onToolEvent);
-    mocks.listener?.({ type: 'tool_execution_start', toolCallId: 't1', toolName: 'read', args: {} });
-    mocks.listener?.({ type: 'tool_execution_end', toolCallId: 't1', toolName: 'read', isError: false });
-    await done;
+    // SA4E-370: the turn executor subscribes per-turn inside an async FIFO
+    // chain — sync listener emission would race ahead of subscribe. Script
+    // the tool events so they flow through the live listener during prompt().
+    mocks.scriptedEvents.push(
+      { type: 'tool_execution_start', toolCallId: 't1', toolName: 'read', args: {} },
+      { type: 'tool_execution_end', toolCallId: 't1', toolName: 'read', isError: false }
+    );
+    await host.promptTurn('hi', undefined, onToolEvent);
     expect(onToolEvent).toHaveBeenCalledWith(
       expect.objectContaining({ phase: 'start', id: 't1', name: 'read' })
     );

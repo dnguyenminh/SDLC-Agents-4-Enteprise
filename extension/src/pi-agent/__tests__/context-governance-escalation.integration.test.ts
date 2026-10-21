@@ -80,7 +80,7 @@ describe('Escalation ladder integration (SA4E-355 Task 7)', () => {
   it('STC-110/306: compression suffices → ALLOW, later steps never fired', async () => {
     compressibleStatic();
     const host = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-esc-ok-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-esc-ok-${++id}`, providerId: 'p',
       configuredModelId: 'qwen', role: 'DEV', phase: 'implementation', nCtxDetected: 16385,
     });
     expect(escalationSteps()).toEqual(['compress']);
@@ -93,7 +93,7 @@ describe('Escalation ladder integration (SA4E-355 Task 7)', () => {
     mocks.contextFiles.push({ path: '/ws/dense.md', content: 'z'.repeat(60000) });
     await expect(
       ensureSessionHost({
-        workspaceRoot: `C:/ws/gov-esc-full-${++id}`, providerId: 'p',
+        tabId: 'tab-1', workspaceRoot: `C:/ws/gov-esc-full-${++id}`, providerId: 'p',
         configuredModelId: 'qwen', nCtxDetected: 16384,
       })
     ).rejects.toThrow(/^PI_CONTEXT_BUDGET_EXCEEDED/);

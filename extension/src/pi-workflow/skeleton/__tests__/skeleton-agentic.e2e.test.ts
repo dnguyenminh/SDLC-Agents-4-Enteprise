@@ -98,6 +98,7 @@ afterAll(() => fs.rmSync(ROOT, { recursive: true, force: true }));
 describe('TC-360-01: skeleton session happy path @32k', () => {
   it('injects the measured skeleton and completes a turn without exceed errors', async () => {
     const host = await ensureSessionHost({
+      tabId: 'tab-1',
       workspaceRoot: ROOT,
       providerId: 'anthropic',
       apiKey: 'k',
@@ -128,6 +129,7 @@ describe('TC-360-20: intra-turn growth absorbed by gate #3', () => {
     // transcript in read-method-chain IT-05; here we assert the SESSION turns
     // complete (no exceed_context_size_error surfacing) across growth.
     const host = await ensureSessionHost({
+      tabId: 'tab-2',
       workspaceRoot: ROOT,
       providerId: 'anthropic',
       apiKey: 'k',
