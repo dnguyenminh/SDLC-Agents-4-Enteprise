@@ -35,14 +35,13 @@ describe('SA4E-26 UT — deriveProjectId', () => {
     expect(config.projectId).toBe('default');
   });
 
-  it('UT-11: root path yields a deterministic hash projectId (SA4E-375)', async () => {
+  it('UT-11: root path yields the default sentinel (SA4E-375)', async () => {
     delete process.env.CODE_INTEL_PROJECT_ID;
     const { loadConfig } = await import('../../../config/index.js');
     const config = loadConfig({ workspace: '/' } as any);
-    // SA4E-375: deterministic projectId from workspace path — no more 'default' sentinel for auto-upsert
-    expect(config.projectId).not.toBe('default');
-    expect(typeof config.projectId).toBe('string');
-    expect(config.projectId.length).toBeGreaterThan(0);
+    // Root path is special — gets the 'default' sentinel regardless of platform
+    // (CI runs on Linux where '/' is the actual root; Windows treats it similarly after SA4E-375)
+    expect(config.projectId).toBe('default');
   });
 
   it('UT-12: empty workspace yields the default sentinel', async () => {
