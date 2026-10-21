@@ -13,9 +13,9 @@ import { suggestExistingPaths } from './path-suggestion.js';
 export const NOT_FOUND_PATTERNS = /ENOENT|no such file|not found|does not exist|ENOTDIR|EISDIR/i;
 const FILE_NOT_DIR_PATTERNS = /not a directory|illegal operation on a directory/i;
 
-/** First absolute Windows path inside a tool error message, if any. */
+/** First absolute path inside a tool error message, if any (Windows drive paths + Unix absolute paths). */
 export function extractMissingPath(message: string): string | undefined {
-  const m = message.match(/[a-zA-Z]:[\\/][^\s'"|,:)\]]+/);
+  const m = message.match(/(?:[a-zA-Z]:)?[\\/][^\s'"|,:)\]]+/);
   return m ? m[0] : undefined;
 }
 
