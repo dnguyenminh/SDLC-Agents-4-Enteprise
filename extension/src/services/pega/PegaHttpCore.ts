@@ -70,10 +70,10 @@ export class PegaHttpCore {
     return vscode.workspace.getConfiguration("sdlcAgents").get<string>("pegaUsername", "").trim();
   }
 
-  /** Backend base URL (Code Intelligence server). */
+  /** Backend base URL (Code Intelligence server) — reads sdlcAgents.backend.url (same key as package.json). */
   getBackendUrl(): string {
     return vscode.workspace.getConfiguration("sdlcAgents")
-      .get<string>("backendUrl", "http://localhost:48721").replace(/\/$/, "");
+      .get<string>("backend.url", "http://127.0.0.1:48721").replace(/\/$/, "");
   }
 
   /** Candidate REST prefixes, active prefix first once discovered. */
