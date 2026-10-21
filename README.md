@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.53.4.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.54.0.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,16 @@ MIT
 ---
 
 ## Changelog
+
+### v1.54.0 (2026-10-21)
+
+**SA4E-369/370/373/374/375 — PeerBus release + CI green + test alignment**
+
+- 📡 **PeerBus: Intra-instance agent-to-agent messaging** (SA4E-369) — `peer_send`/`peer_list`/`peer_status` tools, Option A fail-closed approval (30s auto-deny), rate limiting (10/60s, queue cap 20, ping-pong cap 5 turns, 16k chars), anti-injection (envelope markers, PEER_010_FORGERY, 2nd-order reply wrapping), lifecycle cleanup (I-8 tab close, BR-9 user activity reset), PEN-6a curateReason SECRET_PATTERNS fix. 103 tests + 18 pentest probes, security review PASS, pentest 5/6 SAFE, UAT PASS (14/15), deploy review GO
+- 🤖 **Custom Agents test alignment** (SA4E-370 scope) — Fixed 77 extension test failures: D1 per-tab session keys (12 test files updated with tabId), mock path fixes (per-tab-session, dir-watchers, selectAgent), real-fs test rewrites (fs-helpers, selectAgent), production TabBar.svelte CSS typo fix. Full suite: 3,224/3,224 PASS
+- 🔧 **ide_launch fix** (SA4E-373) — DevToolsActivePort timeout resolved, realpath canonicalization + sandbox prefix for userDataDir, --remote-debugging-address=127.0.0.1, ideBinaryPath whitelist
+- 🧹 **CI fully GREEN** — Backend 3,330/3,330 pass, Extension 3,224/3,224 pass, TypeScript compile 0 errors, contract tests pass, not-found-hint Linux path fix, extractMissingPath Unix support
+- 🔖 **Version sync** — root `package.json`, `backend/package.json`, `extension/package.json` aligned to `1.54.0`; tag `v1.54.0`
 
 ### v1.53.12 (2026-10-20)
 
