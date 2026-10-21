@@ -33,6 +33,8 @@ export { IngestAuthError } from "./PegaStreamIngester/ingest-auth";
 export class PegaStreamIngester {
   private readonly backendUrl: string;
   private readonly auth?: IngestAuthProvider;
+  /** SA4E-375 client-side: projects already pre-registered this session (avoids re-registering per rule). */
+  private registeredProjects = new Set<string>();
 
   constructor(backendUrl: string, auth?: IngestAuthProvider) {
     this.backendUrl = backendUrl;
@@ -57,6 +59,32 @@ export class PegaStreamIngester {
     log?: LogFn,
   ): Promise<Response> {
     return withAuthRetry(send, this.auth, log, endpoint);
+  }
+
+  /**
+   * SA4E-375 client-side fallback: Ensure the project is registered before ingest.
+   * Production backends without the SA4E-375 server-side auto-upsert still
+   * reject unregistered projects with PROJECT_NOT_REGISTERED. This pre-registers
+   * the project so ingest works on both old and new backends.
+   * Fire-and-forget: on failure, proceed with ingest (backend might auto-upsert).
+   */
+  private async ensureProjectRegistered(projectId: string, appName?: string): Promise<void> {
+    if (this.registeredProjects.has(projectId)) { return; }
+    this.registeredProjects.add(projectId); // mark first — even if register fails, don't retry per rule
+    try {
+      const endpoint = `${this.backendUrl}/api/admin/projects/register`;
+      const body = JSON.stringify({ projectId, displayName: appName || projectId });
+      await this.fetchWithAuthRetry(async (token) => {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'X-Project-Id': projectId,
+        };
+        if (token) { headers['Authorization'] = `Bearer ${token}`; }
+        return fetch(endpoint, { method: 'POST', headers, body });
+      }, "projects/register");
+    } catch {
+      // Registration failed — proceed with ingest anyway (backend might auto-upsert)
+    }
   }
 
   /** SA4E-362 FR-2 — Dựng headers: X-Project-Id (identity — SEC-01) + Authorization chỉ khi token khác rỗng (BR-5). */
@@ -160,6 +188,13 @@ export class PegaStreamIngester {
       // SEC-02 (3.7): envelope message được cap 200 ký tự.
       if (res.status === 401) {
         throw new IngestAuthError(`Ingest failed: ${this.truncate(json.error.message)}`, res.status);
+      }
+      // SA4E-375 client-side fallback: auto-register project and retry once when
+      // backend rejects with PROJECT_NOT_REGISTERED (old backends without auto-upsert).
+      if (json.error.message.includes("not registered") && !this.registeredProjects.has(projectId)) {
+        this.registeredProjects.add(projectId);
+        await this.ensureProjectRegistered(projectId, appName);
+        return this.ingestSingleRule(projectId, ruleJson, checksum, version, appName);
       }
       throw new Error(`Ingest failed: ${json.error.message}`); // non-auth envelope error giữ nguyên
     }
