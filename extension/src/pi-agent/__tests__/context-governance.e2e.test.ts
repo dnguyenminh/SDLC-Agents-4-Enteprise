@@ -145,7 +145,7 @@ describe('Context governance E2E-API (SA4E-355 Task 7)', () => {
   it('STC-700: turn-1 on 32k — no exceed_context_size_error, tool call completes', async () => {
     oversizedStatic();
     const host = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-e2e-700-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-e2e-700-${++id}`, providerId: 'p',
       configuredModelId: 'qwen', role: 'DEV', phase: 'implementation', nCtxDetected: await detectNctx(),
     });
     expect(logger.info).toHaveBeenCalledWith('Context budget resolved', expect.objectContaining({
@@ -164,7 +164,7 @@ describe('Context governance E2E-API (SA4E-355 Task 7)', () => {
     sim.nCtx = undefined;
     expect(await detectNctx()).toBeUndefined();
     const host = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-e2e-701-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-e2e-701-${++id}`, providerId: 'p',
       configuredModelId: 'qwen', role: 'DEV', nCtxDetected: await detectNctx(),
     });
     expect(logger.warn).toHaveBeenCalledWith('PI_CONTEXT_DETECT_FALLBACK', expect.anything());
@@ -178,7 +178,7 @@ describe('Context governance E2E-API (SA4E-355 Task 7)', () => {
     sim.nCtx = nCtx;
     const modelId = nCtx === 128000 ? 'gpt-4o-mini' : 'qwen';
     const host = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-e2e-702-${nCtx}-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-e2e-702-${nCtx}-${++id}`, providerId: 'p',
       configuredModelId: modelId, role: 'DEV', nCtxDetected: await detectNctx(),
     });
     const result = await host.promptTurn('Hãy review source code');

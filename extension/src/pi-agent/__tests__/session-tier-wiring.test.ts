@@ -80,6 +80,7 @@ async function hostWith(nCtxDetected: number) {
   mocks.contextFiles.length = 0;
   mocks.contextFiles.push({ path: '/ws/AGENTS.md', content: 'small guide' }); // ~3 tokens: surplus everywhere
   return ensureSessionHost({
+    tabId: 'tab-' + Math.random().toString(36).slice(2, 8),
     workspaceRoot: 'C:/ws/tier-' + Math.random().toString(36).slice(2, 8),
     providerId: 'p',
     configuredModelId: 'qwen',

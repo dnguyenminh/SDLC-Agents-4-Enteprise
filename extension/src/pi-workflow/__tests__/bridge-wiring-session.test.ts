@@ -32,6 +32,7 @@ describe('PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path', () 
   // STC: UT-06 — customTools: 2 existing + 4 bridge; allowlist contains the 4 names.
   it('UT-06: customTools carry 2 existing + 4 bridge tools; allowlist includes bridge names', async () => {
     const host = await ensureSessionHost({
+      tabId: 'tab-s1',
       workspaceRoot: 'C:/ws/sa4e367-s1',
       providerId: 'anthropic',
       apiKey: 'k',
@@ -60,6 +61,7 @@ describe('PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path', () 
   // existing tools keep the converter's hardcoded 'Workspace orientation'.
   it('UT-07: FR-09 — bridge tools have undefined prompt metadata; existing tools untouched', async () => {
     const host = await ensureSessionHost({
+      tabId: 'tab-s2',
       workspaceRoot: 'C:/ws/sa4e367-s2',
       providerId: 'anthropic',
       apiKey: 'k',
@@ -82,6 +84,7 @@ describe('PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path', () 
   it('IT-03: real McpBridge instance → 4 bridge tools; undefined/foreign value → none (fail-safe)', async () => {
     // Case A — real instance passes the instanceof narrow (OI-03).
     const hostA = await ensureSessionHost({
+      tabId: 'tab-it3a',
       workspaceRoot: 'C:/ws/sa4e367-it3a', providerId: 'p', apiKey: 'k',
       mcpBridge: new McpBridge(runningManager()),
     });
@@ -91,15 +94,18 @@ describe('PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path', () 
     // Case B — undefined bridge: session still created, zero bridge entries.
     clearSessionHostCache();
     mocks.sessionOpts = undefined;
-    const hostB = await ensureSessionHost({ workspaceRoot: 'C:/ws/sa4e367-it3b', providerId: 'p', apiKey: 'k' });
+    const hostB = await ensureSessionHost({ tabId: 'tab-it3b', workspaceRoot: 'C:/ws/sa4e367-it3b', providerId: 'p', apiKey: 'k' });
     expect(bridgeToolsIn(sessionOpts().customTools)).toHaveLength(0);
-    expect(sessionOpts().customTools).toHaveLength(2); // degraded, never crashed (W-1)
+    // SA4E-369 D4 + SA4E-370 D1: peer_list/peer_send/peer_status now auto-register
+    // in every tab (3 peer tools + get_workspace_info + read_method = 5).
+    expect(sessionOpts().customTools).toHaveLength(5); // degraded, never crashed (W-1)
     hostB.dispose();
 
     // Case C — foreign object (not a McpBridge instance): type-guard blocks it.
     clearSessionHostCache();
     mocks.sessionOpts = undefined;
     const hostC = await ensureSessionHost({
+      tabId: 'tab-it3c',
       workspaceRoot: 'C:/ws/sa4e367-it3c', providerId: 'p', apiKey: 'k', mcpBridge: {},
     });
     expect(bridgeToolsIn(sessionOpts().customTools)).toHaveLength(0);

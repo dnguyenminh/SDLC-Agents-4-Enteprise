@@ -139,6 +139,7 @@ export function loaderOf(callIndex: number): LoaderOverrides {
 
 export function optsFor(root: string, bridge?: unknown) {
   return {
+    tabId: 'tab-1', // SA4E-370 D1: per-tab session keys require a real tabId
     workspaceRoot: root,
     providerId: 'anthropic',
     apiKey: 'k',

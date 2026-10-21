@@ -74,7 +74,7 @@ function loaderOptsOf(): Record<string, unknown> {
 /** Creates a host for the given workspace id and returns the captured loader options. */
 async function wiredHost(id: string, opts: { role?: string; phase?: string; nCtxDetected?: number } = {}) {
   const host = await ensureSessionHost({
-    workspaceRoot: 'C:/ws/' + id, providerId: 'p', configuredModelId: 'qwen', ...opts,
+    tabId: 'tab-' + id, workspaceRoot: 'C:/ws/' + id, providerId: 'p', configuredModelId: 'qwen', ...opts,
   });
   return { host, opts: loaderOptsOf() };
 }

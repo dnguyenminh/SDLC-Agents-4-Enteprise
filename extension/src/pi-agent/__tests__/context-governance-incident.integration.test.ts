@@ -74,7 +74,7 @@ describe('Original-incident replay (SA4E-355 Task 7)', () => {
     let thrown: unknown;
     try {
       await ensureSessionHost({
-        workspaceRoot: `C:/ws/gov-incident-${++id}`, providerId: 'p',
+        tabId: 'tab-1', workspaceRoot: `C:/ws/gov-incident-${++id}`, providerId: 'p',
         configuredModelId: 'qwen', role: 'DEV', phase: 'implementation', nCtxDetected: 65536,
       });
     } catch (err) {
@@ -90,14 +90,14 @@ describe('Original-incident replay (SA4E-355 Task 7)', () => {
     incidentStatic();
     await expect(
       ensureSessionHost({
-        workspaceRoot: `C:/ws/gov-reject-${++id}`, providerId: 'p',
+        tabId: 'tab-1', workspaceRoot: `C:/ws/gov-reject-${++id}`, providerId: 'p',
         configuredModelId: 'qwen', nCtxDetected: 65536,
       })
     ).rejects.toThrow(/^PI_CONTEXT_BUDGET_EXCEEDED/);
     expect(mocks.createSession).not.toHaveBeenCalled();
     mocks.contextFiles.length = 0; // small static → ALLOW control
     const host = await ensureSessionHost({
-      workspaceRoot: `C:/ws/gov-allow-${++id}`, providerId: 'p',
+      tabId: 'tab-1', workspaceRoot: `C:/ws/gov-allow-${++id}`, providerId: 'p',
       configuredModelId: 'qwen', nCtxDetected: 65536,
     });
     expect(mocks.createSession).toHaveBeenCalledTimes(1);

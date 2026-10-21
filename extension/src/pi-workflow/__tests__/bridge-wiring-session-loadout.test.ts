@@ -122,7 +122,7 @@ describe('Session path — SA4E-367 discovery-pair routing (AC-3/AC-5)', () => {
     clearSessionHostCache();
     mocks.sessionOpts = undefined;
     const host = await ensureSessionHost({
-      workspaceRoot: 'C:/ws/sa4e367-esc', providerId: 'p', apiKey: 'k',
+      tabId: 'tab-esc', workspaceRoot: 'C:/ws/sa4e367-esc', providerId: 'p', apiKey: 'k',
       mcpBridge: new McpBridge(runningManager()),
     });
     // Default (non-escalated) session: allowlist mirrors the loadout — pair absent.
