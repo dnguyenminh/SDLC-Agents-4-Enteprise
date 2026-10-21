@@ -20,8 +20,11 @@ const MAPPINGS = [
     { src: ".code-intel/hooks", dst: ".code-intel/hooks" },
     { src: ".code-intel/steering", dst: ".code-intel/steering" },
     { src: "documents/templates", dst: "documents/templates" },
-    { src: "kiro-sdlc-agents/webview-assets/chat", dst: "webview-assets/chat" },
-    { src: "kiro-sdlc-agents/webview-assets/settings", dst: "webview-assets/settings" },
+    // NOTE: webview-assets are NOT copied here any more — extension/webview-assets/
+    // is the single source of truth and is packaged directly (loaded at runtime
+    // via extensionUri/webview-assets, see ChatHtmlBuilder.ts / SettingsPanel.ts).
+    // The old kiro-sdlc-agents/webview-assets → resources/webview-assets copies
+    // were stale duplicates that drifted from the source (DRY violation, removed).
     { src: ".analysis/code-intelligence/index-config.json", dst: ".analysis/code-intelligence/index-config.json" },
     { src: ".analysis/code-intelligence/scripts/python", dst: ".analysis/code-intelligence/scripts/python" },
     { src: ".analysis/code-intelligence/scripts/java", dst: ".analysis/code-intelligence/scripts/java" },

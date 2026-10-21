@@ -6,6 +6,7 @@
 import * as vscode from "vscode";
 import { ChatPanelProvider } from "../chat-panel/chat-panel-provider";
 import { llmSecretKey, legacyLlmSecretKey } from "../config/llm-secret-keys";
+import { getSettingWithFallback } from "../config/settings-migration";
 
 export function registerLlmCommands(
   context: vscode.ExtensionContext,
@@ -75,8 +76,7 @@ async function sendTestChat(model: vscode.LanguageModelChat, outputCh: vscode.Ou
 }
 
 async function handleSetLlmApiKey(context: vscode.ExtensionContext): Promise<void> {
-  const config = vscode.workspace.getConfiguration("sdlcAgents");
-  const provider = config.get<string>("llmProvider", "anthropic");
+  const provider = getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
   if (provider === "ollama") {
     vscode.window.showInformationMessage("Ollama does not require an API key.");
     return;
@@ -92,8 +92,7 @@ async function handleSetLlmApiKey(context: vscode.ExtensionContext): Promise<voi
 }
 
 async function handleClearLlmApiKey(context: vscode.ExtensionContext): Promise<void> {
-  const config = vscode.workspace.getConfiguration("sdlcAgents");
-  const provider = config.get<string>("llmProvider", "anthropic");
+  const provider = getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
   if (provider === "ollama") {
     vscode.window.showInformationMessage("Ollama does not use stored API keys.");
     return;

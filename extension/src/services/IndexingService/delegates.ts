@@ -7,6 +7,7 @@ import * as vscode from "vscode";
 import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET } from "../WorkspaceScopeResolver";
 import type { ProgressReporter } from "./types";
 import { IndexingServiceBase } from "./base";
+import { getSettingWithFallback } from "../../config/settings-migration";
 
 export class IndexingServiceDelegates extends IndexingServiceBase {
     /** Delegate to PegaSchemaIndexer — batch generate all RuleForm schemas. */
@@ -15,13 +16,12 @@ export class IndexingServiceDelegates extends IndexingServiceBase {
     ): Promise<string | null> {
         try {
             await ensureMigrated(secrets);
-            const config = vscode.workspace.getConfiguration("sdlcAgents");
-            const username = config.get<string>("pegaUsername", "");
+            const username = getSettingWithFallback<string>("pega.username", "pegaUsername", "");
             const wsHash = getWsHash();
             const pwKey = wsHash ? secretKey("pega", wsHash)! : LEGACY_SECRET.pega;
             const password = (await secrets.get(pwKey)) || "";
             if (!username || !password) {
-                return "⚠️ Pega Schema: credentials not configured (set pegaUsername + password in settings)";
+                return "⚠️ Pega Schema: credentials not configured (set pega.username + password in settings)";
             }
             const { PegaHttpClient } = await import("../PegaHttpClient");
             const { PegaSchemaIndexer } = await import("../PegaSchemaIndexer");

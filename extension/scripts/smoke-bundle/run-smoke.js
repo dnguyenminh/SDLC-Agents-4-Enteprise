@@ -12,6 +12,7 @@ const fs = require('node:fs');
 const { execFileSync } = require('node:child_process');
 const esbuild = require('esbuild');
 const { piImportMetaBanner, piImportMetaDefine } = require('../esbuild-plugins/pi-import-meta.js');
+const { copyJitiBabel } = require('../esbuild-plugins/jiti-babel.js');
 
 async function main() {
   const outDir = path.join(__dirname, 'out');
@@ -30,11 +31,15 @@ async function main() {
     logLevel: 'warning',
   });
   const workspaceRoot = process.argv[2] || process.cwd();
+  // jiti's lazy Babel transform (see ../esbuild-plugins/jiti-babel.js) — the
+  // bundled jiti resolves it as <bundleDir>/../dist/babel.cjs.
+  copyJitiBabel(outDir);
   try {
     execFileSync(process.execPath, [outFile, workspaceRoot], { stdio: 'inherit' });
   } finally {
     try {
       fs.rmSync(outDir, { recursive: true, force: true });
+      fs.rmSync(path.join(__dirname, 'dist'), { recursive: true, force: true });
     } catch {
       // Best-effort cleanup (scripts/** is vsix-excluded anyway).
     }

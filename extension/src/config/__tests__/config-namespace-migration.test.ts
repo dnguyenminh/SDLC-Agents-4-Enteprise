@@ -55,23 +55,23 @@ function reset() {
 describe("migrateConfigNamespace", () => {
   beforeEach(reset);
 
-  it("copies a legacy global value when the new namespace is unset", async () => {
+  it("copies a legacy global value to the SA4E-370 dotted key when the new namespace is unset", async () => {
     sections.kiroSdlc.global.set("llmProvider", "openai");
     await migrateConfigNamespace(makeContext());
-    expect(sections.sdlcAgents.global.get("llmProvider")).toBe("openai");
+    expect(sections.sdlcAgents.global.get("llm.provider")).toBe("openai");
   });
 
-  it("copies a legacy workspace value independently of global", async () => {
+  it("copies a legacy workspace value independently of global (dotted target)", async () => {
     sections.kiroSdlc.workspace.set("pegaEndpoint", "https://pega.local");
     await migrateConfigNamespace(makeContext());
-    expect(sections.sdlcAgents.workspace.get("pegaEndpoint")).toBe("https://pega.local");
+    expect(sections.sdlcAgents.workspace.get("pega.endpoint")).toBe("https://pega.local");
   });
 
   it("does NOT overwrite an existing new value (copy-not-clobber)", async () => {
     sections.kiroSdlc.global.set("mcpServerPort", 9181);
-    sections.sdlcAgents.global.set("mcpServerPort", 5000);
+    sections.sdlcAgents.global.set("mcp.serverPort", 5000);
     await migrateConfigNamespace(makeContext());
-    expect(sections.sdlcAgents.global.get("mcpServerPort")).toBe(5000);
+    expect(sections.sdlcAgents.global.get("mcp.serverPort")).toBe(5000);
   });
 
   it("does NOT delete the legacy value (rollback-safe)", async () => {
@@ -83,7 +83,7 @@ describe("migrateConfigNamespace", () => {
   it("is a no-op when already migrated (guard flag set)", async () => {
     sections.kiroSdlc.global.set("llmProvider", "openai");
     await migrateConfigNamespace(makeContext(true));
-    expect(sections.sdlcAgents.global.get("llmProvider")).toBeUndefined();
+    expect(sections.sdlcAgents.global.get("llm.provider")).toBeUndefined();
   });
 
   it("sets the guard flag after a successful run", async () => {

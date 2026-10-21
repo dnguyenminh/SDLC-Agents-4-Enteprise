@@ -8,6 +8,7 @@ import { WebviewToExtMessage } from "../types";
 import { IServerManager } from "../types/server-types";
 import { BasePanel } from "./base-panel";
 import { getBackendUrl } from "../config/backend-url";
+import { getSettingWithFallback } from "../config/settings-migration";
 
 /** System prompt for extension-side code symbol enrichment (fallback). */
 const CODE_ENRICH_SYSTEM = `You are a code analyst. Given a code symbol's source code, produce a JSON response with:
@@ -162,12 +163,14 @@ export class GraphPanel extends BasePanel {
 
   /** SA4E-155: attempt enrichment via local LLM (Ollama or LMStudio) if reachable. */
   private async tryLocalLLM(userPrompt: string): Promise<{ summary: string; pseudo_code: string } | null> {
-    const cfg = vscode.workspace.getConfiguration('sdlcAgents');
     const candidates: Array<{ label: string; baseUrl: string; model: string }> = [];
-    const ollamaUrl = (cfg.get<string>('ollamaUrl') || '').trim();
-    if (ollamaUrl) candidates.push({ label: 'ollama', baseUrl: `${ollamaUrl.replace(/\/$/, '')}/v1`, model: cfg.get<string>('llmModel') || 'qwen2.5-coder' });
-    const lmstudioUrl = (cfg.get<string>('lmstudioBaseUrl') || '').trim();
-    if (lmstudioUrl) candidates.push({ label: 'lmstudio', baseUrl: lmstudioUrl.replace(/\/$/, ''), model: cfg.get<string>('llmModel') || 'local-model' });
+    // SA4E-370: renamed keys with legacy-key fallback; defaults mirror the
+    // manifest so an unset key keeps the exact pre-rename resolution.
+    const ollamaUrl = getSettingWithFallback<string>('llm.ollama.baseUrl', 'ollamaUrl', 'http://localhost:11434').trim();
+    const llmModel = getSettingWithFallback<string>('llm.model', 'llmModel', '');
+    if (ollamaUrl) candidates.push({ label: 'ollama', baseUrl: `${ollamaUrl.replace(/\/$/, '')}/v1`, model: llmModel || 'qwen2.5-coder' });
+    const lmstudioUrl = getSettingWithFallback<string>('llm.lmstudio.baseUrl', 'lmstudioBaseUrl', '').trim();
+    if (lmstudioUrl) candidates.push({ label: 'lmstudio', baseUrl: lmstudioUrl.replace(/\/$/, ''), model: llmModel || 'local-model' });
 
     for (const c of candidates) {
       try {

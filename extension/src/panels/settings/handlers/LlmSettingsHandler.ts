@@ -8,8 +8,14 @@ import * as vscode from "vscode";
 import { SECRET_KEYS } from "../../../models";
 import { LlmTestService } from "../../../services/LlmTestService";
 import { ProviderConfigService } from "../../../services/ProviderConfigService";
+import { getSettingWithFallback } from "../../../config/settings-migration";
 
-/** Base-URL config key per provider. */
+/**
+ * Base-URL config key per provider. SA4E-370: these are the LEGACY flat keys
+ * and intentionally stay as the WRITE targets (updateConfig writes settings.json
+ * where existing user values already live); reads resolve the renamed keys
+ * with legacy-key fallback.
+ */
 const BASE_URL_KEYS: Record<string, string> = {
   anthropic: "anthropicBaseUrl",
   openai: "openaiBaseUrl",
@@ -28,8 +34,7 @@ export class LlmSettingsHandler {
 
   /** Fetch and post the model list for a provider. */
   async getModels(provider: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const currentModel = config.get<string>("llmModel", "");
+    const currentModel = getSettingWithFallback<string>("llm.model", "llmModel", "");
     const { models, selected, defaultModel } = await this.configService.getModels(provider, currentModel);
     this.postMessage({ type: "models", provider, models, selected, defaultModel });
   }

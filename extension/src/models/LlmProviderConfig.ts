@@ -23,8 +23,20 @@ export const PROVIDER_BASE_URL_DEFAULTS: Record<string, string> = {
   openrouter: "https://openrouter.ai/api/v1",
 };
 
-/** Config keys for per-provider base URLs */
+/**
+ * Config keys for per-provider base URLs.
+ * SA4E-370: renamed to dot notation; reads must fall back to the legacy flat
+ * keys below (see config/settings-migration.ts).
+ */
 export const PROVIDER_BASE_URL_KEYS: Record<string, string> = {
+  anthropic: "llm.anthropic.baseUrl",
+  openai: "llm.openai.baseUrl",
+  lmstudio: "llm.lmstudio.baseUrl",
+  openrouter: "llm.openrouter.baseUrl",
+};
+
+/** SA4E-370 legacy flat base-URL keys — read fallback + write targets. */
+export const PROVIDER_BASE_URL_LEGACY_KEYS: Record<string, string> = {
   anthropic: "anthropicBaseUrl",
   openai: "openaiBaseUrl",
   lmstudio: "lmstudioBaseUrl",

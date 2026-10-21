@@ -89,7 +89,7 @@ In OpenCode, tools are described in the system prompt and available directly by 
 ### Key Tools by Category
 - **Project Tracker (Jira)**: `jira_jira_*` tools — get issue, search, transition, comment, attach
 - **Knowledge Base**: `mem_search`, `mem_ingest` — semantic search and data ingestion
-- **Document Export**: `export_docx`, `embed_images` — DOCX conversion
+- **Document Export**: `export_docx`, `embed_image` — DOCX conversion
 - **Sub-agents**: `task` tool — delegate work to specialized agents
 - **Skills**: `skill` tool — load contextual instructions
 
@@ -141,7 +141,7 @@ Then `tools/list` to confirm connection, and `tools/call` to execute tools. Fail
 
 ### Document Attachments
 - Naming: `{DOC}-v{version}-{TICKET}.docx`
-- Process: embed_images → export_docx → jira_update_issue
+- Process: embed_image → export_docx → jira_update_issue
 
 ---
 

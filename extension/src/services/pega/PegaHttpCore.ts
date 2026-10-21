@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { getWsHash, secretKey, LEGACY_SECRET } from "../WorkspaceScopeResolver";
 import { assertWorkspaceTrusted } from "../WorkspaceTrustGuard";
 import { enforcePegaEndpointHttps } from "../../config/pega-endpoint";
+import { getSettingWithFallback } from "../../config/settings-migration";
 
 /** Pega operator + application context returned by getOperatorContext(). */
 export interface PegaOperatorContext {
@@ -43,8 +44,7 @@ export class PegaHttpCore {
    */
   async getAuthHeader(): Promise<string> {
     assertWorkspaceTrusted();
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const username = config.get<string>("pegaUsername", "").trim();
+    const username = getSettingWithFallback<string>("pega.username", "pegaUsername", "").trim();
     const password = await this.readWorkspacePassword();
     return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
   }
@@ -60,14 +60,15 @@ export class PegaHttpCore {
 
   /** Configured Pega endpoint with SEC-02 HTTPS enforcement applied. */
   getPegaEndpoint(): string {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const raw = config.get<string>("pegaEndpoint", "http://localhost:8080/prweb").replace(/\/$/, "");
+    const raw = getSettingWithFallback<string>(
+      "pega.endpoint", "pegaEndpoint", "http://localhost:8080/prweb",
+    ).replace(/\/$/, "");
     return enforcePegaEndpointHttps(raw);
   }
 
   /** SA4E-241 SEC-03: configured Pega operator id (no hardcoded default). */
   getConfiguredUsername(): string {
-    return vscode.workspace.getConfiguration("sdlcAgents").get<string>("pegaUsername", "").trim();
+    return getSettingWithFallback<string>("pega.username", "pegaUsername", "").trim();
   }
 
   /** Backend base URL (Code Intelligence server) — reads sdlcAgents.backend.url (same key as package.json). */

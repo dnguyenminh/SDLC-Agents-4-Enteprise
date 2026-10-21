@@ -6,15 +6,17 @@ import * as vscode from "vscode";
 import { ConfigWatcher } from "../../config-watcher";
 import { writeBundledMcpConfig } from "../../mcp-injector";
 import { mapServerStatusToWebview } from "../../types";
+import { getSettingWithFallback } from "../../config/settings-migration";
 import { runtime } from "./state";
 
 export function setupConfigWatcher(context: vscode.ExtensionContext, workspaceRoot: string, outputChannel: vscode.OutputChannel): void {
   runtime.configWatcher = new ConfigWatcher(workspaceRoot, runtime.mcpManager!, outputChannel);
   context.subscriptions.push(runtime.configWatcher);
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
-    if (!event.affectsConfiguration("sdlcAgents.mcpServerPort") || !runtime.mcpManager) { return; }
-    const cfg = vscode.workspace.getConfiguration("sdlcAgents");
-    if (!cfg.get<boolean>("enableMcpServer", true)) { return; }
+    const portChanged =
+      event.affectsConfiguration("sdlcAgents.mcp.serverPort") || event.affectsConfiguration("sdlcAgents.mcpServerPort");
+    if (!portChanged || !runtime.mcpManager) { return; }
+    if (!getSettingWithFallback<boolean>("mcp.enabled", "enableMcpServer", true)) { return; }
     if (runtime.mcpManager.status === "running") { runtime.mcpManager.restart().then(() => vscode.window.showInformationMessage("MCP Server restarted")).catch((err) => vscode.window.showErrorMessage(`MCP Server restart failed: ${(err as Error).message}`)); }
     else { runtime.mcpManager.spawn().catch((err) => vscode.window.showErrorMessage(`MCP Server start failed: ${(err as Error).message}`)); }
   }));
@@ -38,7 +40,10 @@ export function setupMcpStatusBroadcast(workspaceRoot: string): void {
 }
 
 export async function autoSpawnServer(config: vscode.WorkspaceConfiguration, outputChannel: vscode.OutputChannel): Promise<void> {
-  if (config.get<boolean>("enableMcpServer", true)) {
+  // SA4E-370: config param kept for signature stability; the enabled flag is
+  // read via the fallback helper (new `mcp.enabled` + legacy `enableMcpServer`).
+  void config;
+  if (getSettingWithFallback<boolean>("mcp.enabled", "enableMcpServer", true)) {
     try { await runtime.mcpManager!.spawn(); }
     catch (err) {
       const msg = `Auto-spawn failed: ${(err as Error).message}`;

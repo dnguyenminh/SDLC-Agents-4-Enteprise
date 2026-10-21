@@ -3,6 +3,7 @@
  */
 import * as vscode from "vscode";
 import { readLlmApiKey } from "../config/llm-secret-keys";
+import { getSettingWithFallback } from "../config/settings-migration";
 
 export type ServerStatus = "starting" | "running" | "crashed" | "stopped";
 
@@ -88,8 +89,10 @@ export const SERVER_CONSTANTS = {
 export async function checkLlmAvailability(
   secrets?: vscode.SecretStorage, configKey: string = "sdlcAgents"
 ): Promise<boolean> {
-  const config = vscode.workspace.getConfiguration(configKey);
-  const providerType = config.get<string>("llmProvider", "anthropic");
+  // SA4E-370: provider read via fallback helper (new `llm.provider` + legacy
+  // `llmProvider`); configKey kept for signature stability.
+  void configKey;
+  const providerType = getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
   switch (providerType) {
     case "ollama":
       // health probe — intentional: any error = service unavailable

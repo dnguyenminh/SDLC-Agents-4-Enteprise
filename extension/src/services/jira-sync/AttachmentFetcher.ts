@@ -8,6 +8,7 @@ import { AtlassianHttpClient } from "../../mcp/atlassian/atlassian-http-client";
 import type { AttachmentMeta } from "./LinkCrawler";
 import * as vscode from "vscode";
 import { getEffectiveScope } from "../../utils/scope-detector";
+import { getSettingWithFallback } from "../../config/settings-migration";
 
 /** Result of fetching an attachment */
 export interface FetchedAttachment {
@@ -189,8 +190,9 @@ export class AttachmentFetcher {
 
     /** Load checksums from workspace config. */
     private loadChecksums(): void {
-        const config = vscode.workspace.getConfiguration();
-        this.checksums = config.get<Record<string, AttachmentChecksum>>(CHECKSUM_CONFIG_KEY, {});
+        // SA4E-370: prefers `sdlcAgents.jira.attachmentChecksums`, falls back
+        // to the legacy flat `sdlcAgents.jiraAttachmentChecksums`.
+        this.checksums = getSettingWithFallback<Record<string, AttachmentChecksum>>("jira.attachmentChecksums", "jiraAttachmentChecksums", {});
     }
 
     /** Persist checksums to workspace config after processing. */

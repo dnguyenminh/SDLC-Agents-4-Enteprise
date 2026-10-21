@@ -8,6 +8,7 @@ import * as vscode from "vscode";
 import { ensureMigrated, getWsHash, secretKey, readScopedSecret, type SecretBase } from "./WorkspaceScopeResolver";
 import { assertWorkspaceTrusted } from "./WorkspaceTrustGuard";
 import type { CredentialResponse } from "./AtlassianTypes";
+import { getSettingWithFallback } from "../config/settings-migration";
 
 /** Atlassian connection configuration */
 export interface AtlassianConfig {
@@ -126,8 +127,9 @@ export class AtlassianCredentialService {
   }
 
   private async readConnectionType(): Promise<"cloud" | "server"> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const val = config.get<string>("atlassianConnectionType", "cloud");
+    // SA4E-370: reads the new `jira.connectionType` key with fallback to the
+    // legacy flat `atlassianConnectionType` (writes stay on the legacy key).
+    const val = getSettingWithFallback<string>("jira.connectionType", "atlassianConnectionType", "cloud");
     return val === "server" ? "server" : "cloud";
   }
 

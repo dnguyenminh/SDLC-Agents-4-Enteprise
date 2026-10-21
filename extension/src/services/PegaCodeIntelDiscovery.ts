@@ -14,6 +14,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { PegaHttpClient } from "./PegaHttpClient";
 import { withAuthRetry, type IngestAuthProvider } from "../utils/backend-auth-headers";
+import { getSettingWithFallback } from "../config/settings-migration";
 
 export interface DiscoveryProgress {
   report(v: { message: string }): void;
@@ -61,13 +62,14 @@ export class PegaCodeIntelDiscovery {
         if (appName && appVersion) { return { appName, appVersion }; }
       } catch { /* ignore malformed */ }
     }
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const appName = config.get<string>("pegaAppName", "").trim();
-    const appVersion = config.get<string>("pegaAppVersion", "").trim();
+    // SA4E-370: renamed keys sdlcAgents.pega.appName / sdlcAgents.pega.appVersion
+    // (declared in package.json); legacy undocumented flat keys stay readable.
+    const appName = getSettingWithFallback<string>("pega.appName", "pegaAppName", "").trim();
+    const appVersion = getSettingWithFallback<string>("pega.appVersion", "pegaAppVersion", "").trim();
     if (appName && appVersion) { return { appName, appVersion }; }
     throw new Error(
       "Cannot resolve Pega application for discovery: no valid appName/appVersion in " +
-      "pega-project.json or sdlcAgents.pegaAppName/pegaAppVersion. Run 'Fetch Pega Context' first."
+      "pega-project.json or sdlcAgents.pega.appName/pega.appVersion. Run 'Fetch Pega Context' first."
     );
   }
 
