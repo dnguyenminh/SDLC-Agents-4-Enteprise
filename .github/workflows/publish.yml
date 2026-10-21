@@ -71,9 +71,12 @@ jobs:
           git add package.json
 
       - run: npm install
+      # FIX: esbuild-production FIRST, then copy-resources — esbuild can clean/overwrite
+      # webview-assets that copy-resources copies. Original order (copy-resources first)
+      # caused the 9.25MB vsix missing settings webview assets (v1.54.1 GitHub Release).
+      - run: npm run esbuild-production
       - run: npm run copy-resources
       - run: npm run gen-checksums
-      - run: npm run esbuild-production
       - run: npx vsce package --no-dependencies
 
       - name: Upload VSIX to GitHub Release
