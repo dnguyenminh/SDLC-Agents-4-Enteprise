@@ -1,0 +1,1711 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.8 C:/projects/kiro/SDLC-Agents-4-Enterprise/extension
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:49.432Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:49.436Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:54.684Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:54.684Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:54.735Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:54.736Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:54.739Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:54.740Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:54.776Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:54.778Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:54.781Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:54.781Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:54.821Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:54.822Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:54.824Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:54.824Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:54.861Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:54.862Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:54.865Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:54.865Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:54.903Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:54.904Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:54.906Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:54.906Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:54.941Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:54.942Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:54.944Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:54.944Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:54.979Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:54.980Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:54.982Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:54.982Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.017Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.018Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.020Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.020Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.053Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.054Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.056Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.056Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.089Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.090Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.091Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.092Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.122Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.123Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.125Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.125Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.160Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.161Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.163Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.163Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.196Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.197Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.200Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.200Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.375Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.376Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.378Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.378Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.390Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.391Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.393Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.393Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.404Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.405Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.407Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.407Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.418Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.419Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.422Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.422Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.431Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.433Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.437Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.438Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.451Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.452Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.453Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.453Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.481Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.482Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.483Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.484Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.495Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.495Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.497Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.498Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.510Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.511Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.513Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.513Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.526Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.526Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.529Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.529Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.697Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.697Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.699Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.699Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.726Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.727Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.728Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.729Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.741Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.742Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.743Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.743Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.756Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.756Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.758Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.759Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.769Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.770Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.771Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.771Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.782Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.783Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.791Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.791Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.801Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.802Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.804Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.804Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.814Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.815Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.817Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.817Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.825Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.826Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.828Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.829Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:55.843Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:55.843Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:55.845Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:55.845Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.025Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.026Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.028Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.028Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.038Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.039Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.040Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.040Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.050Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.051Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.053Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.053Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.066Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.067Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.069Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.069Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.079Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.079Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.081Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.081Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.091Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.092Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.093Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.093Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.103Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.104Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.106Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.106Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.117Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.117Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.119Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.119Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.130Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.130Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.132Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.132Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"Context budget resolved","modelId":"claude-opus-4-5","source":"provider","nCtx":200000,"reserveOutput":2000,"safetyMargin":16000,"staticBudget":127399,"historyBudget":54601,"timestamp":"2026-10-20T05:00:56.144Z"}
+{"level":"info","msg":"PI_SKELETON_BRIDGE_ABSENT","mode":"degraded","timestamp":"2026-10-20T05:00:56.145Z"}
+
+stdout | src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"timestamp":"2026-10-20T05:00:56.147Z"}
+{"level":"info","msg":"PI_GATE_DECISION","decision":"ALLOW","usagePercent":2.21,"staticTokens":2410,"escalations":[],"skeletonTokens":0,"truncationApplied":false,"measurementPoint":"turn-start gate #2, before createAgentSession","timestamp":"2026-10-20T05:00:56.147Z"}
+
+ ❯ src/pi-workflow/session-host/__tests__/per-tab-session.test.ts (6 tests | 5 failed) 9166ms
+     × TC-005: creates separate sessions for two tabs in same workspace 7882ms (retry x2)
+     × TC-314: rejects tabId='default' 3ms (retry x2)
+     × TC-203: evictSessionHost removes session from registry 111ms (retry x2)
+     × TC-204: sessions are isolated — tab-1 and tab-2 have separate keys 219ms (retry x2)
+     × TC-407: supports ≥ 10 concurrent tabs without degradation 948ms (retry x2)
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts (6 tests | 1 failed) 9808ms
+     × STC-339-09: SEC-330-01 Role validation 11ms (retry x2)
+ ❯ src/webview/__tests__/layout.integration.test.ts (2 tests | 1 failed) 1526ms
+     × IT-01: Layout mounts without error 1520ms (retry x2)
+ ❯ src/pi-agent/__tests__/context-governance.e2e.test.ts (5 tests | 5 failed) 64ms
+     × STC-700: turn-1 on 32k — no exceed_context_size_error, tool call completes 24ms (retry x2)
+     × STC-701: no meta.n_ctx — registry fallback, turn transparently completes 8ms (retry x2)
+     × STC-702: n_ctx=8192 through the provider layer fits budget 4ms (retry x2)
+     × STC-702: n_ctx=32768 through the provider layer fits budget 3ms (retry x2)
+     × STC-702: n_ctx=128000 through the provider layer fits budget 3ms (retry x2)
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts (4 tests | 3 failed) 68ms
+     × keeps per-root artifacts and layoutCache entries isolated 4ms (retry x2)
+     × creates the session with DEGRADED_NO_SKELETON + layout-only map + steering tool 1ms (retry x2)
+     × serves the assembly path and the tool result from the same cache window 0ms (retry x2)
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts (4 tests | 4 failed) 9ms
+     × measures the same strings it injects as virtual context files 4ms (retry x2)
+     × resolves budget → builds sections → measures → creates session (in order) 1ms (retry x2)
+     × throws PiContextBudgetExceededError after the full ladder; no session, no provider call 1ms (retry x2)
+     × within-share sessions run NO escalation (ladder order proven in IT-03) 0ms (retry x2)
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts (2 tests | 2 failed) 14ms
+     × injects the measured skeleton and completes a turn without exceed errors 7ms (retry x2)
+     × compacts oversized accumulated tool results; provider never errors 4ms (retry x2)
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts (5 tests | 3 failed) 17ms
+     × STC-339-02: High Usage (>= 95%) Triggers Compaction 5ms (retry x2)
+     × STC-339-03: Webview Context Meter Broadcast 3ms (retry x2)
+     × STC-339-05: Boundary 94.5% usage rounds to 0.95 and triggers compaction 3ms (retry x2)
+ ❯ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts (8 tests | 6 failed) 16ms
+     × STC-111: 65,536 scales automatically — resolver + gate + tier in one flow 6ms (retry x2)
+     × STC-016: nCtx=8192 — total prompt <= usable 5488, never REJECT 1ms (retry x2)
+     × STC-016: nCtx=32768 — total prompt <= usable 28098, never REJECT 0ms (retry x2)
+     × STC-016: nCtx=128000 — total prompt <= usable 101376, never REJECT 0ms (retry x2)
+     × STC-017: SM regression — essential skills kept, core tools in allowlist 1ms (retry x2)
+     × tier spot-check: small forces compression, medium surplus passes through 0ms (retry x2)
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.test.ts (9 tests | 7 failed) 15ms
+     × promptTurn streams tokens and reports the session transcript file 5ms (retry x2)
+     × caches the host per workspaceRoot 1ms (retry x2)
+     × seeds a real key into the runtime store 1ms (retry x2)
+     × registers get_workspace_info as a session custom tool 2ms (retry x2)
+     × allowlist covers 7 builtins + discovered extensions + orientation (deduped) 1ms (retry x2)
+     × omits allowlist when extensions fail to resolve (defaults preserved) 1ms (retry x2)
+     × forwards live tool events from the session subscription 0ms (retry x2)
+ ❯ src/pi-agent/__tests__/role-scope-wiring.test.ts (7 tests | 7 failed) 12ms
+     × wires skillsOverride + appendSystemPromptOverride into DefaultResourceLoader 6ms (retry x2)
+     × resolves the session budget in-host (Task 1 resolver wiring, UC-01) 1ms (retry x2)
+     × nCtxDetected option (adapter meta.n_ctx, BR-12) wins over the model catalog 1ms (retry x2)
+     × STC-006 wiring: skillsOverride keeps only BA-token skills, order preserved 1ms (retry x2)
+     × STC-305 wiring: unknown role and absent role keep ALL skills (BR-07 fail-open) 1ms (retry x2)
+     × UC-02 §6.1: role/phase flow into scopedSteering via appendSystemPromptOverride 0ms (retry x2)
+     × STC-202/EF-1 wiring: a throwing override input fails open to base + error log 1ms (retry x2)
+ ❯ src/chat-panel/ChatStateManager/__tests__/fs-helpers.test.ts (10 tests | 1 failed) 10ms
+     × TC-303: skips invalid/unreadable files, continues with valid ones 6ms (retry x2)
+ ❯ src/pi-workflow/__tests__/bridge-wiring-session-loadout.test.ts (6 tests | 1 failed) 12ms
+     × default host allowlist carries no pair names 3ms (retry x2)
+ ❯ src/pi-agent/__tests__/compression-wiring.test.ts (6 tests | 6 failed) 7ms
+     × STC-008 wiring: measured static > staticBudget → AGENTS.md compressed, security intact 4ms (retry x2)
+     × STC-105 wiring: budget surplus → compressPrompt NOT called, content byte-identical 1ms (retry x2)
+     × BR-04: same 32k model with a tiny workspace → no compression (condition is measured, not tier) 0ms (retry x2)
+     × STC-405 step 3: empty / whitespace-only contents pass through unchanged under compression 0ms (retry x2)
+     × UC-03 step 6 wiring: over-budget session also compresses scoped steering entries 0ms (retry x2)
+     × UC-03 step 6 wiring: surplus session keeps scoped steering byte-identical 0ms (retry x2)
+ ❯ src/pi-agent/__tests__/context-governance-incident.integration.test.ts (3 tests | 2 failed) 8ms
+     × STC-206/207: oversized static → REJECT with exact N/M/K message (BR-09) 4ms (retry x2)
+     × STC-307: provider NEVER called after REJECT; ALLOW control proves the spy 1ms (retry x2)
+ ❯ src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts (2 tests | 2 failed) 9ms
+     × watches .code-intel/agents/*.md for create/change/delete events 5ms (retry x2)
+     × onFire is debounced (~300ms) 3ms (retry x2)
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts (8 tests | 8 failed) 8ms
+     × creates host with tier small and enables auto-chunk mode 4ms (retry x2)
+     × promptTurn processes large prompt via incremental chunks for small tier 1ms (retry x2)
+     × promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx 0ms (retry x2)
+     × promptTurn does NOT chunk a small prompt for medium tier (below threshold) 1ms (retry x2)
+     × TC-03a: normal loop forwards thinking deltas then the text token 0ms (retry x2)
+     × TC-03b: auto-chunk loop forwards thinking deltas via onThinking 0ms (retry x2)
+     × TC-03c: empty thinking delta never reaches onThinking 0ms (retry x2)
+     × TC-03d: late event after promptTurn ends is not forwarded (guard live) 0ms (retry x2)
+ ❯ src/pi-agent/__tests__/session-tier-wiring.test.ts (8 tests | 4 failed) 8ms
+     × STC-106 wiring: 8k small tier compresses even though the workspace fits the budget 4ms (retry x2)
+     × STC-313 wiring: 16384 → small (forced), 16385 → medium (passthrough on surplus) 1ms (retry x2)
+     × STC-013/STC-105 wiring: qwen 32768 → medium, surplus workspace stays byte-identical 1ms (retry x2)
+     × STC-015 wiring: 128k large tier keeps full fidelity on surplus 0ms (retry x2)
+ ❯ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts (4 tests | 4 failed) 7ms
+     × STC-011: qwen 32k turn 1 ALLOW — exact budget, session created once 4ms (retry x2)
+     × STC-011: promptTurn delivers the user message to the session 1ms (retry x2)
+     × STC-012: WARN proceeds — session created and PI_GATE_WARN logged 0ms (retry x2)
+     × STC-309: detected n_ctx reaches assembly (source=provider in budget log) 1ms (retry x2)
+ ❯ src/pi-workflow/__tests__/bridge-wiring-session.test.ts (3 tests | 3 failed) 6ms
+     × UT-06: customTools carry 2 existing + 4 bridge tools; allowlist includes bridge names 4ms (retry x2)
+     × UT-07: FR-09 — bridge tools have undefined prompt metadata; existing tools untouched 1ms (retry x2)
+     × IT-03: real McpBridge instance → 4 bridge tools; undefined/foreign value → none (fail-safe) 1ms (retry x2)
+ ❯ src/pi-agent/__tests__/context-governance-escalation.integration.test.ts (2 tests | 2 failed) 5ms
+     × STC-110/306: compression suffices → ALLOW, later steps never fired 4ms (retry x2)
+     × STC-205: dense over-budget fires all three steps in fixed order 1ms (retry x2)
+ ❯ src/pi-workflow/pi-workflow-adapter/__tests__/selectAgent.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/pi-workflow/pi-workflow-adapter/__tests__/selectAgent.test.ts [ src/pi-workflow/pi-workflow-adapter/__tests__/selectAgent.test.ts ]
+Error: [vitest] There was an error when mocking a module. If you are using "vi.mock" factory, make sure there are no top level variables inside, since this call is hoisted to top of the file. Read more: https://vitest.dev/api/vi.html#vi-mock
+Caused by: ReferenceError: Cannot access 'mockReadFileSync' before initialization
+ ❯ src/pi-workflow/pi-workflow-adapter/__tests__/selectAgent.test.ts:15:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/232]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 77 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-09: SEC-330-01 Role validation
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-09: SEC-330-01 Role validation
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-09: SEC-330-01 Role validation
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.summary.test.ts:110:39
+    108|
+    109|     provider.updateContextUsageAfterTurn();
+    110|     expect(mockEngine.setChatHistory).toHaveBeenCalled();
+       |                                       ^
+    111|     const calls = mockEngine.setChatHistory.mock.calls[0][0];
+    112|     // Check first message is the summary and has role user + prefix […
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/232]⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-02: High Usage (>= 95%) Triggers Compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-02: High Usage (>= 95%) Triggers Compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-02: High Usage (>= 95%) Triggers Compaction
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts:80:47
+     78|     provider.updateContextUsageAfterTurn();
+     79|
+     80|     expect(provider.sessionCompactor.compact).toHaveBeenCalled();
+       |                                               ^
+     81|     expect(mockEngine.setChatHistory).toHaveBeenCalled();
+     82|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/232]⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-03: Webview Context Meter Broadcast
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-03: Webview Context Meter Broadcast
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-03: Webview Context Meter Broadcast
+AssertionError: expected undefined to be defined
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts:101:23
+     99|
+    100|     const updateMsg = webviewMessages.find(m => m.type === "tab:contex…
+    101|     expect(updateMsg).toBeDefined();
+       |                       ^
+    102|     expect(updateMsg.payload.tokenCount).toBeDefined();
+    103|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/232]⎯
+
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-05: Boundary 94.5% usage rounds to 0.95 and triggers compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-05: Boundary 94.5% usage rounds to 0.95 and triggers compaction
+ FAIL  src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts > ChatPanelProvider Compaction (SA4E-339) > STC-339-05: Boundary 94.5% usage rounds to 0.95 and triggers compaction
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/chat-panel/__tests__/chat-panel-provider.compaction.trigger.test.ts:150:47
+    148|
+    149|     provider.updateContextUsageAfterTurn();
+    150|     expect(provider.sessionCompactor.compact).toHaveBeenCalled();
+       |                                               ^
+    151|   });
+    152| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/232]⎯
+
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-008 wiring: measured static > staticBudget → AGENTS.md compressed, security intact
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-008 wiring: measured static > staticBudget → AGENTS.md compressed, security intact
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-008 wiring: measured static > staticBudget → AGENTS.md compressed, security intact
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/compression-wiring.test.ts:92:22
+ ❯ src/pi-agent/__tests__/compression-wiring.test.ts:113:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/232]⎯
+
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-105 wiring: budget surplus → compressPrompt NOT called, content byte-identical
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-105 wiring: budget surplus → compressPrompt NOT called, content byte-identical
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-105 wiring: budget surplus → compressPrompt NOT called, content byte-identical
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/compression-wiring.test.ts:92:22
+ ❯ src/pi-agent/__tests__/compression-wiring.test.ts:133:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/232]⎯
+
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > BR-04: same 32k model with a tiny workspace → no compression (condition is measured, not tier)
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > BR-04: same 32k model with a tiny workspace → no compression (condition is measured, not tier)
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > BR-04: same 32k model with a tiny workspace → no compression (condition is measured, not tier)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/compression-wiring.test.ts:92:22
+ ❯ src/pi-agent/__tests__/compression-wiring.test.ts:144:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/232]⎯
+
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-405 step 3: empty / whitespace-only contents pass through unchanged under compression
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-405 step 3: empty / whitespace-only contents pass through unchanged under compression
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > STC-405 step 3: empty / whitespace-only contents pass through unchanged under compression
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/compression-wiring.test.ts:92:22
+ ❯ src/pi-agent/__tests__/compression-wiring.test.ts:153:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/232]⎯
+
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > UC-03 step 6 wiring: over-budget session also compresses scoped steering entries
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > UC-03 step 6 wiring: over-budget session also compresses scoped steering entries
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > UC-03 step 6 wiring: over-budget session also compresses scoped steering entries
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/compression-wiring.test.ts:92:22
+ ❯ src/pi-agent/__tests__/compression-wiring.test.ts:168:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/232]⎯
+
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > UC-03 step 6 wiring: surplus session keeps scoped steering byte-identical
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > UC-03 step 6 wiring: surplus session keeps scoped steering byte-identical
+ FAIL  src/pi-agent/__tests__/compression-wiring.test.ts > PiAgentSessionHost conditional compression wiring (SA4E-355 Task 3) > UC-03 step 6 wiring: surplus session keeps scoped steering byte-identical
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/compression-wiring.test.ts:92:22
+ ❯ src/pi-agent/__tests__/compression-wiring.test.ts:185:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-escalation.integration.test.ts > Escalation ladder integration (SA4E-355 Task 7) > STC-110/306: compression suffices → ALLOW, later steps never fired
+ FAIL  src/pi-agent/__tests__/context-governance-escalation.integration.test.ts > Escalation ladder integration (SA4E-355 Task 7) > STC-110/306: compression suffices → ALLOW, later steps never fired
+ FAIL  src/pi-agent/__tests__/context-governance-escalation.integration.test.ts > Escalation ladder integration (SA4E-355 Task 7) > STC-110/306: compression suffices → ALLOW, later steps never fired
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance-escalation.integration.test.ts:82:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-escalation.integration.test.ts > Escalation ladder integration (SA4E-355 Task 7) > STC-205: dense over-budget fires all three steps in fixed order
+ FAIL  src/pi-agent/__tests__/context-governance-escalation.integration.test.ts > Escalation ladder integration (SA4E-355 Task 7) > STC-205: dense over-budget fires all three steps in fixed order
+ FAIL  src/pi-agent/__tests__/context-governance-escalation.integration.test.ts > Escalation ladder integration (SA4E-355 Task 7) > STC-205: dense over-budget fires all three steps in fixed order
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance-escalation.integration.test.ts:95:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-206/207: oversized static → REJECT with exact N/M/K message (BR-09)
+ FAIL  src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-206/207: oversized static → REJECT with exact N/M/K message (BR-09)
+ FAIL  src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-206/207: oversized static → REJECT with exact N/M/K message (BR-09)
+AssertionError: expected 'PI_INVALID_TAB_ID: tabId must not be …' to match /^PI_CONTEXT_BUDGET_EXCEEDED: static c…/
+
+- Expected:
+/^PI_CONTEXT_BUDGET_EXCEEDED: static context \d+ tokens vượt budget 40771 cho model n_ctx=65536\./
+
++ Received:
+"PI_INVALID_TAB_ID: tabId must not be \"default\" or empty, got: 'undefined'"
+
+ ❯ src/pi-agent/__tests__/context-governance-incident.integration.test.ts:84:39
+     82|     }
+     83|     expect(thrown).toBeInstanceOf(Error);
+     84|     expect((thrown as Error).message).toMatch(
+       |                                       ^
+     85|       /^PI_CONTEXT_BUDGET_EXCEEDED: static context \d+ tokens vượt bud…
+     86|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-307: provider NEVER called after REJECT; ALLOW control proves the spy
+ FAIL  src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-307: provider NEVER called after REJECT; ALLOW control proves the spy
+ FAIL  src/pi-agent/__tests__/context-governance-incident.integration.test.ts > Original-incident replay (SA4E-355 Task 7) > STC-307: provider NEVER called after REJECT; ALLOW control proves the spy
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance-incident.integration.test.ts:92:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-111: 65,536 scales automatically — resolver + gate + tier in one flow
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-111: 65,536 scales automatically — resolver + gate + tier in one flow
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-111: 65,536 scales automatically — resolver + gate + tier in one flow
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts:88:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=8192 — total prompt <= usable 5488, never REJECT
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=8192 — total prompt <= usable 5488, never REJECT
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=8192 — total prompt <= usable 5488, never REJECT
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=32768 — total prompt <= usable 28098, never REJECT
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=32768 — total prompt <= usable 28098, never REJECT
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=32768 — total prompt <= usable 28098, never REJECT
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=128000 — total prompt <= usable 101376, never REJECT
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=128000 — total prompt <= usable 101376, never REJECT
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-016: nCtx=128000 — total prompt <= usable 101376, never REJECT
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts:103:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-017: SM regression — essential skills kept, core tools in allowlist
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-017: SM regression — essential skills kept, core tools in allowlist
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > STC-017: SM regression — essential skills kept, core tools in allowlist
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts:125:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > tier spot-check: small forces compression, medium surplus passes through
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > tier spot-check: small forces compression, medium surplus passes through
+ FAIL  src/pi-agent/__tests__/context-governance-matrix.integration.test.ts > Governance matrix + full flow (SA4E-355 Task 7) > tier spot-check: small forces compression, medium surplus passes through
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance-matrix.integration.test.ts:135:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-011: qwen 32k turn 1 ALLOW — exact budget, session created once
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-011: qwen 32k turn 1 ALLOW — exact budget, session created once
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-011: qwen 32k turn 1 ALLOW — exact budget, session created once
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ turn1Host src/pi-agent/__tests__/context-governance-turn1.integration.test.ts:64:10
+ ❯ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts:88:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-011: promptTurn delivers the user message to the session
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-011: promptTurn delivers the user message to the session
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-011: promptTurn delivers the user message to the session
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ turn1Host src/pi-agent/__tests__/context-governance-turn1.integration.test.ts:64:10
+ ❯ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts:100:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-012: WARN proceeds — session created and PI_GATE_WARN logged
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-012: WARN proceeds — session created and PI_GATE_WARN logged
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-012: WARN proceeds — session created and PI_GATE_WARN logged
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ turn1Host src/pi-agent/__tests__/context-governance-turn1.integration.test.ts:64:10
+ ❯ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts:107:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-309: detected n_ctx reaches assembly (source=provider in budget log)
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-309: detected n_ctx reaches assembly (source=provider in budget log)
+ FAIL  src/pi-agent/__tests__/context-governance-turn1.integration.test.ts > Context governance turn-1 integration (SA4E-355 Task 7) > STC-309: detected n_ctx reaches assembly (source=provider in budget log)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ turn1Host src/pi-agent/__tests__/context-governance-turn1.integration.test.ts:64:10
+ ❯ src/pi-agent/__tests__/context-governance-turn1.integration.test.ts:116:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-700: turn-1 on 32k — no exceed_context_size_error, tool call completes
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-700: turn-1 on 32k — no exceed_context_size_error, tool call completes
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-700: turn-1 on 32k — no exceed_context_size_error, tool call completes
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance.e2e.test.ts:147:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-701: no meta.n_ctx — registry fallback, turn transparently completes
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-701: no meta.n_ctx — registry fallback, turn transparently completes
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-701: no meta.n_ctx — registry fallback, turn transparently completes
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance.e2e.test.ts:166:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/232]⎯
+
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=8192 through the provider layer fits budget
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=8192 through the provider layer fits budget
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=8192 through the provider layer fits budget
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=32768 through the provider layer fits budget
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=32768 through the provider layer fits budget
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=32768 through the provider layer fits budget
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=128000 through the provider layer fits budget
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=128000 through the provider layer fits budget
+ FAIL  src/pi-agent/__tests__/context-governance.e2e.test.ts > Context governance E2E-API (SA4E-355 Task 7) > STC-702: n_ctx=128000 through the provider layer fits budget
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-agent/__tests__/context-governance.e2e.test.ts:180:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/232]⎯
+
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > wires skillsOverride + appendSystemPromptOverride into DefaultResourceLoader
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > wires skillsOverride + appendSystemPromptOverride into DefaultResourceLoader
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > wires skillsOverride + appendSystemPromptOverride into DefaultResourceLoader
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ wiredHost src/pi-agent/__tests__/role-scope-wiring.test.ts:76:22
+ ❯ src/pi-agent/__tests__/role-scope-wiring.test.ts:91:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/232]⎯
+
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > resolves the session budget in-host (Task 1 resolver wiring, UC-01)
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > resolves the session budget in-host (Task 1 resolver wiring, UC-01)
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > resolves the session budget in-host (Task 1 resolver wiring, UC-01)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ wiredHost src/pi-agent/__tests__/role-scope-wiring.test.ts:76:22
+ ❯ src/pi-agent/__tests__/role-scope-wiring.test.ts:99:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/232]⎯
+
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > nCtxDetected option (adapter meta.n_ctx, BR-12) wins over the model catalog
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > nCtxDetected option (adapter meta.n_ctx, BR-12) wins over the model catalog
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > nCtxDetected option (adapter meta.n_ctx, BR-12) wins over the model catalog
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ wiredHost src/pi-agent/__tests__/role-scope-wiring.test.ts:76:22
+ ❯ src/pi-agent/__tests__/role-scope-wiring.test.ts:108:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/232]⎯
+
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-006 wiring: skillsOverride keeps only BA-token skills, order preserved
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-006 wiring: skillsOverride keeps only BA-token skills, order preserved
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-006 wiring: skillsOverride keeps only BA-token skills, order preserved
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ wiredHost src/pi-agent/__tests__/role-scope-wiring.test.ts:76:22
+ ❯ src/pi-agent/__tests__/role-scope-wiring.test.ts:117:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/232]⎯
+
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-305 wiring: unknown role and absent role keep ALL skills (BR-07 fail-open)
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-305 wiring: unknown role and absent role keep ALL skills (BR-07 fail-open)
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-305 wiring: unknown role and absent role keep ALL skills (BR-07 fail-open)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ wiredHost src/pi-agent/__tests__/role-scope-wiring.test.ts:76:22
+ ❯ scoped src/pi-agent/__tests__/role-scope-wiring.test.ts:133:36
+ ❯ src/pi-agent/__tests__/role-scope-wiring.test.ts:139:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/232]⎯
+
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > UC-02 §6.1: role/phase flow into scopedSteering via appendSystemPromptOverride
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > UC-02 §6.1: role/phase flow into scopedSteering via appendSystemPromptOverride
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > UC-02 §6.1: role/phase flow into scopedSteering via appendSystemPromptOverride
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ wiredHost src/pi-agent/__tests__/role-scope-wiring.test.ts:76:22
+ ❯ src/pi-agent/__tests__/role-scope-wiring.test.ts:144:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/232]⎯
+
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-202/EF-1 wiring: a throwing override input fails open to base + error log
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-202/EF-1 wiring: a throwing override input fails open to base + error log
+ FAIL  src/pi-agent/__tests__/role-scope-wiring.test.ts > PiAgentSessionHost role-scope wiring (SA4E-355 Task 2) > STC-202/EF-1 wiring: a throwing override input fails open to base + error log
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ wiredHost src/pi-agent/__tests__/role-scope-wiring.test.ts:76:22
+ ❯ src/pi-agent/__tests__/role-scope-wiring.test.ts:155:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/232]⎯
+
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-106 wiring: 8k small tier compresses even though the workspace fits the budget
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-106 wiring: 8k small tier compresses even though the workspace fits the budget
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-106 wiring: 8k small tier compresses even though the workspace fits the budget
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/session-tier-wiring.test.ts:82:10
+ ❯ src/pi-agent/__tests__/session-tier-wiring.test.ts:132:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/232]⎯
+
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-313 wiring: 16384 → small (forced), 16385 → medium (passthrough on surplus)
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-313 wiring: 16384 → small (forced), 16385 → medium (passthrough on surplus)
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-313 wiring: 16384 → small (forced), 16385 → medium (passthrough on surplus)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/session-tier-wiring.test.ts:82:10
+ ❯ src/pi-agent/__tests__/session-tier-wiring.test.ts:142:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/232]⎯
+
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-013/STC-105 wiring: qwen 32768 → medium, surplus workspace stays byte-identical
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-013/STC-105 wiring: qwen 32768 → medium, surplus workspace stays byte-identical
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-013/STC-105 wiring: qwen 32768 → medium, surplus workspace stays byte-identical
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/session-tier-wiring.test.ts:82:10
+ ❯ src/pi-agent/__tests__/session-tier-wiring.test.ts:157:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/232]⎯
+
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-015 wiring: 128k large tier keeps full fidelity on surplus
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-015 wiring: 128k large tier keeps full fidelity on surplus
+ FAIL  src/pi-agent/__tests__/session-tier-wiring.test.ts > Tier wiring in session governance (SA4E-355 Task 6) > STC-015 wiring: 128k large tier keeps full fidelity on surplus
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ hostWith src/pi-agent/__tests__/session-tier-wiring.test.ts:82:10
+ ❯ src/pi-agent/__tests__/session-tier-wiring.test.ts:166:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session-loadout.test.ts > Session path — SA4E-367 discovery-pair routing (AC-3/AC-5) > default host allowlist carries no pair names
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session-loadout.test.ts > Session path — SA4E-367 discovery-pair routing (AC-3/AC-5) > default host allowlist carries no pair names
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session-loadout.test.ts > Session path — SA4E-367 discovery-pair routing (AC-3/AC-5) > default host allowlist carries no pair names
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/bridge-wiring-session-loadout.test.ts:124:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > UT-06: customTools carry 2 existing + 4 bridge tools; allowlist includes bridge names
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > UT-06: customTools carry 2 existing + 4 bridge tools; allowlist includes bridge names
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > UT-06: customTools carry 2 existing + 4 bridge tools; allowlist includes bridge names
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/bridge-wiring-session.test.ts:34:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > UT-07: FR-09 — bridge tools have undefined prompt metadata; existing tools untouched
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > UT-07: FR-09 — bridge tools have undefined prompt metadata; existing tools untouched
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > UT-07: FR-09 — bridge tools have undefined prompt metadata; existing tools untouched
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/bridge-wiring-session.test.ts:62:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > IT-03: real McpBridge instance → 4 bridge tools; undefined/foreign value → none (fail-safe)
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > IT-03: real McpBridge instance → 4 bridge tools; undefined/foreign value → none (fail-safe)
+ FAIL  src/pi-workflow/__tests__/bridge-wiring-session.test.ts > PiAgentSessionHost — SA4E-367 bridge tools in the SESSION path > IT-03: real McpBridge instance → 4 bridge tools; undefined/foreign value → none (fail-safe)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/bridge-wiring-session.test.ts:84:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > creates host with tier small and enables auto-chunk mode
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > creates host with tier small and enables auto-chunk mode
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > creates host with tier small and enables auto-chunk mode
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts:64:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn processes large prompt via incremental chunks for small tier
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn processes large prompt via incremental chunks for small tier
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn processes large prompt via incremental chunks for small tier
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts:77:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn auto-chunks for MEDIUM tier when the prompt approaches n_ctx
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts:93:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn does NOT chunk a small prompt for medium tier (below threshold)
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn does NOT chunk a small prompt for medium tier (below threshold)
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > PiAgentSessionHost auto-chunk (SA4E-355) > promptTurn does NOT chunk a small prompt for medium tier (below threshold)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts:108:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03a: normal loop forwards thinking deltas then the text token
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03a: normal loop forwards thinking deltas then the text token
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03a: normal loop forwards thinking deltas then the text token
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts:142:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03b: auto-chunk loop forwards thinking deltas via onThinking
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03b: auto-chunk loop forwards thinking deltas via onThinking
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03b: auto-chunk loop forwards thinking deltas via onThinking
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts:155:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03c: empty thinking delta never reaches onThinking
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03c: empty thinking delta never reaches onThinking
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03c: empty thinking delta never reaches onThinking
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts:167:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03d: late event after promptTurn ends is not forwarded (guard live)
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03d: late event after promptTurn ends is not forwarded (guard live)
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts > promptTurn onThinking forwarding (SA4E-365, TC-03) > TC-03d: late event after promptTurn ends is not forwarded (guard live)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.auto-chunk.test.ts:177:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > promptTurn streams tokens and reports the session transcript file
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > promptTurn streams tokens and reports the session transcript file
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > promptTurn streams tokens and reports the session transcript file
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.test.ts:81:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > caches the host per workspaceRoot
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > caches the host per workspaceRoot
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > caches the host per workspaceRoot
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.test.ts:98:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > seeds a real key into the runtime store
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > seeds a real key into the runtime store
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > seeds a real key into the runtime store
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.test.ts:105:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > registers get_workspace_info as a session custom tool
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > registers get_workspace_info as a session custom tool
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > registers get_workspace_info as a session custom tool
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.test.ts:111:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > allowlist covers 7 builtins + discovered extensions + orientation (deduped)
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > allowlist covers 7 builtins + discovered extensions + orientation (deduped)
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > allowlist covers 7 builtins + discovered extensions + orientation (deduped)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.test.ts:118:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > omits allowlist when extensions fail to resolve (defaults preserved)
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > omits allowlist when extensions fail to resolve (defaults preserved)
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > omits allowlist when extensions fail to resolve (defaults preserved)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.test.ts:131:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/232]⎯
+
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > forwards live tool events from the session subscription
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > forwards live tool events from the session subscription
+ FAIL  src/pi-workflow/__tests__/pi-agent-session-host.test.ts > PiAgentSessionHost (SA4E-334 Option A) > forwards live tool events from the session subscription
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/__tests__/pi-agent-session-host.test.ts:141:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/232]⎯
+
+ FAIL  src/webview/__tests__/layout.integration.test.ts > Layout Integration > IT-01: Layout mounts without error
+ FAIL  src/webview/__tests__/layout.integration.test.ts > Layout Integration > IT-01: Layout mounts without error
+ FAIL  src/webview/__tests__/layout.integration.test.ts > Layout Integration > IT-01: Layout mounts without error
+AssertionError: expected [ 'TabBar.svelte: Unexpected input' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "TabBar.svelte: Unexpected input",
++ ]
+
+ ❯ src/webview/__tests__/layout.integration.test.ts:96:27
+     94|       }
+     95|     }
+     96|     expect(compileErrors).toEqual([]);
+       |                           ^
+     97|   });
+     98|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/232]⎯
+
+ FAIL  src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts > createAgentWatcher (S1) > watches .code-intel/agents/*.md for create/change/delete events
+ FAIL  src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts > createAgentWatcher (S1) > watches .code-intel/agents/*.md for create/change/delete events
+ FAIL  src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts > createAgentWatcher (S1) > watches .code-intel/agents/*.md for create/change/delete events
+Error: [vitest] No "window" export is defined on the "vscode" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("vscode"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ debugLog src/debug-logger.ts:26:19
+     24|
+     25| export function debugLog(message: string): void {
+     26|   if (!channel && vscode?.window?.createOutputChannel) {
+       |                   ^
+     27|     channel = vscode.window.createOutputChannel("SDLC Agents Debug");
+     28|   }
+ ❯ WorkspaceDirWatcher.start src/chat-panel/ChatStateManager/dir-watchers.ts:31:7
+ ❯ src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts:47:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/232]⎯
+
+ FAIL  src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts > createAgentWatcher (S1) > onFire is debounced (~300ms)
+ FAIL  src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts > createAgentWatcher (S1) > onFire is debounced (~300ms)
+ FAIL  src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts > createAgentWatcher (S1) > onFire is debounced (~300ms)
+Error: [vitest] No "window" export is defined on the "vscode" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("vscode"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ debugLog src/debug-logger.ts:26:19
+     24|
+     25| export function debugLog(message: string): void {
+     26|   if (!channel && vscode?.window?.createOutputChannel) {
+       |                   ^
+     27|     channel = vscode.window.createOutputChannel("SDLC Agents Debug");
+     28|   }
+ ❯ WorkspaceDirWatcher.start src/chat-panel/ChatStateManager/dir-watchers.ts:31:7
+ ❯ src/chat-panel/ChatStateManager/__tests__/dir-watchers.test.ts:66:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/232]⎯
+
+ FAIL  src/chat-panel/ChatStateManager/__tests__/fs-helpers.test.ts > readAgentInfos (S1) > TC-303: skips invalid/unreadable files, continues with valid ones
+ FAIL  src/chat-panel/ChatStateManager/__tests__/fs-helpers.test.ts > readAgentInfos (S1) > TC-303: skips invalid/unreadable files, continues with valid ones
+ FAIL  src/chat-panel/ChatStateManager/__tests__/fs-helpers.test.ts > readAgentInfos (S1) > TC-303: skips invalid/unreadable files, continues with valid ones
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/chat-panel/ChatStateManager/__tests__/fs-helpers.test.ts:150:27
+    148|     const result = readAgentInfos("/test/workspace");
+    149|
+    150|     expect(result.length).toBe(1);
+       |                           ^
+    151|     expect(result[0].id).toBe("good-agent");
+    152|     expect(result[0].name).toBe("Good Agent");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts > TC-360-01: skeleton session happy path @32k > injects the measured skeleton and completes a turn without exceed errors
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts > TC-360-01: skeleton session happy path @32k > injects the measured skeleton and completes a turn without exceed errors
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts > TC-360-01: skeleton session happy path @32k > injects the measured skeleton and completes a turn without exceed errors
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts:100:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts > TC-360-20: intra-turn growth absorbed by gate #3 > compacts oversized accumulated tool results; provider never errors
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts > TC-360-20: intra-turn growth absorbed by gate #3 > compacts oversized accumulated tool results; provider never errors
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts > TC-360-20: intra-turn growth absorbed by gate #3 > compacts oversized accumulated tool results; provider never errors
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-agentic.e2e.test.ts:130:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-08: multi-root cache isolation > keeps per-root artifacts and layoutCache entries isolated
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-08: multi-root cache isolation > keeps per-root artifacts and layoutCache entries isolated
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-08: multi-root cache isolation > keeps per-root artifacts and layoutCache entries isolated
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts:30:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-09: bridge-absent degradation — fail-safe, never crash > creates the session with DEGRADED_NO_SKELETON + layout-only map + steering tool
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-09: bridge-absent degradation — fail-safe, never crash > creates the session with DEGRADED_NO_SKELETON + layout-only map + steering tool
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-09: bridge-absent degradation — fail-safe, never crash > creates the session with DEGRADED_NO_SKELETON + layout-only map + steering tool
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts:49:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-10: one SummaryTreeBuilder build per 60s TTL window > serves the assembly path and the tool result from the same cache window
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-10: one SummaryTreeBuilder build per 60s TTL window > serves the assembly path and the tool result from the same cache window
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts > IT-10: one SummaryTreeBuilder build per 60s TTL window > serves the assembly path and the tool result from the same cache window
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring-runtime.test.ts:65:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[65/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-01: gate #2 measure == inject > measures the same strings it injects as virtual context files
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-01: gate #2 measure == inject > measures the same strings it injects as virtual context files
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-01: gate #2 measure == inject > measures the same strings it injects as virtual context files
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts:32:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[66/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-02: gate order + OI-5 telemetry > resolves budget → builds sections → measures → creates session (in order)
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-02: gate order + OI-5 telemetry > resolves budget → builds sections → measures → creates session (in order)
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-02: gate order + OI-5 telemetry > resolves budget → builds sections → measures → creates session (in order)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts:58:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[67/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-03: forced oversized skeleton → REJECT > throws PiContextBudgetExceededError after the full ladder; no session, no provider call
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-03: forced oversized skeleton → REJECT > throws PiContextBudgetExceededError after the full ladder; no session, no provider call
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-03: forced oversized skeleton → REJECT > throws PiContextBudgetExceededError after the full ladder; no session, no provider call
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts:87:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[68/232]⎯
+
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-07: escalation ladder order over skeleton content > within-share sessions run NO escalation (ladder order proven in IT-03)
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-07: escalation ladder order over skeleton content > within-share sessions run NO escalation (ladder order proven in IT-03)
+ FAIL  src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts > IT-07: escalation ladder order over skeleton content > within-share sessions run NO escalation (ladder order proven in IT-03)
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'undefined'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/skeleton/__tests__/skeleton-wiring.integration.test.ts:102:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[69/232]⎯
+
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/pi-workflow/session-host/__tests__/per-tab-session.test.ts:57:3
+     55|
+     56|   // TC-005: Two tabs = two sessions
+     57|   it("TC-005: creates separate sessions for two tabs in same workspace…
+       |   ^
+     58|     const baseOpts: SessionHostOptions = {
+     59|       workspaceRoot: "/test-workspace",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[70/232]⎯
+
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-005: creates separate sessions for two tabs in same workspace
+AssertionError: expected "vi.fn()" to be called 2 times, but got 0 times
+ ❯ src/pi-workflow/session-host/__tests__/per-tab-session.test.ts:66:28
+     64|     const host2 = await ensureSessionHost({ ...baseOpts, tabId: "tab-2…
+     65|
+     66|     expect(mockCreateHost).toHaveBeenCalledTimes(2);
+       |                            ^
+     67|     expect(mockCreateHost.mock.calls[0][0]).toMatchObject({
+     68|       workspaceRoot: "/test-workspace",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[71/232]⎯
+
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-314: rejects tabId='default'
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-314: rejects tabId='default'
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-314: rejects tabId='default'
+Error: PI_INVALID_TAB_ID: tabId must not be "default" or empty, got: 'default'
+ ❯ validateTabId src/pi-workflow/session-host/registry.ts:20:11
+     18| function validateTabId(tabId: string): void {
+     19|   if (!tabId || tabId === "default") {
+     20|     throw new Error(`PI_INVALID_TAB_ID: tabId must not be "default" or…
+       |           ^
+     21|   }
+     22| }
+ ❯ Module.ensureSessionHost src/pi-workflow/session-host/registry.ts:26:3
+ ❯ src/pi-workflow/session-host/__tests__/per-tab-session.test.ts:87:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[72/232]⎯
+
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-203: evictSessionHost removes session from registry
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/pi-workflow/session-host/__tests__/per-tab-session.test.ts:101:28
+     99|
+    100|     await ensureSessionHost({ ...baseOpts, tabId: "tab-1" } as any);
+    101|     expect(mockCreateHost).toHaveBeenCalledTimes(1);
+       |                            ^
+    102|
+    103|     evictSessionHost("/test-workspace", "tab-1");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[73/232]⎯
+
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-204: sessions are isolated — tab-1 and tab-2 have separate keys
+AssertionError: expected "vi.fn()" to be called 2 times, but got 0 times
+ ❯ src/pi-workflow/session-host/__tests__/per-tab-session.test.ts:120:28
+    118|     await ensureSessionHost({ ...baseOpts, tabId: "tab-2" } as any);
+    119|
+    120|     expect(mockCreateHost).toHaveBeenCalledTimes(2);
+       |                            ^
+    121|     const call1 = mockCreateHost.mock.calls[0][0] as SessionHostOption…
+    122|     const call2 = mockCreateHost.mock.calls[1][0] as SessionHostOption…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[74/232]⎯
+
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+ FAIL  src/pi-workflow/session-host/__tests__/per-tab-session.test.ts > registry.ts per-tab session (S3) > TC-407: supports ≥ 10 concurrent tabs without degradation
+AssertionError: expected "vi.fn()" to be called 10 times, but got 0 times
+ ❯ src/pi-workflow/session-host/__tests__/per-tab-session.test.ts:144:28
+    142|     const hosts = await Promise.all(promises);
+    143|
+    144|     expect(mockCreateHost).toHaveBeenCalledTimes(tabCount);
+       |                            ^
+    145|     expect(hosts.length).toBe(tabCount);
+    146|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[75/232]⎯
+
+
+ Test Files  22 failed | 392 passed (414)
+      Tests  77 failed | 3141 passed (3218)
+   Start at  12:00:44
+   Duration  242.75s (transform 15.85s, setup 0ms, import 95.14s, tests 49.89s, environment 11.32s)
+

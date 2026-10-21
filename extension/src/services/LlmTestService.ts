@@ -5,7 +5,8 @@
 
 import * as vscode from "vscode";
 import { createProviderByType } from "../mcp/providers";
-import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS } from "../models";
+import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS, PROVIDER_BASE_URL_LEGACY_KEYS } from "../models";
+import { getSettingWithFallback } from "../config/settings-migration";
 
 const TEST_TIMEOUT_MS = 10000;
 const AUTO_TEST_TIMEOUT_MS = 8000;
@@ -21,15 +22,14 @@ export class LlmTestService {
     providerOverride?: string,
     baseUrlOverride?: string
   ): Promise<{ success: boolean; message?: string; error?: string }> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const providerType = providerOverride || config.get<string>("llmProvider", "anthropic");
-    const ollamaUrl = config.get<string>("ollamaUrl", "http://localhost:11434");
+    const providerType = providerOverride || getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
+    const ollamaUrl = getSettingWithFallback<string>("llm.ollama.baseUrl", "ollamaUrl", "http://localhost:11434");
 
     const anthropicBaseUrl = providerType === "anthropic"
-      ? (baseUrlOverride || config.get<string>("anthropicBaseUrl", ""))
+      ? (baseUrlOverride || getSettingWithFallback<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", ""))
       : "";
     const openaiBaseUrl = providerType !== "anthropic"
-      ? (baseUrlOverride || config.get<string>("openaiBaseUrl", ""))
+      ? (baseUrlOverride || getSettingWithFallback<string>("llm.openai.baseUrl", "openaiBaseUrl", ""))
       : "";
 
     try {
@@ -59,13 +59,12 @@ export class LlmTestService {
    * Auto-test a provider and notify chat panel badge.
    */
   async autoTestAndNotify(provider: string): Promise<{ success: boolean; message?: string; error?: string }> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const ollamaUrl = config.get<string>("ollamaUrl", "http://localhost:11434");
+    const ollamaUrl = getSettingWithFallback<string>("llm.ollama.baseUrl", "ollamaUrl", "http://localhost:11434");
 
     const baseUrlKey = PROVIDER_BASE_URL_KEYS[provider];
     const defaultUrl = PROVIDER_BASE_URL_DEFAULTS[provider] || "";
     const baseUrl = baseUrlKey
-      ? (config.get<string>(baseUrlKey, "") || defaultUrl)
+      ? (getSettingWithFallback<string>(baseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[provider], "") || defaultUrl)
       : "";
 
     const anthropicBaseUrl = provider === "anthropic" ? baseUrl : "";

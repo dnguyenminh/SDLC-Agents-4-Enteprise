@@ -9,7 +9,9 @@ const langgraphFreezePatterns = [
 ];
 
 export default tseslint.config(
-  { ignores: ['out/', 'node_modules/', 'resources/', 'mcp-server/', 'dist/', '*.vsix', '**/*.js'] },
+  // 'src/test/' = vendored svelte compiler shim, 'src/mcp/devtools/' = vendored
+  // chrome-devtools-mcp fork (incl. third_party/) — exempt from source standards.
+  { ignores: ['out/', 'node_modules/', 'resources/', 'mcp-server/', 'dist/', '*.vsix', '**/*.js', 'src/test/', 'src/mcp/devtools/'] },
   {
     files: ['src/**/*.ts'],
     languageOptions: {
@@ -19,6 +21,10 @@ export default tseslint.config(
     },
     plugins: { '@typescript-eslint': tseslint.plugin },
     rules: {
+      // BR-18 (SA4E-223): file size standard — max 200 lines.
+      // 'warn' for legacy visibility; hard gate = scripts/check-line-count.sh
+      // (changed-files-only, error) wired into CI + pre-commit.
+      'max-lines': ['warn', { max: 200, skipBlankLines: false, skipComments: false }],
       // Relaxed: codebase not lint-clean yet — only critical rules as errors
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',

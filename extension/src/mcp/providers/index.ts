@@ -8,8 +8,9 @@
 import * as vscode from "vscode";
 import type { LlmProvider, LlmProviderType } from "../llm-provider";
 import { getProviderDef, PROVIDER_REGISTRY } from "./provider-registry";
-import { PROVIDER_BASE_URL_KEYS } from "../../models/LlmProviderConfig";
+import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_LEGACY_KEYS } from "../../models/LlmProviderConfig";
 import { readLlmApiKey } from "../../config/llm-secret-keys";
+import { getSettingWithFallback } from "../../config/settings-migration";
 
 type ExtendedLlmProviderType = LlmProviderType | "onnx" | string;
 
@@ -20,21 +21,26 @@ function apiKeyReader(secrets: vscode.SecretStorage, providerId: string): () => 
 
 /**
  * Create an LlmProvider from VS Code settings.
- * Reads sdlcAgents.llmProvider, sdlcAgents.llmModel, sdlcAgents.ollamaUrl from workspace config.
+ * Reads sdlcAgents.llm.provider, sdlcAgents.llm.model, sdlcAgents.llm.ollama.baseUrl
+ * (SA4E-370 renamed keys; each read falls back to its legacy flat key).
  */
 export function createLlmProvider(secrets?: vscode.SecretStorage): LlmProvider {
-  const config = vscode.workspace.getConfiguration("sdlcAgents");
-  const providerType = config.get<string>("llmProvider", "anthropic");
-  const customModel = config.get<string>("llmModel", "");
-  const ollamaUrl = config.get<string>("ollamaUrl", "http://localhost:11434");
+  const providerType = getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
+  const customModel = getSettingWithFallback<string>("llm.model", "llmModel", "");
+  const ollamaUrl = getSettingWithFallback<string>("llm.ollama.baseUrl", "ollamaUrl", "http://localhost:11434");
 
   // Resolve the base URL from the provider-specific config key (single source of truth).
-  // Settings UI persists per-provider base URLs (e.g. lmstudioBaseUrl, openaiBaseUrl), so
-  // reading only "llmBaseUrl" here would drop the user's configured URL and fall back to the
-  // registry default — the root cause of requests hitting the wrong local server.
+  // Settings UI persists per-provider base URLs (legacy flat keys, e.g. lmstudioBaseUrl,
+  // openaiBaseUrl — kept as write targets), so reading only "llmBaseUrl" here would drop
+  // the user's configured URL and fall back to the registry default — the root cause of
+  // requests hitting the wrong local server.
   const providerBaseUrlKey = PROVIDER_BASE_URL_KEYS[providerType];
-  const providerBaseUrl = providerBaseUrlKey ? config.get<string>(providerBaseUrlKey, "") : "";
-  // Keep "llmBaseUrl" as a generic fallback for custom providers without a dedicated key.
+  const providerBaseUrl = providerBaseUrlKey
+    ? getSettingWithFallback<string>(providerBaseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[providerType], "")
+    : "";
+  // Keep "llmBaseUrl" as a generic fallback for custom providers without a
+  // dedicated key (undocumented — read directly, no rename involved).
+  const config = vscode.workspace.getConfiguration("sdlcAgents");
   const customBaseUrl = providerBaseUrl || config.get<string>("llmBaseUrl", "");
 
   return createProviderByType(providerType, secrets, customModel, ollamaUrl, customBaseUrl, customBaseUrl);
@@ -56,8 +62,8 @@ export function createProviderByType(
   switch (type) {
     case "anthropic": {
       const { AnthropicProvider } = require("./anthropic-provider");
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      const baseUrl = anthropicBaseUrl || config.get<string>("anthropicBaseUrl", "");
+      const baseUrl = anthropicBaseUrl
+        || getSettingWithFallback<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", "");
       return new AnthropicProvider(
         secrets ? apiKeyReader(secrets, "anthropic") : () => Promise.resolve(undefined),
         baseUrl || undefined,
@@ -74,8 +80,8 @@ export function createProviderByType(
       return new OnnxProvider(workspaceRoot, customModel || undefined);
     }
     case "kiro": {
-      const config = vscode.workspace.getConfiguration("sdlcAgents");
-      const gatewayUrl = anthropicBaseUrl || config.get<string>("anthropicBaseUrl", "http://127.0.0.1:8990/anthropic");
+      const gatewayUrl = anthropicBaseUrl
+        || getSettingWithFallback<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", "http://127.0.0.1:8990/anthropic");
       const { AnthropicProvider } = require("./anthropic-provider");
       return new AnthropicProvider(
         secrets ? apiKeyReader(secrets, "anthropic") : () => Promise.resolve(undefined),
@@ -89,10 +95,12 @@ export function createProviderByType(
   const providerDef = getProviderDef(type);
   if (providerDef && (providerDef.apiType === "openai-compatible")) {
     const { OpenAIProvider } = require("./openai-provider");
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
     // Precedence: explicit arg → provider-specific config key → generic llmBaseUrl → registry default.
     const providerBaseUrlKey = PROVIDER_BASE_URL_KEYS[type];
-    const providerConfiguredUrl = providerBaseUrlKey ? config.get<string>(providerBaseUrlKey, "") : "";
+    const providerConfiguredUrl = providerBaseUrlKey
+      ? getSettingWithFallback<string>(providerBaseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[type], "")
+      : "";
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const customUrl = openaiBaseUrl || providerConfiguredUrl || config.get<string>("llmBaseUrl", "");
     const baseUrl = customUrl || providerDef.baseUrl;
     const apiKeyFn = providerDef.requiresApiKey && secrets

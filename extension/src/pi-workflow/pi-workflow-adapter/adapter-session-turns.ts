@@ -7,10 +7,10 @@ import type { PipelineState } from '../types/pi-workflow-state.js';
 import type { ChatExtToWebviewMessage } from '../../chat-panel/message-protocol';
 import type { ToolLiveEvent } from '../pi-event-mapper.js';
 import { providerRequiresApiKey, getExtensionVersion, buildCredentialResolver } from '../pi-provider-config-bridge.js';
-import { PROVIDER_BASE_URL_KEYS } from '../../models/LlmProviderConfig';
+import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_LEGACY_KEYS } from '../../models/LlmProviderConfig';
+import { getSettingWithFallback } from '../../config/settings-migration.js';
 import { isBudgetExceededError } from '../../pi-agent/budget-gate.js';
 import { debugLog } from '../../debug-logger';
-import * as vscode from 'vscode';
 import { AdapterCore } from './adapter-core.js';
 import { forwardToolLiveEvent } from './tool-live-events.js';
 import { notifyPeerUserActivity } from '../peer/lifecycle.js';
@@ -84,12 +84,14 @@ export abstract class AdapterSessionTurns extends AdapterCore {
     // One stable stream identity per turn (streaming-identity fix).
     const turnStart = Date.now();
     try {
-      const config = vscode.workspace?.getConfiguration?.('sdlcAgents');
-      const providerId = config?.get?.<string>('llmProvider', 'anthropic') || 'anthropic';
+      // SA4E-370: renamed keys resolved with legacy-key fallback.
+      const providerId = getSettingWithFallback<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
       if (!providerRequiresApiKey(providerId)) return false; // local → legacy gateway path
       const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
-      const baseUrl = (baseUrlKey ? config?.get?.<string>(baseUrlKey, '') : '') || undefined;
-      const configuredModelId = config?.get?.<string>('llmModel', '') || '';
+      const baseUrl = (baseUrlKey
+        ? getSettingWithFallback<string>(baseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[providerId], '')
+        : '') || undefined;
+      const configuredModelId = getSettingWithFallback<string>('llm.model', 'llmModel', '') || '';
       const resolver = this.secrets ? buildCredentialResolver(this.secrets) : undefined;
       const apiKey = resolver ? await resolver(providerId) : undefined;
       // Key-requiring providers without a key keep the fail-closed

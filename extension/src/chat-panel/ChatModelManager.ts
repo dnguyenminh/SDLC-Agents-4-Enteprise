@@ -2,9 +2,9 @@
  * ChatModelManager — handles model list fetching and sending to webview.
  */
 
-import * as vscode from "vscode";
 import { getStaticModels, getDefaultModel, fetchGatewayModels } from "./chat-models";
 import { ChatExtToWebviewMessage } from "./message-protocol";
+import { getSettingWithFallback } from "../config/settings-migration";
 
 export class ChatModelManager {
   constructor(
@@ -16,9 +16,8 @@ export class ChatModelManager {
    * For gateway providers, attempts /v1/models first, falling back to static catalog.
    */
   async sendModels(): Promise<void> {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const provider = config.get<string>("llmProvider", "anthropic");
-    const anthropicBaseUrl = config.get<string>("anthropicBaseUrl", "");
+    const provider = getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
+    const anthropicBaseUrl = getSettingWithFallback<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", "");
 
     let models = getStaticModels(provider);
 
@@ -31,7 +30,7 @@ export class ChatModelManager {
         models = gatewayModels;
       }
     } else if (provider === "lmstudio") {
-      const lmstudioBaseUrl = config.get<string>("lmstudioBaseUrl", "")
+      const lmstudioBaseUrl = getSettingWithFallback<string>("llm.lmstudio.baseUrl", "lmstudioBaseUrl", "")
         || "http://localhost:1234/v1";
       const lmModels = await fetchGatewayModels(lmstudioBaseUrl);
       if (lmModels && lmModels.length > 0) {
@@ -39,7 +38,7 @@ export class ChatModelManager {
       }
     }
 
-    const llmModel = config.get<string>("llmModel", "");
+    const llmModel = getSettingWithFallback<string>("llm.model", "llmModel", "");
     let selected = llmModel;
     if (selected && !models.some((m) => m.id === selected)) {
       models = [...models, { id: selected, name: selected }];

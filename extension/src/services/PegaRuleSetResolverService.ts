@@ -14,6 +14,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import { PegaHttpClient } from "./PegaHttpClient";
+import { getSettingWithFallback } from "../config/settings-migration";
 import {
   checkRuleSetOpenStatus as checkRuleSetOpenStatusImpl,
   resolveRuleWriteContext as resolveRuleWriteContextImpl,
@@ -50,14 +51,14 @@ export class PegaRuleSetResolverService {
   constructor(private readonly client: PegaHttpClient) {}
 
   /**
-   * Developer short name: setting `sdlcAgents.pegaDeveloperShortName`,
-   * fallback phần trước `@` của `pegaUsername` (vd user@org => user).
+   * Developer short name: setting `sdlcAgents.pega.developerShortName`
+   * (SA4E-370; legacy `pegaDeveloperShortName` still honored), fallback phần
+   * trước `@` của `pega.username` (vd user@org => user).
    */
   public getDeveloperShortName(): string {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const fromSetting = config.get<string>("pegaDeveloperShortName", "").trim();
+    const fromSetting = getSettingWithFallback<string>("pega.developerShortName", "pegaDeveloperShortName", "").trim();
     if (fromSetting) return fromSetting;
-    const username = config.get<string>("pegaUsername", "").trim();
+    const username = getSettingWithFallback<string>("pega.username", "pegaUsername", "").trim();
     if (username.includes("@")) return username.split("@")[0].trim();
     return username.replace(/[^a-zA-Z0-9_.-]/g, "").toLowerCase();
   }

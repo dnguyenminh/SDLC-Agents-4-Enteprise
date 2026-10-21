@@ -5,8 +5,9 @@
 
 import * as vscode from "vscode";
 import { getStaticModels, fetchGatewayModels, getDefaultModel } from "../chat-panel/chat-models";
-import { SECRET_KEYS, PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS } from "../models";
+import { SECRET_KEYS, PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_DEFAULTS, PROVIDER_BASE_URL_LEGACY_KEYS } from "../models";
 import { getBackendUrl } from "../config/backend-url";
+import { getSettingWithFallback } from "../config/settings-migration";
 import { ensureMigrated, getWsHash, secretKey, readScopedSecret, type SecretBase } from "./WorkspaceScopeResolver";
 
 /** Config keys isolated per workspace (SA4E-323) — never via generic updateConfig. */
@@ -29,27 +30,27 @@ export class ProviderConfigService {
   }> {
     await ensureMigrated(this.secrets);
     const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const provider = config.get<string>("llmProvider", "anthropic");
-    const model = config.get<string>("llmModel", "");
-    const ollamaUrl = config.get<string>("ollamaUrl", "http://localhost:11434");
+    const provider = getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
+    const model = getSettingWithFallback<string>("llm.model", "llmModel", "");
+    const ollamaUrl = getSettingWithFallback<string>("llm.ollama.baseUrl", "ollamaUrl", "http://localhost:11434");
 
     const baseUrl = this.getBaseUrlForProvider(provider);
     const backendUrl = getBackendUrl();
     const allowInsecureRemote = config.get<boolean>("backend.allowInsecureRemote", false);
-    const mcpServerPort = config.get<number>("mcpServerPort", 9181);
-    const enableMcpServer = config.get<boolean>("enableMcpServer", true);
+    const mcpServerPort = getSettingWithFallback<number>("mcp.serverPort", "mcpServerPort", 9181);
+    const enableMcpServer = getSettingWithFallback<boolean>("mcp.enabled", "enableMcpServer", true);
 
     const anthropicKey = await this.safeGet(SECRET_KEYS.anthropic);
     const openaiKey = await this.safeGet(SECRET_KEYS.openai);
     const wsHash = getWsHash();
     const pegaPassword = await this.readSecret(wsHash, "pega");
-    const pegaEndpoint = config.get<string>("pegaEndpoint", "http://localhost:8080/prweb");
-    const pegaUsername = config.get<string>("pegaUsername", "");
+    const pegaEndpoint = getSettingWithFallback<string>("pega.endpoint", "pegaEndpoint", "http://localhost:8080/prweb");
+    const pegaUsername = getSettingWithFallback<string>("pega.username", "pegaUsername", "");
 
     const atlassianBaseUrl = (await this.readSecret(wsHash, "atlassianBaseUrl")) || "";
     const atlassianEmail = (await this.readSecret(wsHash, "atlassianEmail")) || "";
     const atlassianToken = await this.readSecret(wsHash, "atlassianToken");
-    const atlassianConnectionType = config.get<string>("atlassianConnectionType", "cloud");
+    const atlassianConnectionType = getSettingWithFallback<string>("jira.connectionType", "atlassianConnectionType", "cloud");
 
     return {
       provider, model, ollamaUrl, baseUrl: baseUrl || "",
@@ -99,8 +100,7 @@ export class ProviderConfigService {
   }> {
     let models = getStaticModels(provider);
     const gatewayBaseUrl = this.getGatewayBaseUrl(provider);
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const lmstudioBaseUrl = config.get<string>("lmstudioBaseUrl", "")
+    const lmstudioBaseUrl = getSettingWithFallback<string>("llm.lmstudio.baseUrl", "lmstudioBaseUrl", "")
       || "http://localhost:1234/v1";
 
     const fetchUrl = provider === "lmstudio"
@@ -168,17 +168,15 @@ export class ProviderConfigService {
   }
 
   private getBaseUrlForProvider(provider: string): string {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const key = PROVIDER_BASE_URL_KEYS[provider];
     if (!key) { return ""; }
-    return config.get<string>(key, "");
+    return getSettingWithFallback<string>(key, PROVIDER_BASE_URL_LEGACY_KEYS[provider], "");
   }
 
   private getGatewayBaseUrl(provider: string): string {
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
     const key = PROVIDER_BASE_URL_KEYS[provider];
     if (!key) { return ""; }
-    const configuredUrl = config.get<string>(key, "");
+    const configuredUrl = getSettingWithFallback<string>(key, PROVIDER_BASE_URL_LEGACY_KEYS[provider], "");
     return configuredUrl || PROVIDER_BASE_URL_DEFAULTS[provider] || "";
   }
 }

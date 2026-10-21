@@ -2,7 +2,7 @@
   "name": "sdlc-agents-4-enterprise",
   "displayName": "SDLC Agents 4 Enterprise",
   "description": "Multi-agent SDLC pipeline for enterprise — 9 AI agents (SM, BA, TA, SA, QA, DEV, DevOps, Security, UI) orchestrated via MCP",
-  "version": "1.54.4",
+  "version": "1.55.0",
   "publisher": "dnguyenminh",
   "license": "MIT",
   "repository": {
@@ -19,12 +19,19 @@
       "restrictedConfigurations": [
         "sdlcAgents.backend.allowInsecureRemote",
         "sdlcAgents.backend.url",
+        "sdlcAgents.pega.endpoint",
         "sdlcAgents.pegaEndpoint",
+        "sdlcAgents.pega.username",
         "sdlcAgents.pegaUsername",
+        "sdlcAgents.jira.connectionType",
         "sdlcAgents.atlassianConnectionType",
+        "sdlcAgents.llm.anthropic.baseUrl",
         "sdlcAgents.anthropicBaseUrl",
+        "sdlcAgents.llm.openai.baseUrl",
         "sdlcAgents.openaiBaseUrl",
+        "sdlcAgents.llm.ollama.baseUrl",
         "sdlcAgents.ollamaUrl",
+        "sdlcAgents.llm.lmstudio.baseUrl",
         "sdlcAgents.lmstudioBaseUrl"
       ]
     }
@@ -295,34 +302,34 @@
           "maximum": 512,
           "description": "Pega indexing: buffer size between the fetch supplier and ingest consumers (backpressure). 0 = auto (2× ingest concurrency). Raise to let the supplier run further ahead at the cost of more buffered rules in RAM. Takes effect on the next indexing run."
         },
-        "sdlcAgents.mcpServerPort": {
+        "sdlcAgents.mcp.serverPort": {
           "type": "number",
           "default": 9181,
           "description": "Local MCP wrapper server port — the in-process HTTP server that the IDE connects to"
         },
-        "sdlcAgents.mcpMaxBodyBytes": {
+        "sdlcAgents.mcp.maxBodyBytes": {
           "type": "number",
           "default": 67108864,
           "minimum": 1048576,
           "maximum": 104857600,
           "description": "Maximum HTTP body size (bytes) the local MCP wrapper server accepts per request — large enough for base64-embedded documents (SA4E-363). Always clamped in code to [1 MiB, 100 MiB] regardless of this value. Takes effect on the next wrapper start (window reload)."
         },
-        "sdlcAgents.enableMcpServer": {
+        "sdlcAgents.mcp.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable/disable the local MCP wrapper server on startup"
         },
-        "sdlcAgents.mcpServerUrl": {
+        "sdlcAgents.mcp.serverUrl": {
           "type": "string",
           "default": "",
-          "description": "Override URL for the local MCP wrapper server (leave empty to use mcpServerPort)"
+          "description": "Override URL for the local MCP wrapper server (leave empty to use mcp.serverPort)"
         },
-        "sdlcAgents.configPath": {
+        "sdlcAgents.workspace.configPath": {
           "type": "string",
           "default": ".code-intel/orchestration.json",
           "description": "Path to orchestration config file (relative to workspace root)"
         },
-        "sdlcAgents.llmProvider": {
+        "sdlcAgents.llm.provider": {
           "type": "string",
           "default": "anthropic",
           "enum": [
@@ -336,12 +343,12 @@
           ],
           "description": "Active LLM provider"
         },
-        "sdlcAgents.llmModel": {
+        "sdlcAgents.llm.model": {
           "type": "string",
           "default": "",
           "description": "Override model for the selected provider"
         },
-        "sdlcAgents.llmFallbackModels": {
+        "sdlcAgents.llm.fallbackModels": {
           "type": "array",
           "items": {
             "type": "string"
@@ -349,37 +356,37 @@
           "default": [],
           "markdownDescription": "Ordered list of fallback model ids the Pi chat retries on when the primary model fails with a transient gateway/upstream error (HTTP 5xx, timeout, or provider bootstrap failures like the Devin 'bridge sandbox' error). Tried in order after the primary; non-retryable errors (4xx/auth/bad request) do NOT trigger fallback. Example for an OmniRoute gateway: `[\"auto/best-coding\", \"agy/claude-sonnet-4-6\", \"auto/best-free\"]`."
         },
-        "sdlcAgents.anthropicBaseUrl": {
+        "sdlcAgents.llm.anthropic.baseUrl": {
           "type": "string",
           "default": "",
           "description": "Custom base URL for Anthropic API (leave empty for official)"
         },
-        "sdlcAgents.openaiBaseUrl": {
+        "sdlcAgents.llm.openai.baseUrl": {
           "type": "string",
           "default": "",
           "description": "Custom base URL for OpenAI API"
         },
-        "sdlcAgents.ollamaUrl": {
+        "sdlcAgents.llm.ollama.baseUrl": {
           "type": "string",
           "default": "http://localhost:11434",
           "description": "Ollama server URL"
         },
-        "sdlcAgents.lmstudioBaseUrl": {
+        "sdlcAgents.llm.lmstudio.baseUrl": {
           "type": "string",
           "default": "",
           "description": "LM Studio server URL (default: http://localhost:1234/v1)"
         },
-        "sdlcAgents.openrouterBaseUrl": {
+        "sdlcAgents.llm.openrouter.baseUrl": {
           "type": "string",
           "default": "",
           "description": "OpenRouter API base URL"
         },
-        "sdlcAgents.kiroModel": {
+        "sdlcAgents.llm.kiro.model": {
           "type": "string",
           "default": "auto",
           "description": "Kiro gateway model selection"
         },
-        "sdlcAgents.pegaEndpoint": {
+        "sdlcAgents.pega.endpoint": {
           "type": "string",
           "default": "http://localhost:8080/prweb",
           "description": "Pega Platform REST API Endpoint URL"
@@ -389,17 +396,27 @@
           "default": true,
           "description": "Use the Pega Rule Catalog Export API (fast, authoritative rule list) when indexing Pega source code. Disable to force the legacy BFS crawl."
         },
-        "sdlcAgents.pegaUsername": {
+        "sdlcAgents.pega.appName": {
+          "type": "string",
+          "default": "",
+          "description": "Pega application name for rule resolution (SA4E-370). Used by Pega code-intel discovery to scope rule resolution to an application build. Leave empty to skip application-scoped discovery."
+        },
+        "sdlcAgents.pega.appVersion": {
+          "type": "string",
+          "default": "",
+          "description": "Pega application version for rule resolution (SA4E-370), paired with pega.appName (e.g. \"01.01.01\"). Leave empty to skip application-scoped discovery."
+        },
+        "sdlcAgents.pega.username": {
           "type": "string",
           "default": "",
           "description": "Pega Operator ID (Username)"
         },
-        "sdlcAgents.pegaDeveloperShortName": {
+        "sdlcAgents.pega.developerShortName": {
           "type": "string",
           "default": "",
-          "description": "Pega developer short name — used for Pega branch naming (e.g. ssa_SA4E-58). Falls back to pegaUsername before @"
+          "description": "Pega developer short name — used for Pega branch naming (e.g. ssa_SA4E-58). Falls back to pega.username before @"
         },
-        "sdlcAgents.atlassianConnectionType": {
+        "sdlcAgents.jira.connectionType": {
           "type": "string",
           "enum": [
             "cloud",
@@ -408,17 +425,17 @@
           "default": "cloud",
           "description": "Atlassian connection type: cloud (email + API token) or server (username + PAT)"
         },
-        "sdlcAgents.jiraSyncState": {
+        "sdlcAgents.jira.syncState": {
           "type": "object",
           "default": {},
           "description": "Internal: Jira project sync state (last sync dates per project key)"
         },
-        "sdlcAgents.jiraLastProject": {
+        "sdlcAgents.jira.lastProject": {
           "type": "string",
           "default": "",
           "description": "Last selected Jira project key for indexing"
         },
-        "sdlcAgents.jiraAttachmentChecksums": {
+        "sdlcAgents.jira.attachmentChecksums": {
           "type": "object",
           "default": {},
           "description": "Internal: checksum cache for Jira attachment dedup (id+size per file)"

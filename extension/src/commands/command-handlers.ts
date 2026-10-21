@@ -19,6 +19,7 @@ import { AuthManager } from "../auth/AuthManager";
 import { KiroTreeViewProvider } from "../sidebar/tree-view-provider";
 import { showUserError } from "../utils/panel-utils";
 import { writeJsonFile } from "../utils/mcp-config-file";
+import { getSettingWithFallback } from "../config/settings-migration";
 
 export function getWorkspaceRoot(): string | undefined {
   const folders = vscode.workspace.workspaceFolders;
@@ -128,7 +129,9 @@ export async function handleEditConfig(): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) { return; }
   const config = vscode.workspace.getConfiguration("sdlcAgents");
-  const relPath = config.get<string>("configPath", ".code-intel/orchestration.json");
+  const relPath = getSettingWithFallback<string>(
+    "workspace.configPath", "configPath", ".code-intel/orchestration.json",
+  );
   const fullPath = path.join(root, relPath);
   if (!fs.existsSync(fullPath)) {
     const create = await vscode.window.showWarningMessage(`Config not found: ${relPath}. Create?`, "Create", "Cancel");
@@ -144,7 +147,9 @@ export async function handleChangeConfig(mcpManager?: IServerManager): Promise<v
   const root = getWorkspaceRoot();
   if (!root) { return; }
   const config = vscode.workspace.getConfiguration("sdlcAgents");
-  const currentRelPath = config.get<string>("configPath", ".code-intel/orchestration.json");
+  const currentRelPath = getSettingWithFallback<string>(
+    "workspace.configPath", "configPath", ".code-intel/orchestration.json",
+  );
   const defaultUri = vscode.Uri.file(root);
   const result = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, canSelectMany: false, defaultUri, filters: { "JSON": ["json"] } });
   if (!result || result.length === 0) { return; }

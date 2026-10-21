@@ -20,6 +20,7 @@ import { buildCredentialResolver } from '../pi-provider-config-bridge.js';
 import type { RemoteCheckpointerStore } from '../checkpointer-adapter.js';
 import { debugLog, debugError } from '../../debug-logger';
 import * as vscode from 'vscode';
+import { getSettingWithFallback } from '../../config/settings-migration.js';
 import { readAgentInfos, parseAgentFrontmatter } from '../../chat-panel/ChatStateManager/fs-helpers.js';
 import { ensureSessionHost, evictSessionHost } from '../session-host/registry.js';
 import type { SessionHostOptions } from '../session-host/types.js';
@@ -256,9 +257,9 @@ export class AdapterCore {
     evictSessionHost(this.workspaceRoot, tabId);
 
     // Resolve provider config for ensureSessionHost
-    const config = vscode.workspace?.getConfiguration?.('sdlcAgents');
-    const providerId = config?.get?.<string>('llmProvider', 'anthropic') || 'anthropic';
-    const configuredModelId = config?.get?.<string>('llmModel', '') || '';
+    // SA4E-370: renamed keys resolved with legacy-key fallback.
+    const providerId = getSettingWithFallback<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
+    const configuredModelId = getSettingWithFallback<string>('llm.model', 'llmModel', '') || '';
     const resolver = this.secrets ? buildCredentialResolver(this.secrets) : undefined;
     const apiKey = resolver ? await resolver(providerId) : undefined;
 

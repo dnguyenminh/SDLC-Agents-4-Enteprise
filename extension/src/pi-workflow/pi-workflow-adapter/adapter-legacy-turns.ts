@@ -12,7 +12,7 @@ import { getExtensionVersion } from '../pi-provider-config-bridge.js';
 import { isBudgetExceededError } from '../../pi-agent/budget-gate.js';
 import { governLegacyTurn } from '../legacy-turn-governance.js';
 import { debugLog, debugError } from '../../debug-logger';
-import * as vscode from 'vscode';
+import { getSettingWithFallback } from '../../config/settings-migration.js';
 import { assembleLegacyToolPool, configureEngineProvider, replayTurnChunks, reportTurnError, resolveTurnBudget } from './adapter-legacy-helpers.js';
 import { AdapterSessionTurns } from './adapter-session-turns.js';
 
@@ -33,7 +33,8 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
   ): Promise<{ history: Array<{ role: string; content: string }> } | null> {
     try {
       await this.detectContextWindowEarly();
-      const config = vscode.workspace?.getConfiguration?.('sdlcAgents');
+      // SA4E-370: renamed key with legacy-key fallback (safe in any host).
+      const modelId = getSettingWithFallback<string>('llm.model', 'llmModel', '');
       // BR-01 window chain: probe meta.n_ctx → runtime (pi-ai) model registry —
       // the resolved model's real window (gateway models carry context_length /
       // meta.n_ctx parsed at registration). resolveContextBudget appends the
@@ -48,7 +49,7 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
         history: state.chatHistory ?? [],
         chatInput,
         tools,
-        modelId: config?.get?.<string>('llmModel', '') || '',
+        modelId: modelId || '',
         nCtxDetected: this.getDetectedContextWindow() ?? runtimeWindow,
       });
     } catch (err) {
@@ -97,7 +98,7 @@ export class AdapterLegacyTurns extends AdapterSessionTurns {
       }
       // FIX C: model resolved but no API key → distinct credentials error (fail-closed).
       if (!credentialsPresent) {
-        const providerId = vscode.workspace?.getConfiguration?.('sdlcAgents')?.get?.<string>('llmProvider', 'anthropic') || 'anthropic';
+        const providerId = getSettingWithFallback<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
         this.onEvent({
           type: 'chat:error', code: 'PI_CREDENTIALS_MISSING',
           message: `No API key for '${providerId}'. Set sdlcAgents.${providerId}ApiKey in Settings, then retry.`,
