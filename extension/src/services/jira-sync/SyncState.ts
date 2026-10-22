@@ -5,7 +5,7 @@
  * legacy flat `sdlcAgents.jiraSyncState` (writes stay on the legacy key).
  */
 import * as vscode from "vscode";
-import { getSettingWithFallback } from "../../config/settings-migration";
+import { getSetting } from "../../config/settings-migration";
 
 /** Sync state per project key */
 export interface ProjectSyncState {
@@ -22,7 +22,7 @@ const CONFIG_KEY = "sdlcAgents.jiraSyncState";
  * @returns Sync state or default (no previous sync)
  */
 export function getSyncState(projectKey: string): ProjectSyncState {
-    const allStates = getSettingWithFallback<Record<string, ProjectSyncState>>("jira.syncState", "jiraSyncState", {});
+    const allStates = getSetting<Record<string, ProjectSyncState>>("jira.syncState", "jiraSyncState", {});
     return allStates[projectKey] || { lastSyncDate: null, totalIssues: 0, lastFullSync: null };
 }
 

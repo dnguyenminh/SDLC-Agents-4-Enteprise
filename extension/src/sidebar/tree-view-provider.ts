@@ -7,7 +7,7 @@ import * as vscode from "vscode";
 import { ServerStatus } from "../types";
 import { McpServerManager } from "../mcp-server-manager";
 import { getBackendUrl } from "../config/backend-url";
-import { getSettingWithFallback } from "../config/settings-migration";
+import { getSetting } from "../config/settings-migration";
 
 export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<KiroTreeItem | undefined>();
@@ -143,7 +143,7 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
     const statusItem = new KiroTreeItem(`Status: ${this.getStatusLabel()}`, vscode.TreeItemCollapsibleState.None);
     statusItem.iconPath = new vscode.ThemeIcon(this.getStatusIcon());
     
-    const mcpServerPort = getSettingWithFallback<number>("mcp.serverPort", "mcpServerPort", 9181);
+    const mcpServerPort = getSetting<number>("mcp.serverPort", "mcpServerPort", 9181);
     statusItem.description = `Port ${mcpServerPort}`;
     
     serverChildren.push(statusItem);

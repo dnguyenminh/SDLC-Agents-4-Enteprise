@@ -1,3 +1,4 @@
+import { getSetting } from "../../config/settings-migration";
 /**
  * LLM Provider Factory — KSA-210
  * Creates provider instances based on VS Code configuration.
@@ -8,9 +9,8 @@
 import * as vscode from "vscode";
 import type { LlmProvider, LlmProviderType } from "../llm-provider";
 import { getProviderDef, PROVIDER_REGISTRY } from "./provider-registry";
-import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_LEGACY_KEYS } from "../../models/LlmProviderConfig";
+import { PROVIDER_BASE_URL_KEYS } from "../../models/LlmProviderConfig";
 import { readLlmApiKey } from "../../config/llm-secret-keys";
-import { getSettingWithFallback } from "../../config/settings-migration";
 
 type ExtendedLlmProviderType = LlmProviderType | "onnx" | string;
 
@@ -22,26 +22,25 @@ function apiKeyReader(secrets: vscode.SecretStorage, providerId: string): () => 
 /**
  * Create an LlmProvider from VS Code settings.
  * Reads sdlcAgents.llm.provider, sdlcAgents.llm.model, sdlcAgents.llm.ollama.baseUrl
- * (SA4E-370 renamed keys; each read falls back to its legacy flat key).
+ * (SA4E-370 dotted keys; legacy flat values are copied forward once at
+ * activation by settings-migration-runner).
  */
 export function createLlmProvider(secrets?: vscode.SecretStorage): LlmProvider {
-  const providerType = getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
-  const customModel = getSettingWithFallback<string>("llm.model", "llmModel", "");
-  const ollamaUrl = getSettingWithFallback<string>("llm.ollama.baseUrl", "ollamaUrl", "http://localhost:11434");
+  const providerType = getSetting<string>("llm.provider", "llmProvider", "anthropic");
+  const customModel = getSetting<string>("llm.model", "llmModel", "");
+  const ollamaUrl = getSetting<string>("llm.ollama.baseUrl", "ollamaUrl", "http://localhost:11434");
 
   // Resolve the base URL from the provider-specific config key (single source of truth).
-  // Settings UI persists per-provider base URLs (legacy flat keys, e.g. lmstudioBaseUrl,
-  // openaiBaseUrl — kept as write targets), so reading only "llmBaseUrl" here would drop
-  // the user's configured URL and fall back to the registry default — the root cause of
-  // requests hitting the wrong local server.
+  // SA4E-370: reads the new dotted per-provider key; the Settings panel now
+  // writes the same dotted key, and legacy flat values are copied forward by
+  // the one-time activation migration.
   const providerBaseUrlKey = PROVIDER_BASE_URL_KEYS[providerType];
   const providerBaseUrl = providerBaseUrlKey
-    ? getSettingWithFallback<string>(providerBaseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[providerType], "")
+    ? getSetting<string>(providerBaseUrlKey, "", "")
     : "";
   // Keep "llmBaseUrl" as a generic fallback for custom providers without a
   // dedicated key (undocumented — read directly, no rename involved).
-  const config = vscode.workspace.getConfiguration("sdlcAgents");
-  const customBaseUrl = providerBaseUrl || config.get<string>("llmBaseUrl", "");
+  const customBaseUrl = providerBaseUrl || getSetting<string>("llmBaseUrl", "llmBaseUrl", "");
 
   return createProviderByType(providerType, secrets, customModel, ollamaUrl, customBaseUrl, customBaseUrl);
 }
@@ -63,7 +62,7 @@ export function createProviderByType(
     case "anthropic": {
       const { AnthropicProvider } = require("./anthropic-provider");
       const baseUrl = anthropicBaseUrl
-        || getSettingWithFallback<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", "");
+        || getSetting<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", "");
       return new AnthropicProvider(
         secrets ? apiKeyReader(secrets, "anthropic") : () => Promise.resolve(undefined),
         baseUrl || undefined,
@@ -81,7 +80,7 @@ export function createProviderByType(
     }
     case "kiro": {
       const gatewayUrl = anthropicBaseUrl
-        || getSettingWithFallback<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", "http://127.0.0.1:8990/anthropic");
+        || getSetting<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", "http://127.0.0.1:8990/anthropic");
       const { AnthropicProvider } = require("./anthropic-provider");
       return new AnthropicProvider(
         secrets ? apiKeyReader(secrets, "anthropic") : () => Promise.resolve(undefined),
@@ -98,10 +97,9 @@ export function createProviderByType(
     // Precedence: explicit arg → provider-specific config key → generic llmBaseUrl → registry default.
     const providerBaseUrlKey = PROVIDER_BASE_URL_KEYS[type];
     const providerConfiguredUrl = providerBaseUrlKey
-      ? getSettingWithFallback<string>(providerBaseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[type], "")
+      ? getSetting<string>(providerBaseUrlKey, "", "")
       : "";
-    const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const customUrl = openaiBaseUrl || providerConfiguredUrl || config.get<string>("llmBaseUrl", "");
+    const customUrl = openaiBaseUrl || providerConfiguredUrl || getSetting<string>("llmBaseUrl", "llmBaseUrl", "");
     const baseUrl = customUrl || providerDef.baseUrl;
     const apiKeyFn = providerDef.requiresApiKey && secrets
       ? apiKeyReader(secrets, type)

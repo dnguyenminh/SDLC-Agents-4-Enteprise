@@ -64,3 +64,19 @@ export const DRAWIO_NO_CBASE64_TOOL = {
     required: [],
   },
 } as const;
+
+/** export_docx — input proxy (content_base64) + output proxy (output_base64). */
+export const EXPORT_DOCX_TOOL = {
+  name: 'export_docx',
+  description: 'Export Markdown to DOCX. Returns output_base64 (base64 DOCX bytes).',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      file_path: { type: 'string' },
+      content_base64: { type: 'string' },
+      output_path: { type: 'string' },
+      file_name: { type: 'string' },
+    },
+    required: [],
+  },
+} as const;

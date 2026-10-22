@@ -7,7 +7,7 @@ import * as vscode from "vscode";
 import { ensureMigrated, getWsHash, secretKey, LEGACY_SECRET } from "../WorkspaceScopeResolver";
 import type { ProgressReporter } from "./types";
 import { IndexingServiceBase } from "./base";
-import { getSettingWithFallback } from "../../config/settings-migration";
+import { getSetting } from "../../config/settings-migration";
 
 export class IndexingServiceDelegates extends IndexingServiceBase {
     /** Delegate to PegaSchemaIndexer — batch generate all RuleForm schemas. */
@@ -16,7 +16,7 @@ export class IndexingServiceDelegates extends IndexingServiceBase {
     ): Promise<string | null> {
         try {
             await ensureMigrated(secrets);
-            const username = getSettingWithFallback<string>("pega.username", "pegaUsername", "");
+            const username = getSetting<string>("pega.username", "pegaUsername", "");
             const wsHash = getWsHash();
             const pwKey = wsHash ? secretKey("pega", wsHash)! : LEGACY_SECRET.pega;
             const password = (await secrets.get(pwKey)) || "";
@@ -43,8 +43,7 @@ export class IndexingServiceDelegates extends IndexingServiceBase {
         root: string, report: ProgressReporter, secrets?: vscode.SecretStorage,
     ): Promise<string | null> {
         // Fast path: Rule Catalog Export (enabled by default; opt-out via setting).
-        const useCatalog = vscode.workspace.getConfiguration("sdlcAgents")
-            .get<boolean>("pega.useCatalogExport", true);
+        const useCatalog = getSetting<boolean>("pega.useCatalogExport", "pega.useCatalogExport", true);
         if (useCatalog && secrets) {
             try {
                 const { PegaCatalogIndexer } = await import("../PegaCatalogIndexer");

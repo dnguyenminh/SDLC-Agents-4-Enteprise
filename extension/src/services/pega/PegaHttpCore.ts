@@ -13,7 +13,7 @@ import * as vscode from "vscode";
 import { getWsHash, secretKey, LEGACY_SECRET } from "../WorkspaceScopeResolver";
 import { assertWorkspaceTrusted } from "../WorkspaceTrustGuard";
 import { enforcePegaEndpointHttps } from "../../config/pega-endpoint";
-import { getSettingWithFallback } from "../../config/settings-migration";
+import { getSetting } from "../../config/settings-migration";
 
 /** Pega operator + application context returned by getOperatorContext(). */
 export interface PegaOperatorContext {
@@ -44,7 +44,7 @@ export class PegaHttpCore {
    */
   async getAuthHeader(): Promise<string> {
     assertWorkspaceTrusted();
-    const username = getSettingWithFallback<string>("pega.username", "pegaUsername", "").trim();
+    const username = getSetting<string>("pega.username", "pegaUsername", "").trim();
     const password = await this.readWorkspacePassword();
     return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
   }
@@ -60,7 +60,7 @@ export class PegaHttpCore {
 
   /** Configured Pega endpoint with SEC-02 HTTPS enforcement applied. */
   getPegaEndpoint(): string {
-    const raw = getSettingWithFallback<string>(
+    const raw = getSetting<string>(
       "pega.endpoint", "pegaEndpoint", "http://localhost:8080/prweb",
     ).replace(/\/$/, "");
     return enforcePegaEndpointHttps(raw);
@@ -68,13 +68,12 @@ export class PegaHttpCore {
 
   /** SA4E-241 SEC-03: configured Pega operator id (no hardcoded default). */
   getConfiguredUsername(): string {
-    return getSettingWithFallback<string>("pega.username", "pegaUsername", "").trim();
+    return getSetting<string>("pega.username", "pegaUsername", "").trim();
   }
 
-  /** Backend base URL (Code Intelligence server) — reads sdlcAgents.backend.url (same key as package.json). */
+  /** Backend base URL (Code Intelligence server) — reads sdlcAgents.backend.url via getSetting. */
   getBackendUrl(): string {
-    return vscode.workspace.getConfiguration("sdlcAgents")
-      .get<string>("backend.url", "http://127.0.0.1:48721").replace(/\/$/, "");
+    return getSetting<string>("backend.url", "backendUrl", "http://127.0.0.1:48721").replace(/\/$/, "");
   }
 
   /** Candidate REST prefixes, active prefix first once discovered. */

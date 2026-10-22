@@ -1,3 +1,4 @@
+import { getSetting } from "../config/settings-migration";
 /**
  * command-handlers — implementation of the non-LLM VS Code command handlers.
  * Extracted from CommandRegistrar (BR-18); registerCommands stays there and
@@ -19,7 +20,6 @@ import { AuthManager } from "../auth/AuthManager";
 import { KiroTreeViewProvider } from "../sidebar/tree-view-provider";
 import { showUserError } from "../utils/panel-utils";
 import { writeJsonFile } from "../utils/mcp-config-file";
-import { getSettingWithFallback } from "../config/settings-migration";
 
 export function getWorkspaceRoot(): string | undefined {
   const folders = vscode.workspace.workspaceFolders;
@@ -128,8 +128,7 @@ export async function handleStopServer(mcpManager?: IServerManager, workspaceRoo
 export async function handleEditConfig(): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) { return; }
-  const config = vscode.workspace.getConfiguration("sdlcAgents");
-  const relPath = getSettingWithFallback<string>(
+  const relPath = getSetting<string>(
     "workspace.configPath", "configPath", ".code-intel/orchestration.json",
   );
   const fullPath = path.join(root, relPath);
@@ -146,15 +145,14 @@ export async function handleEditConfig(): Promise<void> {
 export async function handleChangeConfig(mcpManager?: IServerManager): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) { return; }
-  const config = vscode.workspace.getConfiguration("sdlcAgents");
-  const currentRelPath = getSettingWithFallback<string>(
+  const currentRelPath = getSetting<string>(
     "workspace.configPath", "configPath", ".code-intel/orchestration.json",
   );
   const defaultUri = vscode.Uri.file(root);
   const result = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, canSelectMany: false, defaultUri, filters: { "JSON": ["json"] } });
   if (!result || result.length === 0) { return; }
   const relPath = path.relative(root, result[0].fsPath).replace(/\\/g, "/");
-  await config.update("configPath", relPath, vscode.ConfigurationTarget.Workspace);
+  await vscode.workspace.getConfiguration("sdlcAgents").update("workspace.configPath", relPath, vscode.ConfigurationTarget.Workspace);
   vscode.window.showInformationMessage(`Config changed to: ${relPath}. Restarting...`);
   await handleRestartServer(mcpManager);
 }

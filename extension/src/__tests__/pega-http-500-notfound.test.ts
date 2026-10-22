@@ -20,8 +20,8 @@ vi.mock("vscode", () => ({
   workspace: {
     getConfiguration: vi.fn(() => ({
       get: vi.fn((key: string, defaultValue: unknown) => {
-        if (key === "pegaEndpoint") return "http://localhost:8080/prweb";
-        if (key === "pegaUsername") return "SSA@TGB";
+        if (key === "pega.endpoint") return "http://localhost:8080/prweb";
+        if (key === "pega.username") return "SSA@TGB";
         return defaultValue;
       }),
     })),

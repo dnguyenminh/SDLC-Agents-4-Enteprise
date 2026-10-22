@@ -19,7 +19,7 @@ import { AtlassianCredentialService } from "./services/AtlassianCredentialServic
 import { registerAtlassianLocalTools } from "./mcp/atlassian/index";
 import { registerDevtoolsTools } from "./mcp/devtools-bridge";
 import { registerIdeControlTools } from "./mcp/ide-control-tools";
-import { getSettingWithFallback } from "./config/settings-migration";
+import { getSetting } from "./config/settings-migration";
 
 /** Health check timeout in milliseconds */
 const HEALTH_TIMEOUT_MS = 5000;
@@ -150,7 +150,7 @@ export class RemoteBackendClient implements vscode.Disposable {
   }
 
   private async startWrapper(): Promise<void> {
-    const port = getSettingWithFallback<number>("mcp.serverPort", "mcpServerPort", 9181);
+    const port = getSetting<number>("mcp.serverPort", "mcpServerPort", 9181);
     this.wrapperServer = new WrapperServer({
       outputChannel: this.outputChannel,
       base64Proxy: this.base64Proxy,

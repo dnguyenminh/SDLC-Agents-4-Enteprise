@@ -96,6 +96,8 @@ describe("ensureMigrated", () => {
     expect(store.get(`sdlcAgents.${h}.migrated`)).toBe("1");
     expect(store.get(LEGACY_SECRET.pega)).toBe("pw-a");
     const ws = vscode.ConfigurationTarget.Workspace;
+    // SA4E-370: copyConfig writes the LEGACY flat keys (reads resolve via
+    // getSetting on the dotted keys after the migration runner).
     expect(cfg.updates).toContainEqual({ key: "pegaEndpoint", value: "https://a/pega", target: ws });
     expect(cfg.updates).toContainEqual({ key: "pegaUsername", value: "op.a", target: ws });
   });

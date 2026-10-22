@@ -1,3 +1,4 @@
+import { getSetting } from "../../config/settings-migration";
 /**
  * MCP server lifecycle wiring — config watcher, status broadcast, auto-spawn.
  * Extracted from extension.ts (BR-18 file-size limit).
@@ -6,7 +7,6 @@ import * as vscode from "vscode";
 import { ConfigWatcher } from "../../config-watcher";
 import { writeBundledMcpConfig } from "../../mcp-injector";
 import { mapServerStatusToWebview } from "../../types";
-import { getSettingWithFallback } from "../../config/settings-migration";
 import { runtime } from "./state";
 
 export function setupConfigWatcher(context: vscode.ExtensionContext, workspaceRoot: string, outputChannel: vscode.OutputChannel): void {
@@ -16,7 +16,9 @@ export function setupConfigWatcher(context: vscode.ExtensionContext, workspaceRo
     const portChanged =
       event.affectsConfiguration("sdlcAgents.mcp.serverPort") || event.affectsConfiguration("sdlcAgents.mcpServerPort");
     if (!portChanged || !runtime.mcpManager) { return; }
-    if (!getSettingWithFallback<boolean>("mcp.enabled", "enableMcpServer", true)) { return; }
+    // SA4E-370: reads only the new `mcp.enabled` key — old flat values are
+    // copied forward by the one-time activation migration.
+    if (!getSetting<boolean>("mcp.enabled", "enableMcpServer", true)) { return; }
     if (runtime.mcpManager.status === "running") { runtime.mcpManager.restart().then(() => vscode.window.showInformationMessage("MCP Server restarted")).catch((err) => vscode.window.showErrorMessage(`MCP Server restart failed: ${(err as Error).message}`)); }
     else { runtime.mcpManager.spawn().catch((err) => vscode.window.showErrorMessage(`MCP Server start failed: ${(err as Error).message}`)); }
   }));
@@ -41,9 +43,10 @@ export function setupMcpStatusBroadcast(workspaceRoot: string): void {
 
 export async function autoSpawnServer(config: vscode.WorkspaceConfiguration, outputChannel: vscode.OutputChannel): Promise<void> {
   // SA4E-370: config param kept for signature stability; the enabled flag is
-  // read via the fallback helper (new `mcp.enabled` + legacy `enableMcpServer`).
+  // read directly from the new `mcp.enabled` key (one-time migration copies
+  // legacy `enableMcpServer` values forward at activation).
   void config;
-  if (getSettingWithFallback<boolean>("mcp.enabled", "enableMcpServer", true)) {
+  if (getSetting<boolean>("mcp.enabled", "enableMcpServer", true)) {
     try { await runtime.mcpManager!.spawn(); }
     catch (err) {
       const msg = `Auto-spawn failed: ${(err as Error).message}`;

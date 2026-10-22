@@ -41,7 +41,7 @@ vi.mock("vscode", () => ({
   ConfigurationTarget: { Global: 1, Workspace: 2 },
 }));
 
-import { getSettingWithFallback } from "../settings-migration";
+import { getSetting } from "../settings-migration";
 
 function reset(): void {
   store.global.clear();
@@ -49,27 +49,29 @@ function reset(): void {
   configStub = undefined;
 }
 
-describe("getSettingWithFallback (SA4E-370)", () => {
+describe("getSetting (SA4E-370)", () => {
   beforeEach(reset);
 
   it("returns the NEW key value when the new key is set (global scope)", () => {
     installFullConfig();
     store.global.set("pega.endpoint", "https://new.example.com/prweb");
     store.global.set("pegaEndpoint", "https://old.example.com/prweb");
-    expect(getSettingWithFallback("pega.endpoint", "pegaEndpoint", "http://default/prweb"))
+    expect(getSetting("pega.endpoint", "pegaEndpoint", "http://default/prweb"))
       .toBe("https://new.example.com/prweb");
   });
 
   it("returns the NEW key value when the new key is set (workspace scope)", () => {
     installFullConfig();
     store.workspace.set("mcp.serverPort", 5001);
-    expect(getSettingWithFallback<number>("mcp.serverPort", "mcpServerPort", 9181)).toBe(5001);
+    expect(getSetting<number>("mcp.serverPort", "mcpServerPort", 9181)).toBe(5001);
   });
 
-  it("falls back to the OLD flat key when only the old key is set", () => {
+  it("ignores the OLD flat key when only the old key is set (post-migration)", () => {
+    // Post-migration behavior: getSetting reads ONLY the new key.
+    // Old key values are handled by the one-time migration runner at activation.
     installFullConfig();
     store.global.set("llmProvider", "openai");
-    expect(getSettingWithFallback("llm.provider", "llmProvider", "anthropic")).toBe("openai");
+    expect(getSetting("llm.provider", "llmProvider", "anthropic")).toBe("anthropic");
   });
 
   it("honors an explicitly-set falsy NEW value over a non-empty old value", () => {
@@ -78,36 +80,37 @@ describe("getSettingWithFallback (SA4E-370)", () => {
     installFullConfig();
     store.global.set("llm.anthropic.baseUrl", "");
     store.global.set("anthropicBaseUrl", "https://legacy-gateway/anthropic");
-    expect(getSettingWithFallback("llm.anthropic.baseUrl", "anthropicBaseUrl", "fallback"))
+    expect(getSetting("llm.anthropic.baseUrl", "anthropicBaseUrl", "fallback"))
       .toBe("");
   });
 
   it("returns the default when neither key is set", () => {
     installFullConfig();
-    expect(getSettingWithFallback<number>("mcp.maxBodyBytes", "mcpMaxBodyBytes", 67108864))
+    expect(getSetting<number>("mcp.maxBodyBytes", "mcpMaxBodyBytes", 67108864))
       .toBe(67108864);
   });
 
-  it("degraded (no inspect): honors the old key first, then the new key, then default", () => {
-    // Old key set → old value wins (keeps legacy-mocking tests stable).
+  it("degraded (no inspect): reads only the NEW key, then default (post-migration)", () => {
+    // Post-migration: even without inspect(), the OLD flat key is IGNORED —
+    // old values are handled by the one-time migration runner at activation.
     configStub = { get: (key: string, def?: unknown) => (store.global.has(key) ? store.global.get(key) : def) };
     store.global.set("pegaUsername", "legacy-op");
-    expect(getSettingWithFallback("pega.username", "pegaUsername", "")).toBe("legacy-op");
+    expect(getSetting("pega.username", "pegaUsername", "")).toBe("");
 
     // Only the new key set → new value.
     reset();
     configStub = { get: (key: string, def?: unknown) => (store.global.has(key) ? store.global.get(key) : def) };
     store.global.set("pega.username", "new-op");
-    expect(getSettingWithFallback("pega.username", "pegaUsername", "")).toBe("new-op");
+    expect(getSetting("pega.username", "pegaUsername", "")).toBe("new-op");
 
     // Neither set → default.
     reset();
     configStub = { get: (_key: string, def?: unknown) => def };
-    expect(getSettingWithFallback("pega.username", "pegaUsername", "dflt")).toBe("dflt");
+    expect(getSetting("pega.username", "pegaUsername", "dflt")).toBe("dflt");
   });
 
   it("returns the default when the configuration API is absent", () => {
     configStub = undefined;
-    expect(getSettingWithFallback("llm.provider", "llmProvider", "anthropic")).toBe("anthropic");
+    expect(getSetting("llm.provider", "llmProvider", "anthropic")).toBe("anthropic");
   });
 });

@@ -14,6 +14,7 @@ import { ProxyConfigService } from "./proxy/ProxyConfigService";
 import { ProxyDetectionService } from "./proxy/ProxyDetectionService";
 import { applyGlobalFetchPatch } from "./proxy/global-fetch-patch";
 import { migrateConfigNamespace } from "./config/config-namespace-migration";
+import { runConfigMigration } from "./config/settings-migration-runner";
 import { runtime } from "./extension/registration/state";
 import { initializeWorkspace } from "./extension/registration/workspace-init";
 import { registerTreeView } from "./extension/registration/tree-view";
@@ -38,6 +39,16 @@ export async function activate(context: vscode.ExtensionContext) {
     await migrateConfigNamespace(context);
   } catch (err) {
     console.warn(`[config-migration] namespace migration failed: ${(err as Error).message}`);
+  }
+
+  // SA4E-370: one-time config key migration — copies old flat key values
+  // (e.g. sdlcAgents.pegaEndpoint) to the new dot-notation keys
+  // (sdlcAgents.pega.endpoint). Guarded by a globalState flag; shows a popup
+  // with the migration table when keys were copied. Never break activation.
+  try {
+    await runConfigMigration(context);
+  } catch (err) {
+    console.warn(`[config-migration] key migration failed: ${(err as Error).message}`);
   }
 
   // Register Settings command early — must work even without a workspace folder.

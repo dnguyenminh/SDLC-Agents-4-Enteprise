@@ -6,8 +6,8 @@
 
 import * as vscode from "vscode";
 import type { ProxyConfig, ProxyCredentials, ProxyMode, ProxyState } from "../models/ProxyModels";
+import { getSetting } from "../config/settings-migration";
 
-const CONFIG_SECTION = "sdlcAgents";
 const SECRET_USERNAME = "sdlcAgents.proxy.username";
 const SECRET_PASSWORD = "sdlcAgents.proxy.password";
 /** Pre-rename proxy secret keys — READ-ONLY migration/fallback sources. */
@@ -21,14 +21,13 @@ const LEGACY_SECRET_PASSWORD = "kiroSdlc.proxy.password";
 export class ProxyConfigService {
   constructor(private readonly secrets: vscode.SecretStorage) {}
 
-  /** Read current proxy config from VS Code global settings */
+  /** Read current proxy config from VS Code global settings (via getSetting — unified config reads) */
   getConfig(): ProxyConfig {
-    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
     return {
-      mode: config.get<string>("proxy.mode", "system") as ProxyMode,
-      host: config.get<string>("proxy.host", ""),
-      port: config.get<number>("proxy.port", 8080),
-      bypass: config.get<string>("proxy.bypass", "localhost,127.0.0.1,::1"),
+      mode: getSetting<string>("proxy.mode", "proxy.mode", "system") as ProxyMode,
+      host: getSetting<string>("proxy.host", "proxy.host", ""),
+      port: getSetting<number>("proxy.port", "proxy.port", 8080),
+      bypass: getSetting<string>("proxy.bypass", "proxy.bypass", "localhost,127.0.0.1,::1"),
     };
   }
 
@@ -83,13 +82,13 @@ export class ProxyConfigService {
 
   /** Update proxy mode setting (workspace-scoped) */
   async setMode(mode: ProxyMode): Promise<void> {
-    await vscode.workspace.getConfiguration(CONFIG_SECTION)
+    await vscode.workspace.getConfiguration("sdlcAgents")
       .update("proxy.mode", mode, vscode.ConfigurationTarget.Workspace);
   }
 
   /** Save proxy host, port, bypass settings (workspace-scoped — mỗi project có config riêng) */
   async saveProxy(host: string, port: number, bypass: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+    const config = vscode.workspace.getConfiguration("sdlcAgents");
     await config.update("proxy.host", host, vscode.ConfigurationTarget.Workspace);
     await config.update("proxy.port", port, vscode.ConfigurationTarget.Workspace);
     await config.update("proxy.bypass", bypass, vscode.ConfigurationTarget.Workspace);

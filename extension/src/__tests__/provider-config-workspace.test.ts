@@ -24,6 +24,8 @@ describe("updatePegaConfig", () => {
     const h = getWsHash()!;
     expect(store.get(secretKey("pega", h)!)).toBe("pw-a");
     expect(store.get(LEGACY_SECRET.pega)).toBeUndefined();
+    // SA4E-370: writes keep targeting the legacy flat keys (reads resolve via
+    // getSetting on the new dotted keys after the migration runner).
     expect(cfg.updates).toContainEqual({ key: "pegaEndpoint", value: "https://a/pega", target: WS });
     expect(cfg.updates).toContainEqual({ key: "pegaUsername", value: "op.a", target: WS });
   });
@@ -61,10 +63,15 @@ describe("updatePegaConfig", () => {
 
 describe("getCurrentState isolation", () => {
   it("returns A values in A and empty in B", async () => {
-    installConfigStub();
+    const cfg = installConfigStub();
     const { secrets } = installSecretStub();
     const svc = new ProviderConfigService(secrets);
     await svc.updatePegaConfig("https://a/pega", "op.a", "pw-a");
+    // SA4E-370: getCurrentState reads ONLY the new dotted keys via getSetting —
+    // in production the one-time migration runner materializes them from the
+    // legacy flat writes above. Simulate that post-migration state here.
+    cfg.values["pega.endpoint"] = "https://a/pega";
+    cfg.values["pega.username"] = "op.a";
     const stateA = await svc.getCurrentState();
     expect(stateA.pegaEndpoint).toBe("https://a/pega");
     expect(stateA.hasPegaPassword).toBe(true);
@@ -77,14 +84,17 @@ describe("getCurrentState isolation", () => {
     expect(stateB.pegaUsername).toBe("");
     expect(stateB.hasPegaPassword).toBe(false);
 
-    // Back in A: values intact.
+    // Back in A: values intact (dotted keys — what getCurrentState reads).
     setWorkspaceFolders(["/ws/a"]);
-    installConfigStub({ values: { pegaEndpoint: "https://a/pega", pegaUsername: "op.a" } });
+    installConfigStub({ values: { "pega.endpoint": "https://a/pega", "pega.username": "op.a" } });
     expect((await svc.getCurrentState()).hasPegaPassword).toBe(true);
   });
 
   it("falls back to legacy flat secrets with no folder open", async () => {
-    installConfigStub({ globals: { pegaEndpoint: "https://legacy/pega", pegaUsername: "legacy-op" } });
+    // SA4E-370: getCurrentState reads the dotted key; the config-namespace
+    // migration runner copies legacy global `pegaEndpoint` → `pega.endpoint`,
+    // so the post-migration global carries the dotted key.
+    installConfigStub({ globals: { "pega.endpoint": "https://legacy/pega", "pega.username": "legacy-op" } });
     const { secrets } = installSecretStub({ [LEGACY_SECRET.pega]: "legacy-pw" });
     const svc = new ProviderConfigService(secrets);
     setWorkspaceFolders(null);
@@ -98,6 +108,7 @@ describe("updateConfig guard", () => {
   it("rejects workspace-scoped keys with the SA4E-323 error", async () => {
     const { secrets } = installSecretStub();
     const svc = new ProviderConfigService(secrets);
+    // SA4E-323 guard list is the legacy flat keys (the write targets).
     for (const k of ["pegaEndpoint", "pegaUsername", "atlassianConnectionType"]) {
       await expect(svc.updateConfig(k, "x"))
         .rejects.toThrow(`Use workspace-scoped method for ${k} (SA4E-323).`);
@@ -108,9 +119,9 @@ describe("updateConfig guard", () => {
     const cfg = installConfigStub();
     const { secrets } = installSecretStub();
     const svc = new ProviderConfigService(secrets);
-    await svc.updateConfig("llmProvider", "openai");
+    await svc.updateConfig("llm.provider", "openai");
     expect(cfg.updates).toContainEqual({
-      key: "llmProvider", value: "openai", target: vscode.ConfigurationTarget.Global,
+      key: "llm.provider", value: "openai", target: vscode.ConfigurationTarget.Global,
     });
   });
 });

@@ -6,9 +6,7 @@
 import type { PipelineState } from '../types/pi-workflow-state.js';
 import type { ChatExtToWebviewMessage } from '../../chat-panel/message-protocol';
 import type { ToolLiveEvent } from '../pi-event-mapper.js';
-import { providerRequiresApiKey, getExtensionVersion, buildCredentialResolver } from '../pi-provider-config-bridge.js';
-import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_LEGACY_KEYS } from '../../models/LlmProviderConfig';
-import { getSettingWithFallback } from '../../config/settings-migration.js';
+import { providerRequiresApiKey, getExtensionVersion, buildCredentialResolver, readProviderTurnConfig } from '../pi-provider-config-bridge.js';
 import { isBudgetExceededError } from '../../pi-agent/budget-gate.js';
 import { debugLog } from '../../debug-logger';
 import { AdapterCore } from './adapter-core.js';
@@ -66,12 +64,12 @@ export abstract class AdapterSessionTurns extends AdapterCore {
    * .acp.json sidecar). Returns true when the session handled the turn.
    * Any failure returns false and the caller uses the legacy engine path.
    *
-   * Routing: session-first ONLY for key-requiring (cloud) providers with a
-   * real key. Local endpoints (lmstudio/ollama/onnx) ALWAYS use the legacy
-   * gateway path — pi-ai has no builtin provider for them and ModelRuntime
-   * cannot compose auth ("Provider is not configured"), while legacy
-   * createGatewayProvider builds a complete OpenAI-compatible provider
-   * (real /v1/models + Chat Completions) that works keyless.
+   * Routing (SA4E-369 UAT root-cause fix): session-first for ALL providers.
+   * Key-requiring (cloud) providers need a real key; keyless local endpoints
+   * (lmstudio/ollama/onnx) are served by the session host via the shared
+   * keyless gateway registration (pi-gateway-provider + LOCAL_KEYLESS_
+   * PLACEHOLDER) — the stale "local → legacy ALWAYS" gate was removed. The
+   * legacy path remains the fail-safe fallback for every provider.
    */
   protected async trySessionTurn(
     state: PipelineState,
@@ -84,19 +82,19 @@ export abstract class AdapterSessionTurns extends AdapterCore {
     // One stable stream identity per turn (streaming-identity fix).
     const turnStart = Date.now();
     try {
-      // SA4E-370: renamed keys resolved with legacy-key fallback.
-      const providerId = getSettingWithFallback<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
-      if (!providerRequiresApiKey(providerId)) return false; // local → legacy gateway path
-      const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
-      const baseUrl = (baseUrlKey
-        ? getSettingWithFallback<string>(baseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[providerId], '')
-        : '') || undefined;
-      const configuredModelId = getSettingWithFallback<string>('llm.model', 'llmModel', '') || '';
+      // SA4E-369 UAT root-cause fix — ONE shared config read for both turn
+      // paths (dot keys + legacy flat fallback; see readProviderTurnConfig).
+      const { providerId, baseUrl, configuredModelId } = readProviderTurnConfig();
       const resolver = this.secrets ? buildCredentialResolver(this.secrets) : undefined;
       const apiKey = resolver ? await resolver(providerId) : undefined;
-      // Key-requiring providers without a key keep the fail-closed
-      // PI_CREDENTIALS_MISSING error on the legacy path below.
-      if (!apiKey) return false;
+      // Key-REQUIRING providers without a key keep the fail-closed
+      // PI_CREDENTIALS_MISSING error on the legacy path below. Keyless local
+      // endpoints (lmstudio/ollama/onnx) PROCEED without a key: the session
+      // host seeds LOCAL_KEYLESS_PLACEHOLDER auth and registers the proven
+      // keyless gateway (real /v1/models), so per-tab sessions, budget gates
+      // and the SA4E-369 peer tools exist in EVERY tab (UG §4). Any session
+      // failure falls back to the legacy path below (fail-safe, unchanged).
+      if (providerRequiresApiKey(providerId) && !apiKey) return false;
       // SA4E-355 Task 5.1 (BR-12/STC-309): detect n_ctx BEFORE the host
       // assembles static context — the resolver chain needs it first (UC-01).
       await this.detectContextWindowEarly();

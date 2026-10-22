@@ -68,8 +68,9 @@ describe('PiWorkflowAdapter — SA4E-367 bridge tools in the LEGACY pool', () =>
   beforeEach(() => {
     for (const k of Object.keys(mockConfigValues)) delete mockConfigValues[k];
     // faux resolves through configurePiProvider; key-requiring + no secrets → LEGACY path.
-    mockConfigValues.llmProvider = 'faux';
-    mockConfigValues.llmModel = 'faux-1';
+    // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
+    mockConfigValues['llm.provider'] = 'faux';
+    mockConfigValues['llm.model'] = 'faux-1';
     models = createModels();
     models.setProvider(fauxProvider().provider);
     onEvent = vi.fn();

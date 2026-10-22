@@ -5,9 +5,7 @@
  */
 import type { ChatExtToWebviewMessage } from '../../chat-panel/message-protocol';
 import { createWorkspaceTools } from '../pi-coding-tools.js';
-import { hintLocalEndpointError, providerRequiresApiKey, buildCredentialResolver } from '../pi-provider-config-bridge.js';
-import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_LEGACY_KEYS } from '../../models/LlmProviderConfig';
-import { getSettingWithFallback } from '../../config/settings-migration.js';
+import { hintLocalEndpointError, providerRequiresApiKey, buildCredentialResolver, readProviderTurnConfig } from '../pi-provider-config-bridge.js';
 import { getPiExtensionAgentTools } from '../pi-extension-runtime.js';
 // SA4E-364: bridge tools join the legacy tool pool (merge skip-if-exists — BR-06).
 import { buildMcpBridgeAgentTools } from '../../pi-agent/extensions/mcp-bridge-extension';
@@ -26,25 +24,14 @@ export async function configureEngineProvider(
   engine: import('../pi-workflow').PiWorkflowEngine,
   secrets: vscode.SecretStorage | undefined
 ): Promise<{ modelUnresolved: boolean; credentialsPresent: boolean }> {
-  // SA4E-370: renamed keys resolved with legacy-key fallback.
-  const providerId = getSettingWithFallback<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
-
-  // FIX 4: read the per-provider base URL the Settings panel writes; empty = default URL
-  const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
-  const baseUrl = (baseUrlKey
-    ? getSettingWithFallback<string>(baseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[providerId], '')
-    : '') || undefined;
-
-  // FIX A: pass the RAW configuredModelId ("auto"/"") down — the engine resolves
-  // the default AFTER init + gateway registration (bridge cannot resolve pre-init).
-  // PI-MODEL-FALLBACK: ordered fallback models tried when the primary fails
-  // with a transient gateway/upstream error (5xx / timeout / bridge sandbox).
-  const fallbackModelIds = getSettingWithFallback<string[]>('llm.fallbackModels', 'llmFallbackModels', []);
+  // SA4E-369 UAT fix: shared config reads (dot keys + flat fallback) — one
+  // source of truth for BOTH turn paths (see readProviderTurnConfig).
+  const { providerId, baseUrl, configuredModelId, fallbackModelIds } = readProviderTurnConfig();
 
   const res = await engine.configureProvider({
     credentialResolver: buildCredentialResolver(secrets),
     providerId,
-    configuredModelId: getSettingWithFallback<string>('llm.model', 'llmModel', '') || '',
+    configuredModelId,
     baseUrl,
     fallbackModelIds,
   });
@@ -143,15 +130,10 @@ export function reportTurnError(
   error: { code: string; message: string }
 ): void {
   try {
-    // SA4E-370: renamed keys resolved with legacy-key fallback.
-    const providerId = getSettingWithFallback<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
+    // SA4E-369 UAT fix: ONE shared config read for both turn paths.
+    const { providerId, baseUrl, configuredModelId } = readProviderTurnConfig();
     if (!providerRequiresApiKey(providerId)) {
-      const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
-      const baseUrl = (baseUrlKey
-        ? getSettingWithFallback<string>(baseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[providerId], '')
-        : '') || undefined;
-      const modelId = getSettingWithFallback<string>('llm.model', 'llmModel', '') || undefined;
-      error.message = hintLocalEndpointError(error.message, providerId, baseUrl, modelId);
+      error.message = hintLocalEndpointError(error.message, providerId, baseUrl, configuredModelId || undefined);
     }
   } catch { /* never break error reporting */ }
   onEvent({ type: 'chat:error', code: error.code, message: error.message, retryable: true } as ChatExtToWebviewMessage);

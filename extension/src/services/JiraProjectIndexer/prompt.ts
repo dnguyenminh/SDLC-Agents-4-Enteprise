@@ -6,7 +6,7 @@
 import * as vscode from "vscode";
 import { AtlassianHttpClient } from "../../mcp/atlassian/atlassian-http-client";
 import { AtlassianCredentialService } from "../AtlassianCredentialService";
-import { getSettingWithFallback } from "../../config/settings-migration";
+import { getSetting } from "../../config/settings-migration";
 
 /** Ask user for Jira project key — shows QuickPick with projects from Jira API. */
 export async function promptProjectKey(secrets: vscode.SecretStorage): Promise<string | undefined> {
@@ -61,7 +61,7 @@ async function fallbackInputBox(lastKey?: string): Promise<string | undefined> {
 /** Read last used project key from workspace config. */
 function getLastProjectKey(): string | undefined {
     // SA4E-370: prefers `jira.lastProject`, falls back to legacy `jiraLastProject`.
-    return getSettingWithFallback<string | undefined>("jira.lastProject", "jiraLastProject", undefined);
+    return getSetting<string | undefined>("jira.lastProject", "jiraLastProject", undefined);
 }
 
 /** Persist last used project key. */

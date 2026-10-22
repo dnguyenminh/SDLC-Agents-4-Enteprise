@@ -1,3 +1,4 @@
+import { getSetting } from "../../config/settings-migration";
 /**
  * Pipeline tuning defaults + settings reader for the BFS indexer.
  * These mirror the `sdlcAgents.pega.*` settings declared in package.json and
@@ -33,15 +34,14 @@ export const MAX_QUEUE_SIZE = 50_000;
  * index without a reload. Invalid/out-of-range values fall back to safe defaults.
  */
 export function readPipelineConfig(): PipelineTuning {
-  const cfg = vscode.workspace.getConfiguration("sdlcAgents");
   const clamp = (v: number | undefined, def: number, b: { min: number; max: number }): number =>
     (typeof v === "number" && Number.isFinite(v)) ? Math.min(b.max, Math.max(b.min, Math.round(v))) : def;
 
-  const fetchBatchSize = clamp(cfg.get<number>("pega.fetchBatchSize"), DEFAULT_FETCH_BATCH_SIZE, FETCH_BATCH_SIZE_BOUNDS);
-  const ingestConcurrency = clamp(cfg.get<number>("pega.ingestConcurrency"), DEFAULT_INGEST_CONCURRENCY, INGEST_CONCURRENCY_BOUNDS);
+  const fetchBatchSize = clamp(getSetting<number>("pega.fetchBatchSize", "pega.fetchBatchSize", 50), DEFAULT_FETCH_BATCH_SIZE, FETCH_BATCH_SIZE_BOUNDS);
+  const ingestConcurrency = clamp(getSetting<number>("pega.ingestConcurrency", "pega.ingestConcurrency", 10), DEFAULT_INGEST_CONCURRENCY, INGEST_CONCURRENCY_BOUNDS);
 
   // Channel capacity: 0/unset → auto (2× ingest concurrency). Otherwise clamp.
-  const rawCapacity = cfg.get<number>("pega.ingestChannelCapacity");
+  const rawCapacity = getSetting<number>("pega.ingestChannelCapacity", "pega.ingestChannelCapacity", 0);
   const channelCapacity = (typeof rawCapacity === "number" && rawCapacity >= 1)
     ? clamp(rawCapacity, ingestConcurrency * 2, CHANNEL_CAPACITY_BOUNDS)
     : ingestConcurrency * 2;
