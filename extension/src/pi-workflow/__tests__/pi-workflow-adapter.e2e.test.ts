@@ -53,15 +53,16 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
   });
 
   it('invokeChat emits streamed tokens and NO chat:error on the happy path (real builtin registry, llmModel="auto")', async () => {
-    // REAL builtin registry (no injected models) + config llmProvider=openai, llmModel=auto
+    // REAL builtin registry (no injected models) + config llm.provider=openai, llm.model=auto
     // — the exact scenario that exposed the ordering bug (PI_MODEL_UNRESOLVED).
+    // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
     const realAdapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as any,
       workspaceRoot: 'C:/ws/test',
       onEvent: onEventMock as (msg: ChatExtToWebviewMessage) => void,
     });
-    mockConfigValues.llmProvider = 'openai';
-    mockConfigValues.llmModel = 'auto';
+    mockConfigValues['llm.provider'] = 'openai';
+    mockConfigValues['llm.model'] = 'auto';
 
     await realAdapter.invokeChat('Say hello');
 
@@ -75,8 +76,9 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
 
   it('invokeChat with faux model emits streamed tokens and NO chat:error (happy path)', async () => {
     // Config resolves the faux provider/model through configurePiProvider()
-    mockConfigValues.llmProvider = 'faux';
-    mockConfigValues.llmModel = 'faux-1';
+    // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
+    mockConfigValues['llm.provider'] = 'faux';
+    mockConfigValues['llm.model'] = 'faux-1';
 
     // Spy on the stream handler to assert tokens are emitted to the UI
     const emitSpy = vi.spyOn(adapter.getStreamHandler(), 'emitToken');
@@ -96,9 +98,10 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
   });
 
   it('empty/unresolved model → clear actionable PI_MODEL_UNRESOLVED chat:error (not a raw stream failure)', async () => {
-    // Default config: empty llmModel, provider with no resolvable model in the registry
-    mockConfigValues.llmProvider = 'anthropic-unknown';
-    mockConfigValues.llmModel = '';
+    // Default config: empty llm.model, provider with no resolvable model in the registry
+    // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
+    mockConfigValues['llm.provider'] = 'anthropic-unknown';
+    mockConfigValues['llm.model'] = '';
 
     await adapter.invokeChat('Say hello');
 
@@ -111,8 +114,9 @@ describe('PiWorkflowAdapter e2e — invokeChat through the full chat path (SA4E-
   });
 
   it('two overlapping invokeChat calls are serialized — no "already processing", both handled, busy notice emitted', async () => {
-    mockConfigValues.llmProvider = 'faux';
-    mockConfigValues.llmModel = 'faux-1';
+    // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
+    mockConfigValues['llm.provider'] = 'faux';
+    mockConfigValues['llm.model'] = 'faux-1';
     // Override the beforeEach response queue — exactly 2 responses for 2 queued turns.
     faux.setResponses([
       fauxAssistantMessage('turn one response'),

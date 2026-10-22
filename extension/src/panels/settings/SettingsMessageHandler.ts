@@ -56,12 +56,12 @@ export class SettingsMessageHandler {
       case "ready":
       case "getState": await this.sendCurrentState(); return true;
       case "setProvider":
-        await this.configService.updateConfig("llmProvider", msg.provider);
+        await this.configService.updateConfig("llm.provider", msg.provider);
         await this.sendCurrentState();
         await this.llm.autoTest(msg.provider); return true;
       case "getModels": await this.llm.getModels(msg.provider); return true;
-      case "setModel": await this.configService.updateConfig("llmModel", msg.model); return true;
-      case "setOllamaUrl": await this.configService.updateConfig("ollamaUrl", msg.url); return true;
+      case "setModel": await this.configService.updateConfig("llm.model", msg.model); return true;
+      case "setOllamaUrl": await this.configService.updateConfig("llm.ollama.baseUrl", msg.url); return true;
       case "setBaseUrl": await this.llm.setBaseUrl(msg.provider, msg.url); return true;
       case "saveApiKey": await this.llm.saveApiKey(msg.provider, msg.key); return true;
       case "clearApiKey": await this.llm.clearApiKey(msg.provider); return true;

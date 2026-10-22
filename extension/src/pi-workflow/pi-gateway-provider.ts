@@ -1,6 +1,7 @@
 import { createProvider, envApiKeyAuth } from '@earendil-works/pi-ai';
 import type { Provider } from '@earendil-works/pi-ai';
 import { fetchGatewayModels } from '../chat-panel/chat-models.js';
+import type { ChatModelEntry } from '../chat-panel/message-protocol.js';
 import { debugLog } from '../debug-logger.js';
 
 /** A pi-ai Model built from a real gateway model entry. */
@@ -61,14 +62,18 @@ function buildGatewayModels(
  * FIX 1+4+B: build a gateway provider whose models come from the gateway's REAL
  * `/v1/models` list (fetched WITH the API key — the gateway 401s without it).
  * The static pi-ai catalog is ONLY a fallback when the gateway list is unavailable.
+ * `preloadedModels` (SA4E-369 UAT root-cause fix) lets a caller that already
+ * fetched the real list hand it in — the fetch is skipped (no double /v1/models
+ * round-trip); `undefined`/omitted keeps the self-fetching legacy behavior.
  */
 export async function createGatewayProvider(
   providerId: string,
   baseUrl: string,
-  apiKey?: string
+  apiKey?: string,
+  preloadedModels?: ChatModelEntry[]
 ): Promise<Provider> {
   const authHeader = apiKey ? `Bearer ${apiKey}` : undefined;
-  const realModels = await fetchGatewayModels(baseUrl, authHeader);
+  const realModels = preloadedModels ?? (await fetchGatewayModels(baseUrl, authHeader));
 
   if (providerId === 'anthropic') {
     const { anthropicMessagesApi } = await import('@earendil-works/pi-ai/api/anthropic-messages.lazy');

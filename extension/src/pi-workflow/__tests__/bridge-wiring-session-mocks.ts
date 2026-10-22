@@ -13,6 +13,11 @@ const { mocks } = vi.hoisted(() => {
   const mocks = {
     promptCalls,
     setRuntimeApiKey: vi.fn(async (_p: string, _k: string) => undefined),
+    // SA4E-369 UAT fix: keyless local providers register the shared gateway
+    // provider NATIVELY (real /v1/models) — capture + controllable fetch.
+    registerNativeProvider: vi.fn(),
+    fetchGatewayModels: vi.fn(async (_baseUrl: string, _authHeader?: string) => [] as unknown[]),
+    createGatewayProvider: vi.fn(async () => ({ id: 'gateway-stub' })),
     sessionOpts: undefined as unknown,
     get subscribed() {
       return subscribed;
@@ -43,6 +48,7 @@ vi.mock('@earendil-works/pi-coding-agent', () => ({
     create: async () => ({
       setRuntimeApiKey: mocks.setRuntimeApiKey,
       registerProvider: () => undefined,
+      registerNativeProvider: mocks.registerNativeProvider,
       getModel: (_p: string, _m: string) => ({ id: 'test-model' }),
       getModels: () => [{ id: 'test-model' }],
     }),

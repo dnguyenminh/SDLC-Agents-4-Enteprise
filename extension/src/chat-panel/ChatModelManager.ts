@@ -4,7 +4,7 @@
 
 import { getStaticModels, getDefaultModel, fetchGatewayModels } from "./chat-models";
 import { ChatExtToWebviewMessage } from "./message-protocol";
-import { getSettingWithFallback } from "../config/settings-migration";
+import { readProviderTurnConfig } from "../pi-workflow/pi-provider-config-bridge.js";
 
 export class ChatModelManager {
   constructor(
@@ -14,31 +14,30 @@ export class ChatModelManager {
   /**
    * Build and send the provider-aware model list to the webview.
    * For gateway providers, attempts /v1/models first, falling back to static catalog.
+   * SA4E-369 UAT fix: provider/baseUrl/model read via the SHARED config helper
+   * (dot keys + legacy flat-key fallback) — plain config.get('llm.provider')
+   * returned the manifest default for users still holding the flat keys
+   * (llmProvider=lmstudio), so the webview showed the wrong model list.
    */
   async sendModels(): Promise<void> {
-    const provider = getSettingWithFallback<string>("llm.provider", "llmProvider", "anthropic");
-    const anthropicBaseUrl = getSettingWithFallback<string>("llm.anthropic.baseUrl", "anthropicBaseUrl", "");
+    const { providerId: provider, baseUrl, configuredModelId: llmModel } = readProviderTurnConfig();
 
     let models = getStaticModels(provider);
 
-    const isGatewayBaseUrl =
-      (provider === "anthropic" && anthropicBaseUrl.includes("127.0.0.1"));
-
-    if (isGatewayBaseUrl) {
-      const gatewayModels = await fetchGatewayModels(anthropicBaseUrl);
-      if (gatewayModels && gatewayModels.length > 0) {
-        models = gatewayModels;
-      }
-    } else if (provider === "lmstudio") {
-      const lmstudioBaseUrl = getSettingWithFallback<string>("llm.lmstudio.baseUrl", "lmstudioBaseUrl", "")
-        || "http://localhost:1234/v1";
-      const lmModels = await fetchGatewayModels(lmstudioBaseUrl);
-      if (lmModels && lmModels.length > 0) {
-        models = lmModels;
+    const isLocalGatewayBaseUrl = baseUrl !== undefined && baseUrl.includes("127.0.0.1");
+    if (isLocalGatewayBaseUrl || provider === "lmstudio") {
+      // Gateway provider (or any provider pointed at a local gateway):
+      // the real /v1/models list wins over the static catalog.
+      const gatewayBaseUrl = baseUrl
+        ?? (provider === "lmstudio" ? "http://localhost:1234/v1" : undefined);
+      if (gatewayBaseUrl) {
+        const gatewayModels = await fetchGatewayModels(gatewayBaseUrl);
+        if (gatewayModels && gatewayModels.length > 0) {
+          models = gatewayModels;
+        }
       }
     }
 
-    const llmModel = getSettingWithFallback<string>("llm.model", "llmModel", "");
     let selected = llmModel;
     if (selected && !models.some((m) => m.id === selected)) {
       models = [...models, { id: selected, name: selected }];

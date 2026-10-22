@@ -1,6 +1,8 @@
 import type { CredentialResolver } from './pi-provider.js';
 import * as vscode from 'vscode';
 import { readLlmApiKey } from '../config/llm-secret-keys.js';
+import { getSetting } from '../config/settings-migration.js';
+import { PROVIDER_BASE_URL_KEYS, PROVIDER_BASE_URL_LEGACY_KEYS } from '../models/LlmProviderConfig.js';
 
 export interface ProviderBridgeInput {
   secrets?: vscode.SecretStorage;
@@ -33,6 +35,39 @@ const LOCAL_NO_KEY_PROVIDERS = new Set(["lmstudio", "ollama", "onnx"]);
 export function providerRequiresApiKey(providerId?: string): boolean {
   if (!providerId) return true;
   return !LOCAL_NO_KEY_PROVIDERS.has(providerId.trim().toLowerCase());
+}
+
+export interface ProviderTurnConfig {
+  providerId: string;
+  /** Per-provider gateway baseUrl, or undefined when not configured. */
+  baseUrl?: string;
+  /** Raw configured model id ('' / 'auto' allowed — resolved downstream). */
+  configuredModelId: string;
+  /** PI-MODEL-FALLBACK: ordered fallback model ids from settings. */
+  fallbackModelIds: string[];
+}
+
+/**
+ * SA4E-369 UAT root-cause fix — ONE config-read path for BOTH turn paths.
+ * Session (trySessionTurn / selectAgent) and legacy (configureEngineProvider)
+ * previously read the same settings with DIFFERENT helpers: the legacy path
+ * resolved SA4E-370 dot-notation keys with legacy flat-key fallback
+ * (getSetting) while the session path used plain config.get() on
+ * the dot keys only — silently missing users who still hold the flat keys
+ * (e.g. llmProvider=lmstudio + lmstudioBaseUrl). Every provider-config read
+ * now goes through this function (single source of truth).
+ */
+export function readProviderTurnConfig(): ProviderTurnConfig {
+  const providerId = getSetting<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
+  const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
+  const baseUrl = (
+    baseUrlKey
+      ? getSetting<string>(baseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[providerId], '')
+      : ''
+  ) || undefined;
+  const configuredModelId = getSetting<string>('llm.model', 'llmModel', '') || '';
+  const fallbackModelIds = getSetting<string[]>('llm.fallbackModels', 'llmFallbackModels', []);
+  return { providerId, baseUrl, configuredModelId, fallbackModelIds };
 }
 
 /**

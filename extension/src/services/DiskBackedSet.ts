@@ -167,9 +167,8 @@ export function createPegaDedupSet(workspaceRoot: string, label: string): DiskBa
   // Lazy requires so the pure class has no static vscode dependency (testability).
   const vscode = require('vscode');
   const path = require('node:path');
-  const cap = vscode.workspace
-    .getConfiguration('sdlcAgents')
-    .get('pega.dedupMaxInMemory') as number | undefined;
+  const { getSetting } = require('../config/settings-migration');
+  const cap = getSetting('pega.dedupMaxInMemory', 'pega.dedupMaxInMemory', undefined) as number | undefined;
   const spillPath = path.join(workspaceRoot, '.pega-cache', `dedup-${label}.bin`);
   return new DiskBackedSet(spillPath, cap);
 }

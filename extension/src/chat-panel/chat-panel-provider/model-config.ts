@@ -8,7 +8,7 @@ import * as vscode from "vscode";
 export async function setLlmModelConfig(model: string): Promise<void> {
   const config = vscode.workspace.getConfiguration("sdlcAgents");
   try {
-    await config.update("llmModel", model === "auto" ? undefined : model, vscode.ConfigurationTarget.Global);
+    await config.update("llm.model", model === "auto" ? undefined : model, vscode.ConfigurationTarget.Global);
   } catch (err) {
     console.debug("[ChatPanelProvider] handleSetModel config update failed: " + (err as Error).message);
   }

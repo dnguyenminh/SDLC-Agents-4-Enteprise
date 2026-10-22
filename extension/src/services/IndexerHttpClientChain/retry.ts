@@ -1,3 +1,4 @@
+import { getSetting } from "../../config/settings-migration";
 /**
  * IndexerHttpClientRetry — batch retry segment: exponential-backoff batch sends
  * (SA4E-99), per-file rejection classification (SA4E-300) and the file-level
@@ -106,7 +107,7 @@ export class IndexerHttpClientRetry extends IndexerHttpClientTransport {
 
     /** SA4E-300: read the configured file-retry rounds (0 when invalid/disabled). */
     protected readIndexRetryRounds(): number {
-        const configuredRounds = Number(vscode.workspace.getConfiguration("sdlcAgents").get<number>("backend.indexRetryRounds", 5));
+        const configuredRounds = Number(getSetting<number>("backend.indexRetryRounds", "backendIndexRetryRounds", 5));
         return Number.isFinite(configuredRounds) && configuredRounds > 0 ? Math.floor(configuredRounds) : 0;
     }
 }

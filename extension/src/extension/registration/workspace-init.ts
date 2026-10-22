@@ -1,3 +1,4 @@
+import { getSetting } from "../../config/settings-migration";
 /**
  * Workspace-scoped activation pipeline — builds every manager, wires the chat
  * + enrichment + MCP features, and starts the server.
@@ -38,8 +39,8 @@ export async function initializeWorkspace(context: vscode.ExtensionContext, work
   const outputChannel = vscode.window.createOutputChannel("Kiro MCP Server");
   context.subscriptions.push(outputChannel);
 
-  const mcpConfig = vscode.workspace.getConfiguration("sdlcAgents");
   const backendUrl = resolveBackendUrl();
+  const mcpConfig = vscode.workspace.getConfiguration("sdlcAgents");
 
   runtime.authManager = new AuthManager(context.secrets, backendUrl);
   await runtime.authManager.initialize();
@@ -129,7 +130,7 @@ function registerAgenticChatCommand(
 /** SA4E-183: DiffTracker + SessionLifecycleEmitter wiring. */
 function registerDiffTracking(context: vscode.ExtensionContext, chatPanelProvider: ChatPanelProvider): void {
   runtime.sessionLifecycle = new SessionLifecycleEmitter();
-  runtime.diffTracker = new DiffTracker(null, vscode.workspace.getConfiguration('sdlcAgents').get<boolean>('diffTracker.enabled', true));
+  runtime.diffTracker = new DiffTracker(null, getSetting<boolean>('diffTracker.enabled', 'diffTracker.enabled', true));
   const diffOriginalProvider = new DiffOriginalProvider(runtime.diffTracker);
   context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider('diff-original', diffOriginalProvider)

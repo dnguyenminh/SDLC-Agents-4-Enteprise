@@ -12,8 +12,8 @@ vi.mock("vscode", () => ({
   workspace: {
     getConfiguration: vi.fn(() => ({
       get: vi.fn((key: string, defaultValue: unknown) => {
-        if (key === "pegaDeveloperShortName") return "";
-        if (key === "pegaUsername") return "SSA@TGB";
+        if (key === "pega.developerShortName") return "";
+        if (key === "pega.username") return "SSA@TGB";
         return defaultValue;
       }),
     })),
@@ -65,7 +65,7 @@ describe("PegaRuleSetResolverService", () => {
       const m = vi.mocked(vscode.workspace.getConfiguration);
       m.mockReturnValueOnce({
         get: vi.fn((key: string) => {
-          if (key === "pegaDeveloperShortName") return "dnguyen";
+          if (key === "pega.developerShortName") return "dnguyen";
           return "";
         }),
       } as any);

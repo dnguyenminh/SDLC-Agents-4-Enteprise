@@ -7,7 +7,7 @@ vi.mock('vscode', () => ({
 import * as fs from 'fs';
 import * as path from 'path';
 import { Base64ProxyService } from '../services/Base64ProxyService';
-import { TMP_DIR, BASE64_DETECT_TOOLS, DRAWIO_INPUT_TOOL, DRAWIO_NO_CBASE64_TOOL } from './backend-local-tools.fixtures';
+import { TMP_DIR, BASE64_DETECT_TOOLS, DRAWIO_INPUT_TOOL, DRAWIO_NO_CBASE64_TOOL, EXPORT_DOCX_TOOL } from './backend-local-tools.fixtures';
 
 describe('Base64ProxyService', () => {
   let service: Base64ProxyService;
@@ -80,6 +80,32 @@ describe('Base64ProxyService', () => {
     expect(fs.readFileSync(expectedOut).toString()).toBe('ROOTED-PNG');
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.file_path).toBe(expectedOut);
+  });
+
+  it('TC-46: proxyOutput honours a backend-suggested file_name next to the source', () => {
+    const rooted = new Base64ProxyService(TMP_DIR);
+    rooted.detectFromToolList([EXPORT_DOCX_TOOL as any]);
+    const b64 = Buffer.from('DOCX-BYTES').toString('base64');
+    const mockResult = { content: [{ type: 'text', text: JSON.stringify({ output_base64: b64, file_name: 'BRD-v1.docx' }) }] };
+
+    const result = rooted.proxyOutput('export_docx', { file_path: 'documents/BRD-embedded.md' }, mockResult);
+
+    const expected = path.join(TMP_DIR, 'documents', 'BRD-v1.docx');
+    expect(fs.readFileSync(expected).toString()).toBe('DOCX-BYTES');
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.file_path).toBe(expected);
+    expect(parsed.output_base64).toBeUndefined();
+  });
+
+  it('TC-47: proxyOutput strips path fragments from a suggested file_name', () => {
+    const rooted = new Base64ProxyService(TMP_DIR);
+    rooted.detectFromToolList([EXPORT_DOCX_TOOL as any]);
+    const mockResult = { content: [{ type: 'text', text: JSON.stringify({ output_base64: Buffer.from('X').toString('base64'), file_name: '../../evil.docx' }) }] };
+
+    rooted.proxyOutput('export_docx', { file_path: 'documents/BRD-embedded.md' }, mockResult);
+
+    expect(fs.existsSync(path.join(TMP_DIR, 'documents', 'evil.docx'))).toBe(true);
+    expect(fs.existsSync(path.join(TMP_DIR, '..', 'evil.docx'))).toBe(false);
   });
 
   it('TC-16: proxyInput passes through if tool not in set', () => {

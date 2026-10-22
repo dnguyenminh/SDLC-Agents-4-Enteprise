@@ -34,6 +34,8 @@ describe("saveConfig", () => {
     expect(store.get(LEGACY_SECRET.atlassianBaseUrl)).toBeUndefined();
     expect(store.get(LEGACY_SECRET.atlassianEmail)).toBeUndefined();
     expect(store.get(LEGACY_SECRET.atlassianToken)).toBeUndefined();
+    // SA4E-370: writes keep targeting the legacy flat key (reads resolve via
+    // getSetting on the new `jira.connectionType` after the migration runner).
     expect(cfg.updates).toContainEqual({ key: "atlassianConnectionType", value: "cloud", target: WS });
   });
 
@@ -86,7 +88,8 @@ describe("getConfig isolation", () => {
     expect(await svc.getConfig()).toBeNull();
 
     setWorkspaceFolders(["/ws/a"]);
-    installConfigStub({ values: { atlassianConnectionType: "server" } });
+    // SA4E-370: readConnectionType goes through getSetting → ONLY `jira.connectionType`.
+    installConfigStub({ values: { "jira.connectionType": "server" } });
     const back = await svc.getConfig();
     expect(back?.baseUrl).toBe(TRIPLE.baseUrl);
     expect(back?.connectionType).toBe("server");
@@ -113,7 +116,9 @@ describe("connection type", () => {
     await svc.saveConfig(TRIPLE);
     expect((await svc.getConfig())?.connectionType).toBe("cloud");
 
-    installConfigStub({ values: { atlassianConnectionType: "bogus" } });
+    // SA4E-370: getSetting reads ONLY `jira.connectionType` — seed the corrupt
+    // value there so the coercion branch stays exercised.
+    installConfigStub({ values: { "jira.connectionType": "bogus" } });
     const h = getWsHash()!;
     const { secrets: s2 } = installSecretStub({
       [secretKey("atlassianBaseUrl", h)!]: TRIPLE.baseUrl,
@@ -157,6 +162,7 @@ describe("clearConfig", () => {
     await svc.clearConfig();
     expect(store.get(secretKey("atlassianToken", h)!)).toBeUndefined();
     expect(store.get(`sdlcAgents.${h}.migrated`)).toBe("1");
+    // SA4E-370: clearConfig unsets the legacy flat key (the write target).
     expect(cfg.updates).toContainEqual({ key: "atlassianConnectionType", value: undefined, target: WS });
     expect(await svc.getConfig()).toBeNull();
   });

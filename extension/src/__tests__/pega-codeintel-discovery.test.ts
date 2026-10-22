@@ -12,12 +12,12 @@ vi.mock("vscode", () => ({
   workspace: {
     getConfiguration: vi.fn(() => ({
       get: vi.fn((key: string, defaultValue: unknown) => {
-        if (key === "pegaEndpoint") return "https://cjpge4gy.pegacea.net/prweb";
-        if (key === "pegaUsername") return "SSA@TGB";
+        if (key === "pega.endpoint") return "https://cjpge4gy.pegacea.net/prweb";
+        if (key === "pega.username") return "SSA@TGB";
         if (key === "backendUrl") return "http://127.0.0.1:48721";
         // SA4E-349: app info now resolves from config (no hardcoded fallback)
-        if (key === "pegaAppName") return "HRAppsV2";
-        if (key === "pegaAppVersion") return "01.01";
+        if (key === "pega.appName") return "HRAppsV2";
+        if (key === "pega.appVersion") return "01.01";
         return defaultValue;
       }),
     })),
@@ -96,8 +96,8 @@ describe("PegaCodeIntelDiscovery", () => {
     // HRAppsV2:01.01 when neither pega-project.json nor config provides app info.
     vi.mocked(vscode.workspace.getConfiguration).mockImplementation(() => ({
       get: vi.fn((key: string, defaultValue: unknown) => {
-        if (key === "pegaEndpoint") return "https://cjpge4gy.pegacea.net/prweb";
-        if (key === "pegaUsername") return "SSA@TGB";
+        if (key === "pega.endpoint") return "https://cjpge4gy.pegacea.net/prweb";
+        if (key === "pega.username") return "SSA@TGB";
         return defaultValue; // pegaAppName/pegaAppVersion resolve to ""
       }),
     }) as never);

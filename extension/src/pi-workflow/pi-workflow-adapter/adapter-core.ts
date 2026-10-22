@@ -16,11 +16,10 @@ import { CommandPatternMatcher } from '../../chat/engine/CommandPatternMatcher';
 import type { LlmProvider } from '../../mcp/llm-provider';
 import { createToolApprovalGateHandler } from '../pi-workflow-gate.js';
 import { detectContextWindowEarlyHelper, getDetectedContextWindowHelper, type ContextProbeState } from '../pi-adapter-context-probe.js';
-import { buildCredentialResolver } from '../pi-provider-config-bridge.js';
+import { buildCredentialResolver, readProviderTurnConfig } from '../pi-provider-config-bridge.js';
 import type { RemoteCheckpointerStore } from '../checkpointer-adapter.js';
 import { debugLog, debugError } from '../../debug-logger';
 import * as vscode from 'vscode';
-import { getSettingWithFallback } from '../../config/settings-migration.js';
 import { readAgentInfos, parseAgentFrontmatter } from '../../chat-panel/ChatStateManager/fs-helpers.js';
 import { ensureSessionHost, evictSessionHost } from '../session-host/registry.js';
 import type { SessionHostOptions } from '../session-host/types.js';
@@ -257,9 +256,11 @@ export class AdapterCore {
     evictSessionHost(this.workspaceRoot, tabId);
 
     // Resolve provider config for ensureSessionHost
-    // SA4E-370: renamed keys resolved with legacy-key fallback.
-    const providerId = getSettingWithFallback<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
-    const configuredModelId = getSettingWithFallback<string>('llm.model', 'llmModel', '') || '';
+    // SA4E-369 UAT fix: ONE shared config read (dot keys + flat fallback) and
+    // the per-provider gateway baseUrl — previously MISSING here, so a
+    // host created by an agent switch could never resolve a gateway model
+    // (keyless local providers would have failed PI_MODEL_UNRESOLVED here).
+    const { providerId, baseUrl, configuredModelId } = readProviderTurnConfig();
     const resolver = this.secrets ? buildCredentialResolver(this.secrets) : undefined;
     const apiKey = resolver ? await resolver(providerId) : undefined;
 
@@ -269,6 +270,7 @@ export class AdapterCore {
         tabId,
         providerId,
         apiKey,
+        baseUrl,
         configuredModelId,
         role: parsed.role,      // FR-07: role from agent definition (not hardcoded 'sm-agent')
         phase: parsed.phase,    // FR-07: phase from agent definition

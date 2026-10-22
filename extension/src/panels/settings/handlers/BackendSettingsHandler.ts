@@ -1,3 +1,4 @@
+import { getSetting } from "../../../config/settings-migration";
 /**
  * BackendSettingsHandler — backend URL / MCP wrapper settings messages
  * (SA4E-323 refactor). Split out of SettingsMessageHandler for SRP.
@@ -45,7 +46,7 @@ export class BackendSettingsHandler {
   /** Finding #5: surface an error if the stored URL is now invalid with bypass OFF. */
   private revalidateStoredUrl(): void {
     try {
-      const url = vscode.workspace.getConfiguration("sdlcAgents").get<string>("backend.url", "");
+      const url = getSetting<string>("backend.url", "backendUrl", "");
       if (url) { validateBackendUrl(url, { allowInsecureRemote: false }); }
     } catch (err: any) {
       this.postMessage({
@@ -86,13 +87,13 @@ export class BackendSettingsHandler {
   /** Persist the local MCP wrapper server port. */
   async setMcpPort(port: number): Promise<void> {
     await vscode.workspace.getConfiguration("sdlcAgents")
-      .update("mcpServerPort", port, vscode.ConfigurationTarget.Workspace);
+      .update("mcp.serverPort", port, vscode.ConfigurationTarget.Workspace);
   }
 
   /** Persist the "enable MCP wrapper on startup" flag. */
   async setEnableMcp(enabled: boolean): Promise<void> {
     await vscode.workspace.getConfiguration("sdlcAgents")
-      .update("enableMcpServer", enabled, vscode.ConfigurationTarget.Workspace);
+      .update("mcp.enabled", enabled, vscode.ConfigurationTarget.Workspace);
   }
 
   /** Restart the local MCP wrapper server via command. */

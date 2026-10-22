@@ -55,7 +55,8 @@ describe("ProviderConfigService.getModels — gateway fetch includes Authorizati
   });
 
   it("passes 'Bearer <key>' when the provider has a saved API key and a custom baseUrl", async () => {
-    mockVars.config.openaiBaseUrl = "http://localhost:20128/v1";
+    // SA4E-370: getSetting reads ONLY the new dotted key post-migration.
+    mockVars.config["llm.openai.baseUrl"] = "http://localhost:20128/v1";
     mockVars.secrets["kiroSdlc.openaiApiKey"] = "sk-test-123";
 
     const gatewayModels = [{ id: "free-tier-models", name: "Free Tier Models" }];
@@ -73,7 +74,8 @@ describe("ProviderConfigService.getModels — gateway fetch includes Authorizati
   });
 
   it("still fetches WITHOUT a header when no key is saved (compat: local/no-auth providers)", async () => {
-    mockVars.config.openaiBaseUrl = "http://localhost:20128/v1";
+    // SA4E-370: getSetting reads ONLY the new dotted key post-migration.
+    mockVars.config["llm.openai.baseUrl"] = "http://localhost:20128/v1";
     // no key in secrets
 
     const gatewayModels = [{ id: "free-tier-models", name: "Free Tier Models" }];
@@ -85,7 +87,8 @@ describe("ProviderConfigService.getModels — gateway fetch includes Authorizati
   });
 
   it("falls back to the static catalog when the gateway returns null/empty (unchanged behavior)", async () => {
-    mockVars.config.openaiBaseUrl = "http://localhost:20128/v1";
+    // SA4E-370: getSetting reads ONLY the new dotted key post-migration.
+    mockVars.config["llm.openai.baseUrl"] = "http://localhost:20128/v1";
     mockVars.secrets["kiroSdlc.openaiApiKey"] = "sk-test-123";
 
     vi.mocked(fetchGatewayModels).mockResolvedValue(null);
@@ -99,7 +102,8 @@ describe("ProviderConfigService.getModels — gateway fetch includes Authorizati
   });
 
   it("does NOT hit the gateway when there is no baseUrl (official API path unchanged)", async () => {
-    mockVars.config.openaiBaseUrl = "";
+    // SA4E-370: getSetting reads ONLY the new dotted key post-migration.
+    mockVars.config["llm.openai.baseUrl"] = "";
     mockVars.secrets["kiroSdlc.openaiApiKey"] = "sk-test-123";
 
     await service.getModels("openai", "");

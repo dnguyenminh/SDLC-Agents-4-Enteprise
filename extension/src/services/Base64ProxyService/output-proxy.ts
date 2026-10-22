@@ -33,7 +33,7 @@ export function proxyToolOutput(
   try {
     const parsed = JSON.parse(text);
     if (!parsed.output_base64) return result;
-    const outputPath = resolveOutputPath(ctx, toolName, args);
+    const outputPath = resolveOutputPath(ctx, toolName, args, parsed.file_name);
     if (!outputPath) return result;
     const buf = Buffer.from(parsed.output_base64, "base64");
     ensureDir(path.dirname(outputPath));
@@ -55,18 +55,30 @@ export function proxyToolOutput(
   }
 }
 
-/** Derive the output path from args (output_path > file_path variants). */
+/** Derive the output path from args (output_path > suggested file_name > file_path variants). */
 function resolveOutputPath(
   ctx: OutputProxyContext,
   toolName: string,
   args: Record<string, unknown>,
+  artifactName?: unknown,
 ): string | null {
   if (args.output_path) return ctx.resolvePath(args.output_path as string);
   const fp = args.file_path as string | undefined;
   if (!fp) return null;
   const resolved = ctx.resolvePath(fp);
+  // Backend-suggested artifact name (e.g. export_docx → "BRD-v1.docx") keeps the
+  // real extension and drops the output next to the source file.
+  const suggested = suggestedFileName(artifactName);
+  if (suggested) return path.join(path.dirname(resolved), suggested);
   if (resolved.endsWith(".drawio")) return resolved.replace(/\.drawio$/, ".png");
   return resolved + ".out";
+}
+
+/** Accept only a bare file name — never a path fragment supplied by a tool result. */
+function suggestedFileName(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const base = path.basename(value.trim());
+  return base.length > 0 && base !== "." && base !== ".." ? base : null;
 }
 
 function extractText(result: any): string | null {

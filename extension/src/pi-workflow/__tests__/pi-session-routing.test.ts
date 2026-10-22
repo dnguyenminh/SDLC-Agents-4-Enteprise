@@ -1,8 +1,16 @@
 /**
- * Session-vs-legacy routing (UAT: "Provider is not configured: lmstudio").
- * pi-ai has NO builtin lmstudio/ollama provider and ModelRuntime cannot
- * compose auth for them — so local endpoints must ALWAYS take the legacy
- * gateway path, never the AgentSession path.
+ * Session-vs-legacy routing (SA4E-369 UAT root-cause fix).
+ * NEW contract: session-first for ALL providers. Keyless LOCAL endpoints
+ * (lmstudio/ollama/onnx) take the AgentSession path too — the session host
+ * seeds LOCAL_KEYLESS_PLACEHOLDER auth and registers the shared keyless
+ * gateway (real /v1/models), which is what makes peer_list/peer_send/
+ * peer_status exist in EVERY tab (UG §4). The legacy path remains the
+ * fail-safe fallback: any session failure (e.g. the local server lists no
+ * models) falls back to legacy, which owns the rich local-endpoint hint.
+ * (The pre-fix rule "local → legacy ALWAYS" — and the outdated premise
+ * "pi-ai has no builtin provider / ModelRuntime cannot compose auth" — are
+ * gone: the extension owns createGatewayProvider and the SDK exposes
+ * registerNativeProvider + setRuntimeApiKey.)
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createModels } from '@earendil-works/pi-ai';
@@ -77,9 +85,10 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     delete process.env.NODE_ENV;
   });
 
-  it('lmstudio never touches the session path (legacy gateway owns local endpoints)', async () => {
-    mockConfigValues.llmProvider = 'lmstudio';
-    mockConfigValues.llmModel = '';
+  it('lmstudio (keyless local) routes to the SESSION path (peer tools available in every tab)', async () => {
+    // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
+    mockConfigValues['llm.provider'] = 'lmstudio';
+    mockConfigValues['llm.model'] = '';
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
       workspaceRoot: 'C:/ws/test',
@@ -89,16 +98,45 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
 
     await adapter.invokeChat('hi');
 
-    expect(mocks.ensureSessionHost).not.toHaveBeenCalled();
-    // Legacy path ran: faux registry has no lmstudio models → its own error,
-    // NOT a session "Provider is not configured" failure.
+    // SA4E-369 UAT fix: the stale "local → legacy ALWAYS" gate is gone —
+    // the session host is created for keyless providers too (this is what
+    // registers peer_list/peer_send/peer_status in the tab).
+    expect(mocks.ensureSessionHost).toHaveBeenCalledWith(
+      expect.objectContaining({ providerId: 'lmstudio' })
+    );
+    // The turn SUCCEEDS through the mocked session host — no chat errors.
+    expect(chatErrors(onEvent)).toEqual([]);
+  });
+
+  it('lmstudio session failure falls back to the LEGACY path (fail-safe kept)', async () => {
+    // SA4E-370: getSetting reads ONLY the new dotted keys post-migration.
+    mockConfigValues['llm.provider'] = 'lmstudio';
+    mockConfigValues['llm.model'] = '';
+    // Simulate the session host failing to resolve a model (local server
+    // unreachable / lists no models → PI_MODEL_UNRESOLVED from createModelRuntime).
+    mocks.ensureSessionHost.mockRejectedValueOnce(
+      new Error('PI_MODEL_UNRESOLVED: gateway listed no models')
+    );
+    adapter = new PiWorkflowAdapter({
+      mcpManager: { status: 'running' } as never,
+      workspaceRoot: 'C:/ws/test',
+      onEvent: onEvent as (msg: ChatExtToWebviewMessage) => void,
+      models,
+    });
+
+    await adapter.invokeChat('hi');
+
+    // The session was ATTEMPTED (new routing), then the legacy path ran and
+    // surfaced ITS OWN error (faux registry has no lmstudio models) — the
+    // fail-safe chain is intact: session-first, legacy as the fallback.
+    expect(mocks.ensureSessionHost).toHaveBeenCalled();
     const codes = chatErrors(onEvent).map((e) => (e as { code?: string }).code);
     expect(codes).toContain('PI_MODEL_UNRESOLVED');
   });
 
   it('cloud provider with key routes to the session path', async () => {
-    mockConfigValues.llmProvider = 'anthropic';
-    mockConfigValues.llmModel = '';
+    mockConfigValues['llm.provider'] = 'anthropic';
+    mockConfigValues['llm.model'] = '';
     const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
@@ -134,8 +172,8 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   });
 
   it('closes the stream even for textless turns (tool-only output)', async () => {
-    mockConfigValues.llmProvider = 'anthropic';
-    mockConfigValues.llmModel = '';
+    mockConfigValues['llm.provider'] = 'anthropic';
+    mockConfigValues['llm.model'] = '';
     const secrets = { get: async () => 'sk-x', store: async () => undefined, delete: async () => undefined };
     adapter = new PiWorkflowAdapter({
       mcpManager: { status: 'running' } as never,
