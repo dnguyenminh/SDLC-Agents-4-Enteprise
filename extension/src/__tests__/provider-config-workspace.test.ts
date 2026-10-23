@@ -24,10 +24,9 @@ describe("updatePegaConfig", () => {
     const h = getWsHash()!;
     expect(store.get(secretKey("pega", h)!)).toBe("pw-a");
     expect(store.get(LEGACY_SECRET.pega)).toBeUndefined();
-    // SA4E-370: writes keep targeting the legacy flat keys (reads resolve via
-    // getSetting on the new dotted keys after the migration runner).
-    expect(cfg.updates).toContainEqual({ key: "pegaEndpoint", value: "https://a/pega", target: WS });
-    expect(cfg.updates).toContainEqual({ key: "pegaUsername", value: "op.a", target: WS });
+    // SA4E-370: writes now target the new dotted keys (SA4E-370 standardization).
+    expect(cfg.updates).toContainEqual({ key: "pega.endpoint", value: "https://a/pega", target: WS });
+    expect(cfg.updates).toContainEqual({ key: "pega.username", value: "op.a", target: WS });
   });
 
   it("keeps stored password when the save password is blank", async () => {
@@ -108,8 +107,8 @@ describe("updateConfig guard", () => {
   it("rejects workspace-scoped keys with the SA4E-323 error", async () => {
     const { secrets } = installSecretStub();
     const svc = new ProviderConfigService(secrets);
-    // SA4E-323 guard list is the legacy flat keys (the write targets).
-    for (const k of ["pegaEndpoint", "pegaUsername", "atlassianConnectionType"]) {
+    // SA4E-323 guard list is the NEW dotted keys (the write targets).
+    for (const k of ["pega.endpoint", "pega.username", "atlassianConnectionType"]) {
       await expect(svc.updateConfig(k, "x"))
         .rejects.toThrow(`Use workspace-scoped method for ${k} (SA4E-323).`);
     }
