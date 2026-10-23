@@ -11,10 +11,10 @@ import { PeerBus } from './bus.js';
 import { dispatchPeerTurn } from './dispatch.js';
 import { AntiLoopGuards } from './guards.js';
 import { PeerRegistry } from './registry.js';
-import { sessionHostGateway } from './session-gateway.js';
+import { sessionHostGateway, resetSessionHostGatewayContext, setSessionHostGatewayContext } from './session-gateway.js';
 import { PeerTaskManager } from './task-manager.js';
 import { PeerThreadStore } from './threads.js';
-import type { PeerRegistryRegistration, PeerSessionGateway, PeerToolApprovalHandler, PeerToolApprovalRequest } from './types.js';
+import type { PeerProviderContext, PeerRegistryRegistration, PeerSessionGateway, PeerToolApprovalHandler, PeerToolApprovalRequest } from './types.js';
 
 export interface PeerRuntime {
   bus: PeerBus;
@@ -108,8 +108,12 @@ export function onPeerApprovalPending(
 }
 
 /** Registers a tab's identity + session-creation inputs (idempotent, I-1). */
-export function ensurePeerRuntimeForTab(meta: PeerRegistryRegistration & { tabId: string }): PeerRuntime {
+export function ensurePeerRuntimeForTab(
+  meta: PeerRegistryRegistration & { tabId: string },
+  providerContext?: PeerProviderContext
+): PeerRuntime {
   const rt = initPeerRuntime();
+  if (providerContext) setSessionHostGatewayContext(providerContext);
   rt.registry.register(meta.tabId, meta);
   return rt;
 }
@@ -118,4 +122,5 @@ export function ensurePeerRuntimeForTab(meta: PeerRegistryRegistration & { tabId
 export function resetPeerRuntime(): void {
   runtime?.dispose();
   runtime = undefined;
+  resetSessionHostGatewayContext();
 }

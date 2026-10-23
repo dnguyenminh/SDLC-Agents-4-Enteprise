@@ -26,18 +26,32 @@ export interface PeerSessionWiring {
 
 /** Registers this tab's peer identity + session-creation inputs (I-1). */
 function ensurePeerIdentity(opts: SessionHostOptions, providerId: string): PeerBus {
-  return ensurePeerRuntimeForTab({
-    tabId: opts.tabId ?? '',
-    workspaceRoot: opts.workspaceRoot,
-    providerId,
-    configuredModelId: opts.configuredModelId ?? '',
-    activeAgentId: opts.activeAgentId ?? '',
-    agentName: opts.activeAgentId ?? 'Chat',
-    role: opts.role ?? '',
-    capabilities: [],
-    model: opts.configuredModelId ?? 'auto',
-    status: 'idle',
-  }).bus;
+  return ensurePeerRuntimeForTab(
+    {
+      tabId: opts.tabId ?? '',
+      workspaceRoot: opts.workspaceRoot,
+      providerId,
+      configuredModelId: opts.configuredModelId ?? '',
+      activeAgentId: opts.activeAgentId ?? '',
+      agentName: opts.activeAgentId ?? 'Chat',
+      role: opts.role ?? '',
+      capabilities: [],
+      model: opts.configuredModelId ?? 'auto',
+      status: 'idle',
+    },
+    // SA4E-369 UAT layer-3 fix: capture the SAME provider context this host
+    // was created with — a peer turn dispatching to a tab with no cached
+    // host needs the gateway baseUrl + credentials + bridge to create one
+    // exactly like a user turn (first-winner capture, I-1).
+    {
+      providerId,
+      baseUrl: opts.baseUrl,
+      apiKey: opts.apiKey,
+      configuredModelId: opts.configuredModelId,
+      mcpBridge: opts.mcpBridge,
+      nCtxDetected: opts.nCtxDetected,
+    }
+  ).bus;
 }
 
 /**

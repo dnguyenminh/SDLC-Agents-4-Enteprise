@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.4.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.5.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,15 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.5 (2026-10-24)
+
+**SA4E-369 UAT fix layer 3 — peer dispatch mang theo provider context (hết PEER_003 first-contact)**
+
+- 🧩 **Root cause** — `sessionRequest` xây host options CHỈ từ registry identity (SEC-08), thiếu `baseUrl`/`apiKey`/`mcpBridge`. Peer turn gửi tới tab CHƯA có host → không tạo được host: keyless → thiếu gateway baseUrl → model resolution fail; cloud → thiếu key → "Provider is not configured". Bắt sống live 23:08 ngày 23/10: `peer_send` → PEER_003 "session turn failed" sau 278ms
+- 🔧 **Fix** — gateway seam (`session-gateway.ts`) chụp provider fields từ SessionHostOptions của lần tạo host ĐẦU TIÊN (first-winner, I-1) và inject vào mọi request — host do peer tạo giờ **giống hệt** host do user tạo; identity fields (tab/role/workspaceRoot) vẫn từ registry
+- 🧪 **Tests** — +4 case gateway-context (inject/stomp-guard/empty-override/reset); full suite **3,259/3,259 PASS**, tsc 0
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.5`
 
 ### v1.55.4 (2026-10-23)
 

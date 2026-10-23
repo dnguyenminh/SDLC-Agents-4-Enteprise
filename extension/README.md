@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.4-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.5-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -244,6 +244,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.5 (2026-10-24)
+
+- **SA4E-369 UAT fix layer 3: peer dispatch carries the provider context (PEER_003 on first-contact)** — the dispatch `sessionRequest` built host options from the registry identity ONLY (SEC-08) — no `baseUrl`/`apiKey`/`mcpBridge`. A peer turn to a tab with NO cached host could not create one: keyless → no gateway baseUrl → model resolution failed; cloud → no key → "Provider is not configured" (observed live 2026-10-23 23:08: `peer_send` → PEER_003 "session turn failed" in 278ms). Fix: the gateway seam captures the FIRST host creation's `SessionHostOptions` provider fields (first-winner, I-1) and injects them into every request — peer-created hosts are now byte-identical to user-path hosts. Identity fields stay registry-sourced. Tests: +4 gateway-context cases, full suite 3,259/3,259 PASS, tsc 0
 
 ### v1.55.4 (2026-10-23)
 

@@ -165,7 +165,14 @@ export interface PeerSessionTurnExecutor {
   promptTurn(text: string, opts?: SessionTurnOptions): Promise<{ text: string }>;
 }
 
-/** Session-creation request built from ONE registry entry (SEC-08). */
+/**
+ * Session-creation request built from ONE registry entry (SEC-08).
+ * Identity fields (workspace/tab/agent/role) come from the registry; the
+ * provider context (baseUrl/apiKey/mcpBridge) is INJECTED at the gateway
+ * seam (session-gateway.ts) from the first host creation's SessionHostOptions
+ * — the registry NEVER carries credentials (they are process-wide settings +
+ * SecretStorage, not per-tab state).
+ */
 export interface PeerSessionRequest {
   workspaceRoot: string;
   providerId: string;
@@ -174,6 +181,28 @@ export interface PeerSessionRequest {
   activeAgentId: string;
   tabId: string;
   peerApprovalGate?: PeerToolApprovalHandler;
+  /** Provider context — injected by the gateway seam, never by the registry. */
+  baseUrl?: string;
+  apiKey?: string;
+  mcpBridge?: unknown;
+  nCtxDetected?: number;
+}
+
+/**
+ * SA4E-369 UAT layer-3 fix: window-global provider context captured from the
+ * FIRST SessionHostOptions (wirePeerSession) — the same proven inputs the
+ * user path passes. Without it, a peer turn dispatching to a tab with NO
+ * cached host could not resolve a model (keyless: no gateway baseUrl →
+ * PI_MODEL_UNRESOLVED; cloud: no key → "Provider is not configured") and the
+ * task died as PEER_003 in the receiving tab.
+ */
+export interface PeerProviderContext {
+  providerId?: string;
+  baseUrl?: string;
+  apiKey?: string;
+  configuredModelId?: string;
+  mcpBridge?: unknown;
+  nCtxDetected?: number;
 }
 
 /** Transport seam (D4): the ONLY session integration the peer module needs. */
