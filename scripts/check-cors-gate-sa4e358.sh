@@ -89,7 +89,11 @@ WS=""
 OG=""
 for f in "${raw[@]}"; do
   case "$f" in
-    extension/src/services/WrapperServer.ts) WS="$f" ;;
+    # BR-18 refactor: the handleRequest implementation (gate call + CORS echo)
+    # lives in WrapperServer/request-handler.ts; WrapperServer.ts is a facade.
+    # Prefer the real entry file when present, fall back to the legacy layout.
+    extension/src/services/WrapperServer/request-handler.ts) WS="$f" ;;
+    extension/src/services/WrapperServer.ts) [[ -z "$WS" ]] && WS="$f" ;;
     extension/src/services/OriginGate.ts)    OG="$f" ;;
   esac
 done
@@ -141,9 +145,9 @@ if [[ -s "$NONWS_FILE" ]]; then
   P2="access-control-"
   matches2="$(grep -inE "$P2" $(cat "$NONWS_FILE") 2>/dev/null || true)"
   if [[ -n "$matches2" ]]; then
-    echo "VIOLATION SCAN-02: Access-Control-* header emitted outside WrapperServer.ts (the gate owns ALL CORS — I-1/G-5, TDD §3.6):"
+    echo "VIOLATION SCAN-02: Access-Control-* header emitted outside the gate entry file ($WS) (the gate owns ALL CORS — I-1/G-5, TDD §3.6):"
     echo "$matches2" | sed 's/^/    /'
-    echo "Fix: remove CORS emission from this file; the ONLY sanctioned CORS site is the echo block after evaluateOriginGate() in WrapperServer.handleRequest."
+    echo "Fix: remove CORS emission from this file; the ONLY sanctioned CORS site is the echo block after evaluateOriginGate() in the gate entry handleRequest (WrapperServer/request-handler.ts, legacy: WrapperServer.ts)."
     echo ""
     fail=1
   fi
@@ -153,7 +157,7 @@ fi
 if [[ -n "$WS" && -f "$WS" ]]; then
   gate_line="$(grep -nE 'evaluateOriginGate[[:space:]]*\(' "$WS" | head -1 | cut -d: -f1)"
   if [[ -z "$gate_line" ]]; then
-    echo "VIOLATION I-1: no evaluateOriginGate() call in WrapperServer.ts — the gate must be the FIRST statement of handleRequest (TDD §3.6 / step C3)."
+    echo "VIOLATION I-1: no evaluateOriginGate() call in $WS — the gate must be the FIRST statement of handleRequest (TDD §3.6 / step C3)."
     echo ""
     fail=1
   else
@@ -161,7 +165,7 @@ if [[ -n "$WS" && -f "$WS" ]]; then
     ac_lines="$(grep -inE 'access-control-' "$WS" | cut -d: -f1 || true)"
     for ln in $ac_lines; do
       if [[ "$ln" -le "$gate_line" ]]; then
-        echo "VIOLATION SCAN-02/I-1: Access-Control-* emission at WrapperServer.ts:${ln} is NOT after the gate call (line ${gate_line}) — headers set before the gate materialize on 403 responses (TDD C-2)."
+        echo "VIOLATION SCAN-02/I-1: Access-Control-* emission at ${WS}:${ln} is NOT after the gate call (line ${gate_line}) — headers set before the gate materialize on 403 responses (TDD C-2)."
         fail=1
       fi
     done
@@ -169,7 +173,7 @@ if [[ -n "$WS" && -f "$WS" ]]; then
     marker_lines="$(grep -nE 'u\.pathname[[:space:]]*===|handleMcp[[:space:]]*\(|writeHead[[:space:]]*\([[:space:]]*204' "$WS" | cut -d: -f1 || true)"
     for ln in $marker_lines; do
       if [[ "$ln" -le "$gate_line" ]]; then
-        echo "VIOLATION I-1: route dispatch / preflight at WrapperServer.ts:${ln} is NOT after the gate call (line ${gate_line}) — gate must precede every route (TDD §3.6 note 2, I-1)."
+        echo "VIOLATION I-1: route dispatch / preflight at ${WS}:${ln} is NOT after the gate call (line ${gate_line}) — gate must precede every route (TDD §3.6 note 2, I-1)."
         fail=1
       fi
     done
