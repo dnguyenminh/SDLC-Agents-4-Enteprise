@@ -11,7 +11,7 @@ import { getSetting } from "../config/settings-migration";
 import { ensureMigrated, getWsHash, secretKey, readScopedSecret, type SecretBase } from "./WorkspaceScopeResolver";
 
 /** Config keys isolated per workspace (SA4E-323) — never via generic updateConfig. */
-const WORKSPACE_SCOPED_KEYS = ["pegaEndpoint", "pegaUsername", "atlassianConnectionType"];
+const WORKSPACE_SCOPED_KEYS = ["pega.endpoint", "pega.username", "atlassianConnectionType"];
 
 export class ProviderConfigService {
   constructor(private readonly secrets: vscode.SecretStorage) {}
@@ -73,8 +73,8 @@ export class ProviderConfigService {
     if (!/^https?:\/\//.test(e)) { throw new Error("Invalid Pega Endpoint URL (http/https required)."); }
     try {
       const config = vscode.workspace.getConfiguration("sdlcAgents");
-      await config.update("pegaEndpoint", e, vscode.ConfigurationTarget.Workspace);
-      await config.update("pegaUsername", u, vscode.ConfigurationTarget.Workspace);
+      await config.update("pega.endpoint", e, vscode.ConfigurationTarget.Workspace);
+      await config.update("pega.username", u, vscode.ConfigurationTarget.Workspace);
       if (password && password.trim().length > 0) {
         await this.secrets.store(secretKey("pega", wsHash)!, password);
       }
