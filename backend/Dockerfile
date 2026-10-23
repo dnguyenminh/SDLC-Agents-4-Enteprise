@@ -117,6 +117,16 @@ ARG MARKDOWN_EXPORTER_MCP_REF=1429b6a94767a709f7f5119219ca5951042d9d3c
 # versions). Drop the override once the pinned base image bundles a fixed
 # setuptools.
 ARG SETUPTOOLS_VERSION=84.0.0
+# SA4E-360 follow-up (continued, v1.55.3): Trivy 2026-10-23 flags BOTH venvs —
+#   - certifi 2026.7.22 (pulled via requests): GHSA-6q48-6c7w-9gw2 CRITICAL
+#     (compromised emSign intermediate CA keys), fix 2026.10.19
+#   - pillow 12.3.0: 55 CVEs (CRITICAL+HIGH, e.g. CVE-2026-112393/112403/112900,
+#     fixes in 13.0.0) — markitdown[all] pulls pillow into BOTH venvs
+# Force-upgrade both to fixed versions after the main install; the
+# pillow~=12.1.1 upstream-pin conflict warning stays EXPECTED and non-fatal
+# (same PEP 440 pattern documented below). Probes fail the build on drift.
+ARG CERTIFI_VERSION=2026.10.19
+ARG PILLOW_VERSION=13.0.0
 # `python3` already exists in base (build toolchain); only the venv/ensurepip
 # support is missing. One venv per server: independent dependency trees that
 # are pinned, upgraded and Trivy-scanned separately.
@@ -130,30 +140,31 @@ RUN python3 -m venv /opt/markitdown-venv \
  && /opt/markitdown-venv/bin/python -c "import markitdown_mcp" \
  && /opt/markitdown-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
  && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
+ && /opt/markitdown-venv/bin/pip install --no-cache-dir "certifi==${CERTIFI_VERSION}" "pillow==${PILLOW_VERSION}" \
+ && /opt/markitdown-venv/bin/python -c "from importlib.metadata import version; assert version('certifi') == '${CERTIFI_VERSION}' and version('pillow') == '${PILLOW_VERSION}'" \
  && /opt/markitdown-venv/bin/python -m pip uninstall -y pip
 # `mcp<2` constraint: upstream declares `mcp>=1.27.0` (unbounded) but its code
 # imports `mcp.server.fastmcp` — an API REMOVED in mcp 2.x (FastMCP → MCPServer).
 # The import probe below fails the build on exactly this class of drift
 # (verified: unconstrained pip resolved mcp 2.3.0 → ModuleNotFoundError).
-# `pillow==12.3.0` override (SA4E-360): upstream pins `pillow~=12.1.1`, which
-# resolves to 12.1.1 — carrying 16 HIGH CVEs that fail the production Trivy
-# gate. PEP 440 `~=12.1.1` means >=12.1.1,<12.2, so it does NOT admit the
-# fixed 12.3.0 (which markitdown-venv already runs on the same Python 3.11
-# base). The force-upgrade AFTER the main install therefore triggers a pip
-# metadata conflict warning ("markdown-exporter-mcp-local 0.1.0 requires
-# pillow~=12.1.1 ... incompatible") — EXPECTED and non-fatal: pip installs
-# the requested version and exits 0. Trivy reads the installed 12.3.0
-# metadata, clearing all 16 CVEs. The PIL version probe fails the build if
-# resolution ever regresses to 12.1.1. Remove this override once upstream
-# releases an officially fixed pin (e.g. pillow~=12.3).
+# `pillow` override (SA4E-360, bumped v1.55.3 to 13.0.0): upstream pins
+# `pillow~=12.1.1`, which resolves to 12.1.1 — carrying HIGH CVEs that fail the
+# production Trivy gate. PEP 440 `~=12.1.1` means >=12.1.1,<12.2, so it does
+# NOT admit the fixed 12.3.0/13.0.0. The force-upgrade AFTER the main install
+# therefore triggers a pip metadata conflict warning ("markdown-exporter-mcp-local
+# 0.1.0 requires pillow~=12.1.1 ... incompatible") — EXPECTED and non-fatal:
+# pip installs the requested version and exits 0. Trivy reads the installed
+# version's metadata, clearing the CVEs. The importlib.metadata probe fails the
+# build if resolution ever regresses. Remove this override once upstream
+# releases an officially fixed pin (e.g. pillow~=13).
 RUN python3 -m venv /opt/markdown-exporter-venv \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir \
       "markdown-exporter-mcp-local @ git+https://github.com/Zac-Chen-2001/markdown-exporter-mcp-local@${MARKDOWN_EXPORTER_MCP_REF}" \
       "mcp>=1.27.0,<2.0.0" \
  && test -x /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local \
  && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
- && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==12.3.0" \
- && /opt/markdown-exporter-venv/bin/python -c "import PIL; assert PIL.__version__ == '12.3.0'" \
+ && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==${PILLOW_VERSION}" "certifi==${CERTIFI_VERSION}" \
+ && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('pillow') == '${PILLOW_VERSION}' and version('certifi') == '${CERTIFI_VERSION}'" \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
  && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
  && /opt/markdown-exporter-venv/bin/python -m pip uninstall -y pip
