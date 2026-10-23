@@ -1,0 +1,238 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxGraphModel dx="1184" dy="770" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    
+    <!-- Title -->
+    <mxCell id="title" value="R2 Collapse Semantics — State Transitions (Tool Call Group &amp; Block)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#303F9F;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="20" width="1100" height="50" as="geometry"/>
+    </mxCell>
+    
+    <!-- Legend -->
+    <mxCell id="legend" value="Legend: &amp;#xa;▶ Auto transition (no user action)&amp;#xa;▶ User action (click/keydown)&amp;#xa;📌 Sticky: data-user-managed=true blocks ALL auto rules&amp;#xa;✦ Default state on live render" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="20" y="80" width="500" height="80" as="geometry"/>
+    </mxCell>
+    
+    <!-- States for TOOL CALL GROUP (Container) -->
+    <mxCell id="container-title" value="TOOL CALL GROUP (Container .ksa247-tool-container)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="180" width="500" height="35" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="c-expanded-default" value="EXPANDED_DEFAULT&amp;#xa;✦ Live render default&amp;#xa;aria-expanded='true'&amp;#xa;no data-user-managed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="230" width="200" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="c-expanded-user" value="EXPANDED_USER&amp;#xa;📌 User clicked expand&amp;#xa;data-user-managed='true'&amp;#xa;userExpanded=true persisted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#1B5E20;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="230" width="200" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="c-collapsed-auto" value="COLLAPSED_AUTO&amp;#xa;▶ Auto-collapse ONCE&amp;#xa;ALL tools terminal + !userManaged&amp;#xa;aria-expanded='false'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCCBC;strokeColor=#BF360C;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="320" width="200" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="c-collapsed-user" value="COLLAPSED_USER&amp;#xa;📌 User clicked collapse&amp;#xa;data-user-managed='true'&amp;#xa;userExpanded=false persisted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCCBC;strokeColor=#BF360C;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="320" width="200" height="70" as="geometry"/>
+    </mxCell>
+    
+    <!-- States for TOOL CALL BLOCK -->
+    <mxCell id="block-title" value="TOOL CALL BLOCK (.tool-call-block)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE4EC;strokeColor=#C2185B;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="550" y="180" width="500" height="35" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="b-expanded-default" value="EXPANDED_DEFAULT&amp;#xa;✦ Live render default&amp;#xa;block.expanded + aria-expanded='true'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="550" y="230" width="220" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="b-expanded-user" value="EXPANDED_USER&amp;#xa;📌 User clicked expand&amp;#xa;data-user-managed='1'&amp;#xa;userExpanded=true persisted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#1B5E20;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="790" y="230" width="220" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="b-collapsed-auto" value="COLLAPSED_AUTO&amp;#xa;▶ Terminal update + !userManaged&amp;#xa;block.expanded removed&amp;#xa;aria-expanded='false'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCCBC;strokeColor=#BF360C;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="550" y="320" width="220" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="b-collapsed-user" value="COLLAPSED_USER&amp;#xa;📌 User clicked collapse&amp;#xa;data-user-managed='1'&amp;#xa;userExpanded=false persisted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCCBC;strokeColor=#BF360C;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="790" y="320" width="220" height="70" as="geometry"/>
+    </mxCell>
+    
+    <!-- States for THINKING BLOCK -->
+    <mxCell id="think-title" value="THINKING BLOCK (.thinking-block)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="420" width="500" height="35" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="t-expanded-default" value="EXPANDED_DEFAULT&amp;#xa;thinkingUser=false (replay)&amp;#xa;or streaming (live)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C8E6C9;strokeColor=#2E7D32;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="470" width="200" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="t-expanded-user" value="EXPANDED_USER&amp;#xa;📌 User clicked expand&amp;#xa;data-user-managed='true'&amp;#xa;thinkingUser=true persisted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#A5D6A7;strokeColor=#1B5E20;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="470" width="200" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="t-collapsed-auto" value="COLLAPSED_AUTO&amp;#xa;▶ closeCycle (turn-end)&amp;#xa;if !thinkingUser&amp;#xa;.collapsed added" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCCBC;strokeColor=#BF360C;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="20" y="560" width="200" height="70" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="t-collapsed-user" value="COLLAPSED_USER&amp;#xa;📌 User clicked collapse&amp;#xa;data-user-managed='true'&amp;#xa;thinkingUser=false persisted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFCCBC;strokeColor=#BF360C;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="250" y="560" width="200" height="70" as="geometry"/>
+    </mxCell>
+    
+    <!-- Transitions - Container -->
+    <mxCell id="tc1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="c-expanded-default" target="c-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="220" y="265" as="sourcePoint"/>
+        <mxPoint x="250" y="265" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tc1-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tc1">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tc2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#BF360C;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="c-expanded-default" target="c-collapsed-auto">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="300" as="sourcePoint"/>
+        <mxPoint x="120" y="320" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tc2-label" value="ALL tools terminal&amp;#xa;+ !userManaged" style="html=1;align=center;fontSize=10;strokeColor=#BF360C;" vertex="1" parent="tc2">
+      <mxGeometry x="0.5" y="-20" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tc3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#BF360C;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="c-expanded-user" target="c-collapsed-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="300" as="sourcePoint"/>
+        <mxPoint x="350" y="320" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tc3-label" value="User clicks collapse" style="html=1;align=center;fontSize=10;strokeColor=#BF360C;" vertex="1" parent="tc3">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tc4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="c-collapsed-auto" target="c-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="390" as="sourcePoint"/>
+        <mxPoint x="120" y="390" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tc4-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tc4">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tc5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="c-collapsed-user" target="c-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="390" as="sourcePoint"/>
+        <mxPoint x="350" y="390" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tc5-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tc5">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <!-- Transitions - Block -->
+    <mxCell id="tb1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="b-expanded-default" target="b-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="770" y="265" as="sourcePoint"/>
+        <mxPoint x="790" y="265" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tb1-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tb1">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tb2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#BF360C;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="b-expanded-default" target="b-collapsed-auto">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="660" y="300" as="sourcePoint"/>
+        <mxPoint x="660" y="320" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tb2-label" value="Terminal update&amp;#xa;+ !data-user-managed" style="html=1;align=center;fontSize=10;strokeColor=#BF360C;" vertex="1" parent="tb2">
+      <mxGeometry x="0.5" y="-20" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tb3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#BF360C;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="b-expanded-user" target="b-collapsed-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="300" as="sourcePoint"/>
+        <mxPoint x="900" y="320" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tb3-label" value="User clicks collapse" style="html=1;align=center;fontSize=10;strokeColor=#BF360C;" vertex="1" parent="tb3">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tb4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="b-collapsed-auto" target="b-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="660" y="390" as="sourcePoint"/>
+        <mxPoint x="660" y="390" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tb4-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tb4">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tb5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="b-collapsed-user" target="b-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="900" y="390" as="sourcePoint"/>
+        <mxPoint x="900" y="390" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tb5-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tb5">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <!-- Transitions - Thinking -->
+    <mxCell id="tt1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="t-expanded-default" target="t-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="220" y="505" as="sourcePoint"/>
+        <mxPoint x="250" y="505" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tt1-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tt1">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tt2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#BF360C;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="t-expanded-default" target="t-collapsed-auto">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="540" as="sourcePoint"/>
+        <mxPoint x="120" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tt2-label" value="closeCycle(turn-end)&amp;#xa;if !thinkingUser" style="html=1;align=center;fontSize=10;strokeColor=#BF360C;" vertex="1" parent="tt2">
+      <mxGeometry x="0.5" y="-20" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tt3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#BF360C;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="t-expanded-user" target="t-collapsed-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="540" as="sourcePoint"/>
+        <mxPoint x="350" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tt3-label" value="User clicks collapse" style="html=1;align=center;fontSize=10;strokeColor=#BF360C;" vertex="1" parent="tt3">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tt4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="t-collapsed-auto" target="t-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="630" as="sourcePoint"/>
+        <mxPoint x="120" y="630" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tt4-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tt4">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="tt5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;dashed=1;" edge="1" parent="1" source="t-collapsed-user" target="t-expanded-user">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="350" y="630" as="sourcePoint"/>
+        <mxPoint x="350" y="630" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tt5-label" value="User clicks expand" style="html=1;align=center;fontSize=10;strokeColor=#2E7D32;" vertex="1" parent="tt5">
+      <mxGeometry x="0.5" y="-10" relative="1" as="geometry"/>
+    </mxCell>
+    
+    <!-- Key Rules Box -->
+    <mxCell id="rules" value="KEY RULES (R2):&amp;#xa;1. Live render: Tool block &amp; Container default EXPANDED (user follows progress)&amp;#xa;2. NO auto-collapse while ANY tool running/pending (streaming)&amp;#xa;3. Auto-collapse ONCE per container/block when ALL terminal + !userManaged&amp;#xa;4. User click → data-user-managed=true → AUTO RULES STOP FOREVER (this session)&amp;#xa;5. userExpanded / thinkingUser / userManaged persisted in tab.messages → survives reload&amp;#xa;6. Toolbar Collapse All → sets userManaged=true, userExpanded=false for ALL&amp;#xa;7. Toolbar Expand All → sets userManaged=true, userExpanded=true for ALL&amp;#xa;8. New cycle = new container = fresh default EXPANDED (not sticky from prev cycle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#303F9F;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="550" y="420" width="500" height="250" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

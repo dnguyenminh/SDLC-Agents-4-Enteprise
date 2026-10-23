@@ -1,35 +1,59 @@
 /**
  * Tool schema detection + LLM visibility rewriting (Base64ProxyService).
  * Hides content_base64 from the LLM and exposes file_path/output_path instead.
+ *
+ * Works for both schema shapes the backend emits:
+ *  - tools/list → `inputSchema`
+ *  - find_tools catalog → `schema`
  */
 
 import { FILE_PATH_SCHEMA_DESCRIPTION } from "../PathResolver";
 import type { ToolSchema } from "./types";
 
+/** The schema field a tool carries: `inputSchema` (tools/list) or `schema` (catalog). */
+export function toolSchemaField(tool: ToolSchema): "inputSchema" | "schema" | null {
+  if (tool.inputSchema) return "inputSchema";
+  if (tool.schema) return "schema";
+  return null;
+}
+
 /** Check if a tool schema declares a content_base64 input param. */
 export function hasBase64InputParam(tool: ToolSchema): boolean {
-  const schema = tool.inputSchema;
-  if (!schema) return false;
-  const props = schema.properties as Record<string, any> | undefined;
+  const field = toolSchemaField(tool);
+  if (!field) return false;
+  const props = (tool[field] as any)?.properties as Record<string, any> | undefined;
   if (!props) return false;
   return "content_base64" in props;
 }
 
-/** Check if a tool description advertises output_base64 in its response. */
+/** Check if a tool advertises base64 output (description marker or x-output-base64). */
 export function hasBase64Output(tool: ToolSchema): boolean {
   const desc = tool.description || "";
-  return desc.includes("output_base64") || desc.includes("Returns output_base64");
+  if (desc.includes("output_base64")) return true;
+  const field = toolSchemaField(tool);
+  return field ? (tool[field] as any)?.["x-output-base64"] === true : false;
 }
 
-/** Rewrite a single tool schema for LLM visibility (hide content_base64, add output_path). */
+/** Rewrite a single tool schema for LLM visibility (hide content params, add file_path/output_path). */
 export function rewriteSingleSchema(tool: ToolSchema, isInput: boolean, isOutput: boolean): ToolSchema {
   if (!isInput && !isOutput) return tool;
-  const rewritten = { ...tool, inputSchema: { ...tool.inputSchema } };
-  const schema = rewritten.inputSchema!;
+  const field = toolSchemaField(tool);
+  if (!field) return tool;
+
+  const schema = { ...(tool[field] as Record<string, any>) };
   const props = { ...(schema.properties as Record<string, any> || {}) };
   const required = [...(schema.required as string[] || [])];
+
   if (isInput) {
     delete props.content_base64;
+    // Backend-declared content arg (e.g. export_docx → markdown): the wrapper
+    // supplies it from file_path, so it must disappear from the LLM schema.
+    const contentParam = schema["x-content-param"];
+    if (typeof contentParam === "string") {
+      delete props[contentParam];
+      const contentIdx = required.indexOf(contentParam);
+      if (contentIdx >= 0) required.splice(contentIdx, 1);
+    }
     // M-1: file_path description is ALWAYS overwritten with the shared rule
     // (closes the mem_ingest_file no-description + drawio_export_png
     // "reference only" holes — FSD §3.2.2).
@@ -50,5 +74,5 @@ export function rewriteSingleSchema(tool: ToolSchema, isInput: boolean, isOutput
   }
   schema.properties = props;
   schema.required = required;
-  return rewritten;
+  return { ...tool, [field]: schema };
 }

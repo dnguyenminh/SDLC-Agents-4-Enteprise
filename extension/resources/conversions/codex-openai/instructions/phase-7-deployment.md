@@ -82,7 +82,7 @@ invokeSubAgent(
 
 10. Attach DPG + RLN to Jira:
 ```
-embed_images → export_docx → jira_update_issue
+embed_image → export_docx → jira_update_issue
 ```
 
 11. Update STATUS: `deployment.status = "done"`

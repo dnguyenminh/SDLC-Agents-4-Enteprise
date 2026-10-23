@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.54.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.3.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,30 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.3 (2026-10-23)
+
+**SA4E-380 — Content Proxy for child MCP tools (export DOCX/XLSX/PPTX/PDF/HTML/JSON qua extension wrapper, không thêm tool mới)**
+
+- 🔁 **Backend content-proxy layer** (`backend/src/modules/orchestration/content-proxy/`) — capability detection theo convention (`export_*`/`render_*`/`generate_*` hoặc description "to <format>") + escape hatch `CONTENT_PROXY_OVERRIDES`; schema adaptation in-place (`content_base64`, `x-content-param`, `x-output-base64`, `required: []`) — **zero new tools** trong `tools/list`, discovery vẫn qua `find_tools`
+- 📦 **Wrapper-mode contract: bytes hoặc lỗi rõ ràng, không bao giờ bare path** — invocation adaptation (strict UTF-8 base64 decode → content arg, strip wrapper-only args); artifact retrieval transport-agnostic (inline payload → MCP `resource`/`resources/read` → http(s) URL → `data:` URI → local path) với cap 25 MB mọi đường; multi-file trả `outputs[]`; host paths bị strip toàn bộ
+- 🖥️ **Extension output-proxy fail-loud** — ghi `output_base64`/`outputs[]` vào workspace (path resolver + symlink guard I-7), verify written count; `PROXY_WRITE_FAILED` (zero / X-Y partial) và extension-side `ARTIFACT_FETCH_FAILED` thay cho silent corruption
+- 🧪 **Tests** — backend content-proxy 21/21 pass (unit + remote transport + client-manager); extension suite 3,255 pass / 6 skipped; live E2E 6/6 exporters (xlsx 4,849 B với `xl/workbook.xml`, docx 14,599 B, pptx 29,296 B, pdf 1,967 B `%PDF`, html, json); live DOCX 184,761 B markdown + ảnh nhúng → 265,062 B DOCX OOXML hợp lệ
+- 📚 **Docs SA4E-380** — BRD (7 stories, future-proofing + cleanup in-scope), FSD (TA-enriched), TDD (as-built + §9 design cleanup OI-14/OI-15 + F-01 binding), STP/STC (95 cases), SECURITY-REVIEW (APPROVED WITH FINDINGS; F-01 High: local-read cần confinement `ARTIFACT_OUTPUT_ROOTS` trước khi ship delete-after-inline)
+- 🧾 **Docs backfill** — SA4E-370 (full SDLC set), SA4E-371 (DEPLOY-REPORT, UG), SA4E-372 (TEST-REPORT, diagrams), `documents/KB/`; `.code-intel`/`.kiro` skills/steering sync
+- 🔖 **Version sync** — root/`backend`/`extension` `package.json` → `1.55.3`; tag `v1.55.3`
+
+### v1.55.2 (2026-10-23)
+
+**Fix: Pega config save reverts to default** — `updatePegaConfig` dùng new dotted keys (`pega.endpoint`, `pega.username`) thay vì old flat keys (`pegaEndpoint`, `pegaUsername`); cập nhật `WORKSPACE_SCOPED_KEYS` + tests
+
+### v1.55.1 (2026-10-23)
+
+**Unified config reads** — ALL reads qua `getSetting` (zero direct `config.get`); one-time migration runner lúc activation (copy old→new + popup); runtime fallback removed — `getSetting` chỉ đọc new dotted keys; 10 test files updated. 3,247/3,247 pass, tsc 0
+
+### v1.55.0 (2026-10-23)
+
+**Config keys standardization** — ALL 42 settings dùng dot notation nhất quán (`sdlcAgents.<group>.<name>`); 21 keys renamed (`pegaEndpoint`→`pega.endpoint`, `mcpServerPort`→`mcp.serverPort`, `llmProvider`→`llm.provider`, …) + 2 new keys (`pega.appName`, `pega.appVersion`); 29 production files updated. Breaking change cho user dùng old flat keys — auto-migration
 
 ### v1.54.0 (2026-10-21)
 

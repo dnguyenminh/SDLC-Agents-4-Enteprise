@@ -130,7 +130,7 @@ invokeSubAgent(
 
 7. Update STATUS: `user_guide.status = "done"`, `user_guide.version = N`
 
-8. Attach to Jira: `embed_images → export_docx → jira_update_issue`
+8. Attach to Jira: `embed_image → export_docx → jira_update_issue`
 
 9. Ingest UG into KB (FULL content)
 

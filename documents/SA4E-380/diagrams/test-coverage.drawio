@@ -1,0 +1,228 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="SA4E-380 Content Proxy — Test Coverage Map (7 BRD stories x 6 test levels)" style="text;html=1;fontSize=17;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="16" width="1240" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Planned plan v1.0 — 88 cases; cell = cases whose primary requirement is this story; 100% RTM coverage of the 7 stories" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="40" y="48" width="1240" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="h-label" value="Requirement (BRD)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="72" width="250" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="h-0" value="PBT&lt;br&gt;6 cases" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="72" width="112" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="h-1" value="UT&lt;br&gt;43 cases" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="404" y="72" width="112" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="h-2" value="IT&lt;br&gt;12 cases" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="518" y="72" width="112" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="h-3" value="E2E-API&lt;br&gt;16 cases" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="632" y="72" width="112" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="h-4" value="E2E-UI&lt;br&gt;0 — N/A" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="746" y="72" width="112" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="h-5" value="SIT&lt;br&gt;11 cases" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="72" width="112" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="h-mod" value="Owning module / evidence layer" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="974" y="72" width="290" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="s-0" value="STORY 1 — Six-format export (AC-1)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="118" width="250" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-0-0" value="2" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="118" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-0-1" value="12" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="404" y="118" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-0-2" value="3" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="518" y="118" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-0-3" value="12" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="632" y="118" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-0-4" value="N/A" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="746" y="118" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-0-5" value="7" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="118" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m-0" value="backend content-proxy + extension output-proxy + live" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="974" y="118" width="290" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="s-1" value="STORY 2 — Never a bare path (AC-2)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="166" width="250" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-1-0" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="166" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-1-1" value="8" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="404" y="166" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-1-2" value="3" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="518" y="166" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-1-3" value="4" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="632" y="166" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-1-4" value="N/A" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="746" y="166" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-1-5" value="2" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="166" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m-1" value="result-adapter + output-proxy" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="974" y="166" width="290" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="s-2" value="STORY 3 — Remote retrieval (AC-3)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="214" width="250" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-2-0" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="214" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-2-1" value="6" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="404" y="214" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-2-2" value="2" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="518" y="214" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-2-3" value="0 *" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="632" y="214" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-2-4" value="N/A" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="746" y="214" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-2-5" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="214" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m-2" value="artifact-source + McpClientManager" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="974" y="214" width="290" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="s-3" value="STORY 4 — Multi-file outputs[] (AC-4)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="262" width="250" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-3-0" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="262" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-3-1" value="4" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="404" y="262" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-3-2" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="518" y="262" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-3-3" value="0 *" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="632" y="262" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-3-4" value="N/A" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="746" y="262" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-3-5" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="262" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m-3" value="result-adapter + output-proxy" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="974" y="262" width="290" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="s-4" value="STORY 5 — Zero new tools (AC-5)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="310" width="250" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-4-0" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="310" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-4-1" value="7" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="404" y="310" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-4-2" value="3" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="518" y="310" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-4-3" value="7" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="632" y="310" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-4-4" value="N/A" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="746" y="310" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-4-5" value="0 *" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="310" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m-4" value="schema-adapter + ProxiedToolRegistry + schema-rewrite" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="974" y="310" width="290" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="s-5" value="STORY 6 — Convention detection (SHOULD)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="358" width="250" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-5-0" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="358" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-5-1" value="11" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="404" y="358" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-5-2" value="2" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="518" y="358" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-5-3" value="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="632" y="358" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-5-4" value="N/A" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="746" y="358" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-5-5" value="0 *" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="358" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m-5" value="detect.ts + ContentProxy config" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="974" y="358" width="290" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="s-6" value="STORY 7 — Fail loud (SHOULD)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;align=left;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="406" width="250" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-6-0" value="0 *" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="406" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-6-1" value="10" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="404" y="406" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-6-2" value="3" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="518" y="406" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-6-3" value="3" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="632" y="406" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-6-4" value="N/A" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="746" y="406" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="c-6-5" value="3" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="406" width="112" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="m-6" value="invocation-adapter + result-adapter + output-proxy" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="974" y="406" width="290" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg1" value="" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="486" width="18" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg1t" value="Covered — >=1 planned case at this level" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="64" y="484" width="330" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg2" value="" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="400" y="486" width="18" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg2t" value="Partial — 0 direct cases; covered at another level (*)" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="424" y="484" width="330" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg3" value="" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="800" y="486" width="18" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg3t" value="Not applicable — level or story not exercised" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="824" y="484" width="330" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="auto" value="Automation: 77 / 88 cases = 88% automated  |  11 manual (13%) — SIT only  |  E2E-UI = 0 by design (no browser surface; schema contract asserted at E2E-API-01..07)" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;spacingLeft=8;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="40" y="516" width="1224" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="note" value="(*)  STORY 3: the live child runs on the backend host, so no remote transport exists at E2E-API — resources/read, http(s) and data: paths are proven at UT-25..30 / IT-04..05 and the path-only failure at SIT-09.   STORY 4: none of the six exporters produces multiple artifacts, so outputs[] is verified at UT-36..40 / IT-01 / SIT-08 instead of E2E-API.   STORY 5 and STORY 6: detection and schema markers are proven at UT / IT / E2E-API; SIT adds no detection-specific step.   STORY 7: the fail-loud contract is asserted through UT-17..40, IT-02/05/12, E2E-API-15/16 and SIT-09/10." style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;align=center;verticalAlign=middle;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=8;verticalAlign=top;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="40" y="556" width="1224" height="78" as="geometry"/>
+        </mxCell>
+  </root>
+</mxGraphModel>

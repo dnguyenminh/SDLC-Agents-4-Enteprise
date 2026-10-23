@@ -36,7 +36,7 @@ After each phase completes, verify:
 
 ## Document Attachment (MANDATORY after each phase)
 
-1. embed_images → 2. export_docx → 3. attach to Jira
+1. embed_image → 2. export_docx → 3. attach to Jira
 Naming: `{DOC}-v{version}-{TICKET}.docx`
 
 ## Jira Transitions

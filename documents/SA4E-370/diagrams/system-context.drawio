@@ -1,0 +1,116 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+
+<!-- Extension Host Boundary -->
+<mxCell id="hostBoundary" value="VS Code Extension Host" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#2e7d32;strokeWidth=2;verticalAlign=top;fontSize=14;fontStyle=1;dashed=1;">
+<mxGeometry x="100" y="60" width="1200" height="700" as="geometry"/>
+</mxCell>
+
+<!-- External Actors -->
+<mxCell id="actorUser" value="Extension User (P1)" vertex="1" parent="1" style="shape=mxgraph.flowchart.person;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;">
+<mxGeometry x="40" y="200" width="120" height="100" as="geometry"/>
+</mxCell>
+
+<mxCell id="actorDev" value="Extension Developer (P2)" vertex="1" parent="1" style="shape=mxgraph.flowchart.person;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;">
+<mxGeometry x="40" y="400" width="140" height="100" as="geometry"/>
+</mxCell>
+
+<mxCell id="actorMaint" value="Extension Maintainer (P3)" vertex="1" parent="1" style="shape=mxgraph.flowchart.person;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1565c0;">
+<mxGeometry x="40" y="600" width="140" height="100" as="geometry"/>
+</mxCell>
+
+<!-- External Systems -->
+<mxCell id="extLLM" value="LLM Provider" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontSize=12;fontStyle=1;">
+<mxGeometry x="1180" y="200" width="140" height="80" as="geometry"/>
+</mxCell>
+
+<mxCell id="extFS" value="File System\n(.code-intel/agents/*.md)" vertex="1" parent="1" style="shape=mxgraph.flowchart.document;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontSize=12;">
+<mxGeometry x="1180" y="400" width="160" height="80" as="geometry"/>
+</mxCell>
+
+<!-- Internal Components -->
+<mxCell id="webview" value="Chat Webview\n• Agent Slash Menu\n• Agent Badge per Tab\n• Switch Indicator\n• Conversation History" vertex="1" parent="hostBoundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=11;">
+<mxGeometry x="180" y="100" width="280" height="180" as="geometry"/>
+</mxCell>
+
+<mxCell id="chatPanel" value="ChatPanel / ChatStateManager\n• Message Routing\n• Agent Store (agentsLoaded)\n• Slash Menu Controller\n• Dir Watcher Integration" vertex="1" parent="hostBoundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=11;">
+<mxGeometry x="500" y="100" width="280" height="180" as="geometry"/>
+</mxCell>
+
+<mxCell id="adapter" value="Pi Workflow Adapter\n• selectAgent (REAL wiring)\n• Session Registry (workspaceRoot+tabId)\n• Message Protocol Handler\n• Agent File Loader/Parser" vertex="1" parent="hostBoundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f57f17;fontSize=11;fontStyle=1;">
+<mxGeometry x="820" y="100" width="300" height="180" as="geometry"/>
+</mxCell>
+
+<mxCell id="sessionHost" value="Session Host / Engine\n• Governance Layers:\n  - Budget Gate (runSessionBudgetGate)\n  - Auto-chunk (turn-executor)\n  - TurnBudgetGuard\n  - Context Pipeline (8-stage)\n• Role Scoping:\n  - buildSessionToolLoadout\n  - applyScopedSkills\n  - scopedSteering" vertex="1" parent="hostBoundary" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c2185b;fontSize=11;fontStyle=1;">
+<mxGeometry x="180" y="320" width="940" height="280" as="geometry"/>
+</mxCell>
+
+<!-- Edges -->
+<mxCell id="e1" edge="1" parent="1" source="actorUser" target="webview" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e2" edge="1" parent="1" source="actorDev" target="extFS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e3" edge="1" parent="1" source="actorMaint" target="adapter" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1565c0;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e4" edge="1" parent="1" source="webview" target="chatPanel" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1976d2;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e5" edge="1" parent="1" source="chatPanel" target="adapter" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1976d2;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e6" edge="1" parent="1" source="adapter" target="sessionHost" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e7" edge="1" parent="1" source="adapter" target="extFS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#e65100;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e8" edge="1" parent="1" source="sessionHost" target="extLLM" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#e65100;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e9" edge="1" parent="1" source="extLLM" target="sessionHost" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#e65100;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Labels on edges -->
+<mxCell id="l1" value="SELECT_AGENT\nAGENT_SWITCHED\nagentsLoaded" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="340" y="180" width="140" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l2" value="Internal Calls\nSession Mgmt" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="680" y="180" width="120" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l3" value="Read/Watch\nAgent Files" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="1020" y="250" width="120" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l4" value="Prompt + Persona\n+ Role-scoped Tools" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="1020" y="520" width="140" height="50" as="geometry"/>
+</mxCell>
+
+<mxCell id="l5" value="Response" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="1100" y="560" width="80" height="30" as="geometry"/>
+</mxCell>
+
+<mxCell id="l6" value="Create/Edit\nAgent Files" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="320" y="430" width="100" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l7" value="Governance\nMonitoring" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="320" y="620" width="100" height="40" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

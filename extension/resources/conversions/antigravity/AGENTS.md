@@ -330,7 +330,7 @@ execute_dynamic_tool(
 | Category | Discovery Query | Example Tools |
 |----------|----------------|---------------|
 | Jira | `find_tools("jira")` | jira_get_issue, jira_search, jira_create_issue |
-| Export | `find_tools("export docx")` | export_docx, embed_images |
+| Export | `find_tools("export docx")` | export_docx, embed_image |
 | Draw.io | `find_tools("drawio")` | drawio_auto_layout, drawio_export_png |
 | Memory/KB | `find_tools("memory")` | mem_search, mem_ingest, mem_graph |
 | Code | `find_tools("code")` | code_search, code_symbols, code_context |

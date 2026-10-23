@@ -307,13 +307,13 @@ Create draw.io XML diagrams and export to PNG:
 
 **After completing TDD.md, you MUST export to DOCX using our tools:**
 
-1. Call `embed_images` tool to create self-contained markdown:
+1. Call `embed_image` tool to create self-contained markdown:
    ```
-   embed_images(file_path="C:/projects/.../documents/{TICKET-KEY}/TDD.md", output_path="C:/projects/.../documents/{TICKET-KEY}/TDD-embedded.md")
+   embed_image(file_path="C:/projects/.../documents/{TICKET-KEY}/TDD.md", output_path="C:/projects/.../documents/{TICKET-KEY}/TDD-embedded.md")
    ```
 2. Call `export_docx` via `execute_dynamic_tool` with file_path (NOT content):
    ```
-   export_docx(file_path="C:/projects/.../documents/{TICKET-KEY}/TDD-embedded.md", file_name="TDD-v{VERSION}-{TICKET-KEY}")
+   execute_dynamic_tool(toolName="export_docx", arguments={file_path="C:/projects/.../documents/{TICKET-KEY}/TDD-embedded.md", file_name="TDD-v{VERSION}-{TICKET-KEY}", output_path="C:/projects/.../documents/{TICKET-KEY}/TDD-v{VERSION}-{TICKET-KEY}.docx"})
    ```
 3. Copy exported DOCX to `documents/{TICKET-KEY}/TDD-v{VERSION}-{TICKET-KEY}.docx`
 4. Delete temp `TDD-embedded.md` file

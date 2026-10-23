@@ -1,0 +1,42 @@
+{
+  "ticket": "SA4E-380",
+  "summary": "Content Proxy cho child MCP tools: export DOCX/XLSX/PPTX/PDF/HTML/JSON qua extension wrapper (không thêm tool mới)",
+  "mode": "documentation-backfill (as-built) — L3 unattended",
+  "currentPhase": "docs_complete_pending_review",
+  "jiraStatus": "In Review",
+  "phases": {
+    "requirements": { "status": "done", "file": "BRD.md", "version": 1, "completedAt": "2026-10-23T00:24:00Z" },
+    "specification": { "status": "done", "file": "FSD.md", "version": 1, "completedAt": "2026-10-23T00:38:00Z" },
+    "ui_design": { "status": "skipped", "reason": "No UI change in scope (backend orchestration + extension wrapper)" },
+    "design": { "status": "done", "file": "TDD.md", "version": 1, "completedAt": "2026-10-23T02:20:00Z" },
+    "security_design_review": { "status": "done", "file": "SECURITY-REVIEW.md", "completedAt": "2026-10-23T02:50:00Z", "verdict": "APPROVED WITH FINDINGS (0 Critical / 1 High / 2 Medium / 4 Low / 4 Info); F-01 binding amendment applied to TDD §9.1" },
+    "feedback_loop": { "status": "not_started", "iterations": 0, "maxIterations": 5 },
+    "test_planning": { "status": "done", "files": ["STP.md", "STC.md"], "completedAt": "2026-10-23T02:40:00Z" },
+    "implementation": { "status": "not_started", "reason": "As-built: code already implemented in workspace (uncommitted). Not re-implemented by pipeline." },
+    "user_guide": { "status": "not_started" },
+    "testing": { "status": "not_started", "reason": "Test evidence captured from prior runs; pipeline does not re-run suites." },
+    "deployment": { "status": "not_started", "reason": "Out of scope for this ticket (docs backfill only)." }
+  },
+  "blockers": [
+    {
+      "id": "BLOCKER-WRAPPER-RELOAD",
+      "severity": "environment",
+      "description": "Extension wrapper on port 9183 still runs pre-change code until the Kiro window is reloaded. Backend adaptation is live (x-output-base64 visible in schemas) but the old wrapper does not write files from output_base64. DOCX export through the wrapper may not create a file.",
+      "impact": "Jira DOCX attachments skipped; markdown documents unaffected.",
+      "action": "User must reload Kiro window (Ctrl+Shift+P → Reload Window) before DOCX export via wrapper is usable."
+    },
+    {
+      "id": "LIMITATION-REMOTE-PATH-ONLY",
+      "severity": "design",
+      "description": "A remote child that returns only a host-local path cannot be read by the backend (bytes live on another machine). Such tools must expose MCP resources/URLs or share a volume. ARTIFACT_PATH_MAP is a future option, not implemented.",
+      "impact": "markdown-exporter-mcp-local works only while the child runs on the backend host (stdio/local); remote path-only setup fails by design with ARTIFACT_FETCH_FAILED."
+    },
+    {
+      "id": "KNOWN-TEST-FALURE",
+      "severity": "known-unrelated",
+      "description": "ProjectIsolation.derive-project-id.test.ts UT-11 fails on Windows root path — pre-existing and unrelated. Not fixed by this ticket.",
+      "impact": "Full backend suite: 3,493 pass, 1 known unrelated failure."
+    }
+  ],
+  "lastUpdated": "2026-10-23T02:55:00Z"
+}

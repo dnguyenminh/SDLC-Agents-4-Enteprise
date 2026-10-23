@@ -1,0 +1,99 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="laneUser" value="User / Webview" vertex="1" parent="1" style="swimlane;horizontal=0;startSize=110;fillColor=#dae8fc;html=1;">
+<mxGeometry x="40" y="40" width="1320" height="200" as="geometry"/>
+</mxCell>
+<mxCell id="lanePanel" value="ChatPanel / ChatStateManager" vertex="1" parent="1" style="swimlane;horizontal=0;startSize=110;fillColor=#d5e8d4;html=1;">
+<mxGeometry x="40" y="240" width="1320" height="200" as="geometry"/>
+</mxCell>
+<mxCell id="laneAdapter" value="Pi Workflow Adapter" vertex="1" parent="1" style="swimlane;horizontal=0;startSize=110;fillColor=#ffe6cc;html=1;">
+<mxGeometry x="40" y="440" width="1320" height="200" as="geometry"/>
+</mxCell>
+<mxCell id="laneHost" value="Session Host / Engine" vertex="1" parent="1" style="swimlane;horizontal=0;startSize=110;fillColor=#f8cecc;html=1;">
+<mxGeometry x="40" y="640" width="1320" height="220" as="geometry"/>
+</mxCell>
+<mxCell id="s0" value="Start" vertex="1" parent="laneUser" style="ellipse;fillColor=#000000;html=1;">
+<mxGeometry x="140" y="80" width="40" height="40" as="geometry"/>
+</mxCell>
+<mxCell id="a1" value="Create / edit&#10;.code-intel/agents/*.md" vertex="1" parent="laneUser" style="rounded=1;whiteSpace=wrap;html=1;">
+<mxGeometry x="220" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="a2" value="Select agent&#10;in slash menu (tab)" vertex="1" parent="laneUser" style="rounded=1;whiteSpace=wrap;html=1;">
+<mxGeometry x="440" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="a3" value="See agent badge +&#10;AGENT_SWITCHED" vertex="1" parent="laneUser" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;">
+<mxGeometry x="1120" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="b1" value="Watcher detects change&#10;&#8594; agentsLoaded list" vertex="1" parent="lanePanel" style="rounded=1;whiteSpace=wrap;html=1;">
+<mxGeometry x="220" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="b2" value="SELECT_AGENT&#10;via message protocol" vertex="1" parent="lanePanel" style="rounded=1;whiteSpace=wrap;html=1;">
+<mxGeometry x="440" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="b3" value="Route task&#10;(NO [Agent: X] prefix)" vertex="1" parent="lanePanel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;">
+<mxGeometry x="880" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="c1" value="selectAgent REAL:&#10;load + parse agent file" vertex="1" parent="laneAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;">
+<mxGeometry x="440" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="c2" value="Inject persona&#10;(respect governance)" vertex="1" parent="laneAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;">
+<mxGeometry x="660" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="c3" value="Set role/phase from&#10;agent definition" vertex="1" parent="laneAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;">
+<mxGeometry x="880" y="70" width="160" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="d0" value="Budget gate REJECT?&#10;(PI_CONTEXT_BUDGET_EXCEEDED)" vertex="1" parent="laneHost" style="rhombus;whiteSpace=wrap;html=1;">
+<mxGeometry x="640" y="60" width="200" height="90" as="geometry"/>
+</mxCell>
+<mxCell id="d1" value="Role-scoped loadout /&#10;skills / steering" vertex="1" parent="laneHost" style="rounded=1;whiteSpace=wrap;html=1;">
+<mxGeometry x="900" y="75" width="170" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="d2" value="Per-tab session turn&#10;(auto-chunk + guards)" vertex="1" parent="laneHost" style="rounded=1;whiteSpace=wrap;html=1;">
+<mxGeometry x="1120" y="75" width="170" height="60" as="geometry"/>
+</mxCell>
+<mxCell id="d3" value="Fail: keep old agent&#10;+ error message" vertex="1" parent="laneHost" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;">
+<mxGeometry x="660" y="165" width="160" height="45" as="geometry"/>
+</mxCell>
+<mxCell id="f1" edge="1" parent="1" source="s0" target="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f2" edge="1" parent="1" source="a1" target="b1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f3" edge="1" parent="1" source="a2" target="b2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f4" edge="1" parent="1" source="b2" target="c1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f5" edge="1" parent="1" source="c1" target="c2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f6" edge="1" parent="1" source="c2" target="d0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f7" edge="1" parent="1" source="d0" target="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f8" edge="1" parent="1" source="d1" target="d2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f9" edge="1" parent="1" source="d2" target="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f10" edge="1" parent="1" source="a3" target="b3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f11" edge="1" parent="1" source="b3" target="c3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f12" edge="1" parent="1" source="d0" target="d3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="f13" edge="1" parent="1" source="c2" target="c3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

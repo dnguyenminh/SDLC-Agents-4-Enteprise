@@ -268,7 +268,7 @@ Before delivering the FSD, verify:
 
 **After completing the FSD, you MUST export to DOCX format.**
 
-1. Use `embed_images` tool to create a self-contained markdown (images as base64):
+1. Use `embed_image` tool to create a self-contained markdown (images as base64):
    - `file_path`: absolute path to FSD.md
    - `output_path`: absolute path to FSD-embedded.md (temp file)
 2. Use the discovered **DOCX export tool** (query: "convert markdown to docx") to export:

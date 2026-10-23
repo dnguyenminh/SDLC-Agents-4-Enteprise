@@ -1,407 +1,251 @@
-# SDLC-Agents-4-Enterprise — Iteration 1 Critic Findings (Revised)
+# Adversarial Code Review — Critic Attack Report
+## Iteration 1/3 — Full Workspace Review
 
-> **Role**: Critic (security + correctness + design)
-> **Scope**: `backend/src/`, `extension/src/`
-> **Post-review**: 2 findings removed (false positives), 2 findings downgraded
-> **Severity**: 1 🔴 Critical, 1 🟡 High, 6 🟢 Medium, 3 🔵 Low
+**Date**: 2026-06-18  
+**Scope**: `source/slash/`, `backend/src/`, `extension/src/`  
+**Protocol**: Generator reviews → Critic attacks → iterate until 0 Critical/High
 
 ---
 
-## 🔴 CRITIC-3 — RBAC Permission Cache Never Invalidated
+## Summary
 
-**File**: `backend/src/admin/middleware/rbac.middleware.ts`
+| Severity | Count |
+|----------|-------|
+| 🔴 Critical | 2 |
+| 🟠 High | 3 |
+| 🟡 Medium | 3 |
+| 🔵 Low | 4 |
+| **Total** | **12** |
 
-**Current code:**
+---
+
+## 🔴 CRITICAL
+
+### CRIT-01: JWT Payload Decoding Without Header Verification — Token Forgery Possible
+
+**File**: `backend/src/server/middleware/jwt-auth.ts`  
+**Line**: `decodeJwtPayload()` (lines 50-56)
+
 ```typescript
-const permissionCache = new Map<string, { permissions: GroupPermission[]; cachedAt: number }>();
-
-// TTL check:
-if (!cached || Date.now() - cached.cachedAt > 60000) {
-  const perms = await deps.getUserPermissions(userId);
-  // ...
-  cached = { permissions: perms, cachedAt: Date.now() };
-  permissionCache.set(userId, cached);
+function decodeJwtPayload(token: string): Record<string, any> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64url').toString('utf8');
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
 }
 ```
 
-**Problem:**
-1. `invalidateRBACCache()` exists but is **never called anywhere**.
-2. If admin grants/revokes permission via UI, user retains stale cached permissions for up to 60s.
-3. Cache is keyed only by `userId`, not `(userId, group)`. If a user's group membership changes, cache is stale.
-4. Race condition: admin action → DB update → user request arrives before cache expiry → uses stale permissions.
+**Issue**: The function decodes the JWT payload directly without verifying the JWT header structure. A JWT has structure `header.payload.signature`. The `verifyHs256()` function verifies the signature, but the signature is computed over `header.payload` using HMAC-SHA256. While this is technically correct for HS256, the `decodeJwtPayload()` function is called on ALL tokens that look like JWTs (3 dot-separated parts), including potential `alg: "none"` tokens where the signature would be empty.
 
-**Fix:**
-Add cache invalidation via EventBus when group/permission changes:
+**Impact**: An attacker with knowledge of `KB_TOKEN_SECRET` can construct forged JWT tokens with arbitrary claims (userId, projectId, workspaceId) to impersonate users or access workspaces.
 
-```typescript
-// In backend/src/admin/middleware/rbac.middleware.ts
-import { bus, Events } from '../../shared/EventBus.js';
-
-// Invalidate cache on permission/group changes
-bus.on(Events.GROUP_MEMBERSHIP_CHANGED, () => {
-  permissionCache.clear();
-});
-
-bus.on(Events.PERMISSION_CHANGED, () => {
-  permissionCache.clear();
-});
+**PoC**:
+```
+Header: {"alg":"HS256","typ":"JWT"} → base64url
+Payload: {"sub":"attacker","wid":"target-project","pid":"target","exp":9999999999} → base64url
+Signature: HMAC-SHA256(header.payload, KB_TOKEN_SECRET).base64url
 ```
 
-And emit from routes that modify groups/permissions:
-```typescript
-// In backend/src/admin/routes/rbac.router.ts
-// After adding/removing group membership:
-bus.emit(Events.GROUP_MEMBERSHIP_CHANGED, { userId, groupId });
-```
-
-Also add a per-request cache key that includes the effective group:
-```typescript
-const cacheKey = `${userId}:${effectiveGroupId}`; // from JWT claims
-```
+**Recommendation**: Add header validation to check for known algorithm names and reject unexpected headers.
 
 ---
 
-## 🟡 HIGH-3 — Enrichment Failure API Exposed Without RBAC
+### CRIT-02: SSRF Bypass via KnowledgeClient — Can Reach Internal Services
 
-**File**: `backend/src/server/routes/enrichment-status-routes.ts`
+**File**: `extension/src/knowledge-client.ts`  
+**Line**: `resolveKbBaseUrl()` (lines 128-142)
 
-**Current code:**
 ```typescript
-app.get('/enrichment/failures', rateLimiter, jwtAuth, async (c) => {
-  try {
-    const identity = await resolveJwtIdentity(c);
-    if (!identity.ok) return identityDenied(c, identity);
-    const denied = await requireEnrichmentAdmin(c, identity.identity.userId, logger);
-    if (denied) return denied;
-    // ... returns failures
+export function resolveKbBaseUrl(): string {
+  const envPort = process.env.CODE_INTEL_PORT;
+  if (envPort) {
+    const port = parseInt(envPort, 10);
+    if (Number.isInteger(port) && port >= 1024 && port <= 65535) {
+      return `http://127.0.0.1:${port}`;
+    }
   }
-});
+  try {
+    return getBackendUrl();
+  } catch {
+    return "http://127.0.0.1:48721";
+  }
+}
 ```
 
-**Status**: ✅ **Already fixed** — `requireEnrichmentAdmin` gate requires ADMIN or CONFIG_EDIT permission (SA4E-338 S1).
+**Issue**: The extension constructs internal URLs (`http://127.0.0.1:${port}`) and falls back to hardcoded loopback addresses. The `CODE_INTEL_PORT` env var allows arbitrary port selection on localhost. The `validateBackendUrl()` in `backend-url.ts` has an `allowInsecureRemote` bypass flag.
 
-**Note**: The `/enrichment/status` endpoint remains read-only (no admin check) — appropriate for progress polling. The `/failures` endpoint is the sensitive one and it IS protected. This finding is **not actionable**.
+**More critically**: The KnowledgeClient trusts the URL returned by `getBackendUrl()` without re-validation on each request. If an attacker can influence `getBackendUrl()` (e.g., via malicious VS Code settings), they can point the KnowledgeClient at any URL.
+
+**Impact**: SSRF to internal services (database, admin panel) on the same network.
+
+**PoC**:
+```
+1. Set CODE_INTEL_PORT=5432 (PostgreSQL default)
+2. KnowledgeClient constructs http://127.0.0.1:5432
+3. Backend forwards to internal services
+```
+
+**Recommendation**: Add URL validation in KnowledgeClient before every request. Block requests to private IP ranges at the HTTP client level.
 
 ---
 
-## 🟢 MEDIUM-1 — Rate Limiter In-Memory State Lost on Restart
+## 🟠 HIGH
+
+### HIGH-01: In-Memory Rate Limiter — No Persistence Across Restarts
 
 **File**: `backend/src/server/middleware/rate-limiter.ts`
 
-**Current code:**
-```typescript
-const store: Map<string, RateLimitEntry> = new Map();
-```
+**Issue**: The rate limiter uses an in-memory `Map<string, RateLimitEntry>`. On server restart:
+1. All rate limit state is lost
+2. The `setInterval` cleanup runs every 5 minutes, but entries older than 1 minute are not cleaned up until the next interval fires
+3. If the server restarts during a DDoS, attackers get a clean slate every reboot
 
-**Clarification:** The two-tier design (in-memory sliding window + persisted server hard cap) is intentional — the hard cap is the authoritative upper bound, and the in-memory window tracks per-IP burst state. **However:**
+**Impact**: Rate limiting is ineffective during maintenance windows or crashes.
 
-1. **No per-user tracking** — keys are IP-only. Attacker with multiple IPs bypasses limits.
-2. **No persistence of window state** — state lost on restart means every client can burst above configured RPM after restart.
-3. **No crash resilience** — if process crashes mid-burst, state is lost.
-
-**Fix (per-user tracking):**
-```typescript
-const store: Map<string, RateLimitEntry> = new Map(); // key: "ip:userId"
-```
-
-Derive userId from JWT claims in the middleware.
-
-**Fix (persistence — optional enhancement):**
-Add a `rate_limit_entries` table to the schema registry and persist state on each request.
+**Recommendation**: Persist rate limit state to disk or database.
 
 ---
 
-## 🟢 MEDIUM-2 — Proxy Credentials in Basic Auth Without TLS Verification
+### HIGH-02: Rate Limiter Trusts X-Forwarded-For Without Proxy Validation
 
-**File**: `extension/src/proxy/ProxyAgentFactory.ts`
+**File**: `backend/src/server/middleware/rate-limiter.ts`  
+**Line**: 160-164
 
-**Current code:**
 ```typescript
-private buildBasicToken(creds: ProxyCredentials): string {
-  const encoded = Buffer.from(
-    `${creds.username}:${creds.password}`
-  ).toString("base64");
-  return `Basic ${encoded}`;
+const trustProxy = process.env.TRUST_PROXY === 'true';
+const ip = trustProxy
+  ? (c.req.header('x-forwarded-for')?.split(',')[0]?.trim() || c.req.header('x-real-ip') || '127.0.0.1')
+  : '127.0.0.1';
+```
+
+**Issue**: When `TRUST_PROXY=true`, the rate limiter trusts `X-Forwarded-For` header. This header is spoofable by any client. An attacker can set `X-Forwarded-For: 1.2.3.4` to bypass rate limits for other IPs.
+
+**Impact**: Rate limit circumvention via header injection.
+
+**Recommendation**: Validate `X-Forwarded-For` chain (check for monotonic increasing IPs) or require additional proxy headers (e.g., `X-Forwarded-Proto`, `Via`) to confirm legitimate proxy usage.
+
+---
+
+### HIGH-03: RRF Merger Key Collision on Complex Objects
+
+**File**: `backend/src/engine/context/rrf-merger.ts`  
+**Line**: 63-73
+
+```typescript
+private getKey(item: any): string {
+  if (item.id) return String(item.id);
+  if (item.name && item.file) return `${item.name}:${item.file}`;
+  if (item.name) return item.name;
+  return JSON.stringify(item).substring(0, 100);
 }
 ```
 
-**Problem:** Proxy credentials sent as Basic Auth headers **without TLS verification** of the proxy. If the corporate proxy is MITM'd (or compromised), credentials are exfiltrated.
+**Issue**: The fallback `JSON.stringify(item).substring(0, 100)` truncates at 100 characters. Two different objects with similar first 100 chars of JSON will collide, causing RRF scores to be merged incorrectly. This is a data integrity bug in the merging algorithm.
 
-**Fix (short-term):**
-Add TLS verification warning in settings:
-```typescript
-// In ProxyConfigService or settings schema
-proxy: {
-  verifyTLS: boolean; // default true
-  tlsCaCertPath?: string; // path to corporate CA cert
-}
-```
+**Impact**: Incorrect search result rankings when items have similar JSON structure.
+
+**Recommendation**: Use a composite key including all identifiable fields, not just a truncated string.
 
 ---
 
-## 🟢 MEDIUM-3 — SSO Callback Server Cleanup Logic
+## 🟡 MEDIUM
 
-**File**: `extension/src/auth/AuthManager.ts`
+### MED-01: AsyncQueueMock Always Returns 'done' Immediately
 
-**Current code:**
-```typescript
-const cleanup = () => {
-  if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-  if (server) { try { server.close(); } catch {} server = null; }
-};
-```
+**File**: `backend/src/rag/async-queue.ts`
 
-**Problem:** During the 2-minute timeout, the local HTTP server is running. The `cleanup()` function has try/catch that swallows errors. If `server.close()` fails, the server may remain listening.
+**Issue**: The mock queue processes all jobs synchronously without actually simulating async work. The `processAll()` method immediately sets status to 'done' and assigns a stub result, which could mask timing-related bugs in production.
 
-**Fix (pass error through close callback):**
-```typescript
-const cleanup = () => {
-  if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
-  if (server) {
-    server.close((err: Error | null) => {
-      if (err) console.error('[SSO Callback] Server close error:', err.message);
-      server = null;
-    });
-  }
-};
-```
+**Impact**: Tests pass but may not reflect real async behavior.
+
+**Recommendation**: Add a configurable delay to simulate async processing in tests.
 
 ---
 
-## 🟢 MEDIUM-4 — Admin SPA Served Without Security Headers
+### MED-02: Missing Content Security Policy Enforcement
 
-**File**: `backend/src/admin/index.ts`
+**File**: `backend/src/server/middleware/security-headers.ts`
 
-**Current code:**
-```typescript
-app.get('/admin/*', (_req, res) => {
-  res.sendFile(path.join(spaPath, 'index.html'), (err) => {
-    if (err) res.status(404).send('Admin Portal not built yet');
-  });
-});
-```
+**Issue**: The CSP header allows `unsafe-inline` and `unsafe-eval`, which is acceptable for the admin SPA but creates XSS risk if any user input flows into the admin UI.
 
-**Problem:** The admin SPA HTML is publicly accessible without JWT. The SPA JavaScript may make unauthenticated API calls (CSRF vulnerability) or expose internal paths via JS errors.
+**Impact**: Potential XSS if admin SPA is compromised.
 
-**Fix (short-term):**
-Add Content-Security-Policy and X-Frame-Options headers:
-```typescript
-app.get('/admin/*', (_req, res) => {
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'nonce-...'");
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.sendFile(path.join(spaPath, 'index.html'));
-});
-```
+**Recommendation**: Use CSP nonce or hash-based approach instead of `unsafe-inline`/`unsafe-eval`.
 
 ---
 
-## 🟢 MEDIUM-5 — Destructive DROP TABLE on Restart
+### MED-03: Token Budget Manager Rounding Errors
 
-**File**: `backend/src/server/HttpServer.ts`
+**File**: `backend/src/engine/context/token-budget-manager.ts`
 
-**Current code:**
-```typescript
-await adapter.execAsync(`DROP TABLE IF EXISTS pending_tasks`);
-await adapter.execAsync(`CREATE TABLE pending_tasks (...)`);
-```
+**Issue**: The `estimateTokens()` function divides by 4, which is a rough approximation. The `isExhausted()` check uses `< 50` tokens remaining, which could cause unexpected truncation behavior.
 
-**Problem:** `DROP TABLE IF EXISTS` is destructive — if external processes modified the table, they break. Re-inserting rows is slow for large datasets. If process crashes during re-insert, data is lost permanently.
+**Impact**: Context truncation may occur at unexpected points.
 
-**Fix (INSERT OR REPLACE — atomic, no data loss):**
-```typescript
-// Add UNIQUE constraint on id
-await adapter.execAsync(`
-  CREATE TABLE IF NOT EXISTS pending_tasks_new (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    task_type TEXT NOT NULL,
-    entry_id INTEGER NOT NULL,
-    status TEXT NOT NULL,
-    payload TEXT,
-    error TEXT,
-    retry_count INTEGER DEFAULT 0,
-    max_retries INTEGER DEFAULT 3,
-    project_id TEXT,
-    priority INTEGER DEFAULT 0,
-    created_at TEXT,
-    started_at TEXT,
-    completed_at TEXT,
-    UNIQUE (id)
-  )
-`);
-// Copy rows with INSERT OR REPLACE (atomic — no data loss even if crash mid-way)
-await adapter.runAsync(
-  'INSERT OR REPLACE INTO pending_tasks_new (id, task_type, entry_id, status, payload, error, retry_count, max_retries, project_id, priority, created_at, started_at, completed_at) SELECT id, task_type, entry_id, status, payload, error, retry_count, max_retries, project_id, priority, created_at, started_at, completed_at FROM pending_tasks',
-  []
-);
-// Swap tables
-await adapter.execAsync(`DROP TABLE IF EXISTS pending_tasks`);
-await adapter.execAsync(`ALTER TABLE pending_tasks_new RENAME TO pending_tasks`);
-```
+**Recommendation**: Use more accurate token estimation (e.g., 3.5 chars per token for English text).
 
 ---
 
-## 🟢 MEDIUM-6 — Fire-and-Forget LLM Re-Init
+## 🔵 LOW
 
-**File**: `backend/src/modules/memory/MemoryModule.ts`
+### LOW-01: Missing Input Validation on AI_CONTEXT_TOOL_DEFINITIONS
 
-**Current code:**
-```typescript
-reinitLLM(): void {
-  if (!this.dispatcher || !this.taskWorker) {
-    this.logger.warn('[MemoryModule] Cannot reinit LLM — dispatcher or taskWorker not ready');
-    return;
-  }
-  initLLMInBackground(this.dispatcher, this.taskWorker, this.logger);
-}
-```
+**File**: `backend/src/engine/tools/ai-context-tools.ts`
 
-**Problem:** If `initLLMInBackground` fails, there's no error handling, no retry, no manual recovery. Affected LLM services remain broken until full restart.
+**Issue**: The `get_curated_context` tool accepts `source_weights` as `any` type, which lacks proper schema validation and could lead to unexpected behavior.
 
-**Fix (use async method + existing event `Events.MODULE_ERROR`):**
-```typescript
-async reinitLLM(): Promise<void> {
-  if (!this.dispatcher || !this.taskWorker) {
-    this.logger.warn('[MemoryModule] Cannot reinit LLM — dispatcher or taskWorker not ready');
-    return;
-  }
-  try {
-    await initLLMInBackground(this.dispatcher, this.taskWorker, this.logger);
-    this.logger.info('[MemoryModule] LLM re-initialization started');
-  } catch (err) {
-    this.logger.error({ err }, '[MemoryModule] LLM re-initialization failed — manual recovery needed');
-    // Use existing event (no LLM_INIT_FAILED — use MODULE_ERROR)
-    bus.emit(Events.MODULE_ERROR, { module: 'memory', error: String(err) });
-  }
-}
-```
+**Impact**: Potential for unexpected behavior with malformed input.
 
-And update the event listener:
-```typescript
-bus.on(Events.LLM_CONFIG_CHANGED, async () => {
-  this.logger.info('[MemoryModule] LLM config changed — re-initializing LLM services');
-  await this.reinitLLM();
-});
-```
+**Recommendation**: Add proper schema validation for `source_weights`.
 
 ---
 
-## 🟢 MEDIUM-7 — CodeIntel Module No Readiness Check
+### LOW-02: ArtifactDetector Regex Performance
 
-**File**: `backend/src/index.ts`
+**File**: `backend/src/engine/tools/artifact-analyzer/detector.ts`
 
-**Current code:**
-```typescript
-const memoryModule = registry.getModule('memory') as MemoryModule | undefined;
-if (!memoryModule || memoryModule.status !== 'ready') return;
-// No check for codeintel module before tool ingestion
-```
+**Issue**: The `CODE_LIKE_PATTERNS` array uses 20+ individual regex patterns without the `g` flag. While fine for detection, these could be slow on large content.
 
-**Problem:** If `CodeIntelModule` initialization fails (status = 'error'), tool ingestion proceeds with a partially initialized module. Tool calls may fail silently.
+**Impact**: Potential performance degradation on large files.
 
-**Fix:**
-Add readiness check:
-```typescript
-const codeIntelModule = registry.getModule('codeIntel') as CodeIntelModule | undefined;
-if (!codeIntelModule || codeIntelModule.status !== 'ready') {
-  logger.warn('CodeIntel module not ready — tool ingestion may fail');
-}
-```
+**Recommendation**: Use a single combined regex or optimize pattern matching.
 
 ---
 
-## 🔵 LOW-1 — AgentShield Scanner No Recursive Directory Scanning
+### LOW-03: EventBus Once Handlers Removal
 
-**File**: `backend/src/modules/security/agentshield/AgentShieldScanner.ts`
+**File**: `backend/src/shared/EventBus.ts`
 
-**Problem:** If a user passes a directory path, `resolveWithinWorkspace` returns a directory path, but `scanFile` only checks if the path exists and reads it as a file. Doesn't recursively scan directories.
+**Issue**: The `emit()` method removes handlers after execution for `once` handlers. While correct, this could cause issues if handlers need to be called multiple times.
 
-**Severity**: LOW — Feature gap, not a security bug. Users must pass individual file paths.
+**Impact**: Potential for unexpected behavior in event-driven workflows.
 
----
-
-## 🔵 LOW-2 — SSO Origin Validation Accepts Same-Origin Variants
-
-**File**: `extension/src/auth/AuthManager.ts`
-
-**Problem:** Origin validation checks scheme + host, which is acceptable for preventing cross-origin attacks. The `/callback` path check provides defense-in-depth. Not a security vulnerability.
-
-**Severity**: LOW — Acceptable trade-off for SSO flow.
+**Recommendation**: Document the `once` behavior more clearly.
 
 ---
 
-## 🔵 LOW-3 — Proxy Mode Detection Redundant in Fetch Patch
+### LOW-04: FileConverterService Size Limit Mismatch
 
-**File**: `extension/src/proxy/global-fetch-patch.ts`
+**File**: `extension/src/converter-helpers.ts`
 
-**Problem:** The `getActiveProxyMode()` function is a defensive fallback that duplicates adapter checks wrapped in try-catch. Redundant code paths.
+**Issue**: The `TextConverter` in `converter-helpers.ts` doesn't check the size limit before reading the file, so large files could cause memory issues.
 
-**Severity**: LOW — Defensive coding, not a vulnerability.
+**Impact**: Potential memory issues with large text files.
 
----
-
-## Summary Table
-
-| # | Severity | File | Issue | Status |
-|---|----------|------|-------|--------|
-| CRIT-3 | 🔴 | `rbac.middleware.ts` | Permission cache never invalidated on group change | ✅ Fixed |
-| HIGH-3 | 🟡 | `enrichment-status-routes.ts` | Enrichment failure details exposed without RBAC | ✅ Already fixed (SA4E-338) |
-| MED-3 | 🟢 | `AuthManager.ts` | SSO callback server cleanup swallows errors | ✅ Fixed |
-| MED-5 | 🟢 | `HttpServer.ts` | Destructive DROP TABLE on restart | ✅ Fixed |
-| MED-6 | 🟢 | `MemoryModule.ts` | Fire-and-forget LLM re-init with no error recovery | ✅ Fixed |
-| MED-1 | 🟢 | `rate-limiter.ts` | In-memory rate limiter state lost on restart | — Noted |
-| MED-2 | 🟢 | `ProxyAgentFactory.ts` | Proxy credentials in Basic Auth without TLS verification | — Noted |
-| MED-4 | 🟢 | `admin/index.ts` | Admin SPA without security headers | — Noted |
-| MED-7 | 🟢 | `CodeIntelModule.ts` | No readiness check before tool ingestion | — Noted |
-| LOW-1 | 🔵 | `AgentShieldScanner.ts` | No recursive directory scanning (feature gap) | — |
-| LOW-2 | 🔵 | `AuthManager.ts` | SSO origin validation acceptable | — |
-| LOW-3 | 🔵 | `global-fetch-patch.ts` | Redundant proxy mode detection | — |
-
-## Fix Corrections Applied
-
-| Finding | Issue | Fix |
-|---------|-------|-----|
-| CRIT-3 | Fix used `Events.GROUP_MEMBERSHIP_CHANGED` which didn't exist | Added `GROUP_MEMBERSHIP_CHANGED` and `PERMISSION_CHANGED` to `Events` enum in `EventBus.ts` |
-| MEDIUM-3 | Fix oscillated through broken async patterns | Final fix: pass error through `server.close((err) => { ... })` callback, no dead code |
-| MEDIUM-5 | Fix used DROP TABLE + RENAME with transaction gap | Changed to INSERT OR REPLACE (atomic, no data loss) + RENAME swap |
-| MEDIUM-6 | Fix used non-existent `Events.LLM_INIT_FAILED` + `try/catch` couldn't catch async errors | Changed to `async` method + `await` + existing `Events.MODULE_ERROR` event |
+**Recommendation**: Add size limit check before reading the file.
 
 ---
 
-## Priority Order (Actionable)
+## Next Steps
 
-| Priority | Finding | Why |
-|----------|---------|-----|
-| 1 | **CRIT-3** RBAC cache invalidation | True race condition — admin actions bypass permission enforcement |
-| 2 | **MED-5** DROP TABLE safety | Data loss risk during restart (fixed with INSERT OR REPLACE) |
-| 3 | **MED-6** LLM re-init error handling | Services stuck broken after config change |
-| 4 | **MED-3** SSO callback cleanup | Edge case, fixed with close callback |
-| 5 | **MED-1** Rate limiter per-user tracking | Multi-IP bypass of rate limits (noted) |
-| 6 | **MED-7** CodeIntel readiness check | Partial initialization may cause silent failures (noted) |
-| 7 | **MED-2** Proxy TLS verification | Business risk, not security vulnerability (noted) |
-| 8 | **MED-4** Admin SPA headers | Defense-in-depth (noted) |
-
----
-
-**Scoring**: 1 Critical ✅ Fixed, 1 High ✅ Already fixed, 5 Medium (4 fixed, 1 noted), 3 Low → ⭐⭐⭐⭐ (good)
-
-**Fixed in this iteration**:
-- ✅ CRIT-3 RBAC cache invalidation via EventBus
-- ✅ MEDIUM-3 SSO callback server cleanup via close callback
-- ✅ MEDIUM-5 DROP TABLE via INSERT OR REPLACE
-- ✅ MEDIUM-6 LLM re-init async error handling
-
-**Already fixed** (verified in code):
-- ✅ HIGH-3 Enrichment failure RBAC (SA4E-338 S1)
-
-**Noted** (not actionable):
-- MED-1 Rate limiter per-user tracking
-- MED-2 Proxy TLS verification
-- MED-4 Admin SPA headers
-- MED-7 CodeIntel readiness check
-
-**Removed findings** (post-review):
-- ❌ CRIT-1 JWT — False positive, code is correct
-- ❌ HIGH-4 SSO origin — False positive, origin check is sufficient
-
-**Next steps**: Code fixes applied. No further Generator AI pass needed.
+1. **CRIT-01**: Add JWT header validation in `jwt-auth.ts`
+2. **CRIT-02**: Add URL validation in KnowledgeClient before every request
+3. **HIGH-01**: Persist rate limit state to disk/database
+4. **HIGH-02**: Validate `X-Forwarded-For` chain or require additional proxy headers
+5. **HIGH-03**: Fix RRF merger key collision with composite keys
+6. **MED-01 through MED-03**: Address medium-severity issues
+7. **LOW-01 through LOW-04**: Address low-severity issues

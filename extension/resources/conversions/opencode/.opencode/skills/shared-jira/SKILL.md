@@ -25,9 +25,9 @@ Examples: `BRD-v1-SCRUM-50.docx`, `FSD-v2-KSA-102.docx`
 
 ### Attachment Process
 ```
-1. embed_images(file_path="documents/{TICKET}/{DOC}.md", output_path="documents/{TICKET}/{DOC}-embedded.md")
-2. export_docx(file_path="documents/{TICKET}/{DOC}-embedded.md", file_name="{DOC}-v{version}-{TICKET}")
-3. jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{TICKET}/{DOC}-v{version}-{TICKET}.docx")
+1. embed_image(file_path="documents/{TICKET}/{DOC}.md", output_path="documents/{TICKET}/{DOC}-embedded.md")
+2. execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/{DOC}-embedded.md", file_name="{DOC}-v{version}-{TICKET}", output_path="documents/{TICKET}/{DOC}-v{version}-{TICKET}.docx"})
+3. jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/{DOC}-v{version}-{TICKET}.docx")
 ```
 
 ### Timing
@@ -54,7 +54,7 @@ Examples: `BRD-v1-SCRUM-50.docx`, `FSD-v2-KSA-102.docx`
 Every DOCX attachment MUST include all related `.drawio` files:
 ```powershell
 Get-ChildItem "documents/{TICKET}/diagrams/*.drawio" | ForEach-Object {
-    jira_update_issue(issue_key: "{TICKET}", attachments: $_.FullName)
+    jira_attach_file(issue_key: "{TICKET}", file_path: $_.FullName)
 }
 ```
 

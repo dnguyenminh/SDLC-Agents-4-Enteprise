@@ -16,6 +16,8 @@ import { HealthCoordinator } from './health/HealthCoordinator.js';
 import { createTransport } from './health/TransportFactory.js';
 import { McpServerConfigLoader } from './McpServerConfigLoader.js';
 import { ProxiedToolRegistry } from './ProxiedToolRegistry.js';
+import { adaptInvocation } from './content-proxy/invocation-adapter.js';
+import { adaptResult } from './content-proxy/result-adapter.js';
 
 export class McpClientManager {
   private clients: Map<string, Client> = new Map();
@@ -71,16 +73,56 @@ export class McpClientManager {
   async executeTool(toolName: string, args: unknown): Promise<any> {
     const serverName = this.toolRegistry.getOwningServer(toolName);
     if (!serverName) throw new Error(`Tool ${toolName} is not managed by any child server`);
+    return this.executeToolOnServer(serverName, toolName, args);
+  }
 
+  /**
+   * Execute a tool on a named child server (no registry lookup).
+   * Content-proxy capabilities are applied here: wrapper mode maps
+   * content_base64 → child content arg and inlines artifacts as output_base64.
+   */
+  async executeToolOnServer(serverName: string, toolName: string, args: unknown): Promise<any> {
     const state = this.stateTracker.getState(serverName);
     if (state !== 'connected') throw new Error(this.health.getErrorMsg(serverName, state));
 
     const client = this.clients.get(serverName);
     if (!client) throw new Error(`Client for server ${serverName} is disconnected`);
 
-    this.logger.info({ toolName, serverName }, 'Proxying tool execution to child server');
-    const result = await client.callTool({ name: toolName, arguments: args as Record<string, unknown> });
-    return { content: result.content, isError: result.isError };
+    const capability = this.toolRegistry.getCapability(toolName);
+    const invocation = capability ? adaptInvocation(capability, args) : undefined;
+    if (invocation?.error) {
+      return { content: [{ type: 'text', text: invocation.error }], isError: true };
+    }
+
+    this.logger.info({ toolName, serverName, wrapperMode: invocation?.wrapperMode ?? false }, 'Proxying tool execution to child server');
+    const result = await client.callTool({
+      name: toolName,
+      arguments: (invocation ? invocation.args : args) as Record<string, unknown>,
+    });
+    const raw = { content: result.content, isError: result.isError };
+    if (!invocation) return raw;
+    return adaptResult(invocation, raw, {
+      serverName,
+      readResource: (uri) => this.readResourceFromClient(client, uri),
+    });
+  }
+
+  /**
+   * Fetch a resource from a child server. Works for remote (httpStream) servers
+   * that expose their artifacts through resources/read; servers without resource
+   * support simply yield null and the adapter falls back to a local read.
+   */
+  private async readResourceFromClient(client: Client, uri: string): Promise<Buffer | null> {
+    try {
+      const response: any = await client.readResource({ uri });
+      for (const item of response?.contents ?? []) {
+        if (typeof item?.blob === 'string') return Buffer.from(item.blob, 'base64');
+        if (typeof item?.text === 'string') return Buffer.from(item.text, 'utf8');
+      }
+    } catch {
+      // No resources capability or unknown URI — the adapter reports the failure.
+    }
+    return null;
   }
 
   async connectServer(name: string, config: ServerConfig): Promise<void> {

@@ -25,3 +25,13 @@
 - SA ses_eb11159f0ffeE2NmGzjqLqaspd: Tạo TDD.md + diagrams architecture.drawio/png, component.drawio/png, ingest KB
 - QA ses_eb111479affe9TLKVv7AV6raM0: Bổ sung STP.md diagrams test-coverage.drawio/png, test-execution-flow.drawio/png, ingest KB
 - SM: Cập nhật STATUS.json phases requirements/specification/design/test_planning done
+
+## 2026-10-23 09:39
+- dev-agent: Tạo UG.md (342 dòng) theo template, ingest KB
+- SM: Cập nhật STATUS.json phases.user_guide=done, lastUpdated
+- SM: Cập nhật RUN-LOG
+
+## 2026-10-23 09:50
+- SM: Jira transition SA4E-371 to Done (transition 41), comment added
+- SM: STATUS.json jiraStatus set to Done
+- SM: PNG exports already complete

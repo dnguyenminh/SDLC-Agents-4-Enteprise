@@ -1,0 +1,126 @@
+<mxGraphModel dx="1184" dy="770" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <!-- Lanes -->
+    <mxCell id="lane-user" value="User" style="swimlane;html=1;startSize=30;horizontal=0;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="10" y="10" width="180" height="720" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-webview" value="Webview" style="swimlane;html=1;startSize=30;horizontal=0;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="10" width="300" height="720" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-ext" value="Extension Host" style="swimlane;html=1;startSize=30;horizontal=0;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="510" y="10" width="300" height="720" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-mcp" value="Python MCP" style="swimlane;html=1;startSize=30;horizontal=0;fillColor=#FCE4EC;strokeColor=#C2185B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="820" y="10" width="300" height="720" as="geometry"/>
+    </mxCell>
+    
+    <!-- Steps -->
+    <mxCell id="step1" value="Send message" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2E7D32;fontSize=11;" vertex="1" parent="lane-user">
+      <mxGeometry x="10" y="60" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="step2" value="chat:userMessage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="60" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="step3" value="Start agent turn" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="60" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="step4" value="chat:toolCall (tc1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C2185B;fontSize=11;" vertex="1" parent="lane-mcp">
+      <mxGeometry x="10" y="60" width="160" height="40" as="geometry"/>
+    </mxCell>
+    
+    <!-- tc1 arrives -->
+    <mxCell id="step5" value="chat:toolCall (tc1)&#xa;→ renderToolCall&#xa;→ creates orphan container #1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="120" width="280" height="55" as="geometry"/>
+    </mxCell>
+    
+    <!-- tc2 arrives -->
+    <mxCell id="step6" value="chat:toolCall (tc2)&#xa;→ renderToolCall&#xa;→ appends to orphan #1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C2185B;fontSize=11;" vertex="1" parent="lane-mcp">
+      <mxGeometry x="10" y="120" width="160" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="step7" value="chat:toolCall (tc2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="190" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="step8" value="renderToolCall(tc2)&#xa;→ appends to orphan #1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="240" width="280" height="50" as="geometry"/>
+    </mxCell>
+    
+    <!-- First thinking delta -->
+    <mxCell id="step9" value="chat:streamChunk&#xa;(thinking)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C2185B;fontSize=11;" vertex="1" parent="lane-mcp">
+      <mxGeometry x="10" y="240" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="step10" value="chat:streamChunk&#xa;(thinking)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="240" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="step11" value="maybeCloseCycle → openCycle(c1)&#xa;adoptPreCycleContainers(c1)&#xa;• c1.hasTools = true&#xa;• adoptedContainers = [orphan#1]&#xa;• tab.messages reordered: c1.entry BEFORE tool msgs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="310" width="280" height="80" as="geometry"/>
+    </mxCell>
+    
+    <!-- Token delta -->
+    <mxCell id="step12" value="chat:streamChunk&#xa;(token)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C2185B;fontSize=11;" vertex="1" parent="lane-mcp">
+      <mxGeometry x="10" y="310" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="step13" value="ensureBubble(c1) + append content" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="410" width="280" height="50" as="geometry"/>
+    </mxCell>
+    
+    <!-- Stream complete -->
+    <mxCell id="step14" value="chat:streamComplete" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8BBD0;strokeColor=#C2185B;fontSize=11;" vertex="1" parent="lane-mcp">
+      <mxGeometry x="10" y="410" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="step15" value="chat:streamComplete" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="410" width="160" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="step16" value="closeCycle(turn-end)&#xa;placeAdoptedContainers(c1)&#xa;DOM order: THINK(c1) → BUBBLE → TOOLS(orphan#1)&#xa;chat:saveState (debounced)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="480" width="280" height="80" as="geometry"/>
+    </mxCell>
+    
+    <!-- Edges -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step1" target="step2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step2" target="step3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step3" target="step4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step4" target="step5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step5" target="step6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step6" target="step7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step7" target="step8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step8" target="step9">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step9" target="step10">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step10" target="step11">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step11" target="step12">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step12" target="step13">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step13" target="step14">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step14" target="step15">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="step15" target="step16">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

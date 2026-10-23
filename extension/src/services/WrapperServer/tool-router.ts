@@ -57,11 +57,34 @@ export class ToolRouter {
       return this.rewriteFindToolsResponse(result);
     }
     if (isLocalTool(toolName)) return executeLocalTool(toolName, innerArgs);
+    // File tools discovered at runtime (export_docx, …) may not be in any tool
+    // list yet — resolve their schema once before deciding how to proxy.
+    if ("file_path" in innerArgs && !this.deps.base64Proxy.needsInputProxy(toolName)) {
+      await this.ensureProxyDetection(toolName);
+    }
     const proxied = this.deps.base64Proxy.proxyInput(toolName, innerArgs);
     const finalArgs = this.deps.base64Proxy.wrapDynamicTool(args, proxied);
     let result = await this.deps.restCallTool("execute_dynamic_tool", finalArgs);
     result = this.deps.base64Proxy.proxyOutput(toolName, innerArgs, result);
     return result;
+  }
+
+  /**
+   * Best-effort schema lookup for a dynamic tool so the proxy contract
+   * (file_path ↔ content_base64 / output_base64) applies on first use.
+   * Tools without the markers are simply not registered.
+   */
+  private async ensureProxyDetection(toolName: string): Promise<void> {
+    try {
+      const result = await this.deps.restCallTool("find_tools", { query: toolName, top_k: 10 });
+      const text = result?.content?.[0]?.text;
+      if (!text) return;
+      const parsed = JSON.parse(text);
+      const tools = Array.isArray(parsed?.tools) ? parsed.tools : parsed;
+      if (Array.isArray(tools)) this.deps.base64Proxy.registerTools(tools);
+    } catch {
+      // Detection is additive; the call proceeds unchanged when the lookup fails.
+    }
   }
 
   /**
@@ -75,6 +98,9 @@ export class ToolRouter {
       const tools = parsed.tools || parsed;
       if (!Array.isArray(tools)) return result;
       const merged = this.mergeLocalToolDefinitions(tools);
+      // Catalog entries may be the only schemas the agent ever sees for dynamic
+      // tools (export_docx, export_pdf, …) — register them for input/output proxying.
+      this.deps.base64Proxy.registerTools(merged as Array<{ name: string; description?: string; schema?: Record<string, unknown> }>);
       const rewritten = this.deps.base64Proxy.rewriteSchemasForLlm(merged);
       const output = parsed.tools ? { ...parsed, tools: rewritten } : rewritten;
       return { ...result, content: [{ type: "text", text: JSON.stringify(output) }] };

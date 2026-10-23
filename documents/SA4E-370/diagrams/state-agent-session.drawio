@@ -1,0 +1,320 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+
+<!-- States -->
+<mxCell id="s_created" value="SessionCreated" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=11;fontStyle=1;">
+<mxGeometry x="100" y="100" width="160" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_wiring" value="AgentWiring" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f57f17;fontSize=11;">
+<mxGeometry x="320" y="100" width="160" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_persona" value="PersonaInjection" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8e1;strokeColor=#f57f17;fontSize=11;">
+<mxGeometry x="540" y="100" width="180" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_budget" value="BudgetGateCheck" vertex="1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=11;">
+<mxGeometry x="780" y="100" width="160" height="80" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_role" value="RoleScoping" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;">
+<mxGeometry x="540" y="240" width="180" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_loadout" value="LoadoutSkillsSteering" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#388e3c;fontSize=11;">
+<mxGeometry x="780" y="240" width="200" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_success" value="WiringSuccess" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;fontStyle=1;">
+<mxGeometry x="1040" y="240" width="160" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_active" value="AgentActive" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=12;fontStyle=1;">
+<mxGeometry x="540" y="380" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_turn" value="TurnExecution" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c2185b;fontSize=11;">
+<mxGeometry x="320" y="380" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_gov" value="GovernancePipeline" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c2185b;fontSize=11;">
+<mxGeometry x="100" y="380" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_llm" value="LLMCall" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontSize=11;">
+<mxGeometry x="100" y="520" width="160" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_response" value="ResponseReturned" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;">
+<mxGeometry x="320" y="520" width="180" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_failed" value="WiringFailed" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;">
+<mxGeometry x="1040" y="100" width="160" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="s_disposed" value="SessionDisposed" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontSize=11;">
+<mxGeometry x="100" y="680" width="160" height="60" as="geometry"/>
+</mxCell>
+
+<!-- Start/End -->
+<mxCell id="start" value="" vertex="1" parent="1" style="ellipse;fillColor=#000000;html=1;">
+<mxGeometry x="170" y="30" width="20" height="20" as="geometry"/>
+</mxCell>
+
+<mxCell id="end" value="" vertex="1" parent="1" style="ellipse;fillColor=#000000;html=1;">
+<mxGeometry x="170" y="740" width="20" height="20" as="geometry"/>
+</mxCell>
+
+<!-- Transitions -->
+<mxCell id="t1" edge="1" parent="1" source="start" target="s_created" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="t2" edge="1" parent="1" source="s_created" target="s_wiring" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="260" y="130" as="sourcePoint"/>
+<mxPoint x="320" y="130" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t3" edge="1" parent="1" source="s_wiring" target="s_persona" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="480" y="130" as="sourcePoint"/>
+<mxPoint x="540" y="130" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t4" edge="1" parent="1" source="s_persona" target="s_budget" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="720" y="130" as="sourcePoint"/>
+<mxPoint x="780" y="130" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t5" edge="1" parent="1" source="s_budget" target="s_role" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="780" y="180" as="sourcePoint"/>
+<mxPoint x="720" y="240" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t6" edge="1" parent="1" source="s_budget" target="s_failed" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;strokeColor=#b85450;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="940" y="130" as="sourcePoint"/>
+<mxPoint x="1040" y="130" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t7" edge="1" parent="1" source="s_role" target="s_loadout" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="720" y="300" as="sourcePoint"/>
+<mxPoint x="780" y="300" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t8" edge="1" parent="1" source="s_loadout" target="s_success" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="980" y="270" as="sourcePoint"/>
+<mxPoint x="1040" y="270" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t9" edge="1" parent="1" source="s_success" target="s_active" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="1040" y="300" as="sourcePoint"/>
+<mxPoint x="1040" y="380" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t10" edge="1" parent="1" source="s_failed" target="s_active" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;dashed=1;strokeColor=#b85450;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="1040" y="160" as="sourcePoint"/>
+<mxPoint x="1040" y="380" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t11" edge="1" parent="1" source="s_active" target="s_turn" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="540" y="415" as="sourcePoint"/>
+<mxPoint x="500" y="415" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t12" edge="1" parent="1" source="s_turn" target="s_gov" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="320" y="415" as="sourcePoint"/>
+<mxPoint x="280" y="415" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t13" edge="1" parent="1" source="s_gov" target="s_llm" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="180" y="450" as="sourcePoint"/>
+<mxPoint x="180" y="520" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t14" edge="1" parent="1" source="s_llm" target="s_response" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="260" y="550" as="sourcePoint"/>
+<mxPoint x="320" y="550" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t15" edge="1" parent="1" source="s_response" target="s_active" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="400" y="550" as="sourcePoint"/>
+<mxPoint x="540" y="415" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t16" edge="1" parent="1" source="s_active" target="s_wiring" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;dashed=1;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="540" y="380" as="sourcePoint"/>
+<mxPoint x="540" y="240" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t17" edge="1" parent="1" source="s_active" target="s_disposed" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="180" y="450" as="sourcePoint"/>
+<mxPoint x="180" y="680" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="t18" edge="1" parent="1" source="s_disposed" target="end" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;strokeWidth=2;">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="180" y="740" as="sourcePoint"/>
+<mxPoint x="180" y="740" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<!-- Labels on transitions -->
+<mxCell id="l1" value="Tab opened /\ngetOrCreateSession" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="180" y="80" width="120" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l2" value="SELECT_AGENT\nreceived" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="380" y="80" width="120" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l3" value="Load + parse\nagent file" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="580" y="80" width="120" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l4" value="Inject\npersonaBody" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="740" y="80" width="100" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l5" value="Budget OK" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="860" y="180" width="80" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l6" value="PI_CONTEXT_\nBUDGET_EXCEEDED" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="920" y="80" width="100" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l7" value="Set role/phase\nfrom agent" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="640" y="240" width="100" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l8" value="buildSessionToolLoadout\napplyScopedSkills\nscopedSteering" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="880" y="240" width="140" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l9" value="AGENT_SWITCHED\nemitted" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="1100" y="240" width="120" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l10" value="Keep previous agent\n+ error emitted" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="1080" y="80" width="120" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l11" value="User sends\nprompt" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="400" y="380" width="100" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l12" value="Budget gate →\nauto-chunk →\nTurnBudgetGuard →\ncontext pipeline" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="140" y="380" width="120" height="60" as="geometry"/>
+</mxCell>
+
+<mxCell id="l13" value="Context\nprepared" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="130" y="470" width="80" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l14" value="LLM\nresponds" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="130" y="550" width="80" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l15" value="History updated\nTokens accounted" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="380" y="550" width="120" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l16" value="SELECT_AGENT\n(switch agent)" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="460" y="300" width="100" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l17" value="Tab closed" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="180" y="600" width="80" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="l18" value="Cleanup token\naccounting, history" vertex="1" parent="1" style="html=1;fontSize=9;strokeColor=none;fillColor=none;align=center;">
+<mxGeometry x="180" y="700" width="100" height="40" as="geometry"/>
+</mxCell>
+
+<!-- Legend / Notes -->
+<mxCell id="note1" value="Key States" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontSize=11;fontStyle=1;">
+<mxGeometry x="1000" y="520" width="200" height="240" as="geometry"/>
+</mxCell>
+
+<mxCell id="n1" value="🔵 SessionCreated - Initial state after tab open" vertex="1" parent="note1" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="30" width="200" height="25" as="geometry"/>
+</mxCell>
+
+<mxCell id="n2" value="🟡 AgentWiring / PersonaInjection / BudgetGateCheck - Wiring phase" vertex="1" parent="note1" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="55" width="200" height="30" as="geometry"/>
+</mxCell>
+
+<mxCell id="n3" value="🟢 RoleScoping / LoadoutSkillsSteering / WiringSuccess - Role setup" vertex="1" parent="note1" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="85" width="200" height="30" as="geometry"/>
+</mxCell>
+
+<mxCell id="n4" value="🟢 AgentActive - Steady state (agent driving turns)" vertex="1" parent="note1" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="115" width="200" height="30" as="geometry"/>
+</mxCell>
+
+<mxCell id="n5" value="🔴 TurnExecution / GovernancePipeline / LLMCall / ResponseReturned - Turn cycle" vertex="1" parent="note1" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="145" width="200" height="35" as="geometry"/>
+</mxCell>
+
+<mxCell id="n6" value="🟠 WiringFailed - Budget reject or parse error (keeps previous agent)" vertex="1" parent="note1" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="180" width="200" height="30" as="geometry"/>
+</mxCell>
+
+<mxCell id="n7" value="⚪ SessionDisposed - Tab closed, cleanup" vertex="1" parent="note1" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="210" width="200" height="30" as="geometry"/>
+</mxCell>
+
+<!-- Business Rules Box -->
+<mxCell id="brBox" value="Business Rules in State Machine" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontSize=11;fontStyle=1;">
+<mxGeometry x="1000" y="380" width="200" height="130" as="geometry"/>
+</mxCell>
+
+<mxCell id="br1" value="BR-01: Persona injection via governance" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="30" width="200" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="br2" value="BR-02: Budget gate counts persona tokens" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="55" width="200" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="br3" value="BR-07: Fail-open on role error" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="80" width="200" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="br4" value="BR-S2-01: AGENT_SWITCHED only after WiringSuccess" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="105" width="200" height="25" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

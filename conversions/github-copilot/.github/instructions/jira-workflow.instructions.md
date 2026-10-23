@@ -18,7 +18,7 @@ applyTo: '**'
 
 ## Document Attachments
 - Naming: `{DOC}-v{version}-{TICKET}.docx`
-- Process: embed_images → export_docx → jira_update_issue
+- Process: embed_image → export_docx → jira_update_issue
 - Attach IMMEDIATELY after each phase, not at end of pipeline
 
 ## Rules

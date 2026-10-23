@@ -10,8 +10,8 @@
     "ux"
   ],
   "jiraUrl": "https://jiraassist.atlassian.net/browse/SA4E-372",
-  "jiraStatus": "To Do",
-  "currentPhase": "testing_done_commit_pending",
+  "jiraStatus": "Done",
+  "currentPhase": "deployment_done",
   "relatedTickets": [
     "SA4E-369"
   ],
@@ -96,13 +96,38 @@
     },
     "implementation": {
       "status": "completed",
-      "rounds": ["S1 per-cycle machinery", "S1b ChatHtmlBuilder wiring", "S1c gate-fix 200ln", "S1d QA defects", "S1e checkpoint soft-fail", "S1f contract flip", "S1g orphan adoption (R1 legacy)", "S1h think-only replay parity"],
-      "files": ["webview-assets/chat/chat-cycle.js (new, 199ln)", "webview-assets/chat/chat-blocks.css (new, 44ln)", "webview-assets/chat/chat-stream.js (87ln)", "webview-assets/chat/chat-tools.js (per-cycle rewrite)", "webview-assets/chat/chat-toolcall.js (197ln)", "webview-assets/chat/chat-tool-helpers.js (198ln)", "webview-assets/chat/chat-toolupdate.js", "webview-assets/chat/chat-messages.js (112ln)", "webview-assets/chat/chat-pipeline.js", "webview-assets/chat/chat-core.js", "webview-assets/chat/chat-tabsync.js", "src/chat-panel/ChatHtmlBuilder.ts (runtime wiring)", "src/pi-workflow/remote-checkpointer-store.ts (122ln, checkpoint soft-fail)"],
+      "rounds": [
+        "S1 per-cycle machinery",
+        "S1b ChatHtmlBuilder wiring",
+        "S1c gate-fix 200ln",
+        "S1d QA defects",
+        "S1e checkpoint soft-fail",
+        "S1f contract flip",
+        "S1g orphan adoption (R1 legacy)",
+        "S1h think-only replay parity"
+      ],
+      "files": [
+        "webview-assets/chat/chat-cycle.js (new, 199ln)",
+        "webview-assets/chat/chat-blocks.css (new, 44ln)",
+        "webview-assets/chat/chat-stream.js (87ln)",
+        "webview-assets/chat/chat-tools.js (per-cycle rewrite)",
+        "webview-assets/chat/chat-toolcall.js (197ln)",
+        "webview-assets/chat/chat-tool-helpers.js (198ln)",
+        "webview-assets/chat/chat-toolupdate.js",
+        "webview-assets/chat/chat-messages.js (112ln)",
+        "webview-assets/chat/chat-pipeline.js",
+        "webview-assets/chat/chat-core.js",
+        "webview-assets/chat/chat-tabsync.js",
+        "src/chat-panel/ChatHtmlBuilder.ts (runtime wiring)",
+        "src/pi-workflow/remote-checkpointer-store.ts (122ln, checkpoint soft-fail)"
+      ],
       "note": "Tất cả file ≤200 physical lines (BR-18); webview chat split leftovers (BR-18 e9c6779) ride cùng commit — không có chúng repo không build được panel"
     },
     "user_guide": {
-      "status": "not_started",
-      "note": "Hoãn lại — UI tính năng mô tả nội bộ, README đã ghi changelog"
+      "status": "done",
+      "note": "UG.md exists (ui-agent)",
+      "file": "UG.md",
+      "completedAt": "2026-10-23T09:40:00+07:00"
     },
     "testing": {
       "status": "completed",
@@ -118,8 +143,9 @@
       }
     },
     "deployment": {
-      "status": "commit_ready",
-      "note": "vsix 1.53.10 build+install Kiro; commit SA4E-372 ready (include BR-18 webview split + all feature files + 3 test files); EXCLUDE: eslint.config.js + resources/.code-intel/** + 7 webview-assets deletions (other workstream); await user push decision"
+      "status": "done",
+      "note": "commits 2363101,07b88e8,a1ed67c merged to main; release v1.54.0+; TEST-REPORT created",
+      "completedAt": "2026-10-23T09:40:00+07:00"
     }
   },
   "requirementsSource": {
@@ -150,6 +176,6 @@
     "AC9 (Cross): Gap protocol chat:chatHistory (message-protocol.ts:98) được giải quyết — hoặc được sử dụng hiệu quả hoặc cleanup với rationale rõ trong TDD",
     "AC10 (Cross): No regression — các chatbox test hiện có vẫn green; thêm test case persist/restore cho scenario destroy/recreate"
   ],
-  "lastUpdated": "2026-10-18T17:20:24+07:00",
+  "lastUpdated": "2026-10-23T09:50:00+07:00",
   "lastCommentProcessed": "2026-10-18T17:20:24+07:00"
 }

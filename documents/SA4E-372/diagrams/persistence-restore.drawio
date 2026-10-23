@@ -1,0 +1,143 @@
+<mxGraphModel dx="1184" dy="770" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <!-- Lanes -->
+    <mxCell id="lane-user" value="User" style="swimlane;html=1;startSize=30;horizontal=0;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="10" y="10" width="180" height="720" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-webview" value="Webview" style="swimlane;html=1;startSize=30;horizontal=0;fillColor=#E3F2FD;strokeColor=#1565C0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="10" width="300" height="720" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-ext" value="Extension Host" style="swimlane;html=1;startSize=30;horizontal=0;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="510" y="10" width="300" height="720" as="geometry"/>
+    </mxCell>
+    <mxCell id="lane-ws" value="WorkspaceState" style="swimlane;html=1;startSize=30;horizontal=0;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="820" y="10" width="300" height="720" as="geometry"/>
+    </mxCell>
+    
+    <!-- DURING SESSION -->
+    <mxCell id="label-session" value="DURING SESSION" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EAF6;strokeColor=#303F9F;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="10" y="60" width="1140" height="35" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="s1" value="chat:saveState&#xa;(debounced 500ms)&#xa;{ tabs, activeTabId, messageHistory }" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="110" width="280" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="s2" value="handleBuiltinChatMessage&#xa;chat:saveState" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="110" width="160" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="s3" value="stateManager.saveChatState(payload)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="180" width="160" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="s4" value="update('chatPanel.state', payload)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontSize=11;" vertex="1" parent="lane-ws">
+      <mxGeometry x="10" y="110" width="160" height="55" as="geometry"/>
+    </mxCell>
+    
+    <!-- WEBVIEW DESTROY / RELOAD -->
+    <mxCell id="label-reload" value="WEBVIEW DESTROY / RELOAD / RESTART" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFEBEE;strokeColor=#C62828;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="10" y="260" width="1140" height="35" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="r1" value="Open chat panel" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#2E7D32;fontSize=11;" vertex="1" parent="lane-user">
+      <mxGeometry x="10" y="310" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2" value="ready" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="310" width="160" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="r3" value="resolveWebviewView()&#xa;loadChatState()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="310" width="160" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4" value="loadChatState()&#xa;→ returns saved payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontSize=11;" vertex="1" parent="lane-ws">
+      <mxGeometry x="10" y="310" width="160" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5" value="postMessage&#xa;tab:updated { tabs, activeTabId, messageHistory }" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="380" width="280" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6" value="handleTabsUpdated(payload)&#xa;→ renderTabBar() → switchToTab()&#xa;→ renderChatHistory(tab.messages)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="380" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="r7" value="Full transcript restored with&#xa;all loops, tools, collapse states" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="480" width="280" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="r8" value="Toast: 'Restored N turns&#xa;from workspace'" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="550" width="280" height="45" as="geometry"/>
+    </mxCell>
+    
+    <!-- NEW: chat:chatHistory protocol -->
+    <mxCell id="label-new" value="NEW: chat:chatHistory PROTOCOL (SA4E-372 R3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="10" y="610" width="1140" height="35" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="n1" value="chat:chatHistory (request)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="660" width="280" height="45" as="geometry"/>
+    </mxCell>
+    <mxCell id="n2" value="handleChatHistoryRequest()&#xa;loadChatState()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="660" width="160" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="n3" value="loadChatState()&#xa;→ returns saved payload" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;fontSize=11;" vertex="1" parent="lane-ws">
+      <mxGeometry x="10" y="660" width="160" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="n4" value="postMessage&#xa;chat:chatHistory { messages: transcript[] }" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;fontSize=11;" vertex="1" parent="lane-ext">
+      <mxGeometry x="10" y="730" width="280" height="55" as="geometry"/>
+    </mxCell>
+    <mxCell id="n5" value="renderChatHistory(messages)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#BBDEFB;strokeColor=#1565C0;fontSize=11;" vertex="1" parent="lane-webview">
+      <mxGeometry x="10" y="730" width="280" height="55" as="geometry"/>
+    </mxCell>
+    
+    <!-- Edges -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="s1" target="s2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="s2" target="s3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="s3" target="s4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="r1" target="r2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="r2" target="r3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="r3" target="r4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="r4" target="r3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="r3" target="r5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="r5" target="r6">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="r6" target="r7">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2E7D32;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="r7" target="r8">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;strokeDasharray=5 5;" edge="1" parent="1" source="r2" target="n1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="n1" target="n2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="n2" target="n3">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7B1FA2;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="n3" target="n2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#EF6C00;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="n2" target="n4">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1565C0;strokeWidth=2;endArrow=block;" edge="1" parent="1" source="n4" target="n5">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

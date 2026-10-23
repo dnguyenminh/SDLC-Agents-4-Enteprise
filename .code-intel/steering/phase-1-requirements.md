@@ -102,9 +102,9 @@ If diagrams missing → invoke BA again:
 ### Step 6: Attach to Jira (MANDATORY)
 
 ```
-embed_images(file_path="documents/{TICKET}/BRD.md", output_path="documents/{TICKET}/BRD-embedded.md")
-export_docx(file_path="documents/{TICKET}/BRD-embedded.md", file_name="BRD-v1-{TICKET}")
-jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{TICKET}/BRD-v1-{TICKET}.docx")
+embed_image(file_path="documents/{TICKET}/BRD.md", output_path="documents/{TICKET}/BRD-embedded.md")
+execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/BRD-embedded.md", file_name="BRD-v1-{TICKET}", output_path="documents/{TICKET}/BRD-v1-{TICKET}.docx"})
+jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/BRD-v1-{TICKET}.docx")
 ```
 
 Also attach all `.drawio` files from `documents/{TICKET}/diagrams/`.

@@ -2,7 +2,16 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
 
+// BR-18 (SA4E-223): file size standard — max 200 lines (incl. comments/blanks).
+// 'warn' here for visibility on legacy files; the hard gate lives in
+// scripts/check-line-count.sh (error, changed-files-only) wired into CI + pre-commit.
+// Vendored/generated trees are ignored in the global ignores block above.
+const fileSizeRules = {
+  'max-lines': ['warn', { max: 200, skipBlankLines: false, skipComments: false }],
+};
+
 const sharedRules = {
+  ...fileSizeRules,
   '@typescript-eslint/no-explicit-any': 'off',
   '@typescript-eslint/no-unused-vars': 'off',
   '@typescript-eslint/no-floating-promises': 'off',

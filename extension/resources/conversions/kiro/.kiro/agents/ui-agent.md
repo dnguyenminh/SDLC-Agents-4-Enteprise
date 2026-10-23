@@ -264,8 +264,8 @@ After creating UI-SPEC.md with wireframe references:
 
 1. Use **relative paths** for all images: `![Screen Name](diagrams/ui-{screen-name}.png)`
 2. **⛔ KHÔNG embed base64** vào UI-SPEC.md — chỉ dùng relative paths
-3. `embed_images` tool CHỈ được gọi khi cần **export DOCX** (vì DOCX tool không có filesystem access)
-4. Workflow export DOCX: copy file → embed_images (tạo bản tạm có base64) → export_docx → xóa bản tạm
+3. `embed_image` tool CHỈ được gọi khi cần **export DOCX** (vì DOCX tool không có filesystem access)
+4. Workflow export DOCX: copy file → embed_image (tạo bản tạm có base64) → export_docx → xóa bản tạm
 
 ### Step 7: Update FSD with UI Artifacts
 

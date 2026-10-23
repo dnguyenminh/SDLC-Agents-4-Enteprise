@@ -100,3 +100,6 @@ extension/src/__tests__/sa4e-356-sq1-outside/
 # SA4E derived artifacts (DOCX exports + embedded-md intermediates)
 documents/**/*.docx
 documents/*/*-embedded.md
+
+# code-intel runtime cache (machine-local, regenerated)
+.code-intel/models-cache/

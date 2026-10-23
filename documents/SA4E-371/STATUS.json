@@ -37,7 +37,14 @@
       "status": "done",
       "releasedVersion": "v1.53.11",
       "completedAt": "2026-10-18T19:50:00.000Z"
+    },
+    "user_guide": {
+      "status": "done",
+      "file": "UG.md",
+      "version": 1,
+      "completedAt": "2026-10-23T09:39:45+07:00"
     }
   },
-  "lastUpdated": "2026-10-18T19:50:00.000Z"
+  "lastUpdated": "2026-10-23T09:50:00+07:00",
+  "jiraStatus": "Done"
 }

@@ -98,9 +98,9 @@ After discovery, log:
 ### Quy trình attach (áp dụng cho mọi document):
 
 ```
-1. embed_images(file_path="documents/{TICKET}/{DOC}.md", output_path="documents/{TICKET}/{DOC}-embedded.md")
-2. export_docx(file_path="documents/{TICKET}/{DOC}-embedded.md", file_name="{DOC}-v{version}-{TICKET}")
-3. jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{TICKET}/{DOC}-v{version}-{TICKET}.docx")
+1. embed_image(file_path="documents/{TICKET}/{DOC}.md", output_path="documents/{TICKET}/{DOC}-embedded.md")
+2. execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/{DOC}-embedded.md", file_name="{DOC}-v{version}-{TICKET}"})
+3. jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/{DOC}-v{version}-{TICKET}.docx")
 ```
 
 ### Timing:
@@ -625,12 +625,12 @@ invokeSubAgent(
 5. Update STATUS: `requirements.status = "done"`, `requirements.version = 1`
 6. **Attach BRD to Jira** (MANDATORY — attach ngay sau khi phase hoàn thành):
    ```
-   // Export DOCX: embed_images → export_docx
-   embed_images(file_path="documents/{TICKET}/BRD.md", output_path="documents/{TICKET}/BRD-embedded.md")
-   export_docx(file_path="documents/{TICKET}/BRD-embedded.md", file_name="BRD-v1-{TICKET}")
+   // Export DOCX: embed_image → export_docx
+   embed_image(file_path="documents/{TICKET}/BRD.md", output_path="documents/{TICKET}/BRD-embedded.md")
+   execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/BRD-embedded.md", file_name="BRD-v1-{TICKET}"})
    
    // Attach to Jira
-   jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{TICKET}/BRD-v1-{TICKET}.docx")
+   jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/BRD-v1-{TICKET}.docx")
    ```
 7. Report: "✅ Phase 1 done — BRD.md created & attached to Jira. Chuyển sang Phase 2 (Specification)?"
 8. Wait for user confirmation.
@@ -682,12 +682,12 @@ invokeSubAgent(
 7. Update STATUS: `specification.status = "done"`, `specification.version = 1`
 8. **Attach FSD to Jira** (MANDATORY — attach ngay sau khi phase hoàn thành):
    ```
-   // Export DOCX: embed_images → export_docx
-   embed_images(file_path="documents/{TICKET}/FSD.md", output_path="documents/{TICKET}/FSD-embedded.md")
-   export_docx(file_path="documents/{TICKET}/FSD-embedded.md", file_name="FSD-v1-{TICKET}")
+   // Export DOCX: embed_image → export_docx
+   embed_image(file_path="documents/{TICKET}/FSD.md", output_path="documents/{TICKET}/FSD-embedded.md")
+   execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/FSD-embedded.md", file_name="FSD-v1-{TICKET}"})
    
    // Attach to Jira
-   jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{TICKET}/FSD-v1-{TICKET}.docx")
+   jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/FSD-v1-{TICKET}.docx")
    ```
 9. Report:
    ```
@@ -717,7 +717,7 @@ invokeSubAgent(
        name: "ui-agent",
        prompt: "{TICKET} — Phase 2.5: Tạo wireframes (draw.io) + UI-SPEC.md cho tất cả screens.
        Đọc FSD.md để xác định screens. Export PNG từ drawio. Embed images vào UI-SPEC.md.
-       ⛔ PHẢI có hình trong UI-SPEC.md (dùng embed_images tool sau khi viết xong)."
+       ⛔ PHẢI có hình trong UI-SPEC.md (dùng embed_image tool sau khi viết xong)."
      )
      ```
    - Verify: `documents/{TICKET}/UI-SPEC.md` exists, `diagrams/ui-*.drawio` files exist
@@ -746,12 +746,12 @@ invokeSubAgent(
 6. If no discrepancy → Update STATUS: `design.status = "done"`
 7. **Attach TDD to Jira** (MANDATORY — attach ngay sau khi phase hoàn thành):
    ```
-   // Export DOCX: embed_images → export_docx
-   embed_images(file_path="documents/{TICKET}/TDD.md", output_path="documents/{TICKET}/TDD-embedded.md")
-   export_docx(file_path="documents/{TICKET}/TDD-embedded.md", file_name="TDD-v1-{TICKET}")
+   // Export DOCX: embed_image → export_docx
+   embed_image(file_path="documents/{TICKET}/TDD.md", output_path="documents/{TICKET}/TDD-embedded.md")
+   execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/TDD-embedded.md", file_name="TDD-v1-{TICKET}"})
    
    // Attach to Jira
-   jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{TICKET}/TDD-v1-{TICKET}.docx")
+   jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/TDD-v1-{TICKET}.docx")
    ```
 8. **Verify diagrams exist** (MANDATORY):
    - Check `documents/{TICKET}/diagrams/` directory exists and has `.drawio` + `.png` files
@@ -903,14 +903,15 @@ If review found issues:
 2. Update STATUS: `test_planning.review = "approved"` (hoặc "approved_with_conditions")
 3. **Attach STP/STC to Jira** (MANDATORY — attach ngay sau khi phase hoàn thành):
    ```
-   // Export DOCX: embed_images → export_docx
-   embed_images(file_path="documents/{TICKET}/STP.md", output_path="documents/{TICKET}/STP-embedded.md")
-   export_docx(file_path="documents/{TICKET}/STP-embedded.md", file_name="STP-v1-{TICKET}")
-   embed_images(file_path="documents/{TICKET}/STC.md", output_path="documents/{TICKET}/STC-embedded.md")
-   export_docx(file_path="documents/{TICKET}/STC-embedded.md", file_name="STC-v1-{TICKET}")
+   // Export DOCX: embed_image → export_docx
+   embed_image(file_path="documents/{TICKET}/STP.md", output_path="documents/{TICKET}/STP-embedded.md")
+   execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/STP-embedded.md", file_name="STP-v1-{TICKET}"})
+   embed_image(file_path="documents/{TICKET}/STC.md", output_path="documents/{TICKET}/STC-embedded.md")
+   execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/STC-embedded.md", file_name="STC-v1-{TICKET}"})
    
    // Attach to Jira
-   jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{TICKET}/STP-v1-{TICKET}.docx,documents/{TICKET}/STC-v1-{TICKET}.docx")
+   jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STP-v1-{TICKET}.docx")
+jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STC-v1-{TICKET}.docx")
    ```
 4. Report:
    ```

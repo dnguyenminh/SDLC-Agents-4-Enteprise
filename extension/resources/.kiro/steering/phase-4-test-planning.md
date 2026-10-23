@@ -119,11 +119,12 @@ Max 2 iterations. If still Critical issues → report to user.
 
 2. Attach to Jira (MANDATORY):
 ```
-embed_images(file_path="documents/{TICKET}/STP.md", output_path="documents/{TICKET}/STP-embedded.md")
-export_docx(file_path="documents/{TICKET}/STP-embedded.md", file_name="STP-v1-{TICKET}")
-embed_images(file_path="documents/{TICKET}/STC.md", output_path="documents/{TICKET}/STC-embedded.md")
-export_docx(file_path="documents/{TICKET}/STC-embedded.md", file_name="STC-v1-{TICKET}")
-jira_update_issue(issue_key: "{TICKET}", fields: "{}", attachments: "documents/{TICKET}/STP-v1-{TICKET}.docx,documents/{TICKET}/STC-v1-{TICKET}.docx")
+embed_image(file_path="documents/{TICKET}/STP.md", output_path="documents/{TICKET}/STP-embedded.md")
+execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/STP-embedded.md", file_name="STP-v1-{TICKET}", output_path="documents/{TICKET}/STP-v1-{TICKET}.docx"})
+embed_image(file_path="documents/{TICKET}/STC.md", output_path="documents/{TICKET}/STC-embedded.md")
+execute_dynamic_tool(toolName="export_docx", arguments={file_path="documents/{TICKET}/STC-embedded.md", file_name="STC-v1-{TICKET}", output_path="documents/{TICKET}/STC-v1-{TICKET}.docx"})
+jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STP-v1-{TICKET}.docx")
+jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STC-v1-{TICKET}.docx")
 ```
 
 3. Report:

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.54.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.3-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.54.0.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.3.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.54.0.vsix
+code --install-extension sdlc-agents-4-enterprise-1.55.3.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.3 (2026-10-23)
+
+- **SA4E-380: Content Proxy for child MCP tools** — backend content-proxy layer (`content-proxy/`): convention detection + escape hatch, in-place schema adaptation (`content_base64`/`x-content-param`/`x-output-base64`), invocation adaptation (strict UTF-8 base64, strip wrapper-only args), transport-agnostic artifact retrieval (inline → MCP resource → http(s) → data URI → local, 25 MB cap), multi-file `outputs[]`, host-path stripping. Zero new tools. Extension output-proxy fail-loud (`PROXY_WRITE_FAILED` zero/X-Y, extension-side `ARTIFACT_FETCH_FAILED`). Tests: backend content-proxy 21/21, extension 3,255/6 skipped, live 6/6 exporters. Docs: BRD/FSD/TDD/STP/STC/SECURITY-REVIEW (F-01 High: local-read confinement binding cho cleanup OI-14/OI-15)
 
 ### v1.54.0 (2026-10-21)
 

@@ -1,0 +1,63 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+<mxCell id="system" value="SA4E Chatbox Extension (Custom Agents)" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;verticalAlign=top;fontSize=14;fontStyle=1;">
+<mxGeometry x="280" y="60" width="560" height="700" as="geometry"/>
+</mxCell>
+<mxCell id="actorUser" value="Extension User (P1)" vertex="1" parent="1" style="shape=mxgraph.flowchart.person;whiteSpace=wrap;html=1;">
+<mxGeometry x="80" y="160" width="120" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="actorDev" value="Extension Developer (P2)" vertex="1" parent="1" style="shape=mxgraph.flowchart.person;whiteSpace=wrap;html=1;">
+<mxGeometry x="80" y="420" width="120" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="actorMaint" value="Extension Maintainer (P3)" vertex="1" parent="1" style="shape=mxgraph.flowchart.person;whiteSpace=wrap;html=1;">
+<mxGeometry x="880" y="420" width="140" height="100" as="geometry"/>
+</mxCell>
+<mxCell id="uc1" value="UC-2&#10;Select agent for tab" vertex="1" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;">
+<mxGeometry x="70" y="120" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc2" value="UC-3&#10;Agent drives turn&#10;(persona + role-scoped engine)" vertex="1" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;">
+<mxGeometry x="330" y="120" width="200" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc3" value="UC-4&#10;Per-tab session isolation&#10;(budget + compaction per tab)" vertex="1" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;">
+<mxGeometry x="70" y="280" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc4" value="View agent badge&#10;&amp; switch indicator" vertex="1" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;">
+<mxGeometry x="330" y="280" width="200" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc5" value="UC-1&#10;Define custom agent (.md v2)" vertex="1" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;">
+<mxGeometry x="70" y="440" width="180" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc6" value="Agent discovery&#10;&amp; hot-reload" vertex="1" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;">
+<mxGeometry x="330" y="440" width="200" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="uc7" value="Maintain governance layers&#10;(budget gate / auto-chunk / guards)" vertex="1" parent="system" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;">
+<mxGeometry x="180" y="590" width="220" height="80" as="geometry"/>
+</mxCell>
+<mxCell id="e1" edge="1" parent="1" source="actorUser" target="uc1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e2" edge="1" parent="1" source="actorUser" target="uc3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e3" edge="1" parent="1" source="actorUser" target="uc4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e4" edge="1" parent="1" source="actorDev" target="uc5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e5" edge="1" parent="1" source="actorMaint" target="uc7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e6" edge="1" parent="1" source="uc1" target="uc2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e7" edge="1" parent="1" source="uc5" target="uc6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+<mxCell id="e8" edge="1" parent="1" source="uc1" target="uc4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

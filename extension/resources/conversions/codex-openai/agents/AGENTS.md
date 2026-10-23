@@ -44,7 +44,7 @@ Then execute via: `execute_dynamic_tool(tool_name: "...", arguments: {...})`
 
 - Location: `documents/{TICKET}/`
 - Diagrams: `documents/{TICKET}/diagrams/` (.drawio + .png)
-- Format: Markdown → DOCX (via embed_images → export_docx)
+- Format: Markdown → DOCX (via embed_image → export_docx)
 - Naming: `{DOC}-v{version}-{TICKET}.docx`
 
 ### Draw.io Rules

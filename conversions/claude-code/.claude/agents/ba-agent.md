@@ -297,9 +297,9 @@ Report: "📚 BRD ingested into workspace memory for cross-agent access."
 
 **CRITICAL — This step MUST be executed. Do NOT skip it.**
 
-**Flow: embed_images → export_docx(file_path=...)**
+**Flow: embed_image → execute_dynamic_tool(toolName="export_docx", arguments={file_path=...})**
 
-1. Call `embed_images` tool (via `execute_dynamic_tool`) to create self-contained markdown:
+1. Call `embed_image` tool (via `execute_dynamic_tool`) to create self-contained markdown:
    - `file_path`: absolute path to `documents/{TICKET-KEY}/BRD.md`
    - `output_path`: absolute path to `documents/{TICKET-KEY}/BRD-embedded.md`
    - This replaces all `![](diagrams/...)` with inline base64 data URIs
@@ -424,9 +424,9 @@ Report: "📚 FSD ingested into workspace memory for cross-agent access."
 
 **CRITICAL — This step MUST be executed. Do NOT skip it.**
 
-**Flow: embed_images → export_docx(file_path=...)**
+**Flow: embed_image → execute_dynamic_tool(toolName="export_docx", arguments={file_path=...})**
 
-1. Call `embed_images` tool (via `execute_dynamic_tool`) to create self-contained markdown:
+1. Call `embed_image` tool (via `execute_dynamic_tool`) to create self-contained markdown:
    - `file_path`: absolute path to `documents/{TICKET-KEY}/FSD.md`
    - `output_path`: absolute path to `documents/{TICKET-KEY}/FSD-embedded.md`
 2. Call `export_docx` tool (via `execute_dynamic_tool`) with **file_path**:

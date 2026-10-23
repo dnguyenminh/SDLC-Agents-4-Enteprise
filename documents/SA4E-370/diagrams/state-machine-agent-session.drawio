@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+
+<!-- Start state -->
+<mxCell id="n1" value="[*]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#82b366;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="60" y="100" width="30" height="30" as="geometry"/>
+</mxCell>
+
+<!-- SessionCreated -->
+<mxCell id="n2" value="SessionCreated&#xa;Tab opened /&#xa;getOrCreateSession" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="120" y="80" width="180" height="80" as="geometry"/>
+</mxCell>
+
+<!-- AgentWiring -->
+<mxCell id="n3" value="AgentWiring&#xa;SELECT_AGENT received" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="340" y="80" width="180" height="60" as="geometry"/>
+</mxCell>
+
+<!-- PersonaInjection -->
+<mxCell id="n4" value="PersonaInjection&#xa;Load + parse&#xa;agent file" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="560" y="80" width="180" height="70" as="geometry"/>
+</mxCell>
+
+<!-- BudgetGateCheck -->
+<mxCell id="n5" value="BudgetGateCheck&#xa;Inject personaBody&#xa;runSessionBudgetGate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="780" y="80" width="180" height="80" as="geometry"/>
+</mxCell>
+
+<!-- RoleScoping -->
+<mxCell id="n6" value="RoleScoping&#xa;Set role/phase&#xa;from agent def" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="1000" y="80" width="180" height="80" as="geometry"/>
+</mxCell>
+
+<!-- LoadoutSkillsSteering -->
+<mxCell id="n7" value="LoadoutSkillsSteering&#xa;buildSessionLoadout&#xa;applyScopedSkills&#xa;scopedSteering" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="1220" y="80" width="180" height="100" as="geometry"/>
+</mxCell>
+
+<!-- WiringSuccess -->
+<mxCell id="n8" value="WiringSuccess&#xa;Loadout+skills+steering&#xa;applied" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="1440" y="80" width="180" height="80" as="geometry"/>
+</mxCell>
+
+<!-- WiringFailed -->
+<mxCell id="n9" value="WiringFailed&#xa;PI_CONTEXT_BUDGET_EXCEEDED&#xa;or load/parse error" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="1440" y="200" width="220" height="80" as="geometry"/>
+</mxCell>
+
+<!-- AgentActive -->
+<mxCell id="n10" value="AgentActive&#xa;AGENT_SWITCHED emitted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="900" y="220" width="200" height="70" as="geometry"/>
+</mxCell>
+
+<!-- TurnExecution -->
+<mxCell id="n11" value="TurnExecution&#xa;User sends prompt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="700" y="340" width="180" height="60" as="geometry"/>
+</mxCell>
+
+<!-- GovernancePipeline -->
+<mxCell id="n12" value="GovernancePipeline&#xa;budget gate → auto-chunk&#xa;→ TurnBudgetGuard → context pipeline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="920" y="340" width="220" height="90" as="geometry"/>
+</mxCell>
+
+<!-- LLMCall -->
+<mxCell id="n13" value="LLM Call&#xa;Context prepared" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="1180" y="340" width="160" height="50" as="geometry"/>
+</mxCell>
+
+<!-- ResponseReturned -->
+<mxCell id="n14" value="ResponseReturned&#xa;LLM responds" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="1420" y="340" width="180" height="50" as="geometry"/>
+</mxCell>
+
+<!-- SessionDisposed -->
+<mxCell id="n15" value="SessionDisposed&#xa;Tab closed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+<mxGeometry x="100" y="340" width="160" height="60" as="geometry"/>
+</mxCell>
+
+<!-- End state -->
+<mxCell id="n16" value="[*]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b85450;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+<mxGeometry x="280" y="340" width="30" height="30" as="geometry"/>
+</mxCell>
+
+<!-- Edges -->
+<mxCell id="e1" value="Tab opened / getOrCreateSession" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n1" target="n2">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e2" value="SELECT_AGENT received" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n2" target="n3">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e3" value="Load + parse agent file" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n3" target="n4">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e4" value="Inject personaBody" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n4" target="n5">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e5" value="Budget OK" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n5" target="n6">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e6" value="PI_CONTEXT_BUDGET_EXCEEDED" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=9;color=#b85450;" edge="1" parent="1" source="n5" target="n9">
+<mxGeometry relative="1" as="geometry"><mxPoint x="960" y="160" as="sourcePoint"/><mxPoint x="1550" y="240" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e7" value="Set role/phase from agent" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n6" target="n7">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e8" value="Loadout + skills + steering applied" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n7" target="n8">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e9" value="AGENT_SWITCHED emitted" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n8" target="n10">
+<mxGeometry relative="1" as="geometry">
+<mxPoint x="1620" y="120" as="sourcePoint"/>
+<mxPoint x="1000" y="255" as="targetPoint"/>
+</mxGeometry>
+</mxCell>
+
+<mxCell id="e10" value="Keep previous agent + error" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=9;color=#b85450;" edge="1" parent="1" source="n9" target="n10">
+<mxGeometry relative="1" as="geometry"><mxPoint x="1550" y="240" as="sourcePoint"/><mxPoint x="1000" y="255" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e11" value="User sends prompt" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n10" target="n11">
+<mxGeometry relative="1" as="geometry"><mxPoint x="1000" y="290" as="sourcePoint"/><mxPoint x="790" y="370" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e12" value="Budget gate → auto-chunk → TurnBudgetGuard → context pipeline" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n11" target="n12">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e13" value="Context prepared" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n12" target="n13">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e14" value="LLM responds" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n13" target="n14">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e15" value="History updated, tokens accounted" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n14" target="n10">
+<mxGeometry relative="1" as="geometry"><mxPoint x="1600" y="365" as="sourcePoint"/><mxPoint x="1000" y="255" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e16" value="SELECT_AGENT (switch agent)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n10" target="n3">
+<mxGeometry relative="1" as="geometry"><mxPoint x="900" y="290" as="sourcePoint"/><mxPoint x="430" y="140" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e17" value="Tab closed" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=9;color=#b85450;" edge="1" parent="1" source="n10" target="n15">
+<mxGeometry relative="1" as="geometry"><mxPoint x="900" y="255" as="sourcePoint"/><mxPoint x="180" y="370" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e18" value="Cleanup token accounting&#xa;+ history" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n15" target="n16">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+</root>
+</mxGraphModel>

@@ -1,0 +1,179 @@
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+
+<!-- AgentDefinition Entity -->
+<mxCell id="entAgentDef" value="AgentDefinition" vertex="1" parent="1" style="swimlane;html=1;startSize=30;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=12;fontStyle=1;">
+<mxGeometry x="60" y="60" width="400" height="480" as="geometry"/>
+</mxCell>
+
+<mxCell id="ad_id" value="id : String [PK]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fillColor=#bbdefb;">
+<mxGeometry x="0" y="30" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="ad_name" value="name : String [Required]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="60" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="ad_desc" value="description : String [Required]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="90" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="ad_role" value="role : String [Optional]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="120" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="ad_phase" value="phase : String [Optional]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="150" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="ad_model" value="model : String [Optional]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="180" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="ad_persona" value="personaBody : String [Required]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="210" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="ad_filepath" value="filePath : String [Required]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="240" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="ad_modified" value="modifiedAt : Timestamp [Required]" vertex="1" parent="entAgentDef" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="270" width="400" height="30" as="geometry"/>
+</mxCell>
+
+<!-- AgentSession Entity -->
+<mxCell id="entSession" value="AgentSession" vertex="1" parent="1" style="swimlane;html=1;startSize=30;fillColor=#fff8e1;strokeColor=#f57f17;fontSize=12;fontStyle=1;">
+<mxGeometry x="520" y="60" width="400" height="520" as="geometry"/>
+</mxCell>
+
+<mxCell id="as_key" value="sessionKey : String [PK]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fillColor=#ffe0b2;">
+<mxGeometry x="0" y="30" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_ws" value="workspaceRoot : String [Required]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="60" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_tab" value="tabId : String [Required]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="90" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_agent" value="activeAgentId : String [FK]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="120" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_role" value="sessionRole : String [Required]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="150" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_phase" value="sessionPhase : String [Optional]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="180" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_tokens" value="tokenUsage : Number [Required]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="210" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_history" value="history : Turn[] [Required]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="240" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_created" value="createdAt : Timestamp [Required]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="270" width="400" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="as_updated" value="updatedAt : Timestamp [Required]" vertex="1" parent="entSession" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="300" width="400" height="30" as="geometry"/>
+</mxCell>
+
+<!-- Turn Entity -->
+<mxCell id="entTurn" value="Turn (History Entry)" vertex="1" parent="1" style="swimlane;html=1;startSize=30;fillColor=#fce4ec;strokeColor=#c2185b;fontSize=12;fontStyle=1;">
+<mxGeometry x="980" y="60" width="380" height="480" as="geometry"/>
+</mxCell>
+
+<mxCell id="t_id" value="turnId : String [PK]" vertex="1" parent="entTurn" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fillColor=#f8bbd0;">
+<mxGeometry x="0" y="30" width="380" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="t_tab" value="tabId : String [Required]" vertex="1" parent="entTurn" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="60" width="380" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="t_agent" value="agentId : String [FK, Required]" vertex="1" parent="entTurn" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="90" width="380" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="t_role" value="agentRole : String [Required]" vertex="1" parent="entTurn" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="120" width="380" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="t_prompt" value="prompt : String [Required]" vertex="1" parent="entTurn" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="150" width="380" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="t_resp" value="response : String [Required]" vertex="1" parent="entTurn" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="180" width="380" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="t_tokens" value="tokenCount : Number [Required]" vertex="1" parent="entTurn" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="210" width="380" height="30" as="geometry"/>
+</mxCell>
+<mxCell id="t_time" value="timestamp : Timestamp [Required]" vertex="1" parent="entTurn" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;">
+<mxGeometry x="0" y="240" width="380" height="30" as="geometry"/>
+</mxCell>
+
+<!-- Relationship Labels -->
+<mxCell id="rel1" value="N:1  activeAgentId" vertex="1" parent="1" style="html=1;fontSize=10;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;">
+<mxGeometry x="460" y="130" width="80" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="rel2" value="1:N  history" vertex="1" parent="1" style="html=1;fontSize=10;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;">
+<mxGeometry x="920" y="180" width="80" height="40" as="geometry"/>
+</mxCell>
+
+<mxCell id="rel3" value="N:1  driving agent" vertex="1" parent="1" style="html=1;fontSize=10;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;">
+<mxGeometry x="820" y="100" width="100" height="40" as="geometry"/>
+</mxCell>
+
+<!-- Edges: Using orthogonal edges instead of entityRelationEdgeStyle -->
+<mxCell id="e1" edge="1" parent="1" source="as_agent" target="ad_id" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#1976d2;strokeWidth=2;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e2" edge="1" parent="1" source="as_history" target="t_id" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f57f17;strokeWidth=2;endArrow=block;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<mxCell id="e3" edge="1" parent="1" source="t_agent" target="ad_id" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c2185b;strokeWidth=2;endArrow=block;dashed=1;">
+<mxGeometry relative="1" as="geometry"/>
+</mxCell>
+
+<!-- Legend -->
+<mxCell id="legend" value="Legend" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#9e9e9e;fontSize=11;fontStyle=1;">
+<mxGeometry x="60" y="570" width="300" height="180" as="geometry"/>
+</mxCell>
+
+<mxCell id="leg1" value="PK = Primary Key, FK = Foreign Key" vertex="1" parent="legend" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="30" width="300" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="leg2" value="Solid lines = Direct relationship" vertex="1" parent="legend" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="55" width="300" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="leg3" value="Dashed line = Reference via agentId in Turn" vertex="1" parent="legend" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="80" width="300" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="leg4" value="AgentDefinition: v2 agent file parsed" vertex="1" parent="legend" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="105" width="300" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="leg5" value="AgentSession: Per-tab session (workspaceRoot+tabId)" vertex="1" parent="legend" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="130" width="300" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="leg6" value="Turn: History entry tagged with driving agent" vertex="1" parent="legend" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="155" width="300" height="25" as="geometry"/>
+</mxCell>
+
+<!-- Business Rules Box -->
+<mxCell id="brBox" value="Key Business Rules" vertex="1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontSize=11;fontStyle=1;">
+<mxGeometry x="400" y="570" width="600" height="180" as="geometry"/>
+</mxCell>
+
+<mxCell id="br1" value="BR-S1-01: Agent id = filename without extension; unique per workspace" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="30" width="600" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="br2" value="BR-S1-02: personaBody = markdown body after frontmatter; used as system prompt" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="55" width="600" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="br3" value="BR-S3-01: sessionKey = workspaceRoot + tabId (concatenated)" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="80" width="600" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="br4" value='BR-S3-02: tabId always valid (never "default")' vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="105" width="600" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="br5" value="BR-S4-03: Turn tagged with agentId + agentRole (SHOULD)" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;">
+<mxGeometry x="0" y="130" width="600" height="25" as="geometry"/>
+</mxCell>
+<mxCell id="br6" value="Locked Rule: S3 design = SA4E-369 D1 (design once, dual consumption)" vertex="1" parent="brBox" style="shape=mxgraph.table.row;whiteSpace=wrap;html=1;fontSize=10;fontStyle=1;">
+<mxGeometry x="0" y="155" width="600" height="25" as="geometry"/>
+</mxCell>
+</root>
+</mxGraphModel>

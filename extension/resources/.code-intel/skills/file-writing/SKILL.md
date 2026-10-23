@@ -15,12 +15,16 @@ description: File writing standards — stream_write_file for large documents, D
 - Log a warning when falling back
 
 ## DOCX Export Process
-1. **Embed images first:** `embed_images(file_path="...", output_path="...-embedded.md")`
+1. **Embed images first:** `embed_image(file_path="...", output_path="...-embedded.md")`
    - Creates self-contained markdown with base64 images
    - ALWAYS use file_path, NEVER pass content as parameter
-2. **Export to DOCX:** `export_docx(file_path="...-embedded.md", file_name="{DOC}-v{ver}-{TICKET}")`
-3. **Copy to project:** `Copy-Item -Path "<returned>" -Destination "documents/{TICKET}/{DOC}-v{ver}-{TICKET}.docx"`
-4. **Cleanup:** Delete the temp `-embedded.md` file
+2. **Export to DOCX:** `execute_dynamic_tool(toolName="export_docx", arguments={file_path="...-embedded.md", file_name="{DOC}-v{ver}-{TICKET}", output_path="documents/{TICKET}/{DOC}-v{ver}-{TICKET}.docx"})`
+   - `export_docx` is a backend dynamic tool (not in `tools/list`). Discover it once with `find_tools("export docx", top_k=5)`; the wrapper also resolves its schema automatically on first use.
+   - The wrapper reads `file_path` and sends `content_base64`; the backend maps it to the converter's `markdown` argument, returns `output_base64`; the wrapper writes the file and returns its path as `file_path`.
+   - The same contract applies to `export_pdf`, `export_html`, `export_xlsx`, `export_pptx`, `export_json` (every `export_*` tool).
+   - If the backend cannot read an artifact it fails with `ARTIFACT_FETCH_FAILED` (never a bare path) — do not retry by passing a raw path.
+   - NEVER pass Markdown content in place of a path - a path string exported as content produces a DOCX containing that literal path
+3. **Cleanup:** Delete the temp `-embedded.md` file
 
 ## Naming Convention
 - `{DOC}-v{MAJOR}-{TICKET}.docx`

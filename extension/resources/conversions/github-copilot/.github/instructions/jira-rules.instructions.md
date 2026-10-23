@@ -38,9 +38,9 @@ applyTo: 'documents/**'
 
 ### Process
 ```
-1. embed_images(file_path, output_path)
-2. export_docx(file_path, file_name)
-3. jira_update_issue(issue_key, attachments: "...docx")
+1. embed_image(file_path, output_path)
+2. execute_dynamic_tool(toolName="export_docx", arguments={file_path, file_name})
+3. jira_attach_file(issue_key: {TICKET}, file_path: "...docx")
 ```
 
 ### Timing

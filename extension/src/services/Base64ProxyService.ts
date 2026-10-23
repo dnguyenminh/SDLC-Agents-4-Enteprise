@@ -53,10 +53,19 @@ export class Base64ProxyService {
    */
   constructor(private readonly workspaceRoot?: string | WorkspaceRootProvider) {}
 
-  /** Scan tool list from backend and auto-detect proxy requirements. */
+  /** Scan tool list from backend and auto-detect proxy requirements (replaces the known set). */
   detectFromToolList(tools: ToolSchema[]): void {
     this.base64InputTools.clear();
     this.base64OutputTools.clear();
+    this.registerTools(tools);
+  }
+
+  /**
+   * Add proxy requirements discovered later (find_tools catalog) without
+   * dropping the tools/list set. Catalog entries carry `schema`; tools/list
+   * entries carry `inputSchema` — detection handles both.
+   */
+  registerTools(tools: ToolSchema[]): void {
     for (const tool of tools) {
       if (hasBase64InputParam(tool)) {
         this.base64InputTools.add(tool.name);
@@ -132,7 +141,6 @@ export class Base64ProxyService {
   proxyOutput(toolName: string, args: Record<string, unknown>, result: any): any {
     return proxyToolOutput(
       {
-        isOutputTool: (name) => this.base64OutputTools.has(name),
         resolvePath: (p) => this.resolvePath(p),
         resolveRoot: () => this.resolveRoot(),
       },

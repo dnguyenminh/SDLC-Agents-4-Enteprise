@@ -234,9 +234,9 @@ Status values: `not_started`, `in_progress`, `done`, `needs_revision`, `blocked`
 
 After each phase, attach to Jira immediately:
 ```
-1. embed_images(file_path, output_path)
-2. export_docx(file_path, file_name="{DOC}-v{version}-{TICKET}")
-3. jira_update_issue(issue_key, attachments: "path/to/{DOC}.docx")
+1. embed_image(file_path, output_path)
+2. execute_dynamic_tool(toolName="export_docx", arguments={file_path, file_name="{DOC}-v{version}-{TICKET}"})
+3. jira_attach_file(issue_key: {TICKET}, file_path: "path/to/{DOC}.docx")
 ```
 
 | Phase | Attach |

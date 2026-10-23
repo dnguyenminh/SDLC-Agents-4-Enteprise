@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+<root>
+<mxCell id="0"/>
+<mxCell id="1" parent="0"/>
+
+<!-- AgentDefinition entity -->
+<mxCell id="n1" value="AgentDefinition" style="swimlane;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontStyle=1;startSize=20;" vertex="1" parent="1">
+<mxGeometry x="40" y="60" width="300" height="220" as="geometry"/>
+</mxCell>
+
+<!-- AgentDefinition attributes -->
+<mxCell id="n1a" value="+ id: string (PK)" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="25" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n1b" value="+ name: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="45" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n1c" value="+ description: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="65" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n1d" value="# role: string?" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="85" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n1e" value="# phase: string?" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="105" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n1f" value="# model: string?" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="125" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n1g" value="+ personaBody: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="145" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n1h" value="+ filePath: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="165" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n1i" value="+ modifiedAt: timestamp" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n1">
+<mxGeometry x="10" y="185" width="280" height="20" as="geometry"/>
+</mxCell>
+
+<!-- AgentSession entity -->
+<mxCell id="n2" value="AgentSession" style="swimlane;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;startSize=20;" vertex="1" parent="1">
+<mxGeometry x="400" y="60" width="300" height="260" as="geometry"/>
+</mxCell>
+
+<mxCell id="n2a" value="+ sessionKey: string (PK)" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="25" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2b" value="+ workspaceRoot: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="45" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2c" value="+ tabId: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="65" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2d" value="# activeAgentId: string (FK)" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="85" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2e" value="+ sessionRole: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="105" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2f" value="# sessionPhase: string?" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="125" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2g" value="+ tokenUsage: number" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="145" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2h" value="+ createdAt: timestamp" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="165" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2i" value="+ updatedAt: timestamp" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="185" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2j" value="- history: Turn[]" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="205" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n2k" value="= dispose()" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n2">
+<mxGeometry x="10" y="225" width="280" height="20" as="geometry"/>
+</mxCell>
+
+<!-- Turn entity -->
+<mxCell id="n3" value="Turn" style="swimlane;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;startSize=20;" vertex="1" parent="1">
+<mxGeometry x="760" y="60" width="300" height="220" as="geometry"/>
+</mxCell>
+
+<mxCell id="n3a" value="+ turnId: string (PK)" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="25" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n3b" value="+ tabId: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="45" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n3c" value="+ agentId: string (FK)" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="65" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n3d" value="+ agentRole: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="85" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n3e" value="+ prompt: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="105" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n3f" value="+ response: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="125" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n3g" value="+ tokenCount: number" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="145" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n3h" value="+ timestamp: timestamp" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="165" width="280" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n3i" value="+ toLogEntry()" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n3">
+<mxGeometry x="10" y="185" width="280" height="20" as="geometry"/>
+</mxCell>
+
+<!-- AgentInfo v2 (parsed output) -->
+<mxCell id="n4" value="AgentInfo v2" style="swimlane;html=1;whiteSpace=wrap;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;fontStyle=1;startSize=20;" vertex="1" parent="1">
+<mxGeometry x="40" y="320" width="260" height="180" as="geometry"/>
+</mxCell>
+
+<mxCell id="n4a" value="+ id: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n4">
+<mxGeometry x="10" y="25" width="240" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n4b" value="+ name: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n4">
+<mxGeometry x="10" y="45" width="240" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n4c" value="+ description: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n4">
+<mxGeometry x="10" y="65" width="240" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n4d" value="# role?: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n4">
+<mxGeometry x="10" y="85" width="240" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n4e" value="# phase?: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n4">
+<mxGeometry x="10" y="105" width="240" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n4f" value="# model?: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n4">
+<mxGeometry x="10" y="125" width="240" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n4g" value="+ personaBody: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n4">
+<mxGeometry x="10" y="145" width="240" height="20" as="geometry"/>
+</mxCell>
+
+<!-- SessionHostOptions -->
+<mxCell id="n5" value="SessionHostOptions" style="swimlane;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;startSize=20;" vertex="1" parent="1">
+<mxGeometry x="340" y="320" width="280" height="180" as="geometry"/>
+</mxCell>
+
+<mxCell id="n5a" value="+ workspaceRoot: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n5">
+<mxGeometry x="10" y="25" width="260" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n5b" value="+ providerId: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n5">
+<mxGeometry x="10" y="45" width="260" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n5c" value="# apiKey?: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n5">
+<mxGeometry x="10" y="65" width="260" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n5d" value="# role?: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n5">
+<mxGeometry x="10" y="85" width="260" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n5e" value="# phase?: string" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n5">
+<mxGeometry x="10" y="105" width="260" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n5f" value="# nCtxDetected?: number" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n5">
+<mxGeometry x="10" y="125" width="260" height="20" as="geometry"/>
+</mxCell>
+<mxCell id="n5g" value="# mcpBridge?: unknown" style="html=1;whiteSpace=wrap;fontSize=10;" vertex="1" parent="n5">
+<mxGeometry x="10" y="145" width="260" height="20" as="geometry"/>
+</mxCell>
+
+<!-- Edges: relationships -->
+<mxCell id="e1" value="N:1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n2" target="n1">
+<mxGeometry relative="1" as="geometry"><mxPoint x="550" y="170" as="sourcePoint"/><mxPoint x="340" y="170" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e2" value="1:N" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n2" target="n3">
+<mxGeometry relative="1" as="geometry"><mxPoint x="650" y="190" as="sourcePoint"/><mxPoint x="910" y="170" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e3" value="N:1" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;" edge="1" parent="1" source="n3" target="n1">
+<mxGeometry relative="1" as="geometry"><mxPoint x="910" y="190" as="sourcePoint"/><mxPoint x="340" y="170" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e4" value="parsed →" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="n1" target="n4">
+<mxGeometry relative="1" as="geometry"><mxPoint x="190" y="280" as="sourcePoint"/><mxPoint x="170" y="320" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e5" value="role/phase →" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="n4" target="n5">
+<mxGeometry relative="1" as="geometry"><mxPoint x="300" y="400" as="sourcePoint"/><mxPoint x="480" y="320" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+<mxCell id="e6" value="wsRoot + tabId" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=9;" edge="1" parent="1" source="n5" target="n2">
+<mxGeometry relative="1" as="geometry"><mxPoint x="480" y="400" as="sourcePoint"/><mxPoint x="550" y="320" as="targetPoint"/></mxGeometry>
+</mxCell>
+
+</root>
+</mxGraphModel>

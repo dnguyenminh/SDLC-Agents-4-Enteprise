@@ -145,7 +145,7 @@ At session start, after `tools/list`:
 
 ```
 Phase 1-3 (Documentation):
-  KEEP: mem_search, mem_ingest, find_tools, jira_*, export_docx, embed_images
+  KEEP: mem_search, mem_ingest, find_tools, jira_*, export_docx, embed_image
   DISABLE: code_search, code_symbols, drawio_* (enable when diagrams needed)
 
 Phase 5 (Implementation):

@@ -1,0 +1,150 @@
+{
+  "ticket": "SA4E-370",
+  "type": "Epic",
+  "summary": "Custom Agents — real file-defined agent personas wired into the chat engine (identity, role scoping, per-tab sessions)",
+  "priority": "High",
+  "labels": [
+    "custom-agents",
+    "chatbox-tabs",
+    "pi-workflow",
+    "role-scoping",
+    "persona",
+    "epic"
+  ],
+  "jiraUrl": "https://jiraassist.atlassian.net/browse/SA4E-370",
+  "jiraStatus": "Done",
+  "currentPhase": "deployment",
+  "relatedTickets": [
+    "SA4E-369",
+    "SA4E-186",
+    "SA4E-188",
+    "SA4E-189",
+    "SA4E-355",
+    "SA4E-364",
+    "KSA-240"
+  ],
+  "documents": [
+    {
+      "file": "STATUS.json",
+      "author": "sm-agent",
+      "note": "SM file"
+    },
+    {
+      "file": "RUN-LOG.md",
+      "author": "sm-agent",
+      "note": "SM file"
+    },
+    {
+      "file": "BRD.md",
+      "author": "ba-agent",
+      "note": "BA file"
+    },
+    {
+      "file": "FSD.md",
+      "author": "ba-agent",
+      "note": "BA file"
+    },
+    {
+      "file": "TDD.md",
+      "author": "sa-agent",
+      "note": "SA file"
+    }
+  ],
+  "phases": {
+    "requirements": {
+      "status": "done",
+      "file": "BRD.md",
+      "version": 1,
+      "completedAt": "2026-10-18T15:30:00+07:00"
+    },
+    "specification": {
+      "status": "done",
+      "file": "FSD.md",
+      "version": 1,
+      "completedAt": "2026-10-18T15:30:00+07:00"
+    },
+    "ui_design": {
+      "status": "not_started"
+    },
+    "design": {
+      "status": "done",
+      "file": "TDD.md",
+      "version": 1,
+      "completedAt": "2026-10-19T00:55:00+07:00"
+    },
+    "feedback_loop": {
+      "status": "not_started",
+      "iterations": 0,
+      "maxIterations": 5
+    },
+    "test_planning": {
+      "status": "done",
+      "file": "STP.md,STC.md",
+      "version": 1,
+      "completedAt": "2026-10-19T02:00:00+07:00"
+    },
+    "implementation": {
+      "status": "done",
+      "file": "source code",
+      "version": "verified"
+    },
+    "user_guide": {
+      "status": "done",
+      "file": "UG.md",
+      "version": 1,
+      "completedAt": "2026-10-23T09:39:28+07:00"
+    },
+    "testing": {
+      "status": "done",
+      "file": "TEST-REPORT.md",
+      "version": 1,
+      "completedAt": "2026-10-19T08:30:00+07:00"
+    },
+    "uat": {
+      "status": "done",
+      "note": "UAT completed 2026-10-19 with runtime evidence screenshots via ide_current_screenshot post SA4E-373 fix. Evidence: ide-screenshot-1792394100064.png, ide-screenshot-1792394204369.png, ide-screenshot-1792394263170.png, ide-screenshot-1792394288743.png",
+      "completedAt": "2026-10-19T14:18:09+07:00"
+    },
+    "deployment": {
+      "status": "done",
+      "file": "RLN.md,DPG.md",
+      "version": 1,
+      "completedAt": "2026-10-23T09:39:28+07:00"
+    }
+  },
+  "epicScope": {
+    "note": "Candidate stories S1-S4 — BA will refine into child stories during Phase 1 (BRD). Do NOT treat as final scope.",
+    "S1": "Agent definition format v2 — .code-intel/agents/*.md gains persona body semantics (system prompt section, role, phase defaults, model override optional); parser extended in chat-panel/ChatStateManager/fs-helpers.",
+    "S2": "selectAgent real wiring — agent switch loads the file, injects persona into session context (respecting skeleton/governance), sets SessionHostOptions.role/phase from agent definition instead of hardcoded 'sm-agent' (pi-workflow/pi-workflow-adapter/adapter-legacy-turns.ts:83).",
+    "S3": "Per-tab / per-agent session isolation — registry keying + per-tab budget/compaction (shared prerequisite with SA4E-369, design decision D1 there — coordinate, do not duplicate).",
+    "S4": "UI truthfulness — agent switch indicator, per-tab agent badge, per-agent conversation identity in history (tabs currently share one session's brain)."
+  },
+  "sa4e369Relationship": {
+    "note": "SA4E-369 (Story: Intra-instance PeerBus, tab<->tab messaging, To Do) DEPENDS on this epic's S3 (per-tab sessions) and benefits from S1/S2 (tab binds agent identity -> peer registry shows real agents).",
+    "linkMechanism": "SA4E-369 set as CHILD of this Epic via parent field (jira_update_issue parent={key} succeeded 2026-10-18). Issue-link tooling unavailable (confirmed in SA4E-369 run) — relationship ALSO recorded in both ticket descriptions as belt-and-braces.",
+    "coordinationRule": "S3 here and D1 in SA4E-369 are the SAME prerequisite (per-tab session refactor). Design once; do not duplicate."
+  },
+  "nonGoals": [
+    "Cross-machine agent calls (@bacnh85/pi-a2a — separate track)",
+    "Changing pi-subagents parent<->child delegation",
+    "MCP tool registration (separate SA4E-364 track)"
+  ],
+  "codeEvidence": {
+    "note": "Verified current-state findings, code exploration 2026-10-18, refs tu extension/src/",
+    "exists": [
+      "Agent .md definition + parse: chat-panel/ChatStateManager/fs-helpers.ts:105-121 (readAgentInfos -> AgentInfo {id,name,description})",
+      "Hot-reload watcher: chat-panel/ChatStateManager/dir-watchers.ts:60-70 (SA4E-189)",
+      "UI selection dual-path: ChatStateManager.ts:108-117 (chat:agentsLoaded); webview/slash-menu/SlashMenuController.ts:51; SELECT_AGENT/AGENT_SWITCHED in chat/types/messages.ts:98,115,146 + chat-panel/message-protocol.ts:82 (SA4E-186)",
+      "Role-aware engine (unwired to user agents, SA4E-355): loadout.ts:69-76 buildSessionToolLoadout; create-host.ts:103 applyScopedSkills; create-host.ts:123 scopedSteering; tests pi-agent/__tests__/role-scope-wiring.test.ts + tool-loadout-roles.test.ts"
+    ],
+    "missing": [
+      "selectAgent STUB: pi-workflow/pi-workflow-adapter/adapter-core.ts:159-162 only emits chat:agentSwitched",
+      "Cosmetic selection text: chat-panel/message-routing.ts:66 routes '[Agent: ] ' prefix",
+      "Hardcoded engine role: pi-workflow/pi-workflow-adapter/adapter-legacy-turns.ts:83 const sessionRole = 'sm-agent'",
+      "One shared AgentSession per workspaceRoot: pi-workflow/session-host/registry.ts keyed by workspaceRoot only",
+      "Agent .md body unused by engine (only name+description frontmatter parsed)"
+    ]
+  },
+  "lastUpdated": "2026-10-23T09:50:00+07:00",
+  "lastCommentProcessed": "2026-10-18T14:01:29+07:00"
+}

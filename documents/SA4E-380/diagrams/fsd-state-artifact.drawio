@@ -1,0 +1,120 @@
+<mxGraphModel adaptiveColors="auto">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="Artifact Lifecycle — Content Proxy (SA4E-380)" style="text;html=1;fontSize=18;fontStyle=1;align=left;" vertex="1" parent="1">
+      <mxGeometry x="40" y="20" width="700" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="90" y="90" width="30" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="end" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;shape=mxgraph.flowchart.terminator;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="700" width="40" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_requested" value="&lt;b&gt;Requested&lt;/b&gt;&lt;br&gt;tool call received;&lt;br&gt;wrapper mode unknown" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="40" y="150" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_detected" value="&lt;b&gt;Wrapper detected&lt;/b&gt;&lt;br&gt;x-content-param and/or&lt;br&gt;x-output-base64 present" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="260" y="150" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_passthrough" value="&lt;b&gt;Passthrough&lt;/b&gt;&lt;br&gt;original schema + args&lt;br&gt;unchanged (BR-05/BR-19)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="260" y="40" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_injected" value="&lt;b&gt;Content injected&lt;/b&gt;&lt;br&gt;content_base64 derived from&lt;br&gt;file_path / content-param" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="480" y="150" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_invoked" value="&lt;b&gt;Child invoked&lt;/b&gt;&lt;br&gt;sidecar schema + adapted&lt;br&gt;arguments sent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="700" y="150" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_produced" value="&lt;b&gt;Artifact produced&lt;/b&gt;&lt;br&gt;descriptor in structuredContent&lt;br&gt;and/or base64 content blocks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="700" y="290" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_resolved" value="&lt;b&gt;Resolved&lt;/b&gt;&lt;br&gt;bytes obtained in retrieval&lt;br&gt;order (BR-08)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="480" y="290" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_unresolvable" value="&lt;b&gt;Unresolvable&lt;/b&gt;&lt;br&gt;no descriptor and no&lt;br&gt;content blocks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="700" y="430" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_inlined" value="&lt;b&gt;Inlined&lt;/b&gt;&lt;br&gt;files[] appended, metadata&lt;br&gt;stripped (BR-10/BR-11)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="260" y="430" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_written" value="&lt;b&gt;Written&lt;/b&gt;&lt;br&gt;file(s) on disk;&lt;br&gt;payload returned (BR-09)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+      <mxGeometry x="40" y="560" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="s_failed" value="&lt;b&gt;Failed&lt;/b&gt;&lt;br&gt;ARTIFACT_FETCH_FAILED /&lt;br&gt;PROXY_WRITE_FAILED (BR §9)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="1010" y="430" width="170" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="start" target="s_requested" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="T-1 detect" edge="1" parent="1" source="s_requested" target="s_detected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="T-2 no wrapper fields" edge="1" parent="1" source="s_requested" target="s_passthrough" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="T-3 content_base64 present" edge="1" parent="1" source="s_detected" target="s_invoked" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="T-4 file_path given" edge="1" parent="1" source="s_detected" target="s_injected" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="T-5 missing content" edge="1" parent="1" source="s_detected" target="s_failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1095" y="110"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e7" value="T-6 injected" edge="1" parent="1" source="s_injected" target="s_invoked" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e8" value="T-7 child returns output" edge="1" parent="1" source="s_invoked" target="s_produced" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="T-8 child error" edge="1" parent="1" source="s_invoked" target="s_failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1095" y="185"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e10" value="T-9 descriptor-first resolve" edge="1" parent="1" source="s_produced" target="s_resolved" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e11" value="T-10 no source" edge="1" parent="1" source="s_produced" target="s_unresolvable" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e12" value="T-11 multi mode" edge="1" parent="1" source="s_resolved" target="s_inlined" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e13" value="T-12 write ok" edge="1" parent="1" source="s_inlined" target="s_written" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e14" value="T-13 unresolvable" edge="1" parent="1" source="s_unresolvable" target="s_failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e15" value="write error / partial" edge="1" parent="1" source="s_inlined" target="s_failed" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="345" y="700"/>
+          <mxPoint x="1095" y="700"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e16" edge="1" parent="1" source="s_written" target="end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e17" edge="1" parent="1" source="s_failed" target="end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e18" edge="1" parent="1" source="s_passthrough" target="end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="200" y="75"/>
+          <mxPoint x="120" y="75"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -132,7 +132,7 @@ invokeSubAgent(
 
 8. Attach to Jira:
 ```
-embed_images → export_docx → jira_update_issue
+embed_image → export_docx → jira_update_issue
 ```
 
 9. Ingest UG vào KB (FULL content)

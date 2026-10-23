@@ -1,0 +1,51 @@
+<mxfile host="app" modified="2026-10-19T00:00:00Z" agent="DevOps Agent" version="20.0.0" etag="SA4E-370-ci-cd" type="device"><diagram name="CI-CD Pipeline" id="SA4E-370-ci-cd"><mxGraphModel adaptiveColors="auto"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
+
+<!-- Swimlane: Developer -->
+<mxCell id="lane-dev" value="Developer" style="swimlane;html=1;startSize=30;horizontal=1;container=1;collapsible=0;childLayout=stackLayout;horizontalStack=0;fillColor=#e8f5e9;strokeColor=#2e7d32;" vertex="1" parent="1"><mxGeometry x="40" y="60" width="1100" height="420" as="geometry"/></mxCell>
+<!-- Swimlane: CI Pipeline (automated) -->
+<mxCell id="lane-ci" value="CI Pipeline (automated)" style="swimlane;html=1;startSize=30;horizontal=1;container=1;collapsible=0;childLayout=stackLayout;horizontalStack=0;fillColor=#e3f2fd;strokeColor=#1565c0;" vertex="1" parent="1"><mxGeometry x="40" y="490" width="1100" height="300" as="geometry"/></mxCell>
+<!-- Swimlane: Package &amp; Publish -->
+<mxCell id="lane-pub" value="Package &amp; Publish" style="swimlane;html=1;startSize=30;horizontal=1;container=1;collapsible=0;childLayout=stackLayout;horizontalStack=0;fillColor=#fff3e0;strokeColor=#ef6c00;" vertex="1" parent="1"><mxGeometry x="40" y="800" width="1100" height="220" as="geometry"/></mxCell>
+
+<!-- Developer: Code Commit -->
+<mxCell id="n-commit" value="Code Commit / Merge to release branch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2;" vertex="1" parent="lane-dev"><mxGeometry x="120" y="110" width="260" height="60" as="geometry"/></mxCell>
+
+<!-- CI Pipeline: Compile -->
+<mxCell id="n-compile" value="Compile (npm run compile)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2;" vertex="1" parent="lane-ci"><mxGeometry x="120" y="540" width="260" height="50" as="geometry"/></mxCell>
+<!-- CI Pipeline: Test -->
+<mxCell id="n-test" value="vitest unit + integration tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2;" vertex="1" parent="lane-ci"><mxGeometry x="420" y="540" width="260" height="50" as="geometry"/></mxCell>
+
+<!-- Decisions -->
+<mxCell id="d-compile" value="Compile OK?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe082;strokeColor=#f9a825;strokeWidth=2;" vertex="1" parent="lane-ci"><mxGeometry x="740" y="540" width="90" height="60" as="geometry"/></mxCell>
+<mxCell id="d-test" value="Tests pass?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe082;strokeColor=#f9a825;strokeWidth=2;" vertex="1" parent="lane-ci"><mxGeometry x="740" y="640" width="90" height="60" as="geometry"/></mxCell>
+
+<!-- Package & Publish: vsce package -->
+<mxCell id="n-package" value="vsce package → .vsix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe082;strokeColor=#f9a825;strokeWidth=2;" vertex="1" parent="lane-pub"><mxGeometry x="120" y="850" width="220" height="50" as="geometry"/></mxCell>
+<mxCell id="d-package" value="Package OK?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe082;strokeColor=#f9a825;strokeWidth=2;" vertex="1" parent="lane-pub"><mxGeometry x="380" y="850" width="90" height="60" as="geometry"/></mxCell>
+
+<!-- Package & Publish: Publish (manual) -->
+<mxCell id="n-publish" value="Publish to VS Code Marketplace / OpenVSX" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffccbc;strokeColor=#d32f2f;strokeWidth=2;" vertex="1" parent="lane-pub"><mxGeometry x="520" y="850" width="300" height="50" as="geometry"/></mxCell>
+
+<!-- End -->
+<mxCell id="n-end" value="Extension available in Marketplace" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#2e7d32;strokeWidth=2;" vertex="1" parent="lane-pub"><mxGeometry x="860" y="850" width="240" height="50" as="geometry"/></mxCell>
+
+<!-- Rollback path -->
+<mxCell id="n-rollback" value="Rollback: revert source changes (TDD §10.3)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#d32f2f;strokeWidth=2;strokeDasharray=1 5;" vertex="1" parent="lane-pub"><mxGeometry x="520" y="940" width="300" height="50" as="geometry"/></mxCell>
+
+<!-- Edges -->
+<mxCell id="e-commit-to-compile" edge="1" parent="1" source="n-commit" target="n-compile" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e-compile-to-dcompile" edge="1" parent="1" source="n-compile" target="d-compile" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e-dcompile-yes" edge="1" parent="1" source="d-compile" target="n-test" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;"><mxGeometry relative="1" as="geometry"><mxPoint x="880" y="570" as="offset"/></mxCell></mxCell>
+<mxCell id="e-dcompile-no" edge="1" parent="1" source="d-compile" target="n-rollback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d32f2f;strokeWidth=2;strokeDasharray=1 5;"><mxGeometry relative="1" as="geometry"><mxPoint x="880" y="700" as="offset"/></mxCell></mxCell>
+<mxCell id="e-test-to-dtest" edge="1" parent="1" source="n-test" target="d-test" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e-dtest-yes" edge="1" parent="1" source="d-test" target="n-package" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2e7d32;strokeWidth=2;"><mxGeometry relative="1" as="geometry"><mxPoint x="880" y="670" as="offset"/></mxCell></mxCell>
+<mxCell id="e-dtest-no" edge="1" parent="1" source="d-test" target="n-rollback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d32f2f;strokeWidth=2;strokeDasharray=1 5;"><mxGeometry relative="1" as="geometry"><mxPoint x="880" y="700" as="offset"/></mxCell></mxCell>
+<mxCell id="e-package-to-dpackage" edge="1" parent="1" source="n-package" target="d-package" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f9a825;strokeWidth=2;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e-dpackage-yes" edge="1" parent="1" source="d-package" target="n-publish" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#f9a825;strokeWidth=2;"><mxGeometry relative="1" as="geometry"><mxPoint x="520" y="880" as="offset"/></mxCell></mxCell>
+<mxCell id="e-dpackage-no" edge="1" parent="1" source="d-package" target="n-rollback" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d32f2f;strokeWidth=2;strokeDasharray=1 5;"><mxGeometry relative="1" as="geometry"><mxPoint x="520" y="760" as="offset"/></mxCell></mxCell>
+<mxCell id="e-publish-to-end" edge="1" parent="1" source="n-publish" target="n-end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d32f2f;strokeWidth=2;"><mxGeometry relative="1" as="geometry"/></mxCell>
+<mxCell id="e-rollback-verify" edge="1" parent="1" source="n-rollback" target="n-end" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d32f2f;strokeWidth=2;strokeDasharray=1 5;"><mxGeometry relative="1" as="geometry"><mxPoint x="740" y="1000" as="offset"/></mxCell></mxCell>
+
+<!-- Legend -->
+<mxCell id="legend" value="Legend:  green = automated  |  amber = manual review gate  |  blue/orange = manual publish  |  red (dashed) = rollback path" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1"><mxGeometry x="40" y="1060" width="1000" height="40" as="geometry"/></mxCell>
+</root></mxGraphModel></diagram></mxfile>

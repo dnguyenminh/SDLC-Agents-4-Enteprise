@@ -236,7 +236,10 @@ ENV PYTHONUNBUFFERED=1
 RUN groupadd -g 1001 sa4e \
  && useradd -u 1001 -g sa4e -r -s /usr/sbin/nologin sa4e \
  && mkdir -p /app/.code-intel \
- && chown -R sa4e:sa4e /app
+ && chown -R sa4e:sa4e /app \
+ && mkdir -p /home/sa4e \
+ && chmod -R 777 /home/sa4e
+ 
 USER sa4e
 
 ENV NODE_ENV=production

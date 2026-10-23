@@ -129,6 +129,31 @@ export const MY_NEW_TOOL_DEF = {
 // → Extension auto-detects and proxies. LLM sees file_path required.
 ```
 
+## Child Tool Content Proxy (backend orchestration)
+
+The extension proxy above only covers **backend tools that declare `content_base64`**. Child MCP tools (e.g. `markdown-exporter`'s `export_docx`) declare a content argument (`markdown`) and return a host-local artifact path — the extension never sees that path's bytes.
+
+The backend orchestration layer adapts these tools **without adding a new tool** (`backend/src/modules/orchestration/content-proxy/`):
+
+| Stage | Behaviour |
+|-------|-----------|
+| Detection | Name prefix `export_*` / `render_*` / `generate_*`, or description `… to PDF/DOCX/…`. Escape hatch: `CONTENT_PROXY_OVERRIDES` in `backend/src/config/ContentProxy.ts`. |
+| Schema | Adds `content_base64`, moves the real content arg (`markdown`) to `x-content-param`, marks `x-output-base64: true`, removes the content arg from `required`. |
+| Invocation | Wrapper mode = `content_base64` or `output_path` present → decode to the child's content argument; wrapper-only args are stripped. |
+| Result | Artifact bytes become `output_base64` (multi-file → `outputs[]`); host paths are stripped. |
+
+Artifact retrieval is transport-agnostic — the child may sit next to the backend (stdio) or on another host (streamable-http):
+
+1. inline payload (`output_base64` / `base64` / `data`) or MCP `resource` blob
+2. `resource_link` / `uri` → `resources/read` on the child (works across hosts)
+3. `url` → http(s) fetch by the backend
+4. `file:` / filesystem path → local read (stdio child)
+5. nothing readable → **tool error `ARTIFACT_FETCH_FAILED`**
+
+**Wrapper-mode contract: bytes or a hard error — never a bare path.** A remote server that returns only a local path must expose its artifact as an MCP resource or URL (or share a volume with the backend); silently returning the path is forbidden because the caller would report success while no file exists.
+
+Verified live for all six exporters: `export_docx`, `export_xlsx`, `export_pptx`, `export_pdf`, `export_html`, `export_json`.
+
 ## Testing
 
 - `extension/src/__tests__/backend-local-tools.test.ts` — 19 tests covering:

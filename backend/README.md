@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.54.0-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.3-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/tools-66+-teal?style=for-the-badge" alt="Tools">
   <img src="https://img.shields.io/badge/node-%3E%3D18-green?style=for-the-badge" alt="Node">
 </p>
@@ -233,6 +233,10 @@ The embedding model is expected at `.code-intel/models/model.onnx`. Download it:
 
 | Version | Date | Ticket | Changes |
 |---------|------|--------|---------|
+| 1.55.3 | 2026-10-23 | SA4E-380 | Content Proxy for child MCP tools — backend `content-proxy/` layer: convention detection + overrides, in-place schema adaptation, invocation adaptation (strict base64), transport-agnostic artifact retrieval (25 MB cap), multi-file `outputs[]`, host-path stripping; zero new tools. Extension output-proxy fail-loud. Backend content-proxy tests 21/21; live 6/6 exporters. Docs: BRD/FSD/TDD/STP/STC/SECURITY-REVIEW (F-01 binding). |
+| 1.55.2 | 2026-10-23 | SA4E-369 | Fix: Pega config save reverts to default — `updatePegaConfig` uses new dotted keys (`pega.endpoint`, `pega.username`); `WORKSPACE_SCOPED_KEYS` + tests updated. |
+| 1.55.1 | 2026-10-23 | SA4E-369 | Unified config reads — ALL reads via `getSetting` (zero direct `config.get`); one-time migration runner; runtime fallback removed. 3,247/3,247 pass. |
+| 1.55.0 | 2026-10-23 | SA4E-369 | Config keys standardization — 42 settings dot notation, 21 keys renamed + 2 new (`pega.appName/appVersion`); auto-migration. |
 | 1.54.0 | 2026-10-21 | SA4E-369/370/373/374/375 | PeerBus release (agent-to-agent messaging), 77 extension test failures fixed, ide_launch DevToolsActivePort fix, backend test alignment (SA4E-374 SRP + SA4E-375 deterministic projectId/auto-upsert), CI fully GREEN (3,330 backend + 3,224 extension tests). |
 | 1.53.0 | 2026-10-15 | SA4E-360 | Version sync with extension release v1.53.0 (Multi-Resolution Context Supply P1 — skeleton + agentic loading, UAT-verified; backend runtime unchanged).
 | 1.48.0 | 2026-10-10 | SA4E-341 | Version sync (E2E testing framework delivered in standalone `e2e/` package — no backend runtime changes). Also includes SA4E-335 DB-layer 6 bugfixes (memoized id-column check, literal-safe placeholder translation, identifier quoting SQLi guard, safeExec SQLSTATE filter, writable test-backend data dir), SA4E-349 auth 401 fail-loud fixes, SA4E-350 Pega '@baseclass' appliesTo passthrough fix, enrichment retry scoped via X-Project-Id + runtime settings module. |
