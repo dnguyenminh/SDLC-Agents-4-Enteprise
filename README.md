@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.3.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.4.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,15 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.4 (2026-10-23)
+
+**SA4E-369 UAT fix — peer tools với local provider (2-layer root cause, no workaround)**
+
+- 🛣️ **Layer 1 — tháo stale gate "local → legacy ALWAYS" (SA4E-334)** — provider keyless (`lmstudio`/`ollama`/`onnx`) giờ đi **session path** qua shared keyless gateway (`createGatewayProvider` + `/v1/models` thật + `LOCAL_KEYLESS_PLACEHOLDER` auth); legacy path giữ làm fail-safe (session fail → fallback + endpoint checklist). `readProviderTurnConfig()` = single source of truth cho provider config (dot key + flat fallback) ở CẢ HAI turn path + `selectAgent` (trước đây thiếu `baseUrl`)
+- 🔧 **Layer 2 — peer tools vào session tool ALLOWLIST** — SDK pi-coding-agent lọc customTools qua `isAllowedTool`; `peer_list`/`peer_send`/`peer_status` được wire vào customTools nhưng KHÔNG có trong allowlist → bị loại khỏi tool pool của model ở **mọi tab** (103 test peer không bắt được vì assert pre-filter). Giờ là core loadout names như `read_method`
+- 🧪 **Tests** — +15 test mới (keyless model-resolution 7, lmstudio peer-session acceptance 3, routing 3, routing-contract 2); full suite **3,255/3,255 PASS**, tsc 0
+- 🔖 **Version sync** — root/`backend`/`extension` `package.json` → `1.55.4`
 
 ### v1.55.3 (2026-10-23)
 

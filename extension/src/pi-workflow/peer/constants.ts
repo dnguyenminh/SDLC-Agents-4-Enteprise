@@ -31,3 +31,13 @@ export const PEER_MESSAGE_MAX_CHARS = 16_000;
 /** S-02 (d): peer tool-approval UI window — auto-deny (fail-closed, TC-603).
  *  30s bounds the silent-stall surface the 120s default left open. */
 export const PEER_APPROVAL_TIMEOUT_MS = 30_000;
+
+/**
+ * D4/AC7 — the 3 a2a session tools. MUST also be listed in the session
+ * tool ALLOWLIST (session-host/loadout.ts): the pi-coding-agent SDK filters
+ * customTools THROUGH the allowlist (AgentSession isAllowedTool), so a
+ * customTool absent from the allowlist never reaches the model's tool pool.
+ * This was the UAT root cause layer 2: the tools were wired as customTools
+ * (all peer tests assert at that level) yet silently dropped for EVERY tab.
+ */
+export const PEER_TOOL_NAMES = ['peer_list', 'peer_send', 'peer_status'] as const;

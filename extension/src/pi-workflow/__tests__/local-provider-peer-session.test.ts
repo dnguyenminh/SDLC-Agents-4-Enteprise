@@ -44,6 +44,12 @@ describe('PiAgentSessionHost — SA4E-369 peer tools for keyless LOCAL providers
     const names = (sessionOpts().customTools ?? []).map((t) => t.name);
     for (const name of PEER_TOOLS) expect(names).toContain(name);
     expect(names).toEqual(expect.arrayContaining(['get_workspace_info', 'read_method']));
+    // UAT layer-2 fix: the SDK (AgentSession.isAllowedTool) filters customTools
+    // THROUGH the `tools` allowlist — the peer names MUST be in the allowlist
+    // or they never reach the model's tool pool (the 103-test suite missed
+    // this because it asserted pre-filter customTools only).
+    const allowlist = sessionOpts().tools ?? [];
+    for (const name of PEER_TOOLS) expect(allowlist).toContain(name);
     host.dispose();
   });
 

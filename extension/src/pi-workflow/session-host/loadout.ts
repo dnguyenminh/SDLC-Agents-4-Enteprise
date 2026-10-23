@@ -12,6 +12,7 @@ import { buildMcpBridgeAgentTools } from '../../pi-agent/extensions/mcp-bridge-e
 import { isDiscoveryTool } from '../../pi-agent/extensions/tool-definitions';
 import { getPiExtensionAgentTools } from '../pi-extension-runtime.js';
 import { WORKSPACE_INFO_TOOL_NAME } from '../workspace-info-tool.js';
+import { PEER_TOOL_NAMES } from '../peer/constants.js';
 import { debugLog } from '../../debug-logger';
 import type { SessionHostOptions } from './types.js';
 
@@ -26,7 +27,14 @@ import type { SessionHostOptions } from './types.js';
  */
 export function getSessionToolLoadout(_workspaceRoot: string): string[] {
   const shellTool = process.platform === 'win32' ? 'powershell' : 'bash';
-  return ['read', 'write', 'edit', shellTool, 'grep', 'find', 'ls', WORKSPACE_INFO_TOOL_NAME, 'read_method'];
+  // SA4E-369 (D4/AC7 + UAT layer-2 fix): the peer a2a tools are CORE session
+  // tools ("auto in every tab") — they join the allowlist exactly like
+  // read_method. Without this, the SDK's isAllowedTool filter drops the
+  // peer customTools from the model's tool pool (never call-able).
+  return [
+    'read', 'write', 'edit', shellTool, 'grep', 'find', 'ls',
+    WORKSPACE_INFO_TOOL_NAME, 'read_method', ...PEER_TOOL_NAMES,
+  ];
 }
 
 /** UC-04: estimated schema tokens of bare tool names (OI-4 name estimate). */

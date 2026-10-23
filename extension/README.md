@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.3-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.4-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -244,6 +244,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.4 (2026-10-23)
+
+- **SA4E-369 UAT fix: peer tools reachable in EVERY tab (2-layer root cause)** — Layer 1: removed the stale SA4E-334 "local → legacy ALWAYS" gate; keyless providers (lmstudio/ollama/onnx) now take the session path via the shared keyless gateway (real /v1/models + `LOCAL_KEYLESS_PLACEHOLDER` auth), with the legacy path kept as fail-safe (session failure → legacy fallback owns the endpoint checklist). Layer 2: `peer_list`/`peer_send`/`peer_status` joined the session tool ALLOWLIST — the pi-coding-agent SDK filters customTools through `isAllowedTool`, so the wired-but-unlisted tools never reached the model's tool pool in ANY tab. Unified provider config reads (`readProviderTurnConfig`: dot keys + flat fallback). Tests: 3,255/3,255 PASS, tsc 0
 
 ### v1.55.3 (2026-10-23)
 
