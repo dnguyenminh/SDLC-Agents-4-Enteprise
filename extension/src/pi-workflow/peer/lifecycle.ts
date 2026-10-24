@@ -62,12 +62,41 @@ function bootstrapMeta(tabId: string, name: string, workspaceRoot: string | unde
   };
 }
 
-/** (1) tab-opened → peer runtime ensured + registry identity registered (I-1). */
+/** (1) tab-opened/switch → peer runtime ensured + registry identity registered (I-1).
+ * Identity-stomp guard (manual UAT round-5: peer_list showed agentName = raw
+ * tabId UUIDs — "không thể hiểu được, nó là tab nào"): a NAMELESS bootstrap
+ * (tab:switch re-ensure) must never overwrite an identity that already
+ * carries a real name (tab display name from onTabCreated, or agent metadata
+ * from host creation). A NAMED registration still upgrades a UUID fallback. */
 export function registerPeerTabIdentity(tabId: string, workspaceRoot?: string, agentName?: string): void {
   if (!tabId || tabId === 'default') return;
   try {
+    const existing = peekPeerRuntime()?.registry.getEntry(tabId);
+    if (existing) {
+      const incoming = (agentName ?? '').trim();
+      const upgradesFallback = !!incoming && incoming !== tabId && existing.agentName === tabId;
+      if (!upgradesFallback) return; // real identity known — never stomp it with a UUID bootstrap
+      ensurePeerRuntimeForTab(bootstrapMeta(tabId, incoming, workspaceRoot));
+      return;
+    }
     ensurePeerRuntimeForTab(bootstrapMeta(tabId, agentName ?? tabId, workspaceRoot));
   } catch { /* registration must never break tab creation */ }
+}
+
+/** (1b) tab-renamed → the registry identity follows the display name. Tabs
+ * with a selected agent keep the AGENT name as their peer identity (UG §2.3);
+ * agent-less tabs ARE their display name. */
+export function renamePeerTabIdentity(tabId: string, name: string): void {
+  if (!tabId || tabId === 'default') return;
+  const trimmed = (name ?? '').trim();
+  if (!trimmed) return;
+  try {
+    const rt = peekPeerRuntime();
+    if (!rt) return;
+    const existing = rt.registry.getEntry(tabId);
+    if (!existing || existing.activeAgentId) return; // absent or agent-driven identity
+    rt.registry.register(tabId, { ...existing, agentName: trimmed.substring(0, 30) });
+  } catch { /* rename must never break the tab flow */ }
 }
 
 /** (2) tab-closed → bus.handleTabClosed — the I-8 SINGLE cleanup point. */

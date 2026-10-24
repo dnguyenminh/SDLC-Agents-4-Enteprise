@@ -16,7 +16,7 @@ import {
   type SkillContextItem,
 } from "./message-handler/skill-context";
 import { resolveWorkspaceContext } from "./message-handler/workspace-context";
-import { handlePeerTabClosed, registerPeerTabIdentity } from "../pi-workflow/peer/lifecycle";
+import { handlePeerTabClosed, registerPeerTabIdentity, renamePeerTabIdentity } from "../pi-workflow/peer/lifecycle";
 import { wirePeerApprovalBridge, tryResolvePeerApproval } from "./peer-approval-bridge";
 import { wirePeerInboundBridge } from "./peer-inbound-bridge";
 
@@ -117,7 +117,11 @@ export class MessageHandler {
       case "tab:close":
         handlePeerTabClosed((msg as any).payload?.tabId);
         break;
-      case "tab:rename": break;
+      // SA4E-369 round-5 UAT: the registry identity follows the display name
+      // (agent-less tabs); agent-driven tabs keep the agent identity.
+      case "tab:rename":
+        renamePeerTabIdentity((msg as any).payload?.tabId, (msg as any).payload?.newName);
+        break;
       // SA4E-369: export the conversation / copy a single message for
       // external AI analysis. IO failures surface as a chat:error (the
       // provider's handleMessage catch); save-dialog cancel is silent.
