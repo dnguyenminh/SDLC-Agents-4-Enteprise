@@ -76,11 +76,34 @@ export function registerPeerTabIdentity(tabId: string, workspaceRoot?: string, a
       const incoming = (agentName ?? '').trim();
       const upgradesFallback = !!incoming && incoming !== tabId && existing.agentName === tabId;
       if (!upgradesFallback) return; // real identity known — never stomp it with a UUID bootstrap
-      ensurePeerRuntimeForTab(bootstrapMeta(tabId, incoming, workspaceRoot));
+      // Preserve a non-empty existing root — an upgrade triggered by a
+      // name-only sync (no root in scope) must not blank the session key.
+      ensurePeerRuntimeForTab(bootstrapMeta(tabId, incoming, workspaceRoot || existing.workspaceRoot || undefined));
       return;
     }
     ensurePeerRuntimeForTab(bootstrapMeta(tabId, agentName ?? tabId, workspaceRoot));
   } catch { /* registration must never break tab creation */ }
+}
+
+/**
+ * Round-6 (manual UAT: "Không thấy tên của tab" — peer_list still showed raw
+ * UUIDs): the ConversationManager→peer lifecycle binding exists only in
+ * tests, so NOTHING in production ever carried the tab DISPLAY name into the
+ * registry; the nameless tab:switch bootstrap was the only registrant. The
+ * webview's chat:saveState payload is the production tab-source that carries
+ * EVERY tab (id + name) on every save — sync names through it. Idempotent +
+ * guarded: upgrades UUID fallbacks, never stomps real/agent identities.
+ */
+export function syncPeerTabNames(
+  tabs: ReadonlyArray<{ id?: unknown; name?: unknown }>,
+  workspaceRoot?: string
+): void {
+  for (const t of tabs ?? []) {
+    const id = t && typeof (t as { id?: unknown }).id === 'string' ? (t as { id: string }).id : '';
+    const name = t && typeof (t as { name?: unknown }).name === 'string' ? (t as { name: string }).name : '';
+    if (!id || !id.trim() || !name.trim()) continue;
+    registerPeerTabIdentity(id, workspaceRoot, name);
+  }
 }
 
 /** (1b) tab-renamed → the registry identity follows the display name. Tabs

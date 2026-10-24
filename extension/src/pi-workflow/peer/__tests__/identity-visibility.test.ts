@@ -7,7 +7,7 @@
  *   display name for agent-less tabs only.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { registerPeerTabIdentity, renamePeerTabIdentity } from '../lifecycle.js';
+import { registerPeerTabIdentity, renamePeerTabIdentity, syncPeerTabNames } from '../lifecycle.js';
 import { initPeerRuntime, peekPeerRuntime, resetPeerRuntime } from '../runtime.js';
 
 describe('peer tab identity — comprehensible names (round-5 UAT)', () => {
@@ -59,5 +59,27 @@ describe('peer tab identity — comprehensible names (round-5 UAT)', () => {
     registerPeerTabIdentity('tab-1', '/ws', 'Chat 3');
     renamePeerTabIdentity('tab-1', 'X'.repeat(50));
     expect(peekPeerRuntime()!.registry.getEntry('tab-1')?.agentName).toHaveLength(30);
+  });
+
+  it('SYNC-01: syncPeerTabNames bulk-registers every named tab from the saveState payload', () => {
+    syncPeerTabNames([
+      { id: 'tab-1', name: 'Chat 1' },
+      { id: 'tab-2', name: 'Chat 2' },
+      { id: 'tab-3' }, // nameless — skipped, never a UUID entry
+      { name: 'orphan' }, // idless — skipped
+    ], '/ws');
+    expect(peekPeerRuntime()!.registry.getEntry('tab-1')?.agentName).toBe('Chat 1');
+    expect(peekPeerRuntime()!.registry.getEntry('tab-2')?.agentName).toBe('Chat 2');
+    expect(peekPeerRuntime()!.registry.has('tab-3')).toBe(false);
+  });
+
+  it('SYNC-02: sync upgrades UUID-fallback identities and PRESERVES a non-empty workspaceRoot', () => {
+    registerPeerTabIdentity('tab-1', '/real/ws'); // nameless switch bootstrap → UUID + real root
+    expect(peekPeerRuntime()!.registry.getEntry('tab-1')?.agentName).toBe('tab-1');
+    expect(peekPeerRuntime()!.registry.getEntry('tab-1')?.workspaceRoot).toBe('/real/ws');
+    syncPeerTabNames([{ id: 'tab-1', name: 'Chat 3' }]); // saveState sync carries no root
+    const entry = peekPeerRuntime()!.registry.getEntry('tab-1');
+    expect(entry?.agentName).toBe('Chat 3');
+    expect(entry?.workspaceRoot).toBe('/real/ws'); // upgrade must not blank the session key
   });
 });

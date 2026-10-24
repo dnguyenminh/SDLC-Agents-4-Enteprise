@@ -18,6 +18,7 @@ import { SessionCompactor } from "../pi-agent/session-compactor";
 import { ChatStatusManager } from "./ChatStatusManager";
 import { ChatModelManager } from "./ChatModelManager";
 import { ChatStateManager } from "./ChatStateManager";
+import { syncPeerTabNames } from "../pi-workflow/peer/lifecycle";
 import { CountedFlags } from "./chat-panel-provider/counted-flags";
 import { sendInitialContextUsage as runInitialContextUsage, updateContextUsageFromSavedState as runSavedStateContextUsage } from "./chat-panel-provider/context-usage";
 import type { ContextUsageDeps } from "./chat-panel-provider/context-usage";
@@ -92,6 +93,10 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   saveChatState(state: { tabs: unknown[]; activeTabId: string; messageHistory?: string[] }): void {
     this.stateManager.saveChatState(state);
+    // SA4E-369 round-6: the webview's full tab list (id + name) arrives with
+    // every save — the production path that finally carries DISPLAY NAMES into
+    // the peer registry (the ConversationManager binding is test-only).
+    syncPeerTabNames(state.tabs as ReadonlyArray<{ id?: unknown; name?: unknown }>, this.workspaceRoot);
     // SA4E-182: Update context usage whenever chat state is saved (fires after every turn)
     runSavedStateContextUsage(this.contextUsageDeps, state);
   }
