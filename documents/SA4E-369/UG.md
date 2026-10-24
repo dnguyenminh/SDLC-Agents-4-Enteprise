@@ -376,6 +376,7 @@ No new screens or settings: peer activity surfaces through the **existing** chat
 | 1 | Peer inbound **badge** | Tab bar — top-right of each tab pill | Show trailing unread inbound peer activity per tab |
 | 2 | Transcript **peer prefix** | Conversation transcript of the receiving tab | Mark inbound peer messages and their whole turns |
 | 3 | **Peer list panel** (optional) | Collapsible side panel / dropdown of the chatbox | Read-only live view of the peer registry |
+| 4 | **Peer activity hint** (sending tab) | Tool block of a `peer_send` call, under its header | Live "Peer agent in tab …<id> is working…" line while the blocking/async dispatch runs; settles to "✓ Peer agent replied" / "✗ Peer task failed" |
 
 ### 5.2 Tab Header Badge
 
@@ -433,6 +434,23 @@ No new screens or settings: peer activity surfaces through the **existing** chat
 |--------|-------|-----------------|
 | Open the panel | Expand the panel / dropdown | See all registered peers of this window |
 | Pick a target | Copy a `Tab ID` from the panel | Use it in your `peer_send` prompt |
+
+### 5.4.1 Peer Activity Hint (Sending Tab)
+
+**Key Elements:**
+
+| # | Element | Type | Description |
+|---|---------|------|-------------|
+| 1 | Live hint line | Text line under the `peer_send` tool-block header | **"⇄ Peer agent in tab …\<id8> is working… (this tab waits for the reply; check that tab for the auto-run turn)"** — pulsing while the peer turn runs |
+| 2 | PEER category chip | Tool-block header chip | Peer tool calls render with a distinct **⇄ PEER** category (vs FILE/SEARCH/MEM) so they are recognizable at a glance |
+| 3 | Settled hint | Same line, terminal | **"✓ Peer agent replied — response below (untrusted peer content)"** on completion, **"✗ Peer task failed — see response for the error"** on failure — stays visible even after the block auto-collapses |
+
+**User Actions:**
+
+| Action | Steps | Expected Result |
+|--------|-------|-----------------|
+| Watch a dispatch | Send a blocking peer task and watch the sending tab | Live hint pulses while the other tab's agent runs; the receiving tab shows the auto-run turn (§5.2/§5.3) |
+| Read the outcome | When the tool call completes | Settled hint states the peer interaction's outcome; expand the block for the reply |
 
 ### 5.5 Typical User Flow (no diagram — numbered path)
 

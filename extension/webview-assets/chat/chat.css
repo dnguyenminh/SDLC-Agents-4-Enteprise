@@ -727,6 +727,7 @@ body {
   letter-spacing: 0.3px;
 }
 .tool-cat.cat-command { background: rgba(34, 197, 94, 0.18); color: #4ade80; }
+.tool-cat.cat-peer { background: rgba(236, 72, 153, 0.18); color: #f472b6; }
 .tool-cat.cat-file { background: rgba(59, 130, 246, 0.18); color: #60a5fa; }
 .tool-cat.cat-search { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
 .tool-cat.cat-memory { background: rgba(168, 85, 247, 0.18); color: #c084fc; }
@@ -754,6 +755,22 @@ body {
 .tool-call-header .tool-status.interrupted { color: #94a3b8; }
 .tool-call-header .tool-chevron { display: none; }
 .tool-call-block.expanded .tool-chevron { display: none; }
+
+/* SA4E-369 UAT fix (UX): sending-tab peer-activity hint — the live line under
+   a running peer_send header stating ANOTHER tab's agent is working. */
+.tool-peer-hint {
+  margin: 4px 10px 2px 34px;
+  font-size: 12px;
+  font-style: italic;
+  color: #f472b6;
+  white-space: normal;
+  line-height: 1.4;
+}
+.tool-peer-hint.live { animation: peer-pulse 1.4s ease-in-out infinite; }
+@keyframes peer-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
 
 @keyframes spin {
   to { transform: rotate(360deg); }

@@ -23,6 +23,10 @@
 
     // Priority 1: Explicit prefix matches (most specific first)
     var prefixMap = [
+      // SA4E-369 UAT fix (UX): peer a2a tools get their OWN category — a
+      // blocking peer_send involves ANOTHER tab's agent and must never
+      // render like a local read/grep call.
+      { prefix: "peer_",          icon: "\u21C4", label: "PEER",  cls: "cat-peer" },
       { prefix: "execute_pwsh",    icon: "\x26gt;_", label: "CMD",    cls: "cat-command" },
       { prefix: "control_pwsh",    icon: "\x26gt;_", label: "CMD",    cls: "cat-command" },
       { prefix: "get_process",     icon: "\x26gt;_", label: "CMD",    cls: "cat-command" },

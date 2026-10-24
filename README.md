@@ -73,6 +73,7 @@ MIT
 - 🧩 **Root cause** — `sessionRequest` xây host options CHỈ từ registry identity (SEC-08), thiếu `baseUrl`/`apiKey`/`mcpBridge`. Peer turn gửi tới tab CHƯA có host → không tạo được host: keyless → thiếu gateway baseUrl → model resolution fail; cloud → thiếu key → "Provider is not configured". Bắt sống live 23:08 ngày 23/10: `peer_send` → PEER_003 "session turn failed" sau 278ms
 - 🔧 **Fix** — gateway seam (`session-gateway.ts`) chụp provider fields từ SessionHostOptions của lần tạo host ĐẦU TIÊN (first-winner, I-1) và inject vào mọi request — host do peer tạo giờ **giống hệt** host do user tạo; identity fields (tab/role/workspaceRoot) vẫn từ registry
 - 🧪 **Tests** — +4 case gateway-context (inject/stomp-guard/empty-override/reset); full suite **3,259/3,259 PASS**, tsc 0
+- 🔧 **UX (from manual UAT feedback)** — Sending-tab peer visibility: `peer_*` tool calls render with a distinct **⇄ PEER** category; a running `peer_send` shows a pulsing "Peer agent in tab …\<id> is working…" hint that settles to "✓ Peer agent replied" / "✗ Peer task failed" (stays visible after auto-collapse). UG §5.4.1 + UI-SPEC §4. Docs: UAT-RESULTS addendum + STATUS.json postUatFix
 - 🔖 **Version sync** — root/`backend`/`extension` → `1.55.5`
 
 ### v1.55.4 (2026-10-23)

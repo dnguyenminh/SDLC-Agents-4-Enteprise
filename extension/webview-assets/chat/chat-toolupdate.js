@@ -63,6 +63,19 @@
       }
     }
 
+    // SA4E-369 UAT fix (UX): settle the sending-tab peer hint — the peer
+    // agent finished (or failed); replace the live "is working…" line so
+    // the transcript states the peer interaction's outcome explicitly.
+    var peerHint = block.querySelector(".tool-peer-hint");
+    if (peerHint) {
+      peerHint.classList.remove("live");
+      if (msg.status === "completed") {
+        peerHint.textContent = "\u2713 Peer agent replied \u2014 response below (untrusted peer content)";
+      } else if (msg.status === "failed") {
+        peerHint.textContent = "\u2717 Peer task failed \u2014 see response for the error";
+      }
+    }
+
     // SA4E-371 (R2): a TERMINAL tool folds its OWN block unless the user
     // toggled it manually (data-user-managed is sticky — auto rules stop).
     if ((msg.status === "completed" || msg.status === "failed") &&

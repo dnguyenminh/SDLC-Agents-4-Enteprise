@@ -52,6 +52,18 @@ UI changes required to make peer-inbound activity visible per AC4 and design dec
 - Read-only, auto-updates on PeerRegistry changes
 - Zero configuration
 
+### 4. Peer Activity Hint (Sending Tab) — added from manual UAT feedback (2026-10-24)
+**Purpose:** The SENDING tab must visibly state that ANOTHER tab's agent is working during a dispatched peer task — previously the `peer_send` block rendered like any local tool and the multi-second blocking wait carried no peer-activity signal.
+
+**UI Elements:**
+- Live hint line under the `peer_send` tool-block header: "⇄ Peer agent in tab …\<id8> is working… (this tab waits for the reply; check that tab for the auto-run turn)" — pulsing while running
+- Distinct **⇄ PEER** category chip for `peer_*` tool calls (cat-peer)
+- Settled line on terminal: "✓ Peer agent replied — response below (untrusted peer content)" / "✗ Peer task failed — see response for the error"; remains visible after block auto-collapse
+
+**Behavior:**
+- Pure webview rendering on the existing `chat:toolCall`/`chat:toolCallUpdate` events — no protocol change, no host change
+- Hint renders only while `peer_send` is `running` (live); replay of completed calls shows the outcome text only
+
 ## Wireframes
 ![Chat Tab Header Badge](diagrams/wireframe-chat-tab-header-badge.png)
 *[Edit in draw.io](diagrams/wireframe-chat-tab-header-badge.drawio)*

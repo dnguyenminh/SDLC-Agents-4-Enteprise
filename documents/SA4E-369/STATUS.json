@@ -181,7 +181,7 @@
       "L3_provider_context": "Dispatch sessionRequest lacked baseUrl/apiKey/mcpBridge → PEER_003 on first-contact; gateway seam now captures+injects the first host creation's provider context — v1.55.5 commit c767a75"
     },
     "tests": "3,259/3,259 PASS + tsc 0 (421 files)",
-    "verification": "L1+L2 live-verified on real Kiro; L3 deployed (1.55.5 installed), pending user re-UAT after reload",
+    "verification": "L1+L2 live-verified on real Kiro; L3 live-verified (blocking peer_send completed 19.0s E2E, round-2 UAT 2026-10-24 PASS); UX follow-up (sending-tab peer hint) deployed in same release, pending visual check",
     "pushed": "main 31f1400..c767a75",
     "tags": "v1.55.4/v1.55.5 HELD until L3 re-UAT passes (tag triggers publish.yml marketplace)",
     "evidence": "documents/SA4E-369/UAT-RESULTS.md § Addendum"

@@ -125,6 +125,18 @@
     body.appendChild(resSection);
 
     block.appendChild(header);
+    // SA4E-369 UAT fix (UX): the SENDING tab must show that ANOTHER tab's
+    // agent is working — a blocking peer_send used to render like any local
+    // tool and the multi-second wait carried no peer-activity signal.
+    if (tc.name === "peer_send" && displayStatus === "running") {
+      var peerHint = document.createElement("div");
+      peerHint.className = "tool-peer-hint live";
+      var peerTabShort = tc.args && tc.args.tabId ? String(tc.args.tabId).slice(0, 8) : "?";
+      peerHint.textContent =
+        "\u21C4 Peer agent in tab \u2026" + peerTabShort +
+        " is working\u2026 (this tab waits for the reply; check that tab for the auto-run turn)";
+      block.appendChild(peerHint);
+    }
     block.appendChild(body);
 
     // Tool approval UI — builder lives in chat-tool-helpers.js (SA4E-372);

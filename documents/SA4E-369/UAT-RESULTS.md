@@ -159,3 +159,11 @@
 2. When a component claims "single source of session-creation inputs", verify the source actually CARRIES every input (credentials/URLs were never in the registry).
 3. SEC-04 curated errors preserve privacy but destroy debuggability — pair them with a transcript-based forensic path (`.pi/sessions/*.jsonl`) synced during UAT.
 4. KB entries: id=805, 808, 830, 832 (root causes + fix patterns).
+
+### Follow-up UAT round 2 (2026-10-24) — PASS + UX finding
+
+**Result:** Full E2E PASS on v1.55.5 — `peer_list` (2 tabs) → blocking `peer_send` **completed in 19.0s** with the peer's real code review of `backend/src/server/routes/auth/unified.ts`, wrapped in the `[PEER REPLY — untrusted]` envelope (S-05), summarized by the sending agent. All three layers live-verified.
+
+**UX finding (user feedback):** during the 19s blocking wait, the SENDING tab showed no signal that *another agent* was working — the `peer_send` block rendered like any local tool. Neither UI-SPEC nor UG had ever spec'd sending-tab feedback (receiving-tab badge/prefix only).
+
+**Fix (same release, v1.55.5):** webview-only — `peer_*` gets a distinct **⇄ PEER** category (`chat-tool-helpers.js`), a pulsing "Peer agent in tab …\<id8> is working…" hint while `peer_send` runs (`chat-toolcall.js`), settling to "✓ Peer agent replied" / "✗ Peer task failed" (`chat-toolupdate.js`) + `cat-peer`/`tool-peer-hint` styles (`chat.css`). No protocol/host change. Spec updated: UG §5.1 row 4 + §5.4.1; UI-SPEC §4.
