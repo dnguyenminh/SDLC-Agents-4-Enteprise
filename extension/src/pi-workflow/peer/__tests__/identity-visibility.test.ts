@@ -82,4 +82,22 @@ describe('peer tab identity — comprehensible names (round-5 UAT)', () => {
     expect(entry?.agentName).toBe('Chat 3');
     expect(entry?.workspaceRoot).toBe('/real/ws'); // upgrade must not blank the session key
   });
+
+  it('SYNC-03: the agent-less "Chat" placeholder (host created, no agent) upgrades to the tab name; a REAL agent identity never does', () => {
+    // Host creation without an agent stamps agentName 'Chat' (ensurePeerIdentity).
+    peekPeerRuntime()!.registry.register('tab-1', {
+      workspaceRoot: '/ws', providerId: 'lmstudio', configuredModelId: '', activeAgentId: '',
+      agentName: 'Chat', role: 'sm-agent', capabilities: [], model: 'auto', status: 'idle',
+    });
+    syncPeerTabNames([{ id: 'tab-1', name: 'Chat 2' }]);
+    expect(peekPeerRuntime()!.registry.getEntry('tab-1')?.agentName).toBe('Chat 2');
+
+    // A tab with a SELECTED agent keeps its agent identity.
+    peekPeerRuntime()!.registry.register('tab-2', {
+      workspaceRoot: '/ws', providerId: 'lmstudio', configuredModelId: '', activeAgentId: 'qa-agent',
+      agentName: 'qa-agent', role: 'qa-agent', capabilities: [], model: 'auto', status: 'idle',
+    });
+    syncPeerTabNames([{ id: 'tab-2', name: 'Chat 5' }]);
+    expect(peekPeerRuntime()!.registry.getEntry('tab-2')?.agentName).toBe('qa-agent');
+  });
 });

@@ -124,7 +124,16 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   // === Private routing ===
   private routeMessage(msg: ChatWebviewToExtMessage): void {
-    if (handleBuiltinChatMessage(msg, { saveChatState: (payload) => this.stateManager.saveChatState(payload) })) { return; }
+    if (handleBuiltinChatMessage(msg, {
+      saveChatState: (payload) => {
+        this.stateManager.saveChatState(payload);
+        // SA4E-369 round-6b: the REAL hot path — the webview's full tab list
+        // (id + name) arrives with every save. The provider's saveChatState
+        // wrapper is NOT on this path (routeMessage wires the state manager
+        // directly), so the peer-name sync must live HERE.
+        syncPeerTabNames(payload.tabs as ReadonlyArray<{ id?: unknown; name?: unknown }>, this.workspaceRoot);
+      },
+    })) { return; }
     if (msg.type === "ready") {
       void this.statusManager.sendCombinedStatus();
       void this.modelManager.sendModels();

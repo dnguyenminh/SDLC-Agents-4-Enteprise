@@ -74,8 +74,16 @@ export function registerPeerTabIdentity(tabId: string, workspaceRoot?: string, a
     const existing = peekPeerRuntime()?.registry.getEntry(tabId);
     if (existing) {
       const incoming = (agentName ?? '').trim();
-      const upgradesFallback = !!incoming && incoming !== tabId && existing.agentName === tabId;
-      if (!upgradesFallback) return; // real identity known — never stomp it with a UUID bootstrap
+      // Upgradable placeholder identities: the raw tabId fallback (nameless
+      // tab:switch bootstrap) and the agent-less 'Chat' placeholder stamped
+      // by ensurePeerIdentity when a host was created without an agent.
+      // A REAL identity (selected agent metadata) is never touched.
+      const isPlaceholder =
+        existing.agentName === tabId ||
+        (existing.agentName === 'Chat' && !existing.activeAgentId);
+      if (!(incoming && incoming !== tabId && isPlaceholder)) {
+        return; // real identity known — never stomp it with a UUID bootstrap
+      }
       // Preserve a non-empty existing root — an upgrade triggered by a
       // name-only sync (no root in scope) must not blank the session key.
       ensurePeerRuntimeForTab(bootstrapMeta(tabId, incoming, workspaceRoot || existing.workspaceRoot || undefined));
