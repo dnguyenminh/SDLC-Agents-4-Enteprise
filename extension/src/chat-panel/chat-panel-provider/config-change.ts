@@ -31,9 +31,9 @@ export function applyChatConfigChange(e: vscode.ConfigurationChangeEvent, deps: 
     void deps.sendCombinedStatus();
   }
   const baseUrlChanged = [
-    ["llm.anthropic.baseUrl", "anthropicBaseUrl"],
-    ["llm.openai.baseUrl", "openaiBaseUrl"],
-    ["llm.ollama.baseUrl", "ollamaUrl"],
+    ["llm.anthropic.baseUrl","anthropicBaseUrl"],
+    ["llm.openai.baseUrl","openaiBaseUrl"],
+    ["llm.ollama.baseUrl","ollamaUrl"],
   ].some(([n, o]) =>
     e.affectsConfiguration(`sdlcAgents.${n}`) || e.affectsConfiguration(`sdlcAgents.${o}`));
   if (baseUrlChanged) {
