@@ -16,7 +16,7 @@ export class IndexingServiceDelegates extends IndexingServiceBase {
     ): Promise<string | null> {
         try {
             await ensureMigrated(secrets);
-            const username = getSetting<string>("pega.username", ""pega.username", "");
+            const username = getSetting<string>("pega.username","pega.username", "");
             const wsHash = getWsHash();
             const pwKey = wsHash ? secretKey("pega", wsHash)! : LEGACY_SECRET.pega;
             const password = (await secrets.get(pwKey)) || "";

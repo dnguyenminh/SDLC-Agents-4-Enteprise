@@ -26,9 +26,9 @@ function apiKeyReader(secrets: vscode.SecretStorage, providerId: string): () => 
  * activation by settings-migration-runner).
  */
 export function createLlmProvider(secrets?: vscode.SecretStorage): LlmProvider {
-  const providerType = getSetting<string>("llm.provider", ""llm.provider", "anthropic");
-  const customModel = getSetting<string>("llm.model", ""llm.model", "");
-  const ollamaUrl = getSetting<string>("llm.ollama.baseUrl", ""llm.ollama.baseUrl", "http://localhost:11434");
+  const providerType = getSetting<string>("llm.provider","llm.provider", "anthropic");
+  const customModel = getSetting<string>("llm.model","llm.model", "");
+  const ollamaUrl = getSetting<string>("llm.ollama.baseUrl","llm.ollama.baseUrl", "http://localhost:11434");
 
   // Resolve the base URL from the provider-specific config key (single source of truth).
   // SA4E-370: reads the new dotted per-provider key; the Settings panel now
@@ -62,7 +62,7 @@ export function createProviderByType(
     case "anthropic": {
       const { AnthropicProvider } = require("./anthropic-provider");
       const baseUrl = anthropicBaseUrl
-        || getSetting<string>("llm.anthropic.baseUrl", ""llm.anthropic.baseUrl", "");
+        || getSetting<string>("llm.anthropic.baseUrl","llm.anthropic.baseUrl", "");
       return new AnthropicProvider(
         secrets ? apiKeyReader(secrets, "anthropic") : () => Promise.resolve(undefined),
         baseUrl || undefined,
@@ -80,7 +80,7 @@ export function createProviderByType(
     }
     case "kiro": {
       const gatewayUrl = anthropicBaseUrl
-        || getSetting<string>("llm.anthropic.baseUrl", ""llm.anthropic.baseUrl", "http://127.0.0.1:8990/anthropic");
+        || getSetting<string>("llm.anthropic.baseUrl","llm.anthropic.baseUrl", "http://127.0.0.1:8990/anthropic");
       const { AnthropicProvider } = require("./anthropic-provider");
       return new AnthropicProvider(
         secrets ? apiKeyReader(secrets, "anthropic") : () => Promise.resolve(undefined),

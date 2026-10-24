@@ -34,7 +34,7 @@ export class LlmSettingsHandler {
 
   /** Fetch and post the model list for a provider. */
   async getModels(provider: string): Promise<void> {
-    const currentModel = getSetting<string>("llm.model", ""llm.model", "");
+    const currentModel = getSetting<string>("llm.model","llm.model", "");
     const { models, selected, defaultModel } = await this.configService.getModels(provider, currentModel);
     this.postMessage({ type: "models", provider, models, selected, defaultModel });
   }

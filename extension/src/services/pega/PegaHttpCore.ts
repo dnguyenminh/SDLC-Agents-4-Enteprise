@@ -44,7 +44,7 @@ export class PegaHttpCore {
    */
   async getAuthHeader(): Promise<string> {
     assertWorkspaceTrusted();
-    const username = getSetting<string>("pega.username", ""pega.username", "").trim();
+    const username = getSetting<string>("pega.username","pega.username", "").trim();
     const password = await this.readWorkspacePassword();
     return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
   }
@@ -61,14 +61,14 @@ export class PegaHttpCore {
   /** Configured Pega endpoint with SEC-02 HTTPS enforcement applied. */
   getPegaEndpoint(): string {
     const raw = getSetting<string>(
-      "pega.endpoint", ""pega.endpoint", "http://localhost:8080/prweb",
+      "pega.endpoint","pega.endpoint", "http://localhost:8080/prweb",
     ).replace(/\/$/, "");
     return enforcePegaEndpointHttps(raw);
   }
 
   /** SA4E-241 SEC-03: configured Pega operator id (no hardcoded default). */
   getConfiguredUsername(): string {
-    return getSetting<string>("pega.username", ""pega.username", "").trim();
+    return getSetting<string>("pega.username","pega.username", "").trim();
   }
 
   /** Backend base URL (Code Intelligence server) — reads sdlcAgents.backend.url via getSetting. */

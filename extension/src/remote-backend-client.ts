@@ -150,7 +150,7 @@ export class RemoteBackendClient implements vscode.Disposable {
   }
 
   private async startWrapper(): Promise<void> {
-    const port = getSetting<number>("mcp.serverPort", ""mcp.serverPort", 9181);
+    const port = getSetting<number>("mcp.serverPort","mcp.serverPort", 9181);
     this.wrapperServer = new WrapperServer({
       outputChannel: this.outputChannel,
       base64Proxy: this.base64Proxy,

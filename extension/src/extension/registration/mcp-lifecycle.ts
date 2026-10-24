@@ -18,7 +18,7 @@ export function setupConfigWatcher(context: vscode.ExtensionContext, workspaceRo
     if (!portChanged || !runtime.mcpManager) { return; }
     // SA4E-370: reads only the new `mcp.enabled` key — old flat values are
     // copied forward by the one-time activation migration.
-    if (!getSetting<boolean>("mcp.enabled", ""mcp.enabled", true)) { return; }
+    if (!getSetting<boolean>("mcp.enabled","mcp.enabled", true)) { return; }
     if (runtime.mcpManager.status === "running") { runtime.mcpManager.restart().then(() => vscode.window.showInformationMessage("MCP Server restarted")).catch((err) => vscode.window.showErrorMessage(`MCP Server restart failed: ${(err as Error).message}`)); }
     else { runtime.mcpManager.spawn().catch((err) => vscode.window.showErrorMessage(`MCP Server start failed: ${(err as Error).message}`)); }
   }));
@@ -46,7 +46,7 @@ export async function autoSpawnServer(config: vscode.WorkspaceConfiguration, out
   // read directly from the new `mcp.enabled` key (one-time migration copies
   // legacy `enableMcpServer` values forward at activation).
   void config;
-  if (getSetting<boolean>("mcp.enabled", ""mcp.enabled", true)) {
+  if (getSetting<boolean>("mcp.enabled","mcp.enabled", true)) {
     try { await runtime.mcpManager!.spawn(); }
     catch (err) {
       const msg = `Auto-spawn failed: ${(err as Error).message}`;
