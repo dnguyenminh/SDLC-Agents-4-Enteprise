@@ -1,0 +1,162 @@
+<mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="920" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-381 UX — Redesigned transcript: one turn  Q &#8594; Work trace &#8594; A  (chat panel webview, vanilla JS DOM)" style="text;html=1;align=left;verticalAlign=middle;fontSize=15;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="40" y="8" width="900" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1frame" value="A.1 &#8212; Trace COLLAPSED (default after turn completes)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="40" y="50" width="640" height="760" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1tab1" value="Chat 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="82" width="110" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1tab2" value="Refactor API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="178" y="82" width="120" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1tab3" value="Docs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="306" y="82" width="80" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1transcript" value="transcript  (#chat-messages)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="60" y="120" width="600" height="596" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1user" value="T&#236;m hi&#7875;u ki&#7871;n tr&#250;c chat panel gi&#250;p t&#7891;i" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;arcSize=40;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="360" y="140" width="280" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1trace" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;shadow=0;" vertex="1" parent="1">
+      <mxGeometry x="80" y="200" width="560" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1traceSum" value="&#9656;  &#9881; Work trace &#183; 6 tools &#183; 14.2k tokens &#183; 23s &#183; thinking 2&#215;" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#4945a8;fontStyle=1;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="80" y="200" width="560" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1ans" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+      <mxGeometry x="80" y="254" width="560" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1badge" value="PI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="92" y="264" width="34" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1copy" value="&#10697;" style="text;html=1;align=right;verticalAlign=middle;fontSize=12;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="600" y="262" width="30" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1bar1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="94" y="292" width="520" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1bar2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="94" y="310" width="490" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1bar3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="94" y="328" width="520" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1bar4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="94" y="346" width="420" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1ansNote" value=".message.assistant + node-badge PI + copy action (unchanged)" style="text;html=1;align=left;verticalAlign=middle;fontSize=9;fontColor=#aaaaaa;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="94" y="372" width="420" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1older" value="&#9656;  &#9881; Work trace &#183; 2 tools &#183; 3.1k tokens &#183; 9s &#183; thinking 1&#215;      (previous turn)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#b0aed6;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="80" y="430" width="560" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1reading" value="Reading flow achieved: every finished turn = 1 compact trace line + the answer bubble. Multi-cycle turns (pi:c1, pi:c2 &#8230;) fold into ONE trace per turn." style="text;html=1;align=left;verticalAlign=top;fontSize=10;fontColor=#777777;whiteSpace=wrap;spacingLeft=4;" vertex="1" parent="1">
+      <mxGeometry x="80" y="470" width="560" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1input" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="60" y="742" width="548" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="p1send" value="Send" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="614" y="748" width="46" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2frame" value="A.2 &#8212; Trace EXPANDED (live turn in progress, or user re-opened)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="720" y="50" width="640" height="760" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tab1" value="Chat 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="740" y="82" width="110" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tab2" value="Refactor API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="858" y="82" width="120" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tab3" value="Docs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="986" y="82" width="80" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2transcript" value="transcript  (#chat-messages)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="740" y="120" width="600" height="596" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2user" value="T&#236;m hi&#7875;u ki&#7871;n tr&#250;c chat panel gi&#250;p t&#7891;i" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;arcSize=40;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="138" width="280" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2trace" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#8f8fd0;" vertex="1" parent="1">
+      <mxGeometry x="760" y="196" width="560" height="330" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2traceSum" value="&#9660;  &#9881; Work trace &#183; running&#8230; 3 tools &#183; 12s        &#10227;" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#4945a8;fontStyle=1;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="760" y="196" width="560" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2think1" value="&#9656;  Thinking &#183; 0.8k chars" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f0ff;strokeColor=#a78bfa;fontSize=10;fontColor=#7c6bc4;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="772" y="232" width="536" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;" vertex="1" parent="1">
+      <mxGeometry x="772" y="264" width="536" height="108" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool1h" value="FILE   read_file &#183; chat-panel-provider.ts          &#10003;  0.4s" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#333333;spacingLeft=8;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="780" y="268" width="400" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool1chip" value="FILE" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=none;fontColor=#2563eb;fontSize=8;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="772" y="268" width="6" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool1r1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#efefef;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="790" y="296" width="500" height="8" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool1lab" value="Request / Response sections (KSA-281 &#8212; unchanged)" style="text;html=1;align=left;verticalAlign=middle;fontSize=9;fontColor=#aaaaaa;fontStyle=2;spacingLeft=10;" vertex="1" parent="1">
+      <mxGeometry x="790" y="312" width="400" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool1r2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#efefef;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="790" y="336" width="440" height="8" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool2" value="SEARCH   grep_search &#183; routeMessage          &#10003;  1.2s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=10;fontColor=#333333;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="772" y="380" width="536" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool3" value="MEM   mem_search &#183; thinking block UX          &#10227;  running&#8230;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fffbeb;strokeColor=#f59e0b;fontSize=10;fontColor=#92400e;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="772" y="412" width="536" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2think2" value="&#9656;  Thinking &#183; 0.3k chars" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f0ff;strokeColor=#a78bfa;fontSize=10;fontColor=#7c6bc4;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="772" y="444" width="536" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2tool4" value="CMD   execute_pwsh &#183; npm run build          &#10003;  8.1s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#dddddd;fontSize=10;fontColor=#333333;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="772" y="476" width="536" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2ans" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+      <mxGeometry x="760" y="542" width="560" height="96" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2badge" value="PI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="772" y="552" width="34" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2stream1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="772" y="580" width="530" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2stream2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="772" y="598" width="380" height="10" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2blink" value="&#9679;" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontColor=#6366f1;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="592" width="20" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2peer" value="&#8664;  [Peer inbound] from tab &#8230;a1b2c3d4 (SM) &#8212; task peer-7f  &#8230;   (stays OUTSIDE trace)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fdf2f8;strokeColor=#f472b6;fontSize=9;fontColor=#be185d;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="760" y="654" width="560" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2working" value="Working&#8230; reading response-cycle files" style="text;html=1;align=left;verticalAlign=middle;fontSize=9;fontColor=#b45309;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="740" y="684" width="600" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2input" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="740" y="742" width="548" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="p2send" value="Send" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1294" y="748" width="46" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="n1" value="N1 &#8212; Trace scope: ONE trace per assistant TURN (all cycles pi:c1&#8230;pi:cN). Body = thinking blocks + tool-call blocks only. Answer bubbles, peer rows, system/error rows stay at transcript root." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="40" y="824" width="440" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n2" value="N2 &#8212; Auto-collapse fires on chat:streamComplete (turn end). data-user-managed sticky rule (SA4E-372 R2) is inherited: if the user toggled anything during the turn, the trace keeps its state." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="500" y="824" width="440" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="n3" value="N3 &#8212; Summary line: &#9881; N tools &#183; ~tokens &#183; duration &#183; thinking k&#215;. Click / Enter / Space toggles; aria-expanded kept in sync. Failed tools surface as red &#10007; count in the summary. Persisted model (tab.messages) is NOT re-grouped &#8212; export/copy unaffected." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacingLeft=8;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="960" y="824" width="440" height="80" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

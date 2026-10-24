@@ -1,0 +1,105 @@
+<mxGraphModel dx="1100" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="860" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-381 UX &#8212; Thinking block: 3 states (fixes &#8226;1-line, cannot re-open&#8226; UAT defect)" style="text;html=1;align=left;verticalAlign=middle;fontSize=15;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="40" y="8" width="900" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1frame" value="State 1 &#8212; STREAMING (live, cycle still open)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="40" y="50" width="700" height="250" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1block" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#faf8ff;strokeColor=#a78bfa;" vertex="1" parent="1">
+      <mxGeometry x="70" y="80" width="640" height="196" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1rail" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#c4b5fd;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="70" y="80" width="3" height="196" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1head" value="&#9660;  Thinking &#183; streaming&#8230;" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#7c6bc4;fontStyle=1;spacingLeft=12;" vertex="1" parent="1">
+      <mxGeometry x="80" y="88" width="300" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1pulse" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#c4b5fd;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="256" y="94" width="7" height="7" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1body1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="118" width="590" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1body2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="136" width="560" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1body3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="154" width="590" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1body4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="172" width="300" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1scroll" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d8d0f0;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="692" y="120" width="6" height="130" as="geometry"/>
+    </mxCell>
+    <mxCell id="c1note" value="auto-follow scrolls to newest delta ONLY while the user sits at the bottom (fixes scroll hijack: thinkingBody.scrollTop forced on every delta today &#8212; chat-stream.js L54)." style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontColor=#999999;fontStyle=2;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="70" y="262" width="640" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2frame" value="State 2 &#8212; COLLAPSED (settled default; one line WITH affordance)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="40" y="330" width="700" height="150" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2block" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f0ff;strokeColor=#a78bfa;" vertex="1" parent="1">
+      <mxGeometry x="70" y="366" width="640" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2head" value="&#9656;  Thinking &#183; 1.2k chars &#183; 8s" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#7c6bc4;fontStyle=1;spacingLeft=12;" vertex="1" parent="1">
+      <mxGeometry x="70" y="366" width="400" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="c2note" value="Hit area = full header row, min-height 28px (today: ~22px, label opacity 0.8, no metadata &#8212; reads as a stray rule, not a control). Metadata computed at settle: chars = thinkingText.length, duration = cycle open&#8594;close. Chevron convention fixed: &#9656; = collapsed (today CSS rotates &#9656; DOWN when collapsed &#8212; inverted)." style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontColor=#999999;fontStyle=2;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="70" y="410" width="640" height="58" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3frame" value="State 3 &#8212; EXPANDED (user opened, or sticky choice)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="40" y="510" width="700" height="290" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3block" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#faf8ff;strokeColor=#a78bfa;" vertex="1" parent="1">
+      <mxGeometry x="70" y="540" width="640" height="230" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3head" value="&#9660;  Thinking &#183; 1.2k chars &#183; 8s" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#7c6bc4;fontStyle=1;spacingLeft=12;" vertex="1" parent="1">
+      <mxGeometry x="70" y="548" width="400" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3body1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="580" width="590" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3body2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="598" width="560" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3body3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="616" width="590" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3body4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="634" width="520" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3body5" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eae4f7;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="92" y="652" width="580" height="9" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3scroll" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d8d0f0;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="692" y="582" width="6" height="180" as="geometry"/>
+    </mxCell>
+    <mxCell id="c3note" value="body max-height 220px + overflow-y auto (kept). User scrolls freely; auto-follow only at bottom. Sticky state persists: entry.thinkingUser = true AND direction stored (entry.thinkingCollapsed boolean &#8212; today only &#8226;managed&#8226; is stored, rebuild-after-detach always re-expands, chat-cycle.js L117-128)." style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontColor=#999999;fontStyle=2;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="70" y="746" width="640" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="cx1frame" value="Root causes (code evidence) &#8594; design responses" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="780" y="50" width="420" height="750" as="geometry"/>
+    </mxCell>
+    <mxCell id="cx1" value="R1. Invisible affordance &#8212; collapsed = bare 12px line, no chevron contrast, no size/duration cue; users misread it as a divider.&#10;&#8594; Header always carries chevron + &#8226;Thinking &#183; N chars &#183; Ts&#8226;; min-height 28px; hover bg (list.hoverBackground)." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacing=6;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="796" y="78" width="388" height="96" as="geometry"/>
+    </mxCell>
+    <mxCell id="cx2" value="R2. Multi-cycle stacking &#8212; a turn can emit N cycles; each leaves its own 1-line collapsed block, visually merging into one divider. Clicking a near-empty one looks like &#8226;nothing happens&#8226;.&#10;&#8594; Issue-3 trace groups ALL cycles&#39; thinking into one unit; per-cycle blocks keep their own chevrons inside." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacing=6;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="796" y="186" width="388" height="110" as="geometry"/>
+    </mxCell>
+    <mxCell id="cx3" value="R3. State loss on rebuild &#8212; ensureThinking() rebuilds a detached block EXPANDED even when the user had collapsed it (thinkingUser stores only &#8226;managed&#8226;, not direction); closeCycle may then re-collapse it &#8212; block appears to &#8226;jump&#8226;.&#10;&#8594; Store direction: entry.thinkingCollapsed; rebuild honors it; auto rules still respect data-user-managed." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacing=6;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="796" y="308" width="388" height="124" as="geometry"/>
+    </mxCell>
+    <mxCell id="cx4" value="R4. Empty-body blocks &#8212; whitespace-only thinking persists (hasThinking checks .length, chat-cycle.js L161 &#8212; no trim), so replay renders a block that &#8226;expands to nothing&#8226;.&#10;&#8594; Trim before persist; drop empty blocks on replay." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacing=6;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="796" y="444" width="388" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="cx5" value="R5. Scroll hijack while live &#8212; every delta forces body scrollTop to bottom; the expanded body is unreadable mid-stream.&#10;&#8594; Follow-only-at-bottom rule (same as transcript Jump-to-latest in Issue 1)." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacing=6;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="796" y="556" width="388" height="96" as="geometry"/>
+    </mxCell>
+    <mxCell id="cx6" value="Non-goals: do NOT change the stream protocol shape for thinking (eventType &#8226;thinking&#8226; stays); do NOT move replay logic (chat-messages.js) &#8212; both paths share one builder after the fix. Accessibility: role=button, aria-expanded, Enter/Space toggle, focus-visible ring on header." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=left;spacing=6;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="796" y="664" width="388" height="120" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

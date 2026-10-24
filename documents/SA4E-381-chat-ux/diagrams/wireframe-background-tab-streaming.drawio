@@ -1,0 +1,173 @@
+<mxGraphModel dx="1200" dy="900" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="940" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-381 UX &#8212; Background-tab streaming: composite tab-pill status + resume behavior" style="text;html=1;align=left;verticalAlign=middle;fontSize=15;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="40" y="8" width="980" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1frame" value="B.1 &#8212; Tab pill status zone (single badge slot, priority stack)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="40" y="50" width="640" height="330" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1tab1" value="Chat 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="70" y="90" width="150" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1tab1note" value="active tab &#8212; no badge (stream renders here)" style="text;html=1;align=left;verticalAlign=middle;fontSize=9;fontColor=#999999;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="70" y="126" width="200" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1tab2" value="Refactor API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="70" y="160" width="170" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1spin" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#a78bfa;strokeColor=#7c6bc4;" vertex="1" parent="1">
+      <mxGeometry x="214" y="171" width="12" height="12" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1tab2note" value="background tab STREAMING &#8212; pulsing violet dot (animated, 8px). No count: tokens arrive continuously; count would flicker." style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontColor=#999999;fontStyle=2;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="250" y="160" width="240" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1tab3" value="Docs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="70" y="230" width="130" height="34" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1unread" value="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="168" y="239" width="18" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1tab3note" value="background tab, turn FINISHED &#8212; unread count = new messages since last focus (indigo #6366f1 = reply; pink #ec4899 = peer inbound, SA4E-369 style kept)." style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontColor=#999999;fontStyle=2;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="210" y="230" width="280" height="52" as="geometry"/>
+    </mxCell>
+    <mxCell id="b1priority" value="Badge priority on the ONE slot right of tab-label:   1) streaming dot (live turn)   &#8594;   2) unread count (reply OR peer)   &#8594;   3) none.&#10;Spinner replaces count while streaming; on completion the dot morphs into the count. Focus (switchToTab) clears the unread counter &#8212; same rule as peerUnread today." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacingLeft=8;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="70" y="296" width="560" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2frame" value="B.2 &#8212; User returns to the streaming tab mid-turn (resume view)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="720" y="50" width="640" height="560" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2tab" value="Refactor API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="740" y="82" width="130" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2transcript" value="transcript re-rendered from tab.messages (buffered &#8212; full text so far)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="740" y="120" width="600" height="380" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2user" value="Refactor the routing layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;arcSize=40;spacing=6;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="140" width="280" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2trace" value="&#9656;  &#9881; Work trace &#183; running&#8230; 2 tools &#183; 8s" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;fontColor=#4945a8;align=left;spacingLeft=8;" vertex="1" parent="1">
+      <mxGeometry x="760" y="192" width="560" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2hist" value="earlier bubbles replay from tab.messages &#8212; nothing was lost while away" style="text;html=1;align=left;verticalAlign=middle;fontSize=9;fontColor=#aaaaaa;fontStyle=2;spacingLeft=4;" vertex="1" parent="1">
+      <mxGeometry x="760" y="228" width="560" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2hist1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e2e2e2;" vertex="1" parent="1">
+      <mxGeometry x="760" y="252" width="560" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2hist1b" value="SA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#14b8a6;strokeColor=none;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="772" y="262" width="34" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2hist1bar" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#efefef;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="772" y="282" width="360" height="8" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2hist2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#e2e2e2;" vertex="1" parent="1">
+      <mxGeometry x="760" y="308" width="560" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2hist2b" value="DEV" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#10b981;strokeColor=none;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="772" y="318" width="38" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2hist2bar" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#efefef;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="772" y="338" width="420" height="8" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2ans" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+      <mxGeometry x="760" y="386" width="560" height="70" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2badge" value="PI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="772" y="394" width="34" height="14" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2bar1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="772" y="416" width="530" height="8" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2bar2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e8e8e8;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="772" y="432" width="300" height="8" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2scroll" value="user scrolled up &#8594; auto-follow pauses" style="text;html=1;align=left;verticalAlign=middle;fontSize=9;fontColor=#999999;fontStyle=2;spacingLeft=4;" vertex="1" parent="1">
+      <mxGeometry x="760" y="462" width="400" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2jump" value="&#8595;  Jump to latest &#183; streaming" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=11;fontStyle=1;shadow=1;" vertex="1" parent="1">
+      <mxGeometry x="930" y="510" width="220" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2working" value="Working&#8230;" style="text;html=1;align=left;verticalAlign=middle;fontSize=9;fontColor=#b45309;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="740" y="548" width="300" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2input" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;" vertex="1" parent="1">
+      <mxGeometry x="740" y="574" width="548" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="b2send" value="Send" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1294" y="576" width="46" height="24" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3frame" value="B.3 &#8212; Badge lifecycle while user stays on tab B (no cross-tab bleed)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="40" y="420" width="640" height="440" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3t0" value="t0 &#8212; user sends in tab A, switches to tab B" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#555555;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="70" y="450" width="580" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3tabA0" value="Chat 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="70" y="472" width="110" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3dot0" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#a78bfa;strokeColor=#7c6bc4;" vertex="1" parent="1">
+      <mxGeometry x="158" y="479" width="11" height="11" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3tabB0" value="Chat 2  (active)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="190" y="472" width="120" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3note0" value="tab A transcript is NOT touched: chunks with originTabId &#8800; activeTabId update the per-tab model + counters only (data-only, no DOM). Tab B stays clean." style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontColor=#999999;fontStyle=2;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="70" y="506" width="560" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3t1" value="t1 &#8212; chat:streamComplete arrives for tab A" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#555555;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="70" y="548" width="580" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3tabA1" value="Chat 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="70" y="570" width="110" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3cnt1" value="2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6366f1;strokeColor=none;fontColor=#ffffff;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="158" y="575" width="16" height="15" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3tabB1" value="Chat 2  (active)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="190" y="570" width="120" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3note1" value="dot morphs into unread count (answer + trace summary = 2 new items). No sound, no toast &#8212; pill-level signal only." style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontColor=#999999;fontStyle=2;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="70" y="604" width="560" height="28" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3t2" value="t2 &#8212; user focuses tab A" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#555555;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="70" y="646" width="580" height="18" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3tabA2" value="Chat 1  (active)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="70" y="668" width="120" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3tabB2" value="Chat 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="668" width="110" height="26" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3note2" value="badge cleared (same clearing rule as peerUnread in switchToTab today)." style="text;html=1;align=left;verticalAlign=top;fontSize=9;fontColor=#999999;fontStyle=2;whiteSpace=wrap;" vertex="1" parent="1">
+      <mxGeometry x="70" y="702" width="560" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="b3edge1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#999999;endArrow=block;endFill=1;" edge="1" parent="1" source="b3t0" target="b3t1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="360" y="540"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="b3edge2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#999999;endArrow=block;endFill=1;" edge="1" parent="1" source="b3t1" target="b3t2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="360" y="638"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="b4frame" value="B.4 &#8212; Streaming states summary" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#cccccc;dashed=1;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="720" y="640" width="640" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="b4same" value="Same-tab streaming (unchanged): tokens append to the open cycle bubble + trace live; auto-scroll keeps bottom unless user scrolls up &#8594; Jump to latest pill (also fixes mid-stream scroll-away today)." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacingLeft=8;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="740" y="668" width="600" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="b4bg" value="Background-tab streaming (new): host stamps originTabId on chat:streamChunk / chat:streamComplete / chat:toolCall / chat:toolCallUpdate; webview keeps per-tab cycle state. Active tab renders DOM; others update model + badge only." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;dashed=1;fontSize=10;align=left;spacingLeft=8;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="740" y="736" width="600" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="b4acc" value="A11y: badge sets aria-label &#8226;Streaming in background&#8226; / &#8226;2 new messages&#8226; on the tab button; color never the only signal (dot shape vs count number)." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#cccccc;fontSize=10;align=left;spacingLeft=8;whiteSpace=wrap;verticalAlign=top;" vertex="1" parent="1">
+      <mxGeometry x="740" y="804" width="600" height="44" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>
