@@ -18,6 +18,7 @@ import {
 import { resolveWorkspaceContext } from "./message-handler/workspace-context";
 import { handlePeerTabClosed, registerPeerTabIdentity } from "../pi-workflow/peer/lifecycle";
 import { wirePeerApprovalBridge, tryResolvePeerApproval } from "./peer-approval-bridge";
+import { wirePeerInboundBridge } from "./peer-inbound-bridge";
 
 export class MessageHandler {
   private currentModel: string = "auto";
@@ -37,6 +38,8 @@ export class MessageHandler {
   ) {
     // S-02(b): one bridge per handler — peer pending events reach the SAME chat:toolApprovalPending loop.
     wirePeerApprovalBridge(this.sendToWebview);
+    // SA4E-369 AC4: receiving-tab visibility (badge + [Peer inbound] prefix + reply row).
+    wirePeerInboundBridge(this.sendToWebview);
   }
 
   async handle(msg: ChatWebviewToExtMessage): Promise<void> {

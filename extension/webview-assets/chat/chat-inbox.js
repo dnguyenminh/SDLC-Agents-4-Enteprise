@@ -52,6 +52,18 @@
       case "chat:toolCallUpdate":
         S.updateToolCall(msg);
         break;
+      case "chat:peerInbound":
+        // SA4E-369 AC4: a peer task arrived in tab msg.tabId — badge + prefix row.
+        try { S.handlePeerInbound(msg); } catch (e) {
+          vscode.postMessage({ type: "chat:debugLog", text: "handlePeerInbound ERROR: " + e.message });
+        }
+        break;
+      case "chat:peerTurnSettled":
+        // SA4E-369 AC4: the receiving tab's auto-run turn settled — reply row.
+        try { S.handlePeerTurnSettled(msg); } catch (e) {
+          vscode.postMessage({ type: "chat:debugLog", text: "handlePeerTurnSettled ERROR: " + e.message });
+        }
+        break;
       case "chat:contextPicked":
         S.addContextChip(msg.item);
         S.addFileReference(msg.item);

@@ -128,7 +128,15 @@ export class PeerBus extends EventEmitter {
     queue.push(task.taskId);
     this.inboundQueues.set(targetTabId, queue);
     const sender = this.deps.registry.getEntry(fromTabId);
-    const event: PeerInboundEvent = { tabId: targetTabId, fromTabId, taskId: task.taskId, agentName: sender?.agentName ?? 'unknown' };
+    const event: PeerInboundEvent = {
+      tabId: targetTabId,
+      fromTabId,
+      taskId: task.taskId,
+      agentName: sender?.agentName ?? 'unknown',
+      // AC4: receiving-tab transcript preview — first line of the task,
+      // capped at 140 chars (the full prompt stays in the task/thread store).
+      preview: message.split('\n')[0]?.slice(0, 140) ?? '',
+    };
     this.emit('peer:inbound', event);
     setImmediate(() => void this.deps.dispatch(targetTabId)); // delivery exits the tick
     return task;

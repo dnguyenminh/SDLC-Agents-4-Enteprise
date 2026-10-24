@@ -14,7 +14,7 @@ import { PeerRegistry } from './registry.js';
 import { sessionHostGateway, resetSessionHostGatewayContext, setSessionHostGatewayContext } from './session-gateway.js';
 import { PeerTaskManager } from './task-manager.js';
 import { PeerThreadStore } from './threads.js';
-import type { PeerProviderContext, PeerRegistryRegistration, PeerSessionGateway, PeerToolApprovalHandler, PeerToolApprovalRequest } from './types.js';
+import type { PeerInboundEvent, PeerProviderContext, PeerRegistryRegistration, PeerSessionGateway, PeerToolApprovalHandler, PeerToolApprovalRequest, PeerTurnSettledEvent } from './types.js';
 
 export interface PeerRuntime {
   bus: PeerBus;
@@ -105,6 +105,20 @@ export function onPeerApprovalPending(
   const bus = initPeerRuntime().bus;
   bus.on('peer:approval-pending', listener);
   return () => bus.off('peer:approval-pending', listener);
+}
+
+/** AC4: UI-bridge subscription to `peer:inbound` (receiving-tab badge + prefix row). */
+export function onPeerInbound(listener: (event: PeerInboundEvent) => void): () => void {
+  const bus = initPeerRuntime().bus;
+  bus.on('peer:inbound', listener);
+  return () => bus.off('peer:inbound', listener);
+}
+
+/** AC4: UI-bridge subscription to `peer:turn-settled` (receiving-tab reply row). */
+export function onPeerTurnSettled(listener: (event: PeerTurnSettledEvent) => void): () => void {
+  const bus = initPeerRuntime().bus;
+  bus.on('peer:turn-settled', listener);
+  return () => bus.off('peer:turn-settled', listener);
 }
 
 /** Registers a tab's identity + session-creation inputs (idempotent, I-1). */

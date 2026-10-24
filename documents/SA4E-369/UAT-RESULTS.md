@@ -167,3 +167,14 @@
 **UX finding (user feedback):** during the 19s blocking wait, the SENDING tab showed no signal that *another agent* was working — the `peer_send` block rendered like any local tool. Neither UI-SPEC nor UG had ever spec'd sending-tab feedback (receiving-tab badge/prefix only).
 
 **Fix (same release, v1.55.5):** webview-only — `peer_*` gets a distinct **⇄ PEER** category (`chat-tool-helpers.js`), a pulsing "Peer agent in tab …\<id8> is working…" hint while `peer_send` runs (`chat-toolcall.js`), settling to "✓ Peer agent replied" / "✗ Peer task failed" (`chat-toolupdate.js`) + `cat-peer`/`tool-peer-hint` styles (`chat.css`). No protocol/host change. Spec updated: UG §5.1 row 4 + §5.4.1; UI-SPEC §4.
+
+### Follow-up UAT round 3 (2026-10-24) — receiving-tab visibility (AC4) was NEVER wired
+
+**User feedback:** "Tab nhận không có gì cả" — the RECEIVING tab showed nothing during the exchange: no badge, no `[Peer inbound]` prefix, no trace of the auto-run turn.
+
+**Root cause (layer 4):** the bus already emitted `peer:inbound` (payload explicitly typed *"UI badge/transcript attribution"*) and the turn ran invisibly (dispatch passes no stream callbacks) — but **no subscriber existed**. The entire AC4 receiving-side UI (badge + prefix + reply row) was never implemented; the pre-fix UAT had marked SIT-05..08 as "PROXY-PASS — visual optional spot check", which masked it.
+
+**Fix (v1.55.5, same release):**
+- Host: `peer:inbound` gains `preview`; dispatch emits `peer:turn-settled` (reply / curated failure); runtime exposes `onPeerInbound`/`onPeerTurnSettled`; NEW `chat-panel/peer-inbound-bridge.ts` forwards both to the webview (single-slot pattern of the approval bridge) — wired in `message-handler.ts`.
+- Webview: NEW `chat-peer-ui.js` — badge count per tab (renders on the pill via `renderTabBar`, clears on `switchToTab`), tinted `[Peer inbound] from tab …\<id8> (agent) — task <id>: <preview>` prefix row, and a `peer-reply` row (standard markdown pipeline) when the turn settles; both persist in the tab transcript (replay + export safe). `chat-inbox.js` routes the 2 new messages; `chat.css` adds `.tab-peer-badge`/`.message.peer-inbound`/`.message.peer-reply`.
+- Tests: `receiving-visibility.test.ts` (5) — inbound payload + preview cap, settled success/failure (curated), bridge single-slot forwarding/replacement. Full suite 3,264/3,264 PASS, tsc 0.

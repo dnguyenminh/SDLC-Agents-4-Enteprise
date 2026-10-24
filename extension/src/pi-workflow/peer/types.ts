@@ -146,6 +146,22 @@ export interface PeerInboundEvent {
   fromTabId: string;
   taskId: string;
   agentName: string;
+  /** First line of the task message — receiving-tab transcript preview (AC4). */
+  preview: string;
+}
+
+/**
+ * Payload of the bus event `peer:turn-settled` — the receiving tab's auto-run
+ * turn reached a terminal state (receiving-tab transcript reply row, AC4).
+ */
+export interface PeerTurnSettledEvent {
+  /** Receiving tab (where the reply row renders). */
+  tabId: string;
+  taskId: string;
+  /** true = completed (text carries the reply), false = failed (error). */
+  ok: boolean;
+  text?: string;
+  error?: { code: string; message: string };
 }
 
 /**

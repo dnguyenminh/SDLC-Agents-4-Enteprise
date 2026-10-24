@@ -103,6 +103,12 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:error"; code: string; message: string; retryable: boolean }
   | { type: "chat:toolCall"; toolCall: ToolCallDisplay }
   | { type: "chat:toolCallUpdate"; id: string; status: ToolCallDisplay["status"]; result?: string; duration?: number }
+  /** SA4E-369 AC4: a peer task arrived in tab `tabId` — receiving-tab badge
+   *  increment + `[Peer inbound] from <fromTabId>` transcript prefix row. */
+  | { type: "chat:peerInbound"; tabId: string; fromTabId: string; fromAgentName: string; taskId: string; preview: string }
+  /** SA4E-369 AC4: the receiving tab's auto-run peer turn settled — reply (or
+   *  curated failure) appended to that tab's transcript below the prefix row. */
+  | { type: "chat:peerTurnSettled"; tabId: string; taskId: string; ok: boolean; text?: string; error?: { code: string; message: string } }
   /** Fix J: a tool is waiting for user consent — the webview shows Approve/Reject on the working bar.
    *  SA4E-369 S-02: `peer` marks the same surface for a peer-turn tool call (D6 human approval). */
   | { type: "chat:toolApprovalPending"; toolId: string; toolName: string; peer?: boolean }

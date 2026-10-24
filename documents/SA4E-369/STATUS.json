@@ -178,11 +178,12 @@
     "layers": {
       "L1_routing": "Stale SA4E-334 'local→legacy ALWAYS' gate removed — keyless providers served by session path (integrated as v1.55.1 commit 6785f61; live-verified via .pi/sessions transcript)",
       "L2_allowlist": "peer_list/peer_send/peer_status joined the session tool ALLOWLIST (SDK isAllowedTool filters customTools; tools never reached the model pool in ANY tab) — v1.55.4 commit b91230c",
-      "L3_provider_context": "Dispatch sessionRequest lacked baseUrl/apiKey/mcpBridge → PEER_003 on first-contact; gateway seam now captures+injects the first host creation's provider context — v1.55.5 commit c767a75"
+      "L3_provider_context": "Dispatch sessionRequest lacked baseUrl/apiKey/mcpBridge → PEER_003 on first-contact; gateway seam now captures+injects the first host creation's provider context — v1.55.5 commit c767a75",
+      "L4_receiving_ui": "peer:inbound had NO subscriber — AC4 badge/prefix/reply never rendered in the receiving tab. NEW peer-inbound-bridge (bus→webview) + chat-peer-ui.js (badge + [Peer inbound] prefix + reply row, persisted); dispatch emits peer:turn-settled"
     },
     "tests": "3,259/3,259 PASS + tsc 0 (421 files)",
-    "verification": "L1+L2 live-verified on real Kiro; L3 live-verified (blocking peer_send completed 19.0s E2E, round-2 UAT 2026-10-24 PASS); UX follow-up (sending-tab peer hint) deployed in same release, pending visual check",
-    "pushed": "main 31f1400..c767a75",
+    "verification": "L1+L2 live-verified on real Kiro; L3 live-verified (blocking peer_send completed 19.0s E2E, round-2 UAT 2026-10-24 PASS); L4 (AC4 receiving-tab badge/prefix/reply — previously never wired) implemented in same release, pending final visual check",
+    "pushed": "main 31f1400..(ac4 commit)",
     "tags": "v1.55.4/v1.55.5 HELD until L3 re-UAT passes (tag triggers publish.yml marketplace)",
     "evidence": "documents/SA4E-369/UAT-RESULTS.md § Addendum"
   }

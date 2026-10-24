@@ -539,6 +539,41 @@ body {
   padding-left: 10px;
 }
 
+/* SA4E-369 AC4 — receiving-tab peer rows (UG §5.3: prefix + tint). */
+.message.peer-inbound {
+  align-self: flex-start;
+  font-size: 12px;
+  font-style: italic;
+  color: #f472b6;
+  background: rgba(236, 72, 153, 0.08);
+  border-left: 3px solid #f472b6;
+  padding-left: 10px;
+}
+.message.peer-reply {
+  align-self: flex-start;
+  background: rgba(236, 72, 153, 0.05);
+  border: 1px solid rgba(236, 72, 153, 0.25);
+  border-left: 3px solid #f472b6;
+  padding-left: 10px;
+}
+
+/* SA4E-369 AC4 — tab-pill unread peer badge (UG §5.2). */
+.tab-peer-badge {
+  display: inline-block;
+  min-width: 16px;
+  height: 16px;
+  line-height: 16px;
+  margin-left: 6px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #ec4899;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: none;
+}
+
 .message.streaming::after {
   content: "\25CF";
   animation: blink 1s infinite;

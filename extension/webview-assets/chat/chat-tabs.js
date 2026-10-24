@@ -34,6 +34,11 @@
 
     S.activeTabId = tabId;
     var tab = S.getTab(tabId);
+    // SA4E-369 AC4: focusing a tab acknowledges its peer activity — badge clears.
+    if (tab && tab.peerUnread) {
+      tab.peerUnread = 0;
+      S.renderTabBar();
+    }
 
     // Clear message area and re-render target tab messages
     messagesEl.innerHTML = "";
@@ -124,6 +129,9 @@
       label.className = "tab-label";
       label.textContent = tab.name;
       el.appendChild(label);
+
+      // SA4E-369 AC4: unread peer-inbound badge (clears on tab focus).
+      if (S.renderTabPeerBadge) S.renderTabPeerBadge(tab, el);
 
       if (S.tabs.length > 1) {
         var closeBtn = document.createElement("span");

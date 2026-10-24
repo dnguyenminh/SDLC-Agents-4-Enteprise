@@ -46,6 +46,8 @@ async function runTurn(bus: PeerBus, taskId: string, peer: PeerRegistryEntry): P
     const result = await host.promptTurn(wrapped, { turnOrigin: 'peer' });
     bus.deps.tasks.setCompleted(taskId, result.text);
     recordExchange(bus, task, result.text);
+    // AC4: the receiving tab's transcript shows the auto-run turn's reply.
+    bus.emit('peer:turn-settled', { tabId: peer.tabId, taskId, ok: true, text: result.text });
     logger.debug('peer turn completed', { taskId, toTabId: peer.tabId });
   } catch (err) {
     failTask(bus, taskId, peer.tabId, err);
@@ -91,6 +93,9 @@ function failTask(bus: PeerBus, taskId: string, tabId: string, err: unknown): vo
   logger.warn('peer task failed', { taskId, code: error.code, tabId, endedAt: new Date().toISOString() });
   bus.deps.tasks.setFailed(taskId, error);
   recordFailureMarker(bus, taskId, tabId, error.code);
+  // AC4: the receiving tab's transcript shows the failed turn (curated copy
+  // only — the same error surface the sender sees, never raw internals).
+  bus.emit('peer:turn-settled', { tabId, taskId, ok: false, error: { code: error.code, message: error.message } });
 }
 
 /** SEC-04: raw internals (paths, stacks) never cross tabs — curated surface. */
