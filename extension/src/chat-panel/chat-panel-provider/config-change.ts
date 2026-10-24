@@ -1,9 +1,8 @@
 /**
  * ChatPanelProvider — reaction to configuration changes (LLM provider/model,
  * provider base URLs). Extracted from ChatPanelProvider.onConfigChange;
- * behavior is preserved exactly. SA4E-370: listens on BOTH the new dotted
- * keys and the legacy flat keys (reads fall back to legacy, so either side
- * changing must refresh the panel).
+ * behavior is preserved exactly. SA4E-370: listens on new dotted keys only.
+ * Legacy flat keys are handled by one-time migration at activation.
  */
 
 import * as vscode from "vscode";
@@ -20,9 +19,9 @@ export interface ChatConfigDeps {
 
 export function applyChatConfigChange(e: vscode.ConfigurationChangeEvent, deps: ChatConfigDeps): void {
   const providerChanged =
-    e.affectsConfiguration("sdlcAgents.llm.provider") || e.affectsConfiguration("sdlcAgents.llmProvider");
+    e.affectsConfiguration("sdlcAgents.llm.provider");
   const modelChanged =
-    e.affectsConfiguration("sdlcAgents.llm.model") || e.affectsConfiguration("sdlcAgents.llmModel");
+    e.affectsConfiguration("sdlcAgents.llm.model");
   if (providerChanged || modelChanged) {
     const engine = deps.peekEngine();
     const secrets = deps.getSecrets();
@@ -31,11 +30,11 @@ export function applyChatConfigChange(e: vscode.ConfigurationChangeEvent, deps: 
     void deps.sendCombinedStatus();
   }
   const baseUrlChanged = [
-    ["llm.anthropic.baseUrl","anthropicBaseUrl"],
-    ["llm.openai.baseUrl","openaiBaseUrl"],
-    ["llm.ollama.baseUrl","ollamaUrl"],
-  ].some(([n, o]) =>
-    e.affectsConfiguration(`sdlcAgents.${n}`) || e.affectsConfiguration(`sdlcAgents.${o}`));
+    "llm.anthropic.baseUrl",
+    "llm.openai.baseUrl",
+    "llm.ollama.baseUrl",
+  ].some(n =>
+    e.affectsConfiguration(`sdlcAgents.${n}`));
   if (baseUrlChanged) {
     void deps.sendCombinedStatus();
   }
