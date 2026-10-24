@@ -58,15 +58,15 @@ export interface ProviderTurnConfig {
  * now goes through this function (single source of truth).
  */
 export function readProviderTurnConfig(): ProviderTurnConfig {
-  const providerId = getSetting<string>('llm.provider', 'llmProvider', 'anthropic') || 'anthropic';
+  const providerId = getSetting<string>('llm.provider', 'llm.provider', 'anthropic') || 'anthropic';
   const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
   const baseUrl = (
     baseUrlKey
-      ? getSetting<string>(baseUrlKey, PROVIDER_BASE_URL_LEGACY_KEYS[providerId], '')
+      ? getSetting<string>(baseUrlKey, baseUrlKey, '')
       : ''
   ) || undefined;
-  const configuredModelId = getSetting<string>('llm.model', 'llmModel', '') || '';
-  const fallbackModelIds = getSetting<string[]>('llm.fallbackModels', 'llmFallbackModels', []);
+  const configuredModelId = getSetting<string>('llm.model', 'llm.model', '') || '';
+  const fallbackModelIds = getSetting<string[]>('llm.fallbackModels', 'llm.fallbackModels', []);
   return { providerId, baseUrl, configuredModelId, fallbackModelIds };
 }
 

@@ -107,7 +107,7 @@ export class IndexerHttpClientRetry extends IndexerHttpClientTransport {
 
     /** SA4E-300: read the configured file-retry rounds (0 when invalid/disabled). */
     protected readIndexRetryRounds(): number {
-        const configuredRounds = Number(getSetting<number>("backend.indexRetryRounds", "backendIndexRetryRounds", 5));
+        const configuredRounds = Number(getSetting<number>("backend.indexRetryRounds", "backend.indexRetryRounds", 5));
         return Number.isFinite(configuredRounds) && configuredRounds > 0 ? Math.floor(configuredRounds) : 0;
     }
 }

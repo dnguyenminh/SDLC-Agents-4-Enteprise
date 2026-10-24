@@ -73,7 +73,7 @@ export class PegaHttpCore {
 
   /** Backend base URL (Code Intelligence server) — reads sdlcAgents.backend.url via getSetting. */
   getBackendUrl(): string {
-    return getSetting<string>("backend.url", "backendUrl", "http://127.0.0.1:48721").replace(/\/$/, "");
+    return getSetting<string>("backend.url", "backend.url", "http://127.0.0.1:48721").replace(/\/$/, "");
   }
 
   /** Candidate REST prefixes, active prefix first once discovered. */

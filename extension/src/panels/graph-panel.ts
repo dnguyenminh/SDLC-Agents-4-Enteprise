@@ -167,10 +167,10 @@ export class GraphPanel extends BasePanel {
     // SA4E-370: reads the new dotted keys directly — legacy flat values are
     // copied forward once by the activation migration; defaults mirror the
     // manifest so an unset key keeps the exact pre-rename resolution.
-    const ollamaUrl = getSetting<string>('llm.ollama.baseUrl', 'ollamaUrl', 'http://localhost:11434').trim();
-    const llmModel = getSetting<string>('llm.model', 'llmModel', '');
+    const ollamaUrl = getSetting<string>('llm.ollama.baseUrl', 'llm.ollama.baseUrl', 'http://localhost:11434').trim();
+    const llmModel = getSetting<string>('llm.model', 'llm.model', '');
     if (ollamaUrl) candidates.push({ label: 'ollama', baseUrl: `${ollamaUrl.replace(/\/$/, '')}/v1`, model: llmModel || 'qwen2.5-coder' });
-    const lmstudioUrl = getSetting<string>('llm.lmstudio.baseUrl', 'lmstudioBaseUrl', '').trim();
+    const lmstudioUrl = getSetting<string>('llm.lmstudio.baseUrl', 'llm.lmstudio.baseUrl', '').trim();
     if (lmstudioUrl) candidates.push({ label: 'lmstudio', baseUrl: lmstudioUrl.replace(/\/$/, ''), model: llmModel || 'local-model' });
 
     for (const c of candidates) {

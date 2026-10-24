@@ -96,7 +96,7 @@ export class IndexerHttpClientCore {
         }
         // Client-requested rate limit (rpm). Server clamps this to its own hard cap,
         // so this can only lower (never raise) the effective limit above the server max.
-        const rpm = getSetting<number>("backend.rateLimitRpm", "backendRateLimitRpm", 6000);
+        const rpm = getSetting<number>("backend.rateLimitRpm", "backend.rateLimitRpm", 6000);
         if (typeof rpm === "number" && Number.isInteger(rpm) && rpm > 0) {
             headers["X-Rate-Limit-RPM"] = String(rpm);
         }

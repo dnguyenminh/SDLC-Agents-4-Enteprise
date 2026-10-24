@@ -46,7 +46,7 @@ export class BackendSettingsHandler {
   /** Finding #5: surface an error if the stored URL is now invalid with bypass OFF. */
   private revalidateStoredUrl(): void {
     try {
-      const url = getSetting<string>("backend.url", "backendUrl", "");
+      const url = getSetting<string>("backend.url", "backend.url", "");
       if (url) { validateBackendUrl(url, { allowInsecureRemote: false }); }
     } catch (err: any) {
       this.postMessage({
