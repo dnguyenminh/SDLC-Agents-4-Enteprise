@@ -60,14 +60,14 @@ async function fallbackInputBox(lastKey?: string): Promise<string | undefined> {
 
 /** Read last used project key from workspace config. */
 function getLastProjectKey(): string | undefined {
-    // SA4E-370: prefers `jira.lastProject`, falls back to legacy `jiraLastProject`.
-    return getSetting<string | undefined>("jira.lastProject", "jiraLastProject", undefined);
+    // SA4E-370: key is `jira.lastProject` only. Migration handles legacy values.
+    return getSetting<string | undefined>("jira.lastProject", "jira.lastProject", undefined);
 }
 
 /** Persist last used project key. */
 async function saveLastProjectKey(key: string): Promise<void> {
     await vscode.workspace.getConfiguration("sdlcAgents")
-        .update("jiraLastProject", key, vscode.ConfigurationTarget.Workspace);
+        .update("jira.lastProject", key, vscode.ConfigurationTarget.Workspace);
 }
 
 /** Ask user: incremental or full sync? Shows only if previous sync exists. */

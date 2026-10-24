@@ -11,7 +11,7 @@ import { getSetting } from "../config/settings-migration";
 import { ensureMigrated, getWsHash, secretKey, readScopedSecret, type SecretBase } from "./WorkspaceScopeResolver";
 
 /** Config keys isolated per workspace (SA4E-323) — never via generic updateConfig. */
-const WORKSPACE_SCOPED_KEYS = ["pega.endpoint", "pega.username", "atlassianConnectionType"];
+const WORKSPACE_SCOPED_KEYS = ["pega.endpoint", "pega.username", "jira.connectionType"];
 
 export class ProviderConfigService {
   constructor(private readonly secrets: vscode.SecretStorage) {}
@@ -30,27 +30,27 @@ export class ProviderConfigService {
   }> {
     await ensureMigrated(this.secrets);
     const config = vscode.workspace.getConfiguration("sdlcAgents");
-    const provider = getSetting<string>("llm.provider", "llmProvider", "anthropic");
-    const model = getSetting<string>("llm.model", "llmModel", "");
-    const ollamaUrl = getSetting<string>("llm.ollama.baseUrl", "ollamaUrl", "http://localhost:11434");
+    const provider = getSetting<string>("llm.provider", "llm.provider", "anthropic");
+    const model = getSetting<string>("llm.model", "llm.model", "");
+    const ollamaUrl = getSetting<string>("llm.ollama.baseUrl", "llm.ollama.baseUrl", "http://localhost:11434");
 
     const baseUrl = this.getBaseUrlForProvider(provider);
     const backendUrl = getBackendUrl();
     const allowInsecureRemote = config.get<boolean>("backend.allowInsecureRemote", false);
-    const mcpServerPort = getSetting<number>("mcp.serverPort", "mcpServerPort", 9181);
-    const enableMcpServer = getSetting<boolean>("mcp.enabled", "enableMcpServer", true);
+    const mcpServerPort = getSetting<number>("mcp.serverPort", "mcp.serverPort", 9181);
+    const enableMcpServer = getSetting<boolean>("mcp.enabled", "mcp.enabled", true);
 
     const anthropicKey = await this.safeGet(SECRET_KEYS.anthropic);
     const openaiKey = await this.safeGet(SECRET_KEYS.openai);
     const wsHash = getWsHash();
     const pegaPassword = await this.readSecret(wsHash, "pega");
-    const pegaEndpoint = getSetting<string>("pega.endpoint", "pegaEndpoint", "http://localhost:8080/prweb");
-    const pegaUsername = getSetting<string>("pega.username", "pegaUsername", "");
+    const pegaEndpoint = getSetting<string>("pega.endpoint", "pega.endpoint", "http://localhost:8080/prweb");
+    const pegaUsername = getSetting<string>("pega.username", "pega.username", "");
 
     const atlassianBaseUrl = (await this.readSecret(wsHash, "atlassianBaseUrl")) || "";
     const atlassianEmail = (await this.readSecret(wsHash, "atlassianEmail")) || "";
     const atlassianToken = await this.readSecret(wsHash, "atlassianToken");
-    const atlassianConnectionType = getSetting<string>("jira.connectionType", "atlassianConnectionType", "cloud");
+    const atlassianConnectionType = getSetting<string>("jira.connectionType", "jira.connectionType", "cloud");
 
     return {
       provider, model, ollamaUrl, baseUrl: baseUrl || "",
@@ -100,7 +100,7 @@ export class ProviderConfigService {
   }> {
     let models = getStaticModels(provider);
     const gatewayBaseUrl = this.getGatewayBaseUrl(provider);
-    const lmstudioBaseUrl = getSetting<string>("llm.lmstudio.baseUrl", "lmstudioBaseUrl", "")
+    const lmstudioBaseUrl = getSetting<string>("llm.lmstudio.baseUrl", "llm.lmstudio.baseUrl", "")
       || "http://localhost:1234/v1";
 
     const fetchUrl = provider === "lmstudio"
@@ -170,13 +170,13 @@ export class ProviderConfigService {
   private getBaseUrlForProvider(provider: string): string {
     const key = PROVIDER_BASE_URL_KEYS[provider];
     if (!key) { return ""; }
-    return getSetting<string>(key, PROVIDER_BASE_URL_LEGACY_KEYS[provider], "");
+    return getSetting<string>(key, key, "");
   }
 
   private getGatewayBaseUrl(provider: string): string {
     const key = PROVIDER_BASE_URL_KEYS[provider];
     if (!key) { return ""; }
-    const configuredUrl = getSetting<string>(key, PROVIDER_BASE_URL_LEGACY_KEYS[provider], "");
+    const configuredUrl = getSetting<string>(key, key, "");
     return configuredUrl || PROVIDER_BASE_URL_DEFAULTS[provider] || "";
   }
 }

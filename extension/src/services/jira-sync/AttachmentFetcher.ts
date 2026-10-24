@@ -30,7 +30,7 @@ const TEXT_EXTENSIONS = new Set([".md", ".txt", ".json", ".csv", ".yml", ".yaml"
 /** Extensions we send to backend for conversion */
 const CONVERTIBLE_EXTENSIONS = new Set([".docx", ".xlsx", ".pdf", ".pptx", ".rtf"]);
 
-const CHECKSUM_CONFIG_KEY = "sdlcAgents.jiraAttachmentChecksums";
+const CHECKSUM_CONFIG_KEY = "sdlcAgents.jira.attachmentChecksums";
 
 export class AttachmentFetcher {
     private checksums: Record<string, AttachmentChecksum> = {};
@@ -190,9 +190,8 @@ export class AttachmentFetcher {
 
     /** Load checksums from workspace config. */
     private loadChecksums(): void {
-        // SA4E-370: prefers `sdlcAgents.jira.attachmentChecksums`, falls back
-        // to the legacy flat `sdlcAgents.jiraAttachmentChecksums`.
-        this.checksums = getSetting<Record<string, AttachmentChecksum>>("jira.attachmentChecksums", "jiraAttachmentChecksums", {});
+        // SA4E-370: uses `sdlcAgents.jira.attachmentChecksums` only.
+        this.checksums = getSetting<Record<string, AttachmentChecksum>>("jira.attachmentChecksums", "jira.attachmentChecksums", {});
     }
 
     /** Persist checksums to workspace config after processing. */

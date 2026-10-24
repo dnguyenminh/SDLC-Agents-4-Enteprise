@@ -92,7 +92,7 @@ export async function checkLlmAvailability(
   // SA4E-370: provider read via fallback helper (new `llm.provider` + legacy
   // `llmProvider`); configKey kept for signature stability.
   void configKey;
-  const providerType = getSetting<string>("llm.provider", "llmProvider", "anthropic");
+  const providerType = getSetting<string>("llm.provider", ""llm.provider", "anthropic");
   switch (providerType) {
     case "ollama":
       // health probe — intentional: any error = service unavailable

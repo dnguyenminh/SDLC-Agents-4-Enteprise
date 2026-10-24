@@ -129,7 +129,7 @@ export async function handleEditConfig(): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) { return; }
   const relPath = getSetting<string>(
-    "workspace.configPath", "configPath", ".code-intel/orchestration.json",
+    "workspace.configPath", ""workspace.configPath", ".code-intel/orchestration.json",
   );
   const fullPath = path.join(root, relPath);
   if (!fs.existsSync(fullPath)) {
@@ -146,7 +146,7 @@ export async function handleChangeConfig(mcpManager?: IServerManager): Promise<v
   const root = getWorkspaceRoot();
   if (!root) { return; }
   const currentRelPath = getSetting<string>(
-    "workspace.configPath", "configPath", ".code-intel/orchestration.json",
+    "workspace.configPath", ""workspace.configPath", ".code-intel/orchestration.json",
   );
   const defaultUri = vscode.Uri.file(root);
   const result = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectFolders: false, canSelectMany: false, defaultUri, filters: { "JSON": ["json"] } });

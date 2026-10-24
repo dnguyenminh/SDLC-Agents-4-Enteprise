@@ -143,7 +143,7 @@ export class KiroTreeViewProvider implements vscode.TreeDataProvider<KiroTreeIte
     const statusItem = new KiroTreeItem(`Status: ${this.getStatusLabel()}`, vscode.TreeItemCollapsibleState.None);
     statusItem.iconPath = new vscode.ThemeIcon(this.getStatusIcon());
     
-    const mcpServerPort = getSetting<number>("mcp.serverPort", "mcpServerPort", 9181);
+    const mcpServerPort = getSetting<number>("mcp.serverPort", ""mcp.serverPort", 9181);
     statusItem.description = `Port ${mcpServerPort}`;
     
     serverChildren.push(statusItem);

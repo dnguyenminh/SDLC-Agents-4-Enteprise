@@ -76,7 +76,7 @@ async function sendTestChat(model: vscode.LanguageModelChat, outputCh: vscode.Ou
 }
 
 async function handleSetLlmApiKey(context: vscode.ExtensionContext): Promise<void> {
-  const provider = getSetting<string>("llm.provider", "llmProvider", "anthropic");
+  const provider = getSetting<string>("llm.provider", ""llm.provider", "anthropic");
   if (provider === "ollama") {
     vscode.window.showInformationMessage("Ollama does not require an API key.");
     return;
@@ -92,7 +92,7 @@ async function handleSetLlmApiKey(context: vscode.ExtensionContext): Promise<voi
 }
 
 async function handleClearLlmApiKey(context: vscode.ExtensionContext): Promise<void> {
-  const provider = getSetting<string>("llm.provider", "llmProvider", "anthropic");
+  const provider = getSetting<string>("llm.provider", ""llm.provider", "anthropic");
   if (provider === "ollama") {
     vscode.window.showInformationMessage("Ollama does not use stored API keys.");
     return;

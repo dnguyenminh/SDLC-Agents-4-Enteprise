@@ -74,7 +74,7 @@ export class AtlassianCredentialService {
     await this.secrets.delete(secretKey("atlassianEmail", wsHash)!);
     await this.secrets.delete(secretKey("atlassianToken", wsHash)!);
     const config = vscode.workspace.getConfiguration("sdlcAgents");
-    await config.update("atlassianConnectionType", undefined, vscode.ConfigurationTarget.Workspace);
+    await config.update("jira.connectionType", undefined, vscode.ConfigurationTarget.Workspace);
   }
 
   /** Test connection by calling GET /rest/api/2/myself with Basic auth. */
@@ -123,13 +123,12 @@ export class AtlassianCredentialService {
 
   private async storeConnectionType(type: "cloud" | "server"): Promise<void> {
     const config = vscode.workspace.getConfiguration("sdlcAgents");
-    await config.update("atlassianConnectionType", type, vscode.ConfigurationTarget.Workspace);
+    await config.update("jira.connectionType", type, vscode.ConfigurationTarget.Workspace);
   }
 
   private async readConnectionType(): Promise<"cloud" | "server"> {
-    // SA4E-370: reads the new `jira.connectionType` key with fallback to the
-    // legacy flat `atlassianConnectionType` (writes stay on the legacy key).
-    const val = getSetting<string>("jira.connectionType", "atlassianConnectionType", "cloud");
+    // SA4E-370: reads the new `jira.connectionType` key only.
+    const val = getSetting<string>("jira.connectionType", "jira.connectionType", "cloud");
     return val === "server" ? "server" : "cloud";
   }
 

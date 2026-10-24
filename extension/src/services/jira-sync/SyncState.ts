@@ -1,8 +1,7 @@
 /**
  * SA4E-102 — SyncState: Tracks last sync date for incremental Jira project sync.
  * Persists state in VS Code workspace configuration.
- * SA4E-370: reads prefer `sdlcAgents.jira.syncState` and fall back to the
- * legacy flat `sdlcAgents.jiraSyncState` (writes stay on the legacy key).
+ * SA4E-370: uses `sdlcAgents.jira.syncState` only.
  */
 import * as vscode from "vscode";
 import { getSetting } from "../../config/settings-migration";
@@ -14,7 +13,7 @@ export interface ProjectSyncState {
     lastFullSync: string | null;
 }
 
-const CONFIG_KEY = "sdlcAgents.jiraSyncState";
+const CONFIG_KEY = "sdlcAgents.jira.syncState";
 
 /**
  * Read sync state for a project key from workspace config.
@@ -22,7 +21,7 @@ const CONFIG_KEY = "sdlcAgents.jiraSyncState";
  * @returns Sync state or default (no previous sync)
  */
 export function getSyncState(projectKey: string): ProjectSyncState {
-    const allStates = getSetting<Record<string, ProjectSyncState>>("jira.syncState", "jiraSyncState", {});
+    const allStates = getSetting<Record<string, ProjectSyncState>>("jira.syncState", "jira.syncState", {});
     return allStates[projectKey] || { lastSyncDate: null, totalIssues: 0, lastFullSync: null };
 }
 

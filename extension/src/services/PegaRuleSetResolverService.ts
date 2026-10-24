@@ -56,9 +56,9 @@ export class PegaRuleSetResolverService {
    * trước `@` của `pega.username` (vd user@org => user).
    */
   public getDeveloperShortName(): string {
-    const fromSetting = getSetting<string>("pega.developerShortName", "pegaDeveloperShortName", "").trim();
+    const fromSetting = getSetting<string>("pega.developerShortName", ""pega.developerShortName", "").trim();
     if (fromSetting) return fromSetting;
-    const username = getSetting<string>("pega.username", "pegaUsername", "").trim();
+    const username = getSetting<string>("pega.username", ""pega.username", "").trim();
     if (username.includes("@")) return username.split("@")[0].trim();
     return username.replace(/[^a-zA-Z0-9_.-]/g, "").toLowerCase();
   }
