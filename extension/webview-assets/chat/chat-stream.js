@@ -48,10 +48,16 @@
       // Reasoning delta — streaming collapsible block preceding the bubble.
       // No auto-collapse while it still streams (R2); the cycle settles it.
       S.ensureThinking(c);
+      // SA4E-381 Issue 3: track thinking count per turn
+      S.turnThinkCount = (S.turnThinkCount || 0) + 1;
       c.thinkingText += msg.content || "";
       if (c.entry) c.entry.thinking = c.thinkingText; // R2: live entry mutation
-      c.thinkingBody.textContent = c.thinkingText;
-      c.thinkingBody.scrollTop = c.thinkingBody.scrollHeight;
+      // SA4E-381 Issue 2: follow-only-at-bottom — never yank the body scroll
+      // when the user scrolled up to read earlier reasoning.
+      var tb = c.thinkingBody;
+      var atBodyBottom = tb.scrollHeight - tb.scrollTop - tb.clientHeight < 24;
+      tb.textContent = c.thinkingText;
+      if (atBodyBottom) tb.scrollTop = tb.scrollHeight;
     }
 
     S.scrollToBottom();

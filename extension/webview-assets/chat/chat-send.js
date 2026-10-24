@@ -91,6 +91,9 @@
       workingText.textContent = label || "Working...";
       stopBtn.style.display = "inline-flex";
       S.isStreaming = true;
+    // SA4E-381 Issue 3: reset turn-level counters
+    S.turnStartTime = Date.now();
+    S.turnThinkCount = 0;
     } else {
       workingBar.classList.remove("active");
       stopBtn.style.display = "none";

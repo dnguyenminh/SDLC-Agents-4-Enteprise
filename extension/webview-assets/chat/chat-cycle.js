@@ -29,34 +29,7 @@
     S.scrollToBottom();
   }
 
-  /** Thinking block (collapse rules live in the callers — R2). */
-  function buildThinkingBlock(c) {
-    var wrap = document.createElement("div");
-    wrap.className = "thinking-block streaming";
-    wrap.setAttribute("data-cycle-id", c.cycleId);
-    var header = document.createElement("div");
-    header.className = "thinking-header";
-    header.innerHTML = '<span class="thinking-chevron">&#9656;</span><span class="thinking-label">Thinking</span>';
-    header.addEventListener("click", function () {
-      // R2 sticky: once the user picks a state, auto rules never touch it.
-      wrap.setAttribute("data-user-managed", "true");
-      c.thinkingUser = true;
-      wrap.classList.toggle("collapsed");
-    });
-    var body = document.createElement("div");
-    body.className = "thinking-body";
-    wrap.appendChild(header);
-    wrap.appendChild(body);
-    c.thinkingEl = wrap;
-    c.thinkingBody = body;
-    return wrap;
-  }
-
-  /** Open cycle n+1 for the given node (first delta/tool of a turn).
-   *  SA4E-372 R2: the per-cycle entry joins tab.messages at OPEN — before
-   *  any tool of this cycle renders — so replay order matches chat order.
-   *  The entry object stays REFERENCED: stream buffers mutate it live and
-   *  closeCycle only finalizes. */
+  /** Open cycle n+1 for the given node (first delta/tool of a turn). */
   S.openCycle = function (nodeId) {
     S.cycleSeq = (S.cycleSeq || 0) + 1;
     var c = {
@@ -67,6 +40,8 @@
       content: "",
       hasTools: false,
       thinkingUser: false,
+      thinkingCollapsed: false,
+      openedAt: Date.now(),
       entry: {
         role: "assistant",
         content: "",
@@ -112,38 +87,10 @@
     return el;
   };
 
-  /** The cycle's streaming thinking block (before the bubble when present).
-   *  Recreated detached (mid-stream tab switch), carrying buffered text. */
-  S.ensureThinking = function (c) {
-    if (c.thinkingEl && c.thinkingEl.parentNode === messagesEl) return c.thinkingEl;
-    var wrap = buildThinkingBlock(c);
-    if (c.thinkingUser) wrap.setAttribute("data-user-managed", "true");
-    if (c.thinkingText) c.thinkingBody.textContent = c.thinkingText;
-    if (c.bubbleEl && c.bubbleEl.parentNode === messagesEl) {
-      messagesEl.insertBefore(wrap, c.bubbleEl);
-    } else {
-      appendNode(wrap);
-    }
-    return wrap;
-  };
-
-  /** Collapse a cycle's thinking (no-op when the user took control — R2). */
-  S.collapseThinking = function (c) {
-    if (!c.thinkingEl || c.thinkingEl.getAttribute("data-user-managed") === "true") return;
-    c.thinkingEl.classList.add("collapsed");
-    c.thinkingEl.classList.remove("streaming");
-  };
-
-  /** Mark a thinking stream settled (visual state; content stays for replay). */
-  S.settleThinking = function (c) {
-    if (c.thinkingEl) c.thinkingEl.classList.remove("streaming");
-  };
-
-  /**
-   * Close the open cycle: settle thinking, finish the bubble, then FINALIZE
-   * the entry pushed at open (SA4E-372 R2) — sync final buffers, backfill a
-   * missing timestamp, attach the per-cycle copy action, save. An empty
-   * cycle (no text, no thinking) splices its entry back out of tab.messages.
+  /** Close the open cycle: settle thinking, finish the bubble, then FINALIZE
+   *  the entry pushed at open (SA4E-372 R2) — sync final buffers, backfill a
+   *  missing timestamp, attach the per-cycle copy action, save. An empty
+   *  cycle (no text, no thinking) splices its entry back out of tab.messages.
    */
   S.closeCycle = function (reason) {
     var c = S.currentCycle;
@@ -158,13 +105,18 @@
     // cycle's rendered elements — final order THINK → [bubble] → TOOLS.
     S.placeAdoptedContainers(c);
     var hasText = !!(c.content && c.content.length);
-    var hasThinking = !!(c.thinkingText && c.thinkingText.length);
+    // SA4E-381 Issue 2: trim before persist — whitespace-only thinking must
+    // not create a phantom block, and stored content loses edge whitespace.
+    var thinkingTrimmed = (c.thinkingText || "").trim();
+    var hasThinking = thinkingTrimmed.length > 0;
     if (!c.entry) return null;
     // Same object pushed at open — mutation, never re-push (replay order).
-    // thinkingUser replays the sticky expanded choice (R2).
+    // thinkingUser replays the sticky expanded choice (R2); thinkingCollapsed
+    // replays the user's explicit COLLAPSE (SA4E-381 — direction tracking).
     c.entry.content = hasText ? c.content : "";
-    c.entry.thinking = hasThinking ? c.thinkingText : undefined;
+    c.entry.thinking = hasThinking ? thinkingTrimmed : undefined;
     if (c.thinkingUser) c.entry.thinkingUser = true;
+    if (c.thinkingCollapsed) c.entry.thinkingCollapsed = true;
     if (!c.entry.timestamp) c.entry.timestamp = new Date().toISOString();
     if (!hasText && !hasThinking) {
       // Empty cycle: drop the entry pushed at open (old model persisted
@@ -196,4 +148,5 @@
       S.finalizeToolContainer();
     }
   };
+
 })();

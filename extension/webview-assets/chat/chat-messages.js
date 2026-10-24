@@ -35,29 +35,28 @@
     // block the live stream produces (chat:streamChunk thinking path).
     // SA4E-371: thinkingUser marks a user-pinned expanded block — the sticky
     // choice survives replay (no auto-collapse ever touches it again).
+    // SA4E-381 Issue 2: shared builder + direction tracking. Old entries
+    // (no thinkingCollapsed field) keep today's defaults: thinkingUser ⇒
+    // expanded+managed, otherwise collapsed (regression-safe mapping).
     if (entry && entry.thinking) {
-      var twrap = document.createElement("div");
-      twrap.className = "thinking-block" + (entry.thinkingUser ? "" : " collapsed");
-      var thead = document.createElement("div");
-      thead.className = "thinking-header";
-      thead.innerHTML = '<span class="thinking-chevron">&#9656;</span><span class="thinking-label">Thinking</span>';
-      thead.addEventListener("click", function () {
-        // R2 sticky: user picked a state — auto rules stop touching it.
-        twrap.setAttribute("data-user-managed", "true");
-        twrap.classList.toggle("collapsed");
-        // SA4E-372 R4: persist the manual choice — replay honors it across
-        // reloads (thinkingUser false ⇒ collapsed, true ⇒ expanded).
-        if (entry) {
-          entry.thinkingUser = !twrap.classList.contains("collapsed");
-          S.saveStateToDisk();
-        }
-      });
-      var tbody = document.createElement("div");
-      tbody.className = "thinking-body";
-      tbody.textContent = entry.thinking;
-      twrap.appendChild(thead);
-      twrap.appendChild(tbody);
-      messagesEl.appendChild(twrap);
+      var thinkingTrimmed = String(entry.thinking).trim();
+      if (thinkingTrimmed) {
+        var collapsedDefault = entry.thinkingCollapsed !== undefined
+          ? entry.thinkingCollapsed === true
+          : !(entry.thinkingUser === true);
+        var tb = S.buildThinkingBlockDom(
+          thinkingTrimmed,
+          collapsedDefault,
+          entry.thinkingUser === true,
+          null,
+          function (nowCollapsed) {
+            entry.thinkingCollapsed = nowCollapsed;
+            entry.thinkingUser = true;
+            S.saveStateToDisk();
+          }
+        );
+        messagesEl.appendChild(tb.wrap);
+      }
     }
 
     if (!thinkOnly) {

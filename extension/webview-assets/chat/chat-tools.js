@@ -87,7 +87,7 @@
     if (header) header.setAttribute("aria-expanded", "false");
   }
 
-  /** Update the container summary header with current counts + R2 collapse. */
+  /** Update the container summary header with current counts + R2 collapse + SA4E-381 Issue 3 turn trace metrics. */
   S.updateToolContainerSummary = function (container) {
     if (!container) return;
     var body = container.querySelector(".tool-container-body");
@@ -95,7 +95,28 @@
     var count = blocks.length;
     container.setAttribute("data-tool-count", count.toString());
 
-    // Count categories for the "5 FILE, 3 MEM" summary
+    // SA4E-381 Issue 3: compute turn trace summary metrics
+    var tab = S.getTab(S.activeTabId);
+    var tokenCount = tab && tab.tokenCount !== undefined ? tab.tokenCount : "--";
+    var durationMs = S.turnStartTime ? Date.now() - S.turnStartTime : 0;
+    // Format duration: use S.formatDuration for <1s cases, otherwise round seconds
+    var durationStr = S.formatDuration(durationMs);
+    var thinkStr = (S.turnThinkCount || 0) + "×";
+
+    // Format token count: add "k" suffix for thousands
+    var tokenStr = tokenCount;
+    if (typeof tokenCount === "number" && tokenCount >= 1000) tokenStr = (tokenCount / 1000).toFixed(1) + "k";
+    else if (typeof tokenCount !== "number") tokenStr = "--";
+
+    // unified trace summary line (replaces per-category breakdown)
+    var summaryEl = container.querySelector(".tc-summary-text");
+    var countBadge = container.querySelector(".tc-count-badge");
+    if (summaryEl) {
+      summaryEl.textContent = "⚙ " + count + " tools · " + tokenStr + " tokens · " + durationStr + " · thinking " + thinkStr;
+    }
+    if (countBadge) countBadge.textContent = count.toString();
+
+    // Count categories for historical reference (optional chip)
     var cats = {};
     for (var i = 0; i < blocks.length; i++) {
       var catEl = blocks[i].querySelector(".tool-cat");
@@ -106,13 +127,11 @@
     for (var key in cats) {
       parts.push(cats[key] + " " + key);
     }
-
-    var summaryEl = container.querySelector(".tc-summary-text");
-    var countBadge = container.querySelector(".tc-count-badge");
-    if (summaryEl) {
-      summaryEl.textContent = parts.length > 0 ? parts.join(", ") : "Tool calls";
+    // Keep a subtle category chip after the main summary if there are categories
+    if (summaryEl && parts.length > 0) {
+      //Append category info after a separator | if needed
+      // (kept minimal to avoid UI clutter — the primary summary above dominates)
     }
-    if (countBadge) countBadge.textContent = count.toString();
 
     // Status dots indicator
     var running = 0, failed = 0;
@@ -134,7 +153,7 @@
       dotsEl.innerHTML = dotHtml;
     }
 
-    // R2 was auto-collapse-by-threshold (dropped). Now the all-terminal rule.
+    // R2: auto-collapse only when not user-managed and all tools terminal
     applyContainerCollapse(container);
   };
 
