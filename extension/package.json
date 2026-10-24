@@ -20,19 +20,12 @@
         "sdlcAgents.backend.allowInsecureRemote",
         "sdlcAgents.backend.url",
         "sdlcAgents.pega.endpoint",
-        "sdlcAgents.pegaEndpoint",
         "sdlcAgents.pega.username",
-        "sdlcAgents.pegaUsername",
         "sdlcAgents.jira.connectionType",
-        "sdlcAgents.atlassianConnectionType",
         "sdlcAgents.llm.anthropic.baseUrl",
-        "sdlcAgents.anthropicBaseUrl",
         "sdlcAgents.llm.openai.baseUrl",
-        "sdlcAgents.openaiBaseUrl",
         "sdlcAgents.llm.ollama.baseUrl",
-        "sdlcAgents.ollamaUrl",
-        "sdlcAgents.llm.lmstudio.baseUrl",
-        "sdlcAgents.lmstudioBaseUrl"
+        "sdlcAgents.llm.lmstudio.baseUrl"
       ]
     }
   },

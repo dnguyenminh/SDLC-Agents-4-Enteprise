@@ -24,9 +24,9 @@ describe("restrictedConfigurations (SA4E-323 SEC-01)", () => {
   const restricted = readRestrictedConfigurations();
 
   it("restricts the three workspace-scoped connection keys", () => {
-    expect(restricted).toContain("sdlcAgents.pegaEndpoint");
-    expect(restricted).toContain("sdlcAgents.pegaUsername");
-    expect(restricted).toContain("sdlcAgents.atlassianConnectionType");
+    expect(restricted).toContain("sdlcAgents.pega.endpoint");
+    expect(restricted).toContain("sdlcAgents.pega.username");
+    expect(restricted).toContain("sdlcAgents.jira.connectionType");
   });
 
   it("keeps the pre-existing backend keys (no regression)", () => {
@@ -35,10 +35,10 @@ describe("restrictedConfigurations (SA4E-323 SEC-01)", () => {
   });
 
   it("SEC-324-01: restricts LLM provider base URLs (SSRF + key exfiltration)", () => {
-    expect(restricted).toContain("sdlcAgents.anthropicBaseUrl");
-    expect(restricted).toContain("sdlcAgents.openaiBaseUrl");
-    expect(restricted).toContain("sdlcAgents.ollamaUrl");
-    expect(restricted).toContain("sdlcAgents.lmstudioBaseUrl");
+    expect(restricted).toContain("sdlcAgents.llm.anthropic.baseUrl");
+    expect(restricted).toContain("sdlcAgents.llm.openai.baseUrl");
+    expect(restricted).toContain("sdlcAgents.llm.ollama.baseUrl");
+    expect(restricted).toContain("sdlcAgents.llm.lmstudio.baseUrl");
   });
 
   it("has no duplicate entries", () => {
