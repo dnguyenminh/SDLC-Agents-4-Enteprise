@@ -178,3 +178,22 @@
 - Host: `peer:inbound` gains `preview`; dispatch emits `peer:turn-settled` (reply / curated failure); runtime exposes `onPeerInbound`/`onPeerTurnSettled`; NEW `chat-panel/peer-inbound-bridge.ts` forwards both to the webview (single-slot pattern of the approval bridge) — wired in `message-handler.ts`.
 - Webview: NEW `chat-peer-ui.js` — badge count per tab (renders on the pill via `renderTabBar`, clears on `switchToTab`), tinted `[Peer inbound] from tab …\<id8> (agent) — task <id>: <preview>` prefix row, and a `peer-reply` row (standard markdown pipeline) when the turn settles; both persist in the tab transcript (replay + export safe). `chat-inbox.js` routes the 2 new messages; `chat.css` adds `.tab-peer-badge`/`.message.peer-inbound`/`.message.peer-reply`.
 - Tests: `receiving-visibility.test.ts` (5) — inbound payload + preview cap, settled success/failure (curated), bridge single-slot forwarding/replacement. Full suite 3,264/3,264 PASS, tsc 0.
+
+### Follow-up UAT rounds 4-7 (2026-10-24) — ✅ FINAL PASS (user-confirmed)
+
+**User verdict (round 7):** "Hoạt động tốt rồi" — the complete peer exchange works end-to-end on the production build:
+`peer_list` (2 tabs) → blocking `peer_send` → receiving tab auto-runs the task → reply wrapped in the `[PEER REPLY]` untrusted envelope → summarized by the sending agent. E2E round trips: 8.9s / 9.1s / 9.3s / 9.8s / 9.9s / 19.0s across verification rounds.
+
+**Rounds 4-6 (intermediate verification + 2 more fixes):**
+- Round 4: reload-vs-install race (window reload landed 2s BEFORE the install finished writing) — masked round-3 code; no code change needed.
+- Round 5: `peer_list` still showed raw tabId UUIDs — root cause: `tab:switch` re-registered WITHOUT a name and `registry.register` overwrote the whole entry. Fix: identity-stomp guard (nameless bootstrap never stomps a real name; named registration upgrades a UUID fallback; agent-driven identity protected) + `renamePeerTabIdentity` wired to the previously-empty `tab:rename` case (commit `606ca92`).
+- Round 6/6b: identity sync had been hooked into a wrapper the hot path never calls — `routeMessage` wires `stateManager.saveChatState` directly. Fix: `syncPeerTabNames` moved into the routeMessage lambda (the real seam) + placeholder `'Chat'` upgrade rule (commit `cc4ba3e`). Full suite 3,272/3,272 PASS.
+
+**Cumulative fix chain (6 layers, all root-cause, no workarounds):**
+L1 keyless routing (session path for local providers) · L2 SDK allowlist · L3 dispatch provider context · L4 receiving-tab badge/prefix/reply · L5 identity-stomp guard + rename hook · L6 `syncPeerTabNames` via the real `chat:saveState` hot path (round-6b corrected the seam).
+
+**Release state:** v1.55.5 installed + hash-verified; tag v1.55.5 staged for push/publish after user go.
+
+**New scope discovered during this UAT (3 chat-UX issues, NOT peer-scope):** cross-tab stream leakage (`chat:streamChunk` lacks originTabId), thinking-block collapse affordance broken in live path, fragmented work-trace layout. Dispatched to **ui-agent** for redesign under `documents/SA4E-381-chat-ux/` (SM → ui-agent per user instruction).
+
+*Addendum updated by the coordinating session (SM role) on user confirmation.*
