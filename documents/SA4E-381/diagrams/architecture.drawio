@@ -1,0 +1,113 @@
+<mxGraphModel dx="1200" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="820" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="title" value="SA4E-381 — Delivery topology: three OpenCode delivery locations, tracked vs untracked, one read-only validator" style="text;html=1;fontSize=15;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1080" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="rt" value="OpenCode runtime session&#10;exposes the live tool list" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="40" y="55" width="250" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="mcp" value="Configured MCP server&#10;key = &lt;server-name&gt; (user-chosen)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="400" y="55" width="250" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="cfgshapes" value="V1 shape: mcp.&lt;server-name&gt;&#10;V2 shape: mcp.servers.&lt;server-name&gt;&#10;both must resolve; neither is assumed" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="760" y="45" width="370" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="locA" value="L1 — ACTIVE WORKSPACE  ·  untracked" style="swimlane;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="190" width="300" height="250" as="geometry" />
+    </mxCell>
+    <mxCell id="a_agents" value="agents/ — 9 files&#10;canonical block, 26 lines" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locA">
+      <mxGeometry x="12" y="32" width="276" height="38" as="geometry" />
+    </mxCell>
+    <mxCell id="a_rules" value="rules/ — 8 files (1 root + 7 sdlc)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locA">
+      <mxGeometry x="12" y="78" width="276" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="a_skills" value="skills/ — 48 .md files" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locA">
+      <mxGeometry x="12" y="114" width="276" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="a_cfg" value="opencode.json — 1 declared key&#10;V1 · UNTRACKED · 7 rules in instructions[]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locA">
+      <mxGeometry x="12" y="150" width="276" height="38" as="geometry" />
+    </mxCell>
+    <mxCell id="a_note" value="65 .md files scanned  ·  .gitignore: /.opencode, /opencode.json" style="text;html=1;fontSize=9;fontStyle=2;align=right;verticalAlign=middle;" vertex="1" parent="locA">
+      <mxGeometry x="12" y="200" width="276" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="locB" value="L2 — CONVERSION MIRROR   (tracked: evidence of record)" style="swimlane;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="400" y="190" width="300" height="250" as="geometry" />
+    </mxCell>
+    <mxCell id="b_agents" value=".opencode/agents/ — 9 files&#10;same block hash, shorter bodies (OI-07)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locB">
+      <mxGeometry x="12" y="32" width="276" height="38" as="geometry" />
+    </mxCell>
+    <mxCell id="b_rules" value=".opencode/rules/ — 8 files" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locB">
+      <mxGeometry x="12" y="78" width="276" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="b_skills" value=".opencode/skills/ — 34 .md files" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locB">
+      <mxGeometry x="12" y="114" width="276" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="b_cfg" value="opencode.json — 2 declared keys&#10;V1 · TRACKED · no instructions[]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locB">
+      <mxGeometry x="12" y="150" width="276" height="38" as="geometry" />
+    </mxCell>
+    <mxCell id="b_note" value="51 .md files scanned" style="text;html=1;fontSize=10;fontStyle=2;align=right;verticalAlign=middle;" vertex="1" parent="locB">
+      <mxGeometry x="150" y="200" width="138" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="locC" value="L3 — PACKAGED EXTENSION MIRROR   (tracked, generated from L2)" style="swimlane;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="760" y="190" width="370" height="250" as="geometry" />
+    </mxCell>
+    <mxCell id="c_agents" value=".opencode/agents/ — 9 files" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locC">
+      <mxGeometry x="12" y="32" width="346" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="c_rules" value=".opencode/rules/ — 8 files" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locC">
+      <mxGeometry x="12" y="78" width="346" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="c_skills" value=".opencode/skills/ — 35 .md files" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locC">
+      <mxGeometry x="12" y="114" width="346" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="c_cfg" value="opencode.json — 2 declared keys&#10;V1 · TRACKED · no instructions[]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="locC">
+      <mxGeometry x="12" y="150" width="346" height="38" as="geometry" />
+    </mxCell>
+    <mxCell id="c_note" value="52 .md files scanned" style="text;html=1;fontSize=10;fontStyle=2;align=right;verticalAlign=middle;" vertex="1" parent="locC">
+      <mxGeometry x="220" y="200" width="138" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="report" value="documents/{TICKET}/&#10;validation-report.json&#10;+ markdown rendering&#10;+ RUN-LOG entry" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="555" width="250" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="runner" value="Validation runner&#10;read-only: scans, never edits" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="400" y="565" width="230" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="gate" value="SM Phase 5.5 gate&#10;consumes counts, not opinions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=11" vertex="1" parent="1">
+      <mxGeometry x="760" y="565" width="210" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e1" value="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#666666;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="rt" target="locA">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#666666;dashed=1;exitX=0.88;exitY=0;exitDx=0;exitDy=0;entryX=0.2;entryY=1;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="locA" target="mcp">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#B85450;dashed=1;exitX=1;exitY=0.88;exitDx=0;exitDy=0;entryX=0;entryY=0.88;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="locA" target="locB">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#82B366;exitX=1;exitY=0.88;exitDx=0;exitDy=0;entryX=0;entryY=0.88;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="locB" target="locC">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#9673A6;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.42;entryY=1;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="runner" target="locB">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#D6B656;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="runner" target="report">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#9673A6;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="runner" target="gate">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="key" value="&lt;b&gt;Edges&lt;/b&gt;&#10;1  runtime loads the agent definition + always-on rules&#10;2  agent resolves a capability suffix: session tool list first, then opencode.json (V1, then V2)&#10;3  active → conversion mirror: HAND-AUTHORED. No generation script exists today (OI-07); a blind copy would change packaged behaviour&#10;4  conversion → extension: &lt;code&gt;npm run copy-resources&lt;/code&gt; (extension/scripts/copy-resources.js, mapping &lt;code&gt;conversions → resources&lt;/code&gt;)&#10;5  validator scans all four roots read-only, with the three named exclusion globs&#10;6  validator writes the report artefact (the only write it performs)&#10;7  gate reads counts; it never re-runs the scan&lt;br&gt;&#10;&lt;b&gt;Legend&lt;/b&gt;  blue = untracked active workspace · green = tracked mirror · red = untracked-config risk · purple = validation &amp;amp; gate · orange = runtime &amp;amp; external system" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#F5F5F5;strokeColor=#999999;rounded=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="670" width="1090" height="140" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

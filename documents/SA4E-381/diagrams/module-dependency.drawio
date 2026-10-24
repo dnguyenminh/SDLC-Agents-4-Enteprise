@@ -1,0 +1,89 @@
+<mxGraphModel dx="1200" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="760" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="title" value="SA4E-381 — Artefact dependency view (class-diagram stand-in: this change set introduces no runtime classes)" style="text;html=1;fontSize=15;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1090" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="laneA" value="A — AUTHORITY   (exactly one normative copy of each)" style="swimlane;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="300" height="340" as="geometry" />
+    </mxCell>
+    <mxCell id="A1" value="A1 · Canonical block — TDD Appendix A&#10;26-line span, 25 normalised lines&#10;target hash 667E7922B0EB…" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneA">
+      <mxGeometry x="12" y="42" width="276" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="A2" value="A2 · opencode-agents-baseline.json&#10;expected_sha256 · instance_count&#10;recorded_at · change_reason" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneA">
+      <mxGeometry x="12" y="140" width="276" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="A3" value="A3 · Classification registry (BR-33)&#10;D · X-1 · X-2 · X-3 with file:line&#10;plus the three fixed exclude_globs (BR-30)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneA">
+      <mxGeometry x="12" y="238" width="276" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="laneB" value="B — INSTANCES   (27 agents · 24 rules · 117 skills · 3 configs)" style="swimlane;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="380" y="60" width="440" height="340" as="geometry" />
+    </mxCell>
+    <mxCell id="B1" value="B1 · agents — 9 × 3 locations&#10;carry the block verbatim; hand-authored in L1 (OI-07)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="12" y="42" width="416" height="56" as="geometry" />
+    </mxCell>
+    <mxCell id="B2" value="B2 · rules — 8 × 3 locations&#10;always-on only when listed in root instructions[]" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="12" y="108" width="416" height="56" as="geometry" />
+    </mxCell>
+    <mxCell id="B3" value="B3 · skills — 48 + 34 + 35 = 117 files&#10;L2 is a re-layout, not a byte copy (3 dirs differ)&#10;L3 carries one skill that L2 lacks" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="12" y="174" width="416" height="56" as="geometry" />
+    </mxCell>
+    <mxCell id="B4" value="B4 · opencode.json — 3 files&#10;V1 shape today; the V2 branch is unexercised on disk" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="12" y="240" width="416" height="56" as="geometry" />
+    </mxCell>
+    <mxCell id="B5" value="every instance is a copy: edits must land in all 3 locations or the scan fails on parity" style="text;html=1;fontSize=9;fontStyle=2;align=left;verticalAlign=middle;" vertex="1" parent="laneB">
+      <mxGeometry x="12" y="300" width="416" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="laneC" value="C — EXISTING GENERATORS   (read-only reference; not modified by this ticket)" style="swimlane;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="840" y="60" width="290" height="340" as="geometry" />
+    </mxCell>
+    <mxCell id="C1" value="scripts/sync-conversions.mjs&#10;generates claude-code / copilot / codex&#10;does NOT generate .opencode (OI-07)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneC">
+      <mxGeometry x="12" y="42" width="266" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="C2" value="extension/scripts/copy-resources.js&#10;copy map: conversions -> resources (line 36)&#10;the only generation edge that exists" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneC">
+      <mxGeometry x="12" y="140" width="266" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="C3" value="Neither script touches agent bodies:&#10;the L3 mirror is generated, the L2 mirror is not" style="text;html=1;fontSize=9;fontStyle=2;align=left;verticalAlign=top;" vertex="1" parent="laneC">
+      <mxGeometry x="12" y="238" width="266" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="V" value="NEW · scripts/validate-opencode-agents.mjs&#10;Node &gt;= 20, zero runtime dependencies&#10;reads A and B · writes only the report" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="40" y="440" width="760" height="90" as="geometry" />
+    </mxCell>
+
+    <mxCell id="O1" value="documents/{TICKET}/validation-report.json" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=center;verticalAlign=middle" vertex="1" parent="1">
+      <mxGeometry x="40" y="580" width="360" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="O2" value="markdown table + one RUN-LOG.md line" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=center;verticalAlign=middle" vertex="1" parent="1">
+      <mxGeometry x="440" y="580" width="360" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e1" value="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=1;strokeColor=#666666;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.2;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="laneA" target="laneB">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=1;strokeColor=#666666;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="laneA" target="V">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=1;strokeColor=#666666;exitX=0.6;exitY=1;exitDx=0;exitDy=0;entryX=0.6;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="laneB" target="V">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=1;strokeColor=#82B366;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.35;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="laneC" target="laneB">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=1;strokeColor=#666666;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="V" target="O1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;fontStyle=1;strokeColor=#666666;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="O1" target="O2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="key" value="&lt;b&gt;Template deviation&lt;/b&gt;   the TDD template asks for a class diagram. This change set adds no classes, no interfaces and no runtime objects; its deliverables are markdown plus one script. The nearest honest artefact is this file-level dependency graph, and the deviation is recorded in TDD appendix B.&#10;&lt;b&gt;Edges&lt;/b&gt;   1  one authority text instantiates 27 copies · 2  baseline + exclusions are consumed by the validator, never by the instances · 3  the validator reads every instance root · 4  the only existing generation edge (conversions → extension resources) · 5  report is written once per run · 6  the markdown rendering is derived from the same model, never re-scanned&#10;&lt;b&gt;Direction rule&lt;/b&gt;   arrows point from producer to consumer. A back-arrow would mean an instance is normative — that is precisely the OI-05 defect this ticket removes." style="text;html=1;whiteSpace=wrap;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#F5F5F5;strokeColor=#999999;rounded=0;" vertex="1" parent="1">
+      <mxGeometry x="840" y="440" width="290" height="250" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

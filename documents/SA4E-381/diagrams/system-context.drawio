@@ -1,0 +1,124 @@
+<mxGraphModel adaptiveColors="auto" dx="0" dy="0" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-381 — System Context: Server-Agnostic Tool Resolution and Evidence Gate&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="330" y="14" width="740" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="boundary" value="OpenCode agent library — delivery scope (27 agent files + rules + skills)" style="rounded=1;dashed=1;dashPattern=5 5;fillColor=none;strokeColor=#0288d1;verticalAlign=top;align=center;fontSize=12;arcSize=6;spacingTop=8;html=1;" vertex="1" parent="1">
+      <mxGeometry x="240" y="60" width="620" height="800" as="geometry" />
+    </mxCell>
+    <mxCell id="comp_prompts" value="&lt;b&gt;Agent prompt files&lt;/b&gt;&lt;br&gt;agents · rules · skills — declare capability suffixes and both callable ID forms only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="290" y="100" width="520" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="comp_resolver" value="&lt;b&gt;Server-key resolver&lt;/b&gt;&lt;br&gt;session tool list first, then opencode.json V1 / V2 — never guess" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="290" y="230" width="520" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="comp_toolclient" value="&lt;b&gt;Dynamic tool client&lt;/b&gt;&lt;br&gt;find_tools(query) then execute_dynamic_tool(toolName, arguments object)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="290" y="360" width="520" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="comp_evidence" value="&lt;b&gt;Evidence capture and review gate&lt;/b&gt;&lt;br&gt;runtime profile · instance reuse · freshness check · capture · gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="290" y="490" width="520" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="comp_validate" value="&lt;b&gt;Validation pass&lt;/b&gt;&lt;br&gt;27 agents · 3 opencode.json in delivery scope · 0 forbidden strings" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="290" y="640" width="520" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_dev" value="Pipeline&lt;br&gt;developer" style="shape=actor;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;fontSize=11;fillColor=#e1f5fe;strokeColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="45" y="115" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="actor_rev" value="SM / BA / QA&lt;br&gt;reviewer" style="shape=actor;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;fontSize=11;fillColor=#e1f5fe;strokeColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="45" y="515" width="40" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_runtime" value="&lt;b&gt;OpenCode runtime&lt;/b&gt;&lt;br&gt;exposes live tool list, task, skill" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="100" width="320" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_config" value="&lt;b&gt;opencode.json&lt;/b&gt;&lt;br&gt;V1 mcp.&amp;lt;server-name&amp;gt; / V2 mcp.servers.&amp;lt;server-name&amp;gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="230" width="320" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_mcp" value="&lt;b&gt;Configured MCP server&lt;/b&gt;&lt;br&gt;key = &amp;lt;server-name&amp;gt; (user-defined) — dispatches child tools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="360" width="320" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_build" value="&lt;b&gt;Running build instance&lt;/b&gt;&lt;br&gt;app · MCP server · CLI — the only valid evidence source" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="490" width="320" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="ext_store" value="&lt;b&gt;Evidence store&lt;/b&gt;&lt;br&gt;documents/{TICKET}/diagrams/{kind}-{screen}.png" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;align=left;spacingLeft=10;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="670" width="320" height="110" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="" style="html=1;endArrow=classic;endSize=6;rounded=1;" edge="1" parent="1" source="actor_dev" target="comp_prompts">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="170" y="145" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e2" value="" style="html=1;endArrow=classic;endSize=6;rounded=1;" edge="1" parent="1" source="actor_rev" target="comp_evidence">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="170" y="545" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="loads agent definition" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="ext_runtime" target="comp_prompts">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="read live tool list" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.25;entryX=0.5;entryY=1;" edge="1" parent="1" source="comp_resolver" target="ext_runtime">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="880" y="252" />
+          <mxPoint x="880" y="210" />
+          <mxPoint x="1190" y="210" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="fallback: read key" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="comp_resolver" target="ext_config">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="invoke capability" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="comp_toolclient" target="ext_mcp">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="detect · reuse · capture" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="comp_evidence" target="ext_build">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="store and embed" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.9;entryX=0;entryY=0.5;" edge="1" parent="1" source="comp_evidence" target="ext_store">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="900" y="589" />
+          <mxPoint x="900" y="725" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e9" value="capability suffix only" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="comp_prompts" target="comp_resolver">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" value="binds suffix to concrete tool ID" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="comp_resolver" target="comp_toolclient">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" value="phase artefact produced" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="comp_toolclient" target="comp_evidence">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" value="counts recorded for the gate" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="comp_validate" target="comp_evidence">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="lg_box1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="45" y="690" width="16" height="12" as="geometry" />
+    </mxCell>
+    <mxCell id="lg_txt1" value="Component in scope" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="68" y="684" width="150" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="lg_box2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+      <mxGeometry x="45" y="720" width="16" height="12" as="geometry" />
+    </mxCell>
+    <mxCell id="lg_txt2" value="External system or store" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="68" y="714" width="160" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="lg_box3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;" vertex="1" parent="1">
+      <mxGeometry x="45" y="750" width="16" height="12" as="geometry" />
+    </mxCell>
+    <mxCell id="lg_txt3" value="Human actor" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="68" y="744" width="120" height="22" as="geometry" />
+    </mxCell>
+    <mxCell id="lg_txt4" value="Dashed edge = read / fallback" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="45" y="780" width="180" height="22" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

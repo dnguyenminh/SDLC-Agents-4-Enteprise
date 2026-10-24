@@ -1,0 +1,139 @@
+<mxGraphModel adaptiveColors="auto" dx="0" dy="0" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="960" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-381 — Sequence: session start to capability resolution to dynamic tool invocation&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="180" y="14" width="740" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="h1" value="Agent prompt&lt;br&gt;(agents · rules · skills)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="45" y="90" width="170" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="h2" value="OpenCode runtime" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="245" y="90" width="170" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="h3" value="opencode.json&lt;br&gt;(V1 / V2 shape)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="445" y="90" width="170" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="h4" value="Configured MCP server&lt;br&gt;&amp;lt;server-name&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="655" y="90" width="170" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="h5" value="Nested child capability&lt;br&gt;(jira · mem · drawio · export)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="865" y="90" width="170" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="l1" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="142" as="sourcePoint" />
+        <mxPoint x="130" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="330" y="142" as="sourcePoint" />
+        <mxPoint x="330" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="530" y="142" as="sourcePoint" />
+        <mxPoint x="530" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="740" y="142" as="sourcePoint" />
+        <mxPoint x="740" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="950" y="142" as="sourcePoint" />
+        <mxPoint x="950" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. read Tool Usage block: capability suffix + both ID forms" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="180" as="sourcePoint" />
+        <mxPoint x="130" y="218" as="targetPoint" />
+        <Array as="points">
+          <mxPoint x="180" y="180" />
+          <mxPoint x="180" y="218" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. inspect session tool list for the capability prefix" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="270" as="sourcePoint" />
+        <mxPoint x="330" y="270" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. prefix found → resolved(server_key, mode)" style="html=1;endSize=6;startSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="330" y="320" as="sourcePoint" />
+        <mxPoint x="130" y="320" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. not conclusive: read configuration" style="html=1;endSize=6;startSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="370" as="sourcePoint" />
+        <mxPoint x="530" y="370" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5. server_key + config_shape (V1 | V2)" style="html=1;endSize=6;startSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="530" y="415" as="sourcePoint" />
+        <mxPoint x="130" y="415" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6. find_tools(query = semantic capability description)" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="465" as="sourcePoint" />
+        <mxPoint x="740" y="465" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7. dispatch semantic query" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="740" y="505" as="sourcePoint" />
+        <mxPoint x="950" y="505" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8. candidate names + input schema" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="950" y="545" as="sourcePoint" />
+        <mxPoint x="740" y="545" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9. exact nested tool name" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="740" y="585" as="sourcePoint" />
+        <mxPoint x="130" y="585" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10. execute_dynamic_tool(toolName, arguments object)" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="130" y="630" as="sourcePoint" />
+        <mxPoint x="740" y="630" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11. invoke child tool" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="740" y="670" as="sourcePoint" />
+        <mxPoint x="950" y="670" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="12. result" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="950" y="705" as="sourcePoint" />
+        <mxPoint x="740" y="705" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="13. result payload to the agent" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="740" y="745" as="sourcePoint" />
+        <mxPoint x="130" y="745" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note" value="&lt;b&gt;Exception outcomes (EF-01 … EF-04)&lt;/b&gt;&lt;br&gt;Unresolved key after tool list + both config shapes → stop and report capability + sources searched; never substitute a guessed ID.&lt;br&gt;Unknown nested tool name → report the semantic query and candidates returned; never invent a tool name.&lt;br&gt;Wrong argument key (tool_name) → server rejects; correct to toolName and retry once; repeat occurrence is a prompt defect.&lt;br&gt;ID-form mismatch (direct vs Code Mode) → report detected mode, retry once with the other form, then fail." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="45" y="800" width="990" height="120" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

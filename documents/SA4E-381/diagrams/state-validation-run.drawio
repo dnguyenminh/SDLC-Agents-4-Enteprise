@@ -1,0 +1,79 @@
+<mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="720" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="title" value="SA4E-381 — Lifecycle of a validation run (three terminal verdicts, one loop back)" style="text;html=1;fontSize=15;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1090" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="s0" value="Not run" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=11;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="40" y="150" width="120" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="Running&#10;(invoked with ticket + roots)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="200" y="140" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="s2" value="Enumerating&#10;glob roots, drop excluded paths" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="400" y="140" width="160" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="s3" value="Extracting + normalising&#10;26-line span → 25 lines → sha256" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="600" y="140" width="180" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="s4" value="Comparing + scanning&#10;hash · tool_name · rule refs · config shape" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="820" y="140" width="200" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="s5" value="Writing report&#10;json + markdown, exit code set" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="640" y="290" width="180" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="tPass" value="PASSED&#10;exit 0 · 0 defects, hash 27/27" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="640" y="440" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="tFail" value="FAILED&#10;exit 1 · defects &gt; 0 or hash drift" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="880" y="440" width="200" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="tErr" value="ERROR&#10;exit 2 · incomplete = true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="400" y="440" width="180" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="tRe" value="Re-baselined&#10;block edited on purpose · reason + commit recorded" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10" vertex="1" parent="1">
+      <mxGeometry x="110" y="430" width="220" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e1" value="invoke" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="s0" target="s1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" edge="1" parent="1" source="s1" target="s2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" edge="1" parent="1" source="s2" target="s3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" edge="1" parent="1" source="s3" target="s4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0" edge="1" parent="1" source="s4" target="s5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="clean" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#82B366;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="s5" target="tPass">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="findings" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#B85450;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="s5" target="tFail">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="root unreadable / parse error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#D79B00;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.7;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="s2" target="tErr">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e9" value="hash drift, edit intended" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#D6B656;dashed=1;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="tFail" target="tRe">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="940" y="550" /><mxPoint x="220" y="550" /></Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e10" value="next change → run again" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#999999;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="tRe" target="s0">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="key" value="&lt;b&gt;Why three terminals&lt;/b&gt;   PASSED and FAILED are both complete scans; ERROR means the scan could not be completed. Collapsing ERROR into FAILED would let a partial scan look authoritative, which is the failure mode the report contract exists to prevent.&#10;&lt;b&gt;Re-baselining rule&lt;/b&gt;   the only legitimate way to move the expected hash is the Re-baselined path: block text and baseline file change in the same commit, change_reason is non-null, and the commit id is recorded. A hash change without that evidence is FAILED, not Re-baselined.&#10;&lt;b&gt;No terminal is sticky&lt;/b&gt;   nothing caches the verdict; every run recomputes from file bytes, so a stale green is impossible." style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#F5F5F5;strokeColor=#999999;rounded=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="585" width="1090" height="95" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

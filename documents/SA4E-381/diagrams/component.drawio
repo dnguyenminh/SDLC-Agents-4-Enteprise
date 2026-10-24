@@ -1,0 +1,88 @@
+<mxGraphModel dx="1200" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="title" value="SA4E-381 — Component view: read-only validation core, one report artefact, two human consumers" style="text;html=1;fontSize=15;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1090" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="laneA" value="A — AUTHORING INPUTS   (the only place humans write; the validator never mutates them)" style="swimlane;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="55" width="1090" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="A1" value="A1 · Canonical block artefact&#10;TDD Appendix A text — 26 lines&#10;normative for all 27 instances" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneA">
+      <mxGeometry x="12" y="42" width="250" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="A2" value="A2 · Agent definitions&#10;9 agents × 3 locations = 27 files&#10;each carries the block verbatim" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneA">
+      <mxGeometry x="282" y="42" width="250" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="A3" value="A3 · Rules, skills, AGENTS.md&#10;65 + 51 + 52 + 1 = 169 .md files&#10;scanned for tool_name literals" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneA">
+      <mxGeometry x="552" y="42" width="250" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="A4" value="A4 · opencode.json × 3&#10;V1 today · V2 shape must also resolve&#10;values counted, never echoed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneA">
+      <mxGeometry x="822" y="42" width="250" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="laneB" value="B — VALIDATION CORE   (deterministic; no network, no LLM, no writes except the report)" style="swimlane;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="225" width="1090" height="210" as="geometry" />
+    </mxCell>
+    <mxCell id="B1" value="B1 · File enumerator&#10;walks L1/L2/L3 roots + root AGENTS.md&#10;applies the three fixed exclude_globs (BR-30)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="12" y="42" width="340" height="62" as="geometry" />
+    </mxCell>
+    <mxCell id="B2" value="B2 · Block extractor + normalizer&#10;start marker → next ## / ### heading&#10;CRLF-normalised, trimmed, SHA-256 upper" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="372" y="42" width="340" height="62" as="geometry" />
+    </mxCell>
+    <mxCell id="B3" value="B3 · Capability reference scanner&#10;tool_name literal ⇒ defect | exclusion&#10;emits file:line; never auto-fixes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="732" y="42" width="346" height="62" as="geometry" />
+    </mxCell>
+    <mxCell id="B4" value="B4 · Rule-path reference checker&#10;resolves every rules/… reference&#10;distinguishes rules/ from skills/" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="12" y="118" width="340" height="62" as="geometry" />
+    </mxCell>
+    <mxCell id="B5" value="B5 · Config shape resolver&#10;V1 mcp.&lt;name&gt; then V2 mcp.servers.&lt;name&gt;&#10;counts keys only — values redacted" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="372" y="118" width="340" height="62" as="geometry" />
+    </mxCell>
+    <mxCell id="B6" value="B6 · Baseline comparator&#10;1 expected hash · 27 instances&#10;flags drift and mixed-hash sets" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneB">
+      <mxGeometry x="732" y="118" width="346" height="62" as="geometry" />
+    </mxCell>
+
+    <mxCell id="laneC" value="C — REPORTING   (one artefact, two renderings, one exit code)" style="swimlane;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="455" width="1090" height="140" as="geometry" />
+    </mxCell>
+    <mxCell id="C1" value="C1 · Report model&#10;run metadata + per-location counts&#10;findings grouped by bucket" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneC">
+      <mxGeometry x="12" y="42" width="340" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="C2" value="C2 · JSON emitter&#10;documents/{TICKET}/validation-report.json&#10;stable key order, schema-validated" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneC">
+      <mxGeometry x="372" y="42" width="340" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="C3" value="C3 · Markdown renderer + exit policy&#10;0 clean · 1 findings · 2 tool error&#10;never 0 on a partial or refused scan" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneC">
+      <mxGeometry x="732" y="42" width="346" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="laneD" value="D — CONSUMERS   (read counts; never re-run the scan)" style="swimlane;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="615" width="1090" height="115" as="geometry" />
+    </mxCell>
+    <mxCell id="D1" value="D1 · SM Phase 5.5 gate&#10;pass / fail decided on counts only" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneD">
+      <mxGeometry x="12" y="42" width="340" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="D2" value="D2 · RUN-LOG.md&#10;one line per run: ticket, hash, findings" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneD">
+      <mxGeometry x="372" y="42" width="340" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="D3" value="D3 · Jira attachment&#10;report attached to the ticket" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="laneD">
+      <mxGeometry x="732" y="42" width="346" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e1" value="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#666666;dashed=1;exitX=0.33;exitY=1;exitDx=0;exitDy=0;entryX=0.33;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="laneA" target="laneB">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#666666;dashed=1;exitX=0.33;exitY=1;exitDx=0;exitDy=0;entryX=0.33;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="laneB" target="laneC">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#666666;exitX=0.33;exitY=1;exitDx=0;exitDy=0;entryX=0.33;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="laneC" target="laneD">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="key" value="&lt;b&gt;Edges&lt;/b&gt;   1  inputs are enumerated and normalised read-only · 2  findings aggregate into one report model · 3  consumers read counts, they never re-open the workspace&#10;&lt;b&gt;Internal wiring in B&lt;/b&gt;   B1 feeds B3 and B4 · B2 feeds B3 and B6 · B5 walks no files at all · B6 is the only component that knows the expected hash&#10;&lt;b&gt;Invariants&lt;/b&gt;   nothing in B or C mutates A · the single permitted write is C2's report file · every component is a pure function of (file bytes, exclusions, baseline)&#10;&lt;b&gt;Degradation&lt;/b&gt;   if any root is unreadable then exit 2 and the report is still written, with the reachable subset marked incomplete (never a silent pass)" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#F5F5F5;strokeColor=#999999;rounded=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="740" width="1090" height="100" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

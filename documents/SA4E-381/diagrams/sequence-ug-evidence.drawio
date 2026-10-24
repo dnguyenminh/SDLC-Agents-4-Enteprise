@@ -1,0 +1,135 @@
+<mxGraphModel adaptiveColors="auto" dx="0" dy="0" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1120" pageHeight="960" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-381 — Sequence: evidence capture, instance reuse, freshness check and gate&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="200" y="14" width="720" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="h1" value="Evidence-producing agent&lt;br&gt;(DEV · QA)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="30" y="90" width="180" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="h2" value="Project definition&lt;br&gt;(README · build · TDD deploy)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="240" y="90" width="180" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="h3" value="Running build instance" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="450" y="90" width="180" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="h4" value="Capture tooling&lt;br&gt;(browser · emulator · shell)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="660" y="90" width="180" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="h5" value="Evidence store + gate&lt;br&gt;(SM · BA · QA reviewer)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="870" y="90" width="180" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="l1" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="142" as="sourcePoint" />
+        <mxPoint x="120" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="330" y="142" as="sourcePoint" />
+        <mxPoint x="330" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="540" y="142" as="sourcePoint" />
+        <mxPoint x="540" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="750" y="142" as="sourcePoint" />
+        <mxPoint x="750" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" value="" style="html=1;endArrow=none;dashed=1;strokeWidth=1;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="960" y="142" as="sourcePoint" />
+        <mxPoint x="960" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. resolve runtime profile (start command · port · health path)" style="html=1;endSize=6;startSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="190" as="sourcePoint" />
+        <mxPoint x="330" y="190" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. runtime_profile_source" style="html=1;endSize=6;startSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="330" y="230" as="sourcePoint" />
+        <mxPoint x="120" y="230" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. detect instance: health → port/process/container → PID file" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="285" as="sourcePoint" />
+        <mxPoint x="540" y="285" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. instance_detection_method (running | none-running)" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="540" y="325" as="sourcePoint" />
+        <mxPoint x="120" y="325" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5. reuse the running instance — a second instance is never started" style="html=1;endSize=6;startSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="370" as="sourcePoint" />
+        <mxPoint x="540" y="370" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6. feature freshness check for the deliverable type" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="415" as="sourcePoint" />
+        <mxPoint x="540" y="415" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7. freshness_evidence | STALE" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="540" y="455" as="sourcePoint" />
+        <mxPoint x="120" y="455" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8. if stale: restart that same instance and record restart_reason" style="html=1;endSize=6;startSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="500" as="sourcePoint" />
+        <mxPoint x="540" y="500" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9. capture by deliverable type" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="560" as="sourcePoint" />
+        <mxPoint x="750" y="560" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10. artefact bytes" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="750" y="600" as="sourcePoint" />
+        <mxPoint x="120" y="600" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11. store at diagrams/{kind}-{screen}.png and embed inline" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="650" as="sourcePoint" />
+        <mxPoint x="960" y="650" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="12. submit for gate: freshness + provenance record" style="html=1;endSize=6;startSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="695" as="sourcePoint" />
+        <mxPoint x="960" y="695" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="13. VERIFIED | REJECTED (mockup · stale · missing inline reference)" style="html=1;endSize=6;startSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="960" y="740" as="sourcePoint" />
+        <mxPoint x="120" y="740" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note" value="&lt;b&gt;Exception outcomes (EF-05 … EF-09)&lt;/b&gt;&lt;br&gt;App will not start → do not substitute a mockup; record [SCREENSHOT REQUIRED: app failed to start — reason] and report the gap to SM.&lt;br&gt;Instance owned by another person/process → report to SM; do not terminate it.&lt;br&gt;Capture tooling unavailable (no emulator, no driver, no OS screenshot path) → record the gap naming the missing capability.&lt;br&gt;Evidence produced from a previous build → delete, re-capture from the verified instance, note the re-capture.&lt;br&gt;Silent omission of a missing screenshot is a hard failure, not a gap." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="30" y="800" width="1020" height="125" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,101 @@
+<mxGraphModel adaptiveColors="auto" dx="0" dy="0" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1180" pageHeight="960" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-381 — State Machine: Evidence Capture and Acceptance Lifecycle&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="290" y="14" width="600" height="24" as="geometry" />
+    </mxCell>
+    <mxCell id="subtitle" value="Chosen state machine: evidence capture (US-3). Tool-resolution states are modelled as UC-01 / UC-02 outcomes." style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="230" y="44" width="720" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="init" value="" style="ellipse;shape=doubleCircle;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="172" y="78" width="26" height="26" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="&lt;b&gt;NOT_STARTED&lt;/b&gt;&lt;br&gt;no capture attempted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="140" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="s2" value="&lt;b&gt;RUNTIME_RESOLVED&lt;/b&gt;&lt;br&gt;start command + port known" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="280" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="s3" value="&lt;b&gt;INSTANCE_CONFIRMED&lt;/b&gt;&lt;br&gt;instance detected and reused" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="420" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="s4" value="&lt;b&gt;FRESHNESS_VERIFIED&lt;/b&gt;&lt;br&gt;ticket feature present in build" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="80" y="560" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="s5" value="&lt;b&gt;CAPTURED&lt;/b&gt;&lt;br&gt;stored + embedded inline" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="560" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="s6" value="&lt;b&gt;VERIFIED&lt;/b&gt;&lt;br&gt;gate accepted the evidence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="560" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="final" value="" style="ellipse;shape=doubleCircle;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="1035" y="581" width="28" height="28" as="geometry" />
+    </mxCell>
+    <mxCell id="s8" value="&lt;b&gt;REJECTED&lt;/b&gt;&lt;br&gt;mockup · stale build · no reference" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="700" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="s7" value="&lt;b&gt;GAP_RECORDED&lt;/b&gt;&lt;br&gt;[SCREENSHOT REQUIRED: reason]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="430" y="830" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="s9" value="&lt;b&gt;BLOCKED&lt;/b&gt;&lt;br&gt;SM blocks phase completion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="780" y="830" width="210" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="t1" value="" style="html=1;endArrow=classic;endSize=6;rounded=0;" edge="1" parent="1" source="init" target="s1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t2" value="profile resolved" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s1" target="s2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t3" value="instance detected + reused" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s2" target="s3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t3a" value="stale → restart" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=1;exitY=0.25;entryX=1;entryY=0.75;" edge="1" parent="1" source="s3" target="s3">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="340" y="438" />
+          <mxPoint x="340" y="472" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t4" value="feature present in build" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s3" target="s4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t5" value="captured + stored" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="s4" target="s5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t6" value="gate accepts" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="s5" target="s6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t7" value="" style="html=1;endArrow=classic;endSize=6;rounded=0;" edge="1" parent="1" source="s6" target="final">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t8" value="invalid evidence" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0;entryY=0.5;" edge="1" parent="1" source="s5" target="s8">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="535" y="735" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t9" value="re-capture" style="html=1;endArrow=classic;endSize=6;fontSize=10;dashed=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0.75;entryY=1;" edge="1" parent="1" source="s8" target="s5">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1020" y="735" />
+          <mxPoint x="1020" y="680" />
+          <mxPoint x="588" y="680" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t10" value="capture impossible" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="s4" target="s7">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="30" y="595" />
+          <mxPoint x="30" y="865" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t11" value="reported to SM" style="html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="s7" target="s9">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

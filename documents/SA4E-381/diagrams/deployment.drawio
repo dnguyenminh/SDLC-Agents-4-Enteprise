@@ -1,0 +1,86 @@
+<mxGraphModel dx="1200" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="title" value="SA4E-381 — Deployment view: no server component; validation runs wherever the files are, packaging is the only distribution step" style="text;html=1;fontSize=15;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1090" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="zDev" value="Developer workstation (Windows / macOS)" style="swimlane;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="60" width="340" height="330" as="geometry" />
+    </mxCell>
+    <mxCell id="d_repo" value="Git working tree&#10;tracked files + local untracked state" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6C8EBF;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zDev">
+      <mxGeometry x="12" y="42" width="316" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="d_local" value="Local-only: .opencode/ and opencode.json&#10;gitignored, therefore absent from a clean clone" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zDev">
+      <mxGeometry x="12" y="116" width="316" height="56" as="geometry" />
+    </mxCell>
+    <mxCell id="d_t1" value="Validator Tier 1 — versioned commands&#10;grep / PowerShell one-liners, 0 new files" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zDev">
+      <mxGeometry x="12" y="188" width="316" height="52" as="geometry" />
+    </mxCell>
+    <mxCell id="d_t2" value="Validator Tier 2 — scripts/validate-opencode-agents.mjs&#10;node &gt;= 20, zero runtime dependencies&#10;recommended, but exceeds the NFR-20 file budget" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zDev">
+      <mxGeometry x="12" y="254" width="316" height="64" as="geometry" />
+    </mxCell>
+
+    <mxCell id="zGit" value="Git repository (origin)" style="swimlane;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="430" y="60" width="330" height="170" as="geometry" />
+    </mxCell>
+    <mxCell id="g_tracked" value="Tracked content only&#10;conversions/opencode/ — 51 .md + config&#10;extension/resources/conversions/opencode/ — 52 .md&#10;scripts/ · documents/ · root AGENTS.md" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zGit">
+      <mxGeometry x="12" y="42" width="306" height="108" as="geometry" />
+    </mxCell>
+
+    <mxCell id="zBuild" value="Build / packaging" style="swimlane;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="810" y="60" width="320" height="230" as="geometry" />
+    </mxCell>
+    <mxCell id="b_copy" value="npm run copy-resources&#10;extension/scripts/copy-resources.js — line 36&#10;copy map: conversions -> resources" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zBuild">
+      <mxGeometry x="12" y="42" width="296" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="b_pkg" value="Packaged extension (VSIX)&#10;carries the generated .opencode mirror&#10;never hand-editable at this stage" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zBuild">
+      <mxGeometry x="12" y="124" width="296" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="zCon" value="Consumer workstation (installed extension)" style="swimlane;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="810" y="340" width="320" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="c_inst" value="Installed extension&#10;resources extracted, read-only" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zCon">
+      <mxGeometry x="12" y="42" width="296" height="56" as="geometry" />
+    </mxCell>
+    <mxCell id="c_run" value="OpenCode runtime&#10;loads agents / rules / skills from the mirror&#10;no validator available (no repository)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#82B366;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zCon">
+      <mxGeometry x="12" y="112" width="296" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="zEvi" value="Evidence artefact" style="swimlane;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="40" y="430" width="340" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="e_rep" value="documents/{TICKET}/validation-report.json&#10;+ markdown table rendered into the phase document" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zEvi">
+      <mxGeometry x="12" y="42" width="316" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="e_jira" value="Jira attachment on the ticket" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D6B656;fontSize=10;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="zEvi">
+      <mxGeometry x="12" y="116" width="316" height="44" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e1" value="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#666666;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="zDev" target="zGit">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="gitignored" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;fontStyle=3;strokeColor=#B85450;dashed=1;exitX=1;exitY=0.55;exitDx=0;exitDy=0;entryX=0;entryY=0.9;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="zDev" target="zGit">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#666666;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="zGit" target="zBuild">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#666666;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="b_pkg" target="c_inst">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#9673A6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="d_t2" target="e_rep">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;fontStyle=1;strokeColor=#D6B656;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF" edge="1" parent="1" source="e_rep" target="e_jira">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="key" value="&lt;b&gt;Edges&lt;/b&gt;   1  tracked files are committed and pushed · 2  local .opencode and opencode.json never leave the workstation · 3  the build machine clones tracked content and runs copy-resources · 4  package distributed to consumers · 5  the validator writes the only artefact it is allowed to write · 6  the artefact is attached to the ticket&#10;&lt;b&gt;No runtime service&lt;/b&gt;   this ticket deploys markdown and (optionally) one Node script; there is no server, no container, no database, and therefore no rolling deploy or health endpoint&#10;&lt;b&gt;Consequence for QA&lt;/b&gt;   there is nothing to start. Verification is a file-level scan plus, for OI-09, opening the referenced path in the same tree — see TDD section 10 Runtime Profile" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#F5F5F5;strokeColor=#999999;rounded=0;" vertex="1" parent="1">
+      <mxGeometry x="430" y="570" width="700" height="95" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

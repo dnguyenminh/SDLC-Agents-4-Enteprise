@@ -1,0 +1,90 @@
+<mxGraphModel adaptiveColors="auto" dx="0" dy="0" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2050" pageHeight="700" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="&lt;b&gt;SA4E-381 — Business Flow: Server-Agnostic Tool Invocation and Evidence Gate&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+      <mxGeometry x="620" y="8" width="720" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="lane1" value="Agent Session" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#e8f4f8;strokeColor=#0288d1;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="0" y="40" width="2000" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="lane2" value="OpenCode Runtime" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="0" y="190" width="2000" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="lane3" value="Prompts &amp;amp; Config" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#e8f5e9;strokeColor=#82b366;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="0" y="340" width="2000" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="lane4" value="Verification Gate" style="swimlane;horizontal=0;startSize=110;html=1;fillColor=#fff9e6;strokeColor=#d6b656;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="0" y="490" width="2000" height="150" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="Session&lt;br&gt;start" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;fontColor=#ffffff;fontSize=10;" vertex="1" parent="lane1">
+      <mxGeometry x="120" y="45" width="60" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="p1" value="Load agent prompt&lt;br&gt;(Tool Usage block)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane1">
+      <mxGeometry x="300" y="45" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="p5" value="Execute tool call" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane1">
+      <mxGeometry x="1200" y="45" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="p6" value="Produce artefact&lt;br&gt;(BRD/FSD/UG/evidence)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane1">
+      <mxGeometry x="1380" y="45" width="150" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="endok" value="Accepted" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#000000;fontColor=#ffffff;fontSize=10;" vertex="1" parent="lane1">
+      <mxGeometry x="1740" y="45" width="60" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="p4" value="Resolve concrete&lt;br&gt;tool ID&lt;br&gt;(&amp;lt;server&amp;gt;_&amp;lt;tool&amp;gt; |&lt;br&gt;tools.&amp;lt;server&amp;gt;.&amp;lt;tool&amp;gt;)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane2">
+      <mxGeometry x="1020" y="40" width="150" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="p2" value="Read capability&lt;br&gt;suffix names&lt;br&gt;(find_tools, mem_search, …)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane3">
+      <mxGeometry x="480" y="40" width="150" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="p3" value="Resolve server key&lt;br&gt;from session tool list,&lt;br&gt;else opencode.json&lt;br&gt;(V1 mcp.&amp;lt;name&amp;gt; /&lt;br&gt;V2 mcp.servers.&amp;lt;name&amp;gt;)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="lane3">
+      <mxGeometry x="660" y="35" width="150" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="d1" value="Server key&lt;br&gt;resolved?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane4">
+      <mxGeometry x="840" y="35" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="Report unresolved&lt;br&gt;server key&lt;br&gt;(abort call)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="lane4">
+      <mxGeometry x="1010" y="40" width="170" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="d2" value="Evidence from&lt;br&gt;running build?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane4">
+      <mxGeometry x="1560" y="35" width="140" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="Mark [SCREENSHOT&lt;br&gt;REQUIRED: reason]&lt;br&gt;+ block gate" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fce4ec;strokeColor=#c62828;fontSize=10;" vertex="1" parent="lane4">
+      <mxGeometry x="1740" y="40" width="160" height="70" as="geometry" />
+    </mxCell>
+    <mxCell id="ed0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="start" target="p1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="p1" target="p2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="p2" target="p3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="p3" target="d1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed4" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="d1" target="p4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed5" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="d1" target="e1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="p4" target="p5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="p5" target="p6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;" edge="1" parent="1" source="p6" target="d2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed9" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="d2" target="endok">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="ed10" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endSize=6;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="d2" target="e2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,89 @@
+<mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="640" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="title" value="SA4E-381 — Sequence: one validation run (SM phase 5.5 → validator → report → gate)" style="text;html=1;fontSize=15;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1090" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="L1" value="SM&#10;(phase 5.5)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="45" y="60" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="L2" value="Validator CLI&#10;(single script)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="235" y="60" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="L3" value="Filesystem&#10;169 .md + 3 configs" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="425" y="60" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="L4" value="Baseline&#10;artefact" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="615" y="60" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="L5" value="Report writer" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="805" y="60" width="150" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="L6" value="Gate / RUN-LOG" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=10;fontStyle=1" vertex="1" parent="1">
+      <mxGeometry x="985" y="60" width="150" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="ll1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="120" y="110" as="sourcePoint" /><mxPoint x="120" y="545" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="ll2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="310" y="110" as="sourcePoint" /><mxPoint x="310" y="545" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="ll3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="500" y="110" as="sourcePoint" /><mxPoint x="500" y="545" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="ll4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="690" y="110" as="sourcePoint" /><mxPoint x="690" y="545" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="ll5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="880" y="110" as="sourcePoint" /><mxPoint x="880" y="545" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="ll6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1060" y="110" as="sourcePoint" /><mxPoint x="1060" y="545" as="targetPoint" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="m1" value="1 run validation(ticket, roots)" style="html=1;endArrow=block;rounded=0;fontSize=9;strokeColor=#333333;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="120" y="150" as="sourcePoint" /><mxPoint x="310" y="150" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2 enumerate (exclusion globs applied)" style="html=1;endArrow=block;rounded=0;fontSize=9;strokeColor=#333333;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="310" y="186" as="sourcePoint" /><mxPoint x="500" y="186" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3 paths + counts" style="html=1;endArrow=open;rounded=0;fontSize=9;dashed=1;strokeColor=#666666;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="500" y="216" as="sourcePoint" /><mxPoint x="310" y="216" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4 read 27 agent files (block span)" style="html=1;endArrow=block;rounded=0;fontSize=9;strokeColor=#333333;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="310" y="248" as="sourcePoint" /><mxPoint x="500" y="248" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="self" value="normalise (CRLF→LF, right-trim,&#10;drop trailing blank) then SHA-256 upper" style="shape=note;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=9;align=left;verticalAlign=middle;spacingLeft=4" vertex="1" parent="1">
+      <mxGeometry x="330" y="276" width="230" height="46" as="geometry" />
+    </mxCell>
+    <mxCell id="m6" value="5 expected sha256 + instance count" style="html=1;endArrow=block;rounded=0;fontSize=9;strokeColor=#333333;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="310" y="352" as="sourcePoint" /><mxPoint x="690" y="352" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="6 baseline record (hash, count, reason)" style="html=1;endArrow=open;rounded=0;fontSize=9;dashed=1;strokeColor=#666666;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="690" y="382" as="sourcePoint" /><mxPoint x="310" y="382" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="7 scan tool_name · rule refs · config shapes" style="html=1;endArrow=block;rounded=0;fontSize=9;strokeColor=#333333;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="310" y="414" as="sourcePoint" /><mxPoint x="500" y="414" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="8 24 occurrences → 14 defects / 10 exclusions" style="html=1;endArrow=open;rounded=0;fontSize=9;dashed=1;strokeColor=#666666;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="500" y="444" as="sourcePoint" /><mxPoint x="310" y="444" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="9 write report(exit_code)" style="html=1;endArrow=block;rounded=0;fontSize=9;strokeColor=#333333;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="310" y="476" as="sourcePoint" /><mxPoint x="880" y="476" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="10 report path + verdict + counts" style="html=1;endArrow=open;rounded=0;fontSize=9;dashed=1;strokeColor=#666666;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="880" y="506" as="sourcePoint" /><mxPoint x="120" y="506" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="11 gate on counts; append one RUN-LOG line" style="html=1;endArrow=block;rounded=0;fontSize=9;strokeColor=#333333;labelBackgroundColor=#FFFFFF" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="120" y="536" as="sourcePoint" /><mxPoint x="1060" y="536" as="targetPoint" /></mxGeometry>
+    </mxCell>
+
+    <mxCell id="alt" value="&lt;b&gt;Failure path (no message above changes)&lt;/b&gt;   an unreadable root, an unparseable opencode.json or a missing block short-circuits to exit 2 at the step where it is detected. The report is still written with incomplete=true plus incomplete_reason, and the gate must read incomplete as fail — a partial scan can never return 0." style="shape=note;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=9;align=left;verticalAlign=middle;spacingLeft=6" vertex="1" parent="1">
+      <mxGeometry x="45" y="565" width="1090" height="55" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

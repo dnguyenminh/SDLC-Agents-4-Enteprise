@@ -1,0 +1,95 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="800" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <mxCell id="title" value="SA4E-381 — Data model of the report artefact (no database; ValidationRun is the hub, one artefact per run)" style="text;html=1;fontSize=15;fontStyle=1;align=left;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1090" height="30" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t_run" value="ValidationRun" style="swimlane;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6;collapsible=0" vertex="1" parent="1">
+      <mxGeometry x="430" y="250" width="310" height="200" as="geometry" />
+    </mxCell>
+    <mxCell id="r_run" value="&lt;b&gt;PK&lt;/b&gt; run_id : string (ticket + ISO-8601 UTC)&#10;ticket : string&#10;tool_version : string&#10;generated_at : string&#10;roots_scanned : string[3]&#10;config_files_checked : int&#10;incomplete : boolean&#10;incomplete_reason : string | null" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="t_run">
+      <mxGeometry x="6" y="26" width="298" height="168" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t_loc" value="LocationSummary" style="swimlane;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6;collapsible=0" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="300" height="160" as="geometry" />
+    </mxCell>
+    <mxCell id="r_loc" value="&lt;b&gt;PK&lt;/b&gt; location_id : L1 | L2 | L3&#10;root_path : string&#10;md_files_scanned : int&#10;agents : int · rules : int · skills : int&#10;tracked : boolean&#10;expected_md_files : int" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="t_loc">
+      <mxGeometry x="6" y="26" width="288" height="128" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t_block" value="BlockInstance" style="swimlane;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6;collapsible=0" vertex="1" parent="1">
+      <mxGeometry x="40" y="260" width="300" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="r_block" value="&lt;b&gt;PK&lt;/b&gt; file : string (repo-relative)&#10;&lt;b&gt;FK&lt;/b&gt; location_id -> LocationSummary&#10;start_line : int&#10;line_count : int (expected 26)&#10;sha256 : string (upper-case hex)&#10;matches_baseline : boolean&#10;boundary_ok : boolean" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="t_block">
+      <mxGeometry x="6" y="26" width="288" height="148" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t_base" value="BaselineRecord" style="swimlane;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6;collapsible=0" vertex="1" parent="1">
+      <mxGeometry x="40" y="470" width="300" height="170" as="geometry" />
+    </mxCell>
+    <mxCell id="r_base" value="&lt;b&gt;PK&lt;/b&gt; baseline_id : string&#10;expected_sha256 : string&#10;canonical_line_count : int (26)&#10;instance_count_expected : int (27)&#10;recorded_at : string&#10;change_reason : string | null&#10;changed_in_commit : string | null" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="t_base">
+      <mxGeometry x="6" y="26" width="288" height="138" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t_cap" value="CapabilityRef" style="swimlane;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6;collapsible=0" vertex="1" parent="1">
+      <mxGeometry x="830" y="70" width="300" height="190" as="geometry" />
+    </mxCell>
+    <mxCell id="r_cap" value="&lt;b&gt;PK&lt;/b&gt; ref_id : string&#10;file : string · line : int&#10;literal : string (e.g. tool_name)&#10;classification : defect | exclusion&#10;exclusion_id : X-1 | X-2 | X-3 | null&#10;expected_form : string | null&#10;in_block : boolean" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="t_cap">
+      <mxGeometry x="6" y="26" width="288" height="158" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t_path" value="RulePathRef" style="swimlane;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6;collapsible=0" vertex="1" parent="1">
+      <mxGeometry x="830" y="290" width="300" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="r_path" value="&lt;b&gt;PK&lt;/b&gt; ref_id : string&#10;file : string · line : int&#10;referenced_path : string&#10;resolves : boolean&#10;actual_kind : rule | skill | absent&#10;suggested_target : string | null" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="t_path">
+      <mxGeometry x="6" y="26" width="288" height="148" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t_cfg" value="ConfigCheck" style="swimlane;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6;collapsible=0" vertex="1" parent="1">
+      <mxGeometry x="830" y="500" width="300" height="170" as="geometry" />
+    </mxCell>
+    <mxCell id="r_cfg" value="&lt;b&gt;PK&lt;/b&gt; path : string&#10;shape : V1 | V2 | unknown&#10;declared_key_count : int (redacted)&#10;tracked : boolean&#10;has_instructions : boolean&#10;resolves : boolean&#10;secret_echoed : false (invariant)" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="t_cfg">
+      <mxGeometry x="6" y="26" width="288" height="138" as="geometry" />
+    </mxCell>
+
+    <mxCell id="t_sum" value="RunSummary" style="swimlane;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontStyle=1;fontSize=11;startSize=24;verticalAlign=top;align=left;spacingLeft=6;collapsible=0" vertex="1" parent="1">
+      <mxGeometry x="430" y="500" width="310" height="180" as="geometry" />
+    </mxCell>
+    <mxCell id="r_sum" value="&lt;b&gt;PK/FK&lt;/b&gt; run_id -> ValidationRun&#10;exit_code : 0 | 1 | 2&#10;defects : int · exclusions : int&#10;by_bucket : {X-1, X-2, X-3}&#10;reconciled : boolean&#10;(defects + exclusions = occurrences)&#10;verdict : pass | fail | error" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="t_sum">
+      <mxGeometry x="6" y="26" width="298" height="148" as="geometry" />
+    </mxCell>
+
+    <mxCell id="rel1" value="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=0.4;exitY=0;exitDx=0;exitDy=0;entryX=0.6;entryY=1;entryDx=0;entryDy=0" edge="1" parent="1" source="t_run" target="t_loc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel2" value="N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.2;entryDx=0;entryDy=0" edge="1" parent="1" source="t_run" target="t_cap">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel3" value="N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0" edge="1" parent="1" source="t_run" target="t_path">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel4" value="N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=1;exitY=0.9;exitDx=0;exitDy=0;entryX=0;entryY=0.2;entryDx=0;entryDy=0" edge="1" parent="1" source="t_run" target="t_cfg">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel5" value="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0" edge="1" parent="1" source="t_run" target="t_sum">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel6" value="N" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;dashed=1;exitX=0;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0" edge="1" parent="1" source="t_run" target="t_block">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel7" value="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0" edge="1" parent="1" source="t_block" target="t_loc">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="rel8" value="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=9;strokeColor=#666666;dashed=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0" edge="1" parent="1" source="t_base" target="t_block">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="key" value="&lt;b&gt;Not a database&lt;/b&gt;   there is no table, no migration, no index: the whole model is one JSON document written per run, so every entity below is a JSON object and every FK is a JSON pointer&#10;&lt;b&gt;Cardinality&lt;/b&gt;   1 ValidationRun has 3 LocationSummary, 27 BlockInstance, N CapabilityRef, N RulePathRef, 3 ConfigCheck, 1 RunSummary, and snapshots exactly 1 BaselineRecord&#10;&lt;b&gt;Baseline link&lt;/b&gt;   BaselineRecord is versioned in the repository, not in the report; the report copies the hash it compared against so an old report stays interpretable after the baseline moves&#10;&lt;b&gt;Invariant&lt;/b&gt;   defects + exclusions must equal the raw occurrence count, and by_bucket must sum to exclusions — a report that fails this reconciliation is itself a failure (see DISC-5)" style="text;html=1;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#F5F5F5;strokeColor=#999999;rounded=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="690" width="1090" height="100" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>
