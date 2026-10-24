@@ -108,7 +108,7 @@ describe("updateConfig guard", () => {
     const { secrets } = installSecretStub();
     const svc = new ProviderConfigService(secrets);
     // SA4E-323 guard list is the NEW dotted keys (the write targets).
-    for (const k of ["pega.endpoint", "pega.username", "atlassianConnectionType"]) {
+    for (const k of ["pega.endpoint", "pega.username", "jira.connectionType"]) {
       await expect(svc.updateConfig(k, "x"))
         .rejects.toThrow(`Use workspace-scoped method for ${k} (SA4E-323).`);
     }

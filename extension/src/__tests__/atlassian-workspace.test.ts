@@ -34,9 +34,8 @@ describe("saveConfig", () => {
     expect(store.get(LEGACY_SECRET.atlassianBaseUrl)).toBeUndefined();
     expect(store.get(LEGACY_SECRET.atlassianEmail)).toBeUndefined();
     expect(store.get(LEGACY_SECRET.atlassianToken)).toBeUndefined();
-    // SA4E-370: writes keep targeting the legacy flat key (reads resolve via
-    // getSetting on the new `jira.connectionType` after the migration runner).
-    expect(cfg.updates).toContainEqual({ key: "atlassianConnectionType", value: "cloud", target: WS });
+    // SA4E-370: writes target the new dotted key only.
+    expect(cfg.updates).toContainEqual({ key: "jira.connectionType", value: "cloud", target: WS });
   });
 
   it("rejects empty email/token and persists nothing", async () => {
@@ -162,8 +161,8 @@ describe("clearConfig", () => {
     await svc.clearConfig();
     expect(store.get(secretKey("atlassianToken", h)!)).toBeUndefined();
     expect(store.get(`sdlcAgents.${h}.migrated`)).toBe("1");
-    // SA4E-370: clearConfig unsets the legacy flat key (the write target).
-    expect(cfg.updates).toContainEqual({ key: "atlassianConnectionType", value: undefined, target: WS });
+    // SA4E-370: clearConfig unsets the new dotted key.
+    expect(cfg.updates).toContainEqual({ key: "jira.connectionType", value: undefined, target: WS });
     expect(await svc.getConfig()).toBeNull();
   });
 });
