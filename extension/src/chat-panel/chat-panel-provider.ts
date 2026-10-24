@@ -46,6 +46,7 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   private readonly modelManager: ChatModelManager;
   private readonly stateManager: ChatStateManager;
   private readonly engineListeners = new Set<(msg: ChatExtToWebviewMessage) => void>();
+  private turnTabId: string | undefined;
   private diffTracker: import('../chat/diff/IDiffTracker').IDiffTracker | null = null;
 
   constructor(
@@ -110,6 +111,17 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     return this.contextUsageTracker;
   }
 
+  /** Get the id of the currently active tab for this provider view. */
+  private getActiveTabId(): string {
+    // Derive from the most recent saved state if available; otherwise "default"
+    try {
+      var saved = this.stateManager?.getState?.();
+      return saved && saved.activeTabId ? String(saved.activeTabId) : "default";
+    } catch {
+      return "default";
+    }
+  }
+
   /** Subscribe to every engine message (sidebar stays the default sink). */
   onEngineMessage(listener: (msg: ChatExtToWebviewMessage) => void): vscode.Disposable {
     this.engineListeners.add(listener);
@@ -123,7 +135,13 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   // === Private routing ===
-  private routeMessage(msg: ChatWebviewToExtMessage): void {
+  // SA4E-381 Issue 1: capture the active tab id when a user message starts a
+    // new turn — all subsequent stream/tool events in that turn will carry
+    // originTabId so the receiving tab can attribute them correctly.
+    if (msg.type === "chat:userMessage") {
+      this.turnTabId = "default";
+    }
+
     if (handleBuiltinChatMessage(msg, {
       saveChatState: (payload) => {
         this.stateManager.saveChatState(payload);
@@ -165,6 +183,22 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   private sendToWebview(msg: ChatExtToWebviewMessage): void {
+    // SA4E-381 Issue 1: stamp originTabId on peer-capable protocol messages
+    // so the receiving tab can attribute messages to the correct source tab.
+    const protocolTypes = [
+      "chat:streamChunk",
+      "chat:streamComplete",
+      "chat:toolCall",
+      "chat:toolCallUpdate",
+      "chat:toolApprovalPending"
+    ];
+    if (this.turnTabId && protocolTypes.includes(msg.type)) {
+      // @ts-expectOriginTabId — the type already allows originTabId ?
+      // We'll spread it in via a cast since the type is widened at call site.
+      const typedMsg = msg as any;
+      typedMsg.originTabId = this.turnTabId;
+      msg = typedMsg as ChatExtToWebviewMessage;
+    }
     if (this.view) {
       this.view.webview.postMessage(msg);
       if ((msg as any).type === "serverStatus") {

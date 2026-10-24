@@ -92,8 +92,8 @@ export type ChatWebviewToExtMessage =
 // === Extension → Webview Messages ===
 
 export type ChatExtToWebviewMessage =
-  | { type: "chat:streamChunk"; streamId: string; nodeId: string; eventType: StreamEventType; content: string; timestamp: string; metadata?: Record<string, unknown> }
-  | { type: "chat:streamComplete"; streamId: string; nodeId: string; finalContent: string; metadata?: Record<string, unknown> }
+  | { type: "chat:streamChunk"; streamId: string; nodeId: string; eventType: StreamEventType; content: string; timestamp: string; metadata?: Record<string, unknown>; originTabId?: string }
+  | { type: "chat:streamComplete"; streamId: string; nodeId: string; finalContent: string; metadata?: Record<string, unknown>; originTabId?: string }
   | { type: "chat:graphUpdate"; nodes: PipelineGraphNode[] }
   | { type: "chat:approvalRequest"; checkpoint: QualityGateCheckpoint }
   | { type: "chat:chatHistory"; messages: ChatMessage[] }
@@ -101,8 +101,8 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:nodeDetails"; node: PipelineGraphNode; recentOutputs: AgentOutput[] }
   | { type: "chat:resumePrompt"; threadId: string; ticketKey: string; phase: SDLCPhase; pausedAt: string }
   | { type: "chat:error"; code: string; message: string; retryable: boolean }
-  | { type: "chat:toolCall"; toolCall: ToolCallDisplay }
-  | { type: "chat:toolCallUpdate"; id: string; status: ToolCallDisplay["status"]; result?: string; duration?: number }
+  | { type: "chat:toolCall"; toolCall: ToolCallDisplay; originTabId?: string }
+  | { type: "chat:toolCallUpdate"; id: string; status: ToolCallDisplay["status"]; result?: string; duration?: number; originTabId?: string }
   /** SA4E-369 AC4: a peer task arrived in tab `tabId` — receiving-tab badge
    *  increment + `[Peer inbound] from <fromTabId>` transcript prefix row. */
   | { type: "chat:peerInbound"; tabId: string; fromTabId: string; fromAgentName: string; taskId: string; preview: string }
@@ -111,7 +111,7 @@ export type ChatExtToWebviewMessage =
   | { type: "chat:peerTurnSettled"; tabId: string; taskId: string; ok: boolean; text?: string; error?: { code: string; message: string } }
   /** Fix J: a tool is waiting for user consent — the webview shows Approve/Reject on the working bar.
    *  SA4E-369 S-02: `peer` marks the same surface for a peer-turn tool call (D6 human approval). */
-  | { type: "chat:toolApprovalPending"; toolId: string; toolName: string; peer?: boolean }
+  | { type: "chat:toolApprovalPending"; toolId: string; toolName: string; peer?: boolean; originTabId?: string }
   | { type: "chat:contextPicked"; item: ContextItem }
   | { type: "chat:configUpdate"; model: string; mode: AutopilotMode; availableModels: ModelOption[] }
   | { type: "chat:models"; provider: string; models: ChatModelEntry[]; selected: string; supportsAuto: boolean }

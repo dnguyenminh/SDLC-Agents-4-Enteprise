@@ -13,11 +13,21 @@ export class StreamHandler {
   private buffer: ChatExtToWebviewMessage[] = [];
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly DEBOUNCE_MS = 50;
+  private readonly originTabId: string | undefined;
 
-  constructor(private readonly emit: (msg: ChatExtToWebviewMessage) => void) {}
+  constructor(private readonly emit: (msg: ChatExtToWebviewMessage) => void, originTabId?: string) {
+    this.originTabId = originTabId;
+  }
 
-  /**
-   * Buffer token events, flush on debounce window.
+  /** Add originTabId to message if set (stamp from turn start). */
+  private withOriginTabId(msg: ChatExtToWebviewMessage): ChatExtToWebviewMessage {
+    if (this.originTabId) {
+      return { ...msg, originTabId: this.originTabId };
+    }
+    return msg;
+  }
+
+  /** Buffer token events, flush on debounce window.
    * streamId is REQUIRED and must be stable for the whole turn (one turn =
    * one stream identity: start → tokens → complete/error). Per-flush generated
    * ids fragment one answer into many bubbles and orphan completions.
@@ -26,8 +36,7 @@ export class StreamHandler {
     this.bufferChunk("token", nodeId, content, streamId);
   }
 
-  /**
-   * SA4E-THINKING: buffer reasoning (thinking) delta events like tokens —
+  /** SA4E-THINKING: buffer reasoning (thinking) delta events like tokens —
    * debounced so the webview ThinkingBlock streams without postMessage storms.
    */
   emitThinking(nodeId: string, content: string, streamId: string): void {
@@ -62,39 +71,39 @@ export class StreamHandler {
   /** Immediately flush on status events */
   emitStatus(nodeId: string, status: string, streamId: string): void {
     this.flush(); // Flush any pending tokens first
-    this.emit({
+    this.emit(this.withOriginTabId({
       type: "chat:streamChunk",
       streamId,
       nodeId,
       eventType: "status",
       content: status,
       timestamp: new Date().toISOString(),
-    });
+    }));
   }
 
   /** Immediately flush on complete events */
   emitComplete(nodeId: string, duration: number, streamId: string): void {
     this.flush();
-    this.emit({
+    this.emit(this.withOriginTabId({
       type: "chat:streamComplete",
       streamId,
       nodeId,
       finalContent: `Node ${nodeId} completed in ${duration}ms`,
       metadata: { duration },
-    });
+    }));
   }
 
   /** Immediately flush on error events */
   emitError(nodeId: string, error: string, streamId: string): void {
     this.flush();
-    this.emit({
+    this.emit(this.withOriginTabId({
       type: "chat:streamChunk",
       streamId,
       nodeId,
       eventType: "error",
       content: error,
       timestamp: new Date().toISOString(),
-    });
+    }));
   }
 
   // === Self-Correction Events (KSA-233) ===
@@ -109,14 +118,14 @@ export class StreamHandler {
     streamId: string
   ): void {
     this.flush();
-    this.emit({
+    this.emit(this.withOriginTabId({
       type: "chat:streamChunk",
       streamId,
       nodeId,
       eventType: "retry",
       content: JSON.stringify({ attempt, maxAttempts, delayMs, error }),
       timestamp: new Date().toISOString(),
-    });
+    }));
   }
 
   /** Emit verify event — immediate flush */
@@ -128,14 +137,14 @@ export class StreamHandler {
     streamId: string
   ): void {
     this.flush();
-    this.emit({
+    this.emit(this.withOriginTabId({
       type: "chat:streamChunk",
       streamId,
       nodeId,
       eventType: "verify",
       content: JSON.stringify({ passed, feedback, attempt }),
       timestamp: new Date().toISOString(),
-    });
+    }));
   }
 
   /** Emit strategy switch event — immediate flush */
@@ -147,14 +156,14 @@ export class StreamHandler {
     streamId: string
   ): void {
     this.flush();
-    this.emit({
+    this.emit(this.withOriginTabId({
       type: "chat:streamChunk",
       streamId,
       nodeId,
       eventType: "strategy_switch",
       content: JSON.stringify({ fromStrategy, toStrategy, reason }),
       timestamp: new Date().toISOString(),
-    });
+    }));
   }
 
   /** Emit human intervention required event — immediate flush */
@@ -165,14 +174,14 @@ export class StreamHandler {
     streamId: string
   ): void {
     this.flush();
-    this.emit({
+    this.emit(this.withOriginTabId({
       type: "chat:streamChunk",
       streamId,
       nodeId,
       eventType: "human_intervention_required",
       content: JSON.stringify({ failedStrategies, verifyHistory }),
       timestamp: new Date().toISOString(),
-    });
+    }));
   }
 
   /** Dispose: flush remaining and cancel timer */
@@ -187,7 +196,7 @@ export class StreamHandler {
   /** Emit a raw message directly (used for toolCall messages) */
   emitDirect(msg: ChatExtToWebviewMessage): void {
     this.flush();
-    this.emit(msg);
+    this.emit(this.withOriginTabId(msg));
   }
 
   private scheduleFlush(): void {
@@ -202,7 +211,7 @@ export class StreamHandler {
     }
     const messages = this.buffer.splice(0);
     for (const msg of messages) {
-      this.emit(msg);
+      this.emit(this.withOriginTabId(msg));
     }
   }
 }
