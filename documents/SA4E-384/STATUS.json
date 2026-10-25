@@ -1,0 +1,23 @@
+{
+  "ticket": "SA4E-384",
+  "summary": "Deferred test case register for SA4E-380 — 52 planned-not-authored specs (PBT 6, UT 24, IT 3, E2E-API 16, SIT 3)",
+  "mode": "documentation-followup — L3 unattended",
+  "currentPhase": "deferred_register",
+  "jiraStatus": "Backlog",
+  "phases": {
+    "requirements": { "status": "completed", "file": "BRD.md", "version": "1.0" },
+    "specification": { "status": "completed", "file": "FSD.md", "version": "1.0" },
+    "design": { "status": "completed", "file": "TDD.md", "version": "1.0" },
+    "test_planning": { "status": "completed", "file": "STP.md,STC.md", "version": "1.0" },
+    "deferred_register": { "status": "completed", "file": "STC.md", "version": "1.0" },
+    "implementation": { "status": "not_started", "file": null, "version": null },
+    "user_guide": { "status": "not_started", "file": null, "version": null },
+    "code_review": { "status": "not_started", "file": null, "version": null }
+  },
+  "feedbackLoop": { "iterations": 0, "maxIterations": 5, "status": "open" },
+  "lastUpdated": "2026-10-26T11:15:00Z",
+  "autonomyLevel": "L3",
+  "nextPriority": "closed",
+  "casesCompleted": 52,
+  "totalCases": 52
+}
