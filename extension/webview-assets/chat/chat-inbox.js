@@ -18,10 +18,12 @@
 
     switch (msg.type) {
       case "chat:streamChunk":
-        S.handleStreamChunk(msg);
-        break;
       case "chat:streamComplete":
-        S.handleStreamComplete(msg);
+      case "chat:toolCall":
+      case "chat:toolCallUpdate":
+        // SA4E-381 Issue 2+3: single choke point — active tab renders live;
+        // background tab buffers model + pill counters (zero DOM to viewed tab).
+        S.routeStreamEvent(msg);
         break;
       case "chat:graphUpdate":
         break;
@@ -40,17 +42,6 @@
       case "chat:error":
         S.renderError(msg);
         S.setWorking(false);
-        break;
-      case "chat:toolCall":
-        vscode.postMessage({ type: "chat:debugLog", text: "toolCall obj: " + JSON.stringify(msg.toolCall || msg).slice(0, 200) });
-        try {
-          S.renderToolCall(msg.toolCall, false, msg.requiresApproval);
-        } catch (e) {
-          vscode.postMessage({ type: "chat:debugLog", text: "renderToolCall ERROR: " + e.message });
-        }
-        break;
-      case "chat:toolCallUpdate":
-        S.updateToolCall(msg);
         break;
       case "chat:peerInbound":
         // SA4E-369 AC4: a peer task arrived in tab msg.tabId — badge + prefix row.
@@ -95,11 +86,15 @@
         }
         break;
       case "chat:toolApprovalPending":
-        // Fix J: a tool is blocked on consent — show Approve/Reject on the bar.
-        S.pendingApproval = { toolId: msg.toolId, toolName: msg.toolName };
-        S.setWorking(true, "Waiting approval: " + msg.toolName);
-        approveBtn.style.display = "inline-flex";
-        rejectBtn.style.display = "inline-flex";
+        // SA4E-381 routing: the approval bar is the VIEWED tab's chrome —
+        // a background tab's gated tool must not hijack it.
+        if (S.getMessageTargetTabId(msg) === S.activeTabId) {
+          // Fix J: a tool is blocked on consent — show Approve/Reject on the bar.
+          S.pendingApproval = { toolId: msg.toolId, toolName: msg.toolName };
+          S.setWorking(true, "Waiting approval: " + msg.toolName);
+          approveBtn.style.display = "inline-flex";
+          rejectBtn.style.display = "inline-flex";
+        }
         break;
       case "chat:nodeDetails":
         break;

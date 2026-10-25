@@ -29,8 +29,13 @@
     S.scrollToBottom();
   }
 
-  /** Open cycle n+1 for the given node (first delta/tool of a turn). */
-  S.openCycle = function (nodeId) {
+  /** Open cycle n+1 for the given node (first delta/tool of a turn).
+   *  SA4E-381 routing: the cycle AND its persisted entry bind to the
+   *  TURN's tab (originTabId) — not the tab the user happens to view.
+   *  Data always lands in the owning tab's model; DOM renders only while
+   *  that tab is active (see the render gate in chat-stream.js). */
+  S.openCycle = function (nodeId, tabId) {
+    var targetTabId = tabId || S.activeTabId;
     S.cycleSeq = (S.cycleSeq || 0) + 1;
     var c = {
       cycleId: "c" + S.cycleSeq,
@@ -49,22 +54,29 @@
         timestamp: new Date().toISOString()
       }
     };
-    var tab = S.getTab(S.activeTabId);
+    var tab = S.getTab(targetTabId);
     if (tab) {
       if (!tab.messages) tab.messages = [];
       tab.messages.push(c.entry);
+      tab.currentCycle = c;
     }
-    // SA4E-372 R1: live-posted tool containers (created before any stream
-    // delta — legacy buffered-replay turns) belong to this cycle. Adoption
-    // marks hasTools and reorders tab.messages so replay is THINK → TOOLS.
-    S.adoptPreCycleContainers(c, tab);
-    S.currentCycle = c;
+    // Orphan-container adoption is a DOM concern — orphan containers only
+    // exist in the live (active) view, so only the active tab's cycle
+    // adopts them. Background-tab cycles stay data-only.
+    if (targetTabId === S.activeTabId) {
+      S.adoptPreCycleContainers(c, tab);
+      S.currentCycle = c;
+    }
     return c;
   };
 
-  /** The open cycle, creating the first cycle of the turn lazily. */
-  S.ensureCycle = function (nodeId) {
-    return S.currentCycle || S.openCycle(nodeId);
+  /** The open cycle of the turn's tab, creating the first cycle of the
+   *  turn lazily. Per-tab state means two tabs can stream in parallel
+   *  without clobbering each other's cycles. */
+  S.ensureCycle = function (nodeId, tabId) {
+    var tab = S.getTab(tabId || S.activeTabId);
+    if (tab && tab.currentCycle) return tab.currentCycle;
+    return S.openCycle(nodeId, tabId);
   };
 
   /** The cycle's answer streaming bubble (node badge + markdown content).
@@ -92,10 +104,13 @@
    *  missing timestamp, attach the per-cycle copy action, save. An empty
    *  cycle (no text, no thinking) splices its entry back out of tab.messages.
    */
-  S.closeCycle = function (reason) {
-    var c = S.currentCycle;
+  S.closeCycle = function (reason, tabId) {
+    var targetTabId = tabId || S.activeTabId;
+    var tab = S.getTab(targetTabId);
+    var c = tab ? tab.currentCycle : null;
     if (!c) return null;
-    S.currentCycle = null;
+    tab.currentCycle = null;
+    if (S.currentCycle === c) S.currentCycle = null;
     if (c.thinkingEl) {
       S.settleThinking(c);
       if (reason !== "error") S.collapseThinking(c);
@@ -120,8 +135,8 @@
     if (!c.entry.timestamp) c.entry.timestamp = new Date().toISOString();
     if (!hasText && !hasThinking) {
       // Empty cycle: drop the entry pushed at open (old model persisted
-      // nothing for tool-only trailing cycles — same contract).
-      var tab = S.getTab(S.activeTabId);
+      // nothing for tool-only trailing cycles — same contract). Splice
+      // from the OWNING tab, not the tab currently viewed.
       if (tab && tab.messages) {
         var at = tab.messages.indexOf(c.entry);
         if (at !== -1) tab.messages.splice(at, 1);
@@ -138,14 +153,17 @@
    * after it already rendered tool calls, or when a DIFFERENT node's deltas
    * start (pipeline agents stream sequentially — never merge their text).
    */
-  S.maybeCloseCycle = function (nodeId) {
-    var c = S.currentCycle;
+  S.maybeCloseCycle = function (nodeId, tabId) {
+    var targetTabId = tabId || S.activeTabId;
+    var tab = S.getTab(targetTabId);
+    var c = tab ? tab.currentCycle : null;
     if (!c) return;
     var base = (nodeId || "").split(":")[0];
     if (c.hasTools || (base && base !== (c.nodeId || "").split(":")[0])) {
-      S.closeCycle("cycled");
-      // Seal the cycle's tool container; the next cycle gets a fresh one.
-      S.finalizeToolContainer();
+      S.closeCycle("cycled", targetTabId);
+      // Seal the cycle's tool container — it only exists in the live
+      // (active) view; a background tab's tools never rendered DOM.
+      if (targetTabId === S.activeTabId) S.finalizeToolContainer();
     }
   };
 

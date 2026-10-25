@@ -16,21 +16,24 @@ export class ChatHtmlBuilder {
    *  4. graph-viz.js           — pipeline graph widget (window.PipelineGraphViz)
    *  5. export-ui.js           — export menu + copy buttons (window.ChatExportUI)
    *  6. chat-core.js           — vscode API + window.ChatState namespace (MUST be first chat script)
-   *  7..28 chat-* modules      — feature slices registering onto window.ChatState
-   *                            (chat-cycle.js MUST precede chat-stream.js — chat-stream
-   *                             calls S.openCycle/ensureBubble at runtime; classic scripts
-   *                             execute in document order)
-   *  29. chat-init.js          — initial renderTabBar() + "ready" handshake (MUST be last)
+   *  7..31 chat-* modules      — feature slices registering onto window.ChatState
+   *                            (chat-thinking.js MUST precede chat-cycle.js/chat-stream.js —
+   *                             they call S.ensureThinking/settleThinking/collapseThinking
+   *                             at runtime; chat-peer-ui.js defines the chat:peerInbound /
+   *                             peerTurnSettled handlers chat-inbox.js dispatches to.
+   *                             Classic scripts execute in document order.)
+   *  32. chat-init.js          — initial renderTabBar() + "ready" handshake (MUST be last)
    */
   private static readonly SCRIPTS: string[] = [
     "markdown-highlight.js", "markdown-blocks.js", "markdown-renderer.js",
     "graph-viz.js", "export-ui.js",
-    "chat-core.js", "chat-context-usage.js", "chat-tabs.js", "chat-tabs-ui.js",
+    "chat-core.js", "chat-tabroute.js", "chat-context-usage.js", "chat-tabs.js", "chat-tabs-ui.js",
     "chat-input.js", "chat-attachments.js", "chat-toolbar.js", "chat-model.js",
-    "chat-inbox.js", "chat-send.js", "chat-messages.js", "chat-cycle.js", "chat-stream.js",
+    "chat-inbox.js", "chat-send.js", "chat-messages.js", "chat-thinking.js",
+    "chat-cycle.js", "chat-stream.js",
     "chat-tools.js", "chat-tool-helpers.js", "chat-toolcall.js", "chat-toolupdate.js",
-    "chat-chips.js", "chat-pipeline.js", "chat-codeactions.js", "chat-tabsync.js",
-    "chat-steering.js", "chat-slash.js", "chat-slash-ui.js", "chat-init.js",
+    "chat-trace.js", "chat-peer-ui.js", "chat-chips.js", "chat-pipeline.js", "chat-codeactions.js", "chat-tabsync.js",
+    "chat-jump-pill.js", "chat-steering.js", "chat-slash.js", "chat-slash-ui.js", "chat-init.js",
   ];
 
   static build(webview: vscode.Webview, extensionUri: vscode.Uri): string {

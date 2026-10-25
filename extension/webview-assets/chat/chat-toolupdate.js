@@ -8,10 +8,33 @@
   "use strict";
   var S = window.ChatState;
 
-  S.updateToolCall = function (msg) {
+  S.updateToolCall = function (msg, targetTabId) {
+    // SA4E-381 routing: the persisted model sync targets the TURN's tab
+    // and ALWAYS runs — a background tab's tool never rendered DOM, and
+    // its updates must not be lost.
+    targetTabId = targetTabId || S.activeTabId;
+    var targetTab = S.getTab(targetTabId);
+    if (targetTab && targetTab.messages) {
+      for (var i = targetTab.messages.length - 1; i >= 0; i--) {
+        var m = targetTab.messages[i];
+        if (m.role === "tool" && m.toolData && m.toolData.id === msg.id) {
+          m.toolData.status = msg.status;
+          if (msg.result) m.toolData.result = msg.result;
+          // SA4E-369: failed tools carry their error text in msg.error —
+          // persisted so exports show WHY a tool failed, not just "failed".
+          if (msg.error) m.toolData.error = msg.error;
+          if (msg.duration) m.toolData.duration = msg.duration;
+          break;
+        }
+      }
+      S.saveStateToDisk();
+    }
+
+    // Live DOM update — only when the block was actually rendered (the
+    // target tab was/is active). Background-tab tools are data-only.
     var block = S.toolCalls[msg.id];
     if (!block) {
-      console.warn("[chat.js] updateToolCall: block not found for id", msg.id);
+      console.warn("[chat.js] updateToolCall: block not rendered for id", msg.id);
       return;
     }
 
@@ -88,23 +111,7 @@
     // KSA-290: Update container summary to reflect new status counts
     var container = block.closest(".ksa247-tool-container");
     if (container) S.updateToolContainerSummary(container);
-
-    // Update persisted state in tab
-    var currentTab = S.getTab(S.activeTabId);
-    if (currentTab && currentTab.messages) {
-      for (var i = currentTab.messages.length - 1; i >= 0; i--) {
-        var m = currentTab.messages[i];
-        if (m.role === "tool" && m.toolData && m.toolData.id === msg.id) {
-          m.toolData.status = msg.status;
-          if (msg.result) m.toolData.result = msg.result;
-          // SA4E-369: failed tools carry their error text in msg.error —
-          // persisted so exports show WHY a tool failed, not just "failed".
-          if (msg.error) m.toolData.error = msg.error;
-          if (msg.duration) m.toolData.duration = msg.duration;
-          break;
-        }
-      }
-      S.saveStateToDisk();
-    }
+    // SA4E-381 Issue 3: refresh the work-trace summary metrics too.
+    if (S.updateTraceSummary) S.updateTraceSummary();
   };
 })();

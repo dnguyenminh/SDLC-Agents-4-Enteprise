@@ -1350,6 +1350,113 @@ body {
   color: var(--vscode-button-foreground);
 }
 
+/* SA4E-381 Issue 2 — tab status badge (composite: streaming dot > unread count). */
+.tab-status-badge {
+  display: inline-block;
+  min-width: 16px;
+  height: 16px;
+  line-height: 16px;
+  margin-left: 6px;
+  padding: 0 4px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  pointer-events: none;
+}
+.tab-status-badge.streaming {
+  background: #a78bfa;
+  color: #fff;
+  animation: blink 1s infinite;
+}
+.tab-status-badge.unread {
+  background: var(--vscode-badge-background, #6366f1);
+  color: #fff;
+}
+
+/* SA4E-381 Issue 3 — work-trace container per turn. */
+.work-trace {
+  contain: style;
+  display: block;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(128, 128, 128, 0.12);
+  overflow: visible;
+}
+.trace-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--vscode-sideBar-background, rgba(30, 30, 46, 0.4));
+  border-bottom: 1px solid rgba(128, 128, 128, 0.08);
+  min-height: 30px;
+  transition: background 0.15s;
+}
+.trace-summary:hover {
+  background: var(--vscode-list-hoverBackground, rgba(128, 128, 128, 0.1));
+}
+.trace-summary:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder, #6366f1);
+  outline-offset: -2px;
+}
+.trace-chevner,
+.trace-chevron {
+  font-size: 10px;
+  opacity: 0.6;
+  transition: transform 0.2s;
+}
+.work-trace.tc-collapsed .trace-chevron,
+.work-trace.tc-collapsed .trace-chevner {
+  transform: rotate(-90deg);
+}
+.trace-text {
+  font-weight: 500;
+  opacity: 0.85;
+  color: var(--vscode-foreground);
+}
+.trace-metrics {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trace-body {
+  display: block;
+}
+.work-trace.tc-collapsed .trace-body {
+  display: none;
+}
+
+/* SA4E-381 Issue 2 — jump-to-latest pill. */
+.chat-jump-pill {
+  position: sticky;
+  bottom: calc(8px + 8px);
+  align-self: flex-end;
+  background: var(--vscode-button-background, #6366f1);
+  color: #fff;
+  border-radius: 14px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  border: none;
+  cursor: pointer;
+  margin: 0 8px 8px 0;
+}
+.chat-jump-pill:hover {
+  background: var(--vscode-button-hoverBackground, #4f46e5);
+}
+.chat-jump-pill[hidden] {
+  display: none;
+}
+
 /* === Scrollbar === */
 #chat-messages::-webkit-scrollbar { width: 6px; }
 #chat-messages::-webkit-scrollbar-thumb { background: var(--vscode-scrollbarSlider-background); border-radius: 3px; }
@@ -1612,14 +1719,32 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-height: 28px;
   padding: 5px 10px;
   cursor: pointer;
   user-select: none;
   color: #a78bfa;
   font-weight: 600;
 }
+.thinking-header:hover { background: rgba(139, 92, 246, 0.10); }
+.thinking-header:focus-visible {
+  outline: 1px solid #a78bfa;
+  outline-offset: -1px;
+}
+/* SA4E-381 Issue 2: metadata span (chars · duration) — right-aligned, subtle. */
+.thinking-header .thinking-meta {
+  margin-left: auto;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 11px;
+  opacity: 0.85;
+}
 .thinking-chevron { display: inline-block; transition: transform 0.15s ease; }
-.thinking-block.collapsed .thinking-chevron { transform: rotate(90deg); }
+/* SA4E-381 Issue 2: standard convention — expanded ▼ (rotated), collapsed ▸.
+   The pre-fix rotation was INVERTED (collapsed showed ▼ = "open" affordance),
+   which is why the collapsed one-line block looked like nothing to expand. */
+.thinking-block .thinking-chevron { transform: rotate(90deg); }
+.thinking-block.collapsed .thinking-chevron { transform: none; }
 .thinking-block.collapsed .thinking-body { display: none; }
 .thinking-body {
   padding: 6px 10px 8px 12px;

@@ -77,6 +77,15 @@
   S.MAX_TABS = 10;
   S.lastThreshold = "safe";
 
+  // SA4E-381 Issue 2 (response routing): the tab a tab-scoped protocol
+  // message belongs to. The host stamps originTabId at turn start on the
+  // 5 tab-scoped types (streamChunk / streamComplete / toolCall /
+  // toolCallUpdate / toolApprovalPending); messages without it belong to
+  // the tab the user is viewing.
+  S.getMessageTargetTabId = function (msg) {
+    return (msg && msg.originTabId) ? msg.originTabId : S.activeTabId;
+  };
+
   // Model selector state (populated from chat:models message)
   S.availableModels = [];
   S.supportsAuto = true;

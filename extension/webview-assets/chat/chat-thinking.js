@@ -9,6 +9,10 @@
  * (data-user-managed, sticky — R2/R4). Direction (`thinkingCollapsed`) is
  * tracked so rebuilds and replay honor the user's choice (SA4E-381: fixes the
  * expand-always rebuild bug and the inverted chevron convention).
+ *
+ * Chevron convention (fixed): collapsed ▸ (U+25B6, right), expanded ▼ (U+25BC, down).
+ * CSS in chat.css L1639–1640 implements the rotation; this module only emits
+ * the &#9656; (▸) character and toggles the `collapsed` class.
  */
 (function () {
   "use strict";
@@ -26,6 +30,8 @@
    * metadata span; body keeps the 220px scroll cap. Returns
    * { wrap, header, body, toggle } — `onToggle(nowCollapsed)` lets callers
    * persist the user's direction (sticky R2/R4 choice).
+   *
+   * `meta` may contain { chars, durationMs } computed at settle time.
    */
   S.buildThinkingBlockDom = function (thinkingText, collapsed, userManaged, meta, onToggle) {
     var wrap = document.createElement("div");
@@ -36,7 +42,10 @@
     header.setAttribute("tabindex", "0");
     header.setAttribute("role", "button");
     header.setAttribute("aria-expanded", collapsed ? "false" : "true");
-    header.innerHTML = '<span class="thinking-chevron">&#9656;</span><span class="thinking-label">Thinking</span><span class="thinking-meta"></span>';
+    // Chevron: &#9656; is ▸ (right-pointing). CSS rotates it to ▼ when expanded.
+    header.innerHTML = '<span class="thinking-chevron">&#9656;</span>' +
+      '<span class="thinking-label">Thinking</span>' +
+      '<span class="thinking-meta"></span>';
     var body = document.createElement("div");
     body.className = "thinking-body";
     body.textContent = thinkingText || "";
@@ -47,7 +56,10 @@
       var parts = [];
       if (meta.chars) parts.push(meta.chars + " chars");
       if (meta.durationMs) parts.push((Math.round(meta.durationMs / 100) / 10) + "s");
-      header.querySelector(".thinking-meta").textContent = parts.length ? "\u00B7 " + parts.join(" \u00B7 ") : "";
+      var metaEl = header.querySelector(".thinking-meta");
+      if (metaEl) {
+        metaEl.textContent = parts.length ? "\u00B7 " + parts.join(" \u00B7 ") : "";
+      }
     }
     function toggle() {
       var nowCollapsed = !wrap.classList.contains("collapsed");
@@ -87,7 +99,10 @@
 
   /** The cycle's streaming thinking block (before the bubble when present).
    *  Recreated detached (mid-stream tab switch), carrying buffered text AND
-   *  the user's collapse direction (SA4E-381: fixes the expand-always bug). */
+   *  the user's collapse direction (SA4E-381: fixes the expand-always bug).
+   *  Honor persisted thinkingCollapsed: if userMananged/collapsed, the body
+   *  starts hidden; otherwise streams visible.
+   */
   S.ensureThinking = function (c) {
     if (c.thinkingEl && c.thinkingEl.parentNode === messagesEl) return c.thinkingEl;
     var wrap = S.buildThinkingBlock(c);

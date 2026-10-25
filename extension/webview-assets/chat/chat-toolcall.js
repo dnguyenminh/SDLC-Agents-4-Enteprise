@@ -8,10 +8,36 @@
   "use strict";
   var S = window.ChatState;
 
-  S.renderToolCall = function (tc, isReplay, requiresApproval) {
+  S.renderToolCall = function (tc, isReplay, requiresApproval, targetTabId) {
     // EF-1: Validation - skip if required fields missing
     if (!tc || !tc.id || !tc.name) {
       console.warn("[chat.js] renderToolCall: missing id or name, skipping", tc);
+      return;
+    }
+
+    // SA4E-381 routing: live tool events for a NON-active tab persist into
+    // that tab's model only — no DOM in the viewed tab's transcript. The
+    // entry keeps the exact replay shape, so switching back renders it.
+    targetTabId = targetTabId || S.activeTabId;
+    var targetTab = S.getTab(targetTabId);
+    if (!targetTab) return;
+    if (targetTabId !== S.activeTabId) {
+      if (targetTab.currentCycle) targetTab.currentCycle.hasTools = true;
+      if (!targetTab.messages) targetTab.messages = [];
+      targetTab.messages.push({
+        role: "tool",
+        content: "",
+        toolData: {
+          id: tc.id,
+          name: tc.name,
+          args: tc.args,
+          status: tc.status,
+          result: tc.result,
+          duration: tc.duration,
+          timestamp: new Date().toISOString()
+        }
+      });
+      S.saveStateToDisk();
       return;
     }
 
@@ -147,6 +173,8 @@
     // SA4E-371: flag the open response cycle — the next thinking/token delta
     // closes it (per-cycle groups follow the tool render).
     if (S.currentCycle) S.currentCycle.hasTools = true;
+    // (equivalent to targetTab.currentCycle here — the DOM path only runs
+    // when the target tab IS the active tab)
 
     var container = S.getOrCreateToolContainer();
     // SA4E-372 R1: legacy turns post tool events LIVE while the stream is
@@ -181,15 +209,23 @@
       var summaryHdr = container.querySelector(".tool-container-summary");
       if (summaryHdr) summaryHdr.setAttribute("aria-expanded", "true");
     }
+    // SA4E-381 Issue 3: pending approval forces the trace open so consent
+    // stays visible (trace body never hides an approval bar).
+    if (requiresApproval && !isReplay && S.activeTrace) {
+      S.activeTrace.classList.remove("tc-collapsed");
+      S.activeTrace.setAttribute("data-state", "running");
+      var tSummary = S.activeTrace.querySelector(".trace-summary");
+      if (tSummary) tSummary.setAttribute("aria-expanded", "true");
+      S.activeTrace.removeAttribute("data-user-managed");
+    }
 
     S.scrollToBottom();
 
-    // KSA-240: Persist tool call into active tab so it survives re-renders/reload
+    // KSA-240: Persist tool call into the turn's tab so it survives re-renders/reload
     if (!isReplay) {
-      var currentTab = S.getTab(S.activeTabId);
-      if (currentTab) {
-        if (!currentTab.messages) currentTab.messages = [];
-        currentTab.messages.push({
+      if (targetTab) {
+        if (!targetTab.messages) targetTab.messages = [];
+        targetTab.messages.push({
           role: "tool",
           content: "",
           toolData: {

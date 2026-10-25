@@ -14,7 +14,16 @@
     if (!payload) return;
     if (payload.tabs) {
       S.tabs = payload.tabs.map(function(t) {
-        return { id: t.id, name: t.name, messages: t.messages || [], tokenCount: t.tokenCount || 0, maxTokens: t.maxTokens || 128000 };
+        // SA4E-381 Issue 2: restore unread; stale streaming:true (no live
+        // stream after webview reload) always resets to false — a new
+        // chat:streamChunk will set it again if the turn is still alive.
+        return {
+          id: t.id, name: t.name, messages: t.messages || [],
+          tokenCount: t.tokenCount || 0, maxTokens: t.maxTokens || 128000,
+          streaming: false,
+          unread: t.unread || 0,
+          peerUnread: t.peerUnread || 0
+        };
       });
     }
     // Restore input history if provided

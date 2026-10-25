@@ -177,19 +177,32 @@
     }
   };
 
-  /** Close-time DOM move: adopted containers slot in AFTER the cycle's
-   *  rendered elements — THINK → [bubble] → TOOLS (stable multi-order). */
+  /** Close-time DOM move: adopted containers slot AFTER the cycle's
+   *  rendered elements — THINK → [bubble] → TOOLS. If a work-trace is open
+   *  (SA4E-381 Issue 3), containers go into the trace body instead of the
+   *  transcript root (presentation-only grouping, order preserved).
+   */
   S.placeAdoptedContainers = function (c) {
     if (!c.adoptedContainers || !c.adoptedContainers.length) return;
-    var refEl = c.bubbleEl && c.bubbleEl.parentNode === messagesEl ? c.bubbleEl
-      : (c.thinkingEl && c.thinkingEl.parentNode === messagesEl ? c.thinkingEl : null);
+    var traceBody = S.activeTrace && S.activeTrace.querySelector(".trace-body");
+    var targetParent = traceBody || messagesEl;
+    var refEl = null;
+    if (!traceBody) {
+      refEl = c.bubbleEl && c.bubbleEl.parentNode === messagesEl ? c.bubbleEl
+        : (c.thinkingEl && c.thinkingEl.parentNode === messagesEl ? c.thinkingEl : null);
+    }
     for (var oi = 0; oi < c.adoptedContainers.length; oi++) {
       var oc = c.adoptedContainers[oi];
-      if (!oc || !oc.parentNode || !refEl) continue;
-      messagesEl.insertBefore(oc, refEl.nextSibling);
-      refEl = oc;
+      if (!oc || !oc.parentNode) continue;
+      if (refEl) {
+        targetParent.insertBefore(oc, refEl.nextSibling);
+        refEl = oc;
+      } else {
+        targetParent.appendChild(oc);
+      }
     }
     c.adoptedContainers = [];
+    if (S.updateTraceSummary) S.updateTraceSummary();
   };
 
   S.statusIcon = function (status) {

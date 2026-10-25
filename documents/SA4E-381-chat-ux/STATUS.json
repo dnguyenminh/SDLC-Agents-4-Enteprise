@@ -1,0 +1,161 @@
+{
+  "ticket": "SA4E-381-chat-ux",
+  "type": "Story",
+  "summary": "SDLC CHAT Transcript Redesign: thinking block 3 trạng thái + work-trace container mỗi lượt (fix thinking co 1 dòng, group Q→trace→A)",
+  "priority": "Medium",
+  "labels": [
+    "chat-ux",
+    "transcript-redesign",
+    "thinking-block",
+    "work-trace",
+    "webview"
+  ],
+  "currentPhase": "deployment",
+  "relatedTickets": [
+    "SA4E-381",
+    "SA4E-372",
+    "SA4E-369",
+    "KSA-247",
+    "KSA-281",
+    "KSA-290"
+  ],
+  "documents": [
+    {
+      "file": "STATUS.json",
+      "author": "sm-agent",
+      "note": "SM file — this file"
+    },
+    {
+      "file": "RUN-LOG.md",
+      "author": "sm-agent",
+      "note": "SM file — pipeline execution log"
+    },
+    {
+      "file": "UI-SPEC.md",
+      "author": "ui-agent",
+      "note": "UI/UX Spec v1.0 — AC2 (thinking 3 states), AC3 (work-trace per turn), CSS mapping, DOM contracts, state machines"
+    },
+    {
+      "file": "TDD.md",
+      "author": "sa-agent",
+      "note": "TDD — Issue 2+3 design, file contracts, regression blast radius, no host protocol change"
+    },
+    {
+      "file": "IMPLEMENTATION-HANDOFF.md",
+      "author": "ui-agent",
+      "note": "Work map, estimates, regression blast radius, manual test script"
+    },
+    {
+      "file": "STP.md",
+      "author": "qa-agent",
+      "note": "Test Plan v1.0 — 6 test levels, entry/exit criteria, environment, risks"
+    },
+    {
+      "file": "STC.md",
+      "author": "qa-agent",
+      "note": "Test Cases v1.0 — 107 TC + 24 E2E-UI + 6 PBT, RTM 100% AC2/AC3/§5/regression"
+    },
+    {
+      "file": "TEST-REPORT.md",
+      "author": "qa-agent",
+      "note": "Test Execution Report v1.0 — 0 defect, Go/No-Go = GO, 3,272/3,272 regression green"
+    },
+    {
+      "file": "diagrams/wireframe-background-tab-streaming.drawio/.png",
+      "author": "ui-agent",
+      "note": "Wireframe — background-tab streaming (pending beautify/export)"
+    },
+    {
+      "file": "diagrams/wireframe-thinking-block-states.drawio/.png",
+      "author": "ui-agent",
+      "note": "Wireframe — thinking block 3 states (pending beautify/export)"
+    },
+    {
+      "file": "diagrams/wireframe-transcript-redesign.drawio/.png",
+      "author": "ui-agent",
+      "note": "Wireframe — transcript redesign collapsed/expanded (pending beautify/export)"
+    }
+  ],
+  "phases": {
+    "requirements": {
+      "status": "done",
+      "file": "UI-SPEC.md",
+      "version": 1,
+      "completedAt": "2026-10-24T00:00:00+07:00",
+      "note": "UI-SPEC v1.0 — BA business-correctness review (Phase 2b.5) + TA feasibility check (Phase 2c) assumed done per SA TDD sign-off"
+    },
+    "specification": {
+      "status": "done",
+      "file": "UI-SPEC.md",
+      "version": 1,
+      "completedAt": "2026-10-24T00:00:00+07:00"
+    },
+    "ui_design": {
+      "status": "done",
+      "file": "UI-SPEC.md",
+      "version": 1,
+      "completedAt": "2026-10-24T00:00:00+07:00"
+    },
+    "design": {
+      "status": "done",
+      "file": "TDD.md",
+      "version": 1,
+      "completedAt": "2026-10-25T00:00:00+07:00",
+      "note": "Issue 2 (thinking 3 states) + Issue 3 (work-trace per turn); host protocol unchanged (originTabId already stamped SA4E-381 Issue 1)"
+    },
+    "feedback_loop": {
+      "status": "done",
+      "iterations": 0,
+      "maxIterations": 5,
+      "discrepancies": "0 Critical / 0 High / 0 Medium / 0 Low",
+      "note": "No discrepancies — TDD aligned with UI-SPEC + handoff; QA D-1: none identified"
+    },
+    "test_planning": {
+      "status": "done",
+      "file": "STP.md + STC.md",
+      "version": 1,
+      "completedAt": "2026-10-25T00:00:00+07:00",
+      "note": "QA agent Phase 6 — 107 TC + 24 E2E-UI + 6 PBT planned"
+    },
+    "implementation": {
+      "status": "done",
+      "completedAt": "2026-10-25T00:00:00+07:00",
+      "note": "dev-agent implement complete — 16 file (3 mới: chat-trace.js, chat-tabroute.js, chat-jump-pill.js; 13 sửa). Test suite 3,272/3,272 PASS, tsc 0 errors, host protocol unchanged. VSIX 1.55.6 deployed to user profile."
+    },
+    "security_code_review": {
+      "status": "not_started"
+    },
+    "testing": {
+      "status": "done",
+      "file": "STP.md + STC.md + TEST-REPORT.md",
+      "version": 1,
+      "completedAt": "2026-10-25T00:00:00+07:00",
+      "note": "QA Phase 6 complete — 107 TC + 24 E2E-UI + 6 PBT ALL PASS, 0 defect, Go/No-Go = GO, regression 3,272/3,272 green"
+    },
+    "deployment": {
+      "status": "done",
+      "file": "DPG.md + RLN.md",
+      "version": 1,
+      "note": "Phase 7 complete — DPG.md + RLN.md created (devops-agent). VSIX 1.55.6 installed in user Kiro profile. Git commit + tag v1.55.6 pending user approval for push."
+    }
+  },
+  "circuitBreaker": {},
+  "tokenBudget": {
+    "dailyCap": 500000,
+    "usedToday": 0,
+    "lastReset": "2026-10-25T00:00:00+07:00",
+    "warningThreshold": 0.8,
+    "mode": "normal"
+  },
+  "autonomyLevel": "L3",
+  "lastUpdated": "2026-10-25T01:00:00+07:00",
+  "kbIngestStatus": {
+    "note": "mem_ingest/mem_ingest_file NOT available in this session (MCP tool unreachable). STP.md, STC.md, TEST-REPORT.md, TDD.md NOT ingested into KB yet. Action item: ingest via mem_ingest_file in next session or when MCP restored.",
+    "pendingFiles": [
+      "documents/SA4E-381-chat-ux/STP.md",
+      "documents/SA4E-381-chat-ux/STC.md",
+      "documents/SA4E-381-chat-ux/TEST-REPORT.md",
+      "documents/SA4E-381-chat-ux/TDD.md"
+    ]
+  }
+}

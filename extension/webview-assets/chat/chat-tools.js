@@ -44,6 +44,11 @@
         container.setAttribute("data-user-managed", "true");
         var isCollapsed = container.classList.toggle("tc-collapsed");
         this.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+        // SA4E-381 Issue 3: a manual tool-container toggle marks the trace
+        // user-managed so auto-collapse never folds it at turn end.
+        if (S.activeTrace && S.activeTrace.parentNode) {
+          S.activeTrace.setAttribute("data-user-managed", "true");
+        }
       });
       summaryHeader.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") {
@@ -58,7 +63,10 @@
       bodyWrap.className = "tool-container-body";
       S.activeToolContainer.appendChild(bodyWrap);
 
-      messagesEl.appendChild(S.activeToolContainer);
+      // SA4E-381 Issue 3: if a turn trace is open, the tool container lives
+      // inside the trace body (presentation-only grouping). Otherwise root.
+      var targetParent = (S.activeTrace && S.activeTrace.querySelector(".trace-body")) || messagesEl;
+      targetParent.appendChild(S.activeToolContainer);
     }
     return S.activeToolContainer;
   };
@@ -157,7 +165,8 @@
     applyContainerCollapse(container);
   };
 
-  /** Seal the active container: turn boundary or response-cycle end. */
+  /** Seal the active container: turn boundary or response-cycle end.
+   *  Delegates to S.closeTrace so the work-trace is sealed too. */
   S.finalizeToolContainer = function () {
     // A dangling cycle (turn errored without streamComplete) is closed first
     // so its entry lands chronological; no-op while no cycle is open.
@@ -168,6 +177,9 @@
       applyContainerCollapse(S.activeToolContainer);
       S.activeToolContainer = null;
     }
+    // SA4E-381 Issue 3: seal the work-trace at turn end (auto-collapse unless
+    // user-managed). safe to call when no trace is open.
+    if (S.closeTrace) S.closeTrace("turn-end");
   };
 
 })();

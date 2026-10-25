@@ -38,6 +38,7 @@
     // SA4E-381 Issue 2: shared builder + direction tracking. Old entries
     // (no thinkingCollapsed field) keep today's defaults: thinkingUser ⇒
     // expanded+managed, otherwise collapsed (regression-safe mapping).
+    var thinkingEl = null;
     if (entry && entry.thinking) {
       var thinkingTrimmed = String(entry.thinking).trim();
       if (thinkingTrimmed) {
@@ -56,6 +57,11 @@
           }
         );
         messagesEl.appendChild(tb.wrap);
+        thinkingEl = tb.wrap;
+        // SA4E-381 Issue 3: adopt thinking block into the open trace body.
+        if (S.activeTrace && S.activeTrace.querySelector(".trace-body")) {
+          S.activeTrace.querySelector(".trace-body").appendChild(tb.wrap);
+        }
       }
     }
 
@@ -87,25 +93,54 @@
       messagesEl.appendChild(el);
     }
     S.scrollToBottom();
+    return thinkingEl;
   };
 
+  /** Replay a flat chronological message list, grouping contiguous thinking
+   *  + tool entries between user messages into one work-trace per turn
+   *  (SA4E-381 Issue 3). Trace is presentation-only: tab.messages order is
+   *  unchanged — only DOM re-parenting happens. */
   S.renderChatHistory = function (messages) {
     messagesEl.innerHTML = "";
     S.activeToolContainer = null; // Reset container on full re-render
+    S.activeTrace = null; // No open trace until we hit a turn
     if (messages && messages.length > 0) {
       S.showMessages();
       for (var i = 0; i < messages.length; i++) {
         var m = messages[i];
-        if (m.role === "tool" && m.toolData) {
-          // Re-render persisted tool call block (into container)
-          S.renderToolCall(m.toolData, true);
-        } else {
-          // Seal tool container before rendering non-tool messages
+        if (m.role === "user") {
+          // User message seals any open trace → new turn boundary.
+          if (S.activeTrace) {
+            S.closeTrace("turn-boundary");
+            S.activeTrace = null;
+          }
           S.finalizeToolContainer();
           S.appendMessage(m.role, m.content, m.nodeId, m);
+        } else if (m.role === "tool" && m.toolData) {
+          // Tool entry: ensure a trace is open, render block, adopt into trace body.
+          if (!S.activeTrace) S.openTrace(S.activeTabId);
+          S.finalizeToolContainer(); // seal previous cycle's container first
+          S.renderToolCall(m.toolData, true, undefined, S.activeTabId);
+          if (S.activeToolContainer && S.activeTrace &&
+              S.activeTrace.querySelector(".trace-body")) {
+            S.activeTrace.querySelector(".trace-body").appendChild(S.activeToolContainer);
+          }
+        } else {
+          // Non-tool, non-user message (assistant answer, error, system):
+          // seal tool container + any open trace before rendering at root.
+          S.finalizeToolContainer();
+          if (S.activeTrace) {
+            S.closeTrace("turn-boundary");
+            S.activeTrace = null;
+          }
+          S.appendMessage(m.role, m.content, m.nodeId, m);
         }
+      }
+      // Seal any trace left open at end of history.
+      if (S.activeTrace) {
+        S.closeTrace("end-of-history");
+        S.activeTrace = null;
       }
       S.finalizeToolContainer();
     }
   };
-})();
