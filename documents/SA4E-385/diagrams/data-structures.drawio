@@ -1,0 +1,50 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="entry" value="PeerRegistryEntry — tabId (PK), agentName, role, capabilities, model, status idle|busy, self (registry.ts:14-100)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="60" width="280" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="task" value="PeerTask — taskId (PK), fromTabId, toTabId, message max 16,000, state queued|running|completed|failed|cancelled, reply?, error? (bus.ts:117-126)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="60" width="280" height="80" as="geometry"/>
+    </mxCell>
+    <mxCell id="thread" value="PeerThread — per-pair thread, 50 FIFO messages (threads.ts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="740" y="60" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="guard" value="PairGuardState + RateState — pingpongTurns cap 5, inboundTimestamps 10/60s (guards.ts:24-51)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="200" width="280" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="queue" value="InboundQueue — Map tabId to taskId[], FIFO, cap 20 (bus.ts:40)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="400" y="200" width="280" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="error" value="PeerError — code PEER_001..010, message, details? (errors.ts:17-43)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="740" y="200" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="envelope" value="MessageEnvelope — wrapPeerPrompt / wrapPeerReply, forged-marker check (envelope.ts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="230" y="340" width="280" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="r1" value="1:N — tab has tasks" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="entry" target="task">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r2" value="error on failure" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="task" target="error">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="720" y="100"/>
+          <mxPoint x="720" y="230"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r3" value="FIFO order" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="queue" target="task">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r4" value="gates send (PEER_004 / 005)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="guard" target="queue">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r5" value="wraps message" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="envelope" target="task">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="r6" value="1:N — pair has messages" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="thread" target="error">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

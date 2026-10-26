@@ -1,0 +1,76 @@
+﻿<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="tools" value="Session tools — peer_list / peer_send / peer_status (tools.ts:37-118)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="440" y="40" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="bus" value="PeerBus — list / send / status, Tick-1 atomic (bus.ts:39-104)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="440" y="160" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="registry" value="PeerRegistry — Map&lt;tabId, entry&gt; + self flag (registry.ts:14-100)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="290" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="guards" value="AntiLoopGuards — ping-pong cap 5, rate 10/60s (guards.ts:24-51)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="290" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="tasks" value="PeerTaskManager — state machine + blocking waiters (task-manager.ts)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="580" y="290" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="host" value="Per-tab Session Host — ensureSessionHost / promptTurn / evict (create-host.ts, D1)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="420" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="approval" value="Approval gate — Option A, fail-closed peer-turn tool approval (approval.ts:14-69)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="320" y="420" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="webview" value="Webview PeerBus UI — badge + [Peer inbound] prefix (chat-peer-ui.js)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="580" y="420" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="agents" value="NEW — .code-intel/agents/*.md — per-persona guidance, 9 files (fs-helpers.ts:137-164)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;dashed=1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="60" y="550" width="240" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="kb" value="NEW — KB entries (mem_ingest of guidance)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;dashed=1;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="340" y="550" width="200" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="invoke" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;" edge="1" parent="1" source="tools" target="bus">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="registry snapshot" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bus" target="registry">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e3" value="guard evaluate" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bus" target="guards">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="task store / waiters" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bus" target="tasks">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e5" value="promptTurn (turnOrigin:peer)" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bus" target="host">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="170" y="190"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e6" value="gate tool calls" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=10;" edge="1" parent="1" source="host" target="approval">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="peer:inbound / turn-settled events" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bus" target="webview">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="880" y="190"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e8" value="guidance content" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#82b366;fontSize=10;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="agents" target="kb">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e9" value="guidance consumed by agents" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;strokeColor=#82b366;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="agents" target="tools">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="30" y="580"/>
+          <mxPoint x="30" y="70"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

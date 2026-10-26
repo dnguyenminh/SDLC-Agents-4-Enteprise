@@ -1,0 +1,67 @@
+<mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="bus" value="PeerBus — bus.ts:39-104 — list / send / status, Tick-1 atomic" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="60" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="registry" value="PeerRegistry — registry.ts:14-100 — register / deregister / snapshot" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="60" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="guards" value="AntiLoopGuards — guards.ts:24-51 — evaluate / resetPairsInvolving" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="60" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="tasks" value="PeerTaskManager — task-manager.ts — state machine + blocking waiters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="180" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="tools" value="Session tools — tools.ts:37-118 — buildPeerList / Send / StatusTool" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="180" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="approval" value="Approval gate — approval.ts:14-69 — Option A fail-closed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="820" y="180" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="envelope" value="envelope.ts — wrapPeerPrompt / wrapPeerReply / forged-marker check" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="200" y="300" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="types" value="types.ts — PeerInfo, PeerTask, SendResult, PeerStatusResult, PeerErrorCode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="520" y="300" width="220" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="e1" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="bus" target="registry">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e2" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bus" target="guards">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="400" y="40"/>
+          <mxPoint x="930" y="40"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e3" value="uses" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bus" target="tasks">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e4" value="invokes" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=10;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="tools" target="bus">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="730" y="150"/>
+          <mxPoint x="370" y="150"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e5" value="typed by" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="tools" target="types">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e6" value="wraps messages" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=open;endFill=0;dashed=1;fontSize=10;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="envelope" target="bus">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e7" value="gates peer turns" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=10;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="approval" target="bus">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="930" y="150"/>
+          <mxPoint x="490" y="150"/>
+          <mxPoint x="490" y="90"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

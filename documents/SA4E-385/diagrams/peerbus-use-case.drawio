@@ -1,0 +1,69 @@
+﻿<mxfile host="65bd71144e">
+    <diagram id="CeBKtRfOiX2YSR1llDvF" name="Page-1">
+        <mxGraphModel dx="661" dy="701" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="system" value="PeerBus Inter-Tab System — single window" style="swimlane;startSize=30;fillColor=none;strokeColor=#0288d1;html=1;fontStyle=1;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="230" y="40" width="620" height="520" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc1" value="peer_list() — discover peers" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" parent="system" vertex="1">
+                    <mxGeometry x="325" y="314" width="170" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc2" value="peer_send() — blocking / async task" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" parent="system" vertex="1">
+                    <mxGeometry x="320" y="40" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc4" value="auto-run inbound turn" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" parent="system" vertex="1">
+                    <mxGeometry x="90" y="420" width="170" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc3" value="peer_status() — poll task result" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" parent="system" vertex="1">
+                    <mxGeometry x="110" y="320" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc5" value="approve / reject tool — Option A" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" parent="system" vertex="1">
+                    <mxGeometry x="330" y="140" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="uc6" value="view response in origin tab" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" parent="system" vertex="1">
+                    <mxGeometry x="50" y="210" width="170" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="a1" value="discovers peers" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;startArrow=none;" parent="system" source="uc6" target="uc1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="user" value="User" style="actor;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="160" width="60" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="sm" value="SM-agent" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="320" width="80" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="dev" value="DEV agent" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="80" width="80" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="sec" value="Security agent" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="460" width="80" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="a2" value="sends review task" style="html=1;endArrow=classic;endFill=1;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="dev" target="uc2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a3" value="auto-runs inbound" style="html=1;endArrow=classic;endFill=1;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="sec" target="uc4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a4" value="views response" style="html=1;endArrow=classic;endFill=1;fontSize=9;entryX=0;entryY=0.5;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;" parent="1" target="uc6" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="150" y="200" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="a5" value="approves tools" style="html=1;endArrow=classic;endFill=1;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.01;entryY=0.356;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="user" target="uc5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="a6" value="polls status" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=classic;endFill=1;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="sm" target="uc3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;endFill=1;fontSize=9;" edge="1" parent="1" source="sm" target="uc6">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="240" y="510" as="sourcePoint"/>
+                        <mxPoint x="405" y="170" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

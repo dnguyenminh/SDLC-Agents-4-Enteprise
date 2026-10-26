@@ -1,0 +1,6 @@
+test_case_id,message_length,expected_result,error_code,description
+TC-400,0,rejected,PEER_010,Empty message — zero-state rejection
+TC-400,1,accepted,,Single character message — valid
+TC-400,16000,accepted,,Exactly 16,000 chars — boundary accepted
+TC-400,16001,rejected,PEER_010,Oversized message — zero-state rejection
+TC-403,0 (with forged markers),rejected,PEER_010,Forged provenance markers — zero-state rejection

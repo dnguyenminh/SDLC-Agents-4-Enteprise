@@ -1,0 +1,5 @@
+tabId,agentName,role,capabilities,model,status,self,registeredAt,description
+tab-a-001,Dev Agent,dev,["implement","debug"],claude-sonnet-4,idle,true,2026-10-26T00:00:00Z,Caller tab (self) — initiates peer tasks
+tab-b-002,Security Agent,security,["sast","dependency-check"],claude-sonnet-4,idle,false,2026-10-26T00:00:00Z,Target tab — security review persona
+tab-c-003,QA Agent,qa,["test-review","automation"],claude-sonnet-4,busy,false,2026-10-26T00:00:00Z,Target tab — QA review persona (busy)
+tab-d-004,UI Agent,ui,["design","css"],claude-sonnet-4,idle,false,2026-10-26T00:00:00Z,Third tab — used for response isolation tests

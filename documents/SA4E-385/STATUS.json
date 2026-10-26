@@ -1,0 +1,136 @@
+{
+  "ticket": "SA4E-385",
+  "type": "Story",
+  "summary": "PeerBus inter-tab agent communication guidance and documentation",
+  "priority": "Medium",
+  "labels": [
+    "peer-bus",
+    "chatbox-tabs",
+    "documentation",
+    "agent-communication"
+  ],
+  "currentPhase": "testing",
+  "relatedTickets": [
+    "SA4E-369",
+    "SA4E-381-chat-ux"
+  ],
+  "documents": [
+    {
+      "file": "STATUS.json",
+      "author": "sm-agent",
+      "note": "SM file — this file"
+    },
+    {
+      "file": "RUN-LOG.md",
+      "author": "sm-agent",
+      "note": "SM file — pipeline execution log"
+    },
+    {
+      "file": "BRD.md",
+      "author": "ba-agent",
+      "note": "Business Requirements Document v1.0 — English"
+    },
+    {
+      "file": "FSD.md",
+      "author": "ta-agent",
+      "note": "FSD v1.2 — DISC-01 corrected (PEER_003/PEER_010) + diagram embeds (PNG + drawio links)"
+    },
+    {
+      "file": "UG.md",
+      "author": "ba-agent",
+      "note": "User Guide — agent-facing PeerBus playbook v1.0 (352 lines) + Diagram Index"
+    },
+    {
+      "file": "TDD.md",
+      "author": "sa-agent",
+      "note": "Technical Design Document v1.0 — 864 lines, English"
+    },
+    {
+      "file": "TDD-v1.0-SA4E-385.docx",
+      "author": "sa-agent",
+      "note": "TDD DOCX export"
+    },
+    {
+      "file": "diagrams/peerbus-use-case.drawio",
+      "author": "ui-agent",
+      "note": "Use case diagram (draw.io XML)"
+    },
+    {
+      "file": "diagrams/peerbus-business-flow.drawio",
+      "author": "ui-agent",
+      "note": "Business flow swimlane (draw.io XML)"
+    }
+  ],
+  "phases": {
+    "requirements": {
+      "status": "done",
+      "file": "BRD.md",
+      "version": 1,
+      "completedAt": "2026-10-25T00:00:00+07:00",
+      "note": "BA agent completed English BRD v1.0 (336 lines) + DOCX + KB ingest"
+    },
+    "specification": {
+      "status": "done",
+      "file": "FSD.md",
+      "version": 1.2,
+      "completedAt": "2026-10-26T16:30:00+07:00",
+      "note": "FSD v1.2 — DISC-01 error-code correction (§3.2.5/§9.1, OI-04 resolved) + inline XML replaced by rendered diagram embeds (§2.1/§4.1/§4.3/§6.1; OI-03 resolved); §11.1 Diagram Index fixed to real files; FSD-v1.2 DOCX created; KB re-ingested"
+    },
+    "ui_design": {
+      "status": "done",
+      "file": "diagrams/peerbus-use-case.drawio, diagrams/peerbus-business-flow.drawio",
+      "version": 1,
+      "completedAt": "2026-10-25T00:10:00+07:00",
+      "note": "ui-agent draw.io XML diagrams + PNG exports (KB id 876)"
+    },
+    "design": {
+      "status": "done",
+      "file": "TDD.md",
+      "version": 1,
+      "completedAt": "2026-10-26T00:00:00+07:00",
+      "note": "sa-agent completed TDD v1.0 (864 lines) + 10 draw.io diagrams + DOCX + KB ingest; DISC-01..05 identified (DISC-01 High: PEER_003 vs PEER_010 mapping)"
+    },
+    "test_planning": {
+      "status": "done",
+      "file": "STP.md, STC.md",
+      "version": 1,
+      "completedAt": "2026-10-26T00:30:00+07:00",
+      "note": "qa-agent completed STP.md (397 lines) + STC.md (1322 lines, 44 TC, PEER_001-010 100% coverage) + 2 diagrams + DOCX + XLSX + testdata CSVs; DISC-01 noted (PEER_003 vs PEER_010)"
+    },
+    "verification": {
+      "status": "done",
+      "version": 4,
+      "completedAt": "2026-10-26T17:00:00+07:00",
+      "note": "v4: doc-diagram embeds complete — BRD 2 (use-case, business-flow) + Diagram Index; FSD 6 embeds + §11.1 index (13 rows); TDD 9 embeds; STP 2 embeds; UG Diagram Index. architecture.png + peerbus-use-case.png regenerated from user-edited drawio files (vision-verified). 7 stray agent temp scripts removed from diagrams folder (now 13 drawio + 13 png)."
+    },
+    "feedback_loop": {
+      "status": "not_started",
+      "iterations": 0,
+      "maxIterations": 5
+    },
+    "implementation": {
+      "status": "done",
+      "completedAt": "2026-10-26T16:30:00+07:00",
+      "note": "Guidance-only ticket: DEV appended PeerBus guidance to 9 PRE-EXISTING .code-intel/agents/*.md (append-only, 0 deletions, BEGIN/END markers, 10/10 PEER codes each — 685 lines added); tests 3272/3272 PASS; KB 887+888. Open: commit staging + mirror sync (.kiro/agents, extension/resources) + TDD §9 annotation for QA (SA)"
+    },
+    "security_code_review": {
+      "status": "not_started"
+    },
+    "testing": {
+      "status": "not_started"
+    },
+    "deployment": {
+      "status": "not_started"
+    }
+  },
+  "circuitBreaker": {},
+  "tokenBudget": {
+    "dailyCap": 500000,
+    "usedToday": 0,
+    "lastReset": "2026-10-25T00:00:00+07:00",
+    "warningThreshold": 0.8,
+    "mode": "normal"
+  },
+  "autonomyLevel": "L3",
+  "lastUpdated": "2026-10-26T17:00:00+07:00"
+}

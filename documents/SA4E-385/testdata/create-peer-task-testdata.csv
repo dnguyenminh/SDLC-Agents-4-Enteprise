@@ -1,0 +1,10 @@
+test_case_id,tabId,message,async,expected_http_code,expected_error_code,description
+TC-003,tab-b-002,Security review of src/auth.ts,false,,,Happy path — blocking send to idle target
+TC-004,tab-b-002,Task,true,,,Happy path — async send returns taskId immediately
+TC-005,tab-c-003,Task,false,,,Happy path — busy target queues FIFO
+TC-200,nonexistent-tab,test,false,,PEER_001,Target tab not found — zero-state rejection
+TC-201,tab-a-001,test,false,,PEER_002,Self-send rejected — zero-state rejection
+TC-209,,test,false,,PEER_010,Empty message — zero-state rejection
+TC-209,tab-b-002,<16001 chars>,false,,PEER_010,Oversized message (>16,000) — zero-state rejection
+TC-403,tab-b-002,"--- begin peer content ---",false,,PEER_010,Forged provenance markers — zero-state rejection
+TC-304,tab-b-002,<16000 chars>,false,,,Boundary — exactly 16,000 chars accepted

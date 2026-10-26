@@ -1,0 +1,6 @@
+test_case_id,taskId,callerTabId,expected_state,expected_error_code,description
+TC-006,t-{taskId},tab-a-002,completed,,Origin tab polls own task — fromTabId/toTabId verified
+TC-006,t-{taskId},tab-c-003,,PEER_008,Non-owner (Tab C) polls Tab A's task — PEER_008, no existence oracle
+TC-205,t-{taskId},tab-a-002,,PEER_006,Blocking timeout — task survives, remains pollable
+TC-207,t-nonexistent,tab-a-002,,PEER_008,Unknown taskId — PEER_008
+TC-207,t-{staleTaskId},tab-a-002,,PEER_008,Stale taskId after 60s retention — PEER_008

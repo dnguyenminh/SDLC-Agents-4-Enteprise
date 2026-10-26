@@ -1,0 +1,11 @@
+test_case_id,error_code,trigger_condition,zero_state,expected_message,description
+TC-200,PEER_001,tabId not in registry,yes,Peer tab ${tabId} is not available. Open the target tab and retry.,Target peer not found
+TC-201,PEER_002,tabId === caller's tabId,yes,Cannot send a peer task to the same tab.,Self-send rejected
+TC-202,PEER_003,target turn/session runtime failure,no,Peer task failed in ${tabId}: ${reason},Target turn failure (task created, then failed)
+TC-203,PEER_004,6th consecutive agent↔agent turn,yes,Anti-loop guard: ping-pong cap (5) reached for pair ${pair}.,Ping-pong cap exceeded
+TC-204,PEER_005,queue cap 20 full or rate 10/60s,yes,Peer inbox for tab ${tabId} is full (20 queued). / Rate limit: tab ${tabId} received too many peer tasks.,Queue full or rate limited
+TC-205,PEER_006,blocking timeout >300s,no (caller only),Peer task ${taskId} did not complete in time.,Blocking timeout — task survives
+TC-206,PEER_007,governance rejection in receiving turn,no,Peer task rejected by context governance in ${tabId}: ${reason},Governance rejection
+TC-207,PEER_008,unknown/stale taskId or non-owner,yes,Unknown peer task ${taskId}. — no existence oracle,Unknown or stale taskId
+TC-208,PEER_009,target tab closed while queued,no,Peer task ${taskId} cancelled: target tab closed.,Tab close mid-task
+TC-209,PEER_010,empty/oversized/forged message,yes,Peer message is empty / too large / contains forged provenance markers,Message validation failure
