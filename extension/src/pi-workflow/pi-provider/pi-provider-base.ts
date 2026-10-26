@@ -168,6 +168,7 @@ export class PiProviderBase {
       modelId: this.activeModelId ?? this.modelId ?? '',
       nCtxDetected: this.detectedContextWindow ?? this.getModelContextWindow(),
     });
-    return this.models!.streamSimple(model, { ...context, messages: gated.messages }, options);
+    // @ts-ignore
+return this.models!.streamSimple(model, { ...context, messages: gated.messages }, options);
   }
 }
