@@ -13,18 +13,12 @@ import {
 import { estimateTokenCount } from '../../pi-agent/prompt-compressor.js';
 import { usableTokensOf } from '../../pi-agent/models/ContextBudget.js';
 import { mapAgentEvent, ToolEventTracker, type EventCollector, type ToolLiveEvent } from '../pi-event-mapper.js';
+import { createTruncationGuard, type SessionTurnHooks } from './turn-guards.js';
 import type { NormalizedToolCall } from '../types/executor.types.js';
 import type { SessionHost, SessionTurnResult, SessionTier } from './types.js';
 import type { ContextBudget } from '../../pi-agent/models/ContextBudget';
 import type { TurnOriginTracker } from '../peer/types.js';
 import { logger } from '../../logger.js';
-
-/** Per-turn streaming callbacks (token / live tool event / reasoning deltas). */
-interface SessionTurnHooks {
-  onToken?: (t: string) => void;
-  onToolEvent?: (e: ToolLiveEvent) => void;
-  onThinking?: (t: string) => void;
-}
 
 /**
  * Builds the SessionHost.promptTurn closure over the live session. Keeps the
@@ -177,8 +171,13 @@ async function promptSession(
   tracker: ToolEventTracker,
   hooks: SessionTurnHooks
 ): Promise<void> {
+  // Circuit breaker (see ./turn-guards.ts): stops the request loop when the
+  // model keeps re-issuing output-limit-truncated tool calls. Runs FIRST so
+  // the abort takes effect before any further event handling.
+  const guard = createTruncationGuard(session, hooks);
   const unsub = (session as { subscribe: (l: (e: unknown) => void) => () => void }).subscribe(
     (event) => {
+      guard.observe(event);
       try {
         const live = tracker.observe(event as never);
         if (live && hooks.onToolEvent) {

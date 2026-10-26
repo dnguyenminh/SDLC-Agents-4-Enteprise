@@ -31,6 +31,7 @@ const { mocks } = vi.hoisted(() => {
           assistantMessageEvent: { type: 'text_delta', delta: 'session says hi' },
         });
       },
+      abort: vi.fn(async () => undefined),
       dispose: vi.fn(),
     },
     listener: null as null | ((e: unknown) => void),
@@ -83,6 +84,7 @@ describe('PiAgentSessionHost (SA4E-334 Option A)', () => {
     mocks.scriptedEvents.length = 0;
     mocks.setRuntimeApiKey.mockClear();
     mocks.session.dispose.mockClear();
+    mocks.session.abort.mockClear();
   });
 
   it('promptTurn streams tokens and reports the session transcript file', async () => {
@@ -163,6 +165,46 @@ describe('PiAgentSessionHost (SA4E-334 Option A)', () => {
     expect(onToolEvent).toHaveBeenCalledWith(
       expect.objectContaining({ phase: 'end', id: 't1', isError: false })
     );
+    host.dispose();
+  });
+
+  it('host.abort() forwards to the SDK AgentSession.abort (cancel root-cause fix)', async () => {
+    const host = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/abort', providerId: 'p', apiKey: 'k' });
+    await host.abort();
+    expect(mocks.session.abort).toHaveBeenCalledTimes(1);
+    host.dispose();
+  });
+
+  it('abortSessionHost aborts the cached host of the tab; unknown tab is a no-op', async () => {
+    await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/abort2', providerId: 'p', apiKey: 'k' });
+    const { abortSessionHost } = await import('../session-host/registry.js');
+    expect(await abortSessionHost('C:/ws/abort2', 'tab-1')).toBe(true);
+    expect(mocks.session.abort).toHaveBeenCalledTimes(1);
+    expect(await abortSessionHost('C:/ws/abort2', 'tab-none')).toBe(false);
+    expect(mocks.session.abort).toHaveBeenCalledTimes(1);
+  });
+
+  it('circuit breaker aborts the session after repeated truncated tool calls (chat-loop fix)', async () => {
+    const host = await ensureSessionHost({ tabId: 'tab-1', workspaceRoot: 'C:/ws/loop', providerId: 'p', apiKey: 'k' });
+    const onToolEvent = vi.fn();
+    const sdkError =
+      'Tool call "write" was not executed: the response hit the output token limit, so its arguments may be truncated. Re-issue the tool call with complete arguments.';
+    for (let i = 0; i < 3; i++) {
+      mocks.scriptedEvents.push(
+        { type: 'tool_execution_start', toolCallId: `t${i}`, toolName: 'write', args: {} },
+        {
+          type: 'tool_execution_end',
+          toolCallId: `t${i}`,
+          toolName: 'write',
+          isError: true,
+          result: { content: [{ type: 'text', text: sdkError }] },
+        }
+      );
+    }
+    await host.promptTurn('fix the file', undefined, onToolEvent);
+    expect(mocks.session.abort).toHaveBeenCalledTimes(1);
+    const names = onToolEvent.mock.calls.map((c) => (c[0] as { name?: string }).name);
+    expect(names).toContain('circuit-breaker');
     host.dispose();
   });
 });

@@ -118,11 +118,11 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       });
       // One stable stream identity per turn (streaming-identity fix):
       // every token/complete/error of this turn shares turnStreamId so the
-      // webview opens exactly ONE bubble and always closes it.
-      // Session turns have no in-loop abort (AgentSession API) — bound the
-      // wait instead. Late completions are dropped via live=false so a timed
-      // out session can never bleed tokens into a later turn. Timeout claims
-      // the turn (return true) to avoid double-executing via legacy fallback.
+      // webview opens exactly ONE bubble and always closes it. Late
+      // completions are dropped via live=false so an aborted/timed-out
+      // session can never bleed tokens into a later turn. Cancel and timeout
+      // now ABORT the session (adapter cancel()/this timeout branch), so the
+      // run settles and the next turn is never chained behind a zombie.
       const streamId = turnStreamId;
       let live = true;
       // timeoutMs <= 0 → NO wall-clock backstop (product decision: stop only on
@@ -160,6 +160,10 @@ export abstract class AdapterSessionTurns extends AdapterCore {
       } catch (err) {
         live = false;
         if ((err as Error).message.startsWith('PI_SESSION_TIMEOUT')) {
+          // Timeout claimed the turn — ABORT the session too, otherwise the
+          // run keeps streaming in the background (zombie turn) and the
+          // single-flight chain blocks the tab's next message forever.
+          void import('../session-host/registry.js').then(m => m.abortSessionHost(this.workspaceRoot, tabId)).catch(() => {});
           this.streamHandler.emitComplete('pi', Date.now() - turnStart, streamId);
           this.onEvent({
             type: 'chat:error',

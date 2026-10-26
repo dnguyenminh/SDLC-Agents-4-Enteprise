@@ -71,6 +71,12 @@ export interface SessionHost {
     opts?: SessionTurnOptions
   ): Promise<SessionTurnResult>;
   getSessionFile(): string | undefined;
+  /**
+   * Abort the in-flight AgentSession turn (user cancel / turn timeout).
+   * The SDK settles aborted runs with stopReason "aborted" — promptTurn
+   * resolves (never rejects), so the turn stays on the session path.
+   */
+  abort(): Promise<void>;
   dispose(): void;
 }
 

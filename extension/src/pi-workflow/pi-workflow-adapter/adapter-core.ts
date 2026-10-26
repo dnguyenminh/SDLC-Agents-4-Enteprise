@@ -314,7 +314,21 @@ export class AdapterCore {
     }
   }
 
-  cancel(): void { for (const s of this.store.all()) { s.pipelineStatus = 'CANCELLED'; } }
+  /**
+   * Cancel root-cause fix: flipping pipelineStatus only painted the UI while
+   * the AgentSession kept streaming the in-flight LLM request and firing the
+   * next ones (zombie turn — requests kept hitting the LLM server after the
+   * user pressed Cancel). Now the active tab's host is ABORTED too: the SDK
+   * settles the run (stopReason "aborted"), promptTurn resolves, and the
+   * single-flight turn chain releases.
+   */
+  cancel(): void {
+    for (const s of this.store.all()) { s.pipelineStatus = 'CANCELLED'; }
+    const tabId = this.store.activeTab;
+    if (tabId) {
+      void import('../session-host/registry.js').then(m => m.abortSessionHost(this.workspaceRoot, tabId)).catch(() => {});
+    }
+  }
 
   dispose(): void {
     this.approvalGate.dispose();

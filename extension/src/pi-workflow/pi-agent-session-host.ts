@@ -15,4 +15,8 @@ export {
   resolveShouldCompress,
 } from './session-host/types.js';
 export { getSessionToolLoadout } from './session-host/loadout.js';
-export { ensureSessionHost, clearSessionHostCache } from './session-host/registry.js';
+export {
+  ensureSessionHost,
+  clearSessionHostCache,
+  abortSessionHost,
+} from './session-host/registry.js';

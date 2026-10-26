@@ -189,6 +189,11 @@ export async function createHost(opts: SessionHostOptions): Promise<SessionHost>
 
   return {
     getSessionFile: getFile,
+    // Cancel/timeout root-cause fix: surface the SDK's AgentSession.abort()
+    // ("Abort current operation and wait for agent to become idle") so the
+    // adapter can stop the in-flight LLM request AND the internal agent
+    // loop instead of only flipping UI status.
+    abort: async () => { try { await (session as { abort?: () => Promise<void> }).abort?.(); } catch { /* best-effort */ } },
     dispose: () => {
       try {
         (session as { dispose?: () => void }).dispose?.();

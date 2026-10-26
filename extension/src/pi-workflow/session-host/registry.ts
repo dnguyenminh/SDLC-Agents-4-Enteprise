@@ -47,6 +47,24 @@ export function evictSessionHost(workspaceRoot: string, tabId: string): void {
   hosts.delete(key);
 }
 
+/**
+ * Abort the in-flight turn of a tab's cached host (user cancel / timeout).
+ * No-op when the tab has no host yet or the host is idle. Best-effort: never
+ * throws — cancel must not surface errors for a turn that already settled.
+ */
+export async function abortSessionHost(workspaceRoot: string, tabId: string): Promise<boolean> {
+  validateTabId(tabId);
+  const hit = hosts.get(sessionKey(workspaceRoot || '(default)', tabId));
+  if (!hit) return false;
+  try {
+    const host = await hit;
+    await host.abort();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Test hook. */
 export function clearSessionHostCache(): void {
   hosts.clear();
