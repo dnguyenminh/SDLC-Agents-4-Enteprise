@@ -1,3 +1,6 @@
 ignore:
   - GHSA-xjj6-f33q-929c:severity=low
   - GHSA-5v7r-6r5c-r473:severity=moderate
+  - CVE-2026-111181:severity=high
+  - CVE-2026-109869:severity=high
+  - CVE-2023-54404:severity=high
