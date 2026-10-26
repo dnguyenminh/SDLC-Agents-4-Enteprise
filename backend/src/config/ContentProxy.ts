@@ -12,6 +12,7 @@
  * Overrides exist only for tools that do not follow the convention.
  */
 
+import * as fs from 'fs';
 /** Tool-name prefixes whose result is a file written by the child server. */
 export const FILE_TOOL_NAME_PREFIXES: readonly string[] = ['export_', 'render_', 'generate_'];
 
@@ -48,5 +49,24 @@ export interface ContentProxyOverride {
   enabled?: boolean;
 }
 
-/** Empty by default — convention detection covers every current exporter. */
+/** Artifact output roots — dedicated sinks for orphaned artifact files. */
+export function artifactOutputRoots(): readonly string[] {
+  // Convention: ARTIFACT_OUTPUT_ROOTS env var, or default per-workspace roots
+  const env = process.env.ARTIFACT_OUTPUT_ROOTS;
+  if (env) return env.split(':').map((s) => s.trim()).filter(Boolean);
+  // Default: no roots configured → sweep will find nothing (safe no-op)
+  return [];
+}
+
+/** Check whether a real path falls inside one of the artifact roots. */
+export function isPathWithinRoot(root: string, candidate: string): boolean {
+  try {
+    const real = fs.realpathSync(candidate);
+    return artifactOutputRoots().some((r) => real.startsWith(r));
+  } catch {
+    return false;
+  }
+}
+
+/** Per-tool escape hatch for tools that defy the naming/description convention. */
 export const CONTENT_PROXY_OVERRIDES: Record<string, ContentProxyOverride> = {};
