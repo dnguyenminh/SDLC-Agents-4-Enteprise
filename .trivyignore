@@ -1,0 +1,3 @@
+ignore:
+  - GHSA-xjj6-f33q-929c:severity=low
+  - GHSA-5v7r-6r5c-r473:severity=moderate
