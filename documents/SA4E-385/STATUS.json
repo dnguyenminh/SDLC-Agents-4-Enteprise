@@ -111,7 +111,7 @@
     "implementation": {
       "status": "done",
       "completedAt": "2026-10-26T16:30:00+07:00",
-      "note": "Guidance-only ticket: DEV appended PeerBus guidance to 9 PRE-EXISTING .code-intel/agents/*.md (append-only, 0 deletions, BEGIN/END markers, 10/10 PEER codes each — 685 lines added); tests 3272/3272 PASS; KB 887+888. Open: commit staging + mirror sync (.kiro/agents, extension/resources) + TDD §9 annotation for QA (SA)"
+      "note": "Guidance-only ticket: DEV appended PeerBus guidance to 9 PRE-EXISTING .code-intel/agents/*.md (append-only, 0 deletions, BEGIN/END markers, 10/10 PEER codes each — 685 lines added); tests 3272/3272 PASS; KB 887+888. Mirror extension/resources/.code-intel/agents/ synced 9/9 identical. Commit 52e5484 (agents + mirror + docs, 59 files +7090/−0). TDD v1.1 annotated by SA (§9 extend-in-place, §10 QA note, A4 fixed, §13, dedup tail −46 lines). All follow-ups resolved."
     },
     "security_code_review": {
       "status": "not_started"

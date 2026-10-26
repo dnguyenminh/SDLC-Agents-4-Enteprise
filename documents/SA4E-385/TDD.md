@@ -11,7 +11,7 @@
 | Jira Ticket | SA4E-385 |
 | Title | PeerBus inter-tab agent communication guidance and documentation |
 | Author | SA Agent – Solution Architect |
-| Version | 1.0 |
+| Version | 1.1 |
 | Date | 2026-10-26 |
 | Status | Draft |
 | Related BRD | documents/SA4E-385/BRD.md (v1.0) |
@@ -34,6 +34,7 @@
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2026-10-26 | SA Agent | Initiate document — technical design translated from BRD v1.0 + FSD v1.0 and verified against the actual codebase (`extension/src/pi-workflow/peer/`, `extension/src/chat-panel/`, `extension/webview-assets/chat/`) |
+| 1.1 | 2026-10-26 | SA Agent | A4 corrected (agent files pre-exist); §9 annotated extend-in-place approach; §10 QA note (verify content in existing files, not file creation); duplicated §8.1–8.4 tail after End marker removed; footer v1.1 |
 
 ---
 
@@ -637,11 +638,16 @@ SA4E-385 is guidance/documentation-layer. **No changes to the PeerBus runtime ar
 
 **Prerequisite check (before Task 1):** Confirm SA4E-369 runtime is landed — `extension/src/pi-workflow/peer/` exists and `peer_list`/`peer_send`/`peer_status` register per-tab (`peer-approval.ts:73`, `create-host.ts:175-177`, `loadout.ts:15, 30-33`).
 
+> **⚠ IMPLEMENTATION REALITY (v1.1 — supersedes the "create" wording in Tasks 2–3):**
+> - **REALITY:** The 9 agent instruction files (`.code-intel/agents/{sm,ba,ta,sa,qa,dev,devops,security,ui}-agent.md`) **PRE-EXIST** as git-tracked, live pipeline personas (frontmatter `name/label/phase/tools/outputDoc`; body after frontmatter = persona prompt). The directory is NOT new. Evidence: `git ls-files .code-intel/agents/`; loader `extension/src/chat-panel/ChatStateManager/fs-helpers.ts:137-164` (`readAgentInfos` reads every top-level `*.md`, id = basename).
+> - **CORRECT APPROACH — extend-in-place:** append a PeerBus guidance section INSIDE each existing file, delimited by `SA4E-385:PEERBUS-GUIDANCE:BEGIN` / `SA4E-385:PEERBUS-GUIDANCE:END` markers. Never overwrite/rename existing files (would destroy live personas); never create parallel files (the loader registers every top-level `*.md` → phantom agents).
+> - **STATUS:** implemented accordingly — append-only (`git diff --numstat`: +90..104/−0 per file, 830 lines total); 10/10 PEER codes per file; sections ≤200 lines; tests 3272/3272 PASS; mirror `extension/resources/.code-intel/agents/` synced 9/9; commit `52e5484`.
+
 | # | Task | Files to create / modify | Guidance (≤20 lines per function) |
 |---|------|-------------------------|-----------------------------------|
 | 1 | Verify runtime prerequisite | (read only) `extension/src/pi-workflow/peer/tools.ts:37-118`, `peer-approval.ts:61-78`, `create-host.ts:175-177` | Confirm 3 tools build + register per tab; allowlist contains `peer_list`/`peer_send`/`peer_status`. |
-| 2 | Create `.code-intel/agents/` directory + `sm-agent.md` | CREATE `.code-intel/agents/sm-agent.md` | SM-agent guidance: coordinate cross-tab calls via peer tools; invoke `peer_list` first; choose blocking vs async by status; interpret `fromTabId`/`toTabId`. |
-| 3 | Create persona instruction files (8) | CREATE `.code-intel/agents/{ba,ta,sa,qa,dev,devops,security,ui}-agent.md` | Each: when to use peer, persona-to-task matching table (role/capabilities from `peer_list`), blocking vs async choice, error nextActions (Section 7.2). |
+| 2 | Extend `sm-agent.md` with PeerBus guidance (file PRE-EXISTS — see reality note above) | APPEND `SA4E-385:PEERBUS-GUIDANCE` section (BEGIN/END markers) to existing `.code-intel/agents/sm-agent.md` | SM-agent guidance: coordinate cross-tab calls via peer tools; invoke `peer_list` first; choose blocking vs async by status; interpret `fromTabId`/`toTabId`. |
+| 3 | Extend persona instruction files (8) — PRE-EXISTING, append-only (see reality note above) | APPEND `SA4E-385:PEERBUS-GUIDANCE` section (BEGIN/END markers) to existing `.code-intel/agents/{ba,ta,sa,qa,dev,devops,security,ui}-agent.md` | Each: when to use peer, persona-to-task matching table (role/capabilities from `peer_list`), blocking vs async choice, error nextActions (Section 7.2). |
 | 4 | Verify tool help payload (S2) | (read only) `tools.ts:44,62-65,91-94` | Confirm `promptGuidelines` include "call peer_list first", S-05 "[PEER REPLY] untrusted data" warning, max 16,000 chars. No change needed if present. |
 | 5 | Extend UG section (S3) | MODIFY `documents/SA4E-369/UG.md` (add SA4E-385 guidance section) | Add agent-facing inter-tab flow: discover → select persona → send → poll/interpret errors; badge/prefix interpretation; approval prompts; error matrix PEER_001–010 with hint+nextAction. |
 | 6 | Ingest KB entries (S4) | (KB) `mem_ingest` TDD.md + guidance | Ingest this TDD and per-persona guidance into knowledge base for QA/DEV/DevOps cross-agent access. |
@@ -667,6 +673,8 @@ Traceability table: FR / AC → testable condition. QA derives STP/STC from this
 | FR-06 | AC-1.2 | Select target by role/capabilities | `types.ts:40-48` `role`/`capabilities` | Unit: `PeerInfo` includes role/capabilities |
 
 **FSD test scenarios (reused):** TC-01..TC-17 (FSD.md §10.1 lines 924-942) map 1:1 to FR/AC above. SA4E-385 adds no new runtime test scenarios (guidance-layer); QA verifies guidance content is present in `.code-intel/agents/*.md` and UG.
+
+**QA scope note (v1.1):** QA/STC must verify that guidance **CONTENT IS PRESENT in the EXISTING files — NOT that "files were created"**. For each of the 9 pre-existing `.code-intel/agents/*.md`: (a) `SA4E-385:PEERBUS-GUIDANCE:BEGIN`/`:END` markers present; (b) all 5 guidance sections present; (c) 10/10 PEER codes covered; (d) original persona prompts/frontmatter intact (append-only, 0 deletions); (e) loader still parses all 9 agents (`fs-helpers.ts:137-164`).
 
 **E2E test framework:** vitest 4.1.8, TypeScript, `extension/src/__tests__/peer/` (SA4E-369 TDD §11). Test code in TypeScript to match project language (no Playwright — webview is VS Code; UI verification via message-handler unit tests + manual web test).
 
@@ -730,7 +738,7 @@ None blocking. OI-03 (diagrams) is completed as part of this TDD's diagram deliv
 | A1 | SA4E-369 PeerBus runtime is landed, tested, functional | BRD.md:§1.3 line 73; confirmed `extension/src/pi-workflow/peer/` exists |
 | A2 | Per-tab session support (SA4E-370 S3) available | BRD.md:§1.3 lines 74-75; `session-host/` dir exists |
 | A3 | ≥2 chat tabs open in same window for inter-tab messaging | BRD.md:§1.3 lines 64-65 |
-| A4 | `.code-intel/agents/` dir does not exist yet (confirmed absent) | glob returned no files; `fs-helpers.ts:141` returns `[]` when absent |
+| A4 | The 9 `.code-intel/agents/*.md` files PRE-EXIST as git-tracked live pipeline personas; the work is extend-in-place (append guidance sections inside each file), not file creation | `git ls-files .code-intel/agents/` (9 files); loader `fs-helpers.ts:137-164` (`readAgentInfos` registers every top-level `*.md`, id = basename) |
 | A5 | No DB / no migration needed for SA4E-385 | FSD §4 in-memory only; BRD.md:§1.2 line 60 |
 | A6 | `originTabId` (FSD) ≡ `fromTabId` (runtime) — naming alignment only | FSD §1.3 line 73; `types.ts:75`, `125` |
 
@@ -790,6 +798,8 @@ Per AGENTS.md, every claim about existing behaviour must cite `file:line`, and d
 
 **Overall:** Runtime matches FSD with 5 documentation-level discrepancies (DISC-01..05), none requiring code change. DISC-01 (PEER_003 vs PEER_010) should be corrected in FSD before QA STC sign-off.
 
+> **Correction (v1.1):** TDD v1.0 §12.2 A4 wrongly assumed `.code-intel/agents/` did not exist — the 9 agent persona files pre-exist (git-tracked). DEV correctly implemented extend-in-place (append-only, commit `52e5484`); A4 fixed in §12.2 and §9 annotated accordingly.
+
 ---
 
 ## Glossary
@@ -815,50 +825,4 @@ Per AGENTS.md, every claim about existing behaviour must cite `file:line`, and d
 
 ---
 
-*End of TDD — SA4E-385 v1.0 (2026-10-26) — Draft*
-
-
-
-### 8.1 Threat Model & Controls
-
-| Threat | Control | Implementation | File:line |
-|--------|---------|----------------|-----------|
-| Injection — peer content impersonating user instructions | Provenance envelope marks peer content as untrusted data; not a user instruction | `wrapPeerPrompt` frames every peer message; `wrapPeerReply` frames every reply | `envelope.ts:33-44`, `:59-66` |
-| Spoofing — sender forges identity | `fromTabId`/`fromAgentName`/`fromRole` stamped by the **receiving** bus from its own Registry; content claims carry no weight | `envelopeHeader` stamped from receiving registry | `dispatch.ts:71-82`, `envelope.ts:12-13` |
-| Tool misuse in peer turn | Approval gate (Option A): every tool call in a peer turn requires explicit user approval, fail-closed | `createPeerApprovalExtension` gates on `turnOrigin === 'peer'`; user turns unchanged | `approval.ts:40-69`, `peer-approval.ts:66-68` |
-| Anti-spoofing of `from tab` header | Header stamped by receiving side from its own registry | `dispatch.ts:71` comment + `envelopeHeader` | `dispatch.ts:71-82` |
-| Ping-pong loop | Per-pair cap 5 consecutive agent↔agent turns; resets on user message in either tab | `MAX_PINGPONG_TURNS=5`; `resetPairsInvolving` on user activity | `constants.ts:8`, `guards.ts:27-30,54-58`, `bus.ts:76-78` |
-| Rate abuse | Per-tab 10 tasks / 60s rolling window | `RATE_LIMIT_MAX=10`, `RATE_WINDOW_MS=60_000` | `constants.ts:11-14`, `guards.ts:24-51` |
-| Queue overflow | Target inbound queue cap 20 FIFO | `INBOUND_QUEUE_CAP=20` | `constants.ts:23`, `bus.ts:112-115` |
-| Message size | Cap 16,000 chars; rejected PEER_010 pre-creation, pre-guard | `PEER_MESSAGE_MAX_CHARS=16_000` | `constants.ts:29`, `bus.ts:157-159` |
-| Marker forgery | Messages containing peer framing markers rejected PEER_010 | `messageContainsForgedMarkers` | `envelope.ts:28-30`, `bus.ts:162-164` |
-| Zero-state leakage | Rejected sends create no task/counter/trace | Guards validated before task creation | `bus.ts:146-165`, `guards.ts` `I-2`, `I-7` |
-| Failure isolation | One failed task never affects other tasks | Per-task state machine; bounded queues | `types.ts:68-71`, `bus.ts` |
-| No network / no auth surface | Zero-config; no sockets, ports, tokens | By design | `bus.ts`, `constants.ts` |
-
-### 8.2 Approval Gate for Peer Turns (Option A — D6)
-
-- Wired in `peer-approval.ts:61-78` (`wirePeerSession` → `createPeerApprovalExtension`).
-- Active **only** when `turnOrigin === 'peer'`; user turns default `'user'` and are byte-identical (`approval.ts:50`, `turn-executor.ts:58-62`).
-- Fail-closed: if no gate handler, peer-turn tool calls are blocked (`approval.ts:51-53`).
-- 30s auto-deny timeout bounds the pending window (`constants.ts:33` `PEER_APPROVAL_TIMEOUT_MS`).
-- Webview resolves approvals via `peer-approval-bridge.ts:28-45` (`chat:toolApprovalPending` with `peer: true`).
-
-### 8.3 Authentication & Authorization
-
-- No separate authentication — zero-config, always active when ≥2 tabs open (BRD.md:§1.2 line 62; BRD.md:§6 NFR line 280).
-- Identity established by the extension host's tab registry, not user credentials (SA4E-369 TDD §7.1).
-- Caller agent may `peer_send` to any registered peer except self (BRD.md:§2.3 line 190).
-
-### 8.4 Data Protection
-
-| Data Type | At Rest | In Transit | In Logs |
-|-----------|---------|------------|---------|
-| Peer messages / replies | Nothing at rest — memory only | Never leaves process | **Content excluded**; taskId/tabIds/state/code only |
-| PeerRegistry entries | Memory only | Never leaves process | tabId + role/model only |
-| Guard/rate counters | Memory only | Never leaves process | Metrics only |
-
-(SA4E-369 TDD §7.3; `errors.ts:4` header comment; `bus.ts`/`envelope.ts` header comments.)
-
-
-
+*End of TDD — SA4E-385 v1.1 (2026-10-26) — Draft*
