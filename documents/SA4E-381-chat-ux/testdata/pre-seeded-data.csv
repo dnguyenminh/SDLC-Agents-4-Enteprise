@@ -1,0 +1,5 @@
+id,name,email,role,status,thinkingCollapsed,streaming,unread,created_at,description
+tab-A-001,Tab A,user-a@example.com,READER,ACTIVE,false,false,0,2026-10-25T00:00:00Z,Active tab A — baseline for thinking/trace tests
+tab-B-002,Tab B,user-b@example.com,READER,ACTIVE,false,false,0,2026-10-25T00:00:0Z,Background tab B — for regression peer/out-of-scope checks
+user-001,QA Tester,qa@example.com,READER,ACTIVE,false,false,0,2026-10-25T00:00:00Z,Standard user for keyboard/a11y tests
+user-admin-002,Admin User,admin@example.com,ADMINISTRATOR,ACTIVE,false,false,0,2026-10-25T00:00:00Z,Admin for approval force-open tests

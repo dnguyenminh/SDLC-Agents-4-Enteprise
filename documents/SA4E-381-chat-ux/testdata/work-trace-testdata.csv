@@ -1,0 +1,7 @@
+test_case_id,tools_count,thinking_cycles,duration_ms,failed_count,data_user_managed,expected_http_code,expected_result,description
+TC-101,6,2,23000,0,false,200,auto_collapsed,Trace auto-collapses at streamComplete; one summary line
+TC-102,4,1,12000,0,true,200,sticky,User toggle persists across turn end; no auto-collapse
+TC-103,3,2,5000,0,false,200,live,Live turn: thinking+tools inside trace body; live progress in summary
+TC-108,2,1,8000,1,false,200,failed_count,Failed tool shows red ✗ n count
+TC-305,6,2,23000,0,false,200,summary_format,Summary format: ⚙ N tools · duration · thinking k×
+TC-804,0,0,0,0,false,200,no_empty_trace,Empty cycle — no empty trace summary kept

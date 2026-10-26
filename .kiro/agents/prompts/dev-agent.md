@@ -245,6 +245,8 @@ Before presenting code to user, verify:
 
 **Prerequisites:** Code exists, BRD + FSD + TDD exist.
 
+**MANDATORY:** Follow the `UG Evidence & Running-App Policy` at the end of this file. Reuse an existing running instance, verify it contains the ticket feature, and capture screenshots from the actual build — never wireframes/mockups.
+
 1. **Read template**: `documents/templates/UG-TEMPLATE.md`
 2. **Read from KB**: BRD, FSD, TDD (for business context and feature descriptions)
 3. **Read source code** to extract accurate details:
@@ -257,6 +259,7 @@ Before presenting code to user, verify:
    - **Installation**: Prerequisites, build commands, distribution formats
    - **Configuration Reference**: Every property with type, default, range, description
    - **Usage**: Each tool/API with examples and expected output
+   - **User Interface Guide** (if UI): actual screenshot + Key Elements + User Actions per screen
    - **Administration**: Adding servers, monitoring health, hot-reload
    - **Troubleshooting**: Common issues table, error codes, log locations
    - **API Reference**: Full schemas for each exposed tool
@@ -363,3 +366,51 @@ If the user requests only a specific part:
 - "Implement service" → Steps 4 + 7 (service tests only)
 - "Implement {feature name}" → Find relevant TDD section and implement that scope
 - "Viết User Guide" / "Tạo UG" → Step 9 only (User Guide)
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
+
+This policy applies to every agent that produces, reviews, verifies, or consumes evidence about application behavior (UG, DPG, TEST-REPORT, security findings).
+
+### Non-negotiable rules
+
+1. **Evidence must come from the actual running build.** Wireframes, design mockups, Stitch screens, draw.io mockups, and placeholder images are NOT valid UG/test/security evidence.
+2. **Reuse a running instance.** Before starting an app, detect whether it is already running (health endpoint, port, process, container, PID file). If it is running, do NOT start a second instance.
+3. **Verify freshness before using the instance.** The running build must contain the feature just implemented. Check the new route/tool/command/UI element, and build/commit info if exposed. If stale, restart that same instance and record why.
+4. **Resolve start commands from the project.** Never hardcode `npm start`. Read README, package/build files, Docker/Compose, and the TDD Deployment section.
+5. **Capture by deliverable type:**
+
+   | Deliverable | Required evidence |
+   |---|---|
+   | Web UI | Browser automation screenshot of each primary screen/route |
+   | Electron | Automated app-window screenshot |
+   | Native desktop | OS-level screenshot or app screenshot harness |
+   | Mobile | Emulator/device screenshot (`adb`, `xcrun simctl`) |
+   | CLI | Real terminal transcript + expected output |
+   | API / MCP | Real request/response examples |
+   | Data pipeline | Real input/output sample + logs |
+
+6. **Store evidence** at `documents/{TICKET}/diagrams/{kind}-{screen}.png` and reference it inline: `![{screen}](diagrams/{kind}-{screen}.png)`.
+7. **No silent gaps.** If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap to SM. Never fabricate, reuse a mockup, or silently omit the section.
+
+**Role responsibility:** Own UG evidence: detect app type, reuse a running instance, verify the new feature is present, capture actual screenshots (or real CLI/API output), then write UG.
+
+### Dev-agent UG evidence procedure (extends Step 9)
+
+1. **Detect deliverable type** from TDD/FSD and source tree: Web UI, Electron, native desktop, mobile, CLI, API/MCP, or data pipeline.
+2. **Resolve runtime profile** from README / package or build files / Docker Compose / TDD Deployment: start command, port, health endpoint, config file. Never assume `npm start`.
+3. **Detect an existing instance** via health endpoint, port, process/container, or PID file. If it is already running, reuse it and do NOT start a second instance.
+4. **Verify feature freshness** before capturing evidence:
+   - API → call the new endpoint and validate the response schema.
+   - MCP → `tools/list` must contain the new tool; invoke it once.
+   - Web UI → open the new route and assert the new element/text in the DOM.
+   - CLI → run the new subcommand or `--help` entry.
+   - Desktop/mobile → open the new screen and check build/version info.
+   - Pipeline → run a smoke input and validate the new output.
+   - If stale → restart that same instance, record the reason, then re-check.
+5. **Capture evidence from the actual build**: browser automation for Web/Electron, OS screenshot/harness for native desktop, `adb`/`simctl` for mobile, real terminal transcript for CLI, real request/response for API/MCP, real input/output plus logs for pipelines.
+6. **Store and embed**: write to `documents/{TICKET}/diagrams/{kind}-{screen}.png`; for UI deliverables fill UG Section 5 (screenshot + Key Elements + User Actions) for every primary screen.
+7. **No placeholders**: if capture is impossible, write `[SCREENSHOT REQUIRED: reason]`, report the gap to SM, and never substitute a wireframe or mockup.
+8. **Re-capture after code changes**: screenshots from a previous build are a UG defect.

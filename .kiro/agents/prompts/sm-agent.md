@@ -993,7 +993,7 @@ jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STC-v1-{T
    ```
    invokeSubAgent(
      name: "dev-agent",
-     prompt: "Viết User Guide cho {TICKET}. Đọc BRD, FSD, TDD từ KB. Đọc source code (.env, config, API schemas). Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md. Nội dung cần có: Installation, Configuration Reference (tất cả properties), Usage (mỗi tool/API), Administration, Troubleshooting, Error Codes, FAQ."
+     prompt: "Viết User Guide cho {TICKET}. Đọc BRD, FSD, TDD từ KB. Đọc source code (.env, config, API schemas). Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md. Nội dung cần có: Installation, Configuration Reference (tất cả properties), Usage (mỗi tool/API), Administration, Troubleshooting, Error Codes, FAQ. BẮT BUỘC theo UG Evidence & Running-App Policy: detect app type; kiểm tra app đang chạy và reuse (không start thêm instance); verify app đang chạy có feature mới của ticket; capture screenshot thật từ build hiện tại cho mọi screen UI (không dùng wireframe/mockup); CLI/API dùng output thật."
    )
    ```
 3. Verify `documents/{TICKET}/UG.md` exists
@@ -1004,7 +1004,7 @@ jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STC-v1-{T
    ```
    invokeSubAgent(
      name: "ba-agent",
-     prompt: "Review User Guide cho {TICKET} tại documents/{TICKET}/UG.md. Kiểm tra: 1) Ngôn ngữ user-friendly (không quá technical), 2) Đầy đủ use cases từ BRD, 3) Configuration examples rõ ràng, 4) Troubleshooting covers common issues. Sửa trực tiếp nếu cần."
+     prompt: "Review User Guide cho {TICKET} tại documents/{TICKET}/UG.md. Kiểm tra: 1) Ngôn ngữ user-friendly (không quá technical), 2) Đầy đủ use cases từ BRD, 3) Configuration examples rõ ràng, 4) Troubleshooting covers common issues, 5) Screenshot trong Section 5 PHẢI là ảnh thật từ app đang chạy — reject wireframe/mockup/placeholder, 6) Ảnh phải khớp use case BRD/FSD. Sửa trực tiếp nếu cần."
    )
    ```
 
@@ -1019,13 +1019,15 @@ jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/STC-v1-{T
      prompt: "Verify User Guide cho {TICKET} bằng cách thực hiện theo instructions trong documents/{TICKET}/UG.md.
 
      PHẢI thực hiện các bước sau (không chỉ đọc text):
-     1. Follow Quick Start (§2.1): chạy server bằng npm start, verify log output đúng
-     2. Copy minimal config example (§3.4) vào .env, verify server start không lỗi
-     3. Copy full config example (§3.4), verify YAML syntax hợp lệ
-     4. Send tools/list request, verify response trả về đúng danh sách tools như documented trong UG
-     5. Gọi thử từng tool được list trong UG, verify response format đúng
-     6. Verify tất cả error codes trong §6.2 match với actual server behavior
-     7. Verify config validation rules trong §6.3 match với actual validation
+     1. Follow Quick Start (§2.1): resolve start command từ project (không hardcode npm start), kiểm tra app đang chạy trước khi start, verify log output đúng
+     2. Verify running build có feature mới của ticket (route/tool/command/UI element) trước khi verify UG
+     3. Copy minimal config example (§3.4) vào .env, verify server start không lỗi
+     4. Copy full config example (§3.4), verify YAML syntax hợp lệ
+     5. Send tools/list request, verify response trả về đúng danh sách tools như documented trong UG
+     6. Gọi thử từng tool được list trong UG, verify response format đúng
+     7. Verify tất cả error codes trong §6.2 match với actual server behavior
+     8. Verify config validation rules trong §6.3 match với actual validation
+     9. Verify screenshot trong Section 5 là ảnh thật từ app hiện tại — reject wireframe/mockup/stale screenshot
 
      Báo cáo PASS/FAIL cho mỗi step. Nếu FAIL → mô tả chi tiết issue + expected vs actual."
    )
@@ -1532,6 +1534,9 @@ jira_attach_file(issue_key: "{TICKET}", file_path: "documents/{TICKET}/{DOC}-v{v
 | 7 | Has API Reference (if applicable) | Scan for "API Reference" header | Ask DEV to add |
 | 8 | BA review completed | Check UG has been reviewed (no "TODO" or placeholder text) | Invoke BA to review |
 | 9 | **QA verification completed** | QA actually ran server following UG instructions — all steps PASS | Invoke QA to verify |
+| 10 | **UI screenshots are real** | If UI deliverable: Section 5 references existing PNGs under `diagrams/`; no wireframe/mockup/`[SCREENSHOT REQUIRED]` | Re-invoke DEV with UG Evidence Policy |
+| 11 | **Screenshots match current build** | Spot-check running app or build/commit info; screenshots contain the ticket feature | Re-capture from current build |
+| 12 | **Running app reused + freshness checked** | DEV report states whether an instance was reused or restarted and why | Re-invoke DEV to repeat the check |
 
 ### Verification Checklist — DPG (Phase 7)
 
@@ -1599,3 +1604,43 @@ After each sub-agent completes:
 ### ⛔ CRITICAL RULE
 
 **SM PHẢI chạy verification checklist SAU MỖI sub-agent call.** Không được skip verification khi chạy "tạo tài liệu đầy đủ" (pipeline mode). Pipeline mode = Phase 1 verify → Phase 2 verify → Phase 3 verify. Mỗi phase PHẢI pass verification trước khi chuyển sang phase tiếp theo.
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
+
+This policy applies to every agent that produces, reviews, verifies, or consumes evidence about application behavior (UG, DPG, TEST-REPORT, security findings).
+
+### Non-negotiable rules
+
+1. **Evidence must come from the actual running build.** Wireframes, design mockups, Stitch screens, draw.io mockups, and placeholder images are NOT valid UG/test/security evidence.
+2. **Reuse a running instance.** Before starting an app, detect whether it is already running (health endpoint, port, process, container, PID file). If it is running, do NOT start a second instance.
+3. **Verify freshness before using the instance.** The running build must contain the feature just implemented. Check the new route/tool/command/UI element, and build/commit info if exposed. If stale, restart that same instance and record why.
+4. **Resolve start commands from the project.** Never hardcode `npm start`. Read README, package/build files, Docker/Compose, and the TDD Deployment section.
+5. **Capture by deliverable type:**
+
+   | Deliverable | Required evidence |
+   |---|---|
+   | Web UI | Browser automation screenshot of each primary screen/route |
+   | Electron | Automated app-window screenshot |
+   | Native desktop | OS-level screenshot or app screenshot harness |
+   | Mobile | Emulator/device screenshot (`adb`, `xcrun simctl`) |
+   | CLI | Real terminal transcript + expected output |
+   | API / MCP | Real request/response examples |
+   | Data pipeline | Real input/output sample + logs |
+
+6. **Store evidence** at `documents/{TICKET}/diagrams/{kind}-{screen}.png` and reference it inline: `![{screen}](diagrams/{kind}-{screen}.png)`.
+7. **No silent gaps.** If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap to SM. Never fabricate, reuse a mockup, or silently omit the section.
+
+**Role responsibility:** Block Phase 5.5 completion when a UI deliverable lacks actual screenshots, freshness evidence, or BA/QA verification.
+
+### SM gate addendum (Phase 5.5)
+
+Add these checks to the UG quality gate and do NOT mark `user_guide.status = "done"` if any fails:
+
+| # | Check | How to verify |
+|---|-------|---------------|
+| 10 | UI deliverable has actual screenshots | UG Section 5 references existing files under `diagrams/`, not placeholders |
+| 11 | Screenshots come from the current build | Spot-check the running app or build/commit info; reject wireframes/mockups |
+| 12 | Running app was reused and freshness-checked | DEV report states whether an instance was reused or restarted and why |

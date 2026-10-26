@@ -437,8 +437,10 @@ Verify all PNGs exist after export. Embed PNGs in FSD.
   3. **Configuration examples** — rõ ràng, có minimal + full examples
   4. **Troubleshooting** — covers common issues từ FSD error codes
   5. **No placeholder text** — không còn `{...}` hay `TODO`
-  6. Sửa trực tiếp vào `documents/{TICKET-KEY}/UG.md` nếu cần
-  7. Sau khi review xong, ingest UG vào KB (FULL content)
+  6. **Real screenshots only** — Section 5 phải dùng ảnh thật từ app đang chạy; reject wireframe/mockup/`[SCREENSHOT REQUIRED]`
+  7. **Screenshots match use cases** — mỗi ảnh phải khớp với BRD/FSD use case và màn hình thực tế
+  8. Sửa trực tiếp vào `documents/{TICKET-KEY}/UG.md` nếu cần
+  9. Sau khi review xong, ingest UG vào KB (FULL content)
 
 - **MANDATORY MERMAID DIAGRAMS IN MARKDOWN**: Every BRD and FSD document MUST contain inline Mermaid diagrams directly in the markdown content. These are IN ADDITION to any draw.io diagrams. Mermaid diagrams ensure documents are readable and visual even without draw.io export. Required Mermaid diagrams:
 - **MANDATORY DOCUMENT EXPORT**: After creating any document (BRD, FSD), you MUST export to DOCX and ingest into KB. SM will attach to Jira. If SM does not attach, report the gap.
@@ -501,3 +503,37 @@ the discovered KB "ingest" tool (
 ### Verification Rule
 
 After generating BRD.md or FSD.md, count the number of `![` image references in the document and compare with the number of `.drawio` files created. **Every `.drawio` file must have a corresponding `![...](diagrams/....png)` reference in at least one document (BRD or FSD).** If any diagram is missing from the documents, add the reference before proceeding to export.
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
+
+This policy applies to every agent that produces, reviews, verifies, or consumes evidence about application behavior (UG, DPG, TEST-REPORT, security findings).
+
+### Non-negotiable rules
+
+1. **Evidence must come from the actual running build.** Wireframes, design mockups, Stitch screens, draw.io mockups, and placeholder images are NOT valid UG/test/security evidence.
+2. **Reuse a running instance.** Before starting an app, detect whether it is already running (health endpoint, port, process, container, PID file). If it is running, do NOT start a second instance.
+3. **Verify freshness before using the instance.** The running build must contain the feature just implemented. Check the new route/tool/command/UI element, and build/commit info if exposed. If stale, restart that same instance and record why.
+4. **Resolve start commands from the project.** Never hardcode `npm start`. Read README, package/build files, Docker/Compose, and the TDD Deployment section.
+5. **Capture by deliverable type:**
+
+   | Deliverable | Required evidence |
+   |---|---|
+   | Web UI | Browser automation screenshot of each primary screen/route |
+   | Electron | Automated app-window screenshot |
+   | Native desktop | OS-level screenshot or app screenshot harness |
+   | Mobile | Emulator/device screenshot (`adb`, `xcrun simctl`) |
+   | CLI | Real terminal transcript + expected output |
+   | API / MCP | Real request/response examples |
+   | Data pipeline | Real input/output sample + logs |
+
+6. **Store evidence** at `documents/{TICKET}/diagrams/{kind}-{screen}.png` and reference it inline: `![{screen}](diagrams/{kind}-{screen}.png)`.
+7. **No silent gaps.** If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap to SM. Never fabricate, reuse a mockup, or silently omit the section.
+
+**Role responsibility:** During UG review, reject wireframes/mockups/placeholders and verify every screenshot matches the real app and BRD/FSD use cases.
+
+### BA review addendum (UG)
+
+Reject the UG when: Section 5 uses wireframes/mockups/placeholders; screenshots do not match the actual app; a primary BRD/FSD use case has no screen; or instructions cannot be followed by a non-technical user.

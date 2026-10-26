@@ -284,3 +284,37 @@ agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="START
 agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="ARTIFACT", message="Appended sections 6-11", artifacts="{\"file\": \"documents/MTO-13/FSD.md\"}")
 agent_log(ticket_key="MTO-13", agent_name="TA", step="FSD-Enrich", status="DONE", message="FSD enrichment complete: 3372 lines, 143KB")
 ```
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
+
+This policy applies to every agent that produces, reviews, verifies, or consumes evidence about application behavior (UG, DPG, TEST-REPORT, security findings).
+
+### Non-negotiable rules
+
+1. **Evidence must come from the actual running build.** Wireframes, design mockups, Stitch screens, draw.io mockups, and placeholder images are NOT valid UG/test/security evidence.
+2. **Reuse a running instance.** Before starting an app, detect whether it is already running (health endpoint, port, process, container, PID file). If it is running, do NOT start a second instance.
+3. **Verify freshness before using the instance.** The running build must contain the feature just implemented. Check the new route/tool/command/UI element, and build/commit info if exposed. If stale, restart that same instance and record why.
+4. **Resolve start commands from the project.** Never hardcode `npm start`. Read README, package/build files, Docker/Compose, and the TDD Deployment section.
+5. **Capture by deliverable type:**
+
+   | Deliverable | Required evidence |
+   |---|---|
+   | Web UI | Browser automation screenshot of each primary screen/route |
+   | Electron | Automated app-window screenshot |
+   | Native desktop | OS-level screenshot or app screenshot harness |
+   | Mobile | Emulator/device screenshot (`adb`, `xcrun simctl`) |
+   | CLI | Real terminal transcript + expected output |
+   | API / MCP | Real request/response examples |
+   | Data pipeline | Real input/output sample + logs |
+
+6. **Store evidence** at `documents/{TICKET}/diagrams/{kind}-{screen}.png` and reference it inline: `![{screen}](diagrams/{kind}-{screen}.png)`.
+7. **No silent gaps.** If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap to SM. Never fabricate, reuse a mockup, or silently omit the section.
+
+**Role responsibility:** During review, verify implementation evidence comes from the current build; if FSD/TDD lacks a runtime profile or screen inventory, send it back to BA/SA instead of accepting a workaround.
+
+### TA review addendum
+
+Verify implementation and UG evidence come from the current build. If FSD/TDD lacks a runtime profile or screen inventory, request BA/SA to update the source documents; do not accept a mockup or ad-hoc workaround.

@@ -101,6 +101,9 @@ After each sub-agent completes:
 | 7 | API Reference (if applicable) | Minor | Ask DEV to add |
 | 8 | BA review completed | Critical | Invoke BA |
 | 9 | QA verification PASS | Critical | Invoke QA |
+| 10 | UI screenshots are real (not wireframes/mockups) | Critical | Re-invoke DEV |
+| 11 | Screenshots match current running build | Critical | Re-capture |
+| 12 | Running app reused + feature freshness verified | Critical | Re-invoke DEV |
 
 ## TEST-REPORT Checklist (Phase 6)
 

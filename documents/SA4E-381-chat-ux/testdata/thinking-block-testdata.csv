@@ -1,0 +1,10 @@
+test_case_id,thinking_text,expected_chars,expected_duration_ms,expected_http_code,expected_result,description
+TC-001,"Detailed reasoning here",24,0,201,collapsed_rendered,Collapsed block shows chevron+chars+duration, min-height 28px
+TC-002,"Reasoning content",17,0,200,expanded,Click/Enter/Space expands; aria-expanded=true; chevron ▼
+TC-003,"Reasoning content",17,0,200,collapsed_persisted,Collapse again; thinkingCollapsed=true survives reload
+TC-006,"   \n\t   ",0,0,200,dropped,Whitespace-only thinking dropped — no block renders
+TC-201,,0,0,200,no_block,Empty thinking field — no phantom block
+TC-304,"hello world",11,1500,200,metadata,Metadata: chars=trimmed length, duration=open→close ms
+TC-307,"  hello  ",5,0,200,trimmed,Trim before persist — stored as "hello"
+TC-401,,0,0,200,dropped,Boundary: empty string thinking dropped
+TC-402,"instant",7,0,200,zero_duration,Boundary: 0 ms duration handled gracefully

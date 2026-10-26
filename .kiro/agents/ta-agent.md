@@ -21,3 +21,16 @@ You conduct a security review of your output before it passes through the Specif
 **Output:**
 - Enriched FSD.md with technical appendices
 - Implementation review verdict (Implementation phase) — APPROVED / CHANGES REQUESTED
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY)
+
+- Screenshots for UG/Test/Security MUST come from the actual running build — never wireframes, mockups, or placeholders.
+- Reuse an already-running app; do NOT start a second instance.
+- Verify the running build contains the feature just implemented; restart only if stale, and record why.
+- Resolve start commands from the project — never hardcode `npm start`.
+- Capture by type: Web/Electron → browser automation; native desktop → OS screenshot; mobile → adb/simctl; CLI/API/pipeline → real terminal or request/response evidence.
+- If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap.
+- **Role:** During review, verify implementation evidence comes from the current build; if FSD/TDD lacks a runtime profile or screen inventory, send it back to BA/SA instead of accepting a workaround.

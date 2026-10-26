@@ -1,0 +1,5 @@
+test_case_id,transition,trigger,expected_http_code,expected_result,description
+TC-306,collapsed↔expanded,user_toggle,200,sticky,data-user-managed set; auto rules stop
+TC-102,open→closed,streamComplete_with_sticky,200,keeps_state,Sticky trace keeps user state across turn end
+TC-803,closed→open,approval_pending,200,force_open,Approval force-opens trace; approval bar visible
+TC-104,peer_inbound,peer_message,200,root_placement,Peer rows at transcript root, never inside trace

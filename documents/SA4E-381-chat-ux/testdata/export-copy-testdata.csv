@@ -1,0 +1,7 @@
+test_case_id,export_format,copy_target,expected_http_code,expected_result,description
+TC-107,markdown,message,200,byte_identical,Export Markdown byte-identical to pre-change build
+TC-107,json,message,200,byte_identical,Export JSON byte-identical to pre-change build
+TC-107,markdown,tool_call,200,byte_identical,Copy tool call matches model content
+TC-704,markdown,message,200,model_driven,Export reads tab.messages not DOM
+TC-704,json,tool_call,200,model_driven,Copy listeners travel with moved nodes
+TC-801,markdown,message,200,byte_identical,Regression: export/copy byte-identical (blast radius)
