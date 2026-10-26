@@ -86,6 +86,7 @@ function bootChatModules() {
   const messagesEl = new FakeEl();
   const S: any = {
     messagesEl, activeTabId: 't1', getTab: () => tab,
+    getMessageTargetTabId: (msg: any) => (msg && msg.originTabId) ? msg.originTabId : S.activeTabId,
     saveStateToDisk: () => {}, showMessages: () => {}, setWorking: () => {},
     statusLabel: () => '', addCodeActions: () => {}, scrollToBottom: () => {},
     escapeHtml: (s: string) => s, isStreaming: false,
@@ -95,7 +96,7 @@ function bootChatModules() {
   const fakeDocument = { createElement: () => new FakeEl() };
   const md = { render: (s: string) => s };
   const dir = path.join(process.cwd(), 'webview-assets', 'chat');
-  for (const f of ['chat-tool-helpers.js', 'chat-tools.js', 'chat-cycle.js', 'chat-toolcall.js', 'chat-stream.js']) {
+  for (const f of ['chat-thinking.js', 'chat-tool-helpers.js', 'chat-tools.js', 'chat-cycle.js', 'chat-toolcall.js', 'chat-tabroute.js', 'chat-stream.js']) {
     // eslint-disable-next-line no-new-func
     new Function('window', 'document', 'MarkdownRenderer',
       fs.readFileSync(path.join(dir, f), 'utf8'))(fakeWindow, fakeDocument, md);
@@ -127,7 +128,7 @@ it('R1 legacy turn: live tools adopted by the first cycle — THINK(c1) → TOOL
     m.role + (m.toolData ? ':' + m.toolData.id : m.nodeId ? ':' + m.nodeId : ''));
   expect(roles).toEqual(['user', 'assistant:pi:c1', 'tool:t1', 'tool:t2', 'assistant:pi:c2']);
   // The two legs persist as TWO cycles (R1 merged-legs regression).
-  expect(tab.messages[1].thinking).toBe('leg-one reasoning ');
+  expect(tab.messages[1].thinking).toBe('leg-one reasoning');
   expect(tab.messages[1].content).toBe('');
   expect(tab.messages[4].thinking).toBe('leg-two reasoning');
   expect(tab.messages[4].content).toBe('final answer');

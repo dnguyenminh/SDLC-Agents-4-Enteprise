@@ -134,8 +134,8 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
     this.disposables = [];
   }
 
-  // === Private routing ===
-  // SA4E-381 Issue 1: capture the active tab id when a user message starts a
+  private routeMessage(msg: ChatWebviewToExtMessage): void {
+    // SA4E-381 Issue 1: capture the active tab id when a user message starts a
     // new turn — all subsequent stream/tool events in that turn will carry
     // originTabId so the receiving tab can attribute them correctly.
     if (msg.type === "chat:userMessage") {
