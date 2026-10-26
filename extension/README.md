@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.5-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.7-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.55.3.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.7.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.55.3.vsix
+code --install-extension sdlc-agents-4-enterprise-1.55.7.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,16 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.7 (2026-10-26)
+
+- **SA4E-385: PeerBus inter-tab agent guidance (guidance-only)** — all 9 persona agent files (`.code-intel/agents/*.md`) extended in-place with PeerBus operating guidance: 5-step recipe, per-persona collaboration recipes, corrected PEER_001–010 error table + next actions, untrusted-content safety rules. Mirror `extension/resources/.code-intel/agents/` synced — guidance ships with the VSIX. No runtime code changes; 3,272/3,272 tests PASS
+- **Loop/cancel fix** — fix infinite chat loop & Cancel abort wiring; add TruncationGuard
+- **Docs** — SA4E-385 full SDLC set (BRD, FSD v1.2, TDD v1.1, STP, STC, UG + 13 diagrams); SA4E-384: 52 deferred test case summaries
+
+### v1.55.6 (2026-10-25)
+
+- **SA4E-381-chat-ux: chat transcript redesign** — thinking block 3 states, per-turn work-trace container (Q → Work trace → A), turn metrics, `originTabId` stamping fixes cross-tab stream bleed (mid-stream tab switch keeps responses in the originating tab). Retroactive entry — this release shipped as VSIX 1.55.6 but package.json was not bumped at the time.
 
 ### v1.55.5 (2026-10-24)
 

@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.5.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.7.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,24 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.7 (2026-10-26)
+
+**SA4E-385 — PeerBus inter-tab agent guidance (guidance-only) + loop/cancel fix**
+
+- 🧩 **Agent guidance (9 personas)** — `.code-intel/agents/*.md` extended IN-PLACE (append-only, `SA4E-385:PEERBUS-GUIDANCE:BEGIN/END` markers): 5-step PeerBus recipe (peer_list → persona select → busy/idle → peer_send → response routing), per-persona collaboration recipes, corrected PEER_001–010 error mapping + next actions, untrusted-content safety rules. Mirror `extension/resources/.code-intel/agents/` synced — guidance ships with the VSIX. No runtime code changes; tests 3,272/3,272 PASS
+- 📄 **SDLC docs** — BRD, FSD v1.2 (DISC-01 corrected), TDD v1.1 (extend-in-place annotation), STP/STC (44 TC), UG + 13 draw.io diagrams (13 PNG). Commits 52e5484 + 8da4b40
+- 🔧 **Loop/cancel fix** — fix infinite chat loop & Cancel abort wiring; add TruncationGuard (aa8c2b9)
+- 📚 **SA4E-384** — 52 deferred test case summaries authored (3a2f68f)
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.7`
+
+### v1.55.6 (2026-10-25)
+
+**SA4E-381-chat-ux — chat transcript redesign (retroactive entry: file versions were not bumped in that release)**
+
+- 🎨 **Thinking 3 states + work-trace container** — per-turn grouping Q → Work trace → A; turn metrics (duration/tools/tokens/thinking); chevron + 28px header; follow-only-at-bottom thinking scroll
+- 🔀 **Cross-tab stream bleed fix (Issue 1)** — `originTabId` stamped by host on 5 protocol types; per-tab cycle machinery (`chat-cycle.js`, `chat-tabs.js`); persist-always / render-when-active gate; `chat-tabroute.js` single routing choke point
+- 🧹 **Dead-file trap fixed** — `webview-assets/chat/index.html` removed; `ChatHtmlBuilder.SCRIPTS` is the single source of truth (KB #870)
 
 ### v1.55.5 (2026-10-24)
 
