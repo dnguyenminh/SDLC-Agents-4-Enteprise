@@ -114,12 +114,8 @@ export class ChatPanelProvider implements vscode.WebviewViewProvider, vscode.Dis
   /** Get the id of the currently active tab for this provider view. */
   private getActiveTabId(): string {
     // Derive from the most recent saved state if available; otherwise "default"
-    try {
-      var saved = this.stateManager?.getState?.();
-      return saved && saved.activeTabId ? String(saved.activeTabId) : "default";
-    } catch {
-      return "default";
-    }
+    // ChatStateManager does not expose getState() — fallback to "default".
+    return "default";
   }
 
   /** Subscribe to every engine message (sidebar stays the default sink). */

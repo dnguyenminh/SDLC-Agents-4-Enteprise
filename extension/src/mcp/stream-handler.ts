@@ -22,7 +22,9 @@ export class StreamHandler {
   /** Add originTabId to message if set (stamp from turn start). */
   private withOriginTabId(msg: ChatExtToWebviewMessage): ChatExtToWebviewMessage {
     if (this.originTabId) {
-      return { ...msg, originTabId: this.originTabId };
+      // Runtime: all messages passed here (streamChunk, streamComplete, toolCall) support originTabId.
+      // Use type assertion to bypass the union-member spread check.
+      return { ...msg, originTabId: this.originTabId } as ChatExtToWebviewMessage;
     }
     return msg;
   }
