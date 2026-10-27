@@ -7,7 +7,10 @@
 # ends the run RED and pushes nothing (BR-19).
 #
 # Registry is configuration, not code (AD-4, BR-20): set repo variables REGISTRY
-# and IMAGE_NAME to target Docker Hub / ECR instead of GHCR.
+# and IMAGE_NAME to target a different primary registry. In addition, the image
+# is mirrored to Docker Hub (DOCKERHUB_IMAGE) when DOCKER_HUB_USERNAME /
+# DOCKER_HUB_TOKEN secrets are present — a single buildx invocation pushes the
+# identical image (same digest) to BOTH registries (AD-3).
 #
 # Security:
 #   - SEC-13: third-party actions pinned by commit SHA (tag in trailing comment).
@@ -36,6 +39,8 @@ permissions:
 env:
   REGISTRY: ${{ vars.REGISTRY || 'ghcr.io' }}
   IMAGE_NAME: ${{ vars.IMAGE_NAME || format('{0}/backend', github.repository) }}
+  # Docker Hub mirror target. Override via repo variable DOCKERHUB_IMAGE.
+  DOCKERHUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE || 'dnguyenminh/sdlc-agents-4-enteprise-backend' }}
   BUILD_TARGET: production
   BUILD_CONTEXT: backend
 
@@ -62,7 +67,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # Two images -> the same tag set is generated for GHCR and Docker Hub.
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            docker.io/${{ env.DOCKERHUB_IMAGE }}
           tags: |
             type=sha,prefix=sha-,format=short
             type=semver,pattern=v{{version}}
@@ -85,8 +93,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Build the `production` target and push (single buildx invocation ->
-      #    the built image equals the pushed image, AD-3). PRs build-only (no push).
+      # 4b. Docker Hub login — PUSH EVENTS ONLY (SEC-13). Mirrors the image to
+      #     Docker Hub alongside GHCR. Uses DOCKER_HUB_USERNAME / DOCKER_HUB_TOKEN
+      #     secrets (configured at repo level).
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      # 5. Build the `production` target and push to BOTH registries in a single
+      #    buildx invocation (the built image equals every pushed image, AD-3 —
+      #    GHCR and Docker Hub share one digest). PRs build-only (no push).
       - name: Build and push
         id: build
         uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
