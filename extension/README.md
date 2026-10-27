@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.7-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.8-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.55.7.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.8.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.55.7.vsix
+code --install-extension sdlc-agents-4-enterprise-1.55.8.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,10 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.8 (2026-10-27)
+
+- **Dependency security pins** — root `overrides` now pin `body-parser` → `2.4.0` and `undici` → `6.29.1` (alongside `esbuild` `0.28.2`) to address transitive-dependency advisories. Version sync root/`backend`/`extension` → `1.55.8`.
 
 ### v1.55.7 (2026-10-26)
 

@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.7.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.8.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,13 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.8 (2026-10-27)
+
+**Dependency security pins**
+
+- 🔒 **Security overrides** — pin transitive deps via root `overrides`: `body-parser` → `2.4.0`, `undici` → `6.29.1` (alongside existing `esbuild` `0.28.2`)
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.8`
 
 ### v1.55.7 (2026-10-26)
 

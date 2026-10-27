@@ -1,6 +1,6 @@
 {
   "name": "sdlc-agents-4-enterprise-monorepo",
-  "version": "1.55.7",
+  "version": "1.55.8",
   "private": true,
   "workspaces": [
     "backend",
@@ -26,6 +26,8 @@
     "url": "git+https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise.git"
   },
   "overrides": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "body-parser": "2.4.0",
+    "undici": "6.29.1"
   }
 }
