@@ -16,6 +16,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { MAX_ARTIFACT_BYTES } from '../../../config/ContentProxy.js';
+import { isWithinArtifactRoots } from '../artifact-cleanup/artifact-roots.js';
 import { nameFromLocation, nameFromMime, safeName } from './artifact-name.js';
 
 export interface ArtifactDeps {
@@ -23,6 +24,13 @@ export interface ArtifactDeps {
   readResource?: (uri: string) => Promise<Buffer | null>;
   /** Fetch an http(s) URL. Overridable for tests; defaults to global fetch. */
   fetchUrl?: (url: string) => Promise<Buffer | null>;
+  /**
+   * OI-14 local-read cleanup hook. Receives the absolute path and the
+   * pre-read stat; the default (no hook) deletes the artifact after its
+   * bytes are inlined. Only local reads invoke it — resource/URL/blob
+   * resolutions never do (UT-46).
+   */
+  cleanup?: (filePath: string, stat: fs.Stats) => void;
 }
 
 export interface FetchedArtifact {
@@ -81,7 +89,7 @@ export async function readLocation(location: string, deps: ArtifactDeps): Promis
 
   const fileUri = location.startsWith('file:') ? location : toFileUri(location);
   if (location.startsWith('file:')) {
-    const local = readLocalFileUri(location);
+    const local = readLocalFileUri(location, deps);
     if (local) return local;
     return deps.readResource ? deps.readResource(location) : null;
   }
@@ -91,7 +99,7 @@ export async function readLocation(location: string, deps: ArtifactDeps): Promis
     return deps.readResource ? deps.readResource(location) : null;
   }
 
-  const local = readLocalFile(path.resolve(location));
+  const local = readLocalFile(path.resolve(location), deps);
   if (local) return local;
   return deps.readResource && fileUri ? deps.readResource(fileUri) : null;
 }
@@ -109,23 +117,62 @@ function fromBase64(value: string, name: string | null, mime?: string): FetchedA
   return { buffer, file_name: name ?? nameFromMime(mime), mime_type: mime };
 }
 
-/** Read a file on the backend host: regular file only, size-capped, no symlinks. */
-function readLocalFile(filePath: string): Buffer | null {
+/**
+ * Read a file on the backend host: regular file only, size-capped, no symlinks.
+ *
+ * SA4E-380 F-01 (binding): the path's real location (symlinks/junctions/`..`
+ * resolved) must fall inside the dedicated ARTIFACT_OUTPUT_ROOTS BEFORE any
+ * filesystem access — an out-of-root path is never read and never deleted.
+ *
+ * SA4E-380 OI-14: once the bytes are inlined the local artifact is garbage —
+ * the cleanup hook (default: delete with F-06 stat-identity re-verification)
+ * runs after the successful read. A failed read never deletes anything.
+ */
+function readLocalFile(filePath: string, deps: ArtifactDeps): Buffer | null {
+  if (!isWithinArtifactRoots(filePath)) return null;
   try {
     const stat = fs.lstatSync(filePath);
     if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_ARTIFACT_BYTES) return null;
     const buffer = fs.readFileSync(filePath);
-    return buffer.length <= MAX_ARTIFACT_BYTES ? buffer : null;
+    if (buffer.length > MAX_ARTIFACT_BYTES) return null;
+    try {
+      (deps.cleanup ?? deleteLocalArtifact)(filePath, stat);
+    } catch {
+      // Cleanup failure never fails the tool call (UT-45) — bytes are safe.
+      console.warn(`[artifact-source] cleanup hook failed for '${path.basename(filePath)}'`);
+    }
+    return buffer;
   } catch {
     return null;
   }
 }
 
-function readLocalFileUri(uri: string): Buffer | null {
+function readLocalFileUri(uri: string, deps: ArtifactDeps): Buffer | null {
   try {
-    return readLocalFile(fileURLToPath(uri));
+    return readLocalFile(fileURLToPath(uri), deps);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Default OI-14 cleanup: delete the artifact whose bytes were just inlined.
+ * F-06 TOCTOU guard — re-stat and verify identity (ino/size/mtimeMs) before
+ * unlink so a path swapped between read and delete is never removed.
+ */
+function deleteLocalArtifact(filePath: string, before: fs.Stats): void {
+  let now: fs.Stats;
+  try {
+    now = fs.lstatSync(filePath);
+  } catch {
+    return; // already gone — nothing to delete
+  }
+  if (now.ino !== before.ino || now.size !== before.size || now.mtimeMs !== before.mtimeMs) return;
+  try {
+    fs.unlinkSync(filePath);
+  } catch {
+    // I-3: basename only — never leak host paths into logs.
+    console.warn(`[artifact-source] could not delete local artifact '${path.basename(filePath)}'`);
   }
 }
 

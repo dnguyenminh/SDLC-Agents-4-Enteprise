@@ -12,7 +12,8 @@
  * Overrides exist only for tools that do not follow the convention.
  */
 
-import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 /** Tool-name prefixes whose result is a file written by the child server. */
 export const FILE_TOOL_NAME_PREFIXES: readonly string[] = ['export_', 'render_', 'generate_'];
 
@@ -49,23 +50,50 @@ export interface ContentProxyOverride {
   enabled?: boolean;
 }
 
-/** Artifact output roots — dedicated sinks for orphaned artifact files. */
-export function artifactOutputRoots(): readonly string[] {
-  // Convention: ARTIFACT_OUTPUT_ROOTS env var, or default per-workspace roots
-  const env = process.env.ARTIFACT_OUTPUT_ROOTS;
-  if (env) return env.split(':').map((s) => s.trim()).filter(Boolean);
-  // Default: no roots configured → sweep will find nothing (safe no-op)
-  return [];
+/**
+ * Artifact output roots — the dedicated sinks for orphaned artifact files
+ * (SA4E-380 F-01/F-05). Shared single source for OI-14 (immediate cleanup +
+ * read confinement) and OI-15 (periodic sweep). The raw OS temp root and the
+ * agent workspace are NEVER roots.
+ *
+ * Resolution order:
+ *  1. `ARTIFACT_OUTPUT_ROOTS` env override — `path.delimiter`-separated list
+ *     (operator trust; see SA-08 for the recommended defense-in-depth checks).
+ *  2. Defaults: the dedicated `%TEMP%/sa4e-artifacts` sink, the workspace
+ *     `tmp/artifacts` directory, and the markdown-exporter child's own
+ *     artifact home (F-01: without it every local-path read fails confinement).
+ */
+export function artifactOutputRoots(env: NodeJS.ProcessEnv = process.env): readonly string[] {
+  const override = parseArtifactRootsEnv(env.ARTIFACT_OUTPUT_ROOTS);
+  if (override) return override;
+  const workspace = path.resolve(process.cwd());
+  const childHome =
+    process.platform === 'win32'
+      ? path.join(process.env.LOCALAPPDATA ?? '', 'markdown-exporter-mcp', 'artifacts')
+      : path.join(process.env.HOME ?? os.homedir(), '.cache', 'markdown-exporter-mcp', 'artifacts');
+  return [
+    path.join(os.tmpdir(), 'sa4e-artifacts'),
+    path.join(workspace, 'tmp', 'artifacts'),
+    path.resolve(childHome),
+  ];
 }
 
-/** Check whether a real path falls inside one of the artifact roots. */
+/** SA-08 surface: parse the env override; empty/garbage → fall back to defaults. */
+function parseArtifactRootsEnv(raw: string | undefined): readonly string[] | undefined {
+  if (!raw) return undefined;
+  const roots = raw.split(path.delimiter).map((s) => s.trim()).filter(Boolean);
+  return roots.length ? roots : undefined;
+}
+
+/**
+ * F-01 containment: is `candidate` (already realpath-canonicalised by the
+ * caller) located inside `root`? Compares with `path.relative` — case-folded
+ * on win32, cross-device resolves to an absolute path → rejected. Separator
+ * boundary is honoured (`<root>-evil` is NOT inside `<root>`).
+ */
 export function isPathWithinRoot(root: string, candidate: string): boolean {
-  try {
-    const real = fs.realpathSync(candidate);
-    return artifactOutputRoots().some((r) => real.startsWith(r));
-  } catch {
-    return false;
-  }
+  const rel = path.relative(path.resolve(root), path.resolve(candidate));
+  return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel));
 }
 
 /** Per-tool escape hatch for tools that defy the naming/description convention. */

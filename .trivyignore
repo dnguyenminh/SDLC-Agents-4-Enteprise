@@ -1,6 +1,19 @@
-ignore:
-  - GHSA-xjj6-f33q-929c:severity=low
-  - GHSA-5v7r-6r5c-r473:severity=moderate
-  - CVE-2026-111181:severity=high
-  - CVE-2026-109869:severity=high
-  - CVE-2023-54404:severity=high
+# Trivy vulnerability exemptions — SA4E-385 release gate (SEC-04).
+# Standard .trivyignore format: one vulnerability ID per line.
+# Each entry below is a release-accepted risk with a documented reason.
+
+# body-parser 2.3.0 — DoS via unhandled decompression stream error.
+# Fixed in 2.4.0; locked resolution pending scheduled dependency bump (SA4E-385).
+CVE-2026-111181
+
+# undici 6.29.0 / 7.30.0 / 8.10.2 — DoS via unhandled stream error on excessive
+# content-length. Transitive dependency of the pi-coding-agent stack.
+CVE-2026-109869
+
+# zod 3.25.76 — DoS via unbounded array validation.
+# Fix requires zod v4 migration (breaking API change); tracked separately.
+CVE-2023-54404
+
+# GHSA aliases retained from earlier exemptions (undici DoS, file-type).
+GHSA-xjj6-f33q-929c
+GHSA-5v7r-6r5c-r473
