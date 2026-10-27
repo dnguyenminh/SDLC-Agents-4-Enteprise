@@ -125,11 +125,14 @@ describe.skipIf(!dockerAvailable)('Sandbox module — Docker integration (TC-01,
     const createParsed = JSON.parse(create.content[0].text);
     const sessionId = createParsed.sessionId;
 
-    const res = await handlers.get('sandbox_exec')!({ command: 'curl -s -m 5 https://google.com || true', sessionId });
+    // No `|| true` here: that would force the shell to exit 0 and mask the very
+    // failure we assert. In network:none mode curl cannot resolve/connect, so it
+    // exits non-zero (6/7/28) and returns no body — both prove isolation holds.
+    const res = await handlers.get('sandbox_exec')!({ command: 'curl -s -m 5 https://google.com', sessionId });
     const parsed = JSON.parse(res.content[0].text);
-    // In network:none mode, curl should fail (non-zero exit code) or return empty if it exists.
-    // Since we are asserting isolation, an exit code of 0 means it reached the internet.
+    // An exit code of 0 with a response body would mean the container reached the internet.
     expect(parsed.exitCode).not.toBe(0);
+    expect(parsed.stdout.trim()).toBe('');
     await handlers.get('sandbox_session')!({ action: 'destroy', sessionId });
   }, 30000);
 
