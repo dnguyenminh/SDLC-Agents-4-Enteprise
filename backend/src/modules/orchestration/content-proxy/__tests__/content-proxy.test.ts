@@ -13,7 +13,12 @@ import { adaptInvocation } from '../invocation-adapter.js';
 import { adaptResult } from '../result-adapter.js';
 import type { ToolDefinition } from '../../../../types/tool.js';
 
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'content-proxy-'));
+// SA4E-380 F-01: local artifacts are only inlined when they live inside a
+// dedicated artifact root. The default root is `<os.tmpdir()>/sa4e-artifacts`,
+// so fixtures must be created there for the containment check to pass.
+const ARTIFACT_ROOT = path.join(os.tmpdir(), 'sa4e-artifacts');
+fs.mkdirSync(ARTIFACT_ROOT, { recursive: true });
+const TMP = fs.mkdtempSync(path.join(ARTIFACT_ROOT, 'content-proxy-'));
 afterAll(() => fs.rmSync(TMP, { recursive: true, force: true }));
 
 const EXPORT_DOCX: ToolDefinition = {

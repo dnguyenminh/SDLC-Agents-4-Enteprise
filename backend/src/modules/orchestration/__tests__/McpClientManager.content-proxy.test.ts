@@ -11,7 +11,12 @@ import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { McpClientManager } from '../McpClientManager.js';
 import { silentLogger } from '../../../__tests__/sa4e-testkit.js';
 
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'content-proxy-mgr-'));
+// SA4E-380 F-01: a local artifact is only inlined when it lives inside a
+// dedicated artifact root. The default root is `<os.tmpdir()>/sa4e-artifacts`,
+// so the DOCX fixture must be created there for the containment check to pass.
+const ARTIFACT_ROOT = path.join(os.tmpdir(), 'sa4e-artifacts');
+fs.mkdirSync(ARTIFACT_ROOT, { recursive: true });
+const TMP = fs.mkdtempSync(path.join(ARTIFACT_ROOT, 'content-proxy-mgr-'));
 afterAll(() => fs.rmSync(TMP, { recursive: true, force: true }));
 
 const EXPORT_DOCX_TOOL = {
