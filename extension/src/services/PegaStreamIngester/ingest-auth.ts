@@ -15,6 +15,26 @@ export class IngestAuthError extends Error {
 }
 
 /**
+ * Typed error carrying the backend's CLASSIFIED ingest-failure envelope
+ * (code + category + retryable) so the caller can decide retry-vs-skip and log a
+ * concrete cause without reading server logs. Caught by instanceof, like
+ * IngestAuthError. `retryable` mirrors the backend's transient/permanent split.
+ */
+export class IngestRejectedError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly category: string,
+    public readonly retryable: boolean,
+    public readonly errorName: string,
+    public readonly httpStatus: number,
+  ) {
+    super(message);
+    this.name = "IngestRejectedError"; // survives serialization
+  }
+}
+
+/**
  * SA4E-362 SEC-02 + SECA-01 (3.7): sanitize text embedded in IngestAuthError —
  * strip CR/LF first (a multi-line 401 body could inject forged log lines), then
  * cap at 200 characters.

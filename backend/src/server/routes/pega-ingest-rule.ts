@@ -5,6 +5,7 @@
  */
 
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import type { Logger } from 'pino';
 import type { ModuleRegistry } from '../../modules/ModuleRegistry.js';
@@ -13,6 +14,9 @@ import { IngestRuleRequestSchema } from '../../modules/pega/schemas/ingest-rule.
 import { RelativeExtractor } from '../../modules/pega/services/RelativeExtractor.js';
 import { PegaSchemaLoader } from '../../modules/pega/PegaSchemaLoader.js';
 import type { PegaRuleKbSchema } from '../../modules/pega/strategies/KbDrivenPegaParserStrategy.js';
+import {
+  classifyIngestError, classifyExtractionError, type ClassifiedIngestError,
+} from '../../modules/pega/ingest-error-classifier.js';
 
 /** Build schemaMap from pega-core-schemas.json (cached singleton) */
 let cachedSchemaMap: Map<string, PegaRuleKbSchema> | null = null;
@@ -40,6 +44,36 @@ export function createIngestRuleRoute(registry: ModuleRegistry, logger: Logger):
   app.use('*', bodyLimit({ maxSize: 10 * 1024 * 1024 }));
 
   app.post('/', async (c) => {
+    // Top-level guard: ingestSafely only wraps service.ingestRule(). Steps 4-5
+    // (getSchemaMap + RelativeExtractor.extract) run OUTSIDE it — a throw there
+    // would escape the handler and, under the Node HTTP server, can surface on the
+    // client as a socket close with no response (UND_ERR_SOCKET) instead of a 500.
+    // Wrapping the whole handler guarantees EVERY failure returns an error envelope.
+    try {
+      return await handleIngest(c, registry, logger);
+    } catch (err) {
+      const classified = classifyIngestError(err);
+      logger.error({ err: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined, code: classified.code },
+        '[pega-ingest-rule] Unhandled error in route handler');
+      const httpStatus = classified.details.retryable ? 503 : 500;
+      return c.json({ data: null, error: classified }, httpStatus);
+    }
+  });
+
+  return app;
+}
+
+/**
+ * Core ingest handler — parse, validate, ingest, extract relatives.
+ * Extracted so the route wrapper can catch ANY throw (including the post-ingest
+ * schema/extraction steps) and always return an envelope.
+ */
+async function handleIngest(
+  c: Context<PegaEnv>,
+  registry: ModuleRegistry,
+  logger: Logger,
+) {
     // 1. Resolve PegaService from memory module
     const service = resolvePegaService(registry);
     if (!service) {
@@ -85,17 +119,29 @@ export function createIngestRuleRoute(registry: ModuleRegistry, logger: Logger):
     // 3. Ingest rule via PegaService — scope strictly by authenticated identity.
     const { ruleJson, checksum, version } = parsed.data;
     const ingestResult = await ingestSafely(service, identityProjectId, ruleJson, checksum, version, logger);
-    if (ingestResult.error) {
-      return c.json({
-        data: null,
-        error: { code: 'INTERNAL_ERROR', message: ingestResult.error },
-      }, 500);
+    if (ingestResult.classified) {
+      // Classified, log-free envelope: the extension reads code + details.category
+      // + details.retryable to decide retry-vs-skip and show the user a cause.
+      // Transient faults → 503 (retry-after semantics); permanent → 500.
+      const httpStatus = ingestResult.classified.details.retryable ? 503 : 500;
+      return c.json({ data: null, error: ingestResult.classified }, httpStatus);
     }
 
-    // 4. Extract relatives via RelativeExtractor
-    const schemaMap = getSchemaMap();
-    const extractor = new RelativeExtractor(schemaMap);
-    const relatives = extractor.extract(ruleJson as Record<string, unknown>);
+    // 4. Extract relatives via RelativeExtractor. This runs AFTER a successful
+    // ingest, so a failure here must NOT masquerade as an ingest failure — the
+    // rule IS stored. Return a distinct EXTRACTION_ERROR so the extension knows
+    // the rule landed but relatives are unknown (do not re-ingest blindly).
+    let relatives;
+    try {
+      const schemaMap = getSchemaMap();
+      const extractor = new RelativeExtractor(schemaMap);
+      relatives = extractor.extract(ruleJson as Record<string, unknown>);
+    } catch (err) {
+      logger.error({ err: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined, ruleId: ingestResult.ruleId },
+        '[pega-ingest-rule] Relative extraction failed (rule already stored)');
+      return c.json({ data: null, error: classifyExtractionError(err) }, 500);
+    }
 
     // 5. Return combined response
     const status = ingestResult.ruleId === -1 ? 200 : 201;
@@ -108,9 +154,6 @@ export function createIngestRuleRoute(registry: ModuleRegistry, logger: Logger):
       },
       error: null,
     }, status);
-  });
-
-  return app;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -122,7 +165,11 @@ function resolvePegaService(registry: ModuleRegistry): PegaService | null {
   return new PegaService(memModule.getEngine());
 }
 
-/** Wrap ingestRule in try/catch to prevent unhandled exceptions */
+/**
+ * Wrap ingestRule in try/catch. On failure, return a CLASSIFIED error (safe,
+ * log-free) so the route can hand the extension a structured cause — the raw
+ * message/stack stays in the server log only (SEC: no internal detail leak).
+ */
 async function ingestSafely(
   service: PegaService,
   projectId: string,
@@ -130,12 +177,17 @@ async function ingestSafely(
   checksum: string | undefined,
   version: string | undefined,
   logger: Logger,
-): Promise<{ status: string; ruleId?: number; reason?: string; error?: string }> {
+): Promise<{ status: string; ruleId?: number; reason?: string; classified?: ClassifiedIngestError }> {
   try {
     const result = await service.ingestRule({ projectId, ruleJson, checksum, version });
     return { status: result.status, ruleId: result.ruleId, reason: result.reason };
-  } catch (err: any) {
-    logger.error({ err: err.message, stack: err.stack }, '[pega-ingest-rule] Ingestion failed');
-    return { status: 'error', error: 'Ingestion failed. Check server logs for details.' };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    const classified = classifyIngestError(err);
+    // Full detail in the log (for ops); only the classified envelope on the wire.
+    logger.error({ err: message, stack, code: classified.code, category: classified.details.category },
+      '[pega-ingest-rule] Ingestion failed');
+    return { status: 'error', classified };
   }
 }

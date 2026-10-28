@@ -18,7 +18,7 @@ After each sub-agent completes:
 
 1. READ the generated document
 2. CHECK each item in the checklist for that phase
-3. CHECK diagrams directory: listDirectory("documents/{TICKET}/diagrams/")
+3. CHECK diagrams directory: glob("documents/{TICKET}/diagrams/*")
 4. VALIDATE drawio XML: grep for self-closing edge cells
    (pattern: edge="1" followed by /> without <mxGeometry>)
    If found → re-invoke agent to fix before export

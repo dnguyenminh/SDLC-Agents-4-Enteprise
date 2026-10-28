@@ -155,3 +155,44 @@ function describeSingleCause(c: Record<string, any> | undefined): string | undef
   const text = parts.join(" ").trim();
   return text.length > 0 ? text : undefined;
 }
+
+/** Transient network/socket error codes worth retrying with backoff. */
+const TRANSIENT_FETCH_CODES = new Set([
+  "UND_ERR_SOCKET",    // undici: "other side closed" — server closed TCP mid-flight
+  "UND_ERR_CONNECT_TIMEOUT",
+  "ECONNRESET", "ETIMEDOUT", "ECONNREFUSED", "EPIPE", "EAI_AGAIN",
+]);
+
+/**
+ * Is this fetch/undici failure transient (safe to retry with backoff)?
+ *
+ * undici buries the real code in `err.cause` (and, when all connect attempts
+ * fail, inside `cause.errors[]`). We walk that chain and also scan the rendered
+ * description, since the "other side closed [UND_ERR_SOCKET]" Pega-ingest symptom
+ * only surfaces its code once unwrapped. A timeout from AbortSignal.timeout()
+ * (name === "TimeoutError") is likewise transient.
+ *
+ * @param err - The error thrown by fetch (or any error).
+ * @returns true when the failure is a transient connection fault.
+ */
+export function isTransientFetchError(err: unknown): boolean {
+  if (!err || typeof err !== "object") { return false; }
+  const e = err as Record<string, any>;
+  if (e.name === "TimeoutError" || e.name === "AbortError") { return true; }
+
+  // Collect candidate codes from the error, its cause, and aggregated inner errors.
+  const codes: string[] = [];
+  const collect = (o: any): void => {
+    if (!o || typeof o !== "object") { return; }
+    if (typeof o.code === "string") { codes.push(o.code); }
+    if (typeof o.errno === "string") { codes.push(o.errno); }
+    if (Array.isArray(o.errors)) { for (const inner of o.errors) { collect(inner); } }
+  };
+  collect(e);
+  collect(e.cause);
+  if (codes.some((c) => TRANSIENT_FETCH_CODES.has(c))) { return true; }
+
+  // Fallback: the unwrapped description sometimes carries the code as text only.
+  const desc = describeFetchError(err);
+  return [...TRANSIENT_FETCH_CODES].some((c) => desc.includes(c));
+}

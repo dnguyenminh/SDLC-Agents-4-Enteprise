@@ -490,3 +490,37 @@ Use this CVSS-aligned scoring:
 8. **TypeScript/Hono idioms** — Remediation code must use idiomatic TypeScript and Hono patterns (async/await, middleware composition, zod schemas).
 9. **Do NOT run destructive commands** — This is a static analysis agent. Never attempt to exploit vulnerabilities or modify production systems.
 10. **Report scope limitations honestly** — Static analysis cannot find all vulnerabilities. Always note what was NOT tested (runtime behavior, infrastructure, network).
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
+
+This policy applies to every agent that produces, reviews, verifies, or consumes evidence about application behavior (UG, DPG, TEST-REPORT, security findings).
+
+### Non-negotiable rules
+
+1. **Evidence must come from the actual running build.** Wireframes, design mockups, Stitch screens, draw.io mockups, and placeholder images are NOT valid UG/test/security evidence.
+2. **Reuse a running instance.** Before starting an app, detect whether it is already running (health endpoint, port, process, container, PID file). If it is running, do NOT start a second instance.
+3. **Verify freshness before using the instance.** The running build must contain the feature just implemented. Check the new route/tool/command/UI element, and build/commit info if exposed. If stale, restart that same instance and record why.
+4. **Resolve start commands from the project.** Never hardcode `npm start`. Read README, package/build files, Docker/Compose, and the TDD Deployment section.
+5. **Capture by deliverable type:**
+
+   | Deliverable | Required evidence |
+   |---|---|
+   | Web UI | Browser automation screenshot of each primary screen/route |
+   | Electron | Automated app-window screenshot |
+   | Native desktop | OS-level screenshot or app screenshot harness |
+   | Mobile | Emulator/device screenshot (`adb`, `xcrun simctl`) |
+   | CLI | Real terminal transcript + expected output |
+   | API / MCP | Real request/response examples |
+   | Data pipeline | Real input/output sample + logs |
+
+6. **Store evidence** at `documents/{TICKET}/diagrams/{kind}-{screen}.png` and reference it inline: `![{screen}](diagrams/{kind}-{screen}.png)`.
+7. **No silent gaps.** If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap to SM. Never fabricate, reuse a mockup, or silently omit the section.
+
+**Role responsibility:** Security findings and evidence must come from a fresh, feature-verified instance; stale instances invalidate the assessment.
+
+### Security addendum
+
+Before pentest/security evidence, verify the running instance contains the ticket feature and comes from the current build; stale instances invalidate findings.

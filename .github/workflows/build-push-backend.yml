@@ -104,34 +104,45 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      # 5. Build the `production` target and push to BOTH registries in a single
-      #    buildx invocation (the built image equals every pushed image, AD-3 —
-      #    GHCR and Docker Hub share one digest). PRs build-only (no push).
-      - name: Build and push
+      # 5. Build the `production` target (no push) so the image can be scanned before distribution (AD-9).
+      - name: Build (no push)
         id: build
         uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
           context: ${{ env.BUILD_CONTEXT }}
           file: ${{ env.BUILD_CONTEXT }}/Dockerfile
           target: ${{ env.BUILD_TARGET }}
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          push: false
+          load: true
+          tags: |
+            sa4e-backend:candidate
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 6. SEC-04 — Trivy vulnerability scan on the built image. Fails the run on
-      #    CRITICAL/HIGH CVEs (push already succeeded in step 5; a failure here
-      #    surfaces RED so the image is flagged, not silently accepted).
+      # 6. SEC-04 — Trivy vulnerability scan on the built image BEFORE push (AD-9). Runs on PRs too.
       - name: Scan image for vulnerabilities (Trivy)
-        if: github.event_name != 'pull_request'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # 0.36.0
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+          image-ref: sa4e-backend:candidate
           format: table
           exit-code: "1"
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+
+      # 6b. Push the scanned image to registries (only on non-PR events).
+      - name: Push image to registries
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
+        with:
+          context: ${{ env.BUILD_CONTEXT }}
+          file: ${{ env.BUILD_CONTEXT }}/Dockerfile
+          target: ${{ env.BUILD_TARGET }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # 7. Verify the push produced an immutable digest; emit a traceable ref.
       - name: Verify image digest & emit ref
@@ -147,3 +158,4 @@ jobs:
           echo "tags<<EOF" >> "$GITHUB_OUTPUT"
           echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+

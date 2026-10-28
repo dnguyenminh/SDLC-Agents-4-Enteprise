@@ -1,0 +1,9 @@
+fixture_id,test_case_id,payload_text,hex_bytes,byte_length,expected_result,reason_code,description
+N-01,"PBT-02,UT-02,IT-02","22.23.4\n",32322E32332E340A,8,PASS,,Canonical conforming payload
+N-02,"PBT-02,UT-02","22.23.4",32322E32332E34,7,FAIL,ERR_LEN,No trailing newline (7 bytes)
+N-03,"PBT-02,UT-02","22.23.4\r\n",32322E32332E340D0A,9,FAIL,ERR_CR,CRLF from Windows checkout (9 bytes)
+N-04,"PBT-02,UT-02","BOM+22.23.4\n",EFBBBF32322E32332E340A,11,FAIL,ERR_BOM,UTF-8 BOM prefix
+N-05,"PBT-02,UT-02","v22.23.4\n",7632322E32332E340A,9,FAIL,ERR_PREFIX_V,v prefix is not accepted by nvm on Windows
+N-06,"PBT-02,UT-02","22.23.4 \n",32322E32332E34200A,9,FAIL,ERR_TRAILING_WS,Trailing space
+N-07,"PBT-02,UT-02","22.x\n",32322E780A,5,FAIL,ERR_NOT_SEMVER,Range text instead of a version
+N-08,"PBT-02,UT-02",(empty),,0,FAIL,ERR_LEN,Empty file (baseline of a deleted .nvmrc)

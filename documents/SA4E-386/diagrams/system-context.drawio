@@ -1,0 +1,94 @@
+<mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="760" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-386 — System Context: Node.js 22.23.4 version pins and their external touchpoints" style="text;html=1;align=left;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1100" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="repo" value="SDLC-Agents-4-Enterprise repository — Node runtime pins (in scope)" style="swimlane;startSize=34;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13;swimlaneFillColor=#ffffff;" vertex="1" parent="1">
+      <mxGeometry x="560" y="280" width="400" height="260" as="geometry" />
+    </mxCell>
+    <mxCell id="c1" value="package.json&#10;engines.node" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="repo">
+      <mxGeometry x="20" y="45" width="170" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="c2" value="backend/package.json&#10;engines.node" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="repo">
+      <mxGeometry x="20" y="95" width="170" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="c3" value=".nvmrc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="repo">
+      <mxGeometry x="20" y="145" width="170" height="34" as="geometry" />
+    </mxCell>
+    <mxCell id="c4" value="backend/Dockerfile&#10;ARG NODE_VERSION + ARG NODE_BASE_DIGEST" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="repo">
+      <mxGeometry x="205" y="45" width="175" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="c5" value=".github/workflows/*.yml&#10;27 node-version in 12 files" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="repo">
+      <mxGeometry x="205" y="118" width="175" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="c6" value="branch node-security-upgrade&#10;+ commit message" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="repo">
+      <mxGeometry x="205" y="190" width="175" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" value="Developer / DEV Agent&#10;nvm + Node 22.23.4 installed" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="90" y="110" width="250" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" value="GitHub Actions CI&#10;16 workflows (12 pin the Node version)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="110" width="250" height="90" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" value="Docker Hub registry&#10;node:22.23.4-slim&#10;(tag + sha256 digest)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="90" y="360" width="250" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" value="GitHub Pull Request&#10;+ branch protection&#10;(no direct push to main)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="360" width="250" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" value="npm registry&#10;npm ci / EBADENGINE gate" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=11;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="90" y="610" width="250" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="e7" value="nodejs.org security advisories&#10;(confirm 22.23.4 is latest 22.x patch)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="470" y="610" width="240" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="e8" value="Jira SA4E-386&#10;(verification evidence attached)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="770" y="610" width="230" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="e6" value="Trivy image scanner&#10;(optional, AC-05 evidence)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#9673a6;fontSize=10;verticalAlign=middle;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="610" width="250" height="80" as="geometry" />
+    </mxCell>
+    <mxCell id="edge1" value="edits pins (UC-02 … UC-05)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#6c8ebf;fontSize=10;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.15;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="e1" target="repo">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="edge2" value="pull base image (digest pinned)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=10;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.35;entryDx=0;entryDy=0;" edge="1" parent="1" source="repo" target="e3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="edge3" value="sha256: digest via docker inspect / skopeo" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#0288d1;fontSize=10;dashed=1;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0;entryY=0.9;entryDx=0;entryDy=0;" edge="1" parent="1" source="e3" target="repo">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="500" y="380" />
+          <mxPoint x="500" y="514" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="edge4" value="node-version: 22.23.4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=10;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="repo" target="e2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="edge5" value="EBADENGINE / build + scan status" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=10;dashed=1;exitX=0;exitY=0.85;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="e2" target="repo">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="edge6" value="npm ci (engines gate)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#9673a6;fontSize=10;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="repo" target="e5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="edge7" value="re-verify latest 22.x patch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#9673a6;fontSize=10;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="repo" target="e7">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="edge8" value="Trivy scan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#9673a6;fontSize=10;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="e2" target="e6">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1470" y="155" />
+          <mxPoint x="1470" y="650" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="edge9" value="push branch + open PR" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#d6b656;fontSize=10;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="repo" target="e4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="edge10" value="attach evidence" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#d6b656;fontSize=10;exitX=0.2;exitY=1;exitDx=0;exitDy=0;entryX=0.9;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="e4" target="e8">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

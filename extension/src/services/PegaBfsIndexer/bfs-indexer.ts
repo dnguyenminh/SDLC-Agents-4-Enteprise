@@ -9,12 +9,12 @@ import type { CrawlPlanItem } from "../../models";
 import type { UnresolvedDependency } from "../DependencyMapper";
 import type { MembershipSet } from "../DiskBackedSet";
 import { saveRuleFile, calibrateFetchConcurrency } from "../PegaCrawlHelper";
-import { IngestAuthError } from "../PegaStreamIngester";
+import { IngestAuthError, IngestRejectedError } from "../PegaStreamIngester";
 import { PegaBfsPipeline, type FetchedRule, type BfsRunResult } from "../PegaBfsPipeline";
 import { PegaLocalRuleIndex } from "../PegaLocalRuleIndex";
 import { MAX_QUEUE_SIZE, MIN_BFS_ITERATIONS, readPipelineConfig } from "./config";
 import { readPegaAppName, ruleFilePath } from "./workspace-files";
-import { logIngestCrash, logIngestRejection } from "./ingest-log";
+import { logIngestCrash, logIngestRejection, logIngestClassified } from "./ingest-log";
 import type { BfsIndexResult, PipelineTuning, ProgressReporter } from "./types";
 import { PegaBfsIndexerBase } from "./base";
 
@@ -184,6 +184,13 @@ export class PegaBfsIndexer extends PegaBfsIndexerBase {
       }
       // Rule hiện tại vẫn return { ingested: false } — GIỮ ELIGIBLE cho run sau
       // (rerun incremental; đúng comment hiện có). KHÔNG auto-login (BR-3).
+      return { ingested: false, relatives: [] };
+    }
+    // Classified backend rejection: the server told us exactly what went wrong
+    // (code + category + retryable) — log that cause instead of a generic skip,
+    // so the Pega panel shows a real reason without anyone opening server logs.
+    if (err instanceof IngestRejectedError) {
+      logIngestClassified(this.log, err, ruleJson, sourceFile);
       return { ingested: false, relatives: [] };
     }
     logIngestCrash(this.log, err, ruleJson, sourceFile);

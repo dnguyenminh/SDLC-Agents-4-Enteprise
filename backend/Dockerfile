@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 # =============================================================================
-# SA4E-335 Backend Dockerfile — Node.js 22 + Hono Code Intelligence MCP Server
+# SA4E-335 Backend Dockerfile — Node.js 22.23.4 + Hono Code Intelligence MCP Server
 # -----------------------------------------------------------------------------
 # Multi-stage build (7 stages): base, deps, build, mcp-python, production,
 # development, test. `production` is the SOLE CI push target (TDD AD-2).
 # Build-only tooling never reaches the runtime image.
 #
 # Design decisions (TDD §3.2 / Security Review):
-#   - AD-1 : base = node:22-slim (Debian/glibc) so native modules such as
+#   - AD-1 : base = node:22.23.4-slim (Debian/glibc) so native modules such as
 #            onnxruntime-node link against glibc (musl/alpine is incompatible).
 #   - SEC-02 (Critical): base image pinned by immutable sha256 DIGEST, not only
 #            the mutable tag, to keep the build hermetic/reproducible. The human
@@ -29,10 +29,10 @@
 # =============================================================================
 
 # --- Build-time arguments (NO secrets — build args must never carry credentials, BR-17) ---
-ARG NODE_VERSION=22
-# node:22-slim — pin by digest for a reproducible supply chain (SEC-02).
+ARG NODE_VERSION=22.23.4
+# node:22.23.4-slim — pin by digest for a reproducible supply chain (SEC-02).
 # Tag kept for readability; the digest is the authoritative pin.
-ARG NODE_BASE_DIGEST=sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c
+ARG NODE_BASE_DIGEST=sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d
 
 # -----------------------------------------------------------------------------
 # base — shared workdir + build toolchain (glibc). Build-time only.
@@ -173,7 +173,7 @@ RUN python3 -m venv /opt/markdown-exporter-venv \
 
 # -----------------------------------------------------------------------------
 # production ★ — runtime image. SOLE CI push target. Minimal surface, non-root.
-# No git, no compilers (SEC-05). node:22-slim pinned by digest (SEC-02).
+# No git, no compilers (SEC-05). node:22.23.4-slim pinned by digest (SEC-02).
 # -----------------------------------------------------------------------------
 FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS production
 WORKDIR /app
@@ -182,7 +182,7 @@ WORKDIR /app
 # npm CLI that the base image bundles under /usr/local/lib/node_modules/npm.
 # Those copies (pacote, sigstore, brace-expansion, picomatch, ip-address,
 # undici) are NOT reachable from backend/package-lock.json, and the pinned
-# node:22-slim digest is already the latest — so the fix is to bump the CLI
+# node:22.23.4-slim digest is already the latest — so the fix is to bump the CLI
 # itself (10.9.9 → NPM_VERSION: pacote/sigstore majors land on patched lines)
 # and refresh the two packages upstream has not re-released yet, using
 # same-major PATCH releases only (5.0.9→5.0.12, 6.28.0→6.28.1).
@@ -206,7 +206,7 @@ RUN npm install -g npm@${NPM_VERSION} --no-audit --no-fund --loglevel=error \
   # SEC-04: upgrade Debian packages to fix CVE-2026-103111 (libpcre2-8-0 HIGH)
   # and the perl CVE set found by Trivy on 2026-10-10 (CVE-2026-13221 CRITICAL,
   # CVE-2026-42497 HIGH, CVE-2026-42496, CVE-2026-8376, CVE-2026-48962,
-  # CVE-2026-57432, CVE-2026-57433 — perl-base/perl-modules in node:XX-slim)
+  # CVE-2026-57432, CVE-2026-57433 — perl-base/perl-modules in node:22.23.4-slim)
   && apt-get update \
   && apt-get upgrade -y --no-install-recommends libpcre2-8-0 perl-base perl-modules-5.36 \
   && apt-get clean \
@@ -265,7 +265,7 @@ ENV INDEX_CONCURRENCY_LIMIT=8
 
 EXPOSE 48721
 
-# Dependency-free health probe (SEC-12): node:22-slim does not ship `wget`, so a
+# Dependency-free health probe (SEC-12): node:22.23.4-slim does not ship `wget`, so a
 # wget-based probe would silently fail. Use node's built-in http client instead.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||48721)+'/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"

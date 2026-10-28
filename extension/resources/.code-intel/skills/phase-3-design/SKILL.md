@@ -19,10 +19,9 @@ description: Phase 3: Design (SA → TDD) + Feedback Loop
 
 2. Invoke SA agent:
 ```
-invokeSubAgent(
-  name: "sa-agent",
-  prompt: "Tạo TDD cho {TICKET}. Đọc code intelligence data và FSD. PHẢI tạo draw.io diagrams (architecture.drawio + component.drawio + class diagram) và export PNG. Không được bỏ qua Step 4 (Generate Diagrams).",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+task(
+  subagent_type: "sa-agent",
+  prompt: "Tạo TDD cho {TICKET}. Đọc code intelligence data và FSD. PHẢI tạo draw.io diagrams (architecture.drawio + component.drawio + class diagram) và export PNG. Không được bỏ qua Step 4 (Generate Diagrams)."
 )
 ```
 
@@ -58,8 +57,8 @@ Also attach all `.drawio` files.
 
 2. Invoke Security agent:
 ```
-invokeSubAgent(
-  name: "security-agent",
+task(
+  subagent_type: "security-agent",
   prompt: "Security Design Review cho {TICKET}. Đọc TDD.md tại documents/{TICKET}/TDD.md. Review:
   1. Authentication/Authorization design — đầy đủ, an toàn?
   2. Data protection — encryption at rest/transit, PII handling?
@@ -78,8 +77,8 @@ invokeSubAgent(
    - **No Critical/High** → proceed to Phase 4
    - **Critical findings** → invoke sa-agent to update TDD:
      ```
-     invokeSubAgent(
-       name: "sa-agent",
+     task(
+       subagent_type: "sa-agent",
        prompt: "Cập nhật TDD cho {TICKET}. Security review phát hiện: {critical findings}. Sửa TDD security section để address các issues này."
      )
      ```
@@ -108,20 +107,18 @@ while DISCREPANCY.md exists AND iteration < 5:
     3. Report: "⚠️ Vòng {iteration}/5 — SA phát hiện {n} discrepancies"
     
     4. Invoke BA to fix FSD:
-       invokeSubAgent(
-         name: "ba-agent",
-         prompt: "Đọc discrepancy report tại documents/{TICKET}/DISCREPANCY.md và cập nhật FSD cho {TICKET}. Chỉ fix FSD, không tạo lại BRD.",
-         contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+       task(
+         subagent_type: "ba-agent",
+         prompt: "Đọc discrepancy report tại documents/{TICKET}/DISCREPANCY.md và cập nhật FSD cho {TICKET}. Chỉ fix FSD, không tạo lại BRD."
        )
     
     5. Verify FSD updated
     6. Update STATUS: specification.version++
     
     7. Invoke SA to review:
-       invokeSubAgent(
-         name: "sa-agent",
-         prompt: "Review lại FSD đã cập nhật và tạo lại TDD cho {TICKET}. Kiểm tra discrepancies trước đó đã được fix chưa.",
-         contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+       task(
+         subagent_type: "sa-agent",
+         prompt: "Review lại FSD đã cập nhật và tạo lại TDD cho {TICKET}. Kiểm tra discrepancies trước đó đã được fix chưa."
        )
     
     8. Check DISCREPANCY.md exists?

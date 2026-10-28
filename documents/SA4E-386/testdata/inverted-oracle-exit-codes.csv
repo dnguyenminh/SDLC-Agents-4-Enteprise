@@ -1,0 +1,7 @@
+"scenario_id","test_case_id","check_id","oracle_type","grep_exit_code","match_count","expected_verdict","description"
+"IO-01","UT-08","CC-03 / AC-01","inverted","1","0","PASS","No loose engines constraint found"
+"IO-02","UT-08","CC-03 / AC-01","inverted","0","1","FAIL","One forbidden literal found - quoted in the report"
+"IO-03","UT-08","CC-04 / AC-04","inverted","2","n/a","NOT_EXECUTED","Invalid path or pattern - never reported as PASS"
+"IO-04","UT-08","SCC-03 / AC-04","inverted","1","0","PASS","No unquoted major literal"
+"IO-05","UT-08","AC-08 sweep","inverted","1","0","PASS","No build-native or better-sqlite3 reference"
+"IO-06","UT-08","CC-02 (normal oracle)","normal","0","n/a","PASS","Non-inverted checks keep exit 0 = PASS semantics"

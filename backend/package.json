@@ -47,7 +47,7 @@
     "url": "git+https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise.git"
   },
   "engines": {
-    "node": "22.x"
+    "node": "22.23.4"
   },
   "dependencies": {
     "@hono/node-server": "^1.12.0",

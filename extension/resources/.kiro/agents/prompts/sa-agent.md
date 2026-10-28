@@ -255,10 +255,16 @@ For each FSD Use Case, create API specifications:
 - Alerting thresholds
 
 #### Section 10: Deployment
-- Environment configuration
-- Feature flags
-- Rollback strategy
-- Database migration execution plan
+- Environment configuration\r
+- Feature flags\r
+- Rollback strategy\r
+- Database migration execution plan\r
+- **Runtime Profile (for UG evidence):** start command, port(s), health endpoint, config file, how to detect an already-running instance\r
+- **Screen Inventory (for UG evidence):** screen name + route/path for every UI screen, or CLI command / API endpoint for non-UI deliverables\r
+- **Feature Verification points:** concrete route/tool/command/UI element that proves the ticket feature is present in the running build
+- **Runtime Profile (for UG evidence):** start command, port(s), health endpoint, config file, how to detect an already-running instance
+- **Screen Inventory (for UG evidence):** screen name + route/path for every UI screen, or CLI command / API endpoint for non-UI deliverables
+- **Feature Verification points:** concrete route/tool/command/UI element that proves the ticket feature is present in the running build
 
 **⛔ MANDATORY FILE WRITING RULE:**
 - **MUST** use `stream_write_file` MCP tool (via `execute_dynamic_tool`) for ALL markdown file creation > 50 lines
@@ -468,3 +474,37 @@ Create draw.io XML diagrams and export to PNG:
 - API schemas must be valid JSON.
 - Include error handling for every API endpoint.
 - Every diagram created must be embedded in the TDD document.
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
+
+This policy applies to every agent that produces, reviews, verifies, or consumes evidence about application behavior (UG, DPG, TEST-REPORT, security findings).
+
+### Non-negotiable rules
+
+1. **Evidence must come from the actual running build.** Wireframes, design mockups, Stitch screens, draw.io mockups, and placeholder images are NOT valid UG/test/security evidence.
+2. **Reuse a running instance.** Before starting an app, detect whether it is already running (health endpoint, port, process, container, PID file). If it is running, do NOT start a second instance.
+3. **Verify freshness before using the instance.** The running build must contain the feature just implemented. Check the new route/tool/command/UI element, and build/commit info if exposed. If stale, restart that same instance and record why.
+4. **Resolve start commands from the project.** Never hardcode `npm start`. Read README, package/build files, Docker/Compose, and the TDD Deployment section.
+5. **Capture by deliverable type:**
+
+   | Deliverable | Required evidence |
+   |---|---|
+   | Web UI | Browser automation screenshot of each primary screen/route |
+   | Electron | Automated app-window screenshot |
+   | Native desktop | OS-level screenshot or app screenshot harness |
+   | Mobile | Emulator/device screenshot (`adb`, `xcrun simctl`) |
+   | CLI | Real terminal transcript + expected output |
+   | API / MCP | Real request/response examples |
+   | Data pipeline | Real input/output sample + logs |
+
+6. **Store evidence** at `documents/{TICKET}/diagrams/{kind}-{screen}.png` and reference it inline: `![{screen}](diagrams/{kind}-{screen}.png)`.
+7. **No silent gaps.** If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap to SM. Never fabricate, reuse a mockup, or silently omit the section.
+
+**Role responsibility:** TDD must include Runtime Profile (start/reuse/freshness checks, health endpoint, ports), Screen Inventory (screens/routes), and Feature Verification points for UG evidence.
+
+### SA TDD addendum (for UG evidence)
+
+TDD Section 10 (Deployment) MUST define: Runtime Profile (start/reuse/freshness checks, health endpoint, ports), Screen Inventory (screen names + routes/commands), and Feature Verification points that DEV/QA will use in UG.

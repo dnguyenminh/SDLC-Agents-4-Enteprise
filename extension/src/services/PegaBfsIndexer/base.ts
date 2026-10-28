@@ -47,7 +47,8 @@ export class PegaBfsIndexerBase {
     protected readonly resilient = false,
     protected readonly auth?: IngestAuthProvider,
   ) {
-    this.ingester = new PegaStreamIngester(backendUrl, auth);
+    // Fix 5: pass the run logger so transient-fault retries surface in the Pega panel.
+    this.ingester = new PegaStreamIngester(backendUrl, auth, this.log);
   }
 
   /**

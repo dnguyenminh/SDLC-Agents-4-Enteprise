@@ -3,7 +3,7 @@
  * network failures with enough rule identity for individual retry.
  */
 
-import type { PegaStreamIngester } from "../PegaStreamIngester";
+import type { PegaStreamIngester, IngestRejectedError } from "../PegaStreamIngester";
 import type { LogFn } from "./types";
 import { describeFetchError } from "../../utils/http-client-utils";
 
@@ -42,4 +42,22 @@ export function logIngestCrash(
   const pxObjClass = String(ruleJson.pxObjClass ?? '');
   const pyRuleName = String(ruleJson.pyRuleName ?? '');
   log(`[Pega Ingester] ❌ Ingest POST failed (skipping): ${detail} | endpoint=${endpoint} | insKey=${pzInsKey} pxObjClass=${pxObjClass} pyRuleName=${pyRuleName}${sourceFile ? ` | file=${sourceFile}` : ""}`);
+}
+
+/**
+ * Backend returned a CLASSIFIED failure envelope (code + category + retryable).
+ * Unlike logIngestCrash (opaque network failure), here the server told us the
+ * exact cause — surface it verbatim so the operator never needs the server log.
+ * `retryable=true` is flagged so a transient fault reads differently from a
+ * permanent skip.
+ */
+export function logIngestClassified(
+  log: LogFn, err: IngestRejectedError, ruleJson: Record<string, unknown>, sourceFile?: string,
+): void {
+  const pzInsKey = String(ruleJson.pzInsKey ?? ruleJson.insKey ?? '');
+  const pxObjClass = String(ruleJson.pxObjClass ?? '');
+  const pyRuleName = String(ruleJson.pyRuleName ?? '');
+  const icon = err.retryable ? '🔁' : '❌';
+  const verdict = err.retryable ? 'transient (retryable)' : 'permanent (skipped)';
+  log(`[Pega Ingester] ${icon} Backend rejected rule — ${verdict} | code=${err.code} category=${err.category} errorName=${err.errorName} httpStatus=${err.httpStatus} | reason="${err.message}" | insKey=${pzInsKey} pxObjClass=${pxObjClass} pyRuleName=${pyRuleName}${sourceFile ? ` | file=${sourceFile}` : ""}`);
 }

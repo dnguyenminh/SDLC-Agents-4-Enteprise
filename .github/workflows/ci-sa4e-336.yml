@@ -67,7 +67,7 @@ jobs:
       - name: Setup Node 22
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "22.23.4"
           cache: "npm"
           cache-dependency-path: extension/package-lock.json
 
@@ -125,7 +125,7 @@ jobs:
       - name: Setup Node 22
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "22.23.4"
           cache: "npm"
           cache-dependency-path: extension/package-lock.json
 
@@ -191,3 +191,4 @@ jobs:
             echo "=== $pkg ==="
             npm ls "$pkg" --all 2>/dev/null || echo "(not present in resolved tree)"
           done
+

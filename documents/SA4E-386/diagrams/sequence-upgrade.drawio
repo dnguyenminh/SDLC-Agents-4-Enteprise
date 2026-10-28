@@ -1,0 +1,159 @@
+<mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="1000" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-386 — Sequence: pin Node.js to 22.23.4, retrieve the real digest, verify, and open the PR" style="text;html=1;align=left;verticalAlign=middle;fontSize=15;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+      <mxGeometry x="50" y="20" width="1200" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="h1" value="Developer / DEV Agent" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="50" y="90" width="170" height="54" as="geometry" />
+    </mxCell>
+    <mxCell id="h2" value="Repository (git)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="290" y="90" width="170" height="54" as="geometry" />
+    </mxCell>
+    <mxCell id="h3" value="Docker Hub registry" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="540" y="90" width="170" height="54" as="geometry" />
+    </mxCell>
+    <mxCell id="h4" value="docker daemon / skopeo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="790" y="90" width="170" height="54" as="geometry" />
+    </mxCell>
+    <mxCell id="h5" value="GitHub Actions CI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1040" y="90" width="170" height="54" as="geometry" />
+    </mxCell>
+    <mxCell id="h6" value="Reviewer / Security" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1290" y="90" width="170" height="54" as="geometry" />
+    </mxCell>
+    <mxCell id="l1" value="" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#999999;endFill=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="144" as="sourcePoint" />
+        <mxPoint x="135" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" value="" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#999999;endFill=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="375" y="144" as="sourcePoint" />
+        <mxPoint x="375" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" value="" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#999999;endFill=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="625" y="144" as="sourcePoint" />
+        <mxPoint x="625" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" value="" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#999999;endFill=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="875" y="144" as="sourcePoint" />
+        <mxPoint x="875" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" value="" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#999999;endFill=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1125" y="144" as="sourcePoint" />
+        <mxPoint x="1125" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l6" value="" style="edgeStyle=none;html=1;dashed=1;endArrow=none;strokeColor=#999999;endFill=0;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1375" y="144" as="sourcePoint" />
+        <mxPoint x="1375" y="930" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1. Read current pins (2 engines, .nvmrc, Dockerfile ARGs, 27 node-version)" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#6c8ebf;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="190" as="sourcePoint" />
+        <mxPoint x="375" y="190" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2. Confirm node:22.23.4-slim is the latest safe 22.x patch" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#0288d1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="235" as="sourcePoint" />
+        <mxPoint x="625" y="235" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3. Request real manifest digest" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#0288d1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="280" as="sourcePoint" />
+        <mxPoint x="875" y="280" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4. HEAD /v2/library/node/manifests/22.23.4-slim" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#0288d1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="875" y="325" as="sourcePoint" />
+        <mxPoint x="625" y="325" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5. Docker-Content-Digest: sha256:…" style="edgeStyle=none;html=1;dashed=1;endArrow=classic;endFill=1;strokeColor=#0288d1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="625" y="370" as="sourcePoint" />
+        <mxPoint x="875" y="370" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6. TARGET_DOCKER_DIGEST (never copied, never guessed)" style="edgeStyle=none;html=1;dashed=1;endArrow=classic;endFill=1;strokeColor=#0288d1;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="875" y="415" as="sourcePoint" />
+        <mxPoint x="135" y="415" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7. Apply pins: engines ×2, .nvmrc, Dockerfile ARG + digest + CVE comment, 27 CI values" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#6c8ebf;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="465" as="sourcePoint" />
+        <mxPoint x="375" y="465" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8. Verify: grep clean, cat .nvmrc, read ARGs, git diff --stat" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#6c8ebf;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="510" as="sourcePoint" />
+        <mxPoint x="375" y="510" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9. docker build --target production ./backend" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="560" as="sourcePoint" />
+        <mxPoint x="875" y="560" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10. build OK — onnxruntime-node links against glibc" style="edgeStyle=none;html=1;dashed=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="875" y="605" as="sourcePoint" />
+        <mxPoint x="135" y="605" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11. Commit on node-security-upgrade (explicit staging, no git add -A)" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#6c8ebf;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="655" as="sourcePoint" />
+        <mxPoint x="375" y="655" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="12. Push branch — push event triggers the workflows" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#d6b656;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="375" y="700" as="sourcePoint" />
+        <mxPoint x="1125" y="700" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="13. setup-node 22.23.4 · npm ci · docker build · Trivy" style="edgeStyle=none;html=1;dashed=1;endArrow=classic;endFill=1;strokeColor=#d6b656;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1125" y="745" as="sourcePoint" />
+        <mxPoint x="375" y="745" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m14" value="14. Open PR: CVE rationale + changed files + verification evidence" style="edgeStyle=none;html=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="135" y="790" as="sourcePoint" />
+        <mxPoint x="1375" y="790" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m15" value="15. Review → APPROVED or changes requested" style="edgeStyle=none;html=1;dashed=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1375" y="835" as="sourcePoint" />
+        <mxPoint x="135" y="835" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m16" value="16. Merge to main — 22.23.4 enforced for local, CI and container" style="edgeStyle=none;html=1;dashed=1;endArrow=classic;endFill=1;strokeColor=#666666;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1375" y="880" as="sourcePoint" />
+        <mxPoint x="375" y="880" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

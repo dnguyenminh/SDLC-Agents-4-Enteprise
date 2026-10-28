@@ -8,10 +8,10 @@ description: File writing standards — stream_write_file for large documents, D
 - First call: `mode="write"` to create the file
 - Subsequent calls: `mode="append"` for each section
 - Chunk size: ≤ 4000 characters per append call
-- NEVER use `fsWrite`/`fsAppend` for documents > 50 lines
+- NEVER use `write`/`edit` for documents > 50 lines while `stream_write_file` is available
 
 ## Fallback
-- If `stream_write_file` is unavailable, use `fsWrite` + `fsAppend`
+- If `stream_write_file` is unavailable, use `write` + `edit`
 - Log a warning when falling back
 
 ## DOCX Export Process

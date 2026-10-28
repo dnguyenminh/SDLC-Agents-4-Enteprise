@@ -56,7 +56,7 @@ jobs:
       - name: Setup Node 22
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "22.23.4"
           cache: "npm"
           cache-dependency-path: e2e/package-lock.json
 
@@ -88,7 +88,7 @@ jobs:
       - name: Setup Node 22
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "22.23.4"
           cache: "npm"
           cache-dependency-path: e2e/package-lock.json
 
@@ -151,3 +151,4 @@ jobs:
           name: sa4e-341-serenity-report
           path: e2e/target/site/serenity/
           if-no-files-found: ignore
+

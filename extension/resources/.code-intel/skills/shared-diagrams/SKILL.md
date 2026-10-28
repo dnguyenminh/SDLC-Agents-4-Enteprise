@@ -271,7 +271,6 @@ Dùng **participant boxes ở top** + **dashed vertical lifelines** + **horizont
 
 ```
 "PHẢI tạo draw.io diagrams và export PNG. Tuân thủ shared-diagrams.md: orthogonal edges, waypoints for backward connections, port distribution, 10px grid, routing corridors between rows, 7-color palette."
-contextFiles: [{ "path": ".opencode/rules/sdlc/shared-diagrams.md" }]
 ```
 
 ## KB Ingestion

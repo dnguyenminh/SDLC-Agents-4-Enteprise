@@ -34,11 +34,17 @@ export class PegaSettingsHandler {
       const client = new PegaHttpClient(this.secrets);
       const base = client.getPegaEndpoint().replace(/\/$/, "");
       const authHeader = await client.getAuthHeader();
-      const res = await fetch(`${base}/api/v1/data/D_OperatorID`, {
-        method: "GET",
-        headers: { Authorization: authHeader, Accept: "application/json" },
-        signal: AbortSignal.timeout(8000),
-      });
+      // Probe the single-datapage endpoint (D_OperatorID) via POST — a 200 means
+      // the operator credentials are accepted by Pega's CodeIntelligence API.
+      const res = await fetch(
+        `${base}/api/CodeIntelligence/v1/datapage/single?dataPageName=D_OperatorID`,
+        {
+          method: "POST",
+          headers: { Authorization: authHeader, Accept: "application/json", "Content-Type": "text/plain" },
+          body: "string",
+          signal: AbortSignal.timeout(8000),
+        }
+      );
       this.postMessage(this.buildTestResult(res.status));
     } catch (err: any) {
       this.postMessage({ type: "pegaTestResult", success: false, message: `Connection failed: ${err.message}` });

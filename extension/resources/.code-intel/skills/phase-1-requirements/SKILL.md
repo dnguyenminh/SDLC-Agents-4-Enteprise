@@ -81,10 +81,9 @@ mem_ingest(
 ### Step 3: Invoke BA Agent
 
 ```
-invokeSubAgent(
-  name: "ba-agent",
-  prompt: "Tạo BRD cho {TICKET}. Đọc REFERENCE-ANALYSIS.md nếu có. PHẢI tạo draw.io diagrams (use-case.drawio + business-flow.drawio) và export PNG. Không được bỏ qua Step 7 (Generate Diagrams).",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }, { "path": "documents/{TICKET}/REFERENCE-ANALYSIS.md" }]
+task(
+  subagent_type: "ba-agent",
+  prompt: "Tạo BRD cho {TICKET}. Đọc REFERENCE-ANALYSIS.md nếu có. PHẢI tạo draw.io diagrams (use-case.drawio + business-flow.drawio) và export PNG. Không được bỏ qua Step 7 (Generate Diagrams)."
 )
 ```
 

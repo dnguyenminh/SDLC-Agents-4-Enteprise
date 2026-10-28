@@ -11,7 +11,12 @@ import * as vscode from "vscode";
 import type { PipelineTuning } from "./types";
 
 const DEFAULT_FETCH_BATCH_SIZE = 50;
-const DEFAULT_INGEST_CONCURRENCY = 10;
+// Fix 5: default lowered 10 → 5. The backend PG pool is max=10; 10 concurrent
+// ingests could saturate it and leave requests queued behind the 5s keep-alive
+// default, producing scattered UND_ERR_SOCKET closes. 5 leaves pool headroom while
+// retry-with-backoff absorbs any residual transient fault. Users can raise it via
+// `sdlcAgents.pega.ingestConcurrency` (clamped 1–64).
+const DEFAULT_INGEST_CONCURRENCY = 5;
 
 /** Clamp bounds — must match the min/max declared in package.json. */
 const FETCH_BATCH_SIZE_BOUNDS = { min: 1, max: 1000 } as const;

@@ -32,8 +32,8 @@ Both reviews run in PARALLEL (2 independent sub-agent invocations):
 #### Axis 1: Standards Review
 
 ```
-invokeSubAgent(
-  name: "dev-agent",
+task(
+  subagent_type: "dev-agent",
   prompt: "CODE REVIEW — Standards Axis cho {TICKET}.
 
   Đọc code vừa implement (git diff main..{TICKET}) và review theo .opencode/rules/sdlc/code-standards.md.
@@ -62,16 +62,15 @@ invokeSubAgent(
   | 1 | path | description | High/Med/Low | Feature Envy / None |
 
   Verdict: PASS / PASS with warnings / FAIL (needs fix)
-  ",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/code-standards.md" }]
+  "
 )
 ```
 
 #### Axis 2: Spec Compliance Review
 
 ```
-invokeSubAgent(
-  name: "qa-agent",
+task(
+  subagent_type: "qa-agent",
   prompt: "CODE REVIEW — Spec Compliance Axis cho {TICKET}.
 
   Đọc TDD.md và FSD.md từ KB (mem_search('{TICKET} TDD') + mem_search('{TICKET} FSD')).
@@ -119,8 +118,8 @@ invokeSubAgent(
 
 **If FAIL on either axis:**
 ```
-invokeSubAgent(
-  name: "dev-agent",
+task(
+  subagent_type: "dev-agent",
   prompt: "Fix code review issues cho {TICKET}:
   Standards issues: {list from Axis 1}
   Spec issues: {list from Axis 2}
@@ -155,8 +154,8 @@ If fresh review is unavailable (budget, time), standard review is sufficient to 
 
 Invoke QA agent for test execution:
 ```
-invokeSubAgent(
-  name: "qa-agent",
+task(
+  subagent_type: "qa-agent",
   prompt: "Chạy automated tests cho {TICKET}. Run npm test (Vitest) trong backend/ và extension/. Báo cáo pass/fail."
 )
 ```
@@ -186,8 +185,8 @@ invokeSubAgent(
 
 **If issues found:**
 ```
-invokeSubAgent(
-  name: "dev-agent",
+task(
+  subagent_type: "dev-agent",
   prompt: "Fix IT tests cho {TICKET}. QA phát hiện: {discrepancies}. Phải dùng đúng technique trong STC."
 )
 ```
@@ -203,8 +202,8 @@ Re-run tests after fix.
 
 2. Invoke Security agent for pentest:
 ```
-invokeSubAgent(
-  name: "security-agent",
+task(
+  subagent_type: "security-agent",
   prompt: "Penetration Testing cho {TICKET}. Application đang chạy tại {test_url}. Thực hiện:
 
   PHASE 1 — Reconnaissance:
@@ -245,8 +244,8 @@ invokeSubAgent(
 4. Handle findings:
    - **Critical/High vulns found** → MUST fix before UAT:
      ```
-     invokeSubAgent(
-       name: "dev-agent",
+     task(
+       subagent_type: "dev-agent",
        prompt: "Fix pentest vulnerabilities cho {TICKET}: {findings with PoC}. Security đã chứng minh exploit được."
      )
      ```

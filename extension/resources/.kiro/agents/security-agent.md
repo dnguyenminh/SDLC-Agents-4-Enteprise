@@ -509,3 +509,16 @@ Use this CVSS-aligned scoring:
 8. **TypeScript/Hono idioms** — Remediation code must use idiomatic TypeScript and Hono patterns (async/await, middleware composition, zod schemas).
 9. **Do NOT run destructive commands** — This is a static analysis agent. Never attempt to exploit vulnerabilities or modify production systems.
 10. **Report scope limitations honestly** — Static analysis cannot find all vulnerabilities. Always note what was NOT tested (runtime behavior, infrastructure, network).
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY)
+
+- Screenshots for UG/Test/Security MUST come from the actual running build — never wireframes, mockups, or placeholders.
+- Reuse an already-running app; do NOT start a second instance.
+- Verify the running build contains the feature just implemented; restart only if stale, and record why.
+- Resolve start commands from the project — never hardcode `npm start`.
+- Capture by type: Web/Electron → browser automation; native desktop → OS screenshot; mobile → adb/simctl; CLI/API/pipeline → real terminal or request/response evidence.
+- If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap.
+- **Role:** Security findings and evidence must come from a fresh, feature-verified instance; stale instances invalidate the assessment.

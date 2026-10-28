@@ -178,3 +178,4 @@ jobs:
             gh release upload "$TAG" "$f" --clobber
           done
           echo "✅ Uploaded $(ls *.tar.gz | wc -l) archives to release $TAG"
+

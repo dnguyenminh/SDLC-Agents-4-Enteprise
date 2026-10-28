@@ -98,3 +98,16 @@ Use the correct design pattern for the problem at hand. Do NOT write procedural/
 - [ ] Models separated from processing logic
 - [ ] All exceptions handled and surfaced to user
 - [ ] Comments explain WHY, not WHAT
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY)
+
+- Screenshots for UG/Test/Security MUST come from the actual running build — never wireframes, mockups, or placeholders.
+- Reuse an already-running app; do NOT start a second instance.
+- Verify the running build contains the feature just implemented; restart only if stale, and record why.
+- Resolve start commands from the project — never hardcode `npm start`.
+- Capture by type: Web/Electron → browser automation; native desktop → OS screenshot; mobile → adb/simctl; CLI/API/pipeline → real terminal or request/response evidence.
+- If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap.
+- **Role:** Own UG evidence: detect app type, reuse a running instance, verify the new feature is present, capture actual screenshots (or real CLI/API output), then write UG.

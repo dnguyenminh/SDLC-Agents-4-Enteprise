@@ -283,10 +283,10 @@
         },
         "sdlcAgents.pega.ingestConcurrency": {
           "type": "number",
-          "default": 10,
+          "default": 5,
           "minimum": 1,
           "maximum": 64,
-          "description": "Pega indexing: max concurrent ingest requests to the backend. Higher values speed up indexing when the network is the bottleneck, but increase load on the shared backend. Takes effect on the next indexing run."
+          "description": "Pega indexing: max concurrent ingest requests to the backend. Default 5 leaves headroom under the backend's DB connection pool; raising it speeds up indexing when the network is the bottleneck but increases load on the shared backend and its database. Takes effect on the next indexing run."
         },
         "sdlcAgents.pega.ingestChannelCapacity": {
           "type": "number",

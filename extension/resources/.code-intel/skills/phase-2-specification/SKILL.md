@@ -23,10 +23,9 @@ BA creates FSD draft (business sections), then TA reviews and enriches with tech
 
 2. Invoke BA agent:
 ```
-invokeSubAgent(
-  name: "ba-agent",
-  prompt: "Tạo FSD cho {TICKET}. Đọc BRD từ KB trước (kb_search query '{TICKET} BRD'). Đọc code intelligence data. PHẢI tạo draw.io diagrams (system-context.drawio + sequence diagrams + state diagram) và export PNG. Không được bỏ qua Step 7.",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+task(
+  subagent_type: "ba-agent",
+  prompt: "Tạo FSD cho {TICKET}. Đọc BRD từ KB trước (kb_search query '{TICKET} BRD'). Đọc code intelligence data. PHẢI tạo draw.io diagrams (system-context.drawio + sequence diagrams + state diagram) và export PNG. Không được bỏ qua Step 7."
 )
 ```
 
@@ -42,8 +41,8 @@ The UI agent authors the mockups and owns the aesthetic/UX quality of its own ou
 
 Invoke UI agent:
 ```
-invokeSubAgent(
-  name: "ui-agent",
+task(
+  subagent_type: "ui-agent",
   prompt: "Tao UI mockup cho {TICKET} nhu mot phan cua FSD. Doc FSD draft + BRD tu KB + code intelligence frontend. PHAI: 1) phan tich design system hien co, 2) tao draw.io wireframe cho tung screen + export PNG, 3) tao UI-SPEC (implementation notes cho DEV), 4) embed wireframe vao FSD Section UI Specifications. Tu dam bao chat luong my thuat/UX theo design system hien co."
 )
 ```
@@ -56,8 +55,8 @@ The BA agent reviews the UI agent's mockups for BUSINESS correctness only. In th
 
 Invoke BA:
 ```
-invokeSubAgent(
-  name: "ba-agent",
+task(
+  subagent_type: "ba-agent",
   prompt: "Review UI mockup cho {TICKET} ve mat NGHIEP VU. Doc BRD + FSD draft tu KB va wireframe tai documents/{TICKET}/diagrams/wireframe-*.png. Kiem tra: 1) Du man hinh cho moi User Story/AC can UI, 2) Navigation dung luong nghiep vu, 3) Du field/action/trang thai nghiep vu, 4) Khong thieu khong thua. CHI xet nghiep vu — KHONG xet tham my (UI agent lo) va KHONG xet kha thi ky thuat (TA lo). Verdict: APPROVED / CHANGES REQUESTED (list gaps)."
 )
 ```
@@ -72,8 +71,8 @@ Handle BA verdict:
 
 5. Invoke TA agent:
 ```
-invokeSubAgent(
-  name: "ta-agent",
+task(
+  subagent_type: "ta-agent",
   prompt: "Review và bổ sung FSD cho {TICKET} tại documents/{TICKET}/FSD.md. Đọc BRD từ KB. Đọc code intelligence data (.analysis/code-intelligence/project-structure.md và modules/*.md). FSD đã có business sections. Bạn cần:
   1. Review Use Cases — bổ sung Alternative/Exception flows nếu thiếu
   2. Bổ sung/chi tiết hóa API Contracts — đảm bảo developer implement được
@@ -83,8 +82,7 @@ invokeSubAgent(
   6. Bổ sung Non-Functional Requirements nếu thiếu quantified targets
   7. Bổ sung Open Issues nếu có unresolved technical decisions
   KHÔNG tạo lại FSD — chỉ review và bổ sung vào file hiện có.
-  Sau khi bổ sung, ingest FSD vào KB.",
-  contextFiles: [{ "path": "documents/{TICKET}/FSD.md" }, { "path": ".analysis/code-intelligence/project-structure.md" }]
+  Sau khi bổ sung, ingest FSD vào KB."
 )
 ```
 

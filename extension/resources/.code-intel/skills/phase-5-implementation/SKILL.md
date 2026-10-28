@@ -31,8 +31,8 @@ git checkout -b {TICKET}
 ### Step 5b: Invoke DEV Agent
 
 ```
-invokeSubAgent(
-  name: "dev-agent",
+task(
+  subagent_type: "dev-agent",
   prompt: "Implement code cho {TICKET} theo TDD. Đọc code intelligence data."
 )
 ```
@@ -91,8 +91,8 @@ transition_issue(issue_key: "{TICKET}", transition_name: "Review code")
 
 2. Invoke DEV:
 ```
-invokeSubAgent(
-  name: "dev-agent",
+task(
+  subagent_type: "dev-agent",
   prompt: "Viết User Guide cho {TICKET}. Đọc BRD, FSD, TDD từ KB. Đọc source code. Template: documents/templates/UG-TEMPLATE.md. Output: documents/{TICKET}/UG.md. Nội dung: Installation, Configuration Reference, Usage, Administration, Troubleshooting, Error Codes, FAQ."
 )
 ```
@@ -103,8 +103,8 @@ invokeSubAgent(
 
 4. Invoke BA:
 ```
-invokeSubAgent(
-  name: "ba-agent",
+task(
+  subagent_type: "ba-agent",
   prompt: "Review User Guide cho {TICKET} tại documents/{TICKET}/UG.md. Kiểm tra: 1) Ngôn ngữ user-friendly, 2) Đầy đủ use cases từ BRD, 3) Configuration examples rõ ràng, 4) Troubleshooting covers common issues. Sửa trực tiếp nếu cần."
 )
 ```
@@ -113,8 +113,8 @@ invokeSubAgent(
 
 5. Invoke QA:
 ```
-invokeSubAgent(
-  name: "qa-agent",
+task(
+  subagent_type: "qa-agent",
   prompt: "Verify User Guide cho {TICKET} bằng cách thực hiện theo instructions trong documents/{TICKET}/UG.md.
   PHẢI thực hiện (không chỉ đọc):
   1. Follow Quick Start: chạy server, verify log output
@@ -174,8 +174,8 @@ embed_image → export_docx → jira_update_issue
 
 2. Invoke Security agent:
 ```
-invokeSubAgent(
-  name: "security-agent",
+task(
+  subagent_type: "security-agent",
   prompt: "Security Code Review cho {TICKET}. Audit source code on branch {TICKET}. Check:
   1. OWASP Top 10 vulnerabilities (injection, broken auth, sensitive data exposure, XXE, broken access control, security misconfiguration, XSS, insecure deserialization, known vulns, insufficient logging)
   2. Authentication/Authorization implementation correctness
@@ -202,8 +202,8 @@ invokeSubAgent(
    - **No Critical/High** → proceed to Phase 6 (Testing)
    - **Critical findings** → MUST fix before testing:
      ```
-     invokeSubAgent(
-       name: "dev-agent",
+     task(
+       subagent_type: "dev-agent",
        prompt: "Fix security vulnerabilities cho {TICKET}. Security review phát hiện:
        {list critical findings with file + line + remediation}
        Fix từng issue. Commit message: '{TICKET}: fix security - {category}'"

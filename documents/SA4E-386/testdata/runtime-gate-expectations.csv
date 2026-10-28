@@ -1,0 +1,8 @@
+"check_id","test_case_id","mode","command","runtime_version","expected_exit_code","expected_warning","expected_result","description"
+"RT-01","IT-09","HOST","node -v","v22.23.4","0","none","PASS","Pin active on the host - required for G4 claims"
+"RT-02","IT-09","HOST","npm ci","v22.23.4","0","no EBADENGINE","PASS","Root install under the pin"
+"RT-03","IT-09","HOST","npm ci --prefix backend","v22.23.4","0","no EBADENGINE","PASS","Backend install under the pin"
+"RT-04","IT-09","HOST","npm run build","v22.23.4","0","none","PASS","Root build under the pin"
+"RT-05","IT-09","HOST","npm run build --prefix backend","v22.23.4","0","none","PASS","Backend build under the pin"
+"RT-06","IT-09","HOST","npm ci","v24.8.0","0","npm warn EBADENGINE (names >=22.23.4 <23)","PASS (advisory proven)","Negative control - engines is advisory, npm must NOT block"
+"RT-07","IT-09","CONTAINER","docker run --rm -it node:22.23.4-slim@sha256:{digest} -v","v22.23.4","0","none","PASS","Fallback mode when the host cannot be re-pinned (nvm absent)"

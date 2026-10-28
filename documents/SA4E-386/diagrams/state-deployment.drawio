@@ -1,0 +1,98 @@
+<mxGraphModel dx="1500" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="660" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" value="SA4E-386 — State: lifecycle of the Node 22.23.4 version-pin change" style="text;html=1;align=left;verticalAlign=middle;fontSize=16;fontStyle=1;fontColor=#1a1a1a;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1000" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="legend" value="Legend: red = exposed / blocked / rolled back · blue = in-progress work · green = accepted state · yellow = needs rework. Terminal state: Enforced (22.23.4)." style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="40" y="55" width="900" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="start" value="" style="ellipse;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="40" y="240" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="s1" value="Exposed baseline&#10;engines 22.x · .nvmrc 22&#10;ARG NODE_VERSION=22&#10;27 × node-version &quot;22&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="100" y="190" width="180" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="s2" value="Edits applied&#10;working tree uncommitted&#10;(15 files: 2 engines,&#10;.nvmrc, Dockerfile,&#10;12 workflows)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="400" y="190" width="180" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="s3" value="Verified&#10;grep clean · npm ci OK&#10;docker build OK&#10;(scan optional)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="700" y="190" width="180" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="s4" value="Committed&#10;branch node-security-upgrade&#10;explicit staging&#10;conventional message" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="1000" y="190" width="180" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="s5" value="In review&#10;PR open with&#10;CVE rationale, file scope&#10;and evidence" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="1300" y="190" width="170" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="s6" value="Enforced&#10;merged — 22.23.4 pinned&#10;local = CI = container&#10;CVE-2026-111497 patched" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="1590" y="190" width="190" height="130" as="geometry" />
+    </mxCell>
+    <mxCell id="end" value="" style="ellipse;html=1;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="1830" y="240" width="30" height="30" as="geometry" />
+    </mxCell>
+    <mxCell id="f1" value="Blocked&#10;verification failed&#10;commit not permitted" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="700" y="400" width="180" height="85" as="geometry" />
+    </mxCell>
+    <mxCell id="f2" value="Changes requested&#10;by reviewer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="1300" y="400" width="170" height="85" as="geometry" />
+    </mxCell>
+    <mxCell id="f3" value="Rolled back&#10;revert PR restores&#10;previous pins" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;arcSize=16;" vertex="1" parent="1">
+      <mxGeometry x="1590" y="400" width="190" height="85" as="geometry" />
+    </mxCell>
+    <mxCell id="t1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="start" target="s1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t2" value="edit pins&#10;UC-02…05" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#6c8ebf;fontSize=9;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="s1" target="s2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t3" value="run verification&#10;UC-06" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#6c8ebf;fontSize=9;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="s2" target="s3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t4" value="any check fails" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=9;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3" target="f1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t5" value="fix missed file / digest&#10;then re-verify" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=9;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="f1" target="s2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="490" y="442" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t6" value="AC pass&#10;AC-01…07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=9;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="s3" target="s4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t7" value="push + open PR&#10;UC-07" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=9;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="s4" target="s5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t8" value="review comments" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#d6b656;fontSize=9;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s5" target="f2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t9" value="amend edits + re-verify + recommit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#d6b656;fontSize=9;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="f2" target="s2">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1385" y="570" />
+          <mxPoint x="490" y="570" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="t10" value="approved&#10;+ merged" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#82b366;fontSize=9;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="s5" target="s6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#666666;fontSize=9;" edge="1" parent="1" source="s6" target="end">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t12" value="regression&#10;after merge" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=9;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s6" target="f3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="t13" value="revert commit — restore previous pins" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=classic;endFill=1;strokeColor=#b85450;fontSize=9;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="f3" target="s1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1685" y="620" />
+          <mxPoint x="190" y="620" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

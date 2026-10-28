@@ -39,10 +39,28 @@ export interface IngestSingleRuleResult {
   reason?: string;
 }
 
+/**
+ * Structured, log-free error detail the backend attaches so the extension can
+ * decide retry-vs-skip and show the user a cause WITHOUT reading server logs.
+ * Mirrors backend `IngestErrorDetails` (ingest-error-classifier.ts).
+ */
+export interface IngestErrorDetails {
+  category: 'validation' | 'database' | 'extraction' | 'unknown';
+  retryable: boolean;
+  errorName: string;
+}
+
+/** Error envelope — `details` present on classified ingest failures. */
+export interface IngestErrorEnvelope {
+  code: string;
+  message: string;
+  details?: IngestErrorDetails;
+}
+
 /** SA4E-156: Full envelope from POST /api/v1/pega/ingest-rule */
 export interface IngestSingleRuleResponse {
   data: IngestSingleRuleResult | null;
-  error: { code: string; message: string } | null;
+  error: IngestErrorEnvelope | null;
 }
 
 export type LogFn = (msg: string) => void;

@@ -1,0 +1,7 @@
+fixture_id,test_case_id,baseline_report,new_report,m1_named_cves_absent,m2_no_fixable_increase,m3_unfixed_attributed,expected_verdict,description
+T-01,"UT-06,SIT-07",present,present,true,true,true,PASS,Named CVEs removed and no fixable increase
+T-02,"UT-06",present,present,false,true,true,FAIL,One named CVE persists - M1 fails only
+T-03,"UT-06",present,present,true,false,true,FAIL,New fixable HIGH appears - M2 fails only
+T-04,"UT-06",present,present,true,true,false,FAIL,Unfixed findings not attributed - M3 fails only
+T-05,"UT-06,UT-07",absent,present,unknown,unknown,unknown,NOT_EXECUTED,Baseline missing - C-1 cannot close
+T-06,"UT-06,UT-07",present,absent,unknown,unknown,unknown,NOT_EXECUTED,Scanner unavailable - never reported as 0 CVE

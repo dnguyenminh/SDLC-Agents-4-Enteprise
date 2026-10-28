@@ -1,0 +1,19 @@
+path,test_case_id,family,expected_status,expected_diff_shape,description
+package.json,"IT-01,IT-08",ENGINES,M,1 line - engines.node only,Root manifest
+backend/package.json,"IT-01,IT-08",ENGINES,M,1 line - engines.node only,Backend manifest
+package-lock.json,"IT-01,IT-08",LOCK,M,2 lines - metadata only,Lockfile metadata mirror
+.nvmrc,"IT-01,IT-02",NVMRC,M,whole file - 8 bytes,Local runtime pin
+backend/Dockerfile,"IT-01,IT-02",DOCKER,M,2 ARG lines + comment - no FROM hunk,Base image pin
+.github/workflows/auto-release.yml,"IT-01,UT-09",CI,M,2 lines - literal + trigger list,Class-A plus CR-01
+.github/workflows/ci.yml,"IT-01",CI,M,4 lines - literals only,Class-A
+.github/workflows/publish.yml,"IT-01",CI,M,2 lines - literals only,Class-A
+.github/workflows/ci-sa4e-191.yml,"IT-01",CI,M,1 line - literal only,Class-A
+.github/workflows/ci-sa4e-223.yml,"IT-01",CI,M,2 lines - literals only,Class-A
+.github/workflows/ci-sa4e-241.yml,"IT-01",CI,M,6 lines - literals only,Class-A
+.github/workflows/ci-sa4e-332.yml,"IT-01",CI,M,1 line - literal only,Class-A
+.github/workflows/ci-sa4e-336.yml,"IT-01",CI,M,2 lines - literals only,Class-A
+.github/workflows/ci-sa4e-356.yml,"IT-01",CI,M,3 lines - literals only,Class-A
+.github/workflows/ci-sa4e-358.yml,"IT-01",CI,M,2 lines - literals only,Class-A
+.github/workflows/ci-sa4e-369.yml,"IT-01",CI,M,1 line - literal only,Class-A
+.github/workflows/e2e-tests.yml,"IT-01",CI,M,2 lines - literals only,Class-A
+.github/workflows/build-native.yml,"IT-01,IT-05,UT-09",CI - REMOVED,D,167 lines removed 0 added,CR-01 deletion

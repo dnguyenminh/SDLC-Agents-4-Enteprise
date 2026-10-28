@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node 20
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "22.23.4"
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
@@ -68,7 +68,7 @@ jobs:
       - name: Setup Node 20
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "22.23.4"
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
@@ -79,3 +79,4 @@ jobs:
         # Fails the pipeline on high/critical vulnerabilities in runtime deps.
         # Dev-only advisories are excluded to avoid blocking on test tooling.
         run: npm audit --omit=dev --audit-level=high
+

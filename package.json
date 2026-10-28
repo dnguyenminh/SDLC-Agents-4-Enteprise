@@ -18,7 +18,7 @@
     "postinstall": "node scripts/patch-vendored-deps.mjs"
   },
   "engines": {
-    "node": "22.x"
+    "node": "22.23.4"
   },
   "description": "Multi-agent SDLC pipeline - 9 AI agents automate your software development workflow. BA -> SA -> DEV -> QA -> DevOps, orchestrated by Scrum Master.",
   "repository": {

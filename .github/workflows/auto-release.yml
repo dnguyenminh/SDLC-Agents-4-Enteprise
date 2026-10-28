@@ -3,7 +3,6 @@ name: Auto-release Extension
 on:
   workflow_run:
     workflows:
-      - "Build Native Addons (better-sqlite3)"
       - "Build ONNX Runtime Native (onnxruntime-node)"
     types: [completed]
   workflow_dispatch:
@@ -91,7 +90,7 @@ jobs:
         if: steps.bump.outputs.version != ''
         uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '22.23.4'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Build and publish to npm
@@ -126,3 +125,4 @@ jobs:
             --generate-notes \
             --notes-start-tag "$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo '')"
           echo "✅ GitHub Release v${VERSION} created"
+

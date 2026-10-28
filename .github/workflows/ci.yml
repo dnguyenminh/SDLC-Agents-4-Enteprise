@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '22.23.4'
 
       - name: Clean install (root workspace + rolldown binding)
         run: |
@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '22.23.4'
 
       - name: Clean install (root workspace + rolldown binding)
         run: |
@@ -68,7 +68,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '22.23.4'
 
       - name: Clean install (root workspace + rolldown binding)
         run: |
@@ -93,7 +93,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '22.23.4'
 
       - name: Clean install (root workspace + rolldown binding)
         run: |
@@ -108,3 +108,4 @@ jobs:
 
       - run: npm run test:e2e-api --workspace=backend
         working-directory: .
+

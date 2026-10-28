@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node 20
         uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "22.23.4"
           cache: "npm"
 
       - name: Install dependencies
@@ -103,3 +103,4 @@ jobs:
 
       - name: Mark pipeline ready for Deployment gate
         run: echo "test job passed; artifacts eligible for gated deploy."
+

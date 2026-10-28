@@ -47,6 +47,17 @@ export class HttpServer {
         fetch: this.app.fetch,
         port: this.port,
         hostname: this.host,
+        // Fix 5/UND_ERR_SOCKET: Node's default keepAliveTimeout (~5s) closes an idle
+        // socket mid-pipeline when an ingest request is queued behind the DB under
+        // load — the client sees "other side closed". Raise the timeouts so a slow
+        // request waiting on Postgres is never dropped without a response.
+        // serverOptions is forwarded to node:http.createServer (@hono/node-server).
+        // Invariant: headersTimeout > keepAliveTimeout, requestTimeout ≥ both.
+        serverOptions: {
+          keepAliveTimeout: 60_000,  // keep idle sockets alive across batched POSTs
+          headersTimeout: 65_000,    // > keepAliveTimeout (Node requirement)
+          requestTimeout: 120_000,   // allow a slow DB-bound ingest to finish
+        },
       }, async (info) => {
         this._isRunning = true;
         this.logger.info({ port: info.port, host: this.host }, 'Backend server started');

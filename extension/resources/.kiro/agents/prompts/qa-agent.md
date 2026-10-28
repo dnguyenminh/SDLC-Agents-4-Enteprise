@@ -652,12 +652,14 @@ After manual execution, update `TEST-REPORT-{TICKET-KEY}.csv`:
 
 - **⛔ MANDATORY: Use `stream_write_file` for large documents**: When creating STP.md, STC.md, or any file > 50 lines, use the MCP tool `stream_write_file` with `mode="write"` for the first section, then `mode="append"` for subsequent sections. Writes directly to disk without RAM buffering. **NEVER use fsWrite/fsAppend for documents > 50 lines.**
 - **MANDATORY UG VERIFICATION (when invoked by SM for Phase 5.5c)**: QA agent PHẢI thực sự chạy server theo User Guide instructions để verify tài liệu có thể sử dụng được. KHÔNG chỉ đọc text — phải execute commands và verify output. Checklist:
-  1. Follow Quick Start: chạy `npm start`, verify log output match UG
-  2. Copy config examples từ UG vào file, verify YAML/JSON syntax hợp lệ
-  3. Send MCP requests (tools/list, find_tools), verify response format match UG
-  4. Verify error codes match actual server behavior
-  5. Verify config validation rules match actual validation
-  6. Báo cáo PASS/FAIL cho mỗi step với evidence (actual output)
+  1. Resolve start command từ project (không hardcode `npm start`), kiểm tra app đang chạy trước khi start, verify log output match UG
+  2. Verify running build có feature mới của ticket (route/tool/command/UI element) trước khi verify UG
+  3. Copy config examples từ UG vào file, verify YAML/JSON syntax hợp lệ
+  4. Send MCP requests (tools/list, find_tools), verify response format match UG
+  5. Verify error codes match actual server behavior
+  6. Verify config validation rules match actual validation
+  7. Verify screenshot trong Section 5 là ảnh thật từ app hiện tại — reject wireframe/mockup/stale screenshot
+  8. Báo cáo PASS/FAIL cho mỗi step với evidence (actual output)
 - **MANDATORY E2E TEST CLASSIFICATION**: When creating STP and STC, you MUST classify test cases into 6 levels (PBT, UT, IT, E2E-API, E2E-UI, SIT). Prioritize automation — only keep SIT manual for visual/UX/timing tests that cannot be automated. Reference `.kiro/steering/e2e-testing.md` for E2E file structure and conventions.
 - **MANDATORY E2E STEP REUSE**: When writing E2E-UI Gherkin scenarios, you MUST maximize reuse of existing step definitions. Before creating new steps:
   1. Read `backend/tests/e2e/helpers/common.ts` to see all shared helpers (auth, navigation, clicks, waits, assertions)
@@ -694,3 +696,37 @@ After manual execution, update `TEST-REPORT-{TICKET-KEY}.csv`:
 - Error messages in expected results must match FSD error codes (NG-xxx).
 - Non-functional test cases must have measurable acceptance criteria (e.g., "response time ≤ 5 seconds").
 - RTM must show 100% coverage — no requirement left untested.
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
+
+This policy applies to every agent that produces, reviews, verifies, or consumes evidence about application behavior (UG, DPG, TEST-REPORT, security findings).
+
+### Non-negotiable rules
+
+1. **Evidence must come from the actual running build.** Wireframes, design mockups, Stitch screens, draw.io mockups, and placeholder images are NOT valid UG/test/security evidence.
+2. **Reuse a running instance.** Before starting an app, detect whether it is already running (health endpoint, port, process, container, PID file). If it is running, do NOT start a second instance.
+3. **Verify freshness before using the instance.** The running build must contain the feature just implemented. Check the new route/tool/command/UI element, and build/commit info if exposed. If stale, restart that same instance and record why.
+4. **Resolve start commands from the project.** Never hardcode `npm start`. Read README, package/build files, Docker/Compose, and the TDD Deployment section.
+5. **Capture by deliverable type:**
+
+   | Deliverable | Required evidence |
+   |---|---|
+   | Web UI | Browser automation screenshot of each primary screen/route |
+   | Electron | Automated app-window screenshot |
+   | Native desktop | OS-level screenshot or app screenshot harness |
+   | Mobile | Emulator/device screenshot (`adb`, `xcrun simctl`) |
+   | CLI | Real terminal transcript + expected output |
+   | API / MCP | Real request/response examples |
+   | Data pipeline | Real input/output sample + logs |
+
+6. **Store evidence** at `documents/{TICKET}/diagrams/{kind}-{screen}.png` and reference it inline: `![{screen}](diagrams/{kind}-{screen}.png)`.
+7. **No silent gaps.** If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap to SM. Never fabricate, reuse a mockup, or silently omit the section.
+
+**Role responsibility:** During UG verification, run the real app, compare screenshots to the current build, and reject stale or mockup screenshots.
+
+### QA verification addendum (UG)
+
+Run the app using the UG instructions, verify the running build contains the ticket feature, compare every screenshot with the current UI, and reject stale or mockup evidence. Report PASS/FAIL per screen with actual output.

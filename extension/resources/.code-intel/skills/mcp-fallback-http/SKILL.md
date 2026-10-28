@@ -23,7 +23,11 @@ $body = @{
     }
 } | ConvertTo-Json
 
-Invoke-RestMethod -Uri "http://localhost:9181/mcp" -Method Post -Body $body -ContentType "application/json"
+# Resolve $mcpUrl from opencode.json (server name/port are user-defined; never hardcode)
+$cfg = Get-Content "opencode.json" -Raw | ConvertFrom-Json
+$servers = if ($cfg.mcp.servers) { $cfg.mcp.servers } else { $cfg.mcp }
+$mcpUrl = @($servers.PSObject.Properties | Where-Object { $_.Value.url } | ForEach-Object { $_.Value.url })[0]
+Invoke-RestMethod -Uri $mcpUrl -Method Post -Body $body -ContentType "application/json"
 ```
 
 ### Supported Methods
@@ -35,4 +39,3 @@ Invoke-RestMethod -Uri "http://localhost:9181/mcp" -Method Post -Body $body -Con
 - Only when native MCP tools are unavailable
 - Check native MCP first with `find_tools`
 - Fall back to HTTP if no results after 3 query variations
-

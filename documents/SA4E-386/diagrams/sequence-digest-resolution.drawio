@@ -1,0 +1,144 @@
+<mxGraphModel dx="1440" dy="980" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="980" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+    <mxCell id="title" value="SA4E-386 — Digest resolution and tag↔digest binding (UC-04, §6.1): the only step that must touch the network before a commit" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="40" y="10" width="1360" height="30" as="geometry"/>
+    </mxCell>
+    <mxCell id="h1" value="DEV" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="30" y="60" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h2" value="Resolver CLI&#10;buildx / docker / skopeo" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="270" y="60" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h3" value="Docker Hub&#10;docker.io/library/node" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="510" y="60" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h4" value="backend/Dockerfile&#10;L32 / L35" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="750" y="60" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h5" value="Builder&#10;docker buildx" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="990" y="60" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="h6" value="Image&#10;sa4e-backend&#10;production" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="1230" y="60" width="180" height="50" as="geometry"/>
+    </mxCell>
+    <mxCell id="l1" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="110" as="sourcePoint"/>
+        <mxPoint x="120" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l2" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="360" y="110" as="sourcePoint"/>
+        <mxPoint x="360" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l3" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="600" y="110" as="sourcePoint"/>
+        <mxPoint x="600" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l4" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="840" y="110" as="sourcePoint"/>
+        <mxPoint x="840" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l5" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1080" y="110" as="sourcePoint"/>
+        <mxPoint x="1080" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="l6" value="" style="endArrow=none;dashed=1;html=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1320" y="110" as="sourcePoint"/>
+        <mxPoint x="1320" y="800" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m1" value="1  resolver probe (P2 preferred)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="150" as="sourcePoint"/>
+        <mxPoint x="360" y="150" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m2" value="2  GET manifest: 22.23.4-slim&#10;    Accept: OCI index" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="360" y="200" as="sourcePoint"/>
+        <mxPoint x="600" y="200" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m3" value="3  index + per-platform digests" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;align=right;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="600" y="250" as="sourcePoint"/>
+        <mxPoint x="360" y="250" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m4" value="4  one sha256:&lt;64 hex&gt; — normalise N-1..N-5 (EV-05)" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="360" y="300" as="sourcePoint"/>
+        <mxPoint x="120" y="300" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m5" value="5  ARG NODE_BASE_DIGEST = [resolved digest]   (L35; no FROM edit — AD-4)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="360" as="sourcePoint"/>
+        <mxPoint x="840" y="360" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m6" value="6  docker build --target production" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="410" as="sourcePoint"/>
+        <mxPoint x="1080" y="410" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m7" value="7  pull index@digest" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1080" y="460" as="sourcePoint"/>
+        <mxPoint x="600" y="460" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m8" value="8  resolved FROM node:22.23.4-slim@sha256:…" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1080" y="510" as="sourcePoint"/>
+        <mxPoint x="1320" y="510" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m9" value="9  build log shows the resolved FROM (EV-12)" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="1320" y="560" as="sourcePoint"/>
+        <mxPoint x="120" y="560" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m10" value="10  docker run --entrypoint node … -v  →  v22.23.4  (EV-13)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="610" as="sourcePoint"/>
+        <mxPoint x="1320" y="610" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m11" value="11  E-2 re-check: tag digest ≡ file digest (EV-06)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="120" y="660" as="sourcePoint"/>
+        <mxPoint x="360" y="660" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m12" value="12  identical digest → binding proven" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="360" y="700" as="sourcePoint"/>
+        <mxPoint x="120" y="700" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="m13" value="abort: &gt;1 distinct digest / empty RepoDigests / tag ≠ 22.23.4-slim" style="html=1;verticalAlign=bottom;endArrow=open;endFill=0;dashed=1;fontSize=9;strokeColor=#b85450;fontColor=#b85450;align=left;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="360" y="760" as="sourcePoint"/>
+        <mxPoint x="120" y="760" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="note" value="E-1 — the value written to L35 must equal the registry index digest for the tag. A hand-edited or copied digest still passes the format check, so EV-06 must be read, not skimmed. Registry GC or mirror rotation after merge → emergency path §10.3 / FSD §13.7.8." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;size=14;" vertex="1" parent="1">
+      <mxGeometry x="30" y="820" width="1380" height="70" as="geometry"/>
+    </mxCell>
+  </root>
+</mxGraphModel>

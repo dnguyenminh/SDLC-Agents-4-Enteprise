@@ -52,8 +52,8 @@ Reviewer chỉ thấy: git diff + specs (TDD, FSD, code-standards). Loại bỏ 
 ## Fresh Review Prompt Template
 
 ```
-invokeSubAgent(
-  name: "{review-agent}",
+task(
+  subagent_type: "{review-agent}",
   prompt: "INDEPENDENT CODE REVIEW — Fresh Context
 
   You are reviewing code changes for the FIRST time with NO prior context.
@@ -84,12 +84,7 @@ invokeSubAgent(
   - Do NOT reference any prior discussion or decision
   - Judge ONLY what the code does vs what specs say it should do
   - Flag anything that SURPRISES you — if code does something unexpected, report it
-  ",
-  contextFiles: [
-    { "path": "documents/{TICKET}/TDD.md" },
-    { "path": "documents/{TICKET}/FSD.md" },
-    { "path": ".opencode/rules/sdlc/code-standards.md" }
-  ]
+  "
 )
 ```
 

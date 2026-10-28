@@ -1533,3 +1533,16 @@ After each sub-agent completes:
 ### ⛔ CRITICAL RULE
 
 **SM PHẢI chạy verification checklist SAU MỖI sub-agent call.** Không được skip verification khi chạy "tạo tài liệu đầy đủ" (pipeline mode). Pipeline mode = Phase 1 verify → Phase 2 verify → Phase 3 verify. Mỗi phase PHẢI pass verification trước khi chuyển sang phase tiếp theo.
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY)
+
+- Screenshots for UG/Test/Security MUST come from the actual running build — never wireframes, mockups, or placeholders.
+- Reuse an already-running app; do NOT start a second instance.
+- Verify the running build contains the feature just implemented; restart only if stale, and record why.
+- Resolve start commands from the project — never hardcode `npm start`.
+- Capture by type: Web/Electron → browser automation; native desktop → OS screenshot; mobile → adb/simctl; CLI/API/pipeline → real terminal or request/response evidence.
+- If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap.
+- **Role:** Block Phase 5.5 completion when a UI deliverable lacks actual screenshots, freshness evidence, or BA/QA verification.

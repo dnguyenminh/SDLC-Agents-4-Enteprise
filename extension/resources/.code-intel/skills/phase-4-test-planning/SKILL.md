@@ -19,10 +19,9 @@ description: Phase 4: Test Planning (QA → STP/STC → SM Review)
 
 2. Invoke QA agent:
 ```
-invokeSubAgent(
-  name: "qa-agent",
-  prompt: "Tạo STP và STC cho {TICKET}. PHẢI tạo draw.io diagrams (test-coverage.drawio + test-execution-flow.drawio) và export PNG.",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+task(
+  subagent_type: "qa-agent",
+  prompt: "Tạo STP và STC cho {TICKET}. PHẢI tạo draw.io diagrams (test-coverage.drawio + test-execution-flow.drawio) và export PNG."
 )
 ```
 
@@ -96,10 +95,9 @@ Verdict: {Approve / Approve with conditions / Reject}
 ### Step 4c: Fix Issues (if any)
 
 ```
-invokeSubAgent(
-  name: "qa-agent",
-  prompt: "Fix các issues sau trong STP/STC cho {TICKET}: {list}",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+task(
+  subagent_type: "qa-agent",
+  prompt: "Fix các issues sau trong STP/STC cho {TICKET}: {list}"
 )
 ```
 

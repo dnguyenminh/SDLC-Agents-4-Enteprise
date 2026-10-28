@@ -23,10 +23,9 @@ description: Phase 7: Deployment (DevOps → DPG/RLN + Deploy)
 
 2. Invoke DevOps:
 ```
-invokeSubAgent(
-  name: "devops-agent",
-  prompt: "Tạo Deployment Guide và Release Notes cho {TICKET}. PHẢI tạo draw.io diagrams (deployment-architecture.drawio + rollback-flow.drawio) và export PNG.",
-  contextFiles: [{ "path": ".opencode/rules/sdlc/drawio.md" }]
+task(
+  subagent_type: "devops-agent",
+  prompt: "Tạo Deployment Guide và Release Notes cho {TICKET}. PHẢI tạo draw.io diagrams (deployment-architecture.drawio + rollback-flow.drawio) và export PNG."
 )
 ```
 
@@ -49,8 +48,8 @@ invokeSubAgent(
 
 **SM invoke DevOps with explicit instructions:**
 ```
-invokeSubAgent(
-  name: "devops-agent",
+task(
+  subagent_type: "devops-agent",
   prompt: "Release {TICKET} — Deploy đã thành công. Thực hiện release process:
   1. Merge branch {TICKET} vào master (--no-ff)
   2. Bump version — tạo git tag (semver: minor cho feature, patch cho bugfix)

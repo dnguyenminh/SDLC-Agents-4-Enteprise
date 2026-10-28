@@ -193,6 +193,8 @@
 ## 5. User Interface Guide (if applicable)
 
 > **Note:** Include this section only if the system has a web UI, desktop UI, or mobile UI. For server-only / CLI-only systems, remove this section entirely.
+>
+> ⛔ **Evidence rule:** Screenshots MUST be captured from the actual running build. Wireframes, draw.io mockups, Stitch screens, and placeholder images are NOT valid UG evidence. Use the real app after the ticket feature has been verified in the running instance.
 
 ### 5.1 Screen Overview
 
@@ -203,7 +205,10 @@
 
 ### 5.2 {Screen 1 — e.g., Dashboard}
 
+<!-- Replace with a screenshot from the actual running build. Do NOT use a wireframe or mockup. -->
 ![{Screen Name}](diagrams/ui-{screen-name}.png)
+
+**Evidence source:** {build/commit/version + URL or route captured}
 
 **Key Elements:**
 

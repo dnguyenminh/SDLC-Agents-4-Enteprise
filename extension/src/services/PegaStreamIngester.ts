@@ -13,7 +13,8 @@ import type {
   LogFn,
   StreamIngestResult,
 } from "./PegaStreamIngester/ingest-types";
-import { IngestAuthError, sanitizeIngestText } from "./PegaStreamIngester/ingest-auth";
+import { IngestAuthError, IngestRejectedError, sanitizeIngestText } from "./PegaStreamIngester/ingest-auth";
+import { withIngestRetry, DEFAULT_INGEST_RETRY, type RetryConfig } from "./PegaStreamIngester/ingest-retry";
 import {
   submitJobCore,
   pollUntilCompleteCore,
@@ -24,7 +25,7 @@ export type {
   StreamIngestResult,
   IngestSingleRuleResult,
 } from "./PegaStreamIngester/ingest-types";
-export { IngestAuthError } from "./PegaStreamIngester/ingest-auth";
+export { IngestAuthError, IngestRejectedError } from "./PegaStreamIngester/ingest-auth";
 
 /**
  * Stream rules to backend via NDJSON POST, then poll for completion.
@@ -33,12 +34,18 @@ export { IngestAuthError } from "./PegaStreamIngester/ingest-auth";
 export class PegaStreamIngester {
   private readonly backendUrl: string;
   private readonly auth?: IngestAuthProvider;
+  /** Optional logger for retry visibility in the Pega panel (Fix 5). */
+  private readonly log?: LogFn;
+  /** Retry tuning for transient single-rule ingest faults (Fix 5). */
+  private readonly retryConfig: RetryConfig;
   /** SA4E-375 client-side: projects already pre-registered this session (avoids re-registering per rule). */
   private registeredProjects = new Set<string>();
 
-  constructor(backendUrl: string, auth?: IngestAuthProvider) {
+  constructor(backendUrl: string, auth?: IngestAuthProvider, log?: LogFn, retryConfig: RetryConfig = DEFAULT_INGEST_RETRY) {
     this.backendUrl = backendUrl;
     this.auth = auth;
+    this.log = log;
+    this.retryConfig = retryConfig;
   }
 
   /** Delegated context for the standalone job lifecycle functions. */
@@ -105,6 +112,14 @@ export class PegaStreamIngester {
     return sanitizeIngestText(value);
   }
 
+  /** One-line rule identity for retry logs (insKey/class/name). */
+  private ruleDescriptor(ruleJson: Record<string, unknown>): string {
+    const insKey = String(ruleJson.pzInsKey ?? ruleJson.insKey ?? '');
+    const cls = String(ruleJson.pxObjClass ?? '');
+    const name = String(ruleJson.pyRuleName ?? '');
+    return `insKey=${insKey} pxObjClass=${cls} pyRuleName=${name}`;
+  }
+
   /**
    * Ingest rules via async job pattern:
    * 1. POST NDJSON body → 202 + jobId
@@ -162,6 +177,24 @@ export class PegaStreamIngester {
     version?: string,
     appName?: string,
   ): Promise<IngestSingleRuleResult> {
+    // Fix 5: retry transient faults (server-closed socket / DB_TRANSIENT) with
+    // backoff. Permanent faults (validation, missing checksum, auth) fail fast —
+    // isRetryableIngestError gates this, so no retry storm on a real rejection.
+    const describe = this.ruleDescriptor(ruleJson);
+    return withIngestRetry(
+      () => this.attemptIngestOnce(projectId, ruleJson, checksum, version, appName),
+      this.retryConfig, this.log, describe,
+    );
+  }
+
+  /** One ingest attempt: single POST + envelope handling (wrapped by retry). */
+  private async attemptIngestOnce(
+    projectId: string,
+    ruleJson: Record<string, unknown>,
+    checksum?: string,
+    version?: string,
+    appName?: string,
+  ): Promise<IngestSingleRuleResult> {
     const endpoint = `${this.backendUrl}/api/v1/pega/ingest-rule`;
 
     // SA4E-338 B1: forward the Pega application name (read by the caller from
@@ -196,7 +229,18 @@ export class PegaStreamIngester {
         await this.ensureProjectRegistered(projectId, appName);
         return this.ingestSingleRule(projectId, ruleJson, checksum, version, appName);
       }
-      throw new Error(`Ingest failed: ${json.error.message}`); // non-auth envelope error giữ nguyên
+      // Classified backend failure: preserve code + category + retryable so the
+      // caller logs a concrete cause and decides retry-vs-skip WITHOUT server logs.
+      // `details` is absent on old backends → fall back to a non-retryable envelope.
+      const d = json.error.details;
+      throw new IngestRejectedError(
+        `Ingest failed: ${this.truncate(json.error.message)}`,
+        json.error.code ?? 'INTERNAL_ERROR',
+        d?.category ?? 'unknown',
+        d?.retryable ?? false,
+        d?.errorName ?? 'Error',
+        res.status,
+      );
     }
     if (!json.data) {
       throw new Error('Ingest returned empty data');

@@ -1,0 +1,20 @@
+file,test_case_id,quote_style,literal_count,observed_line_numbers,expected_after,classification_expected,description
+auto-release.yml,"PBT-03,UT-03,IT-04",single,1,"94",22.23.4,allowed,Also carries the CR-01 trigger-list edit on line 6
+ci.yml,"PBT-03,UT-03,IT-04",single,4,"18|46|71|96",22.23.4,allowed,Primary CI workflow
+publish.yml,"PBT-03,UT-03,IT-04",single,2,"64|108",22.23.4,allowed,Publish pipeline
+ci-sa4e-191.yml,"PBT-03,UT-03,IT-04",double,1,"28",22.23.4,allowed,Historical ticket workflow
+ci-sa4e-223.yml,"PBT-03,UT-03,IT-04",double,2,"34|71",22.23.4,allowed,Historical ticket workflow
+ci-sa4e-241.yml,"PBT-03,UT-03,IT-04",double,6,"80|114|150|181|228|259",22.23.4,allowed,Largest literal set
+ci-sa4e-332.yml,"PBT-03,UT-03,IT-04",double,1,"105",22.23.4,allowed,Historical ticket workflow
+ci-sa4e-336.yml,"PBT-03,UT-03,IT-04",double,2,"70|128",22.23.4,allowed,Historical ticket workflow
+ci-sa4e-356.yml,"PBT-03,UT-03,IT-04",double,3,"86|193|227",22.23.4,allowed,Historical ticket workflow
+ci-sa4e-358.yml,"PBT-03,UT-03,IT-04",double,2,"107|219",22.23.4,allowed,Historical ticket workflow
+ci-sa4e-369.yml,"PBT-03,UT-03,IT-04",double,1,"76",22.23.4,allowed,Historical ticket workflow
+e2e-tests.yml,"PBT-03,UT-03,IT-04",double,2,"59|91",22.23.4,allowed,E2E workflow pins the runtime too
+build-onnxruntime.yml,"UT-03,IT-04,IT-06",double,1(matrix),"84","${ matrix.node_version } (unchanged)","matrix - allowed",ABI selector must show zero diff (AD-5)
+build-push-backend.yml,"IT-04,IT-02",none,0,(none),no node-version key,allowed,Reviewed and left unchanged (BR-17)
+scheduled-prebuild-scan.yml,"UT-10,IT-04",none,0,(none),no node-version key,allowed,Carries the CR-01 simplification only
+"(probe) node-version: 22","PBT-05","unquoted","1","(probe)","n/a","forbidden","Numeric major literal must be classified FAIL"
+"(probe) node-version: 22.x","PBT-05","unquoted","1","(probe)","n/a","forbidden","Range literal must be classified FAIL"
+"(probe) node-version: v22.23.4","PBT-05","unquoted","1","(probe)","n/a","forbidden","v-prefixed literal must be classified FAIL"
+"(probe) node_version: ""22""","PBT-05,UT-03","double","0","(probe)","n/a","ignored (ABI selector)","Underscore identifier is not the pin and must not be counted or fixed"

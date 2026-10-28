@@ -1,0 +1,12 @@
+declaration_id,test_case_id,artifact,key,observed_before,expected_after,format_or_bytes,expected_result,description
+C-01,"PBT-01,UT-01,IT-02,IT-10",package.json,engines.node,22.x,">=22.23.4 <23",semver range starting with >=,PASS,Root manifest must carry the exact range
+C-02,"PBT-01,UT-01,IT-02,IT-08",backend/package.json,engines.node,22.x,">=22.23.4 <23",semver range starting with >=,PASS,Backend manifest must carry the exact range
+C-03,"IT-08,IT-10,IT-02",package-lock.json,metadata "node" entries (root + backend),22.x (stale)," >=22.23.4 <23 (x2)",2 lines only,diff=2 insertions + 2 deletions,Package-lock metadata mirrors both manifests
+C-04,"UT-04,IT-02,IT-10,E2E-API-01",backend/Dockerfile L32,ARG NODE_VERSION,22,22.23.4,exact string,arg equals TARGET_NODE,Dockerfile build argument carries the patch version
+C-05,"PBT-04,UT-05,IT-02,E2E-API-01,E2E-API-05",backend/Dockerfile L35,ARG NODE_BASE_DIGEST,sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c (digest of the 22 tag),sha256:{digest} (resolved for node:22.23.4-slim),^sha256:[0-9a-f]{64}$,equals registry index digest,Digest must be registry-derived for the 22.23.4-slim tag
+C-06,"UT-04,IT-02",backend/Dockerfile L33-L34,comment block,node:22-slim + digest authority note,node:22.23.4-slim + CVE-2026-111497 + digest authority note,contains both mandatory phrases,contains CVE id and digest-authority sentence,Comment records why the pin exists
+C-07,"PBT-02,UT-02,IT-02",.nvmrc,whole file,"22 CRLF (hex 32320D0A)","22.23.4 LF (hex 32322E32332E340A)","8 bytes exactly",bytes match exactly,Byte contract is stricter than the text contract
+C-08,"IT-01",extension/package.json,all keys,unchanged,unchanged,not in diff,0 diff lines,VSCode extension manifest is out of scope (pins engines.vscode)
+C-09,"UT-04,IT-02,IT-06",backend/Dockerfile L40,FROM ...,"FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS base",unchanged,no [+-]FROM hunk,0 diff lines,FROM inherits the ARGs and must not be edited
+C-10,"UT-04,IT-02,IT-06",backend/Dockerfile L178,FROM ...,"FROM node:${NODE_VERSION}-slim@${NODE_BASE_DIGEST} AS production",unchanged,no [+-]FROM hunk,0 diff lines,Production stage FROM must not be edited
+C-11,"UT-01,PBT-01",package.json + backend/package.json,engines.node (invalid variants),"22.x / ^22 / ~22 / >=22 / * / missing / invalid JSON",n/a,7 negative variants,6 FAIL with distinct reason + 1 JSON parse error,Loose or malformed declarations must be rejected

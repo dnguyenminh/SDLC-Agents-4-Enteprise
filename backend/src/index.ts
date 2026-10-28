@@ -125,6 +125,21 @@ async function main() {
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
 
+  // Global crash guards: a single rejected/uncaught error on an async path (e.g.
+  // Pega ingest) must NOT silently kill the process. Without these, Node tears the
+  // process down and EVERY in-flight HTTP socket fails at once as
+  // `UND_ERR_SOCKET "other side closed"` on the client — the exact Pega-ingest symptom.
+  // We log with full context so the real throw site is attributable instead of invisible.
+  process.on('unhandledRejection', (reason: unknown) => {
+    const err = reason instanceof Error ? { message: reason.message, stack: reason.stack } : { reason };
+    logger.error(err, '[fatal] Unhandled promise rejection — process kept alive for diagnosis');
+  });
+  process.on('uncaughtException', (err: Error) => {
+    logger.error({ message: err.message, stack: err.stack }, '[fatal] Uncaught exception — process kept alive for diagnosis');
+    // Intentionally NOT exiting: an isolated ingest-path throw should not drop all
+    // concurrent connections. Fatal startup errors are still caught by main().catch.
+  });
+
   logger.info({ pid: process.pid, port: config.port, version: VERSION }, 'Backend MCP Server ready');
 }
 

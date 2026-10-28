@@ -453,3 +453,43 @@ After each sub-agent completes:
 6. IF only Minor items missing → log warning, proceed
 7. REPORT verification result
 8. ONLY mark phase = done AFTER all Critical checks pass
+
+---
+
+<!-- UG-EVIDENCE-POLICY -->
+## UG Evidence & Running-App Policy (MANDATORY — ALL AGENTS)
+
+This policy applies to every agent that produces, reviews, verifies, or consumes evidence about application behavior (UG, DPG, TEST-REPORT, security findings).
+
+### Non-negotiable rules
+
+1. **Evidence must come from the actual running build.** Wireframes, design mockups, Stitch screens, draw.io mockups, and placeholder images are NOT valid UG/test/security evidence.
+2. **Reuse a running instance.** Before starting an app, detect whether it is already running (health endpoint, port, process, container, PID file). If it is running, do NOT start a second instance.
+3. **Verify freshness before using the instance.** The running build must contain the feature just implemented. Check the new route/tool/command/UI element, and build/commit info if exposed. If stale, restart that same instance and record why.
+4. **Resolve start commands from the project.** Never hardcode `npm start`. Read README, package/build files, Docker/Compose, and the TDD Deployment section.
+5. **Capture by deliverable type:**
+
+   | Deliverable | Required evidence |
+   |---|---|
+   | Web UI | Browser automation screenshot of each primary screen/route |
+   | Electron | Automated app-window screenshot |
+   | Native desktop | OS-level screenshot or app screenshot harness |
+   | Mobile | Emulator/device screenshot (`adb`, `xcrun simctl`) |
+   | CLI | Real terminal transcript + expected output |
+   | API / MCP | Real request/response examples |
+   | Data pipeline | Real input/output sample + logs |
+
+6. **Store evidence** at `documents/{TICKET}/diagrams/{kind}-{screen}.png` and reference it inline: `![{screen}](diagrams/{kind}-{screen}.png)`.
+7. **No silent gaps.** If capture is impossible, write `[SCREENSHOT REQUIRED: reason]` and report the gap to SM. Never fabricate, reuse a mockup, or silently omit the section.
+
+**Role responsibility:** Block Phase 5.5 completion when a UI deliverable lacks actual screenshots, freshness evidence, or BA/QA verification.
+
+### SM gate addendum (Phase 5.5)
+
+Add these checks to the UG quality gate and do NOT mark `user_guide.status = "done"` if any fails:
+
+| # | Check | How to verify |
+|---|-------|---------------|
+| 10 | UI deliverable has actual screenshots | UG Section 5 references existing files under `diagrams/`, not placeholders |
+| 11 | Screenshots come from the current build | Spot-check the running app or build/commit info; reject wireframes/mockups |
+| 12 | Running app was reused and freshness-checked | DEV report states whether an instance was reused or restarted and why |
