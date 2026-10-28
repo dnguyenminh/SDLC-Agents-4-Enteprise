@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.8.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.9.vsix
 ```
 
 ### 3. Use
@@ -72,6 +72,15 @@ MIT
 
 - 🔒 **Security overrides** — pin transitive deps via root `overrides`: `body-parser` → `2.4.0`, `undici` → `6.29.1` (alongside existing `esbuild` `0.28.2`)
 - 🔖 **Version sync** — root/`backend`/`extension` → `1.55.8`
+
+### v1.55.9 (2026-10-28)
+
+**SA4E-386 — Node.js security upgrade to 22.23.4**
+
+- 🔒 **Node.js 22.23.4 pin** — 4-layer enforcement: `.nvmrc` 8B, `engines` root+backend+lockfile, `Dockerfile ARG NODE_VERSION + NODE_BASE_DIGEST`, 27 workflow literals
+- � CR-01 **Scope amendment** — delete `build-native.yml`; ONNX workflow preserved; update `auto-release.yml` + `scheduled-prebuild-scan.yml`
+- 📄 **SDLC docs** — BRD v1.0 (English per template), FSD v1.3, TDD v1.1 (AD-11, all discrepancies closed), TEST-REPORT.md, UG.md with §7 Manual Test Procedure
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.9`
 
 ### v1.55.7 (2026-10-26)
 
