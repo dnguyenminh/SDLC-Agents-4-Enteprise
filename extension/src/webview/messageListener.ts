@@ -87,7 +87,7 @@ function buildHandlers(): HandlerMap {
         }
       }
     },
-    tab:updated: (msg) => {
+    'tab:updated': (msg) => {
       if (msg.type === 'tab:updated') {
         updateTabs(msg.payload.tabs, msg.payload.activeTabId);
       }
@@ -97,7 +97,7 @@ function buildHandlers(): HandlerMap {
         updateTabs(msg.payload.tabs, msg.payload.activeTabId);
       }
     },
-    tab:switch: (msg) => {
+    'tab:switch': (msg) => {
       if (msg.type === 'tab:switch') {
         setActiveTab(msg.payload.tabId);
       }
