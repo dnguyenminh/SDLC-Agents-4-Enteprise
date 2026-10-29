@@ -178,11 +178,13 @@ jobs:
 
       # Line-count gate (BR-18): NEW/CHANGED .ts files must stay <= 200 lines.
       # Diff-based on PRs so pre-existing large files never block the build.
+      # Diff-based ONLY: flag NEW/CHANGED .ts files over 200 lines, never the
+      # pre-existing large files (incl. generated parsers). On PRs compare vs
+      # the base branch; on push compare vs the previous commit.
       - name: Line-count gate (new/changed .ts <= 200 lines)
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             bash scripts/check-line-count.sh --changed origin/${{ github.base_ref }}
           else
-            bash scripts/check-line-count.sh --all backend/src
-            bash scripts/check-line-count.sh --all extension/src
+            bash scripts/check-line-count.sh --changed HEAD~1
           fi
