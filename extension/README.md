@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.8-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.10-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.55.8.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.10.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.55.8.vsix
+code --install-extension sdlc-agents-4-enterprise-1.55.10.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,12 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.10 (2026-10-29)
+
+- **CI supply-chain hardening** — `undici` lifted to patched lines tree-wide (6.29.1 / 7.30.1 / 8.12.3), `zod` 4.x → 4.6.7, `body-parser` → 2.4.0 via extended vendor-patch (`scripts/patch-vendored-deps.mjs`) + `audit-gate` with a documented allowlist for the un-fixable zod advisory.
+- **Single CI workflow** — 8 per-ticket `ci-sa4e-*.yml` folded into one `ci.yml` (lint + typecheck + tests + supply-chain audit + secret/line-count gates).
+- **Lint fixes** — quote `tab:updated`/`tab:switch` handler keys; remove dead `TAB_UPDATED` message type. Version sync root/`backend`/`extension` → `1.55.10`.
 
 ### v1.55.8 (2026-10-27)
 

@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.9.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.10.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,17 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.10 (2026-10-29)
+
+**CI supply-chain hardening + single-workflow consolidation**
+
+- 🔒 **Dependency CVEs fixed** — `undici` lifted to patched lines across the whole tree (6.29.1 / 7.30.1 / 8.12.3), `zod` 4.x → 4.6.7, `body-parser` → 2.4.0; backend image `undici` 6.28.1 → 6.29.1 (Trivy gate green)
+- 🩹 **Vendor-patch extended** — `scripts/patch-vendored-deps.mjs` now swaps every vulnerable nested `undici` (overrides are ignored for pi-coding-agent's shrinkwrapped subtree)
+- 🛡️ **audit-gate** — `scripts/audit-gate.mjs` fails on High/Critical except one documented, un-fixable upstream advisory (zod `<4.6.6` via puppeteer-core/chromium-bidi); still blocks any NEW finding
+- 🧹 **Single CI workflow** — folded 8 per-ticket `ci-sa4e-*.yml` into one `ci.yml` (lint + typecheck + tests + supply-chain audit + secret/line-count gates) and removed them
+- 🐛 **Lint fixes** — quote `tab:updated`/`tab:switch` handler keys; remove dead `TAB_UPDATED` message type
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.10`
 
 ### v1.55.8 (2026-10-27)
 
