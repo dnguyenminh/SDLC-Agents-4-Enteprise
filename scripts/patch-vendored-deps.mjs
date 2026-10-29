@@ -33,42 +33,87 @@
  * a patch failure must not break installs), and becomes a no-op once
  * upstream ships a fixed shrinkwrap (target dir simply won't exist).
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync, rmSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const vendorDir = join(repoRoot, 'scripts', 'vendor', 'brace-expansion-5.0.12');
 
-// Official registry metadata for brace-expansion@5.0.12 — the vendored copy
-// is verified against this integrity before being applied.
-const FIXED = {
-  version: '5.0.12',
-  resolved: 'https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz',
-  integrity: 'sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ==',
-};
-
-/** Physical locations npm may place the shrinkwrapped nested copy. */
-const NESTED_SUFFIX = join('@earendil-works', 'pi-coding-agent', 'node_modules', 'brace-expansion');
-const PHYSICAL_TARGETS = [
-  join('node_modules', NESTED_SUFFIX),
-  join('extension', 'node_modules', NESTED_SUFFIX),
+/**
+ * Each entry patches ONE dependency that pi-coding-agent's shrinkwrap pins to a
+ * vulnerable version (overrides are ignored for shrinkwrapped subtrees — see
+ * header). `name` is the shrinkwrapped package; `vendorDir` holds the verified
+ * fixed copy; `FIXED` is the registry metadata synced into the lockfile views.
+ */
+const PATCHES = [
+  {
+    name: 'brace-expansion',
+    vendorDir: join(repoRoot, 'scripts', 'vendor', 'brace-expansion-5.0.12'),
+    FIXED: {
+      version: '5.0.12',
+      resolved: 'https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz',
+      integrity: 'sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ==',
+    },
+  },
 ];
 
-/** Lockfile views npm audit / npm ls read. */
+/**
+ * undici fix map (keyed by major). Several packages (pi-coding-agent via its
+ * shrinkwrap, plus @vscode/proxy-agent, cheerio, jsdom, @cortexkit/aft-bridge,
+ * pi-subagents, pi-web-access) pin a nested undici in the vuln ranges
+ * 7.0.0-7.30.0 and 8.0.0-8.12.1 (GHSA-4qv8-2p9j-2685 EventSource DoS +
+ * TLS/SRI/redirect advisories). npm `overrides` can't normalise them (shrinkwrap
+ * + multi-major pins), so we vendor-swap every vulnerable nested undici to the
+ * fixed line for its major, preserving the major to keep each consumer's API.
+ */
+const UNDICI_FIX = {
+  7: {
+    maxVuln: '7.30.0',
+    vendorDir: join(repoRoot, 'scripts', 'vendor', 'undici-7.30.1'),
+    FIXED: {
+      version: '7.30.1',
+      resolved: 'https://registry.npmjs.org/undici/-/undici-7.30.1.tgz',
+      integrity: 'sha512-03KrMbjIFDWQR5RNPrSw3bd1r12JpyFQl9/yxjUbJtqkjmllqC5lFjZh6ujeuJCKr8EOQvRW872Oy/az+nLYxg==',
+    },
+  },
+  8: {
+    maxVuln: '8.12.1',
+    vendorDir: join(repoRoot, 'scripts', 'vendor', 'undici-8.12.3'),
+    FIXED: {
+      version: '8.12.3',
+      resolved: 'https://registry.npmjs.org/undici/-/undici-8.12.3.tgz',
+      integrity: 'sha512-+fdndUTwBP86cVjihTp21hZHo7d6oj1c/47XPA3lL8mM0XHs+C4EkcjmgRsFnFk2f/UONGDy9ItBItmXsLOQHw==',
+    },
+  },
+};
+
+/**
+ * Lockfile views npm audit / npm ls read. Includes the extension workspace
+ * lockfiles because the SEC-07 audit job runs `npm audit` with
+ * working-directory: extension, which reads extension/package-lock.json.
+ */
 const LOCKFILES = [
   join('package-lock.json'),
   join('node_modules', '.package-lock.json'),
+  join('extension', 'package-lock.json'),
+  join('extension', 'node_modules', '.package-lock.json'),
 ];
 
-const NESTED_POSIX_SUFFIX = '@earendil-works/pi-coding-agent/node_modules/brace-expansion';
+/** Physical + lockfile nested paths for a shrinkwrapped package `name`. */
+function targetsFor(name) {
+  const suffix = join('@earendil-works', 'pi-coding-agent', 'node_modules', name);
+  return {
+    physical: [join('node_modules', suffix), join('extension', 'node_modules', suffix)],
+    posixSuffix: `@earendil-works/pi-coding-agent/node_modules/${name}`,
+  };
+}
 
 function sha512Integrity(filePath) {
   return 'sha512-' + createHash('sha512').update(readFileSync(filePath)).digest('base64');
 }
 
-function verifyVendor() {
+function verifyVendor(vendorDir, FIXED) {
   const pkgFile = join(vendorDir, 'package.json');
   if (!existsSync(pkgFile)) return false;
   const pkg = JSON.parse(readFileSync(pkgFile, 'utf8'));
@@ -88,31 +133,110 @@ function verifyVendor() {
   });
 }
 
-let patched = 0;
+/** Replace vulnerable physical copies of `patch.name` with the vendored fix. */
+function patchPhysical(patch) {
+  let patched = 0;
+  if (!verifyVendor(patch.vendorDir, patch.FIXED)) {
+    console.warn(`[patch-vendored-deps] WARNING: vendored ${patch.name} failed verification — skipping (fail-open)`);
+    return patched;
+  }
+  for (const rel of targetsFor(patch.name).physical) {
+    const abs = join(repoRoot, rel);
+    const pkgFile = join(abs, 'package.json');
+    if (!existsSync(pkgFile)) continue;
+    const cur = JSON.parse(readFileSync(pkgFile, 'utf8'));
+    if (cur.version === patch.FIXED.version) continue;
+    rmSync(abs, { recursive: true, force: true });
+    mkdirSync(abs, { recursive: true });
+    cpSync(patch.vendorDir, abs, { recursive: true });
+    patched++;
+    console.log(`[patch-vendored-deps] ${patch.name} ${cur.version} -> ${patch.FIXED.version} (${rel})`);
+  }
+  return patched;
+}
 
-try {
-  // 1. Replace vulnerable physical copies with the verified vendor copy.
-  const vendorOk = verifyVendor();
-  if (!vendorOk) {
-    console.warn('[patch-vendored-deps] WARNING: vendored brace-expansion failed verification — skipping patch (fail-open)');
-  } else {
-    for (const rel of PHYSICAL_TARGETS) {
-      const abs = join(repoRoot, rel);
+/** Numeric semver compare (a <= b). Ignores prerelease — fine for these pins. */
+function lte(a, b) {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] ?? 0) < (pb[i] ?? 0)) return true;
+    if ((pa[i] ?? 0) > (pb[i] ?? 0)) return false;
+  }
+  return true; // equal
+}
+
+/**
+ * Vendor-swap EVERY vulnerable nested undici copy (any parent) to the fixed
+ * line for its major. Walks the physical trees under node_modules and swaps
+ * each nested "node_modules/undici" whose version is <= the major's maxVuln.
+ * Returns the count patched.
+ */
+function patchUndici() {
+  let patched = 0;
+  const roots = [join(repoRoot, 'node_modules'), join(repoRoot, 'extension', 'node_modules')];
+  for (const major of Object.keys(UNDICI_FIX)) {
+    const fix = UNDICI_FIX[major];
+    if (!verifyVendor(fix.vendorDir, fix.FIXED)) {
+      console.warn(`[patch-vendored-deps] WARNING: vendored undici@${fix.FIXED.version} failed verification — skipping (fail-open)`);
+      continue;
+    }
+  }
+  for (const nmRoot of roots) {
+    if (!existsSync(nmRoot)) continue;
+    for (const abs of findNestedUndici(nmRoot)) {
       const pkgFile = join(abs, 'package.json');
       if (!existsSync(pkgFile)) continue;
       const cur = JSON.parse(readFileSync(pkgFile, 'utf8'));
-      if (cur.version === FIXED.version) continue;
+      const major = String(parseInt(cur.version, 10));
+      const fix = UNDICI_FIX[major];
+      if (!fix || !lte(cur.version, fix.maxVuln)) continue; // not vulnerable
+      if (!verifyVendor(fix.vendorDir, fix.FIXED)) continue;
       rmSync(abs, { recursive: true, force: true });
       mkdirSync(abs, { recursive: true });
-      cpSync(vendorDir, abs, { recursive: true });
+      cpSync(fix.vendorDir, abs, { recursive: true });
       patched++;
-      console.log(`[patch-vendored-deps] brace-expansion ${cur.version} -> ${FIXED.version} (${rel})`);
+      console.log(`[patch-vendored-deps] undici ${cur.version} -> ${fix.FIXED.version} (${abs.replace(repoRoot, '.')})`);
     }
   }
+  return patched;
+}
 
-  // 2. Sync lockfile views (package-lock.json + hidden lockfile) so audit/ls
-  //    report the patched version. Runs even when the physical copy was
-  //    already patched (npm may have re-written the lockfiles this install).
+/** Find every `<parent>/node_modules/undici` dir under an nmRoot (one level of nesting). */
+function findNestedUndici(nmRoot) {
+  const out = [];
+  const scopes = readdirSync(nmRoot, { withFileTypes: true });
+  for (const ent of scopes) {
+    if (!ent.isDirectory()) continue;
+    const pkgDir = join(nmRoot, ent.name);
+    // scoped (@x/y) — descend one more level
+    const children = ent.name.startsWith('@')
+      ? readdirSync(pkgDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => join(pkgDir, e.name))
+      : [pkgDir];
+    for (const c of children) {
+      const nested = join(c, 'node_modules', 'undici');
+      if (existsSync(join(nested, 'package.json'))) out.push(nested);
+    }
+  }
+  return out;
+}
+
+/** Sync a nested undici lockfile entry to the fixed metadata for its major. */
+function syncUndiciLockEntry(entry) {
+  const major = String(parseInt(entry.version, 10));
+  const fix = UNDICI_FIX[major];
+  if (!fix || !lte(entry.version, fix.maxVuln)) return false;
+  entry.version = fix.FIXED.version;
+  entry.resolved = fix.FIXED.resolved;
+  entry.integrity = fix.FIXED.integrity;
+  return true;
+}
+
+/**
+ * Sync the lockfile views so npm audit / npm ls report the patched version for
+ * EVERY patch (they read the lockfile, not the physical tree).
+ */
+function syncLockfiles() {
   for (const rel of LOCKFILES) {
     const abs = join(repoRoot, rel);
     if (!existsSync(abs)) continue;
@@ -123,25 +247,48 @@ try {
       continue; // unreadable lockfile — skip silently
     }
     const pkgs = lock.packages ?? {};
-    const keys = Object.keys(pkgs).filter((k) => k.replaceAll('\\', '/').endsWith(NESTED_POSIX_SUFFIX));
     let changed = false;
-    for (const k of keys) {
+    // Named shrinkwrap patches (brace-expansion) — exact path suffix match.
+    for (const patch of PATCHES) {
+      const posixSuffix = targetsFor(patch.name).posixSuffix;
+      const keys = Object.keys(pkgs).filter((k) => k.replaceAll('\\', '/').endsWith(posixSuffix));
+      for (const k of keys) {
+        const e = pkgs[k];
+        if (e.version !== patch.FIXED.version) {
+          e.version = patch.FIXED.version;
+          e.resolved = patch.FIXED.resolved;
+          e.integrity = patch.FIXED.integrity;
+          changed = true;
+          console.log(`[patch-vendored-deps] ${rel} synced: ${k.replaceAll('\\', '/')} -> ${patch.FIXED.version}`);
+        }
+      }
+    }
+    // undici — every vulnerable nested entry (any parent), by major.
+    for (const k of Object.keys(pkgs)) {
+      const posix = k.replaceAll('\\', '/');
+      if (!/\/node_modules\/undici$/.test(posix)) continue;
       const e = pkgs[k];
-      if (e.version !== FIXED.version) {
-        e.version = FIXED.version;
-        e.resolved = FIXED.resolved;
-        e.integrity = FIXED.integrity;
+      if (!e?.version) continue;
+      if (syncUndiciLockEntry(e)) {
         changed = true;
-        console.log(`[patch-vendored-deps] ${rel} synced: ${k.replaceAll('\\', '/')}`);
+        console.log(`[patch-vendored-deps] ${rel} synced: ${posix} -> ${e.version}`);
       }
     }
     if (changed) {
       writeFileSync(abs, JSON.stringify(lock, null, 2) + '\n');
     }
   }
+}
 
+try {
+  let patched = 0;
+  for (const patch of PATCHES) {
+    patched += patchPhysical(patch);
+  }
+  patched += patchUndici();
+  syncLockfiles();
   if (patched === 0) {
-    console.log('[patch-vendored-deps] no vulnerable nested brace-expansion copy present (nothing to do)');
+    console.log('[patch-vendored-deps] no vulnerable nested copy present (lockfiles synced)');
   }
 } catch (err) {
   // Fail-open: a patch problem must never break `npm install`.

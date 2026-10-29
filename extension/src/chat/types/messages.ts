@@ -76,7 +76,6 @@ export type ExtensionMessageType =
   | 'COMPACT_ERROR'
   | 'AGENT_SWITCHED'
   | 'tab:updated'
-  | 'TAB_UPDATED'
   | 'DIFF_COUNT_UPDATED'
   | 'DIFF_SUMMARY_RESPONSE';
 
@@ -116,7 +115,6 @@ export type ExtensionMessage =
   | { type: 'COMPACT_ERROR'; error: string; fallbackApplied: boolean }
   | { type: 'AGENT_SWITCHED'; agentId: string | null; agentName: string; tabId: string; success: boolean; sessionRole?: string; sessionPhase?: string; error?: string }
   | { type: 'tab:updated'; payload: { tabs: Array<{ id: string; name: string; messages: unknown[]; tokenCount: number; maxTokens: number }>; activeTabId: string } }
-  | { type: 'TAB_UPDATED'; payload: { tabs: Array<{ id: string; name: string; messages: unknown[]; tokenCount: number; maxTokens: number }>; activeTabId: string } }
   | { type: 'DIFF_COUNT_UPDATED'; count: number }
   | { type: 'DIFF_SUMMARY_RESPONSE'; summary: DiffSummaryPayload };
 

@@ -25,6 +25,10 @@ jobs:
           npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
         working-directory: .
 
+      - name: Lint (eslint)
+        run: npm run lint --workspace=backend
+        working-directory: .
+
       - run: npm run build --workspace=backend
         working-directory: .
 
@@ -51,6 +55,10 @@ jobs:
           npm cache clean --force
           npm install --force --no-audit --no-fund
           npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+        working-directory: .
+
+      - name: Lint (eslint)
+        run: npm run lint --workspace=extension
         working-directory: .
 
       - run: npm run compile --workspace=extension
@@ -109,3 +117,72 @@ jobs:
       - run: npm run test:e2e-api --workspace=backend
         working-directory: .
 
+  supply-chain:
+    name: Supply-chain audit (${{ matrix.workspace }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [backend, extension]
+    defaults:
+      run:
+        working-directory: ${{ matrix.workspace }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.4'
+
+      # Root workspace install (repo-canonical). npm overrides are ignored for
+      # pi-coding-agent's shrinkwrapped subtree, so the postinstall vendor-patch
+      # (scripts/patch-vendored-deps.mjs) applies the fixed undici/brace-expansion.
+      - name: Clean install (root workspace + rolldown binding)
+        working-directory: .
+        run: |
+          rm -rf node_modules backend/node_modules extension/node_modules
+          npm cache clean --force
+          npm install --force --no-audit --no-fund
+          npm install --force --no-audit --no-fund --os=linux --cpu=x64 @rolldown/binding-linux-x64-gnu
+
+      # A second `npm install` above may skip the root postinstall; re-run the
+      # patch so npm audit (reads package-lock.json) sees the vendored fixes.
+      - name: Re-apply vendored-deps patch
+        working-directory: .
+        run: node scripts/patch-vendored-deps.mjs
+
+      # Fails on High/Critical in runtime deps EXCEPT documented, un-fixable
+      # upstream advisories (allowlist lives in scripts/audit-gate.mjs); still
+      # blocks on any NEW High/Critical finding.
+      - name: npm audit — fail on High/Critical (runtime deps)
+        run: node ../scripts/audit-gate.mjs
+
+  static-gates:
+    name: Static gates (secret scan + line-count)
+    runs-on: ubuntu-latest
+    steps:
+      # Full history so the diff-based gates can compare against the base branch.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Hardcoded-secret gate (SEC-03): scan the PR diff vs base, or the whole
+      # tree on push, so a leaked credential anywhere on the branch is caught.
+      - name: Hardcoded-secret gate
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bash scripts/check-secrets.sh --changed origin/${{ github.base_ref }}
+          else
+            bash scripts/check-secrets.sh --all
+          fi
+
+      # Line-count gate (BR-18): NEW/CHANGED .ts files must stay <= 200 lines.
+      # Diff-based on PRs so pre-existing large files never block the build.
+      - name: Line-count gate (new/changed .ts <= 200 lines)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bash scripts/check-line-count.sh --changed origin/${{ github.base_ref }}
+          else
+            bash scripts/check-line-count.sh --all backend/src
+            bash scripts/check-line-count.sh --all extension/src
+          fi

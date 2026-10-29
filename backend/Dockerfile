@@ -185,7 +185,8 @@ WORKDIR /app
 # node:22.23.4-slim digest is already the latest — so the fix is to bump the CLI
 # itself (10.9.9 → NPM_VERSION: pacote/sigstore majors land on patched lines)
 # and refresh the two packages upstream has not re-released yet, using
-# same-major PATCH releases only (5.0.9→5.0.12, 6.28.0→6.28.1).
+# same-major releases only (5.0.9→5.0.12; undici 6.28.0→6.29.1 clears
+# CVE-2026-109383 + CVE-2026-87018, both fixed in undici 6.29.1).
 # npm/npx stay installed: the sandbox module's local-mode fallback (UC-06)
 # shells out to them at runtime, so removing the CLI would be a regression.
 # Build stages keep the base npm for `npm ci` — only the runtime CLI moves.
@@ -194,7 +195,7 @@ WORKDIR /app
 ARG NPM_VERSION=11.21.0
 RUN npm install -g npm@${NPM_VERSION} --no-audit --no-fund --loglevel=error \
   && NM=/usr/local/lib/node_modules/npm/node_modules \
-  && for entry in "brace-expansion 5.0.12" "undici 6.28.1"; do \
+  && for entry in "brace-expansion 5.0.12" "undici 6.29.1"; do \
        name=$(echo "$entry" | cut -d ' ' -f1); ver=$(echo "$entry" | cut -d ' ' -f2); \
        tgz=$(npm pack "${name}@${ver}" --pack-destination /tmp --silent); \
        rm -rf "${NM}/${name}"; mkdir -p "${NM}/${name}"; \

@@ -96,5 +96,8 @@
   "bugs": {
     "url": "https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise/issues"
   },
-  "homepage": "https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise#readme"
+  "homepage": "https://github.com/dnguyenminh/SDLC-Agents-4-Enteprise#readme",
+  "overrides": {
+    "undici": "6.29.1"
+  }
 }
