@@ -92,11 +92,6 @@ function buildHandlers(): HandlerMap {
         updateTabs(msg.payload.tabs, msg.payload.activeTabId);
       }
     },
-    TAB_UPDATED: (msg) => {
-      if (msg.type === 'TAB_UPDATED') {
-        updateTabs(msg.payload.tabs, msg.payload.activeTabId);
-      }
-    },
     'tab:switch': (msg) => {
       if (msg.type === 'tab:switch') {
         setActiveTab(msg.payload.tabId);

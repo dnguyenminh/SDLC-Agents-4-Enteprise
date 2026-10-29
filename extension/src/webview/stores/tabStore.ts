@@ -1,7 +1,7 @@
 /**
  * SA4E-370 S3/S4 — Tab Store.
  * Tracks chat tabs, active tab, and per-tab agent assignments.
- * Synced from Extension Host via tab:updated / TAB_UPDATED messages.
+ * Synced from Extension Host via tab:updated messages.
  */
 
 import { writable, derived } from 'svelte/store';
@@ -44,7 +44,7 @@ export const activeTab = derived(tabState, ($s) =>
 /** Derived: loading indicator */
 export const isTabLoading = derived(tabState, ($s) => $s.isLoading);
 
-/** Sync tabs from Extension Host broadcast (tab:updated / TAB_UPDATED) */
+/** Sync tabs from Extension Host broadcast (tab:updated) */
 export function updateTabs(tabs: ChatTab[], activeTabId: string): void {
   tabState.update((s) => ({
     ...s,
