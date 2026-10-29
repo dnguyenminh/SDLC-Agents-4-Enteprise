@@ -8,7 +8,7 @@
  * hammers an already-struggling backend.
  */
 
-import { IngestRejectedError, IngestAuthError } from "./ingest-auth";
+import { IngestRejectedError, IngestAuthError, TransientBodyError } from "./ingest-auth";
 import { isTransientFetchError } from "../../utils/http-client-utils";
 import type { LogFn } from "./ingest-types";
 
@@ -29,6 +29,8 @@ export const DEFAULT_INGEST_RETRY: RetryConfig = {
 export function isRetryableIngestError(err: unknown): boolean {
   if (err instanceof IngestAuthError) { return false; }
   if (err instanceof IngestRejectedError) { return err.retryable; }
+  // Body read/parse failed mid-response (socket closed) — transient, retry.
+  if (err instanceof TransientBodyError) { return true; }
   // Network/socket faults (fetch threw) — UND_ERR_SOCKET & friends.
   return isTransientFetchError(err);
 }

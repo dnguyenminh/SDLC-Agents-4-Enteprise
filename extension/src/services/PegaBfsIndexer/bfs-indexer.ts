@@ -56,6 +56,9 @@ export class PegaBfsIndexer extends PegaBfsIndexerBase {
 
     // BR-13: Calibrate fetch concurrency before the crawl starts.
     await calibrateFetchConcurrency(this.pegaClient, initialCount, this.log);
+    // Surface the ingest target up front so a later UND_ERR_SOCKET/ECONNREFUSED
+    // is immediately attributable to this backend (sdlcAgents.backend.url).
+    this.log(`[BfsIndexer] 🎯 Ingest target: ${this.backendUrl}/api/v1/pega/ingest-rule`);
     this.log(`[BfsIndexer] 🚀 Starting BFS pipeline: ${initialCount} seeds (max iterations: ${maxIterations}) | batch=${tuning.fetchBatchSize}, ingestConcurrency=${tuning.ingestConcurrency}, channelCapacity=${tuning.channelCapacity}`);
 
     const pipeline = this.createPipeline(projectId, root, tuning, maxIterations, report);
@@ -193,7 +196,7 @@ export class PegaBfsIndexer extends PegaBfsIndexerBase {
       logIngestClassified(this.log, err, ruleJson, sourceFile);
       return { ingested: false, relatives: [] };
     }
-    logIngestCrash(this.log, err, ruleJson, sourceFile);
+    logIngestCrash(this.log, err, ruleJson, this.backendUrl, sourceFile);
     return { ingested: false, relatives: [] };
   }
 }

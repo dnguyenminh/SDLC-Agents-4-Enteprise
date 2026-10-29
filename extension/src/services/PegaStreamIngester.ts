@@ -8,13 +8,13 @@
 
 import { withAuthRetry, type IngestAuthProvider } from "../utils/backend-auth-headers";
 import type {
-  IngestSingleRuleResponse,
   IngestSingleRuleResult,
   LogFn,
   StreamIngestResult,
 } from "./PegaStreamIngester/ingest-types";
-import { IngestAuthError, IngestRejectedError, sanitizeIngestText } from "./PegaStreamIngester/ingest-auth";
-import { withIngestRetry, DEFAULT_INGEST_RETRY, type RetryConfig } from "./PegaStreamIngester/ingest-retry";
+import { IngestAuthError, sanitizeIngestText } from "./PegaStreamIngester/ingest-auth";
+import { DEFAULT_INGEST_RETRY, type RetryConfig } from "./PegaStreamIngester/ingest-retry";
+import { ingestSingleRuleCore, type SingleRuleContext } from "./PegaStreamIngester/single-rule";
 import {
   submitJobCore,
   pollUntilCompleteCore,
@@ -112,12 +112,19 @@ export class PegaStreamIngester {
     return sanitizeIngestText(value);
   }
 
-  /** One-line rule identity for retry logs (insKey/class/name). */
-  private ruleDescriptor(ruleJson: Record<string, unknown>): string {
-    const insKey = String(ruleJson.pzInsKey ?? ruleJson.insKey ?? '');
-    const cls = String(ruleJson.pxObjClass ?? '');
-    const name = String(ruleJson.pyRuleName ?? '');
-    return `insKey=${insKey} pxObjClass=${cls} pyRuleName=${name}`;
+  /** Context passed to the per-rule ingest flow (single-rule.ts). */
+  private singleRuleCtx(): SingleRuleContext {
+    return {
+      backendUrl: this.backendUrl,
+      auth: this.auth,
+      log: this.log,
+      retryConfig: this.retryConfig,
+      registeredProjects: this.registeredProjects,
+      fetchWithAuthRetry: (send, endpoint) => this.fetchWithAuthRetry(send, endpoint),
+      authHeaders: (projectId, extra) => this.authHeaders(projectId, extra),
+      truncate: (value) => this.truncate(value),
+      ensureProjectRegistered: (projectId, appName) => this.ensureProjectRegistered(projectId, appName),
+    };
   }
 
   /**
@@ -177,75 +184,8 @@ export class PegaStreamIngester {
     version?: string,
     appName?: string,
   ): Promise<IngestSingleRuleResult> {
-    // Fix 5: retry transient faults (server-closed socket / DB_TRANSIENT) with
-    // backoff. Permanent faults (validation, missing checksum, auth) fail fast —
-    // isRetryableIngestError gates this, so no retry storm on a real rejection.
-    const describe = this.ruleDescriptor(ruleJson);
-    return withIngestRetry(
-      () => this.attemptIngestOnce(projectId, ruleJson, checksum, version, appName),
-      this.retryConfig, this.log, describe,
-    );
-  }
-
-  /** One ingest attempt: single POST + envelope handling (wrapped by retry). */
-  private async attemptIngestOnce(
-    projectId: string,
-    ruleJson: Record<string, unknown>,
-    checksum?: string,
-    version?: string,
-    appName?: string,
-  ): Promise<IngestSingleRuleResult> {
-    const endpoint = `${this.backendUrl}/api/v1/pega/ingest-rule`;
-
-    // SA4E-338 B1: forward the Pega application name (read by the caller from
-    // pega-project.json) so the backend registers the project under its real app
-    // name instead of a random rule's class.
-    const body = JSON.stringify({ projectId, ruleJson, checksum, version, appName }); // JSON string — replay-safe
-
-    const res = await this.fetchWithAuthRetry(async (token) => {
-      const headers = this.authHeaders(projectId, { 'Content-Type': 'application/json' });
-      if (token) { headers['Authorization'] = `Bearer ${token}`; }
-      return fetch(endpoint, {
-        method: 'POST',
-        // SA4E-241 SEC-01: send project identity for the write path (backend scopes
-        // by identity, not body.projectId).
-        headers,
-        body,
-      });
-    }, "rule");
-
-    const json = (await res.json()) as IngestSingleRuleResponse;
-    if (json.error) {
-      // SA4E-362 FR-3: 401 persists → typed error, message GIỮ contract hiện có
-      // ("Ingest failed: Invalid or expired token") — caller/log test phụ thuộc chuỗi này.
-      // SEC-02 (3.7): envelope message được cap 200 ký tự.
-      if (res.status === 401) {
-        throw new IngestAuthError(`Ingest failed: ${this.truncate(json.error.message)}`, res.status);
-      }
-      // SA4E-375 client-side fallback: auto-register project and retry once when
-      // backend rejects with PROJECT_NOT_REGISTERED (old backends without auto-upsert).
-      if (json.error.message.includes("not registered") && !this.registeredProjects.has(projectId)) {
-        this.registeredProjects.add(projectId);
-        await this.ensureProjectRegistered(projectId, appName);
-        return this.ingestSingleRule(projectId, ruleJson, checksum, version, appName);
-      }
-      // Classified backend failure: preserve code + category + retryable so the
-      // caller logs a concrete cause and decides retry-vs-skip WITHOUT server logs.
-      // `details` is absent on old backends → fall back to a non-retryable envelope.
-      const d = json.error.details;
-      throw new IngestRejectedError(
-        `Ingest failed: ${this.truncate(json.error.message)}`,
-        json.error.code ?? 'INTERNAL_ERROR',
-        d?.category ?? 'unknown',
-        d?.retryable ?? false,
-        d?.errorName ?? 'Error',
-        res.status,
-      );
-    }
-    if (!json.data) {
-      throw new Error('Ingest returned empty data');
-    }
-
-    return json.data;
+    // Per-rule ingest (endpoint validation, timeout, defensive body read, retry,
+    // envelope handling) lives in single-rule.ts (BR-18 ≤200-LOC).
+    return ingestSingleRuleCore(this.singleRuleCtx(), { projectId, ruleJson, checksum, version, appName });
   }
 }

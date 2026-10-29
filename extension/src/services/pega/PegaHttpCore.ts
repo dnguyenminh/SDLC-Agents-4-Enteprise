@@ -71,9 +71,20 @@ export class PegaHttpCore {
     return getSetting<string>("pega.username","pega.username", "").trim();
   }
 
-  /** Backend base URL (Code Intelligence server) — reads sdlcAgents.backend.url via getSetting. */
+  /**
+   * Backend base URL (Code Intelligence server) — reads sdlcAgents.backend.url.
+   * VS Code `get(key, default)` only substitutes the default when the key is
+   * UNDEFINED; an explicit empty/whitespace string set by the user would slip
+   * through and produce a host-less URL ("/api/v1/pega/ingest-rule"), making
+   * fetch() fail with an opaque parse/socket error. Guard that here so the
+   * ingest target is always a valid absolute URL — consistent with
+   * config/backend-url.ts getBackendUrl() which applies the same fallback.
+   */
   getBackendUrl(): string {
-    return getSetting<string>("backend.url", "backend.url", "http://127.0.0.1:48721").replace(/\/$/, "");
+    const DEFAULT = "http://127.0.0.1:48721";
+    const raw = getSetting<string>("backend.url", "backend.url", DEFAULT);
+    const url = (typeof raw === "string" ? raw : "").trim();
+    return (url || DEFAULT).replace(/\/$/, "");
   }
 
   /** Candidate REST prefixes, active prefix first once discovered. */

@@ -35,6 +35,20 @@ export class IngestRejectedError extends Error {
 }
 
 /**
+ * Thrown when the HTTP headers arrived but the response BODY could not be read
+ * or parsed (socket closed mid-body / truncated / empty). This is a TRANSIENT
+ * fault equivalent to a dropped connection, so it must be retried — not treated
+ * as a permanent parse error. Caught by instanceof in isRetryableIngestError.
+ * `cause` preserves the original undici error for diagnostics.
+ */
+export class TransientBodyError extends Error {
+  constructor(message: string, public readonly cause?: unknown) {
+    super(message);
+    this.name = "TransientBodyError";
+  }
+}
+
+/**
  * SA4E-362 SEC-02 + SECA-01 (3.7): sanitize text embedded in IngestAuthError —
  * strip CR/LF first (a multi-line 401 body could inject forged log lines), then
  * cap at 200 characters.

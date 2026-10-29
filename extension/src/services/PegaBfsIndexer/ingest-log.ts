@@ -34,10 +34,13 @@ export function logIngestRejection(
  * the failed rule can be re-ingested individually (Pega Ingester panel).
  */
 export function logIngestCrash(
-  log: LogFn, err: any, ruleJson: Record<string, unknown>, sourceFile?: string,
+  log: LogFn, err: any, ruleJson: Record<string, unknown>, backendUrl: string, sourceFile?: string,
 ): void {
   const detail = describeFetchError(err);
-  const endpoint = "/api/v1/pega/ingest-rule";
+  // Log the FULL target URL (host:port + path), not just the relative path, so a
+  // UND_ERR_SOCKET / ECONNREFUSED is traceable to the exact backend the request
+  // went to — loopback vs a misconfigured/remote sdlcAgents.backend.url.
+  const endpoint = `${backendUrl}/api/v1/pega/ingest-rule`;
   const pzInsKey = String(ruleJson.pzInsKey ?? ruleJson.insKey ?? '');
   const pxObjClass = String(ruleJson.pxObjClass ?? '');
   const pyRuleName = String(ruleJson.pyRuleName ?? '');

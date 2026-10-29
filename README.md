@@ -17,7 +17,7 @@ npx sdlc-agent-4-enterprise-server
 ```bash
 cd extension
 npm ci && npm run esbuild && npx vsce package --no-dependencies
-kiro --install-extension sdlc-agents-4-enterprise-1.55.10.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
 ```
 
 ### 3. Use
@@ -65,6 +65,17 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.11 (2026-10-29)
+
+**Pega ingest resilience — UND_ERR_SOCKET / backend-URL hardening**
+
+- 🩹 **Socket close mid-body** — a response whose body read throws after headers (UND_ERR_SOCKET "other side closed") or arrives truncated/empty is now re-tagged transient and **retried**, instead of being skipped as a permanent parse error
+- ⏱️ **Explicit fetch timeout** — per-rule ingest uses `AbortSignal.timeout(30s)`; a hung backend becomes a retryable `TimeoutError` instead of blocking a pipeline consumer forever
+- 🔧 **Empty/malformed backend URL guard** — `sdlcAgents.backend.url` set to `""` no longer produces a host-less URL; `PegaHttpCore.getBackendUrl()` falls back to the default and ingest fails fast with a clear, non-retryable config message
+- 🔎 **Diagnosable logs** — ingest crash log now shows the FULL target URL (host:port), and each run logs its `🎯 Ingest target`, so a socket failure is traceable to the exact backend
+- 🧱 **Refactor** — per-rule ingest extracted to `single-rule.ts` (files back under the 200-line standard); +7 resilience unit tests
+- 🔖 **Version sync** — root/`backend`/`extension` → `1.55.11`
 
 ### v1.55.10 (2026-10-29)
 

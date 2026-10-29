@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.55.10-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.55.11-blue?style=for-the-badge" alt="Version">
   <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License">
   <img src="https://img.shields.io/badge/agents-9-purple?style=for-the-badge" alt="Agents">
   <img src="https://img.shields.io/badge/KB_Panels-5-orange?style=for-the-badge" alt="KB Panels">
@@ -48,10 +48,10 @@ npm run esbuild
 npx vsce package --no-dependencies
 
 # Install into Kiro
-kiro --install-extension sdlc-agents-4-enterprise-1.55.10.vsix
+kiro --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
 
 # Or VS Code
-code --install-extension sdlc-agents-4-enterprise-1.55.10.vsix
+code --install-extension sdlc-agents-4-enterprise-1.55.11.vsix
 ```
 
 3. **Verify connection**: Command Palette → "SDLC Agents: Settings" → Server Settings → Test Connection
@@ -244,6 +244,11 @@ MIT
 ---
 
 ## Changelog
+
+### v1.55.11 (2026-10-29)
+
+- **Pega ingest resilience** — a response whose body read throws mid-stream (UND_ERR_SOCKET "other side closed") or arrives truncated/empty is re-tagged transient and **retried**; per-rule ingest gets an explicit `AbortSignal.timeout(30s)` so a hung backend becomes a retryable timeout.
+- **Backend URL guard** — `sdlcAgents.backend.url` set to `""` no longer yields a host-less URL; `PegaHttpCore.getBackendUrl()` falls back to default and ingest fails fast with a clear config message. Crash logs now show the full target URL. Per-rule ingest extracted to `single-rule.ts` (≤200-line standard) + 7 resilience tests. Version sync root/`backend`/`extension` → `1.55.11`.
 
 ### v1.55.10 (2026-10-29)
 

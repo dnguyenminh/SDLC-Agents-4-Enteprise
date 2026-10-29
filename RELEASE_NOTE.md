@@ -1,36 +1,49 @@
-# Release v1.55.10
+# Release v1.55.11
 
 ## Summary
-CI supply-chain hardening (undici/zod/body-parser CVEs) and consolidation of the
-8 per-ticket workflows into a single `ci.yml`.
+Pega ingest resilience — harden the per-rule ingest client against
+`UND_ERR_SOCKET "other side closed"`, hung backends, and a misconfigured
+backend URL.
 
 ## Changes Included
 
-### 🔒 Security / Supply-chain
-- **undici** lifted to patched lines across the whole dependency tree: 6.29.1 / 7.30.1 / 8.12.3 (clears GHSA-4qv8-2p9j-2685 EventSource DoS + TLS/SRI/redirect advisories)
-- **zod** 4.x → 4.6.7, **body-parser** → 2.4.0 (in-range via `npm update`)
-- Backend image: bundled-npm `undici` 6.28.1 → 6.29.1 — **Trivy gate green**
-- **Vendor-patch extended** (`scripts/patch-vendored-deps.mjs`): swaps every vulnerable nested `undici`, because npm `overrides` are ignored for `@earendil-works/pi-coding-agent`'s shrinkwrapped subtree
-- **audit-gate** (`scripts/audit-gate.mjs`): fails on High/Critical EXCEPT one documented, un-fixable upstream advisory — `GHSA-mrhx-c7xc-m3w5` (zod `<4.6.6` via `puppeteer-core`/`chromium-bidi`, which pin `zod ^3.24.1`; runtime dep, no fixed 3.x line). Still blocks any NEW High/Critical finding. Re-review when upstream adopts zod ≥ 4.6.6.
+### 🩹 Resilience fixes (extension — per-rule Pega ingest)
+- **Socket closed mid-body** — `fetch()` resolves on headers, then throws while
+  reading the body (undici `UND_ERR_SOCKET`). The body read is now defensive
+  (`readEnvelope`): a dropped/truncated/empty body is re-tagged `TransientBodyError`
+  and **retried** with backoff, instead of being skipped as a permanent parse error.
+- **Explicit fetch timeout** — per-rule ingest uses `AbortSignal.timeout(30s)`,
+  so a hung backend becomes a retryable `TimeoutError` instead of blocking a
+  pipeline consumer forever.
+- **Empty/malformed backend URL guard** — VS Code `get(key, default)` only
+  substitutes the default when the key is *undefined*; an explicit `""` for
+  `sdlcAgents.backend.url` used to yield a host-less URL and an opaque fetch
+  failure. `PegaHttpCore.getBackendUrl()` now falls back to the default on
+  empty/whitespace, and `resolveIngestEndpoint()` validates the URL and fails
+  fast with a clear, **non-retryable** configuration message.
 
-### 🧹 CI consolidation
-- Folded the shared gates of 8 per-ticket workflows into a single `ci.yml`:
-  lint + typecheck + unit/integration/e2e-api/contract tests + supply-chain audit
-  (backend + extension) + static gates (secret scan + line-count ≤ 200)
-- Removed `ci-sa4e-191/223/241/332/336/356/358/369.yml` — the project now keeps exactly ONE CI workflow
+### 🔎 Diagnosability
+- The ingest crash log now prints the **full target URL** (host:port + path),
+  and each run logs its `🎯 Ingest target`, so a socket failure is traceable to
+  the exact backend (loopback vs a misconfigured/remote `sdlcAgents.backend.url`).
 
-### 🐛 Fixes
-- `messageListener.ts`: quote `'tab:updated'` / `'tab:switch'` handler keys (eslint parse error surfaced by the new lint gate)
-- Remove dead `TAB_UPDATED` message type (leftover from the pre-SA4E-370 convention; no sender emits it — `tab:updated` is the live protocol)
+### 🧱 Refactor + tests
+- Per-rule ingest extracted from `PegaStreamIngester.ts` into
+  `PegaStreamIngester/single-rule.ts` (both files back under the 200-line standard).
+- New `PegaStreamIngester.resilience.test.ts` — 7 tests covering empty/malformed
+  URL, socket-closed-mid-body retry, truncated-body retry, UND_ERR_SOCKET retry,
+  retry exhaustion, and no-retry-on-permanent-rejection.
 
 ### 🏷️ Version & Tag
-- Version: **1.55.10** (bumped from 1.55.9)
+- Version: **1.55.11** (bumped from 1.55.10)
 - Synced across root / `backend` / `extension` + lockfiles
 
 ### 📁 Modified Files
-- `package.json` (root) — 1.55.10
-- `backend/package.json`, `extension/package.json` — 1.55.10
-- `.github/workflows/ci.yml` — new lint + supply-chain + static-gates jobs
-- `scripts/patch-vendored-deps.mjs`, `scripts/audit-gate.mjs`, `scripts/vendor/undici-7.30.1/`, `scripts/vendor/undici-8.12.3/`
-- `backend/Dockerfile` — undici 6.29.1
-- `README.md`, `RELEASE_NOTE.md`, `extension/README.md` — version badge + changelog
+- `extension/src/services/pega/PegaHttpCore.ts` — empty-URL guard
+- `extension/src/services/PegaStreamIngester.ts` — delegate to single-rule
+- `extension/src/services/PegaStreamIngester/single-rule.ts` — NEW per-rule flow
+- `extension/src/services/PegaStreamIngester/ingest-auth.ts` — `TransientBodyError`
+- `extension/src/services/PegaStreamIngester/ingest-retry.ts` — retry TransientBodyError
+- `extension/src/services/PegaBfsIndexer/ingest-log.ts` + `bfs-indexer.ts` — full-URL logging
+- `extension/src/services/__tests__/PegaStreamIngester.resilience.test.ts` — NEW
+- `README.md`, `RELEASE_NOTE.md`, `extension/README.md` — version + changelog
