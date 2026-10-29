@@ -78,5 +78,7 @@ jobs:
       - name: npm audit (production deps, high+)
         # Fails the pipeline on high/critical vulnerabilities in runtime deps.
         # Dev-only advisories are excluded to avoid blocking on test tooling.
-        run: npm audit --omit=dev --audit-level=high
+        # Uses audit-gate (allowlist for un-fixable upstream advisories — see
+        # scripts/audit-gate.mjs); still fails on any NEW High/Critical finding.
+        run: node ../scripts/audit-gate.mjs
 

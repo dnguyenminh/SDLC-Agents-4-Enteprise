@@ -243,6 +243,8 @@ jobs:
         run: node scripts/patch-vendored-deps.mjs
 
       - name: npm audit — fail on High/Critical (runtime deps)
-        run: npm audit --omit=dev --audit-level=high
+        # audit-gate allowlists un-fixable upstream advisories (scripts/
+        # audit-gate.mjs) while still failing on any NEW High/Critical finding.
+        run: node ../scripts/audit-gate.mjs
         working-directory: extension
 

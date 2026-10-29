@@ -265,5 +265,7 @@ jobs:
       - name: npm audit (production deps, high+)
         # Fails on high/critical CVEs in RUNTIME deps (SEC — dependency risk).
         # Dev-only advisories excluded so test tooling doesn't block the gate.
-        run: npm audit --omit=dev --audit-level=high
+        # Uses audit-gate (allowlist for un-fixable upstream advisories — see
+        # scripts/audit-gate.mjs); still fails on any NEW High/Critical finding.
+        run: node ../scripts/audit-gate.mjs
 

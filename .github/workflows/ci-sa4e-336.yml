@@ -137,7 +137,9 @@ jobs:
       - name: npm audit — fail on High/Critical (SEC-07)
         # Blocking gate on RUNTIME deps. Dev-only advisories excluded so test
         # tooling (vitest/esbuild/etc.) doesn't block a production security gate.
-        run: npm audit --omit=dev --audit-level=high
+        # Uses audit-gate (allowlist for un-fixable upstream advisories — see
+        # scripts/audit-gate.mjs); still fails on any NEW High/Critical finding.
+        run: node ../scripts/audit-gate.mjs
 
       - name: Single-version check — exactly ONE @earendil-works/pi-agent-core = 0.99.1 (TDD §1.5)
         # Duplicate pi-agent-core instances break the Agent runtime (TDD §1.5,
