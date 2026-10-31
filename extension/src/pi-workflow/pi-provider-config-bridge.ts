@@ -79,7 +79,7 @@ function resolveActiveProfileConfig(): ProviderTurnConfig {
   if (activeProfileId) {
     const activeProfile = profiles.find((p: any) => p.id === activeProfileId);
     if (activeProfile) {
-      const providerId = activeProfile.provider;
+    const providerId = activeProfile.id;  // Use profile ID, not provider name
       const baseUrlKey = PROVIDER_BASE_URL_KEYS[providerId];
       const baseUrl = activeProfile.useDefaultUrl
         ? undefined
