@@ -142,8 +142,10 @@ export function resolveWorkspacePath(
   let worktreeType: WorktreeType = "main";
   if (opts?.worktreeType) {
     worktreeType = opts.worktreeType;
-  } else {
-    // Auto-detect: check if running in a branch worktree
+  } else if (rootSource === "workspace") {
+    // Only detect worktree type when running inside a VS Code workspace.
+    // When rootSource is "cwd_fallback", there's no VS Code workspace, so
+    // worktree detection should not apply (BR-17, FR-18).
     worktreeType = detectWorktreeType();
   }
   if (rootPath && rootPath.trim() !== "") {
