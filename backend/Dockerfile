@@ -127,6 +127,11 @@ ARG SETUPTOOLS_VERSION=84.0.0
 # (same PEP 440 pattern documented below). Probes fail the build on drift.
 ARG CERTIFI_VERSION=2026.10.19
 ARG PILLOW_VERSION=13.0.0
+# pypdf — transitive of markdown-exporter-mcp-local. 6.21.3 (upstream-resolved)
+# carries CVE-2026-119203 / CVE-2026-119204 / CVE-2026-119205 (HIGH, DoS), all
+# fixed in 6.21.4. Force-upgraded after the main install with a version probe
+# (same pattern as pillow/certifi above) so a regression fails the build.
+ARG PYPDF_VERSION=6.21.4
 # `python3` already exists in base (build toolchain); only the venv/ensurepip
 # support is missing. One venv per server: independent dependency trees that
 # are pinned, upgraded and Trivy-scanned separately.
@@ -163,8 +168,8 @@ RUN python3 -m venv /opt/markdown-exporter-venv \
       "mcp>=1.27.0,<2.0.0" \
  && test -x /opt/markdown-exporter-venv/bin/markdown-exporter-mcp-local \
  && /opt/markdown-exporter-venv/bin/python -c "import markdown_exporter_mcp.server, md_exporter" \
- && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==${PILLOW_VERSION}" "certifi==${CERTIFI_VERSION}" \
- && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('pillow') == '${PILLOW_VERSION}' and version('certifi') == '${CERTIFI_VERSION}'" \
+ && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "pillow==${PILLOW_VERSION}" "certifi==${CERTIFI_VERSION}" "pypdf==${PYPDF_VERSION}" \
+ && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('pillow') == '${PILLOW_VERSION}' and version('certifi') == '${CERTIFI_VERSION}' and version('pypdf') == '${PYPDF_VERSION}'" \
  && /opt/markdown-exporter-venv/bin/pip install --no-cache-dir "setuptools==${SETUPTOOLS_VERSION}" \
  && /opt/markdown-exporter-venv/bin/python -c "from importlib.metadata import version; assert version('setuptools') == '${SETUPTOOLS_VERSION}'" \
  && /opt/markdown-exporter-venv/bin/python -m pip uninstall -y pip
