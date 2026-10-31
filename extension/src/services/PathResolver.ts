@@ -138,7 +138,12 @@ export function resolveWorkspacePath(
     rootPath = undefined;
   }
   let rootSource: PathRootSource;
-  // Step 2c — worktree type detection (BR-17, FR-18)
+  if (rootPath && rootPath.trim() !== "") {
+    rootSource = "workspace";
+  } else {
+    rootPath = process.cwd(); // BR-06 fallback
+    rootSource = "cwd_fallback";
+  }
   let worktreeType: WorktreeType = "main";
   if (opts?.worktreeType) {
     worktreeType = opts.worktreeType;
@@ -147,12 +152,6 @@ export function resolveWorkspacePath(
     // When rootSource is "cwd_fallback", there's no VS Code workspace, so
     // worktree detection should not apply (BR-17, FR-18).
     worktreeType = detectWorktreeType();
-  }
-  if (rootPath && rootPath.trim() !== "") {
-    rootSource = "workspace";
-  } else {
-    rootPath = process.cwd(); // BR-06 fallback
-    rootSource = "cwd_fallback";
   }
 
   // Step 2d — worktree type specific handling
