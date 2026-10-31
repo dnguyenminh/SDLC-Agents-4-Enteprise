@@ -69,9 +69,14 @@ function resolveActiveProfileConfig(): ProviderTurnConfig {
 
   // Try new multi-profile config first
   const profiles = (config.get<any[]>("llm.profiles", []) ?? []);
-  const activeProfileId = config.get<string>("llm.activeProfileId");
+  let activeProfileId = config.get<string>("llm.activeProfileId");
 
-  if (profiles.length > 0 && activeProfileId) {
+  // If activeProfileId is not set or doesn't match any profile, fall back to providerId
+  if (!activeProfileId || !profiles.find((p) => p.id === activeProfileId)) {
+    activeProfileId = config.get<string>("llm.provider");
+  }
+
+  if (activeProfileId) {
     const activeProfile = profiles.find((p: any) => p.id === activeProfileId);
     if (activeProfile) {
       const providerId = activeProfile.provider;
