@@ -143,7 +143,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   });
 
   it('cloud provider with key routes to the session path', async () => {
-    mockConfigValues['llm.provider'] = 'anthropic-claude-3-haiku';
+    mockConfigValues['llm.provider'] = 'anthropic';
     mockConfigValues['llm.model'] = '';
     mockConfigValues['llm.profiles'] = [
       { id: 'anthropic-claude-3-haiku', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
@@ -182,7 +182,7 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
   });
 
   it('closes the stream even for textless turns (tool-only output)', async () => {
-    mockConfigValues['llm.provider'] = 'anthropic-claude-3-haiku';
+    mockConfigValues['llm.provider'] = 'anthropic';
     mockConfigValues['llm.model'] = '';
     mockConfigValues['llm.profiles'] = [
       { id: 'anthropic-claude-3-haiku', provider: 'anthropic', model: 'claude-3-haiku', useDefaultUrl: true },
@@ -208,3 +208,4 @@ describe('PiWorkflowAdapter session routing (local vs cloud)', () => {
     expect(chatErrors(onEvent)).toEqual([]);
   });
 });
+
